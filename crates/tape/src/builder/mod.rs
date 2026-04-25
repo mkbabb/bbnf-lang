@@ -211,29 +211,9 @@ pub struct FusedBuilder {
     /// still accepted (so mid-recovery parses can continue producing
     /// records for partial success), but `finish` returns the error.
     pub(crate) error: Option<TapeBuildError>,
-    /// Per-record depth byte stream — emitted inline by the builder on
-    /// every structural push.
-    ///
-    /// B3.W0.γ — restored as the SOLE depth source. The pre-W0.γ
-    /// `has_inline_frame_depth` gate retired alongside the
-    /// `derive_frame_depth` reconstruction path: that helper assumed a
-    /// canonical post-order tape (`child_off < parent_idx`), but the
-    /// shape emitters mix pre-order [`Self::end_compound`] (where
-    /// `child_off == parent_idx + 1`) and post-order
-    /// [`Self::end_compound_post_order`] (where `child_off < parent_idx`)
-    /// freely. The reverse-walk leap in `derive_frame_depth` enters an
-    /// infinite loop on pre-order children. Tracking depth inline at the
-    /// builder makes the layout question moot: every `begin_compound`
-    /// bumps [`Self::current_depth`], every `end_compound` /
-    /// `end_compound_post_order` decrements it, every structural push
-    /// stamps the current value here. [`Self::finish`] hands this slice
-    /// to [`crate::finaliser::finalise`] directly.
-    pub(crate) frame_depth: Vec<u8>,
-    /// Currently-open compound depth — incremented on
-    /// [`Self::begin_compound`], decremented on [`Self::end_compound`] /
-    /// [`Self::end_compound_post_order`]. Stamped onto every structural
-    /// push (leaf or compound row) via [`Self::frame_depth`]. B3.W0.γ.
-    pub(crate) current_depth: u8,
+    // B3.W0.δ — `current_depth` migrated into [`Columns::current_depth`]
+    // alongside `frame_depth` so a `columns_mut().rollback_to(...)`
+    // call from generated parser code restores both atomically.
 
     // ── Value substrate (absorbed from W0.c `ValueBuilder<R>`) ────
     /// Nested value-frame arena — one entry per compound open + one
@@ -275,8 +255,6 @@ impl FusedBuilder {
         Self {
             columns: Columns::with_capacity(expected),
             error: None,
-            frame_depth: Vec::with_capacity(expected),
-            current_depth: 0,
             value_frames: Vec::with_capacity(expected),
             value_payloads_narrow: Vec::with_capacity(expected / 4),
             value_payloads_wide: Vec::with_capacity(expected / 4),
@@ -312,11 +290,12 @@ impl FusedBuilder {
         // pushing the row), so restoring `current_depth` to that row's
         // recorded depth re-establishes the pre-`begin_compound`
         // bookkeeping.
-        let new_len = open_offset as usize;
-        if new_len < self.frame_depth.len() {
-            self.current_depth = self.frame_depth[new_len];
-            self.frame_depth.truncate(new_len);
-        }
+        // Tape side — `Columns::rollback_to` rewinds `records`,
+        // `sib_skip`, `frame_depth`, AND restores `current_depth` to
+        // the depth recorded at `open_offset` (B3.W0.δ). Generated
+        // parser code that calls `columns_mut().rollback_to(...)`
+        // directly gets the same restoration without going through
+        // this builder method.
         self.columns.rollback_to(open_offset);
         // Value side — pop every open frame whose tape_offset-equivalent
         // landed on or after `open_offset`, resolving the matching
@@ -411,7 +390,6 @@ impl FusedBuilder {
             span_hi,
             TapeOffset::NONE,
         );
-        self.frame_depth.push(self.current_depth);
         self.push_value_leaf(kind, span_lo, span_hi, variant_idx, PayloadTag::NONE);
         TapeOffset(idx)
     }
@@ -472,13 +450,12 @@ impl FusedBuilder {
             span_lo,
             TapeOffset::NONE,
         );
-        self.frame_depth.push(self.current_depth);
         // Bump after stamping so the children of this compound stamp
         // at `current_depth + 1`. Saturate to `u8::MAX` — grammars
         // that nest deeper than 255 compounds are diagnosed by the
         // finaliser's depth-overflow path; saturation keeps the push
         // path branchless.
-        self.current_depth = self.current_depth.saturating_add(1);
+        self.columns.current_depth = self.columns.current_depth.saturating_add(1);
         self.value_begin_compound(kind, span_lo, variant_idx);
         idx
     }
@@ -497,15 +474,50 @@ impl FusedBuilder {
     #[inline(always)]
     pub fn end_compound(&mut self, open_offset: u32, span_hi: u32) {
         self.columns.set_span_hi_at(open_offset, span_hi);
-        let first_child = open_offset + 1;
-        if (first_child as usize) < self.columns.len() {
+        // The compound was emitted at its outer frame's depth; its
+        // direct children are stamped at `open_depth + 1`. Pre-order
+        // layout normally puts the first child at `open_offset + 1`,
+        // BUT when an inner [`Self::end_compound_post_order`] retro-
+        // actively bumps `frame_depth` over its child range, records
+        // that landed between this compound's open and the nested
+        // post-order close move one level deeper. The true first
+        // child is then the first row at exactly `open_depth + 1`,
+        // bounded by the compound's structural scope.
+        //
+        // Scope bound (B3.W0.ε): a record at `frame_depth <= open_depth`
+        // marks the end of this compound's scope (an outer-frame
+        // sibling or shallower); abort the scan at that point. Without
+        // this bound, a childless compound followed by no later same-
+        // depth records would scan to end-of-tape; with it, the scan
+        // also correctly identifies childless compounds whose body
+        // produced zero records.
+        let open_depth = self.columns.frame_depth[open_offset as usize];
+        let target_depth = open_depth.saturating_add(1);
+        let n = self.columns.len() as u32;
+        let mut first_child = open_offset + 1;
+        let mut found = false;
+        while first_child < n {
+            let d = self.columns.frame_depth[first_child as usize];
+            if d == target_depth {
+                found = true;
+                break;
+            }
+            if d <= open_depth {
+                // Crossed out of the compound's scope (an outer-frame
+                // sibling or shallower) without finding a target-depth
+                // child — this compound is childless.
+                break;
+            }
+            first_child += 1;
+        }
+        if found {
             self.columns
                 .set_child_off_at(open_offset, TapeOffset(first_child));
             self.columns
                 .or_extra_at(open_offset, TapeRec::HAS_CHILDREN_BIT);
         }
         // B3.W0.γ — pair the `begin_compound` depth bump.
-        self.current_depth = self.current_depth.saturating_sub(1);
+        self.columns.current_depth = self.columns.current_depth.saturating_sub(1);
         self.value_end_compound(span_hi);
     }
 
@@ -551,12 +563,12 @@ impl FusedBuilder {
             // total depth offset.
             let lo = first_child.0 as usize;
             let hi = open_offset as usize;
-            for slot in &mut self.frame_depth[lo..hi] {
+            for slot in &mut self.columns.frame_depth[lo..hi] {
                 *slot = slot.saturating_add(1);
             }
         }
         // B3.W0.γ — pair the `begin_compound` depth bump.
-        self.current_depth = self.current_depth.saturating_sub(1);
+        self.columns.current_depth = self.columns.current_depth.saturating_sub(1);
         self.value_end_compound(span_hi);
     }
 
@@ -645,7 +657,6 @@ impl FusedBuilder {
             span_hi,
             child_off,
         );
-        self.frame_depth.push(self.current_depth);
         self.push_value_leaf(kind, span_lo, span_hi, variant_idx, value_tag);
         TapeOffset(idx)
     }
@@ -784,7 +795,6 @@ impl FusedBuilder {
             span_hi,
             TapeOffset(arena_offset),
         );
-        self.frame_depth.push(self.current_depth);
         self.push_value_leaf(kind, span_lo, span_hi, variant_idx, PayloadTag::NONE);
         TapeOffset(idx)
     }
@@ -846,7 +856,6 @@ impl FusedBuilder {
             span_hi,
             TapeOffset(arena_offset),
         );
-        self.frame_depth.push(self.current_depth);
         self.push_value_leaf(kind, span_lo, span_hi, variant_idx, PayloadTag::NONE);
         TapeOffset(idx)
     }
@@ -893,7 +902,6 @@ impl FusedBuilder {
             span_hi,
             TapeOffset::NONE,
         );
-        self.frame_depth.push(self.current_depth);
         self.push_value_leaf(kind, span_lo, span_hi, variant_idx, PayloadTag::NONE);
         TapeOffset(idx)
     }
@@ -942,7 +950,6 @@ impl FusedBuilder {
             span_hi,
             TapeOffset(rank),
         );
-        self.frame_depth.push(self.current_depth);
         // Value-side: project the `f64` bits into the wide payload
         // column and stamp the matching leaf frame.
         let v_rank = self.value_payloads_wide.len() as u32;
@@ -1064,18 +1071,20 @@ impl FusedBuilder {
     }
 
     /// Shared finaliser step — runs the sibling-skip stamping pass
-    /// over the in-builder `frame_depth` stream (always inline, B3.W0.γ).
+    /// over the per-record `frame_depth` column. Authored B3.W0.γ;
+    /// B3.W0.δ moved storage into `Columns` so the column rolls back
+    /// in lockstep with `records` / `sib_skip` on retry.
     #[inline(always)]
     fn run_finaliser(&mut self) {
         debug_assert_eq!(
-            self.frame_depth.len(),
+            self.columns.frame_depth.len(),
             self.columns.len(),
-            "inline frame_depth length {} != columns length {} \
-             (B3.W0.γ — every structural push must stamp frame_depth in lockstep)",
-            self.frame_depth.len(),
+            "frame_depth length {} != records length {} \
+             (every structural push must stamp frame_depth in lockstep)",
+            self.columns.frame_depth.len(),
             self.columns.len(),
         );
-        crate::finaliser::finalise(&mut self.columns, &self.frame_depth);
+        self.columns.run_finalise();
     }
 
     /// Access the in-progress columns for debug / intermediate
@@ -1110,25 +1119,28 @@ impl FusedBuilder {
     }
 
     /// Mutable handle on the in-progress per-record frame_depth
-    /// stream.
+    /// stream. B3.W0.δ moved storage into `Columns`, so this defers
+    /// to `columns.frame_depth_mut()`.
     #[inline]
     pub fn frame_depth_mut(&mut self) -> &mut Vec<u8> {
-        &mut self.frame_depth
+        &mut self.columns.frame_depth
     }
 
     /// AW-III.W4.d — split-borrow accessor for the parallel-column
     /// pair the per-grammar specialised walker writes into.
     ///
     /// Returns a tuple of `(&mut Columns, &mut Vec<u8>)` borrowing
-    /// the `columns` and `frame_depth` fields disjointly so the
-    /// emitted `dta_run_<grammar>` can pass them as adjacent
-    /// arguments without the caller dancing around the borrow
-    /// checker.
+    /// the `Columns` rest-fields and the `frame_depth` column
+    /// disjointly so the emitted `dta_run_<grammar>` can pass them as
+    /// adjacent arguments without the caller dancing around the
+    /// borrow checker. B3.W0.δ moved `frame_depth` ownership into
+    /// `Columns`, so the disjoint borrow runs through
+    /// [`Columns::split_off_frame_depth_mut`].
     #[inline]
     pub fn columns_and_frame_depth_mut(
         &mut self,
     ) -> (&mut Columns, &mut Vec<u8>) {
-        (&mut self.columns, &mut self.frame_depth)
+        self.columns.split_off_frame_depth_mut()
     }
 
     /// Access the in-progress tape view for debug inspection.

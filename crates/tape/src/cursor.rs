@@ -611,14 +611,19 @@ fn first_child_root(columns: &Columns, parent_idx: u32) -> Option<u32> {
         return None;
     }
     let start = child_off.0;
-    // AW.1.10 pre-order fast path: `child_off == parent + 1`.
-    // The DTA driver's `close_compound` stamps `child_off` to the
-    // frame's `child_mark`, which is `columns.len()` at the instant
-    // the parent row was reserved — one record before the first
-    // child's row. So `child_off == parent + 1` iff the layout is
-    // pre-order. Degrade to O(1) in that case; fall through to the
-    // bounded backward walk only for the post-order legacy layout.
-    if start == parent_idx + 1 {
+    // AW.1.10 pre-order fast path. The DTA driver's `close_compound`
+    // stamps `child_off` at-or-after the parent row, so `child_off >
+    // parent_idx` iff the layout is pre-order. The legacy fast path
+    // checked the strict `parent + 1` relation; B3.W0.δ widens the
+    // check because [`crate::TapeBuilder::end_compound`] now scans
+    // for the first record at `parent_depth + 1` (skipping records
+    // that an inner [`crate::TapeBuilder::end_compound_post_order`]
+    // retroactively bumped to a deeper level). The result still
+    // satisfies pre-order's "child_off names the first child root"
+    // contract for any `start > parent_idx`. Fall through to the
+    // bounded backward walk only for post-order legacy layouts where
+    // `child_off < parent_idx`.
+    if start > parent_idx {
         return Some(start);
     }
     let end = parent_idx;
@@ -632,7 +637,13 @@ fn first_child_root(columns: &Columns, parent_idx: u32) -> Option<u32> {
         first = co;
         let has_children = columns.has_children_at(co);
         let co_child_off = columns.child_off_at(co);
-        pos = if has_children && !co_child_off.is_none() {
+        // Leap only when `co_child_off` points strictly BEFORE `co`
+        // (canonical post-order subtree skip). For pre-order children
+        // (child_off > co) leaping would move `pos` upward and spin the
+        // `while pos > start` guard forever — same defect γ identified
+        // in `derive_frame_depth`. Step by one in that case so the
+        // walk monotonically descends to `start`. B3.W0.ε.
+        pos = if has_children && !co_child_off.is_none() && co_child_off.0 < co {
             co_child_off.0
         } else {
             co

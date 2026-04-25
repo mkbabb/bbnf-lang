@@ -91,6 +91,37 @@ pub struct Columns {
     /// time (AY.W1.2 fold pending).
     pub(crate) sib_skip: Vec<u32>,
 
+    /// Per-record nesting depth column (B3.W0.γ + B3.W0.δ). One byte
+    /// per structural record, stamped in lockstep with `records` /
+    /// `sib_skip` on every push and rolled back atomically with them
+    /// on retry. The Stage-C finaliser walks this column to derive
+    /// sibling skips; emitters never read it.
+    ///
+    /// Lives inside `Columns` (not on the builder) because the parser-
+    /// emitted retry paths bypass the builder's full rollback by
+    /// calling `columns_mut().rollback_to(open)` directly. Owning
+    /// `frame_depth` here guarantees rollback parity with `records`
+    /// without requiring every parser site to thread the builder
+    /// surface — the contract documented on `rollback_to` (every
+    /// per-record column rewinds in lockstep) holds by construction.
+    pub(crate) frame_depth: Vec<u8>,
+
+    /// Currently-open compound depth — the depth at which the NEXT
+    /// structural push will stamp its `frame_depth` byte. Bumped by
+    /// [`crate::TapeBuilder::begin_compound`] (after stamping the
+    /// compound row at the OUTER depth), decremented by
+    /// [`crate::TapeBuilder::end_compound`] /
+    /// [`crate::TapeBuilder::end_compound_post_order`].
+    ///
+    /// Lives inside `Columns` (alongside `frame_depth`, B3.W0.δ)
+    /// because the parser-emitted retry paths bypass the builder's
+    /// full rollback by calling `columns_mut().rollback_to(open)`
+    /// directly. [`Self::rollback_to`] reads `frame_depth[open]`
+    /// before truncation and restores `current_depth` to that
+    /// value, so the next `begin_compound` re-opens at the correct
+    /// depth.
+    pub(crate) current_depth: u8,
+
     // ── Typed payload columns (dense-packed in push order) ─────────
     /// Inline scalars ≤ 4 B. The record's `child_off` holds the
     /// column rank.
@@ -146,6 +177,8 @@ impl Columns {
         Self {
             records: Vec::with_capacity(expected),
             sib_skip: Vec::with_capacity(expected),
+            frame_depth: Vec::with_capacity(expected),
+            current_depth: 0,
             pay_narrow: Vec::new(),
             pay_wide: Vec::new(),
             pay_f64: Vec::new(),
@@ -193,8 +226,15 @@ impl Columns {
     /// next one.
     #[inline]
     pub fn truncate(&mut self, new_len: usize) {
+        if new_len < self.frame_depth.len() {
+            // Mirror `rollback_to`: restore `current_depth` to the
+            // depth of the row at `new_len` before truncation, so
+            // subsequent pushes stamp at the right level.
+            self.current_depth = self.frame_depth[new_len];
+        }
         self.records.truncate(new_len);
         self.sib_skip.truncate(new_len);
+        self.frame_depth.truncate(new_len);
         self.invalidate_packed();
     }
 
@@ -228,9 +268,63 @@ impl Columns {
         if new_len >= self.records.len() {
             return;
         }
+        // Recover `current_depth` from the row about to be discarded.
+        // The compound at `open_offset` was emitted at its outer
+        // frame's depth (B3.W0.γ — the row's `frame_depth` byte holds
+        // the pre-bump value), so restoring `current_depth` to that
+        // byte re-establishes the bookkeeping the next
+        // `begin_compound` will consume.
+        self.current_depth = self.frame_depth[new_len];
         self.records.truncate(new_len);
         self.sib_skip.truncate(new_len);
+        self.frame_depth.truncate(new_len);
         self.invalidate_packed();
+    }
+
+    /// Run the Stage-C finaliser over `self`, reading the per-record
+    /// `frame_depth` column and back-patching `sib_skip` / `child_off`
+    /// / `span_hi` on every compound record. Wraps the disjoint-borrow
+    /// dance the `TapeBuilder::finish` path needs (the finaliser
+    /// signature takes a `&[u8]` for the depth slice alongside a
+    /// `&mut Columns`).
+    ///
+    /// SAFETY: the depth slice aliases the heap buffer of the
+    /// in-place `frame_depth` `Vec`. The finaliser's mutating writes
+    /// touch only `records` / `sib_skip` / `packed_cache`; it never
+    /// reads or writes `frame_depth`. So the slice and the `&mut
+    /// Columns` borrow over `self` describe disjoint memory.
+    #[inline(always)]
+    pub(crate) fn run_finalise(&mut self) {
+        let depth_slice: &[u8] = unsafe {
+            let ptr = self.frame_depth.as_ptr();
+            let len = self.frame_depth.len();
+            std::slice::from_raw_parts(ptr, len)
+        };
+        crate::finaliser::finalise(self, depth_slice);
+    }
+
+    /// Split-borrow accessor: hand back `(&mut Columns, &mut Vec<u8>)`
+    /// where the first borrow ranges over the `Columns` fields the
+    /// per-grammar specialised walker mutates (records, sib_skip,
+    /// payload columns) and the second projects into the depth
+    /// column. Mirrors the pre-W0.δ shape `TapeBuilder` exposed
+    /// when `frame_depth` lived on the builder directly.
+    ///
+    /// SAFETY: callers must not mutate `frame_depth` through the
+    /// returned `&mut Columns` for the lifetime of the returned
+    /// `&mut Vec<u8>`. Every emitted walker this call services
+    /// pushes structural rows into `records` and depth bytes into the
+    /// `Vec<u8>`; neither path reaches `frame_depth` through the
+    /// `Columns` handle.
+    #[inline]
+    pub(crate) fn split_off_frame_depth_mut(
+        &mut self,
+    ) -> (&mut Columns, &mut Vec<u8>) {
+        let cols_ptr: *mut Columns = self;
+        unsafe {
+            let depth: &mut Vec<u8> = &mut (*cols_ptr).frame_depth;
+            (&mut *cols_ptr, depth)
+        }
     }
 
     // ── AX.W1.D — AoS sidecar (`packed_cache`) readers/invalidators ──
@@ -334,6 +428,13 @@ impl Columns {
             child_off,
         });
         self.sib_skip.push(0);
+        // B3.W0.δ — `frame_depth` is a per-record column owned by
+        // `Columns`. Builders that wrap `push_structural` overwrite the
+        // stamped byte with the live `current_depth`; direct callers
+        // (test-only `push_compound_fused` / `push_leaf_fused`) accept
+        // the default-0 stamp, matching the depth a freshly-built
+        // `Columns` would assign at the root.
+        self.frame_depth.push(self.current_depth);
         // AX.W1.D — primary mutation invalidates the AoS sidecar.
         self.invalidate_packed();
         idx

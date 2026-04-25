@@ -43,7 +43,7 @@
 //! ## BEAT-sonic sanity gate
 //!
 //! A test-level timing gate is inherently noisy. The real BEAT-sonic
-//! verification happens via `cargo bench --bench json_monolithic_value`
+//! verification happens via `cargo bench --bench json_value`
 //! in W7 FINAL. This test is a sanity floor that catches gross
 //! regressions in the eager-materialise hot path — if
 //! `bbnf_value_twitter / sonic_value_twitter > 1.5×` the
@@ -263,7 +263,7 @@ fn parse_count_invariant_to_value_is_thin_projection() {
 // introduces ±20-30% jitter, and single-threaded `cargo test`
 // execution interleaves with `cargo build`'s background work. The
 // real BEAT-sonic verification lives in the bench harness
-// (`cargo bench --bench json_monolithic_value`), which runs
+// (`cargo bench --bench json_value`), which runs
 // `bencher` over many iterations + reports the noise floor.
 //
 // The gate is `#[ignore]`d so `cargo test --workspace` stays green

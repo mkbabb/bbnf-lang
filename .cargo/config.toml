@@ -172,18 +172,26 @@ expand-derive         = "expand --profile ax-iter -p bbnf --lib"
 asm-bbnf              = "asm --profile ay-final -p bbnf"
 
 # ── Build flags ─────────────────────────────────────────────────────────────
-# Parallel rustc front-end + generics sharing. Nightly-gated; pinned by
-# rust-toolchain.toml. Measured impact: 20-30% cold wall reduction on
-# iter-check-full (blog.rust-lang.org/2023/11/09/parallel-rustc).
+# 2026-04-25 B1.W4-followup (pre-B2): `-Zthreads=8 -Zshare-generics=y` were
+# active in B1.W0.b (`416dcf76`) on the hypothesis that they would reduce
+# cold workspace-check wall. Audit α (`docs/audit/2026-04-25-deep-audit/
+# AUDIT-A-B1-retrospective.md`) measured a 28× warm regression on
+# `cargo iter-check` (0.14 s d7-baseline → 3.88 s post-B1) attributable
+# entirely to the build-level rustflags: small-crate warm checks pay
+# rustflags-fixed setup cost without amortising the benefit.
 #
-# NOTE on the ICE interaction: `-Zthreads=N` amplifies the on-disk-cache ICE
-# count (one poisoned query fires one ICE per parallel worker). Remediation
-# is the `make ay-clean-incr` target documented in PROFILING.md §ICE recovery,
-# NOT dropping `-Zthreads`. Once the nightly pin includes the on_disk_cache
-# AttrId fix (see rust-toolchain.toml upgrade cadence), the ICE class closes.
-
-[build]
-rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
+# `-Zshare-generics`'s benefit is strictly cold + cross-crate-generic;
+# warm `iter-check` is neither. `-Zthreads` adds parallel-front-end
+# overhead that dominates small-crate-set warm builds. Both removed.
+# Linux's lld linker arg stays in the target-specific block (linker
+# choice is independent of these flags).
+#
+# Cold-build re-evaluation: the gorgeous fix (B1.W0 trium) + the
+# B2 architectural transposition (proc-macro retirement) move the
+# cold-wall conversation into a different regime; if a future tranche
+# wants to revisit `-Zthreads` / `-Zshare-generics` it does so with a
+# warm-vs-cold tradeoff measured against the post-B2 baseline, not
+# this B1-era assumption.
 
 # ── Target-specific overrides ───────────────────────────────────────────────
 
@@ -206,9 +214,12 @@ rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
 # check wild's release notes for current macOS status before using.
 # `mold` 2.0+ requires a commercial license on macOS, so is not free.
 #
-# Default: system ld64 via clang. No extra install required.
-[target.aarch64-apple-darwin]
-rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
+# Default: system ld64 via clang. No extra install required. No build
+# rustflags overridden — let cargo's defaults stand. Per the §Build flags
+# audit-α retrospective above, the prior `-Zthreads=8 -Zshare-generics=y`
+# entries here regressed warm `iter-check` on small-crate sets and
+# delivered no measurable benefit on the working set this block
+# describes; both removed.
 
 # Opt-in lld (requires `brew install lld`). Uncomment after
 # verifying the path exists on your host.
@@ -216,8 +227,6 @@ rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
 # linker    = "clang"
 # rustflags = [
 #     "-C", "link-arg=-fuse-ld=/opt/homebrew/opt/lld/bin/ld.lld",
-#     "-Zthreads=8",
-#     "-Zshare-generics=y",
 # ]
 
 # Dev-only codegen backend: cranelift. Applied via per-profile override so
@@ -230,10 +239,10 @@ rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
 # codegen-backend = "cranelift"
 
 # Linux x86_64: lld via rust-lld (bundled with the toolchain). No extra
-# install required.
+# install required. Linker arg only; `-Zthreads` / `-Zshare-generics`
+# removed per the §Build flags retrospective above (warm-iter regression
+# on small crate sets).
 [target.x86_64-unknown-linux-gnu]
 rustflags = [
     "-C", "link-arg=-fuse-ld=lld",
-    "-Zthreads=8",
-    "-Zshare-generics=y",
 ]

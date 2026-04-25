@@ -162,7 +162,7 @@ harness = false
 required-features = ["iai"]
 
 [[bench]]
-name = "json_monolithic_value"
+name = "json_value"
 path = "benches/json/value.rs"
 harness = false
 

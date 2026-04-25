@@ -465,15 +465,86 @@ post-order canonicalisation.
 - `.profiles/b3/parser-hang/profile-symbols.txt` — symbol filter
   (committed).
 
-## 2026-04-25 — (γ) debug_assert + bisect — pending dispatch
+## 2026-04-25 — (γ) source-side root-cause + fix — RESOLVED
 
-Next probe: add `debug_assert!(co_child_off.0 < pos as u32, ...)`
-at `finaliser.rs:368` in a fresh worktree, rebuild xtask under the
-debug profile, re-run the probe, capture the assertion-failure
-record index + child_off pair. With that data, bisect `crates/tape/`
-since `f603f549` to find the commit that introduced the
-non-monotonic `child_off`. Once localized, fix at the source — no
-workaround at the finaliser site.
+**Verdict**: parser hang resolved at source. Fix landed on master at
+`9167dac4`.
+
+**Probe path**: disposable worktree at
+`/Users/mkbabb/Programming/bbnf-wt-b3-w0g-bisect`. Master HEAD pre-probe:
+`eec1731b`. Worktree commits (NOT cherry-picked verbatim):
+
+- `e843c24c` — diag(tape): fail-fast assert on non-monotonic child_off
+  in derive_frame_depth (diagnostic only; not on master).
+- `0a602e7f` — fix(tape): in-builder frame_depth tracking; retire
+  derive_frame_depth (cherry-picked as `9167dac4` on master).
+
+**Failing-record tuple captured by Phase 1 panic**:
+
+```
+parent_idx=585  co=575  child_off=576  pos=576  start=575  end=585  len=637
+```
+
+Record 575 is a Pratt pre-order compound (`child_off = self + 1 = 576`)
+nested inside a post-order parent at 585. The reverse-walk leap in
+`derive_frame_depth` set `pos = child_off = 576` when `pos` was
+already 576, looping infinitely on `co = 575`. Captured at
+`.profiles/b3/parser-hang/g-panic-stderr.txt`.
+
+**Source-side analysis**: `derive_frame_depth` (introduced
+`f603f549`, AY.W1.1 AoS revert) presupposed canonical post-order
+(`child_off < self_idx` for every compound with children). Pratt
+Option C inline (`49d468f2`, AY.W1.6) introduced pre-order compound
+emission (`end_compound` with `child_off = open_offset + 1`); ~9
+of 114 compound closings in `generated.rs` are pre-order. When a
+pre-order compound appears as a direct child of a post-order parent
+(BBNF self-host: Pratt-inside-Seq for `value_path` rule), the
+reverse-walk leap goes upward instead of downward and the
+`while pos > start` loop spins.
+
+**Fix**: retired `derive_frame_depth` entirely. `FusedBuilder` owns
+a `current_depth` counter (bumps on `begin_compound`, decrements on
+`end_compound` / `end_compound_post_order`); every structural push
+auto-stamps `frame_depth` in lockstep. `end_compound_post_order`
+retroactively bumps `frame_depth[first_child..open_offset]` to
+migrate post-order children to (parent + 1) depth. The
+`has_inline_frame_depth` gate, `enable_inline_frame_depth` method,
+and `derive_frame_depth` function are all deleted. KISS, one path.
+Full analysis at `.profiles/b3/parser-hang/g-rootcause.md`.
+
+**Verification**:
+
+| Step | Result |
+|---|---|
+| `cargo build -p xtask --release` | exit 0 (1 m 02 s cold) |
+| `cargo xtask regen --grammar json` | `[parse-end] wall=242.042µs` |
+| `cargo xtask regen --grammar bbnf` | `[parse-end] wall=296.209µs` |
+| `cargo nextest run -p tape --profile ax-iter` | 100 / 100 passed |
+| `cargo check -p bbnf -p xtask --profile ax-iter` | exit 0 |
+
+Both grammars now reach `compile_paths_request done` in ~1 ms total
+(was hanging > 60 s on json, > 5 min on bbnf). The downstream panic
+at `crates/core/src/generate/serialize/mod.rs:64` (index out of
+bounds on empty `ir.rules`) is a SEPARATE pre-existing issue
+unrelated to W0.γ scope; it does not affect parser correctness.
+
+**Implication for B3 thesis**: the AY-II.W0' revert thesis is
+fully DISPROVED. The parser regression was NOT caused by W0' source
+landings — it was a latent contract bug between `derive_frame_depth`
+(authored 2026-04-20 at `f603f549`) and Pratt pre-order emission
+(landed 2026-04-20 at `49d468f2`), bisecting to a single-day
+window where both landed without each other's awareness. The W0'
+landings amplified Pratt usage on self-host BBNF parsing but did
+not introduce the regression. **B3 closes successfully on substrate
+restoration without any W0'-scope reverts**: the parser baseline
+holds on master `9167dac4`, B2.W0.c re-execution unblocks, and
+W0' work re-lands directly under the existing post-W0.γ substrate
+(no separate B4 needed for the runtime regression — only for any
+emit-correctness deferrals).
+
+The probe-#γ worktree retains its evidence commits and can be torn
+down by the orchestrator (`git worktree remove
+bbnf-wt-b3-w0g-bisect`).
 
 ## Pre-B3 inheritance
 

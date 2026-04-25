@@ -1,6 +1,6 @@
 //! Bootstrap crate for the self-hosted BBNF grammar parser.
 //!
-//! Pre-B2: this crate carried `#[derive(Parser)]` and was the source
+//! Pre-B2: this crate carried `the proc-macro derive (retired B2)` and was the source
 //! `cargo expand -p bbnf-bootstrap` post-processed into
 //! `crates/core/src/grammar/generated.rs` via `scripts/bootstrap-bbnf.sh`.
 //!

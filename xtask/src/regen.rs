@@ -5,7 +5,7 @@
 //! time. The pipeline now runs once per `cargo xtask regen` invocation,
 //! producing per-grammar source files at
 //! `crates/core/src/grammar/generated/<ident>.rs`. Consumers
-//! `include!` the on-disk product instead of `#[derive(Parser)]`.
+//! `include!` the on-disk product instead of `the proc-macro derive (retired B2)`.
 //!
 //! The grammar manifest lives at `[workspace.metadata.bbnf.grammars]`
 //! in the workspace `Cargo.toml`; this module reads it via
@@ -44,7 +44,7 @@ impl GrammarEntry {
     }
 
     /// Marker-struct ident emitted into the per-grammar file. Mirrors
-    /// the proc-macro's `#[derive(Parser)]` consumer-side struct name
+    /// the proc-macro's `the proc-macro derive (retired B2)` consumer-side struct name
     /// — for the BBNF self-host this is `BbnfBootstrap`, for other
     /// grammars the per-grammar consumer cutover (B2.W1) declares the
     /// canonical ident; today the manifest carries it implicitly via

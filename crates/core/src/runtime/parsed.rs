@@ -66,7 +66,7 @@ use crate::runtime::path::Path;
 /// Binding between a grammar marker type and the root view it
 /// produces over a parsed tape.
 ///
-/// Every grammar struct with `#[derive(Parser)]` implements this
+/// Every grammar struct with `the proc-macro derive (retired B2)` implements this
 /// trait via generated code. The GAT `type View<'p>` gives
 /// [`Parsed`] a way to lend a cursor-backed root view whose
 /// lifetime is tied to `&self`, without forcing the grammar

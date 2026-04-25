@@ -1,0 +1,12900 @@
+//! AUTO-GENERATED from `[workspace.metadata.bbnf.grammars]` — do not edit manually.
+//! Regenerate: cargo xtask regen --grammar ebnf
+
+#![allow(
+    dead_code,
+    unused_variables,
+    unused_mut,
+    unused_parens,
+    unused_assignments,
+    non_camel_case_types,
+    non_snake_case,
+    non_upper_case_globals,
+    clippy::all
+)]
+
+use ::bbnf::runtime::tape::*;
+use ::bbnf::runtime::{Parsed, ParseErr, Root};
+use ::parse_that::*;
+
+pub struct EbnfParser;
+mod __ebnfparser_emit_impl {
+    #![allow(
+        dead_code,
+        unused_variables,
+        unused_mut,
+        unused_parens,
+        unused_assignments,
+        non_camel_case_types,
+        non_snake_case,
+        non_upper_case_globals,
+        clippy::all,
+    )]
+    use super::*;
+    use ::parse_that::*;
+    pub const GRAMMAR_EbnfParser: [&'static str; 1usize] = [
+        include_str!("/Users/mkbabb/Programming/bbnf-wt-b2-w1/grammar/ebnf/ebnf.bbnf"),
+    ];
+    static __GRAMMAR_PROFILE_ALPHABET: [u8; 89usize] = [
+        8, 9, 10, 12, 13, 32, 34, 39, 40, 41, 42, 43, 44, 45, 46, 48, 49, 50, 51, 52, 53,
+        54, 55, 56, 57, 59, 60, 61, 62, 63, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75,
+        76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 95, 97,
+        98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113,
+        114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125,
+    ];
+    /// Per-grammar codegen fingerprint — consolidated static
+    /// profile emitted by Tranche AV Phase 1. Every downstream
+    /// consumer (tape capacity, scanner dispatch) reads the
+    /// matching field.
+    pub const GRAMMAR_PROFILE: ::bbnf::runtime::tape::GrammarProfile = ::bbnf::runtime::tape::GrammarProfile {
+        compounds_per_input_byte: 0.5f32,
+        leaves_per_input_byte: 0f32,
+        parallel_break_even_bytes: 1048576u32,
+        structural_alphabet: &__GRAMMAR_PROFILE_ALPHABET,
+        structural_digraphs: &[],
+        structural_digraph_mask: [0, 0, 0, 0],
+        structural_quote_classes: &[],
+    };
+    /// AW-III.W6.2 — PHF keyword table.
+    ///
+    /// Mined literal-led Alt branches, sorted lexicographically.
+    /// Binary search dispatches in O(log N) compares; LLVM lowers
+    /// the fixed-size table to a balanced compare tree.
+    static __PHF_EbnfParser_0_KW: [&[u8]; 52usize] = [
+        b"A",
+        b"B",
+        b"C",
+        b"D",
+        b"E",
+        b"F",
+        b"G",
+        b"H",
+        b"I",
+        b"J",
+        b"K",
+        b"L",
+        b"M",
+        b"N",
+        b"O",
+        b"P",
+        b"Q",
+        b"R",
+        b"S",
+        b"T",
+        b"U",
+        b"V",
+        b"W",
+        b"X",
+        b"Y",
+        b"Z",
+        b"a",
+        b"b",
+        b"c",
+        b"d",
+        b"e",
+        b"f",
+        b"g",
+        b"h",
+        b"i",
+        b"j",
+        b"k",
+        b"l",
+        b"m",
+        b"n",
+        b"o",
+        b"p",
+        b"q",
+        b"r",
+        b"s",
+        b"t",
+        b"u",
+        b"v",
+        b"w",
+        b"x",
+        b"y",
+        b"z",
+    ];
+    /// Per-entry branch discriminant — parallel to [`#kw_ident`].
+    /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
+    /// branch with discriminant `#idx_ident[i]`.
+    static __PHF_EbnfParser_0_IDX: [u8; 52usize] = [
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+        23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42,
+        43, 44, 45, 46, 47, 48, 49, 50, 51,
+    ];
+    /// AW-III.W6.2 — dispatch the mined keyword table for rule
+    /// `#rule_id`.
+    ///
+    /// Returns `Some(branch_idx)` when `bytes` matches a mined
+    /// keyword, `None` otherwise. Called from the walker's
+    /// AltLinear / ClassifyByte arm to short-circuit the branch
+    /// scan to a single binary search.
+    #[allow(dead_code)]
+    #[inline]
+    fn __phf_EbnfParser_dispatch_0(bytes: &[u8]) -> ::core::option::Option<u8> {
+        match __PHF_EbnfParser_0_KW.binary_search(&bytes) {
+            ::core::result::Result::Ok(idx) => {
+                ::core::option::Option::Some(__PHF_EbnfParser_0_IDX[idx])
+            }
+            ::core::result::Result::Err(_) => ::core::option::Option::None,
+        }
+    }
+    /// AW-III.W6.2 — PHF keyword table.
+    ///
+    /// Mined literal-led Alt branches, sorted lexicographically.
+    /// Binary search dispatches in O(log N) compares; LLVM lowers
+    /// the fixed-size table to a balanced compare tree.
+    static __PHF_EbnfParser_1_KW: [&[u8]; 10usize] = [
+        b"0",
+        b"1",
+        b"2",
+        b"3",
+        b"4",
+        b"5",
+        b"6",
+        b"7",
+        b"8",
+        b"9",
+    ];
+    /// Per-entry branch discriminant — parallel to [`#kw_ident`].
+    /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
+    /// branch with discriminant `#idx_ident[i]`.
+    static __PHF_EbnfParser_1_IDX: [u8; 10usize] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    /// AW-III.W6.2 — dispatch the mined keyword table for rule
+    /// `#rule_id`.
+    ///
+    /// Returns `Some(branch_idx)` when `bytes` matches a mined
+    /// keyword, `None` otherwise. Called from the walker's
+    /// AltLinear / ClassifyByte arm to short-circuit the branch
+    /// scan to a single binary search.
+    #[allow(dead_code)]
+    #[inline]
+    fn __phf_EbnfParser_dispatch_1(bytes: &[u8]) -> ::core::option::Option<u8> {
+        match __PHF_EbnfParser_1_KW.binary_search(&bytes) {
+            ::core::result::Result::Ok(idx) => {
+                ::core::option::Option::Some(__PHF_EbnfParser_1_IDX[idx])
+            }
+            ::core::result::Result::Err(_) => ::core::option::Option::None,
+        }
+    }
+    /// AW-III.W6.2 — PHF keyword table.
+    ///
+    /// Mined literal-led Alt branches, sorted lexicographically.
+    /// Binary search dispatches in O(log N) compares; LLVM lowers
+    /// the fixed-size table to a balanced compare tree.
+    static __PHF_EbnfParser_2_KW: [&[u8]; 25usize] = [
+        b"\x08",
+        b"\t",
+        b"\n",
+        b"\x0C",
+        b"\r",
+        b"\"",
+        b"'",
+        b"(",
+        b")",
+        b"*",
+        b"+",
+        b",",
+        b"-",
+        b".",
+        b";",
+        b"<",
+        b"=",
+        b">",
+        b"?",
+        b"[",
+        b"\\",
+        b"]",
+        b"{",
+        b"|",
+        b"}",
+    ];
+    /// Per-entry branch discriminant — parallel to [`#kw_ident`].
+    /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
+    /// branch with discriminant `#idx_ident[i]`.
+    static __PHF_EbnfParser_2_IDX: [u8; 25usize] = [
+        23, 20, 19, 22, 21, 9, 8, 4, 5, 17, 16, 13, 15, 12, 14, 6, 10, 7, 18, 0, 24, 1,
+        2, 11, 3,
+    ];
+    /// AW-III.W6.2 — dispatch the mined keyword table for rule
+    /// `#rule_id`.
+    ///
+    /// Returns `Some(branch_idx)` when `bytes` matches a mined
+    /// keyword, `None` otherwise. Called from the walker's
+    /// AltLinear / ClassifyByte arm to short-circuit the branch
+    /// scan to a single binary search.
+    #[allow(dead_code)]
+    #[inline]
+    fn __phf_EbnfParser_dispatch_2(bytes: &[u8]) -> ::core::option::Option<u8> {
+        match __PHF_EbnfParser_2_KW.binary_search(&bytes) {
+            ::core::result::Result::Ok(idx) => {
+                ::core::option::Option::Some(__PHF_EbnfParser_2_IDX[idx])
+            }
+            ::core::result::Result::Err(_) => ::core::option::Option::None,
+        }
+    }
+    /// AW-III.W6.2 — PHF keyword table.
+    ///
+    /// Mined literal-led Alt branches, sorted lexicographically.
+    /// Binary search dispatches in O(log N) compares; LLVM lowers
+    /// the fixed-size table to a balanced compare tree.
+    static __PHF_EbnfParser_6_KW: [&[u8]; 3usize] = [b"(", b"[", b"{"];
+    /// Per-entry branch discriminant — parallel to [`#kw_ident`].
+    /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
+    /// branch with discriminant `#idx_ident[i]`.
+    static __PHF_EbnfParser_6_IDX: [u8; 3usize] = [0, 1, 2];
+    /// AW-III.W6.2 — dispatch the mined keyword table for rule
+    /// `#rule_id`.
+    ///
+    /// Returns `Some(branch_idx)` when `bytes` matches a mined
+    /// keyword, `None` otherwise. Called from the walker's
+    /// AltLinear / ClassifyByte arm to short-circuit the branch
+    /// scan to a single binary search.
+    #[allow(dead_code)]
+    #[inline]
+    fn __phf_EbnfParser_dispatch_6(bytes: &[u8]) -> ::core::option::Option<u8> {
+        match __PHF_EbnfParser_6_KW.binary_search(&bytes) {
+            ::core::result::Result::Ok(idx) => {
+                ::core::option::Option::Some(__PHF_EbnfParser_6_IDX[idx])
+            }
+            ::core::result::Result::Err(_) => ::core::option::Option::None,
+        }
+    }
+    /// AW-III.W6.5 — aggregate dense Pratt precedence LUT.
+    ///
+    /// Union of every Pratt rule's packed LUT (last-write-wins
+    /// per byte). Consulted by the walker cold-path's
+    /// `ShuntingYard` arm until W0b retires the walker. See
+    /// `bbnf::backend::rust::emitter::precedence` for the bit
+    /// layout.
+    pub const PRECEDENCE_LUT: [u8; 256] = [
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+    ];
+    /// AW-III.W6.5 — aggregate sparse Pratt metadata slice.
+    ///
+    /// Flat union of every rule's mined operator entries.
+    /// Consulted by the walker cold-path until W0b retires it.
+    pub const PRECEDENCE_ENTRIES: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[];
+    /// AW-III.W6.5 — total mined operator count for this
+    /// grammar. Non-zero iff the lift admitted ≥ 1 chain OR the
+    /// shape classifier admitted ≥ 1 single-rung Pratt rule.
+    pub const PRECEDENCE_OPERATOR_COUNT: usize = 0usize;
+    static __DTA_REGEX_125: &str = "[ \\t\\n\\r\\f]*";
+    #[inline]
+    #[cold]
+    fn __regex_scan_EbnfParser(
+        pattern: &str,
+        input: &[u8],
+        pos: usize,
+    ) -> ::core::option::Option<u32> {
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_125.as_ptr())
+            || pattern == __DTA_REGEX_125
+        {
+            return '__dfa: {
+                let mut __dfa_state: u32 = 0;
+                let mut __dfa_p: usize = pos;
+                let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::Some(
+                    pos as u32,
+                );
+                loop {
+                    let b = match input.get(__dfa_p) {
+                        ::core::option::Option::Some(&b) => b,
+                        ::core::option::Option::None => break,
+                    };
+                    match __dfa_state {
+                        0 => {
+                            match b {
+                                9 | 10 | 12 | 13 | 32 => __dfa_state = 0,
+                                _ => break,
+                            }
+                        }
+                        _ => unsafe { ::core::hint::unreachable_unchecked() }
+                    }
+                    __dfa_p += 1;
+                    match __dfa_state {
+                        0 => {
+                            __dfa_last_match = ::core::option::Option::Some(
+                                __dfa_p as u32,
+                            );
+                        }
+                        _ => {}
+                    }
+                }
+                break '__dfa __dfa_last_match.map(|end| end - pos as u32);
+            };
+        }
+        ::core::option::Option::None
+    }
+    /// AW-V.W3.2 — per-grammar shape-dispatch support.
+    ///
+    /// Inlined by every `parse_<shape>_<grammar>_<rule>` emitted
+    /// sibling; carries the SIMD whitespace bitmap cache + the
+    /// quoted-string scanner primitive. The module is private to
+    /// the generated code — downstream consumers route through the
+    /// top-level `parse_<grammar>_<root>` which inlines every
+    /// helper under workspace LTO.
+    #[allow(dead_code, non_snake_case)]
+    pub(crate) mod __shape_support_EbnfParser {
+        /// Per-parse SIMD scratch — 64-byte whitespace-bitmap
+        /// cache mirroring `json-prototype::simd::ScanState`.
+        ///
+        /// AY.W4.3 — for grammars whose `structural_alphabet` is
+        /// non-empty, ScanState additionally carries a lazy
+        /// `OnceCell<StructuralIndex>` consumed by CTNS-style
+        /// probes. Lazy-init keeps the O(N) scan cost amortised
+        /// rather than paid eagerly at parse entry — see
+        /// `AYW1-twitter-regression-diag` for the eager-init
+        /// regression that motivates the OnceCell discipline.
+        #[derive(Debug, Default)]
+        pub struct ScanState {
+            pub(crate) nospace_bits: u64,
+            pub(crate) nospace_start: isize,
+            /// AY.W4.3 — lazy structural-byte index. Populated on
+            /// first consumer query via `ensure_structural_index`;
+            /// `OnceCell` discipline keeps the O(N) scan cost
+            /// amortised across the parse rather than paid eagerly
+            /// at parse-entry (AY.W1-fix demonstrated eager scans
+            /// regress JSON twitter -64%).
+            pub(crate) structural_index: ::core::cell::OnceCell<
+                ::bbnf::runtime::tape::StructuralIndex,
+            >,
+        }
+        impl ScanState {
+            #[inline]
+            pub fn new() -> Self {
+                Self {
+                    nospace_bits: 0,
+                    nospace_start: -1,
+                    structural_index: ::core::cell::OnceCell::new(),
+                }
+            }
+        }
+        /// AY.W4.3 — lazy-init the per-parse structural index
+        /// against the grammar's mined `structural_alphabet`.
+        /// Idempotent; consumers may call freely.
+        #[inline]
+        pub(crate) fn ensure_structural_index<'a>(
+            state: &'a mut ScanState,
+            input: &[u8],
+        ) -> &'a ::bbnf::runtime::tape::StructuralIndex {
+            state
+                .structural_index
+                .get_or_init(|| {
+                    ::bbnf::runtime::tape::scan_structural(
+                        input,
+                        super::GRAMMAR_PROFILE.structural_alphabet,
+                    )
+                })
+        }
+        /// Skip JSON whitespace at `*p`, returning the first
+        /// non-whitespace byte (or `None` on EOF). Hot-path fast-
+        /// exit when the next byte is non-whitespace.
+        #[inline(always)]
+        pub fn skip_space(
+            input: &[u8],
+            p: &mut usize,
+            state: &mut ScanState,
+        ) -> Option<u8> {
+            match input.get(*p) {
+                Some(&b) if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' => {
+                    Some(b)
+                }
+                None => None,
+                _ => {
+                    skip_space_slow(input, p, state);
+                    input.get(*p).copied()
+                }
+            }
+        }
+        #[inline(always)]
+        pub(crate) fn skip_space_slow(
+            input: &[u8],
+            p: &mut usize,
+            state: &mut ScanState,
+        ) {
+            loop {
+                let cache_base = state.nospace_start;
+                if cache_base >= 0 && (*p as isize) >= cache_base {
+                    let rel = *p - cache_base as usize;
+                    if rel < 64 {
+                        let masked = state.nospace_bits & (!0u64 << rel);
+                        if masked != 0 {
+                            let bit = masked.trailing_zeros() as usize;
+                            *p = cache_base as usize + bit;
+                            return;
+                        }
+                        *p = cache_base as usize + 64;
+                    }
+                }
+                if *p + 64 > input.len() {
+                    while let Some(&b) = input.get(*p) {
+                        if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
+                            return;
+                        }
+                        *p += 1;
+                    }
+                    return;
+                }
+                let stripe = unsafe {
+                    ::core::slice::from_raw_parts(input.as_ptr().add(*p), 64)
+                };
+                let mask = nospace_bitmap_64(stripe);
+                state.nospace_bits = mask;
+                state.nospace_start = *p as isize;
+                if mask != 0 {
+                    let bit = mask.trailing_zeros() as usize;
+                    *p += bit;
+                    return;
+                }
+                *p += 64;
+            }
+        }
+        /// Compute the 64-bit "non-whitespace" bitmap for a 64-byte
+        /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT in
+        /// `{b' ', b'\t', b'\n', b'\r'}`.
+        #[inline(always)]
+        pub(crate) fn nospace_bitmap_64(stripe: &[u8]) -> u64 {
+            #[cfg(target_arch = "aarch64")]
+            unsafe {
+                return nospace_bitmap_64_neon(stripe);
+            }
+            #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+            unsafe {
+                return nospace_bitmap_64_avx2(stripe);
+            }
+            #[allow(unreachable_code)] nospace_bitmap_64_scalar(stripe)
+        }
+        #[cfg(target_arch = "aarch64")]
+        #[inline(always)]
+        unsafe fn nospace_bitmap_64_neon(stripe: &[u8]) -> u64 {
+            use core::arch::aarch64::*;
+            unsafe {
+                let ptr = stripe.as_ptr();
+                let space = vdupq_n_u8(b' ');
+                let tab = vdupq_n_u8(b'\t');
+                let nl = vdupq_n_u8(b'\n');
+                let cr = vdupq_n_u8(b'\r');
+                let bits_lo: [u8; 16] = [
+                    1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128,
+                ];
+                let bit_vec = vld1q_u8(bits_lo.as_ptr());
+                let m0 = chunk_ns_mask16(ptr, 0, space, tab, nl, cr, bit_vec);
+                let m1 = chunk_ns_mask16(ptr, 16, space, tab, nl, cr, bit_vec);
+                let m2 = chunk_ns_mask16(ptr, 32, space, tab, nl, cr, bit_vec);
+                let m3 = chunk_ns_mask16(ptr, 48, space, tab, nl, cr, bit_vec);
+                (m0 as u64) | ((m1 as u64) << 16) | ((m2 as u64) << 32)
+                    | ((m3 as u64) << 48)
+            }
+        }
+        #[cfg(target_arch = "aarch64")]
+        #[inline(always)]
+        unsafe fn chunk_ns_mask16(
+            ptr: *const u8,
+            off: usize,
+            space: core::arch::aarch64::uint8x16_t,
+            tab: core::arch::aarch64::uint8x16_t,
+            nl: core::arch::aarch64::uint8x16_t,
+            cr: core::arch::aarch64::uint8x16_t,
+            bit_vec: core::arch::aarch64::uint8x16_t,
+        ) -> u16 {
+            use core::arch::aarch64::*;
+            unsafe {
+                let chunk = vld1q_u8(ptr.add(off));
+                let ws = vorrq_u8(
+                    vorrq_u8(vceqq_u8(chunk, space), vceqq_u8(chunk, tab)),
+                    vorrq_u8(vceqq_u8(chunk, nl), vceqq_u8(chunk, cr)),
+                );
+                let ns = vmvnq_u8(ws);
+                let weighted = vandq_u8(ns, bit_vec);
+                let low = vaddv_u8(vget_low_u8(weighted)) as u16;
+                let high = vaddv_u8(vget_high_u8(weighted)) as u16;
+                low | (high << 8)
+            }
+        }
+        #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+        #[inline(always)]
+        unsafe fn nospace_bitmap_64_avx2(stripe: &[u8]) -> u64 {
+            use core::arch::x86_64::*;
+            unsafe {
+                let ptr = stripe.as_ptr();
+                let space = _mm256_set1_epi8(b' ' as i8);
+                let tab = _mm256_set1_epi8(b'\t' as i8);
+                let nl = _mm256_set1_epi8(b'\n' as i8);
+                let cr = _mm256_set1_epi8(b'\r' as i8);
+                let mut out = 0u64;
+                for i in 0..2 {
+                    let v = _mm256_loadu_si256(ptr.add(i * 32) as *const __m256i);
+                    let ws = _mm256_or_si256(
+                        _mm256_or_si256(
+                            _mm256_cmpeq_epi8(v, space),
+                            _mm256_cmpeq_epi8(v, tab),
+                        ),
+                        _mm256_or_si256(
+                            _mm256_cmpeq_epi8(v, nl),
+                            _mm256_cmpeq_epi8(v, cr),
+                        ),
+                    );
+                    let ws_mask = _mm256_movemask_epi8(ws) as u32;
+                    let ns_mask = !ws_mask as u64;
+                    out |= (ns_mask & 0xFFFF_FFFF) << (i * 32);
+                }
+                out
+            }
+        }
+        #[inline(always)]
+        pub(crate) fn nospace_bitmap_64_scalar(stripe: &[u8]) -> u64 {
+            let mut out = 0u64;
+            for (i, &b) in stripe.iter().enumerate() {
+                if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
+                    out |= 1u64 << i;
+                }
+            }
+            out
+        }
+        /// Find the first `b'"'` or `b'\\'` byte in `bytes`.
+        /// Mirrors `json-prototype::simd::first_quote_or_backslash`.
+        #[inline(always)]
+        pub fn first_quote_or_backslash(bytes: &[u8]) -> Option<(usize, u8)> {
+            #[cfg(target_arch = "aarch64")]
+            unsafe {
+                return first_quote_or_backslash_neon(bytes);
+            }
+            #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+            unsafe {
+                return first_quote_or_backslash_avx2(bytes);
+            }
+            #[allow(unreachable_code)] first_quote_or_backslash_scalar(bytes)
+        }
+        #[cfg(target_arch = "aarch64")]
+        #[inline(always)]
+        unsafe fn first_quote_or_backslash_neon(bytes: &[u8]) -> Option<(usize, u8)> {
+            use core::arch::aarch64::*;
+            unsafe {
+                let quote = vdupq_n_u8(b'"');
+                let backslash = vdupq_n_u8(b'\\');
+                let ptr = bytes.as_ptr();
+                let len = bytes.len();
+                let mut i = 0usize;
+                while i + 16 <= len {
+                    let v = vld1q_u8(ptr.add(i));
+                    let hit = vorrq_u8(vceqq_u8(v, quote), vceqq_u8(v, backslash));
+                    let packed = vshrn_n_u16::<4>(vreinterpretq_u16_u8(hit));
+                    let bits = vget_lane_u64::<0>(vreinterpret_u64_u8(packed));
+                    if bits != 0 {
+                        let off = (bits.trailing_zeros() >> 2) as usize;
+                        let byte = *ptr.add(i + off);
+                        return Some((i + off, byte));
+                    }
+                    i += 16;
+                }
+                while i < len {
+                    let b = *ptr.add(i);
+                    if b == b'"' || b == b'\\' {
+                        return Some((i, b));
+                    }
+                    i += 1;
+                }
+                None
+            }
+        }
+        #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+        #[inline(always)]
+        unsafe fn first_quote_or_backslash_avx2(bytes: &[u8]) -> Option<(usize, u8)> {
+            use core::arch::x86_64::*;
+            unsafe {
+                let quote = _mm256_set1_epi8(b'"' as i8);
+                let backslash = _mm256_set1_epi8(b'\\' as i8);
+                let ptr = bytes.as_ptr();
+                let len = bytes.len();
+                let mut i = 0usize;
+                while i + 32 <= len {
+                    let v = _mm256_loadu_si256(ptr.add(i) as *const __m256i);
+                    let hit = _mm256_or_si256(
+                        _mm256_cmpeq_epi8(v, quote),
+                        _mm256_cmpeq_epi8(v, backslash),
+                    );
+                    let mask = _mm256_movemask_epi8(hit) as u32;
+                    if mask != 0 {
+                        let off = mask.trailing_zeros() as usize;
+                        return Some((i + off, *ptr.add(i + off)));
+                    }
+                    i += 32;
+                }
+                while i < len {
+                    let b = *ptr.add(i);
+                    if b == b'"' || b == b'\\' {
+                        return Some((i, b));
+                    }
+                    i += 1;
+                }
+                None
+            }
+        }
+        #[inline(always)]
+        pub(crate) fn first_quote_or_backslash_scalar(
+            bytes: &[u8],
+        ) -> Option<(usize, u8)> {
+            for (i, &b) in bytes.iter().enumerate() {
+                if b == b'"' || b == b'\\' {
+                    return Some((i, b));
+                }
+            }
+            None
+        }
+        /// Map a byte into one of six arms: object `{` → 0,
+        /// array `[` → 1, string `"` → 2, digit/`-` (number) → 3,
+        /// keyword-led `t` / `f` / `n` → 4, else → 5.
+        ///
+        /// The emitter's dispatcher inlines this to compile-time
+        /// byte matches; kept here as a reference helper for tests.
+        #[inline(always)]
+        pub(crate) fn shape_byte_arm(b: u8) -> u8 {
+            match b {
+                b'{' => 0,
+                b'[' => 1,
+                b'"' => 2,
+                b'-' | b'0'..=b'9' => 3,
+                b't' | b'f' | b'n' => 4,
+                _ => 5,
+            }
+        }
+        /// Expect an exact keyword sequence at `*p` and advance
+        /// past it on match.
+        #[inline(always)]
+        pub fn expect_keyword(input: &[u8], p: &mut usize, word: &[u8]) -> bool {
+            let at = *p;
+            let end = at + word.len();
+            if input.len() < end || &input[at..end] != word {
+                return false;
+            }
+            *p = end;
+            true
+        }
+    }
+    /// AX.W0a.2.b — per-grammar AltDispatch-shape parse function.
+    ///
+    /// Generalized byte-dispatch over `Alt(leaf, leaf, …)` bodies.
+    /// Each branch is a classified-Ref, a Literal, a Regex, or a
+    /// leaf-only Seq (prefix-tree factoring). No recursion through
+    /// `__value` — per-Ref routing emits direct shape-fn calls.
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut,
+        unused_assignments,
+        unreachable_code
+    )]
+    pub fn parse_altdispatch_EbnfParser_letter(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<
+        ::bbnf::runtime::tape::TapeOffset,
+        ::bbnf::runtime::tape::DtaError,
+    > {
+        let first = __shape_support_EbnfParser::skip_space(input, p, state)
+            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                offset: *p as u32,
+            })?;
+        let alt_lo = *p as u32;
+        let alt_child = builder.columns_mut().len() as u32;
+        let _ = alt_child;
+        let save_p = *p;
+        let save_child = builder.columns_mut().len() as u32;
+        let _ = save_p;
+        let _ = save_child;
+        'try_branches: loop {
+            match first {
+                65u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [65u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                66u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [66u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                67u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [67u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                68u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [68u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                69u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [69u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                70u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [70u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                71u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [71u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                72u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [72u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                73u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [73u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                74u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [74u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                75u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [75u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                76u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [76u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                77u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [77u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                78u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [78u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                79u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [79u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                80u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [80u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                81u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [81u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                82u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [82u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                83u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [83u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                84u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [84u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                85u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [85u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                86u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [86u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                87u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [87u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                88u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [88u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                89u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [89u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                90u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [90u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                97u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [97u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                98u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [98u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                99u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [99u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                100u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [100u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                101u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [101u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                102u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [102u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                103u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [103u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                104u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [104u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                105u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [105u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                106u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [106u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                107u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [107u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                108u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [108u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                109u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [109u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                110u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [110u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                111u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [111u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                112u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [112u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                113u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [113u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                114u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [114u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                115u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [115u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                116u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [116u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                117u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [117u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                118u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [118u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                119u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [119u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                120u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [120u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                121u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [121u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                122u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [122u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                _ => {}
+            }
+            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            });
+        }
+        let alt_hi = *p as u32;
+        let off = builder
+            .begin_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                alt_lo,
+                0u8,
+                0u8,
+                0u8,
+                0u16,
+            );
+        builder
+            .end_compound_post_order(
+                off,
+                alt_hi,
+                ::bbnf::runtime::tape::TapeOffset(alt_child),
+            );
+        Ok(::bbnf::runtime::tape::TapeOffset(off))
+    }
+    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
+    /// (Alt of literal-led or Ref-led branches).
+    ///
+    /// AX.W0a.2.g — admits Ref-led branches whose target
+    /// resolves to a literal-prefix body (per `leading_
+    /// literal_bytes`). For each first-byte group, each
+    /// candidate's full prefix is checked before committing:
+    /// Literal branches emit the legacy leaf push;
+    /// Ref branches delegate to the target's shape fn via
+    /// [`emit_ref_call_tape`], threading `state` through.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_keyword_EbnfParser_digit(
+        input: &[u8],
+        p: &mut usize,
+        first_byte: u8,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<
+        ::bbnf::runtime::tape::TapeOffset,
+        ::bbnf::runtime::tape::DtaError,
+    > {
+        let _ = state;
+        match first_byte {
+            48u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [48u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder
+                        .push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            at as u32,
+                            end as u32,
+                            1u8,
+                            0u8,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            49u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [49u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder
+                        .push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            at as u32,
+                            end as u32,
+                            1u8,
+                            0u8,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            50u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [50u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder
+                        .push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            at as u32,
+                            end as u32,
+                            1u8,
+                            0u8,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            51u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [51u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder
+                        .push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            at as u32,
+                            end as u32,
+                            1u8,
+                            0u8,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            52u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [52u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder
+                        .push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            at as u32,
+                            end as u32,
+                            1u8,
+                            0u8,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            53u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [53u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder
+                        .push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            at as u32,
+                            end as u32,
+                            1u8,
+                            0u8,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            54u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [54u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder
+                        .push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            at as u32,
+                            end as u32,
+                            1u8,
+                            0u8,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            55u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [55u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder
+                        .push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            at as u32,
+                            end as u32,
+                            1u8,
+                            0u8,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            56u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [56u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder
+                        .push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            at as u32,
+                            end as u32,
+                            1u8,
+                            0u8,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            57u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [57u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    let off = builder
+                        .push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            at as u32,
+                            end as u32,
+                            1u8,
+                            0u8,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            _ => {
+                Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                })
+            }
+        }
+    }
+    /// AX.W0a.2.b — per-grammar AltDispatch-shape parse function.
+    ///
+    /// Generalized byte-dispatch over `Alt(leaf, leaf, …)` bodies.
+    /// Each branch is a classified-Ref, a Literal, a Regex, or a
+    /// leaf-only Seq (prefix-tree factoring). No recursion through
+    /// `__value` — per-Ref routing emits direct shape-fn calls.
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut,
+        unused_assignments,
+        unreachable_code
+    )]
+    pub fn parse_altdispatch_EbnfParser_symbol(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<
+        ::bbnf::runtime::tape::TapeOffset,
+        ::bbnf::runtime::tape::DtaError,
+    > {
+        let first = __shape_support_EbnfParser::skip_space(input, p, state)
+            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                offset: *p as u32,
+            })?;
+        let alt_lo = *p as u32;
+        let alt_child = builder.columns_mut().len() as u32;
+        let _ = alt_child;
+        let save_p = *p;
+        let save_child = builder.columns_mut().len() as u32;
+        let _ = save_p;
+        let _ = save_child;
+        'try_branches: loop {
+            match first {
+                8u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [8u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                9u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [9u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                10u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [10u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                12u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [12u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                13u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [13u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                34u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [34u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                39u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [39u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                40u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [40u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                41u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [41u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                42u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [42u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                43u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [43u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                44u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [44u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                45u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [45u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                46u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [46u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                59u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [59u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                60u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [60u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                61u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [61u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                62u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [62u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                63u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [63u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                91u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [91u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                92u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [92u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                93u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [93u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                123u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [123u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                124u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [124u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                125u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [125u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                _ => {}
+            }
+            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            });
+        }
+        let alt_hi = *p as u32;
+        let off = builder
+            .begin_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                alt_lo,
+                2u8,
+                0u8,
+                0u8,
+                0u16,
+            );
+        builder
+            .end_compound_post_order(
+                off,
+                alt_hi,
+                ::bbnf::runtime::tape::TapeOffset(alt_child),
+            );
+        Ok(::bbnf::runtime::tape::TapeOffset(off))
+    }
+    /// AX.W0a.2.b — per-grammar AltDispatch-shape parse function.
+    ///
+    /// Generalized byte-dispatch over `Alt(leaf, leaf, …)` bodies.
+    /// Each branch is a classified-Ref, a Literal, a Regex, or a
+    /// leaf-only Seq (prefix-tree factoring). No recursion through
+    /// `__value` — per-Ref routing emits direct shape-fn calls.
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut,
+        unused_assignments,
+        unreachable_code
+    )]
+    pub fn parse_altdispatch_EbnfParser_character(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<
+        ::bbnf::runtime::tape::TapeOffset,
+        ::bbnf::runtime::tape::DtaError,
+    > {
+        let first = __shape_support_EbnfParser::skip_space(input, p, state)
+            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                offset: *p as u32,
+            })?;
+        let alt_lo = *p as u32;
+        let alt_child = builder.columns_mut().len() as u32;
+        let _ = alt_child;
+        let save_p = *p;
+        let save_child = builder.columns_mut().len() as u32;
+        let _ = save_p;
+        let _ = save_child;
+        'try_branches: loop {
+            match first {
+                32u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [32u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                48u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                49u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                50u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                51u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                52u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                53u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                54u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                55u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                56u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                57u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                95u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [95u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                _ => {}
+            }
+            {
+                let attempt_p = *p;
+                match { parse_altdispatch_EbnfParser_symbol(input, p, state, builder) } {
+                    Ok(_) => break 'try_branches,
+                    Err(_) => {
+                        *p = attempt_p;
+                    }
+                }
+            }
+            {
+                let attempt_p = *p;
+                match {
+                    let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                    parse_altdispatch_EbnfParser_letter(input, p, state, builder)
+                } {
+                    Ok(_) => break 'try_branches,
+                    Err(_) => {
+                        *p = attempt_p;
+                    }
+                }
+            }
+            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            });
+        }
+        let alt_hi = *p as u32;
+        let off = builder
+            .begin_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                alt_lo,
+                3u8,
+                0u8,
+                0u8,
+                0u16,
+            );
+        builder
+            .end_compound_post_order(
+                off,
+                alt_hi,
+                ::bbnf::runtime::tape::TapeOffset(alt_child),
+            );
+        Ok(::bbnf::runtime::tape::TapeOffset(off))
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_EbnfParser_identifier(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<
+        ::bbnf::runtime::tape::TapeOffset,
+        ::bbnf::runtime::tape::DtaError,
+    > {
+        let span_lo = *p as u32;
+        let outer_child = builder.columns_mut().len() as u32;
+        {
+            let _ = ({
+                let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                parse_altdispatch_EbnfParser_letter(input, p, state, builder)
+            })?;
+        }
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.columns_mut().len() as u32;
+            let mut iter_count: u32 = 0;
+            loop {
+                let save_p = *p;
+                let save_cols = builder.columns_mut().len() as u32;
+                let iter_lo = *p as u32;
+                let iter_child = builder.columns_mut().len() as u32;
+                let attempt = (|| -> ::core::result::Result<
+                    (),
+                    ::bbnf::runtime::tape::DtaError,
+                > {
+                    {
+                        let first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        'try_branches: loop {
+                            match first {
+                                48u8 => {
+                                    let attempt_p = *p;
+                                    let attempt_len = builder.columns_mut().len() as u32;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                                offset: *p as u32,
+                                            })?;
+                                        parse_keyword_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            builder,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                            builder.columns_mut().rollback_to(attempt_len);
+                                        }
+                                    }
+                                }
+                                49u8 => {
+                                    let attempt_p = *p;
+                                    let attempt_len = builder.columns_mut().len() as u32;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                                offset: *p as u32,
+                                            })?;
+                                        parse_keyword_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            builder,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                            builder.columns_mut().rollback_to(attempt_len);
+                                        }
+                                    }
+                                }
+                                50u8 => {
+                                    let attempt_p = *p;
+                                    let attempt_len = builder.columns_mut().len() as u32;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                                offset: *p as u32,
+                                            })?;
+                                        parse_keyword_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            builder,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                            builder.columns_mut().rollback_to(attempt_len);
+                                        }
+                                    }
+                                }
+                                51u8 => {
+                                    let attempt_p = *p;
+                                    let attempt_len = builder.columns_mut().len() as u32;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                                offset: *p as u32,
+                                            })?;
+                                        parse_keyword_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            builder,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                            builder.columns_mut().rollback_to(attempt_len);
+                                        }
+                                    }
+                                }
+                                52u8 => {
+                                    let attempt_p = *p;
+                                    let attempt_len = builder.columns_mut().len() as u32;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                                offset: *p as u32,
+                                            })?;
+                                        parse_keyword_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            builder,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                            builder.columns_mut().rollback_to(attempt_len);
+                                        }
+                                    }
+                                }
+                                53u8 => {
+                                    let attempt_p = *p;
+                                    let attempt_len = builder.columns_mut().len() as u32;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                                offset: *p as u32,
+                                            })?;
+                                        parse_keyword_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            builder,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                            builder.columns_mut().rollback_to(attempt_len);
+                                        }
+                                    }
+                                }
+                                54u8 => {
+                                    let attempt_p = *p;
+                                    let attempt_len = builder.columns_mut().len() as u32;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                                offset: *p as u32,
+                                            })?;
+                                        parse_keyword_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            builder,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                            builder.columns_mut().rollback_to(attempt_len);
+                                        }
+                                    }
+                                }
+                                55u8 => {
+                                    let attempt_p = *p;
+                                    let attempt_len = builder.columns_mut().len() as u32;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                                offset: *p as u32,
+                                            })?;
+                                        parse_keyword_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            builder,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                            builder.columns_mut().rollback_to(attempt_len);
+                                        }
+                                    }
+                                }
+                                56u8 => {
+                                    let attempt_p = *p;
+                                    let attempt_len = builder.columns_mut().len() as u32;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                                offset: *p as u32,
+                                            })?;
+                                        parse_keyword_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            builder,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                            builder.columns_mut().rollback_to(attempt_len);
+                                        }
+                                    }
+                                }
+                                57u8 => {
+                                    let attempt_p = *p;
+                                    let attempt_len = builder.columns_mut().len() as u32;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                                offset: *p as u32,
+                                            })?;
+                                        parse_keyword_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            builder,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                            builder.columns_mut().rollback_to(attempt_len);
+                                        }
+                                    }
+                                }
+                                95u8 => {
+                                    let at = *p;
+                                    let end = at + 1usize;
+                                    if input.len() >= end && input[at..end] == [95u8] {
+                                        *p = end;
+                                        let _ = builder
+                                            .push_leaf(
+                                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                                at as u32,
+                                                end as u32,
+                                                0,
+                                                0,
+                                            );
+                                        break 'try_branches;
+                                    }
+                                }
+                                _ => {}
+                            }
+                            {
+                                let attempt_p = *p;
+                                let attempt_len = builder.columns_mut().len() as u32;
+                                match {
+                                    let _ = __shape_support_EbnfParser::skip_space(
+                                        input,
+                                        p,
+                                        state,
+                                    );
+                                    parse_altdispatch_EbnfParser_letter(
+                                        input,
+                                        p,
+                                        state,
+                                        builder,
+                                    )
+                                } {
+                                    Ok(_) => break 'try_branches,
+                                    Err(_) => {
+                                        *p = attempt_p;
+                                        builder.columns_mut().rollback_to(attempt_len);
+                                    }
+                                }
+                            }
+                            return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: *p as u32,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            });
+                        }
+                    }
+                    Ok(())
+                })();
+                if attempt.is_err() {
+                    *p = save_p;
+                    builder.columns_mut().rollback_to(save_cols);
+                    break;
+                }
+                if *p == save_p {
+                    builder.columns_mut().rollback_to(save_cols);
+                    break;
+                }
+                let iter_hi = *p as u32;
+                let __iter_off = builder
+                    .begin_compound(
+                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        iter_lo,
+                        0u8,
+                        0u8,
+                        0u8,
+                        0u16,
+                    );
+                builder
+                    .end_compound_post_order(
+                        __iter_off,
+                        iter_hi,
+                        ::bbnf::runtime::tape::TapeOffset(iter_child),
+                    );
+                iter_count = iter_count.saturating_add(1);
+            }
+            if iter_count < (0usize as u32) {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            let repeat_hi = *p as u32;
+            let __repeat_off = builder
+                .begin_compound(
+                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                    repeat_lo,
+                    0u8,
+                    0u8,
+                    0u8,
+                    0u16,
+                );
+            builder
+                .end_compound_post_order(
+                    __repeat_off,
+                    repeat_hi,
+                    ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                );
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder
+            .begin_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                span_lo,
+                4u8,
+                0u8,
+                0u8,
+                0u16,
+            );
+        builder
+            .end_compound_post_order(
+                outer_off,
+                span_hi,
+                ::bbnf::runtime::tape::TapeOffset(outer_child),
+            );
+        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+    }
+    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
+    /// (Alt of literal-led or Ref-led branches).
+    ///
+    /// AX.W0a.2.g — admits Ref-led branches whose target
+    /// resolves to a literal-prefix body (per `leading_
+    /// literal_bytes`). For each first-byte group, each
+    /// candidate's full prefix is checked before committing:
+    /// Literal branches emit the legacy leaf push;
+    /// Ref branches delegate to the target's shape fn via
+    /// [`emit_ref_call_tape`], threading `state` through.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_keyword_EbnfParser_terminal(
+        input: &[u8],
+        p: &mut usize,
+        first_byte: u8,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<
+        ::bbnf::runtime::tape::TapeOffset,
+        ::bbnf::runtime::tape::DtaError,
+    > {
+        let _ = state;
+        match first_byte {
+            34u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [34u8] {
+                    let span_lo = *p as u32;
+                    let seq_save_cols = builder.columns_mut().len() as u32;
+                    let seq_attempt: ::core::result::Result<(), ()> = (|| {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [34u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        {
+                            let __pos_attempt: ::core::result::Result<
+                                (),
+                                ::bbnf::runtime::tape::DtaError,
+                            > = (|| {
+                                {
+                                    let save_p = *p;
+                                    let excluded_result: ::core::result::Result<(), ()> = (|| {
+                                        let at = *p;
+                                        let end = at + 1usize;
+                                        if input.len() < end || input[at..end] != [34u8] {
+                                            return Err(());
+                                        }
+                                        *p = end;
+                                        Ok(())
+                                    })();
+                                    *p = save_p;
+                                    if excluded_result.is_ok() {
+                                        return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                            offset: save_p as u32,
+                                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                        });
+                                    }
+                                    let _ = ({
+                                        parse_altdispatch_EbnfParser_character(
+                                            input,
+                                            p,
+                                            state,
+                                            builder,
+                                        )
+                                    })?;
+                                }
+                                ::core::result::Result::Ok(())
+                            })();
+                            if __pos_attempt.is_err() {
+                                return ::core::result::Result::Err(());
+                            }
+                        }
+                        {
+                            let mut iter_count: usize = 0;
+                            loop {
+                                let iter_p = *p;
+                                let iter_len = builder.columns_mut().len() as u32;
+                                let iter_res: ::core::result::Result<(), ()> = (|| {
+                                    {
+                                        let __pos_attempt: ::core::result::Result<
+                                            (),
+                                            ::bbnf::runtime::tape::DtaError,
+                                        > = (|| {
+                                            {
+                                                let save_p = *p;
+                                                let excluded_result: ::core::result::Result<(), ()> = (|| {
+                                                    let at = *p;
+                                                    let end = at + 1usize;
+                                                    if input.len() < end || input[at..end] != [34u8] {
+                                                        return Err(());
+                                                    }
+                                                    *p = end;
+                                                    Ok(())
+                                                })();
+                                                *p = save_p;
+                                                if excluded_result.is_ok() {
+                                                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                                        offset: save_p as u32,
+                                                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                                    });
+                                                }
+                                                let _ = ({
+                                                    parse_altdispatch_EbnfParser_character(
+                                                        input,
+                                                        p,
+                                                        state,
+                                                        builder,
+                                                    )
+                                                })?;
+                                            }
+                                            ::core::result::Result::Ok(())
+                                        })();
+                                        if __pos_attempt.is_err() {
+                                            return ::core::result::Result::Err(());
+                                        }
+                                    }
+                                    Ok(())
+                                })();
+                                if iter_res.is_err() || *p == iter_p {
+                                    *p = iter_p;
+                                    builder.columns_mut().rollback_to(iter_len);
+                                    break;
+                                }
+                                iter_count += 1;
+                            }
+                            if iter_count < 0u32 as usize {
+                                return Err(());
+                            }
+                        }
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [34u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        Ok(())
+                    })();
+                    if seq_attempt.is_err() {
+                        *p = span_lo as usize;
+                        builder.columns_mut().rollback_to(seq_save_cols);
+                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            offset: span_lo,
+                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                    let span_hi = *p as u32;
+                    builder.columns_mut().rollback_to(seq_save_cols);
+                    let off = builder
+                        .push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            span_lo,
+                            span_hi,
+                            5u8,
+                            0u8,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            39u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [39u8] {
+                    let span_lo = *p as u32;
+                    let seq_save_cols = builder.columns_mut().len() as u32;
+                    let seq_attempt: ::core::result::Result<(), ()> = (|| {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [39u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        {
+                            let __pos_attempt: ::core::result::Result<
+                                (),
+                                ::bbnf::runtime::tape::DtaError,
+                            > = (|| {
+                                {
+                                    let save_p = *p;
+                                    let excluded_result: ::core::result::Result<(), ()> = (|| {
+                                        let at = *p;
+                                        let end = at + 1usize;
+                                        if input.len() < end || input[at..end] != [39u8] {
+                                            return Err(());
+                                        }
+                                        *p = end;
+                                        Ok(())
+                                    })();
+                                    *p = save_p;
+                                    if excluded_result.is_ok() {
+                                        return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                            offset: save_p as u32,
+                                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                        });
+                                    }
+                                    let _ = ({
+                                        parse_altdispatch_EbnfParser_character(
+                                            input,
+                                            p,
+                                            state,
+                                            builder,
+                                        )
+                                    })?;
+                                }
+                                ::core::result::Result::Ok(())
+                            })();
+                            if __pos_attempt.is_err() {
+                                return ::core::result::Result::Err(());
+                            }
+                        }
+                        {
+                            let mut iter_count: usize = 0;
+                            loop {
+                                let iter_p = *p;
+                                let iter_len = builder.columns_mut().len() as u32;
+                                let iter_res: ::core::result::Result<(), ()> = (|| {
+                                    {
+                                        let __pos_attempt: ::core::result::Result<
+                                            (),
+                                            ::bbnf::runtime::tape::DtaError,
+                                        > = (|| {
+                                            {
+                                                let save_p = *p;
+                                                let excluded_result: ::core::result::Result<(), ()> = (|| {
+                                                    let at = *p;
+                                                    let end = at + 1usize;
+                                                    if input.len() < end || input[at..end] != [39u8] {
+                                                        return Err(());
+                                                    }
+                                                    *p = end;
+                                                    Ok(())
+                                                })();
+                                                *p = save_p;
+                                                if excluded_result.is_ok() {
+                                                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                                        offset: save_p as u32,
+                                                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                                    });
+                                                }
+                                                let _ = ({
+                                                    parse_altdispatch_EbnfParser_character(
+                                                        input,
+                                                        p,
+                                                        state,
+                                                        builder,
+                                                    )
+                                                })?;
+                                            }
+                                            ::core::result::Result::Ok(())
+                                        })();
+                                        if __pos_attempt.is_err() {
+                                            return ::core::result::Result::Err(());
+                                        }
+                                    }
+                                    Ok(())
+                                })();
+                                if iter_res.is_err() || *p == iter_p {
+                                    *p = iter_p;
+                                    builder.columns_mut().rollback_to(iter_len);
+                                    break;
+                                }
+                                iter_count += 1;
+                            }
+                            if iter_count < 0u32 as usize {
+                                return Err(());
+                            }
+                        }
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [39u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        Ok(())
+                    })();
+                    if seq_attempt.is_err() {
+                        *p = span_lo as usize;
+                        builder.columns_mut().rollback_to(seq_save_cols);
+                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            offset: span_lo,
+                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                    let span_hi = *p as u32;
+                    builder.columns_mut().rollback_to(seq_save_cols);
+                    let off = builder
+                        .push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            span_lo,
+                            span_hi,
+                            5u8,
+                            0u8,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                    return Ok(off);
+                }
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            _ => {
+                Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                })
+            }
+        }
+    }
+    /// AX.W0a.2.b — per-grammar AltDispatch-shape parse function.
+    ///
+    /// Generalized byte-dispatch over `Alt(leaf, leaf, …)` bodies.
+    /// Each branch is a classified-Ref, a Literal, a Regex, or a
+    /// leaf-only Seq (prefix-tree factoring). No recursion through
+    /// `__value` — per-Ref routing emits direct shape-fn calls.
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut,
+        unused_assignments,
+        unreachable_code
+    )]
+    pub fn parse_altdispatch_EbnfParser_term(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<
+        ::bbnf::runtime::tape::TapeOffset,
+        ::bbnf::runtime::tape::DtaError,
+    > {
+        let first = __shape_support_EbnfParser::skip_space(input, p, state)
+            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                offset: *p as u32,
+            })?;
+        let alt_lo = *p as u32;
+        let alt_child = builder.columns_mut().len() as u32;
+        let _ = alt_child;
+        let save_p = *p;
+        let save_child = builder.columns_mut().len() as u32;
+        let _ = save_p;
+        let _ = save_child;
+        'try_branches: loop {
+            match first {
+                34u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_terminal(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            builder,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                39u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_terminal(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            builder,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                40u8 => {
+                    let attempt_p = *p;
+                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt: ::core::result::Result<(), ()> = (|| {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [40u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        let span_lo = *p as u32;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return Err(());
+                        };
+                        *p += match_len as usize;
+                        let span_hi = *p as u32;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                span_lo,
+                                span_hi,
+                                0,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        if ({
+                            parse_flat_EbnfParser_alternation(input, p, state, builder)
+                        })
+                            .is_err()
+                        {
+                            return Err(());
+                        }
+                        let span_lo = *p as u32;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return Err(());
+                        };
+                        *p += match_len as usize;
+                        let span_hi = *p as u32;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                span_lo,
+                                span_hi,
+                                0,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [41u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        Ok(())
+                    })();
+                    match attempt {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.columns_mut().rollback_to(attempt_len);
+                        }
+                    }
+                }
+                91u8 => {
+                    let attempt_p = *p;
+                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt: ::core::result::Result<(), ()> = (|| {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [91u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        let span_lo = *p as u32;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return Err(());
+                        };
+                        *p += match_len as usize;
+                        let span_hi = *p as u32;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                span_lo,
+                                span_hi,
+                                0,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        if ({
+                            parse_flat_EbnfParser_alternation(input, p, state, builder)
+                        })
+                            .is_err()
+                        {
+                            return Err(());
+                        }
+                        let span_lo = *p as u32;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return Err(());
+                        };
+                        *p += match_len as usize;
+                        let span_hi = *p as u32;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                span_lo,
+                                span_hi,
+                                0,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [93u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        Ok(())
+                    })();
+                    match attempt {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.columns_mut().rollback_to(attempt_len);
+                        }
+                    }
+                }
+                123u8 => {
+                    let attempt_p = *p;
+                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt: ::core::result::Result<(), ()> = (|| {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [123u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        let span_lo = *p as u32;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return Err(());
+                        };
+                        *p += match_len as usize;
+                        let span_hi = *p as u32;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                span_lo,
+                                span_hi,
+                                0,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        if ({
+                            parse_flat_EbnfParser_alternation(input, p, state, builder)
+                        })
+                            .is_err()
+                        {
+                            return Err(());
+                        }
+                        let span_lo = *p as u32;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return Err(());
+                        };
+                        *p += match_len as usize;
+                        let span_hi = *p as u32;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                span_lo,
+                                span_hi,
+                                0,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [125u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        Ok(())
+                    })();
+                    match attempt {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.columns_mut().rollback_to(attempt_len);
+                        }
+                    }
+                }
+                _ => {}
+            }
+            {
+                let attempt_p = *p;
+                match {
+                    let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                    parse_flat_EbnfParser_identifier(input, p, state, builder)
+                } {
+                    Ok(_) => break 'try_branches,
+                    Err(_) => {
+                        *p = attempt_p;
+                    }
+                }
+            }
+            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            });
+        }
+        let alt_hi = *p as u32;
+        let off = builder
+            .begin_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                alt_lo,
+                6u8,
+                0u8,
+                0u8,
+                0u16,
+            );
+        builder
+            .end_compound_post_order(
+                off,
+                alt_hi,
+                ::bbnf::runtime::tape::TapeOffset(alt_child),
+            );
+        Ok(::bbnf::runtime::tape::TapeOffset(off))
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_EbnfParser_factor(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<
+        ::bbnf::runtime::tape::TapeOffset,
+        ::bbnf::runtime::tape::DtaError,
+    > {
+        let span_lo = *p as u32;
+        let outer_child = builder.columns_mut().len() as u32;
+        {
+            let _ = ({
+                let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                parse_altdispatch_EbnfParser_term(input, p, state, builder)
+            })?;
+        }
+        {
+            {
+                let span_lo = *p as u32;
+                let Some(match_len) = __regex_scan_EbnfParser(
+                    "[ \\t\\n\\r\\f]*",
+                    input,
+                    *p,
+                ) else {
+                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: span_lo,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                };
+                *p += match_len as usize;
+                let span_hi = *p as u32;
+                let _ = builder
+                    .push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        span_lo,
+                        span_hi,
+                        7u8,
+                        0,
+                        ::bbnf::runtime::tape::PayloadData::None,
+                    );
+            }
+        }
+        {
+            {
+                let first = __shape_support_EbnfParser::skip_space(input, p, state)
+                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                        offset: *p as u32,
+                    })?;
+                'try_branches: loop {
+                    match first {
+                        42u8 => {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() >= end && input[at..end] == [42u8] {
+                                *p = end;
+                                let _ = builder
+                                    .push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                break 'try_branches;
+                            }
+                        }
+                        43u8 => {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() >= end && input[at..end] == [43u8] {
+                                *p = end;
+                                let _ = builder
+                                    .push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                break 'try_branches;
+                            }
+                        }
+                        45u8 => {
+                            let attempt_p = *p;
+                            let attempt_len = builder.columns_mut().len() as u32;
+                            let attempt: ::core::result::Result<(), ()> = (|| {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() < end || input[at..end] != [45u8] {
+                                    return Err(());
+                                }
+                                *p = end;
+                                let _ = builder
+                                    .push_leaf_with(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                        ::bbnf::runtime::tape::PayloadData::None,
+                                    );
+                                let span_lo = *p as u32;
+                                let Some(match_len) = __regex_scan_EbnfParser(
+                                    "[ \\t\\n\\r\\f]*",
+                                    input,
+                                    *p,
+                                ) else {
+                                    return Err(());
+                                };
+                                *p += match_len as usize;
+                                let span_hi = *p as u32;
+                                let _ = builder
+                                    .push_leaf_with(
+                                        ::bbnf::runtime::tape::TapeKind::Span,
+                                        span_lo,
+                                        span_hi,
+                                        0,
+                                        0,
+                                        ::bbnf::runtime::tape::PayloadData::None,
+                                    );
+                                if ({
+                                    let _ = __shape_support_EbnfParser::skip_space(
+                                        input,
+                                        p,
+                                        state,
+                                    );
+                                    parse_altdispatch_EbnfParser_term(input, p, state, builder)
+                                })
+                                    .is_err()
+                                {
+                                    return Err(());
+                                }
+                                Ok(())
+                            })();
+                            match attempt {
+                                Ok(_) => break 'try_branches,
+                                Err(_) => {
+                                    *p = attempt_p;
+                                    builder.columns_mut().rollback_to(attempt_len);
+                                }
+                            }
+                        }
+                        63u8 => {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() >= end && input[at..end] == [63u8] {
+                                *p = end;
+                                let _ = builder
+                                    .push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                break 'try_branches;
+                            }
+                        }
+                        _ => {}
+                    }
+                    break 'try_branches;
+                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+            }
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder
+            .begin_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                span_lo,
+                7u8,
+                0u8,
+                0u8,
+                0u16,
+            );
+        builder
+            .end_compound_post_order(
+                outer_off,
+                span_hi,
+                ::bbnf::runtime::tape::TapeOffset(outer_child),
+            );
+        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_EbnfParser_concatenation(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<
+        ::bbnf::runtime::tape::TapeOffset,
+        ::bbnf::runtime::tape::DtaError,
+    > {
+        let span_lo = *p as u32;
+        let outer_child = builder.columns_mut().len() as u32;
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.columns_mut().len() as u32;
+            let mut iter_count: u32 = 0;
+            loop {
+                let save_p = *p;
+                let save_cols = builder.columns_mut().len() as u32;
+                let iter_lo = *p as u32;
+                let iter_child = builder.columns_mut().len() as u32;
+                let attempt = (|| -> ::core::result::Result<
+                    (),
+                    ::bbnf::runtime::tape::DtaError,
+                > {
+                    {
+                        let span_lo = *p as u32;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: span_lo,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            });
+                        };
+                        *p += match_len as usize;
+                        let span_hi = *p as u32;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                span_lo,
+                                span_hi,
+                                8u8,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                    }
+                    let _ = ({
+                        let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                        parse_flat_EbnfParser_factor(input, p, state, builder)
+                    })?;
+                    {
+                        let span_lo = *p as u32;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: span_lo,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            });
+                        };
+                        *p += match_len as usize;
+                        let span_hi = *p as u32;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                span_lo,
+                                span_hi,
+                                8u8,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                    }
+                    let repeat_lo = *p as u32;
+                    let repeat_child = builder.columns_mut().len() as u32;
+                    let iter_save_p = *p;
+                    let iter_save_cols = builder.columns_mut().len() as u32;
+                    let iter_lo = *p as u32;
+                    let iter_child = builder.columns_mut().len() as u32;
+                    let opt_attempt: ::core::result::Result<
+                        (),
+                        ::bbnf::runtime::tape::DtaError,
+                    > = (|| {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [44u8] {
+                            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: at as u32,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            });
+                        }
+                        *p = end;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                8u8,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        Ok(())
+                    })();
+                    let matched = opt_attempt.is_ok();
+                    if !matched {
+                        *p = iter_save_p;
+                        builder.columns_mut().rollback_to(iter_save_cols);
+                    } else {
+                        let iter_hi = *p as u32;
+                        let __iter_off = builder
+                            .begin_compound(
+                                ::bbnf::runtime::tape::TapeKind::Seq,
+                                iter_lo,
+                                0u8,
+                                0u8,
+                                0u8,
+                                0u16,
+                            );
+                        builder
+                            .end_compound_post_order(
+                                __iter_off,
+                                iter_hi,
+                                ::bbnf::runtime::tape::TapeOffset(iter_child),
+                            );
+                    }
+                    let repeat_hi = *p as u32;
+                    let __repeat_off = builder
+                        .begin_compound(
+                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                            repeat_lo,
+                            0u8,
+                            0u8,
+                            0u8,
+                            0u16,
+                        );
+                    builder
+                        .end_compound_post_order(
+                            __repeat_off,
+                            repeat_hi,
+                            ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                        );
+                    Ok(())
+                })();
+                if attempt.is_err() {
+                    *p = save_p;
+                    builder.columns_mut().rollback_to(save_cols);
+                    break;
+                }
+                if *p == save_p {
+                    builder.columns_mut().rollback_to(save_cols);
+                    break;
+                }
+                let iter_hi = *p as u32;
+                let __iter_off = builder
+                    .begin_compound(
+                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        iter_lo,
+                        0u8,
+                        0u8,
+                        0u8,
+                        0u16,
+                    );
+                builder
+                    .end_compound_post_order(
+                        __iter_off,
+                        iter_hi,
+                        ::bbnf::runtime::tape::TapeOffset(iter_child),
+                    );
+                iter_count = iter_count.saturating_add(1);
+            }
+            if iter_count < (1usize as u32) {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            let repeat_hi = *p as u32;
+            let __repeat_off = builder
+                .begin_compound(
+                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                    repeat_lo,
+                    0u8,
+                    0u8,
+                    0u8,
+                    0u16,
+                );
+            builder
+                .end_compound_post_order(
+                    __repeat_off,
+                    repeat_hi,
+                    ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                );
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder
+            .begin_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                span_lo,
+                8u8,
+                0u8,
+                0u8,
+                0u16,
+            );
+        builder
+            .end_compound_post_order(
+                outer_off,
+                span_hi,
+                ::bbnf::runtime::tape::TapeOffset(outer_child),
+            );
+        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_EbnfParser_alternation(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<
+        ::bbnf::runtime::tape::TapeOffset,
+        ::bbnf::runtime::tape::DtaError,
+    > {
+        let span_lo = *p as u32;
+        let outer_child = builder.columns_mut().len() as u32;
+        {
+            let repeat_lo = *p as u32;
+            let repeat_child = builder.columns_mut().len() as u32;
+            let mut iter_count: u32 = 0;
+            loop {
+                let save_p = *p;
+                let save_cols = builder.columns_mut().len() as u32;
+                let iter_lo = *p as u32;
+                let iter_child = builder.columns_mut().len() as u32;
+                let attempt = (|| -> ::core::result::Result<
+                    (),
+                    ::bbnf::runtime::tape::DtaError,
+                > {
+                    {
+                        let span_lo = *p as u32;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: span_lo,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            });
+                        };
+                        *p += match_len as usize;
+                        let span_hi = *p as u32;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                span_lo,
+                                span_hi,
+                                9u8,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                    }
+                    let _ = ({
+                        parse_flat_EbnfParser_concatenation(input, p, state, builder)
+                    })?;
+                    {
+                        let span_lo = *p as u32;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: span_lo,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            });
+                        };
+                        *p += match_len as usize;
+                        let span_hi = *p as u32;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Span,
+                                span_lo,
+                                span_hi,
+                                9u8,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                    }
+                    let repeat_lo = *p as u32;
+                    let repeat_child = builder.columns_mut().len() as u32;
+                    let iter_save_p = *p;
+                    let iter_save_cols = builder.columns_mut().len() as u32;
+                    let iter_lo = *p as u32;
+                    let iter_child = builder.columns_mut().len() as u32;
+                    let opt_attempt: ::core::result::Result<
+                        (),
+                        ::bbnf::runtime::tape::DtaError,
+                    > = (|| {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [124u8] {
+                            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                offset: at as u32,
+                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            });
+                        }
+                        *p = end;
+                        let _ = builder
+                            .push_leaf_with(
+                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                9u8,
+                                0,
+                                ::bbnf::runtime::tape::PayloadData::None,
+                            );
+                        Ok(())
+                    })();
+                    let matched = opt_attempt.is_ok();
+                    if !matched {
+                        *p = iter_save_p;
+                        builder.columns_mut().rollback_to(iter_save_cols);
+                    } else {
+                        let iter_hi = *p as u32;
+                        let __iter_off = builder
+                            .begin_compound(
+                                ::bbnf::runtime::tape::TapeKind::Seq,
+                                iter_lo,
+                                0u8,
+                                0u8,
+                                0u8,
+                                0u16,
+                            );
+                        builder
+                            .end_compound_post_order(
+                                __iter_off,
+                                iter_hi,
+                                ::bbnf::runtime::tape::TapeOffset(iter_child),
+                            );
+                    }
+                    let repeat_hi = *p as u32;
+                    let __repeat_off = builder
+                        .begin_compound(
+                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                            repeat_lo,
+                            0u8,
+                            0u8,
+                            0u8,
+                            0u16,
+                        );
+                    builder
+                        .end_compound_post_order(
+                            __repeat_off,
+                            repeat_hi,
+                            ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                        );
+                    Ok(())
+                })();
+                if attempt.is_err() {
+                    *p = save_p;
+                    builder.columns_mut().rollback_to(save_cols);
+                    break;
+                }
+                if *p == save_p {
+                    builder.columns_mut().rollback_to(save_cols);
+                    break;
+                }
+                let iter_hi = *p as u32;
+                let __iter_off = builder
+                    .begin_compound(
+                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        iter_lo,
+                        0u8,
+                        0u8,
+                        0u8,
+                        0u16,
+                    );
+                builder
+                    .end_compound_post_order(
+                        __iter_off,
+                        iter_hi,
+                        ::bbnf::runtime::tape::TapeOffset(iter_child),
+                    );
+                iter_count = iter_count.saturating_add(1);
+            }
+            if iter_count < (1usize as u32) {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            let repeat_hi = *p as u32;
+            let __repeat_off = builder
+                .begin_compound(
+                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                    repeat_lo,
+                    0u8,
+                    0u8,
+                    0u8,
+                    0u16,
+                );
+            builder
+                .end_compound_post_order(
+                    __repeat_off,
+                    repeat_hi,
+                    ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                );
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder
+            .begin_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                span_lo,
+                9u8,
+                0u8,
+                0u8,
+                0u16,
+            );
+        builder
+            .end_compound_post_order(
+                outer_off,
+                span_hi,
+                ::bbnf::runtime::tape::TapeOffset(outer_child),
+            );
+        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_EbnfParser_rule(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<
+        ::bbnf::runtime::tape::TapeOffset,
+        ::bbnf::runtime::tape::DtaError,
+    > {
+        let span_lo = *p as u32;
+        let outer_child = builder.columns_mut().len() as u32;
+        {
+            let _ = ({
+                let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                parse_flat_EbnfParser_identifier(input, p, state, builder)
+            })?;
+        }
+        {
+            {
+                let span_lo = *p as u32;
+                let Some(match_len) = __regex_scan_EbnfParser(
+                    "[ \\t\\n\\r\\f]*",
+                    input,
+                    *p,
+                ) else {
+                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: span_lo,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                };
+                *p += match_len as usize;
+                let span_hi = *p as u32;
+                let _ = builder
+                    .push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        span_lo,
+                        span_hi,
+                        10u8,
+                        0,
+                        ::bbnf::runtime::tape::PayloadData::None,
+                    );
+            }
+        }
+        {
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [61u8] {
+                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = builder
+                .push_leaf_with(
+                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    at as u32,
+                    end as u32,
+                    10u8,
+                    0,
+                    ::bbnf::runtime::tape::PayloadData::None,
+                );
+        }
+        {
+            {
+                let span_lo = *p as u32;
+                let Some(match_len) = __regex_scan_EbnfParser(
+                    "[ \\t\\n\\r\\f]*",
+                    input,
+                    *p,
+                ) else {
+                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: span_lo,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                };
+                *p += match_len as usize;
+                let span_hi = *p as u32;
+                let _ = builder
+                    .push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        span_lo,
+                        span_hi,
+                        10u8,
+                        0,
+                        ::bbnf::runtime::tape::PayloadData::None,
+                    );
+            }
+        }
+        {
+            let _ = ({ parse_flat_EbnfParser_alternation(input, p, state, builder) })?;
+        }
+        {
+            {
+                let span_lo = *p as u32;
+                let Some(match_len) = __regex_scan_EbnfParser(
+                    "[ \\t\\n\\r\\f]*",
+                    input,
+                    *p,
+                ) else {
+                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: span_lo,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                };
+                *p += match_len as usize;
+                let span_hi = *p as u32;
+                let _ = builder
+                    .push_leaf_with(
+                        ::bbnf::runtime::tape::TapeKind::Span,
+                        span_lo,
+                        span_hi,
+                        10u8,
+                        0,
+                        ::bbnf::runtime::tape::PayloadData::None,
+                    );
+            }
+        }
+        {
+            {
+                let first = __shape_support_EbnfParser::skip_space(input, p, state)
+                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                        offset: *p as u32,
+                    })?;
+                'try_branches: loop {
+                    match first {
+                        46u8 => {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() >= end && input[at..end] == [46u8] {
+                                *p = end;
+                                let _ = builder
+                                    .push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                break 'try_branches;
+                            }
+                        }
+                        59u8 => {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() >= end && input[at..end] == [59u8] {
+                                *p = end;
+                                let _ = builder
+                                    .push_leaf(
+                                        ::bbnf::runtime::tape::TapeKind::Literal,
+                                        at as u32,
+                                        end as u32,
+                                        0,
+                                        0,
+                                    );
+                                break 'try_branches;
+                            }
+                        }
+                        _ => {}
+                    }
+                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+            }
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder
+            .begin_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                span_lo,
+                10u8,
+                0u8,
+                0u8,
+                0u16,
+            );
+        builder
+            .end_compound_post_order(
+                outer_off,
+                span_hi,
+                ::bbnf::runtime::tape::TapeOffset(outer_child),
+            );
+        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+    }
+    /// AX.W0a.2.a — per-grammar Array-shape parse function
+    /// (Shape 2 — direct-Repeat entry-rule list,
+    /// **walker-tape-identical**).
+    ///
+    /// Emits a single Rule compound (the Repeat frame)
+    /// carrying the per-iteration children. Matches the
+    /// walker's direct lowering of a `Repeat { .. }` body
+    /// where the rule's variant stamp lands on the Rule
+    /// compound itself (no outer Seq wrapper).
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]`.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_array_EbnfParser_grammar(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<
+        ::bbnf::runtime::tape::TapeOffset,
+        ::bbnf::runtime::tape::DtaError,
+    > {
+        let repeat_open = *p as u32;
+        let repeat_off = builder
+            .begin_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                repeat_open,
+                0u8,
+                0u8,
+                0u8,
+                0u16,
+            );
+        loop {
+            let iter_save_p = *p;
+            let __iter_save_cols = builder.columns_mut().len() as u32;
+            if input.get(*p).is_none() {
+                break;
+            }
+            let iter_result: ::core::result::Result<
+                (),
+                ::bbnf::runtime::tape::DtaError,
+            > = (|| {
+                let iter_open = *p as u32;
+                let iter_off = builder
+                    .begin_compound(
+                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        iter_open,
+                        0,
+                        0u8,
+                        0u8,
+                        0u16,
+                    );
+                let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                {
+                    let span_lo = *p as u32;
+                    let Some(match_len) = __regex_scan_EbnfParser(
+                        "[ \\t\\n\\r\\f]*",
+                        input,
+                        *p,
+                    ) else {
+                        return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            offset: span_lo,
+                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    };
+                    *p += match_len as usize;
+                    let span_hi = *p as u32;
+                    let _ = builder
+                        .push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            span_lo,
+                            span_hi,
+                            11u8,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                }
+                let _value_off = ({
+                    let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                    parse_flat_EbnfParser_rule(input, p, state, builder)
+                })?;
+                {
+                    let span_lo = *p as u32;
+                    let Some(match_len) = __regex_scan_EbnfParser(
+                        "[ \\t\\n\\r\\f]*",
+                        input,
+                        *p,
+                    ) else {
+                        return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            offset: span_lo,
+                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    };
+                    *p += match_len as usize;
+                    let span_hi = *p as u32;
+                    let _ = builder
+                        .push_leaf_with(
+                            ::bbnf::runtime::tape::TapeKind::Span,
+                            span_lo,
+                            span_hi,
+                            11u8,
+                            0,
+                            ::bbnf::runtime::tape::PayloadData::None,
+                        );
+                }
+                let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                let iter_close = *p as u32;
+                builder.end_compound(iter_off, iter_close);
+                Ok(())
+            })();
+            match iter_result {
+                Ok(()) => {
+                    if *p == iter_save_p {
+                        break;
+                    }
+                }
+                Err(_) => {
+                    *p = iter_save_p;
+                    builder.columns_mut().rollback_to(__iter_save_cols);
+                    break;
+                }
+            }
+        }
+        let repeat_close = *p as u32;
+        builder.end_compound(repeat_off, repeat_close);
+        Ok(::bbnf::runtime::tape::TapeOffset(repeat_off))
+    }
+    /// AX.W0a.2.b — visitor-path AltDispatch-shape parse function.
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]`.
+    #[inline]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut,
+        unused_assignments,
+        unreachable_code
+    )]
+    pub fn parse_altdispatch_visitor_EbnfParser_letter<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    where
+        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
+            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
+            + ::bbnf::runtime::tape::KeywordVisitor,
+    {
+        let first = __shape_support_EbnfParser::skip_space(input, p, state)
+            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                offset: *p as u32,
+                rule: None,
+            })?;
+        'try_branches: loop {
+            match first {
+                65u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [65u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                66u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [66u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                67u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [67u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                68u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [68u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                69u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [69u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                70u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [70u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                71u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [71u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                72u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [72u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                73u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [73u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                74u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [74u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                75u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [75u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                76u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [76u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                77u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [77u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                78u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [78u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                79u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [79u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                80u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [80u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                81u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [81u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                82u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [82u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                83u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [83u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                84u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [84u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                85u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [85u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                86u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [86u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                87u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [87u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                88u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [88u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                89u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [89u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                90u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [90u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                97u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [97u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                98u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [98u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                99u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [99u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                100u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [100u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                101u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [101u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                102u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [102u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                103u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [103u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                104u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [104u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                105u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [105u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                106u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [106u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                107u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [107u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                108u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [108u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                109u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [109u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                110u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [110u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                111u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [111u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                112u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [112u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                113u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [113u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                114u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [114u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                115u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [115u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                116u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [116u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                117u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [117u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                118u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [118u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                119u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [119u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                120u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [120u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                121u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [121u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                122u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [122u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                _ => {}
+            }
+            return Err(::bbnf::runtime::ParseErr::Syntax {
+                offset: *p as u32,
+                rule: None,
+            });
+        }
+        Ok(())
+    }
+    /// AW-V.W3-bench-fix — visitor-path Keyword-shape parse
+    /// function (Alt of literal-led or Ref-led branches).
+    ///
+    /// AX.W0a.2.g — admits Ref-led branches; threads `state`
+    /// for downstream visitor-path Ref calls.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_keyword_visitor_EbnfParser_digit<V>(
+        input: &[u8],
+        p: &mut usize,
+        first_byte: u8,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    where
+        V: ::bbnf::runtime::tape::KeywordVisitor + ::bbnf::runtime::tape::ObjectVisitor
+            + ::bbnf::runtime::tape::ArrayVisitor + ::bbnf::runtime::tape::StringVisitor
+            + ::bbnf::runtime::tape::NumberVisitor,
+    {
+        let _ = state;
+        match first_byte {
+            48u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [48u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    return visitor
+                        .null()
+                        .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                            offset: at as u32,
+                            rule: None,
+                        });
+                }
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+            }
+            49u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [49u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    return visitor
+                        .null()
+                        .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                            offset: at as u32,
+                            rule: None,
+                        });
+                }
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+            }
+            50u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [50u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    return visitor
+                        .null()
+                        .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                            offset: at as u32,
+                            rule: None,
+                        });
+                }
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+            }
+            51u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [51u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    return visitor
+                        .null()
+                        .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                            offset: at as u32,
+                            rule: None,
+                        });
+                }
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+            }
+            52u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [52u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    return visitor
+                        .null()
+                        .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                            offset: at as u32,
+                            rule: None,
+                        });
+                }
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+            }
+            53u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [53u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    return visitor
+                        .null()
+                        .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                            offset: at as u32,
+                            rule: None,
+                        });
+                }
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+            }
+            54u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [54u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    return visitor
+                        .null()
+                        .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                            offset: at as u32,
+                            rule: None,
+                        });
+                }
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+            }
+            55u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [55u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    return visitor
+                        .null()
+                        .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                            offset: at as u32,
+                            rule: None,
+                        });
+                }
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+            }
+            56u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [56u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    return visitor
+                        .null()
+                        .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                            offset: at as u32,
+                            rule: None,
+                        });
+                }
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+            }
+            57u8 => {
+                if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [57u8] {
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    return visitor
+                        .null()
+                        .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                            offset: at as u32,
+                            rule: None,
+                        });
+                }
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+            }
+            _ => {
+                Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                })
+            }
+        }
+    }
+    /// AX.W0a.2.b — visitor-path AltDispatch-shape parse function.
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]`.
+    #[inline]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut,
+        unused_assignments,
+        unreachable_code
+    )]
+    pub fn parse_altdispatch_visitor_EbnfParser_symbol<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    where
+        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
+            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
+            + ::bbnf::runtime::tape::KeywordVisitor,
+    {
+        let first = __shape_support_EbnfParser::skip_space(input, p, state)
+            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                offset: *p as u32,
+                rule: None,
+            })?;
+        'try_branches: loop {
+            match first {
+                8u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [8u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                9u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [9u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                10u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [10u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                12u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [12u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                13u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [13u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                34u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [34u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                39u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [39u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                40u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [40u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                41u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [41u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                42u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [42u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                43u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [43u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                44u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [44u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                45u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [45u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                46u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [46u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                59u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [59u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                60u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [60u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                61u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [61u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                62u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [62u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                63u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [63u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                91u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [91u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                92u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [92u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                93u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [93u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                123u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [123u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                124u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [124u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                125u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [125u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                _ => {}
+            }
+            return Err(::bbnf::runtime::ParseErr::Syntax {
+                offset: *p as u32,
+                rule: None,
+            });
+        }
+        Ok(())
+    }
+    /// AX.W0a.2.b — visitor-path AltDispatch-shape parse function.
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]`.
+    #[inline]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut,
+        unused_assignments,
+        unreachable_code
+    )]
+    pub fn parse_altdispatch_visitor_EbnfParser_character<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    where
+        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
+            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
+            + ::bbnf::runtime::tape::KeywordVisitor,
+    {
+        let first = __shape_support_EbnfParser::skip_space(input, p, state)
+            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                offset: *p as u32,
+                rule: None,
+            })?;
+        'try_branches: loop {
+            match first {
+                32u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [32u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                48u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                49u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                50u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                51u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                52u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                53u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                54u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                55u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                56u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                57u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                95u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [95u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                _ => {}
+            }
+            {
+                let attempt_p = *p;
+                match {
+                    let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                    parse_altdispatch_visitor_EbnfParser_symbol(input, p, state, visitor)
+                } {
+                    Ok(_) => break 'try_branches,
+                    Err(_) => {
+                        *p = attempt_p;
+                    }
+                }
+            }
+            {
+                let attempt_p = *p;
+                match {
+                    let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                    parse_altdispatch_visitor_EbnfParser_letter(input, p, state, visitor)
+                } {
+                    Ok(_) => break 'try_branches,
+                    Err(_) => {
+                        *p = attempt_p;
+                    }
+                }
+            }
+            return Err(::bbnf::runtime::ParseErr::Syntax {
+                offset: *p as u32,
+                rule: None,
+            });
+        }
+        Ok(())
+    }
+    /// AW-V.W4-fix — visitor-path Flat-shape parse function.
+    ///
+    /// Mirrors the tape-path emitter structure. Literal positions
+    /// byte-match without emitting a visitor event; Ref / Regex /
+    /// Alt positions recurse through the visitor dispatcher.
+    ///
+    /// AX.W0a.2.f — compound; see tape-path comment for the
+    /// `#[inline]` downgrade rationale.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_visitor_EbnfParser_identifier<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    where
+        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
+            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
+            + ::bbnf::runtime::tape::KeywordVisitor,
+    {
+        {
+            ({
+                let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                parse_altdispatch_visitor_EbnfParser_letter(input, p, state, visitor)
+            })?;
+        }
+        {
+            let mut iter_count: u32 = 0;
+            loop {
+                let save_p = *p;
+                let res = (|| -> ::core::result::Result<(), ::bbnf::runtime::ParseErr> {
+                    {
+                        let first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        'try_branches: loop {
+                            match first {
+                                48u8 => {
+                                    let attempt_p = *p;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                                offset: *p as u32,
+                                                rule: None,
+                                            })?;
+                                        parse_keyword_visitor_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            visitor,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                        }
+                                    }
+                                }
+                                49u8 => {
+                                    let attempt_p = *p;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                                offset: *p as u32,
+                                                rule: None,
+                                            })?;
+                                        parse_keyword_visitor_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            visitor,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                        }
+                                    }
+                                }
+                                50u8 => {
+                                    let attempt_p = *p;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                                offset: *p as u32,
+                                                rule: None,
+                                            })?;
+                                        parse_keyword_visitor_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            visitor,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                        }
+                                    }
+                                }
+                                51u8 => {
+                                    let attempt_p = *p;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                                offset: *p as u32,
+                                                rule: None,
+                                            })?;
+                                        parse_keyword_visitor_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            visitor,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                        }
+                                    }
+                                }
+                                52u8 => {
+                                    let attempt_p = *p;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                                offset: *p as u32,
+                                                rule: None,
+                                            })?;
+                                        parse_keyword_visitor_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            visitor,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                        }
+                                    }
+                                }
+                                53u8 => {
+                                    let attempt_p = *p;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                                offset: *p as u32,
+                                                rule: None,
+                                            })?;
+                                        parse_keyword_visitor_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            visitor,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                        }
+                                    }
+                                }
+                                54u8 => {
+                                    let attempt_p = *p;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                                offset: *p as u32,
+                                                rule: None,
+                                            })?;
+                                        parse_keyword_visitor_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            visitor,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                        }
+                                    }
+                                }
+                                55u8 => {
+                                    let attempt_p = *p;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                                offset: *p as u32,
+                                                rule: None,
+                                            })?;
+                                        parse_keyword_visitor_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            visitor,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                        }
+                                    }
+                                }
+                                56u8 => {
+                                    let attempt_p = *p;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                                offset: *p as u32,
+                                                rule: None,
+                                            })?;
+                                        parse_keyword_visitor_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            visitor,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                        }
+                                    }
+                                }
+                                57u8 => {
+                                    let attempt_p = *p;
+                                    match {
+                                        let __first = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            )
+                                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                                offset: *p as u32,
+                                                rule: None,
+                                            })?;
+                                        parse_keyword_visitor_EbnfParser_digit(
+                                            input,
+                                            p,
+                                            __first,
+                                            state,
+                                            visitor,
+                                        )
+                                    } {
+                                        Ok(_) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = attempt_p;
+                                        }
+                                    }
+                                }
+                                95u8 => {
+                                    let at = *p;
+                                    let end = at + 1usize;
+                                    if input.len() >= end && input[at..end] == [95u8] {
+                                        *p = end;
+                                        break 'try_branches;
+                                    }
+                                }
+                                _ => {}
+                            }
+                            {
+                                let attempt_p = *p;
+                                match {
+                                    let _ = __shape_support_EbnfParser::skip_space(
+                                        input,
+                                        p,
+                                        state,
+                                    );
+                                    parse_altdispatch_visitor_EbnfParser_letter(
+                                        input,
+                                        p,
+                                        state,
+                                        visitor,
+                                    )
+                                } {
+                                    Ok(_) => break 'try_branches,
+                                    Err(_) => {
+                                        *p = attempt_p;
+                                    }
+                                }
+                            }
+                            return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            });
+                        }
+                    }
+                    Ok(())
+                })();
+                if res.is_err() {
+                    *p = save_p;
+                    break;
+                }
+                if *p == save_p {
+                    break;
+                }
+                iter_count = iter_count.saturating_add(1);
+            }
+            if iter_count < (0usize as u32) {
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+            }
+        }
+        Ok(())
+    }
+    /// AW-V.W3-bench-fix — visitor-path Keyword-shape parse
+    /// function (Alt of literal-led or Ref-led branches).
+    ///
+    /// AX.W0a.2.g — admits Ref-led branches; threads `state`
+    /// for downstream visitor-path Ref calls.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_keyword_visitor_EbnfParser_terminal<V>(
+        input: &[u8],
+        p: &mut usize,
+        first_byte: u8,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    where
+        V: ::bbnf::runtime::tape::KeywordVisitor + ::bbnf::runtime::tape::ObjectVisitor
+            + ::bbnf::runtime::tape::ArrayVisitor + ::bbnf::runtime::tape::StringVisitor
+            + ::bbnf::runtime::tape::NumberVisitor,
+    {
+        let _ = state;
+        match first_byte {
+            _ => {
+                Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                })
+            }
+        }
+    }
+    /// AX.W0a.2.b — visitor-path AltDispatch-shape parse function.
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]`.
+    #[inline]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut,
+        unused_assignments,
+        unreachable_code
+    )]
+    pub fn parse_altdispatch_visitor_EbnfParser_term<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    where
+        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
+            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
+            + ::bbnf::runtime::tape::KeywordVisitor,
+    {
+        let first = __shape_support_EbnfParser::skip_space(input, p, state)
+            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                offset: *p as u32,
+                rule: None,
+            })?;
+        'try_branches: loop {
+            match first {
+                34u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_terminal(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                39u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_terminal(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                40u8 => {
+                    let save_p = *p;
+                    let attempt = (|| -> ::core::result::Result<(), ()> {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [40u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let at = *p;
+                        let mut q = at;
+                        while q < input.len() {
+                            let b = input[q];
+                            if b.is_ascii_alphanumeric() || b == b'_' {
+                                q += 1;
+                            } else {
+                                break;
+                            }
+                        }
+                        if q == at {
+                            return Err(());
+                        }
+                        *p = q;
+                        return Err(());
+                        let at = *p;
+                        let mut q = at;
+                        while q < input.len() {
+                            let b = input[q];
+                            if b.is_ascii_alphanumeric() || b == b'_' {
+                                q += 1;
+                            } else {
+                                break;
+                            }
+                        }
+                        if q == at {
+                            return Err(());
+                        }
+                        *p = q;
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [41u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        Ok(())
+                    })();
+                    match attempt {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = save_p;
+                        }
+                    }
+                }
+                91u8 => {
+                    let save_p = *p;
+                    let attempt = (|| -> ::core::result::Result<(), ()> {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [91u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let at = *p;
+                        let mut q = at;
+                        while q < input.len() {
+                            let b = input[q];
+                            if b.is_ascii_alphanumeric() || b == b'_' {
+                                q += 1;
+                            } else {
+                                break;
+                            }
+                        }
+                        if q == at {
+                            return Err(());
+                        }
+                        *p = q;
+                        return Err(());
+                        let at = *p;
+                        let mut q = at;
+                        while q < input.len() {
+                            let b = input[q];
+                            if b.is_ascii_alphanumeric() || b == b'_' {
+                                q += 1;
+                            } else {
+                                break;
+                            }
+                        }
+                        if q == at {
+                            return Err(());
+                        }
+                        *p = q;
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [93u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        Ok(())
+                    })();
+                    match attempt {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = save_p;
+                        }
+                    }
+                }
+                123u8 => {
+                    let save_p = *p;
+                    let attempt = (|| -> ::core::result::Result<(), ()> {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [123u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        let at = *p;
+                        let mut q = at;
+                        while q < input.len() {
+                            let b = input[q];
+                            if b.is_ascii_alphanumeric() || b == b'_' {
+                                q += 1;
+                            } else {
+                                break;
+                            }
+                        }
+                        if q == at {
+                            return Err(());
+                        }
+                        *p = q;
+                        return Err(());
+                        let at = *p;
+                        let mut q = at;
+                        while q < input.len() {
+                            let b = input[q];
+                            if b.is_ascii_alphanumeric() || b == b'_' {
+                                q += 1;
+                            } else {
+                                break;
+                            }
+                        }
+                        if q == at {
+                            return Err(());
+                        }
+                        *p = q;
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [125u8] {
+                            return Err(());
+                        }
+                        *p = end;
+                        Ok(())
+                    })();
+                    match attempt {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = save_p;
+                        }
+                    }
+                }
+                _ => {}
+            }
+            {
+                let attempt_p = *p;
+                match {
+                    let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                    parse_flat_visitor_EbnfParser_identifier(input, p, state, visitor)
+                } {
+                    Ok(_) => break 'try_branches,
+                    Err(_) => {
+                        *p = attempt_p;
+                    }
+                }
+            }
+            return Err(::bbnf::runtime::ParseErr::Syntax {
+                offset: *p as u32,
+                rule: None,
+            });
+        }
+        Ok(())
+    }
+    /// AW-V.W4-fix — visitor-path Flat-shape parse function.
+    ///
+    /// Mirrors the tape-path emitter structure. Literal positions
+    /// byte-match without emitting a visitor event; Ref / Regex /
+    /// Alt positions recurse through the visitor dispatcher.
+    ///
+    /// AX.W0a.2.f — compound; see tape-path comment for the
+    /// `#[inline]` downgrade rationale.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_visitor_EbnfParser_factor<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    where
+        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
+            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
+            + ::bbnf::runtime::tape::KeywordVisitor,
+    {
+        {
+            ({
+                let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                parse_altdispatch_visitor_EbnfParser_term(input, p, state, visitor)
+            })?;
+        }
+        {
+            {
+                let span_lo = *p;
+                let Some(match_len) = __regex_scan_EbnfParser(
+                    "[ \\t\\n\\r\\f]*",
+                    input,
+                    *p,
+                ) else {
+                    return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: span_lo as u32,
+                        rule: None,
+                    });
+                };
+                *p = span_lo + match_len as usize;
+            }
+        }
+        {
+            {
+                let first = __shape_support_EbnfParser::skip_space(input, p, state)
+                    .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                        offset: *p as u32,
+                        rule: None,
+                    })?;
+                'try_branches: loop {
+                    match first {
+                        42u8 => {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() >= end && input[at..end] == [42u8] {
+                                *p = end;
+                                break 'try_branches;
+                            }
+                        }
+                        43u8 => {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() >= end && input[at..end] == [43u8] {
+                                *p = end;
+                                break 'try_branches;
+                            }
+                        }
+                        45u8 => {
+                            let save_p = *p;
+                            let attempt = (|| -> ::core::result::Result<(), ()> {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() < end || input[at..end] != [45u8] {
+                                    return Err(());
+                                }
+                                *p = end;
+                                let at = *p;
+                                let mut q = at;
+                                while q < input.len() {
+                                    let b = input[q];
+                                    if b.is_ascii_alphanumeric() || b == b'_' {
+                                        q += 1;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                if q == at {
+                                    return Err(());
+                                }
+                                *p = q;
+                                return Err(());
+                                Ok(())
+                            })();
+                            match attempt {
+                                Ok(_) => break 'try_branches,
+                                Err(_) => {
+                                    *p = save_p;
+                                }
+                            }
+                        }
+                        63u8 => {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() >= end && input[at..end] == [63u8] {
+                                *p = end;
+                                break 'try_branches;
+                            }
+                        }
+                        _ => {}
+                    }
+                    return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: *p as u32,
+                        rule: None,
+                    });
+                }
+            }
+        }
+        Ok(())
+    }
+    /// AW-V.W4-fix — visitor-path Flat-shape parse function.
+    ///
+    /// Mirrors the tape-path emitter structure. Literal positions
+    /// byte-match without emitting a visitor event; Ref / Regex /
+    /// Alt positions recurse through the visitor dispatcher.
+    ///
+    /// AX.W0a.2.f — compound; see tape-path comment for the
+    /// `#[inline]` downgrade rationale.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_visitor_EbnfParser_concatenation<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    where
+        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
+            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
+            + ::bbnf::runtime::tape::KeywordVisitor,
+    {
+        {
+            let mut iter_count: u32 = 0;
+            loop {
+                let save_p = *p;
+                let res = (|| -> ::core::result::Result<(), ::bbnf::runtime::ParseErr> {
+                    {
+                        let span_lo = *p;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                                offset: span_lo as u32,
+                                rule: None,
+                            });
+                        };
+                        *p = span_lo + match_len as usize;
+                    }
+                    ({
+                        let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                        parse_flat_visitor_EbnfParser_factor(input, p, state, visitor)
+                    })?;
+                    {
+                        let span_lo = *p;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                                offset: span_lo as u32,
+                                rule: None,
+                            });
+                        };
+                        *p = span_lo + match_len as usize;
+                    }
+                    let save_p = *p;
+                    let res = (|| -> ::core::result::Result<
+                        (),
+                        ::bbnf::runtime::ParseErr,
+                    > {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [44u8] {
+                            return Err(::bbnf::runtime::ParseErr::Syntax {
+                                offset: at as u32,
+                                rule: None,
+                            });
+                        }
+                        *p = end;
+                        Ok(())
+                    })();
+                    if res.is_err() {
+                        *p = save_p;
+                    }
+                    Ok(())
+                })();
+                if res.is_err() {
+                    *p = save_p;
+                    break;
+                }
+                if *p == save_p {
+                    break;
+                }
+                iter_count = iter_count.saturating_add(1);
+            }
+            if iter_count < (1usize as u32) {
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+            }
+        }
+        Ok(())
+    }
+    /// AW-V.W4-fix — visitor-path Flat-shape parse function.
+    ///
+    /// Mirrors the tape-path emitter structure. Literal positions
+    /// byte-match without emitting a visitor event; Ref / Regex /
+    /// Alt positions recurse through the visitor dispatcher.
+    ///
+    /// AX.W0a.2.f — compound; see tape-path comment for the
+    /// `#[inline]` downgrade rationale.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_visitor_EbnfParser_alternation<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    where
+        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
+            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
+            + ::bbnf::runtime::tape::KeywordVisitor,
+    {
+        {
+            let mut iter_count: u32 = 0;
+            loop {
+                let save_p = *p;
+                let res = (|| -> ::core::result::Result<(), ::bbnf::runtime::ParseErr> {
+                    {
+                        let span_lo = *p;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                                offset: span_lo as u32,
+                                rule: None,
+                            });
+                        };
+                        *p = span_lo + match_len as usize;
+                    }
+                    ({
+                        let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                        parse_flat_visitor_EbnfParser_concatenation(
+                            input,
+                            p,
+                            state,
+                            visitor,
+                        )
+                    })?;
+                    {
+                        let span_lo = *p;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                                offset: span_lo as u32,
+                                rule: None,
+                            });
+                        };
+                        *p = span_lo + match_len as usize;
+                    }
+                    let save_p = *p;
+                    let res = (|| -> ::core::result::Result<
+                        (),
+                        ::bbnf::runtime::ParseErr,
+                    > {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [124u8] {
+                            return Err(::bbnf::runtime::ParseErr::Syntax {
+                                offset: at as u32,
+                                rule: None,
+                            });
+                        }
+                        *p = end;
+                        Ok(())
+                    })();
+                    if res.is_err() {
+                        *p = save_p;
+                    }
+                    Ok(())
+                })();
+                if res.is_err() {
+                    *p = save_p;
+                    break;
+                }
+                if *p == save_p {
+                    break;
+                }
+                iter_count = iter_count.saturating_add(1);
+            }
+            if iter_count < (1usize as u32) {
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+            }
+        }
+        Ok(())
+    }
+    /// AW-V.W4-fix — visitor-path Flat-shape parse function.
+    ///
+    /// Mirrors the tape-path emitter structure. Literal positions
+    /// byte-match without emitting a visitor event; Ref / Regex /
+    /// Alt positions recurse through the visitor dispatcher.
+    ///
+    /// AX.W0a.2.f — compound; see tape-path comment for the
+    /// `#[inline]` downgrade rationale.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_visitor_EbnfParser_rule<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    where
+        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
+            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
+            + ::bbnf::runtime::tape::KeywordVisitor,
+    {
+        {
+            ({
+                let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                parse_flat_visitor_EbnfParser_identifier(input, p, state, visitor)
+            })?;
+        }
+        {
+            {
+                let span_lo = *p;
+                let Some(match_len) = __regex_scan_EbnfParser(
+                    "[ \\t\\n\\r\\f]*",
+                    input,
+                    *p,
+                ) else {
+                    return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: span_lo as u32,
+                        rule: None,
+                    });
+                };
+                *p = span_lo + match_len as usize;
+            }
+        }
+        {
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [61u8] {
+                return Err(::bbnf::runtime::ParseErr::Syntax {
+                    offset: at as u32,
+                    rule: None,
+                });
+            }
+            *p = end;
+        }
+        {
+            {
+                let span_lo = *p;
+                let Some(match_len) = __regex_scan_EbnfParser(
+                    "[ \\t\\n\\r\\f]*",
+                    input,
+                    *p,
+                ) else {
+                    return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: span_lo as u32,
+                        rule: None,
+                    });
+                };
+                *p = span_lo + match_len as usize;
+            }
+        }
+        {
+            ({
+                let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                parse_flat_visitor_EbnfParser_alternation(input, p, state, visitor)
+            })?;
+        }
+        {
+            {
+                let span_lo = *p;
+                let Some(match_len) = __regex_scan_EbnfParser(
+                    "[ \\t\\n\\r\\f]*",
+                    input,
+                    *p,
+                ) else {
+                    return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: span_lo as u32,
+                        rule: None,
+                    });
+                };
+                *p = span_lo + match_len as usize;
+            }
+        }
+        {
+            {
+                let first = __shape_support_EbnfParser::skip_space(input, p, state)
+                    .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                        offset: *p as u32,
+                        rule: None,
+                    })?;
+                'try_branches: loop {
+                    match first {
+                        46u8 => {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() >= end && input[at..end] == [46u8] {
+                                *p = end;
+                                break 'try_branches;
+                            }
+                        }
+                        59u8 => {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() >= end && input[at..end] == [59u8] {
+                                *p = end;
+                                break 'try_branches;
+                            }
+                        }
+                        _ => {}
+                    }
+                    return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: *p as u32,
+                        rule: None,
+                    });
+                }
+            }
+        }
+        Ok(())
+    }
+    /// AW-V.W3-bench-fix — visitor-path Array-shape parse function.
+    ///
+    /// Mirrors `json_prototype::parse_array::<V>`. Bypasses
+    /// the tape entirely.
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]`.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_array_visitor_EbnfParser_grammar<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    where
+        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
+            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
+            + ::bbnf::runtime::tape::KeywordVisitor,
+    {
+        let begin_at = *p;
+        if input.get(*p).copied() != Some(b'[') {
+            return Err(::bbnf::runtime::ParseErr::Syntax {
+                offset: begin_at as u32,
+                rule: None,
+            });
+        }
+        *p += 1;
+        visitor
+            .begin_array()
+            .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                offset: begin_at as u32,
+                rule: None,
+            })?;
+        if let Some(b) = __shape_support_EbnfParser::skip_space(input, p, state) {
+            if b == b']' {
+                *p += 1;
+                return visitor
+                    .end_array()
+                    .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                        offset: *p as u32,
+                        rule: None,
+                    });
+            }
+        } else {
+            return Err(::bbnf::runtime::ParseErr::Syntax {
+                offset: *p as u32,
+                rule: None,
+            });
+        }
+        loop {
+            ({
+                let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                parse_flat_visitor_EbnfParser_rule(input, p, state, visitor)
+            })?;
+            match __shape_support_EbnfParser::skip_space(input, p, state) {
+                Some(b']') => {
+                    *p += 1;
+                    return visitor
+                        .end_array()
+                        .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                            offset: *p as u32,
+                            rule: None,
+                        });
+                }
+                Some(b',') => {
+                    *p += 1;
+                    let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                }
+                _ => {
+                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: *p as u32,
+                        rule: None,
+                    });
+                }
+            }
+        }
+    }
+    /// AY-II.W0.e — Grammar-activated structural-scan policy table.
+    ///
+    /// One entry per non-transparent rule, derived at codegen from
+    /// CSP-inferred FIRST-set facts intersected with the grammar's
+    /// mined `structural_alphabet` + `structural_digraph_mask`.
+    /// Consumed at emission time by `emit_path_query_impls` in
+    /// `backend::rust::view::value`, which inlines the matching
+    /// cursor primitive in `__path_walk`'s per-`rule_kind()`
+    /// dispatch:
+    /// [`::bbnf::runtime::tape::TapeCursor::object_key_seek`] /
+    /// [`::bbnf::runtime::tape::TapeCursor::bounded_lookahead`] /
+    /// [`::bbnf::runtime::tape::TapeCursor::scan_structural_bounded`]
+    /// per the entry's `activation` bitmap.
+    ///
+    /// No runtime flag; no hand-routed grammar specialisation.
+    /// AY-II.W0'.c retires the `#[allow(dead_code)]` that
+    /// previously guarded this surface — the emitted grammar now
+    /// carries a same-translation-unit consumer through
+    /// `__path_walk`'s dispatch.
+    pub const STRUCTURAL_SCAN_POLICY: &[::bbnf::runtime::tape::ScanPolicyEntry] = &[
+        ::bbnf::runtime::tape::ScanPolicyEntry {
+            rule_id: 0u32,
+            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
+            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+        },
+        ::bbnf::runtime::tape::ScanPolicyEntry {
+            rule_id: 1u32,
+            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
+            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+        },
+        ::bbnf::runtime::tape::ScanPolicyEntry {
+            rule_id: 2u32,
+            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
+            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+        },
+        ::bbnf::runtime::tape::ScanPolicyEntry {
+            rule_id: 3u32,
+            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
+            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+        },
+        ::bbnf::runtime::tape::ScanPolicyEntry {
+            rule_id: 4u32,
+            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
+            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+        },
+        ::bbnf::runtime::tape::ScanPolicyEntry {
+            rule_id: 5u32,
+            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+        },
+        ::bbnf::runtime::tape::ScanPolicyEntry {
+            rule_id: 6u32,
+            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
+            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+        },
+        ::bbnf::runtime::tape::ScanPolicyEntry {
+            rule_id: 7u32,
+            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
+            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+        },
+        ::bbnf::runtime::tape::ScanPolicyEntry {
+            rule_id: 8u32,
+            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
+            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+        },
+        ::bbnf::runtime::tape::ScanPolicyEntry {
+            rule_id: 9u32,
+            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
+            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+        },
+        ::bbnf::runtime::tape::ScanPolicyEntry {
+            rule_id: 10u32,
+            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
+            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+        },
+        ::bbnf::runtime::tape::ScanPolicyEntry {
+            rule_id: 11u32,
+            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
+            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+        },
+    ];
+    /// AW-V.W3.2 — top-level shape dispatcher.
+    ///
+    /// Mirrors the walker's `value` rule ByteDispatch: skip leading
+    /// whitespace, dispatch on the first byte to the chosen branch
+    /// shape fn, return its `TapeOffset` unchanged. No outer Rule /
+    /// Alt compound is pushed — the DTA's ByteDispatch state for
+    /// `value` emits no compound either, and the target rule's Ref
+    /// overwrites any `pending_variant_idx` en route, so the chosen
+    /// rule's own compound carries the final root variant.
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_EbnfParser_grammar(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<
+        ::bbnf::runtime::tape::TapeOffset,
+        ::bbnf::runtime::tape::DtaError,
+    > {
+        parse_EbnfParser_grammar__value(input, p, state, builder)
+    }
+    /// AW-V.W3.2 — value-position shape dispatcher. Called both at
+    /// the grammar root and from Object / Array compound bodies.
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]`.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_EbnfParser_grammar__value(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    ) -> ::core::result::Result<
+        ::bbnf::runtime::tape::TapeOffset,
+        ::bbnf::runtime::tape::DtaError,
+    > {
+        let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+        parse_array_EbnfParser_grammar(input, p, state, builder)
+    }
+    /// AW-V.W3-bench-fix — top-level visitor-path dispatcher.
+    ///
+    /// Generic over the visitor type; `V: JsonVisitor` composes all
+    /// per-shape sub-trait bounds (`ObjectVisitor`, `ArrayVisitor`,
+    /// `StringVisitor`, `NumberVisitor`, `KeywordVisitor`) so every
+    /// per-shape method invocation resolves statically at the
+    /// monomorphisation site. Bypasses the tape entirely.
+    ///
+    /// The dispatcher's bounds are narrow by design: emitted only
+    /// for grammars whose classified rules use W3-pure shapes
+    /// (Object / Array / String / Number / Keyword / Scalar).
+    /// Grammars carrying W4-classified rules (Pratt / Unordered /
+    /// ArgList / Flat / Wrap / HRegex) skip visitor dispatcher
+    /// emission entirely — the tape-path dispatcher still emits,
+    /// the per-shape fns still compile, but the generic `V`
+    /// visitor bound can't union W4 visitor sub-traits without
+    /// rippling into callers that don't have those bounds. Visitor
+    /// activation for W4-carrying grammars lands in a follow-on
+    /// wave alongside the per-Ref `__value` dispatcher refactor.
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]`.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_EbnfParser_grammar_visitor<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    where
+        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
+            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
+            + ::bbnf::runtime::tape::KeywordVisitor,
+    {
+        parse_EbnfParser_grammar_visitor__value(input, p, state, visitor)
+    }
+    /// AW-V.W3-bench-fix — value-position visitor-path dispatcher.
+    /// Called both at the grammar root and from the object / array
+    /// shape fns' value-position recursion.
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]`.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_EbnfParser_grammar_visitor__value<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    where
+        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
+            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
+            + ::bbnf::runtime::tape::KeywordVisitor,
+    {
+        let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+        parse_array_visitor_EbnfParser_grammar(input, p, state, visitor)
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct letterView<'p> {
+        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> letterView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p ::bbnf::runtime::tape::Tape,
+            input: &'p str,
+            offset: ::bbnf::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> EbnfParserRuleKind {
+            match self.variant_idx() {
+                0u8 => EbnfParserRuleKind::letter,
+                1u8 => EbnfParserRuleKind::digit,
+                2u8 => EbnfParserRuleKind::symbol,
+                3u8 => EbnfParserRuleKind::character,
+                4u8 => EbnfParserRuleKind::identifier,
+                5u8 => EbnfParserRuleKind::terminal,
+                6u8 => EbnfParserRuleKind::term,
+                7u8 => EbnfParserRuleKind::factor,
+                8u8 => EbnfParserRuleKind::concatenation,
+                9u8 => EbnfParserRuleKind::alternation,
+                10u8 => EbnfParserRuleKind::rule,
+                11u8 => EbnfParserRuleKind::grammar,
+                12u8 => EbnfParserRuleKind::term_0,
+                13u8 => EbnfParserRuleKind::term_1,
+                14u8 => EbnfParserRuleKind::factor_0,
+                15u8 => EbnfParserRuleKind::factor_1,
+                _ => EbnfParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> letterView<'p> {
+        /// The source text matched by this rule.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
+            }
+        }
+        /// The matched byte range as a `Range<usize>`, suitable
+        /// for slicing the input string directly.
+        #[inline]
+        pub fn byte_range(&self) -> ::core::ops::Range<usize> {
+            let (lo, hi) = self.span();
+            lo as usize..hi as usize
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct digitView<'p> {
+        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> digitView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p ::bbnf::runtime::tape::Tape,
+            input: &'p str,
+            offset: ::bbnf::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> EbnfParserRuleKind {
+            match self.variant_idx() {
+                0u8 => EbnfParserRuleKind::letter,
+                1u8 => EbnfParserRuleKind::digit,
+                2u8 => EbnfParserRuleKind::symbol,
+                3u8 => EbnfParserRuleKind::character,
+                4u8 => EbnfParserRuleKind::identifier,
+                5u8 => EbnfParserRuleKind::terminal,
+                6u8 => EbnfParserRuleKind::term,
+                7u8 => EbnfParserRuleKind::factor,
+                8u8 => EbnfParserRuleKind::concatenation,
+                9u8 => EbnfParserRuleKind::alternation,
+                10u8 => EbnfParserRuleKind::rule,
+                11u8 => EbnfParserRuleKind::grammar,
+                12u8 => EbnfParserRuleKind::term_0,
+                13u8 => EbnfParserRuleKind::term_1,
+                14u8 => EbnfParserRuleKind::factor_0,
+                15u8 => EbnfParserRuleKind::factor_1,
+                _ => EbnfParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> digitView<'p> {
+        /// The source text matched by this rule.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
+            }
+        }
+        /// The matched byte range as a `Range<usize>`, suitable
+        /// for slicing the input string directly.
+        #[inline]
+        pub fn byte_range(&self) -> ::core::ops::Range<usize> {
+            let (lo, hi) = self.span();
+            lo as usize..hi as usize
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct symbolView<'p> {
+        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> symbolView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p ::bbnf::runtime::tape::Tape,
+            input: &'p str,
+            offset: ::bbnf::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> EbnfParserRuleKind {
+            match self.variant_idx() {
+                0u8 => EbnfParserRuleKind::letter,
+                1u8 => EbnfParserRuleKind::digit,
+                2u8 => EbnfParserRuleKind::symbol,
+                3u8 => EbnfParserRuleKind::character,
+                4u8 => EbnfParserRuleKind::identifier,
+                5u8 => EbnfParserRuleKind::terminal,
+                6u8 => EbnfParserRuleKind::term,
+                7u8 => EbnfParserRuleKind::factor,
+                8u8 => EbnfParserRuleKind::concatenation,
+                9u8 => EbnfParserRuleKind::alternation,
+                10u8 => EbnfParserRuleKind::rule,
+                11u8 => EbnfParserRuleKind::grammar,
+                12u8 => EbnfParserRuleKind::term_0,
+                13u8 => EbnfParserRuleKind::term_1,
+                14u8 => EbnfParserRuleKind::factor_0,
+                15u8 => EbnfParserRuleKind::factor_1,
+                _ => EbnfParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> symbolView<'p> {
+        /// The source text matched by this rule.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
+            }
+        }
+        /// The matched byte range as a `Range<usize>`, suitable
+        /// for slicing the input string directly.
+        #[inline]
+        pub fn byte_range(&self) -> ::core::ops::Range<usize> {
+            let (lo, hi) = self.span();
+            lo as usize..hi as usize
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct characterView<'p> {
+        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> characterView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p ::bbnf::runtime::tape::Tape,
+            input: &'p str,
+            offset: ::bbnf::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> EbnfParserRuleKind {
+            match self.variant_idx() {
+                0u8 => EbnfParserRuleKind::letter,
+                1u8 => EbnfParserRuleKind::digit,
+                2u8 => EbnfParserRuleKind::symbol,
+                3u8 => EbnfParserRuleKind::character,
+                4u8 => EbnfParserRuleKind::identifier,
+                5u8 => EbnfParserRuleKind::terminal,
+                6u8 => EbnfParserRuleKind::term,
+                7u8 => EbnfParserRuleKind::factor,
+                8u8 => EbnfParserRuleKind::concatenation,
+                9u8 => EbnfParserRuleKind::alternation,
+                10u8 => EbnfParserRuleKind::rule,
+                11u8 => EbnfParserRuleKind::grammar,
+                12u8 => EbnfParserRuleKind::term_0,
+                13u8 => EbnfParserRuleKind::term_1,
+                14u8 => EbnfParserRuleKind::factor_0,
+                15u8 => EbnfParserRuleKind::factor_1,
+                _ => EbnfParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> characterView<'p> {
+        ///If variant `branch_0` (branch 0) was chosen, return its child view.
+        #[inline]
+        pub fn as_branch_0(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            if self.cursor.meta_idx() == 0u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        ///Returns `true` if variant `branch_0` (branch 0) was chosen.
+        #[inline]
+        pub fn is_branch_0(&self) -> bool {
+            self.cursor.meta_idx() == 0u8
+        }
+        ///If variant `branch_1` (branch 1) was chosen, return its child view.
+        #[inline]
+        pub fn as_branch_1(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            if self.cursor.meta_idx() == 1u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        ///Returns `true` if variant `branch_1` (branch 1) was chosen.
+        #[inline]
+        pub fn is_branch_1(&self) -> bool {
+            self.cursor.meta_idx() == 1u8
+        }
+        ///If variant `digit` (branch 2) was chosen, return its child view.
+        #[inline]
+        pub fn as_digit(&self) -> ::core::option::Option<digitView<'p>> {
+            if self.cursor.meta_idx() == 2u8 {
+                self.cursor.child(0).map(|c| digitView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        ///Returns `true` if variant `digit` (branch 2) was chosen.
+        #[inline]
+        pub fn is_digit(&self) -> bool {
+            self.cursor.meta_idx() == 2u8
+        }
+        ///If variant `symbol` (branch 3) was chosen, return its child view.
+        #[inline]
+        pub fn as_symbol(&self) -> ::core::option::Option<symbolView<'p>> {
+            if self.cursor.meta_idx() == 3u8 {
+                self.cursor.child(0).map(|c| symbolView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        ///Returns `true` if variant `symbol` (branch 3) was chosen.
+        #[inline]
+        pub fn is_symbol(&self) -> bool {
+            self.cursor.meta_idx() == 3u8
+        }
+        ///If variant `letter` (branch 4) was chosen, return its child view.
+        #[inline]
+        pub fn as_letter(&self) -> ::core::option::Option<letterView<'p>> {
+            if self.cursor.meta_idx() == 4u8 {
+                self.cursor.child(0).map(|c| letterView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        ///Returns `true` if variant `letter` (branch 4) was chosen.
+        #[inline]
+        pub fn is_letter(&self) -> bool {
+            self.cursor.meta_idx() == 4u8
+        }
+        /// The chosen branch's child as a generic node view,
+        /// regardless of which variant was selected.
+        #[inline]
+        pub fn chosen(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(0).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+    }
+    /// Typed value enum — payload-eligible branches carry typed
+    /// values directly; non-eligible branches wrap a cursor view.
+    #[derive(Clone, Debug)]
+    pub enum characterValue<'p> {
+        branch_0(EbnfParserNodeView<'p>),
+        branch_1(EbnfParserNodeView<'p>),
+        digit(((u32, u32))),
+        symbol(((u32, u32))),
+        letter(((u32, u32))),
+    }
+    impl<'p> characterView<'p> {
+        /// Decode the chosen branch's value. Payload-eligible
+        /// branches return typed scalars/aggregates; other
+        /// branches return cursor-wrapped sub-views.
+        #[inline]
+        pub fn value(&self) -> ::core::option::Option<characterValue<'p>> {
+            match self.cursor.meta_idx() {
+                0u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        characterValue::branch_0(
+                            EbnfParserNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                1u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        characterValue::branch_1(
+                            EbnfParserNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                2u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_bytes(__rec, 8usize) {
+                        Some(__bytes) => {
+                            ({
+                                let __raw = u64::from_le_bytes(
+                                    <[u8; 8]>::try_from(&__bytes[0usize..8usize]).unwrap(),
+                                );
+                                (__raw as u32, (__raw >> 32) as u32)
+                            })
+                        }
+                        None => ((0_u32, 0_u32)),
+                    };
+                    Some(characterValue::digit(__value))
+                }
+                3u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_bytes(__rec, 8usize) {
+                        Some(__bytes) => {
+                            ({
+                                let __raw = u64::from_le_bytes(
+                                    <[u8; 8]>::try_from(&__bytes[0usize..8usize]).unwrap(),
+                                );
+                                (__raw as u32, (__raw >> 32) as u32)
+                            })
+                        }
+                        None => ((0_u32, 0_u32)),
+                    };
+                    Some(characterValue::symbol(__value))
+                }
+                4u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_bytes(__rec, 8usize) {
+                        Some(__bytes) => {
+                            ({
+                                let __raw = u64::from_le_bytes(
+                                    <[u8; 8]>::try_from(&__bytes[0usize..8usize]).unwrap(),
+                                );
+                                (__raw as u32, (__raw >> 32) as u32)
+                            })
+                        }
+                        None => ((0_u32, 0_u32)),
+                    };
+                    Some(characterValue::letter(__value))
+                }
+                _ => None,
+            }
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct identifierView<'p> {
+        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> identifierView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p ::bbnf::runtime::tape::Tape,
+            input: &'p str,
+            offset: ::bbnf::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> EbnfParserRuleKind {
+            match self.variant_idx() {
+                0u8 => EbnfParserRuleKind::letter,
+                1u8 => EbnfParserRuleKind::digit,
+                2u8 => EbnfParserRuleKind::symbol,
+                3u8 => EbnfParserRuleKind::character,
+                4u8 => EbnfParserRuleKind::identifier,
+                5u8 => EbnfParserRuleKind::terminal,
+                6u8 => EbnfParserRuleKind::term,
+                7u8 => EbnfParserRuleKind::factor,
+                8u8 => EbnfParserRuleKind::concatenation,
+                9u8 => EbnfParserRuleKind::alternation,
+                10u8 => EbnfParserRuleKind::rule,
+                11u8 => EbnfParserRuleKind::grammar,
+                12u8 => EbnfParserRuleKind::term_0,
+                13u8 => EbnfParserRuleKind::term_1,
+                14u8 => EbnfParserRuleKind::factor_0,
+                15u8 => EbnfParserRuleKind::factor_1,
+                _ => EbnfParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> identifierView<'p> {
+        ///Child at position 0 as a typed view.
+        #[inline]
+        pub fn child_0(&self) -> ::core::option::Option<letterView<'p>> {
+            self.cursor.child(0usize).map(|c| letterView::from_cursor(c, self.input))
+        }
+        ///The `letter` child as a typed view.
+        #[inline]
+        pub fn letter(&self) -> ::core::option::Option<letterView<'p>> {
+            self.cursor.child(0usize).map(|c| letterView::from_cursor(c, self.input))
+        }
+        ///Child at position 1 as a typed view.
+        #[inline]
+        pub fn child_1(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor
+                .child(1usize)
+                .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        /// The number of typed child positions in this Seq.
+        #[inline]
+        pub fn num_children(&self) -> usize {
+            2usize
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct terminalView<'p> {
+        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> terminalView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p ::bbnf::runtime::tape::Tape,
+            input: &'p str,
+            offset: ::bbnf::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> EbnfParserRuleKind {
+            match self.variant_idx() {
+                0u8 => EbnfParserRuleKind::letter,
+                1u8 => EbnfParserRuleKind::digit,
+                2u8 => EbnfParserRuleKind::symbol,
+                3u8 => EbnfParserRuleKind::character,
+                4u8 => EbnfParserRuleKind::identifier,
+                5u8 => EbnfParserRuleKind::terminal,
+                6u8 => EbnfParserRuleKind::term,
+                7u8 => EbnfParserRuleKind::factor,
+                8u8 => EbnfParserRuleKind::concatenation,
+                9u8 => EbnfParserRuleKind::alternation,
+                10u8 => EbnfParserRuleKind::rule,
+                11u8 => EbnfParserRuleKind::grammar,
+                12u8 => EbnfParserRuleKind::term_0,
+                13u8 => EbnfParserRuleKind::term_1,
+                14u8 => EbnfParserRuleKind::factor_0,
+                15u8 => EbnfParserRuleKind::factor_1,
+                _ => EbnfParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> terminalView<'p> {
+        ///If variant `branch_0` (branch 0) was chosen, return its child view.
+        #[inline]
+        pub fn as_branch_0(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            if self.cursor.meta_idx() == 0u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        ///Returns `true` if variant `branch_0` (branch 0) was chosen.
+        #[inline]
+        pub fn is_branch_0(&self) -> bool {
+            self.cursor.meta_idx() == 0u8
+        }
+        ///If variant `branch_1` (branch 1) was chosen, return its child view.
+        #[inline]
+        pub fn as_branch_1(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            if self.cursor.meta_idx() == 1u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        ///Returns `true` if variant `branch_1` (branch 1) was chosen.
+        #[inline]
+        pub fn is_branch_1(&self) -> bool {
+            self.cursor.meta_idx() == 1u8
+        }
+        /// The chosen branch's child as a generic node view,
+        /// regardless of which variant was selected.
+        #[inline]
+        pub fn chosen(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(0).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct termView<'p> {
+        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> termView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p ::bbnf::runtime::tape::Tape,
+            input: &'p str,
+            offset: ::bbnf::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> EbnfParserRuleKind {
+            match self.variant_idx() {
+                0u8 => EbnfParserRuleKind::letter,
+                1u8 => EbnfParserRuleKind::digit,
+                2u8 => EbnfParserRuleKind::symbol,
+                3u8 => EbnfParserRuleKind::character,
+                4u8 => EbnfParserRuleKind::identifier,
+                5u8 => EbnfParserRuleKind::terminal,
+                6u8 => EbnfParserRuleKind::term,
+                7u8 => EbnfParserRuleKind::factor,
+                8u8 => EbnfParserRuleKind::concatenation,
+                9u8 => EbnfParserRuleKind::alternation,
+                10u8 => EbnfParserRuleKind::rule,
+                11u8 => EbnfParserRuleKind::grammar,
+                12u8 => EbnfParserRuleKind::term_0,
+                13u8 => EbnfParserRuleKind::term_1,
+                14u8 => EbnfParserRuleKind::factor_0,
+                15u8 => EbnfParserRuleKind::factor_1,
+                _ => EbnfParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> termView<'p> {
+        ///If variant `branch_0` (branch 0) was chosen, return its child view.
+        #[inline]
+        pub fn as_branch_0(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            if self.cursor.meta_idx() == 0u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        ///Returns `true` if variant `branch_0` (branch 0) was chosen.
+        #[inline]
+        pub fn is_branch_0(&self) -> bool {
+            self.cursor.meta_idx() == 0u8
+        }
+        ///If variant `branch_1` (branch 1) was chosen, return its child view.
+        #[inline]
+        pub fn as_branch_1(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            if self.cursor.meta_idx() == 1u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        ///Returns `true` if variant `branch_1` (branch 1) was chosen.
+        #[inline]
+        pub fn is_branch_1(&self) -> bool {
+            self.cursor.meta_idx() == 1u8
+        }
+        ///If variant `branch_2` (branch 2) was chosen, return its child view.
+        #[inline]
+        pub fn as_branch_2(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            if self.cursor.meta_idx() == 2u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        ///Returns `true` if variant `branch_2` (branch 2) was chosen.
+        #[inline]
+        pub fn is_branch_2(&self) -> bool {
+            self.cursor.meta_idx() == 2u8
+        }
+        ///If variant `terminal` (branch 3) was chosen, return its child view.
+        #[inline]
+        pub fn as_terminal(&self) -> ::core::option::Option<terminalView<'p>> {
+            if self.cursor.meta_idx() == 3u8 {
+                self.cursor.child(0).map(|c| terminalView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        ///Returns `true` if variant `terminal` (branch 3) was chosen.
+        #[inline]
+        pub fn is_terminal(&self) -> bool {
+            self.cursor.meta_idx() == 3u8
+        }
+        ///If variant `identifier` (branch 4) was chosen, return its child view.
+        #[inline]
+        pub fn as_identifier(&self) -> ::core::option::Option<identifierView<'p>> {
+            if self.cursor.meta_idx() == 4u8 {
+                self.cursor.child(0).map(|c| identifierView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        ///Returns `true` if variant `identifier` (branch 4) was chosen.
+        #[inline]
+        pub fn is_identifier(&self) -> bool {
+            self.cursor.meta_idx() == 4u8
+        }
+        ///If sub-variant `term_0` was chosen (branch 0), return its child view.
+        #[inline]
+        pub fn as_term_0(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            if self.cursor.meta_idx() == 0u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_term_0(&self) -> bool {
+            self.cursor.meta_idx() == 0u8
+        }
+        ///If sub-variant `term_0_sv1` was chosen (branch 1), return its child view.
+        #[inline]
+        pub fn as_term_0_sv1(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            if self.cursor.meta_idx() == 1u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_term_0_sv1(&self) -> bool {
+            self.cursor.meta_idx() == 1u8
+        }
+        ///If sub-variant `term_0_sv2` was chosen (branch 2), return its child view.
+        #[inline]
+        pub fn as_term_0_sv2(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            if self.cursor.meta_idx() == 2u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_term_0_sv2(&self) -> bool {
+            self.cursor.meta_idx() == 2u8
+        }
+        ///If sub-variant `term_1` was chosen (branch 4), return its child view.
+        #[inline]
+        pub fn as_term_1(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            if self.cursor.meta_idx() == 4u8 {
+                self.cursor
+                    .child(0)
+                    .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+            } else {
+                None
+            }
+        }
+        #[inline]
+        pub fn is_term_1(&self) -> bool {
+            self.cursor.meta_idx() == 4u8
+        }
+        /// The chosen branch's child as a generic node view,
+        /// regardless of which variant was selected.
+        #[inline]
+        pub fn chosen(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(0).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+    }
+    /// Typed value enum — payload-eligible branches carry typed
+    /// values directly; non-eligible branches wrap a cursor view.
+    #[derive(Clone, Debug)]
+    pub enum termValue<'p> {
+        branch_0(EbnfParserNodeView<'p>),
+        branch_1(EbnfParserNodeView<'p>),
+        branch_2(EbnfParserNodeView<'p>),
+        terminal(EbnfParserNodeView<'p>),
+        identifier(&'p str),
+    }
+    impl<'p> termView<'p> {
+        /// Decode the chosen branch's value. Payload-eligible
+        /// branches return typed scalars/aggregates; other
+        /// branches return cursor-wrapped sub-views.
+        #[inline]
+        pub fn value(&self) -> ::core::option::Option<termValue<'p>> {
+            match self.cursor.meta_idx() {
+                0u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        termValue::branch_0(
+                            EbnfParserNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                1u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        termValue::branch_1(
+                            EbnfParserNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                2u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        termValue::branch_2(
+                            EbnfParserNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                3u8 => {
+                    let __child = self.cursor.child(0)?;
+                    Some(
+                        termValue::terminal(
+                            EbnfParserNodeView::from_cursor(__child, self.input),
+                        ),
+                    )
+                }
+                4u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(termValue::identifier(__value))
+                }
+                _ => None,
+            }
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct factorView<'p> {
+        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> factorView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p ::bbnf::runtime::tape::Tape,
+            input: &'p str,
+            offset: ::bbnf::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> EbnfParserRuleKind {
+            match self.variant_idx() {
+                0u8 => EbnfParserRuleKind::letter,
+                1u8 => EbnfParserRuleKind::digit,
+                2u8 => EbnfParserRuleKind::symbol,
+                3u8 => EbnfParserRuleKind::character,
+                4u8 => EbnfParserRuleKind::identifier,
+                5u8 => EbnfParserRuleKind::terminal,
+                6u8 => EbnfParserRuleKind::term,
+                7u8 => EbnfParserRuleKind::factor,
+                8u8 => EbnfParserRuleKind::concatenation,
+                9u8 => EbnfParserRuleKind::alternation,
+                10u8 => EbnfParserRuleKind::rule,
+                11u8 => EbnfParserRuleKind::grammar,
+                12u8 => EbnfParserRuleKind::term_0,
+                13u8 => EbnfParserRuleKind::term_1,
+                14u8 => EbnfParserRuleKind::factor_0,
+                15u8 => EbnfParserRuleKind::factor_1,
+                _ => EbnfParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> factorView<'p> {
+        ///Child at position 0 as a typed view.
+        #[inline]
+        pub fn child_0(&self) -> ::core::option::Option<termView<'p>> {
+            self.cursor.child(0usize).map(|c| termView::from_cursor(c, self.input))
+        }
+        ///The `term` child as a typed view.
+        #[inline]
+        pub fn term(&self) -> ::core::option::Option<termView<'p>> {
+            self.cursor.child(0usize).map(|c| termView::from_cursor(c, self.input))
+        }
+        ///Child at position 1 as a typed view.
+        #[inline]
+        pub fn child_1(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor
+                .child(1usize)
+                .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        /// The number of typed child positions in this Seq.
+        #[inline]
+        pub fn num_children(&self) -> usize {
+            2usize
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct concatenationView<'p> {
+        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> concatenationView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p ::bbnf::runtime::tape::Tape,
+            input: &'p str,
+            offset: ::bbnf::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> EbnfParserRuleKind {
+            match self.variant_idx() {
+                0u8 => EbnfParserRuleKind::letter,
+                1u8 => EbnfParserRuleKind::digit,
+                2u8 => EbnfParserRuleKind::symbol,
+                3u8 => EbnfParserRuleKind::character,
+                4u8 => EbnfParserRuleKind::identifier,
+                5u8 => EbnfParserRuleKind::terminal,
+                6u8 => EbnfParserRuleKind::term,
+                7u8 => EbnfParserRuleKind::factor,
+                8u8 => EbnfParserRuleKind::concatenation,
+                9u8 => EbnfParserRuleKind::alternation,
+                10u8 => EbnfParserRuleKind::rule,
+                11u8 => EbnfParserRuleKind::grammar,
+                12u8 => EbnfParserRuleKind::term_0,
+                13u8 => EbnfParserRuleKind::term_1,
+                14u8 => EbnfParserRuleKind::factor_0,
+                15u8 => EbnfParserRuleKind::factor_1,
+                _ => EbnfParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> concatenationView<'p> {
+        /// Iterator over each repetition element as a typed view.
+        #[inline]
+        pub fn iter(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The number of elements in this repetition.
+        #[inline]
+        pub fn len(&self) -> usize {
+            self.cursor.child_count()
+        }
+        /// Whether this repetition matched zero elements.
+        #[inline]
+        pub fn is_empty(&self) -> bool {
+            self.len() == 0
+        }
+        /// The i-th element as a typed view, if present.
+        #[inline]
+        pub fn get(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct alternationView<'p> {
+        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> alternationView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p ::bbnf::runtime::tape::Tape,
+            input: &'p str,
+            offset: ::bbnf::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> EbnfParserRuleKind {
+            match self.variant_idx() {
+                0u8 => EbnfParserRuleKind::letter,
+                1u8 => EbnfParserRuleKind::digit,
+                2u8 => EbnfParserRuleKind::symbol,
+                3u8 => EbnfParserRuleKind::character,
+                4u8 => EbnfParserRuleKind::identifier,
+                5u8 => EbnfParserRuleKind::terminal,
+                6u8 => EbnfParserRuleKind::term,
+                7u8 => EbnfParserRuleKind::factor,
+                8u8 => EbnfParserRuleKind::concatenation,
+                9u8 => EbnfParserRuleKind::alternation,
+                10u8 => EbnfParserRuleKind::rule,
+                11u8 => EbnfParserRuleKind::grammar,
+                12u8 => EbnfParserRuleKind::term_0,
+                13u8 => EbnfParserRuleKind::term_1,
+                14u8 => EbnfParserRuleKind::factor_0,
+                15u8 => EbnfParserRuleKind::factor_1,
+                _ => EbnfParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> alternationView<'p> {
+        /// Iterator over each repetition element as a typed view.
+        #[inline]
+        pub fn iter(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The number of elements in this repetition.
+        #[inline]
+        pub fn len(&self) -> usize {
+            self.cursor.child_count()
+        }
+        /// Whether this repetition matched zero elements.
+        #[inline]
+        pub fn is_empty(&self) -> bool {
+            self.len() == 0
+        }
+        /// The i-th element as a typed view, if present.
+        #[inline]
+        pub fn get(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct ruleView<'p> {
+        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> ruleView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p ::bbnf::runtime::tape::Tape,
+            input: &'p str,
+            offset: ::bbnf::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> EbnfParserRuleKind {
+            match self.variant_idx() {
+                0u8 => EbnfParserRuleKind::letter,
+                1u8 => EbnfParserRuleKind::digit,
+                2u8 => EbnfParserRuleKind::symbol,
+                3u8 => EbnfParserRuleKind::character,
+                4u8 => EbnfParserRuleKind::identifier,
+                5u8 => EbnfParserRuleKind::terminal,
+                6u8 => EbnfParserRuleKind::term,
+                7u8 => EbnfParserRuleKind::factor,
+                8u8 => EbnfParserRuleKind::concatenation,
+                9u8 => EbnfParserRuleKind::alternation,
+                10u8 => EbnfParserRuleKind::rule,
+                11u8 => EbnfParserRuleKind::grammar,
+                12u8 => EbnfParserRuleKind::term_0,
+                13u8 => EbnfParserRuleKind::term_1,
+                14u8 => EbnfParserRuleKind::factor_0,
+                15u8 => EbnfParserRuleKind::factor_1,
+                _ => EbnfParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> ruleView<'p> {
+        ///Child at position 0 as a typed view.
+        #[inline]
+        pub fn child_0(&self) -> ::core::option::Option<identifierView<'p>> {
+            self.cursor.child(0usize).map(|c| identifierView::from_cursor(c, self.input))
+        }
+        ///The `identifier` child as a typed view.
+        #[inline]
+        pub fn identifier(&self) -> ::core::option::Option<identifierView<'p>> {
+            self.cursor.child(0usize).map(|c| identifierView::from_cursor(c, self.input))
+        }
+        ///Child at position 1 as a typed view.
+        #[inline]
+        pub fn child_1(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor
+                .child(1usize)
+                .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        ///Child at position 2 as a typed view.
+        #[inline]
+        pub fn child_2(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor
+                .child(2usize)
+                .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        ///Child at position 3 as a typed view.
+        #[inline]
+        pub fn child_3(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor
+                .child(3usize)
+                .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        ///Child at position 4 as a typed view.
+        #[inline]
+        pub fn child_4(&self) -> ::core::option::Option<alternationView<'p>> {
+            self.cursor
+                .child(4usize)
+                .map(|c| alternationView::from_cursor(c, self.input))
+        }
+        ///The `alternation` child as a typed view.
+        #[inline]
+        pub fn alternation(&self) -> ::core::option::Option<alternationView<'p>> {
+            self.cursor
+                .child(4usize)
+                .map(|c| alternationView::from_cursor(c, self.input))
+        }
+        ///Child at position 5 as a typed view.
+        #[inline]
+        pub fn child_5(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor
+                .child(5usize)
+                .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        ///Child at position 6 as a typed view.
+        #[inline]
+        pub fn child_6(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor
+                .child(6usize)
+                .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        /// The number of typed child positions in this Seq.
+        #[inline]
+        pub fn num_children(&self) -> usize {
+            7usize
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct grammarView<'p> {
+        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> grammarView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p ::bbnf::runtime::tape::Tape,
+            input: &'p str,
+            offset: ::bbnf::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> EbnfParserRuleKind {
+            match self.variant_idx() {
+                0u8 => EbnfParserRuleKind::letter,
+                1u8 => EbnfParserRuleKind::digit,
+                2u8 => EbnfParserRuleKind::symbol,
+                3u8 => EbnfParserRuleKind::character,
+                4u8 => EbnfParserRuleKind::identifier,
+                5u8 => EbnfParserRuleKind::terminal,
+                6u8 => EbnfParserRuleKind::term,
+                7u8 => EbnfParserRuleKind::factor,
+                8u8 => EbnfParserRuleKind::concatenation,
+                9u8 => EbnfParserRuleKind::alternation,
+                10u8 => EbnfParserRuleKind::rule,
+                11u8 => EbnfParserRuleKind::grammar,
+                12u8 => EbnfParserRuleKind::term_0,
+                13u8 => EbnfParserRuleKind::term_1,
+                14u8 => EbnfParserRuleKind::factor_0,
+                15u8 => EbnfParserRuleKind::factor_1,
+                _ => EbnfParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> grammarView<'p> {
+        /// Iterator over each repetition element as a typed view.
+        #[inline]
+        pub fn iter(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The number of elements in this repetition.
+        #[inline]
+        pub fn len(&self) -> usize {
+            self.cursor.child_count()
+        }
+        /// Whether this repetition matched zero elements.
+        #[inline]
+        pub fn is_empty(&self) -> bool {
+            self.len() == 0
+        }
+        /// The i-th element as a typed view, if present.
+        #[inline]
+        pub fn get(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+    }
+    /// Generic node view over any tape record for this grammar.
+    #[derive(Clone, Copy, Debug)]
+    pub struct EbnfParserNodeView<'p> {
+        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    /// Rule-identity discriminator for `NodeView::rule_kind`
+    /// and per-rule view `rule_kind` accessors. One variant
+    /// per non-transparent rule (in declaration order),
+    /// followed by one variant per distinct sub-variant name
+    /// from heterogeneous alt coercion, plus a fallback
+    /// `Unknown` for records the discriminator table does
+    /// not cover (leaf spans, alt branch indices, etc.).
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum EbnfParserRuleKind {
+        letter,
+        digit,
+        symbol,
+        character,
+        identifier,
+        terminal,
+        term,
+        factor,
+        concatenation,
+        alternation,
+        rule,
+        grammar,
+        term_0,
+        term_1,
+        factor_0,
+        factor_1,
+        /// Fallback for records whose variant_idx is not a
+        /// known rule- or sub-variant discriminator.
+        Unknown,
+    }
+    impl<'p> EbnfParserNodeView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p ::bbnf::runtime::tape::Tape,
+            input: &'p str,
+            offset: ::bbnf::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> EbnfParserRuleKind {
+            match self.variant_idx() {
+                0u8 => EbnfParserRuleKind::letter,
+                1u8 => EbnfParserRuleKind::digit,
+                2u8 => EbnfParserRuleKind::symbol,
+                3u8 => EbnfParserRuleKind::character,
+                4u8 => EbnfParserRuleKind::identifier,
+                5u8 => EbnfParserRuleKind::terminal,
+                6u8 => EbnfParserRuleKind::term,
+                7u8 => EbnfParserRuleKind::factor,
+                8u8 => EbnfParserRuleKind::concatenation,
+                9u8 => EbnfParserRuleKind::alternation,
+                10u8 => EbnfParserRuleKind::rule,
+                11u8 => EbnfParserRuleKind::grammar,
+                12u8 => EbnfParserRuleKind::term_0,
+                13u8 => EbnfParserRuleKind::term_1,
+                14u8 => EbnfParserRuleKind::factor_0,
+                15u8 => EbnfParserRuleKind::factor_1,
+                _ => EbnfParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl ::bbnf::runtime::Root for EbnfParser {
+        type View<'p> = grammarView<'p>;
+        #[inline]
+        fn make_view<'p>(
+            tape: &'p ::bbnf::runtime::tape::Tape,
+            input: &'p str,
+            root: ::bbnf::runtime::tape::TapeOffset,
+        ) -> Self::View<'p> {
+            grammarView::new(tape, input, root)
+        }
+    }
+    impl EbnfParser {
+        /// The name of the root rule for this grammar.
+        #[inline]
+        pub fn root_rule_name() -> &'static str {
+            "grammar"
+        }
+    }
+    /// AY-II.W0.d — grammar-derived direct-to-struct projection.
+    ///
+    /// Emitted storage for a rule whose child sequence projects
+    /// onto a fixed-layout tuple. Packed admissions read every
+    /// field from `Tape::payload_bytes` at scalar offsets; rich
+    /// (resolver-backed) admissions mix scalar payload reads with
+    /// per-child cursor handles — the materialiser walks
+    /// `view.child(i)` at the admitted `CHILD_INDICES` to
+    /// populate cursor fields.
+    ///
+    /// `NAMED_BINDING` is `""` when the admission came from a
+    /// pure layout arm; non-empty when the grammar author spelt
+    /// a `-> Name` annotation. Consumers that want a semantic-
+    /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
+    #[doc(hidden)]
+    pub struct EbnfParserLetterProjection {
+        /// Grammar-declared scalar field at packed-buffer offset
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
+        pub field_0: (u32, u32),
+    }
+    impl EbnfParserLetterProjection {
+        /// Grammar-declared rule that projects into this
+        /// struct. Matches the `rule_name` entry in
+        /// `PROJECTION_DIRECT_TO_STRUCT`.
+        #[doc(hidden)]
+        pub const RULE_NAME: &'static str = "letter";
+        /// Grammar-declared `-> Name` binding; empty string
+        /// when the admission came from a pure layout arm.
+        #[doc(hidden)]
+        pub const NAMED_BINDING: &'static str = "";
+        /// Number of fields (scalar + cursor) the layout pass
+        /// admitted for this projection.
+        #[doc(hidden)]
+        pub const FIELD_COUNT: usize = 1;
+        /// Total bytes the projection's packed portion occupies
+        /// in the aggregate payload buffer; `0` when every
+        /// field is a cursor handle.
+        #[doc(hidden)]
+        pub const TOTAL_BYTES: u8 = 8;
+    }
+    /// AY-II.W0.d — grammar-derived direct-to-struct projection.
+    ///
+    /// Emitted storage for a rule whose child sequence projects
+    /// onto a fixed-layout tuple. Packed admissions read every
+    /// field from `Tape::payload_bytes` at scalar offsets; rich
+    /// (resolver-backed) admissions mix scalar payload reads with
+    /// per-child cursor handles — the materialiser walks
+    /// `view.child(i)` at the admitted `CHILD_INDICES` to
+    /// populate cursor fields.
+    ///
+    /// `NAMED_BINDING` is `""` when the admission came from a
+    /// pure layout arm; non-empty when the grammar author spelt
+    /// a `-> Name` annotation. Consumers that want a semantic-
+    /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
+    #[doc(hidden)]
+    pub struct EbnfParserDigitProjection {
+        /// Grammar-declared scalar field at packed-buffer offset
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
+        pub field_0: (u32, u32),
+    }
+    impl EbnfParserDigitProjection {
+        /// Grammar-declared rule that projects into this
+        /// struct. Matches the `rule_name` entry in
+        /// `PROJECTION_DIRECT_TO_STRUCT`.
+        #[doc(hidden)]
+        pub const RULE_NAME: &'static str = "digit";
+        /// Grammar-declared `-> Name` binding; empty string
+        /// when the admission came from a pure layout arm.
+        #[doc(hidden)]
+        pub const NAMED_BINDING: &'static str = "";
+        /// Number of fields (scalar + cursor) the layout pass
+        /// admitted for this projection.
+        #[doc(hidden)]
+        pub const FIELD_COUNT: usize = 1;
+        /// Total bytes the projection's packed portion occupies
+        /// in the aggregate payload buffer; `0` when every
+        /// field is a cursor handle.
+        #[doc(hidden)]
+        pub const TOTAL_BYTES: u8 = 8;
+    }
+    /// AY-II.W0.d — grammar-derived direct-to-struct projection.
+    ///
+    /// Emitted storage for a rule whose child sequence projects
+    /// onto a fixed-layout tuple. Packed admissions read every
+    /// field from `Tape::payload_bytes` at scalar offsets; rich
+    /// (resolver-backed) admissions mix scalar payload reads with
+    /// per-child cursor handles — the materialiser walks
+    /// `view.child(i)` at the admitted `CHILD_INDICES` to
+    /// populate cursor fields.
+    ///
+    /// `NAMED_BINDING` is `""` when the admission came from a
+    /// pure layout arm; non-empty when the grammar author spelt
+    /// a `-> Name` annotation. Consumers that want a semantic-
+    /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
+    #[doc(hidden)]
+    pub struct EbnfParserSymbolProjection {
+        /// Grammar-declared scalar field at packed-buffer offset
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
+        pub field_0: (u32, u32),
+    }
+    impl EbnfParserSymbolProjection {
+        /// Grammar-declared rule that projects into this
+        /// struct. Matches the `rule_name` entry in
+        /// `PROJECTION_DIRECT_TO_STRUCT`.
+        #[doc(hidden)]
+        pub const RULE_NAME: &'static str = "symbol";
+        /// Grammar-declared `-> Name` binding; empty string
+        /// when the admission came from a pure layout arm.
+        #[doc(hidden)]
+        pub const NAMED_BINDING: &'static str = "";
+        /// Number of fields (scalar + cursor) the layout pass
+        /// admitted for this projection.
+        #[doc(hidden)]
+        pub const FIELD_COUNT: usize = 1;
+        /// Total bytes the projection's packed portion occupies
+        /// in the aggregate payload buffer; `0` when every
+        /// field is a cursor handle.
+        #[doc(hidden)]
+        pub const TOTAL_BYTES: u8 = 8;
+    }
+    /// AY-II.W0.d — per-grammar direct-to-struct projection
+    /// admissions, derived from `ir.payload_layouts` + the
+    /// `RustNamedTypes` resolver.
+    ///
+    /// Each `(rule_name, struct_name)` pair identifies a
+    /// non-transparent rule whose projection admits direct-to-
+    /// struct storage. `struct_name` is ALWAYS the synthesised
+    /// `<Grammar><RuleCamel>Projection` struct emitted alongside
+    /// this const — no resolver-bound name dispatch.
+    pub const PROJECTION_DIRECT_TO_STRUCT: &[(&str, &str); 3usize] = &[
+        ("letter", "EbnfParserLetterProjection"),
+        ("digit", "EbnfParserDigitProjection"),
+        ("symbol", "EbnfParserSymbolProjection"),
+    ];
+    /// AY-II.W0.d — grammar-declared `-> Name` bindings, indexed in
+    /// lockstep with `PROJECTION_DIRECT_TO_STRUCT`. Empty string for
+    /// admissions that did not spell a named type.
+    #[doc(hidden)]
+    pub const PROJECTION_NAMED_BINDINGS: &[&str; 3usize] = &["", "", ""];
+    /// AY-II.W0.d — canonical evidence that every admission has a
+    /// matching `materialize_projection_<rule>_<Grammar>` fn.
+    /// Indexed in lockstep with `PROJECTION_DIRECT_TO_STRUCT`; the
+    /// wire-contract totality test asserts both slices share the
+    /// same length per grammar.
+    #[doc(hidden)]
+    pub const PROJECTION_MATERIALIZERS: &[&str; 3usize] = &[
+        "materialize_projection_letter_EbnfParser",
+        "materialize_projection_digit_EbnfParser",
+        "materialize_projection_symbol_EbnfParser",
+    ];
+    /// AY-II.W0.d — canonical evidence that every admission has a
+    /// matching `<Grammar>Value::<RuleName>` enum variant
+    /// (production consumer). Indexed in lockstep with
+    /// `PROJECTION_DIRECT_TO_STRUCT`.
+    #[doc(hidden)]
+    pub const PROJECTION_CONSUMERS: &[&str; 3usize] = &[
+        "EbnfParserValue::letter",
+        "EbnfParserValue::digit",
+        "EbnfParserValue::symbol",
+    ];
+    /// AY-II.W0.d marker — structural evidence that the
+    /// layout pass + resolver admitted this rule for
+    /// direct-to-struct projection. The returned
+    /// `(rule_name, field_count, named_binding)` triple
+    /// exposes the admitted shape to the `cargo expand`
+    /// hard gate without requiring a runtime compilation.
+    #[doc(hidden)]
+    #[inline(always)]
+    pub fn __grammar_projection_letter() -> (&'static str, usize, &'static str) {
+        ("letter", 1, "")
+    }
+    /// AY-II.W0.d marker — structural evidence that the
+    /// layout pass + resolver admitted this rule for
+    /// direct-to-struct projection. The returned
+    /// `(rule_name, field_count, named_binding)` triple
+    /// exposes the admitted shape to the `cargo expand`
+    /// hard gate without requiring a runtime compilation.
+    #[doc(hidden)]
+    #[inline(always)]
+    pub fn __grammar_projection_digit() -> (&'static str, usize, &'static str) {
+        ("digit", 1, "")
+    }
+    /// AY-II.W0.d marker — structural evidence that the
+    /// layout pass + resolver admitted this rule for
+    /// direct-to-struct projection. The returned
+    /// `(rule_name, field_count, named_binding)` triple
+    /// exposes the admitted shape to the `cargo expand`
+    /// hard gate without requiring a runtime compilation.
+    #[doc(hidden)]
+    #[inline(always)]
+    pub fn __grammar_projection_symbol() -> (&'static str, usize, &'static str) {
+        ("symbol", 1, "")
+    }
+    /// AY-II.W0'.b — grammar-emitted value enum. Eager
+    /// materialisation target for `Parsed::to_value()`. Variants
+    /// enumerate non-transparent rules; admitted rules carry the
+    /// matching `<Grammar><RuleCamel>Projection` struct directly,
+    /// non-admitted rules carry their shape-classified payload.
+    #[derive(Clone, Debug)]
+    pub enum EbnfParserValue<'p> {
+        letter(EbnfParserLetterProjection),
+        digit(EbnfParserDigitProjection),
+        symbol(EbnfParserSymbolProjection),
+        character(&'p str),
+        identifier(&'p str),
+        terminal(::std::vec::Vec<EbnfParserValue<'p>>),
+        term(::std::vec::Vec<EbnfParserValue<'p>>),
+        factor(::std::vec::Vec<EbnfParserValue<'p>>),
+        concatenation(::std::vec::Vec<EbnfParserValue<'p>>),
+        alternation(::std::vec::Vec<EbnfParserValue<'p>>),
+        rule(::std::vec::Vec<EbnfParserValue<'p>>),
+        grammar(::std::vec::Vec<EbnfParserValue<'p>>),
+        /// Fallback for records whose `variant_idx` is not a
+        /// known rule discriminator (recovered records, stray
+        /// sub-variant indices).
+        Unknown(EbnfParserNodeView<'p>),
+    }
+    /// AY-II.W0'.b — rule-id → RuleKind dispatch local to the
+    /// fused-pipeline projection path. Mirrors the view layer's
+    /// `rule_kind()` dispatch; scoped to the projection module so
+    /// the two consumer paths stay coupled only through the
+    /// `RuleKind` enum.
+    #[inline(always)]
+    fn project_rule_kind_EbnfParser(variant_idx: u8) -> EbnfParserRuleKind {
+        match variant_idx {
+            0u8 => EbnfParserRuleKind::letter,
+            1u8 => EbnfParserRuleKind::digit,
+            2u8 => EbnfParserRuleKind::symbol,
+            3u8 => EbnfParserRuleKind::character,
+            4u8 => EbnfParserRuleKind::identifier,
+            5u8 => EbnfParserRuleKind::terminal,
+            6u8 => EbnfParserRuleKind::term,
+            7u8 => EbnfParserRuleKind::factor,
+            8u8 => EbnfParserRuleKind::concatenation,
+            9u8 => EbnfParserRuleKind::alternation,
+            10u8 => EbnfParserRuleKind::rule,
+            11u8 => EbnfParserRuleKind::grammar,
+            _ => EbnfParserRuleKind::Unknown,
+        }
+    }
+    /// AY-II.W0'.b — per-frame projector. Reads one frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// value slab and constructs the matching `<Grammar>Value`
+    /// variant. Admitted rules tail-call their grammar-derived
+    /// materializer; non-admitted rules construct the variant
+    /// inline. Compound variants recurse through this same fn.
+    #[inline]
+    fn project_frame_EbnfParser<'p>(
+        output: &::bbnf::runtime::FusedOutput<EbnfParser>,
+        input: &'p str,
+        offset: u32,
+    ) -> EbnfParserValue<'p> {
+        let frame = match output.value_frame_at(offset) {
+            ::core::option::Option::Some(f) => f,
+            ::core::option::Option::None => {
+                ::core::panic!(
+                    "AY-II.W0'.b: value frame offset {} out of range (frames: {})",
+                    offset, output.frames().len(),
+                );
+            }
+        };
+        match project_rule_kind_EbnfParser(frame.variant_idx) {
+            EbnfParserRuleKind::letter => {
+                let proj = materialize_projection_letter_EbnfParser(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "letter", offset,
+                        );
+                    });
+                EbnfParserValue::letter(proj)
+            }
+            EbnfParserRuleKind::digit => {
+                let proj = materialize_projection_digit_EbnfParser(output, input, offset)
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "digit", offset,
+                        );
+                    });
+                EbnfParserValue::digit(proj)
+            }
+            EbnfParserRuleKind::symbol => {
+                let proj = materialize_projection_symbol_EbnfParser(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "symbol", offset,
+                        );
+                    });
+                EbnfParserValue::symbol(proj)
+            }
+            EbnfParserRuleKind::character => {
+                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                EbnfParserValue::character(span)
+            }
+            EbnfParserRuleKind::identifier => {
+                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                EbnfParserValue::identifier(span)
+            }
+            EbnfParserRuleKind::terminal => {
+                let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::with_capacity(
+                    frame.child_count as usize,
+                );
+                for (child_off, _child_frame) in output.value_children(offset) {
+                    children.push(project_frame_EbnfParser(output, input, child_off));
+                }
+                EbnfParserValue::terminal(children)
+            }
+            EbnfParserRuleKind::term => {
+                let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::with_capacity(
+                    frame.child_count as usize,
+                );
+                for (child_off, _child_frame) in output.value_children(offset) {
+                    children.push(project_frame_EbnfParser(output, input, child_off));
+                }
+                EbnfParserValue::term(children)
+            }
+            EbnfParserRuleKind::factor => {
+                let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::with_capacity(
+                    frame.child_count as usize,
+                );
+                for (child_off, _child_frame) in output.value_children(offset) {
+                    children.push(project_frame_EbnfParser(output, input, child_off));
+                }
+                EbnfParserValue::factor(children)
+            }
+            EbnfParserRuleKind::concatenation => {
+                let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::with_capacity(
+                    frame.child_count as usize,
+                );
+                for (child_off, _child_frame) in output.value_children(offset) {
+                    children.push(project_frame_EbnfParser(output, input, child_off));
+                }
+                EbnfParserValue::concatenation(children)
+            }
+            EbnfParserRuleKind::alternation => {
+                let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::with_capacity(
+                    frame.child_count as usize,
+                );
+                for (child_off, _child_frame) in output.value_children(offset) {
+                    children.push(project_frame_EbnfParser(output, input, child_off));
+                }
+                EbnfParserValue::alternation(children)
+            }
+            EbnfParserRuleKind::rule => {
+                let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::with_capacity(
+                    frame.child_count as usize,
+                );
+                for (child_off, _child_frame) in output.value_children(offset) {
+                    children.push(project_frame_EbnfParser(output, input, child_off));
+                }
+                EbnfParserValue::rule(children)
+            }
+            EbnfParserRuleKind::grammar => {
+                let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::with_capacity(
+                    frame.child_count as usize,
+                );
+                for (child_off, _child_frame) in output.value_children(offset) {
+                    children.push(project_frame_EbnfParser(output, input, child_off));
+                }
+                EbnfParserValue::grammar(children)
+            }
+            _ => {
+                let _ = frame;
+                ::core::panic!(
+                    "AY-II.W0'.b: unclassified variant_idx {} on frame at offset {}",
+                    frame.variant_idx, offset,
+                );
+            }
+        }
+    }
+    /// AY-II.W0'.b — fused-pipeline root projector. Reads the root
+    /// frame from the value slab and constructs the grammar's
+    /// `<Grammar>Value<'p>` in one pass. No tape walk, no reparse,
+    /// no visitor dispatch.
+    #[inline]
+    fn project_value_EbnfParser<'p>(
+        output: &::bbnf::runtime::FusedOutput<EbnfParser>,
+        input: &'p str,
+    ) -> EbnfParserValue<'p> {
+        let root_off = output.value_root_offset();
+        match output.value_frame_at(root_off) {
+            ::core::option::Option::Some(_) => {}
+            ::core::option::Option::None => {
+                ::core::panic!(
+                    "AY-II.W0'.b: ValueBuilder root frame absent after parse \
+                         (root_offset = {}, frame count = {})",
+                    root_off, output.frames().len(),
+                );
+            }
+        }
+        project_frame_EbnfParser(output, input, root_off)
+    }
+    impl ::bbnf::runtime::ValueRoot for EbnfParser {
+        type Value<'p> = EbnfParserValue<'p>;
+        #[inline]
+        fn project_value_output<'p>(
+            output: &::bbnf::runtime::FusedOutput<EbnfParser>,
+            input: &'p str,
+        ) -> Self::Value<'p>
+        where
+            Self: 'p,
+        {
+            project_value_EbnfParser(output, input)
+        }
+    }
+    /// AY-II.W0'.c — policy-driven path walker. Descends from
+    /// `view` per the given path, returning the narrowed
+    /// NodeView on hit or `None` when any step misses.
+    ///
+    /// The per-step dispatch reads `cur.rule_kind()` and
+    /// resolves to the structural-scan primitive the rule's
+    /// [`STRUCTURAL_SCAN_POLICY`] entry admits: rules admitting
+    /// `OBJECT_KEY_SEEK` use
+    /// [`TapeCursor::bounded_lookahead`] + [`TapeCursor::object_key_seek`]
+    /// for the key-match + value-hop sequence; rules admitting
+    /// `SCAN_STRUCTURAL_BOUNDED` use
+    /// [`TapeCursor::scan_structural_bounded`] for positional
+    /// access. Rules outside the policy's admission fall
+    /// through to a generic children iteration.
+    ///
+    /// [`STRUCTURAL_SCAN_POLICY`]: crate::STRUCTURAL_SCAN_POLICY
+    /// [`TapeCursor::bounded_lookahead`]: ::bbnf::runtime::tape::TapeCursor::bounded_lookahead
+    /// [`TapeCursor::object_key_seek`]: ::bbnf::runtime::tape::TapeCursor::object_key_seek
+    /// [`TapeCursor::scan_structural_bounded`]: ::bbnf::runtime::tape::TapeCursor::scan_structural_bounded
+    #[inline]
+    fn __path_walk<'p>(
+        view: EbnfParserNodeView<'p>,
+        path: ::bbnf::runtime::Path<'_>,
+    ) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+        let cur_input = view.input();
+        let mut cur = view;
+        for seg in path.iter() {
+            match seg {
+                ::bbnf::runtime::PathSegment::Field(key) => {
+                    match cur.rule_kind() {
+                        EbnfParserRuleKind::letter
+                        | EbnfParserRuleKind::digit
+                        | EbnfParserRuleKind::symbol
+                        | EbnfParserRuleKind::character
+                        | EbnfParserRuleKind::identifier
+                        | EbnfParserRuleKind::term
+                        | EbnfParserRuleKind::factor
+                        | EbnfParserRuleKind::concatenation
+                        | EbnfParserRuleKind::alternation
+                        | EbnfParserRuleKind::rule
+                        | EbnfParserRuleKind::grammar => {
+                            let parent = cur.cursor();
+                            let (_, parent_end) = parent.span();
+                            let mut iter = parent.bounded_lookahead(parent_end);
+                            let mut hit: ::core::option::Option<
+                                EbnfParserNodeView<'p>,
+                            > = None;
+                            loop {
+                                let k_cur = match iter.next() {
+                                    ::core::option::Option::Some(c) => c,
+                                    ::core::option::Option::None => break,
+                                };
+                                let _ = iter.next();
+                                let (k_lo, k_hi) = k_cur.span();
+                                let raw = &cur_input[k_lo as usize..k_hi as usize];
+                                let key_text = if raw.as_bytes().first()
+                                    == ::core::option::Option::Some(&b'"')
+                                    && raw.as_bytes().last()
+                                        == ::core::option::Option::Some(&b'"') && raw.len() >= 2
+                                {
+                                    &raw[1..raw.len() - 1]
+                                } else {
+                                    raw
+                                };
+                                if key_text == *key {
+                                    let v_cursor = parent.object_key_seek((k_lo, k_hi));
+                                    hit = v_cursor
+                                        .map(|c| EbnfParserNodeView::from_cursor(c, cur_input));
+                                    break;
+                                }
+                            }
+                            cur = match hit {
+                                ::core::option::Option::Some(v) => v,
+                                ::core::option::Option::None => {
+                                    return ::core::option::Option::None;
+                                }
+                            };
+                        }
+                        EbnfParserRuleKind::terminal => {
+                            let parent = cur.cursor();
+                            let (_, parent_end) = parent.span();
+                            let mut iter = parent.bounded_lookahead(parent_end);
+                            let mut hit: ::core::option::Option<
+                                EbnfParserNodeView<'p>,
+                            > = None;
+                            loop {
+                                let k_cur = match iter.next() {
+                                    ::core::option::Option::Some(c) => c,
+                                    ::core::option::Option::None => break,
+                                };
+                                let v_cur = match iter.next() {
+                                    ::core::option::Option::Some(c) => c,
+                                    ::core::option::Option::None => break,
+                                };
+                                let (k_lo, k_hi) = k_cur.span();
+                                let raw = &cur_input[k_lo as usize..k_hi as usize];
+                                let key_text = if raw.as_bytes().first()
+                                    == ::core::option::Option::Some(&b'"')
+                                    && raw.as_bytes().last()
+                                        == ::core::option::Option::Some(&b'"') && raw.len() >= 2
+                                {
+                                    &raw[1..raw.len() - 1]
+                                } else {
+                                    raw
+                                };
+                                if key_text == *key {
+                                    hit = ::core::option::Option::Some(
+                                        EbnfParserNodeView::from_cursor(v_cur, cur_input),
+                                    );
+                                    break;
+                                }
+                            }
+                            cur = match hit {
+                                ::core::option::Option::Some(v) => v,
+                                ::core::option::Option::None => {
+                                    return ::core::option::Option::None;
+                                }
+                            };
+                        }
+                        _ => {
+                            let mut it = cur.children();
+                            let mut found = None;
+                            loop {
+                                let k = match it.next() {
+                                    ::core::option::Option::Some(k) => k,
+                                    ::core::option::Option::None => break,
+                                };
+                                let v = match it.next() {
+                                    ::core::option::Option::Some(v) => v,
+                                    ::core::option::Option::None => break,
+                                };
+                                let raw = k.span_text();
+                                let key_text = if raw.as_bytes().first()
+                                    == ::core::option::Option::Some(&b'"')
+                                    && raw.as_bytes().last()
+                                        == ::core::option::Option::Some(&b'"') && raw.len() >= 2
+                                {
+                                    &raw[1..raw.len() - 1]
+                                } else {
+                                    raw
+                                };
+                                if key_text == *key {
+                                    found = ::core::option::Option::Some(v);
+                                    break;
+                                }
+                            }
+                            cur = match found {
+                                ::core::option::Option::Some(v) => v,
+                                ::core::option::Option::None => {
+                                    return ::core::option::Option::None;
+                                }
+                            };
+                        }
+                    }
+                }
+                ::bbnf::runtime::PathSegment::Index(i) => {
+                    match cur.rule_kind() {
+                        EbnfParserRuleKind::letter
+                        | EbnfParserRuleKind::digit
+                        | EbnfParserRuleKind::symbol
+                        | EbnfParserRuleKind::character
+                        | EbnfParserRuleKind::identifier
+                        | EbnfParserRuleKind::term
+                        | EbnfParserRuleKind::factor
+                        | EbnfParserRuleKind::concatenation
+                        | EbnfParserRuleKind::alternation
+                        | EbnfParserRuleKind::rule
+                        | EbnfParserRuleKind::grammar => {
+                            let parent = cur.cursor();
+                            let (_, parent_end) = parent.span();
+                            let scan = parent.scan_structural_bounded(parent_end);
+                            cur = match scan.iter().nth(*i) {
+                                ::core::option::Option::Some(c) => {
+                                    EbnfParserNodeView::from_cursor(c, cur_input)
+                                }
+                                ::core::option::Option::None => {
+                                    return ::core::option::Option::None;
+                                }
+                            };
+                        }
+                        _ => {
+                            cur = cur.child(*i)?;
+                        }
+                    }
+                }
+            }
+        }
+        ::core::option::Option::Some(cur)
+    }
+    impl ::bbnf::runtime::PathQuery<&'static str> for EbnfParser {
+        #[inline]
+        fn query<'p>(
+            view: Self::View<'p>,
+            path: ::bbnf::runtime::Path<'_>,
+        ) -> ::core::option::Option<&'static str>
+        where
+            Self: 'p,
+        {
+            let node = EbnfParserNodeView::from_cursor(view.cursor(), view.input());
+            __path_walk(node, path)?;
+            ::core::option::Option::None
+        }
+    }
+    impl ::bbnf::runtime::PathQuery<f64> for EbnfParser {
+        #[inline]
+        fn query<'p>(
+            view: Self::View<'p>,
+            path: ::bbnf::runtime::Path<'_>,
+        ) -> ::core::option::Option<f64>
+        where
+            Self: 'p,
+        {
+            let node = EbnfParserNodeView::from_cursor(view.cursor(), view.input());
+            let hit = __path_walk(node, path)?;
+            let tape = hit.cursor().tape();
+            let rec = hit.cursor().record();
+            if let ::core::option::Option::Some(v) = tape.payload_f64(rec) {
+                return ::core::option::Option::Some(v);
+            }
+            hit.span_text().parse::<f64>().ok()
+        }
+    }
+    impl ::bbnf::runtime::PathQuery<bool> for EbnfParser {
+        #[inline]
+        fn query<'p>(
+            view: Self::View<'p>,
+            path: ::bbnf::runtime::Path<'_>,
+        ) -> ::core::option::Option<bool>
+        where
+            Self: 'p,
+        {
+            let node = EbnfParserNodeView::from_cursor(view.cursor(), view.input());
+            let hit = __path_walk(node, path)?;
+            let tape = hit.cursor().tape();
+            let rec = hit.cursor().record();
+            if let ::core::option::Option::Some(v) = tape.payload_bool(rec) {
+                return ::core::option::Option::Some(v);
+            }
+            match hit.span_text() {
+                "true" => ::core::option::Option::Some(true),
+                "false" => ::core::option::Option::Some(false),
+                _ => ::core::option::Option::None,
+            }
+        }
+    }
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
+    ///
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
+    #[inline]
+    #[doc(hidden)]
+    pub fn materialize_projection_letter_EbnfParser<'p>(
+        output: &::bbnf::runtime::FusedOutput<EbnfParser>,
+        input: &'p str,
+        offset: u32,
+    ) -> ::core::option::Option<EbnfParserLetterProjection> {
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
+        ::core::option::Option::Some(EbnfParserLetterProjection {
+            field_0,
+        })
+    }
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
+    ///
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
+    #[inline]
+    #[doc(hidden)]
+    pub fn materialize_projection_digit_EbnfParser<'p>(
+        output: &::bbnf::runtime::FusedOutput<EbnfParser>,
+        input: &'p str,
+        offset: u32,
+    ) -> ::core::option::Option<EbnfParserDigitProjection> {
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
+        ::core::option::Option::Some(EbnfParserDigitProjection {
+            field_0,
+        })
+    }
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
+    ///
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
+    #[inline]
+    #[doc(hidden)]
+    pub fn materialize_projection_symbol_EbnfParser<'p>(
+        output: &::bbnf::runtime::FusedOutput<EbnfParser>,
+        input: &'p str,
+        offset: u32,
+    ) -> ::core::option::Option<EbnfParserSymbolProjection> {
+        let _ = input;
+        let frame = output.value_frame_at(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
+        ::core::option::Option::Some(EbnfParserSymbolProjection {
+            field_0,
+        })
+    }
+    impl EbnfParser {
+        fn __letter_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    let __byte = match state.src_bytes.get(state.offset) {
+                        Some(&b) => b,
+                        None => return false,
+                    };
+                    match __byte {
+                        b'A' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'A')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'A');
+                            };
+                        }
+                        b'B' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'B')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'B');
+                            };
+                        }
+                        b'C' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'C')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'C');
+                            };
+                        }
+                        b'D' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'D')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'D');
+                            };
+                        }
+                        b'E' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'E')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'E');
+                            };
+                        }
+                        b'F' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'F')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'F');
+                            };
+                        }
+                        b'G' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'G')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'G');
+                            };
+                        }
+                        b'H' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'H')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'H');
+                            };
+                        }
+                        b'I' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'I')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'I');
+                            };
+                        }
+                        b'J' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'J')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'J');
+                            };
+                        }
+                        b'K' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'K')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'K');
+                            };
+                        }
+                        b'L' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'L')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'L');
+                            };
+                        }
+                        b'M' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'M')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'M');
+                            };
+                        }
+                        b'N' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'N')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'N');
+                            };
+                        }
+                        b'O' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'O')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'O');
+                            };
+                        }
+                        b'P' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'P')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'P');
+                            };
+                        }
+                        b'Q' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'Q')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'Q');
+                            };
+                        }
+                        b'R' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'R')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'R');
+                            };
+                        }
+                        b'S' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'S')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'S');
+                            };
+                        }
+                        b'T' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'T')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'T');
+                            };
+                        }
+                        b'U' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'U')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'U');
+                            };
+                        }
+                        b'V' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'V')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'V');
+                            };
+                        }
+                        b'W' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'W')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'W');
+                            };
+                        }
+                        b'X' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'X')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'X');
+                            };
+                        }
+                        b'Y' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'Y')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'Y');
+                            };
+                        }
+                        b'Z' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'Z')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'Z');
+                            };
+                        }
+                        b'a' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'a')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'a');
+                            };
+                        }
+                        b'b' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'b')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'b');
+                            };
+                        }
+                        b'c' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'c')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'c');
+                            };
+                        }
+                        b'd' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'd')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'd');
+                            };
+                        }
+                        b'e' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'e')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'e');
+                            };
+                        }
+                        b'f' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'f')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'f');
+                            };
+                        }
+                        b'g' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'g')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'g');
+                            };
+                        }
+                        b'h' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'h')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'h');
+                            };
+                        }
+                        b'i' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'i')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'i');
+                            };
+                        }
+                        b'j' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'j')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'j');
+                            };
+                        }
+                        b'k' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'k')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'k');
+                            };
+                        }
+                        b'l' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'l')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'l');
+                            };
+                        }
+                        b'm' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'm')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'm');
+                            };
+                        }
+                        b'n' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'n')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'n');
+                            };
+                        }
+                        b'o' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'o')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'o');
+                            };
+                        }
+                        b'p' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'p')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'p');
+                            };
+                        }
+                        b'q' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'q')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'q');
+                            };
+                        }
+                        b'r' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'r')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'r');
+                            };
+                        }
+                        b's' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b's')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b's');
+                            };
+                        }
+                        b't' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b't')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b't');
+                            };
+                        }
+                        b'u' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'u')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'u');
+                            };
+                        }
+                        b'v' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'v')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'v');
+                            };
+                        }
+                        b'w' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'w')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'w');
+                            };
+                        }
+                        b'x' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'x')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'x');
+                            };
+                        }
+                        b'y' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'y')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'y');
+                            };
+                        }
+                        b'z' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'z')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'z');
+                            };
+                        }
+                        _ => {
+                            return false;
+                        }
+                    }
+                };
+                true
+            }
+        }
+        pub fn letter_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__letter_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __digit_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    let __byte = match state.src_bytes.get(state.offset) {
+                        Some(&b) => b,
+                        None => return false,
+                    };
+                    match __byte {
+                        b'0' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'0')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'0');
+                            };
+                        }
+                        b'1' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'1')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'1');
+                            };
+                        }
+                        b'2' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'2')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'2');
+                            };
+                        }
+                        b'3' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'3')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'3');
+                            };
+                        }
+                        b'4' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'4')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'4');
+                            };
+                        }
+                        b'5' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'5')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'5');
+                            };
+                        }
+                        b'6' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'6')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'6');
+                            };
+                        }
+                        b'7' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'7')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'7');
+                            };
+                        }
+                        b'8' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'8')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'8');
+                            };
+                        }
+                        b'9' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'9')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'9');
+                            };
+                        }
+                        _ => {
+                            return false;
+                        }
+                    }
+                };
+                true
+            }
+        }
+        pub fn digit_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__digit_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __symbol_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    let __byte = match state.src_bytes.get(state.offset) {
+                        Some(&b) => b,
+                        None => return false,
+                    };
+                    match __byte {
+                        b'[' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'[')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'[');
+                            };
+                        }
+                        b']' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b']')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b']');
+                            };
+                        }
+                        b'{' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'{')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'{');
+                            };
+                        }
+                        b'}' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'}')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'}');
+                            };
+                        }
+                        b'(' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'(')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'(');
+                            };
+                        }
+                        b')' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b')')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b')');
+                            };
+                        }
+                        b'<' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'<')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'<');
+                            };
+                        }
+                        b'>' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'>')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'>');
+                            };
+                        }
+                        b'\'' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'\'')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'\'');
+                            };
+                        }
+                        b'"' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'"')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'"');
+                            };
+                        }
+                        b'=' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'=')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'=');
+                            };
+                        }
+                        b'|' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'|')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'|');
+                            };
+                        }
+                        b'.' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'.');
+                            };
+                        }
+                        b',' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b',')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b',');
+                            };
+                        }
+                        b';' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b';')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b';');
+                            };
+                        }
+                        b'-' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'-')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'-');
+                            };
+                        }
+                        b'+' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'+')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'+');
+                            };
+                        }
+                        b'*' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'*');
+                            };
+                        }
+                        b'?' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'?')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'?');
+                            };
+                        }
+                        b'\n' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'\n')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'\n');
+                            };
+                        }
+                        b'\t' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'\t')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'\t');
+                            };
+                        }
+                        b'\r' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'\r')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'\r');
+                            };
+                        }
+                        b'\x0C' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied()
+                                    != Some(b'\x0C')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'\x0C');
+                            };
+                        }
+                        b'\x08' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied()
+                                    != Some(b'\x08')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'\x08');
+                            };
+                        }
+                        b'\\' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'\\')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'\\');
+                            };
+                        }
+                        _ => {
+                            return false;
+                        }
+                    }
+                };
+                true
+            }
+        }
+        pub fn symbol_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__symbol_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __character_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    let __byte = match state.src_bytes.get(state.offset) {
+                        Some(&b) => b,
+                        None => return false,
+                    };
+                    match __byte {
+                        b'_' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'_')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'_');
+                            };
+                        }
+                        b' ' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b' ')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b' ');
+                            };
+                        }
+                        b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' | b'8'
+                        | b'9' => {
+                            if !Self::__digit_prettify(state, __builder) {
+                                return false;
+                            }
+                        }
+                        b'\x08' | b'\t' | b'\n' | b'\x0C' | b'\r' | b'"' | b'\'' | b'('
+                        | b')' | b'*' | b'+' | b',' | b'-' | b'.' | b';' | b'<' | b'='
+                        | b'>' | b'?' | b'[' | b'\\' | b']' | b'{' | b'|' | b'}' => {
+                            if !Self::__symbol_prettify(state, __builder) {
+                                return false;
+                            }
+                        }
+                        b'A' | b'B' | b'C' | b'D' | b'E' | b'F' | b'G' | b'H' | b'I'
+                        | b'J' | b'K' | b'L' | b'M' | b'N' | b'O' | b'P' | b'Q' | b'R'
+                        | b'S' | b'T' | b'U' | b'V' | b'W' | b'X' | b'Y' | b'Z' | b'a'
+                        | b'b' | b'c' | b'd' | b'e' | b'f' | b'g' | b'h' | b'i' | b'j'
+                        | b'k' | b'l' | b'm' | b'n' | b'o' | b'p' | b'q' | b'r' | b's'
+                        | b't' | b'u' | b'v' | b'w' | b'x' | b'y' | b'z' => {
+                            if !Self::__letter_prettify(state, __builder) {
+                                return false;
+                            }
+                        }
+                        _ => {
+                            return false;
+                        }
+                    }
+                };
+                true
+            }
+        }
+        pub fn character_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__character_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __identifier_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    if !Self::__letter_prettify(state, __builder) {
+                        return false;
+                    }
+                    {
+                        let mut __rep_count2 = 0usize;
+                        while __rep_count2 < 4294967295 {
+                            let __rep_cp3 = state.offset;
+                            if !{
+                                let __pretty_cp0 = state.offset;
+                                let __pretty_bcp1 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
+                                    {
+                                        let __byte = match state.src_bytes.get(state.offset) {
+                                            Some(&b) => b,
+                                            None => return false,
+                                        };
+                                        match __byte {
+                                            b'_' => {
+                                                {
+                                                    if state.src_bytes.get(state.offset).copied() != Some(b'_')
+                                                    {
+                                                        return false;
+                                                    }
+                                                    state.offset += 1;
+                                                    __builder.char(b'_');
+                                                };
+                                            }
+                                            b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' | b'8'
+                                            | b'9' => {
+                                                if !Self::__digit_prettify(state, __builder) {
+                                                    return false;
+                                                }
+                                            }
+                                            b'A' | b'B' | b'C' | b'D' | b'E' | b'F' | b'G' | b'H' | b'I'
+                                            | b'J' | b'K' | b'L' | b'M' | b'N' | b'O' | b'P' | b'Q'
+                                            | b'R' | b'S' | b'T' | b'U' | b'V' | b'W' | b'X' | b'Y'
+                                            | b'Z' | b'a' | b'b' | b'c' | b'd' | b'e' | b'f' | b'g'
+                                            | b'h' | b'i' | b'j' | b'k' | b'l' | b'm' | b'n' | b'o'
+                                            | b'p' | b'q' | b'r' | b's' | b't' | b'u' | b'v' | b'w'
+                                            | b'x' | b'y' | b'z' => {
+                                                if !Self::__letter_prettify(state, __builder) {
+                                                    return false;
+                                                }
+                                            }
+                                            _ => {
+                                                return false;
+                                            }
+                                        }
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp0;
+                                    __builder.restore(__pretty_bcp1);
+                                }
+                                __ok
+                            } {
+                                state.offset = __rep_cp3;
+                                break;
+                            }
+                            if state.offset == __rep_cp3 {
+                                break;
+                            }
+                            __rep_count2 += 1;
+                        }
+                    };
+                };
+                true
+            }
+        }
+        pub fn identifier_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__identifier_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __terminal_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    let __byte = match state.src_bytes.get(state.offset) {
+                        Some(&b) => b,
+                        None => return false,
+                    };
+                    match __byte {
+                        b'\'' => {
+                            {
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b'\'')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b'\'');
+                                };
+                                {
+                                    {
+                                        let __pretty_cp4 = state.offset;
+                                        let __pretty_bcp5 = __builder.checkpoint();
+                                        let __ok = (|| -> bool {
+                                            {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b'\'')
+                                                {
+                                                    return false;
+                                                }
+                                                state.offset += 1;
+                                                __builder.char(b'\'');
+                                            };
+                                            true
+                                        })();
+                                        if !__ok {
+                                            state.offset = __pretty_cp4;
+                                            __builder.restore(__pretty_bcp5);
+                                        }
+                                        __ok
+                                    };
+                                    if !Self::__character_prettify(state, __builder) {
+                                        return false;
+                                    }
+                                };
+                                {
+                                    let mut __rep_count10 = 0usize;
+                                    while __rep_count10 < 4294967295 {
+                                        let __rep_cp11 = state.offset;
+                                        if !{
+                                            let __pretty_cp8 = state.offset;
+                                            let __pretty_bcp9 = __builder.checkpoint();
+                                            let __ok = (|| -> bool {
+                                                {
+                                                    {
+                                                        let __pretty_cp6 = state.offset;
+                                                        let __pretty_bcp7 = __builder.checkpoint();
+                                                        let __ok = (|| -> bool {
+                                                            {
+                                                                if state.src_bytes.get(state.offset).copied() != Some(b'\'')
+                                                                {
+                                                                    return false;
+                                                                }
+                                                                state.offset += 1;
+                                                                __builder.char(b'\'');
+                                                            };
+                                                            true
+                                                        })();
+                                                        if !__ok {
+                                                            state.offset = __pretty_cp6;
+                                                            __builder.restore(__pretty_bcp7);
+                                                        }
+                                                        __ok
+                                                    };
+                                                    if !Self::__character_prettify(state, __builder) {
+                                                        return false;
+                                                    }
+                                                };
+                                                true
+                                            })();
+                                            if !__ok {
+                                                state.offset = __pretty_cp8;
+                                                __builder.restore(__pretty_bcp9);
+                                            }
+                                            __ok
+                                        } {
+                                            state.offset = __rep_cp11;
+                                            break;
+                                        }
+                                        if state.offset == __rep_cp11 {
+                                            break;
+                                        }
+                                        __rep_count10 += 1;
+                                    }
+                                };
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b'\'')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b'\'');
+                                };
+                            };
+                        }
+                        b'"' => {
+                            {
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b'"')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b'"');
+                                };
+                                {
+                                    {
+                                        let __pretty_cp12 = state.offset;
+                                        let __pretty_bcp13 = __builder.checkpoint();
+                                        let __ok = (|| -> bool {
+                                            {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b'"')
+                                                {
+                                                    return false;
+                                                }
+                                                state.offset += 1;
+                                                __builder.char(b'"');
+                                            };
+                                            true
+                                        })();
+                                        if !__ok {
+                                            state.offset = __pretty_cp12;
+                                            __builder.restore(__pretty_bcp13);
+                                        }
+                                        __ok
+                                    };
+                                    if !Self::__character_prettify(state, __builder) {
+                                        return false;
+                                    }
+                                };
+                                {
+                                    let mut __rep_count18 = 0usize;
+                                    while __rep_count18 < 4294967295 {
+                                        let __rep_cp19 = state.offset;
+                                        if !{
+                                            let __pretty_cp16 = state.offset;
+                                            let __pretty_bcp17 = __builder.checkpoint();
+                                            let __ok = (|| -> bool {
+                                                {
+                                                    {
+                                                        let __pretty_cp14 = state.offset;
+                                                        let __pretty_bcp15 = __builder.checkpoint();
+                                                        let __ok = (|| -> bool {
+                                                            {
+                                                                if state.src_bytes.get(state.offset).copied() != Some(b'"')
+                                                                {
+                                                                    return false;
+                                                                }
+                                                                state.offset += 1;
+                                                                __builder.char(b'"');
+                                                            };
+                                                            true
+                                                        })();
+                                                        if !__ok {
+                                                            state.offset = __pretty_cp14;
+                                                            __builder.restore(__pretty_bcp15);
+                                                        }
+                                                        __ok
+                                                    };
+                                                    if !Self::__character_prettify(state, __builder) {
+                                                        return false;
+                                                    }
+                                                };
+                                                true
+                                            })();
+                                            if !__ok {
+                                                state.offset = __pretty_cp16;
+                                                __builder.restore(__pretty_bcp17);
+                                            }
+                                            __ok
+                                        } {
+                                            state.offset = __rep_cp19;
+                                            break;
+                                        }
+                                        if state.offset == __rep_cp19 {
+                                            break;
+                                        }
+                                        __rep_count18 += 1;
+                                    }
+                                };
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b'"')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b'"');
+                                };
+                            };
+                        }
+                        _ => {
+                            return false;
+                        }
+                    }
+                };
+                true
+            }
+        }
+        pub fn terminal_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__terminal_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __term_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    let __byte = match state.src_bytes.get(state.offset) {
+                        Some(&b) => b,
+                        None => return false,
+                    };
+                    match __byte {
+                        b'(' => {
+                            {
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b'(')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b'(');
+                                };
+                                {
+                                    let __start = state.offset;
+                                    if {
+                                        let __start = state.offset;
+                                        let __end = state.src_bytes.len();
+                                        let mut __pos = __start;
+                                        while __pos < __end {
+                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                            if (__b >= b'\t' && __b <= b'\n')
+                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                            {
+                                                __pos += 1;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        state.offset = __pos;
+                                        Some(::parse_that::Span::new(__start, __pos, state.src))
+                                    }
+                                        .is_none()
+                                    {
+                                        return false;
+                                    }
+                                    let __matched = &state.src[__start..state.offset];
+                                    if !__matched.is_empty() {
+                                        __builder.text(__matched);
+                                    }
+                                };
+                                if !Self::__alternation_prettify(state, __builder) {
+                                    return false;
+                                }
+                                {
+                                    let __start = state.offset;
+                                    if {
+                                        let __start = state.offset;
+                                        let __end = state.src_bytes.len();
+                                        let mut __pos = __start;
+                                        while __pos < __end {
+                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                            if (__b >= b'\t' && __b <= b'\n')
+                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                            {
+                                                __pos += 1;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        state.offset = __pos;
+                                        Some(::parse_that::Span::new(__start, __pos, state.src))
+                                    }
+                                        .is_none()
+                                    {
+                                        return false;
+                                    }
+                                    let __matched = &state.src[__start..state.offset];
+                                    if !__matched.is_empty() {
+                                        __builder.text(__matched);
+                                    }
+                                };
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b')')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b')');
+                                };
+                            };
+                        }
+                        b'[' => {
+                            {
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b'[')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b'[');
+                                };
+                                {
+                                    let __start = state.offset;
+                                    if {
+                                        let __start = state.offset;
+                                        let __end = state.src_bytes.len();
+                                        let mut __pos = __start;
+                                        while __pos < __end {
+                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                            if (__b >= b'\t' && __b <= b'\n')
+                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                            {
+                                                __pos += 1;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        state.offset = __pos;
+                                        Some(::parse_that::Span::new(__start, __pos, state.src))
+                                    }
+                                        .is_none()
+                                    {
+                                        return false;
+                                    }
+                                    let __matched = &state.src[__start..state.offset];
+                                    if !__matched.is_empty() {
+                                        __builder.text(__matched);
+                                    }
+                                };
+                                if !Self::__alternation_prettify(state, __builder) {
+                                    return false;
+                                }
+                                {
+                                    let __start = state.offset;
+                                    if {
+                                        let __start = state.offset;
+                                        let __end = state.src_bytes.len();
+                                        let mut __pos = __start;
+                                        while __pos < __end {
+                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                            if (__b >= b'\t' && __b <= b'\n')
+                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                            {
+                                                __pos += 1;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        state.offset = __pos;
+                                        Some(::parse_that::Span::new(__start, __pos, state.src))
+                                    }
+                                        .is_none()
+                                    {
+                                        return false;
+                                    }
+                                    let __matched = &state.src[__start..state.offset];
+                                    if !__matched.is_empty() {
+                                        __builder.text(__matched);
+                                    }
+                                };
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b']')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b']');
+                                };
+                            };
+                        }
+                        b'{' => {
+                            {
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b'{')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b'{');
+                                };
+                                {
+                                    let __start = state.offset;
+                                    if {
+                                        let __start = state.offset;
+                                        let __end = state.src_bytes.len();
+                                        let mut __pos = __start;
+                                        while __pos < __end {
+                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                            if (__b >= b'\t' && __b <= b'\n')
+                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                            {
+                                                __pos += 1;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        state.offset = __pos;
+                                        Some(::parse_that::Span::new(__start, __pos, state.src))
+                                    }
+                                        .is_none()
+                                    {
+                                        return false;
+                                    }
+                                    let __matched = &state.src[__start..state.offset];
+                                    if !__matched.is_empty() {
+                                        __builder.text(__matched);
+                                    }
+                                };
+                                if !Self::__alternation_prettify(state, __builder) {
+                                    return false;
+                                }
+                                {
+                                    let __start = state.offset;
+                                    if {
+                                        let __start = state.offset;
+                                        let __end = state.src_bytes.len();
+                                        let mut __pos = __start;
+                                        while __pos < __end {
+                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                            if (__b >= b'\t' && __b <= b'\n')
+                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                            {
+                                                __pos += 1;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        state.offset = __pos;
+                                        Some(::parse_that::Span::new(__start, __pos, state.src))
+                                    }
+                                        .is_none()
+                                    {
+                                        return false;
+                                    }
+                                    let __matched = &state.src[__start..state.offset];
+                                    if !__matched.is_empty() {
+                                        __builder.text(__matched);
+                                    }
+                                };
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b'}')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b'}');
+                                };
+                            };
+                        }
+                        b'"' | b'\'' => {
+                            if !Self::__terminal_prettify(state, __builder) {
+                                return false;
+                            }
+                        }
+                        b'A' | b'B' | b'C' | b'D' | b'E' | b'F' | b'G' | b'H' | b'I'
+                        | b'J' | b'K' | b'L' | b'M' | b'N' | b'O' | b'P' | b'Q' | b'R'
+                        | b'S' | b'T' | b'U' | b'V' | b'W' | b'X' | b'Y' | b'Z' | b'a'
+                        | b'b' | b'c' | b'd' | b'e' | b'f' | b'g' | b'h' | b'i' | b'j'
+                        | b'k' | b'l' | b'm' | b'n' | b'o' | b'p' | b'q' | b'r' | b's'
+                        | b't' | b'u' | b'v' | b'w' | b'x' | b'y' | b'z' => {
+                            if !Self::__identifier_prettify(state, __builder) {
+                                return false;
+                            }
+                        }
+                        _ => {
+                            return false;
+                        }
+                    }
+                };
+                true
+            }
+        }
+        pub fn term_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__term_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __factor_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    if !Self::__term_prettify(state, __builder) {
+                        return false;
+                    }
+                    {
+                        {
+                            let __start = state.offset;
+                            if {
+                                let __start = state.offset;
+                                let __end = state.src_bytes.len();
+                                let mut __pos = __start;
+                                while __pos < __end {
+                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                    if (__b >= b'\t' && __b <= b'\n')
+                                        || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                    {
+                                        __pos += 1;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                state.offset = __pos;
+                                Some(::parse_that::Span::new(__start, __pos, state.src))
+                            }
+                                .is_none()
+                            {
+                                return false;
+                            }
+                            let __matched = &state.src[__start..state.offset];
+                            if !__matched.is_empty() {
+                                __builder.text(__matched);
+                            }
+                        };
+                        {
+                            let Some(&__byte) = state.src_bytes.get(state.offset) else {
+                                return true;
+                            };
+                            match __byte {
+                                b'?' => {
+                                    {
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'?')
+                                        {
+                                            return false;
+                                        }
+                                        state.offset += 1;
+                                        __builder.char(b'?');
+                                    };
+                                }
+                                b'*' => {
+                                    {
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                        {
+                                            return false;
+                                        }
+                                        state.offset += 1;
+                                        __builder.char(b'*');
+                                    };
+                                }
+                                b'+' => {
+                                    {
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'+')
+                                        {
+                                            return false;
+                                        }
+                                        state.offset += 1;
+                                        __builder.char(b'+');
+                                    };
+                                }
+                                b'-' => {
+                                    {
+                                        {
+                                            if state.src_bytes.get(state.offset).copied() != Some(b'-')
+                                            {
+                                                return false;
+                                            }
+                                            state.offset += 1;
+                                            __builder.char(b'-');
+                                        };
+                                        {
+                                            let __start = state.offset;
+                                            if {
+                                                let __start = state.offset;
+                                                let __end = state.src_bytes.len();
+                                                let mut __pos = __start;
+                                                while __pos < __end {
+                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                    if (__b >= b'\t' && __b <= b'\n')
+                                                        || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                                    {
+                                                        __pos += 1;
+                                                    } else {
+                                                        break;
+                                                    }
+                                                }
+                                                state.offset = __pos;
+                                                Some(::parse_that::Span::new(__start, __pos, state.src))
+                                            }
+                                                .is_none()
+                                            {
+                                                return false;
+                                            }
+                                            let __matched = &state.src[__start..state.offset];
+                                            if !__matched.is_empty() {
+                                                __builder.text(__matched);
+                                            }
+                                        };
+                                        if !Self::__term_prettify(state, __builder) {
+                                            return false;
+                                        }
+                                    };
+                                }
+                                b'\t' | b'\n' | b'\x0C' | b'\r' | b' ' => {}
+                                _ => {}
+                            }
+                        };
+                    };
+                };
+                true
+            }
+        }
+        pub fn factor_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__factor_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __concatenation_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    let __rep_start26 = state.offset;
+                    let __rep_bcp27 = __builder.checkpoint();
+                    let mut __rep_count24 = 0usize;
+                    while __rep_count24 < 4294967295 {
+                        let __rep_cp25 = state.offset;
+                        if !{
+                            let __pretty_cp22 = state.offset;
+                            let __pretty_bcp23 = __builder.checkpoint();
+                            let __ok = (|| -> bool {
+                                {
+                                    {
+                                        let __start = state.offset;
+                                        if {
+                                            let __start = state.offset;
+                                            let __end = state.src_bytes.len();
+                                            let mut __pos = __start;
+                                            while __pos < __end {
+                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                if (__b >= b'\t' && __b <= b'\n')
+                                                    || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                                {
+                                                    __pos += 1;
+                                                } else {
+                                                    break;
+                                                }
+                                            }
+                                            state.offset = __pos;
+                                            Some(::parse_that::Span::new(__start, __pos, state.src))
+                                        }
+                                            .is_none()
+                                        {
+                                            return false;
+                                        }
+                                        let __matched = &state.src[__start..state.offset];
+                                        if !__matched.is_empty() {
+                                            __builder.text(__matched);
+                                        }
+                                    };
+                                    if !Self::__factor_prettify(state, __builder) {
+                                        return false;
+                                    }
+                                    {
+                                        let __start = state.offset;
+                                        if {
+                                            let __start = state.offset;
+                                            let __end = state.src_bytes.len();
+                                            let mut __pos = __start;
+                                            while __pos < __end {
+                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                if (__b >= b'\t' && __b <= b'\n')
+                                                    || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                                {
+                                                    __pos += 1;
+                                                } else {
+                                                    break;
+                                                }
+                                            }
+                                            state.offset = __pos;
+                                            Some(::parse_that::Span::new(__start, __pos, state.src))
+                                        }
+                                            .is_none()
+                                        {
+                                            return false;
+                                        }
+                                        let __matched = &state.src[__start..state.offset];
+                                        if !__matched.is_empty() {
+                                            __builder.text(__matched);
+                                        }
+                                    };
+                                    {
+                                        let _ = {
+                                            let __pretty_cp20 = state.offset;
+                                            let __pretty_bcp21 = __builder.checkpoint();
+                                            let __ok = (|| -> bool {
+                                                {
+                                                    if state.src_bytes.get(state.offset).copied() != Some(b',')
+                                                    {
+                                                        return false;
+                                                    }
+                                                    state.offset += 1;
+                                                    __builder.char(b',');
+                                                };
+                                                true
+                                            })();
+                                            if !__ok {
+                                                state.offset = __pretty_cp20;
+                                                __builder.restore(__pretty_bcp21);
+                                            }
+                                            __ok
+                                        };
+                                        true
+                                    };
+                                };
+                                true
+                            })();
+                            if !__ok {
+                                state.offset = __pretty_cp22;
+                                __builder.restore(__pretty_bcp23);
+                            }
+                            __ok
+                        } {
+                            state.offset = __rep_cp25;
+                            break;
+                        }
+                        if state.offset == __rep_cp25 {
+                            break;
+                        }
+                        __rep_count24 += 1;
+                    }
+                    if __rep_count24 < 1 {
+                        state.offset = __rep_start26;
+                        __builder.restore(__rep_bcp27);
+                        return false;
+                    }
+                };
+                true
+            }
+        }
+        pub fn concatenation_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__concatenation_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __alternation_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            __builder.group_open();
+            let __pretty_ok = {
+                {
+                    {
+                        let __rep_start34 = state.offset;
+                        let __rep_bcp35 = __builder.checkpoint();
+                        let mut __rep_count32 = 0usize;
+                        while __rep_count32 < 4294967295 {
+                            let __rep_cp33 = state.offset;
+                            if !{
+                                let __pretty_cp30 = state.offset;
+                                let __pretty_bcp31 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
+                                    {
+                                        {
+                                            let __start = state.offset;
+                                            if {
+                                                let __start = state.offset;
+                                                let __end = state.src_bytes.len();
+                                                let mut __pos = __start;
+                                                while __pos < __end {
+                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                    if (__b >= b'\t' && __b <= b'\n')
+                                                        || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                                    {
+                                                        __pos += 1;
+                                                    } else {
+                                                        break;
+                                                    }
+                                                }
+                                                state.offset = __pos;
+                                                Some(::parse_that::Span::new(__start, __pos, state.src))
+                                            }
+                                                .is_none()
+                                            {
+                                                return false;
+                                            }
+                                            let __matched = &state.src[__start..state.offset];
+                                            if !__matched.is_empty() {
+                                                __builder.text(__matched);
+                                            }
+                                        };
+                                        if !Self::__concatenation_prettify(state, __builder) {
+                                            return false;
+                                        }
+                                        {
+                                            let __start = state.offset;
+                                            if {
+                                                let __start = state.offset;
+                                                let __end = state.src_bytes.len();
+                                                let mut __pos = __start;
+                                                while __pos < __end {
+                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                    if (__b >= b'\t' && __b <= b'\n')
+                                                        || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                                    {
+                                                        __pos += 1;
+                                                    } else {
+                                                        break;
+                                                    }
+                                                }
+                                                state.offset = __pos;
+                                                Some(::parse_that::Span::new(__start, __pos, state.src))
+                                            }
+                                                .is_none()
+                                            {
+                                                return false;
+                                            }
+                                            let __matched = &state.src[__start..state.offset];
+                                            if !__matched.is_empty() {
+                                                __builder.text(__matched);
+                                            }
+                                        };
+                                        {
+                                            let _ = {
+                                                let __pretty_cp28 = state.offset;
+                                                let __pretty_bcp29 = __builder.checkpoint();
+                                                let __ok = (|| -> bool {
+                                                    {
+                                                        if state.src_bytes.get(state.offset).copied() != Some(b'|')
+                                                        {
+                                                            return false;
+                                                        }
+                                                        state.offset += 1;
+                                                        __builder.char(b'|');
+                                                    };
+                                                    true
+                                                })();
+                                                if !__ok {
+                                                    state.offset = __pretty_cp28;
+                                                    __builder.restore(__pretty_bcp29);
+                                                }
+                                                __ok
+                                            };
+                                            true
+                                        };
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp30;
+                                    __builder.restore(__pretty_bcp31);
+                                }
+                                __ok
+                            } {
+                                state.offset = __rep_cp33;
+                                break;
+                            }
+                            if state.offset == __rep_cp33 {
+                                break;
+                            }
+                            __rep_count32 += 1;
+                        }
+                        if __rep_count32 < 1 {
+                            state.offset = __rep_start34;
+                            __builder.restore(__rep_bcp35);
+                            return false;
+                        }
+                    };
+                    true
+                }
+            };
+            __builder.group_close();
+            __pretty_ok
+        }
+        pub fn alternation_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__alternation_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __rule_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            __builder.group_open();
+            let __pretty_ok = {
+                {
+                    {
+                        if !Self::__identifier_prettify(state, __builder) {
+                            return false;
+                        }
+                        {
+                            let __start = state.offset;
+                            if {
+                                let __start = state.offset;
+                                let __end = state.src_bytes.len();
+                                let mut __pos = __start;
+                                while __pos < __end {
+                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                    if (__b >= b'\t' && __b <= b'\n')
+                                        || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                    {
+                                        __pos += 1;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                state.offset = __pos;
+                                Some(::parse_that::Span::new(__start, __pos, state.src))
+                            }
+                                .is_none()
+                            {
+                                return false;
+                            }
+                            let __matched = &state.src[__start..state.offset];
+                            if !__matched.is_empty() {
+                                __builder.text(__matched);
+                            }
+                        };
+                        {
+                            if state.src_bytes.get(state.offset).copied() != Some(b'=') {
+                                return false;
+                            }
+                            state.offset += 1;
+                            __builder.char(b'=');
+                        };
+                        {
+                            let __start = state.offset;
+                            if {
+                                let __start = state.offset;
+                                let __end = state.src_bytes.len();
+                                let mut __pos = __start;
+                                while __pos < __end {
+                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                    if (__b >= b'\t' && __b <= b'\n')
+                                        || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                    {
+                                        __pos += 1;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                state.offset = __pos;
+                                Some(::parse_that::Span::new(__start, __pos, state.src))
+                            }
+                                .is_none()
+                            {
+                                return false;
+                            }
+                            let __matched = &state.src[__start..state.offset];
+                            if !__matched.is_empty() {
+                                __builder.text(__matched);
+                            }
+                        };
+                        if !Self::__alternation_prettify(state, __builder) {
+                            return false;
+                        }
+                        {
+                            let __start = state.offset;
+                            if {
+                                let __start = state.offset;
+                                let __end = state.src_bytes.len();
+                                let mut __pos = __start;
+                                while __pos < __end {
+                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                    if (__b >= b'\t' && __b <= b'\n')
+                                        || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                    {
+                                        __pos += 1;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                state.offset = __pos;
+                                Some(::parse_that::Span::new(__start, __pos, state.src))
+                            }
+                                .is_none()
+                            {
+                                return false;
+                            }
+                            let __matched = &state.src[__start..state.offset];
+                            if !__matched.is_empty() {
+                                __builder.text(__matched);
+                            }
+                        };
+                        {
+                            let __byte = match state.src_bytes.get(state.offset) {
+                                Some(&b) => b,
+                                None => return false,
+                            };
+                            match __byte {
+                                b';' => {
+                                    {
+                                        if state.src_bytes.get(state.offset).copied() != Some(b';')
+                                        {
+                                            return false;
+                                        }
+                                        state.offset += 1;
+                                        __builder.char(b';');
+                                    };
+                                }
+                                b'.' => {
+                                    {
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'.')
+                                        {
+                                            return false;
+                                        }
+                                        state.offset += 1;
+                                        __builder.char(b'.');
+                                    };
+                                }
+                                _ => {
+                                    return false;
+                                }
+                            }
+                        };
+                    };
+                    true
+                }
+            };
+            __builder.group_close();
+            __pretty_ok
+        }
+        pub fn rule_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__rule_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __grammar_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    let mut __rep_count37 = 0usize;
+                    while __rep_count37 < 4294967295 {
+                        let __rep_cp38 = state.offset;
+                        let __iter_cp = if __rep_count37 > 0 {
+                            Some(__builder.checkpoint())
+                        } else {
+                            None
+                        };
+                        if __rep_count37 > 0 {
+                            __builder.hardline();
+                        }
+                        if !{
+                            let __pretty_cp36 = state.offset;
+                            let __ok = (|| -> bool {
+                                {
+                                    {
+                                        let __start = state.offset;
+                                        if {
+                                            let __start = state.offset;
+                                            let __end = state.src_bytes.len();
+                                            let mut __pos = __start;
+                                            while __pos < __end {
+                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                if (__b >= b'\t' && __b <= b'\n')
+                                                    || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                                {
+                                                    __pos += 1;
+                                                } else {
+                                                    break;
+                                                }
+                                            }
+                                            state.offset = __pos;
+                                            Some(::parse_that::Span::new(__start, __pos, state.src))
+                                        }
+                                            .is_none()
+                                        {
+                                            return false;
+                                        }
+                                        let __matched = &state.src[__start..state.offset];
+                                        if !__matched.is_empty() {
+                                            __builder.text(__matched);
+                                        }
+                                    };
+                                    if !Self::__rule_prettify(state, __builder) {
+                                        return false;
+                                    }
+                                    {
+                                        let __start = state.offset;
+                                        if {
+                                            let __start = state.offset;
+                                            let __end = state.src_bytes.len();
+                                            let mut __pos = __start;
+                                            while __pos < __end {
+                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                if (__b >= b'\t' && __b <= b'\n')
+                                                    || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                                {
+                                                    __pos += 1;
+                                                } else {
+                                                    break;
+                                                }
+                                            }
+                                            state.offset = __pos;
+                                            Some(::parse_that::Span::new(__start, __pos, state.src))
+                                        }
+                                            .is_none()
+                                        {
+                                            return false;
+                                        }
+                                        let __matched = &state.src[__start..state.offset];
+                                        if !__matched.is_empty() {
+                                            __builder.text(__matched);
+                                        }
+                                    };
+                                };
+                                true
+                            })();
+                            if !__ok {
+                                state.offset = __pretty_cp36;
+                            }
+                            __ok
+                        } {
+                            state.offset = __rep_cp38;
+                            if let Some(__bcp) = __iter_cp {
+                                __builder.restore(__bcp);
+                            }
+                            break;
+                        }
+                        if state.offset == __rep_cp38 {
+                            if let Some(__bcp) = __iter_cp {
+                                __builder.restore(__bcp);
+                            }
+                            break;
+                        }
+                        __rep_count37 += 1;
+                    }
+                };
+                true
+            }
+        }
+        pub fn grammar_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__grammar_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        pub fn serialize_letter<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_digit<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_symbol<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_character<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_identifier<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_terminal<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_term<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_factor<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_concatenation<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_alternation<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_rule<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_grammar<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        fn __dispatch_serialize<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            match __v.variant_idx() {
+                0u8 => {
+                    Self::serialize_letter(__v, __ser);
+                }
+                1u8 => {
+                    Self::serialize_digit(__v, __ser);
+                }
+                2u8 => {
+                    Self::serialize_symbol(__v, __ser);
+                }
+                3u8 => {
+                    Self::serialize_character(__v, __ser);
+                }
+                4u8 => {
+                    Self::serialize_identifier(__v, __ser);
+                }
+                5u8 => {
+                    Self::serialize_terminal(__v, __ser);
+                }
+                6u8 => {
+                    Self::serialize_term(__v, __ser);
+                }
+                7u8 => {
+                    Self::serialize_factor(__v, __ser);
+                }
+                8u8 => {
+                    Self::serialize_concatenation(__v, __ser);
+                }
+                9u8 => {
+                    Self::serialize_alternation(__v, __ser);
+                }
+                10u8 => {
+                    Self::serialize_rule(__v, __ser);
+                }
+                11u8 => {
+                    Self::serialize_grammar(__v, __ser);
+                }
+                _ => {
+                    __ser.text(__v.span_text());
+                }
+            }
+        }
+        pub fn serialize_compact<'a>(__v: EbnfParserNodeView<'a>) -> String {
+            let mut __ser = ::bbnf_ser::StringSerializer::new();
+            Self::serialize_grammar(__v, &mut __ser);
+            __ser.finish()
+        }
+        pub fn serialize<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            Self::serialize_grammar(__v, __ser);
+        }
+        /// AW-IV.W1.δ — associated-constant accessor for the
+        /// grammar's consolidated codegen fingerprint. Alias
+        /// of the module-scope `GRAMMAR_PROFILE` const; the
+        /// underlying bytes live in `.rodata` once. Downstream
+        /// consumers (wire-contract tests, per-grammar
+        /// introspection, cross-grammar harnesses) use
+        /// `<Grammar>::GRAMMAR_PROFILE` to disambiguate when
+        /// multiple grammars coexist in the same test file —
+        /// the module-scope `pub use ...::*` would otherwise
+        /// collide on the unqualified `GRAMMAR_PROFILE` name.
+        pub const GRAMMAR_PROFILE: ::bbnf::runtime::tape::GrammarProfile = GRAMMAR_PROFILE;
+        /// AY.W6.2 — associated-constant accessor for the
+        /// grammar's direct-to-struct projection admission
+        /// list. Alias of the module-scope
+        /// `PROJECTION_DIRECT_TO_STRUCT` slice; downstream
+        /// consumers that coexist with multiple grammars in
+        /// one test binary read via
+        /// `<Grammar>::PROJECTION_DIRECT_TO_STRUCT` to
+        /// disambiguate.
+        pub const PROJECTION_DIRECT_TO_STRUCT: &'static [(&'static str, &'static str)] = PROJECTION_DIRECT_TO_STRUCT;
+        /// AY-II.W0.d — grammar-declared `-> Name` bindings
+        /// per admission. Indexed in lockstep with
+        /// `PROJECTION_DIRECT_TO_STRUCT`; empty string when
+        /// the admission came from a pure layout arm.
+        #[doc(hidden)]
+        pub const PROJECTION_NAMED_BINDINGS: &'static [&'static str] = PROJECTION_NAMED_BINDINGS;
+        /// AY-II.W0.d — materialiser function names per
+        /// admission. Canonical wire-contract evidence that
+        /// every `PROJECTION_DIRECT_TO_STRUCT` entry has a
+        /// matching `materialize_projection_<rule>_<Grammar>`
+        /// fn in the emitter output.
+        #[doc(hidden)]
+        pub const PROJECTION_MATERIALIZERS: &'static [&'static str] = PROJECTION_MATERIALIZERS;
+        /// AY-II.W0.d — production consumer names per
+        /// admission. Each entry identifies the
+        /// `<Grammar>Value::<RuleName>` variant that consumes
+        /// the admitted rule at runtime.
+        #[doc(hidden)]
+        pub const PROJECTION_CONSUMERS: &'static [&'static str] = PROJECTION_CONSUMERS;
+        /// Parse an input string and return a zero-copy
+        /// `Parsed<'_, Self>` that borrows the input directly.
+        ///
+        /// AY-II.W0'.a: `parse()` routes through the shape
+        /// dispatcher against a single `FusedBuilder`. The
+        /// hot path here:
+        ///
+        /// 1. Allocate a sized `FusedBuilder` — owns both
+        ///    tape + value-frame substrates in one handle.
+        /// 2. Call the shape dispatcher, which decomposes
+        ///    into per-shape bodies inlined at the call
+        ///    site. Every compound / leaf push stamps both
+        ///    column families atomically.
+        /// 3. Finalise via `FusedBuilder::finish_fused::<Self>`
+        ///    — returns `FusedOutput<Self>` holding tape +
+        ///    value, handed to `Parsed::new_fused` directly.
+        pub fn parse(
+            input: &str,
+        ) -> ::core::result::Result<
+            ::bbnf::runtime::Parsed<'_, Self>,
+            ::bbnf::runtime::ParseErr,
+        > {
+            let __input_bytes = input.as_bytes();
+            let mut state = __shape_support_EbnfParser::ScanState::new();
+            let mut builder = ::bbnf::runtime::tape::FusedBuilder::with_capacity(
+                GRAMMAR_PROFILE.capacity_for(input.len()),
+            );
+            let root_off = {
+                let mut pos: usize = 0;
+                let off = parse_EbnfParser_grammar(
+                        __input_bytes,
+                        &mut pos,
+                        &mut state,
+                        &mut builder,
+                    )
+                    .map_err(|e| match e {
+                        ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {
+                            ::bbnf::runtime::ParseErr::Syntax {
+                                offset,
+                                rule: None,
+                            }
+                        }
+                        ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                            ::bbnf::runtime::ParseErr::Syntax {
+                                offset,
+                                rule: None,
+                            }
+                        }
+                        ::bbnf::runtime::tape::DtaError::InvalidState { .. } => {
+                            ::bbnf::runtime::ParseErr::Syntax {
+                                offset: 0,
+                                rule: None,
+                            }
+                        }
+                    })?;
+                let _ = __shape_support_EbnfParser::skip_space(
+                    __input_bytes,
+                    &mut pos,
+                    &mut state,
+                );
+                if pos != input.len() {
+                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                        offset: pos as u32,
+                        rule: None,
+                    });
+                }
+                off
+            };
+            let output = builder
+                .finish_fused::<Self>(root_off.0)
+                .map_err(::bbnf::runtime::ParseErr::Tape)?;
+            ::core::result::Result::Ok(
+                ::bbnf::runtime::Parsed::new_fused_output(output, input, root_off),
+            )
+        }
+    }
+    impl<'p> identifierView<'p> {
+        /// Identifier text — slice of the owning `Parsed`'s
+        /// input covered by this view's record span.
+        #[inline]
+        pub fn identifier_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+    }
+    /// Walk `cursor`'s sub-tree depth-first and return the text
+    /// of the first reachable identifier record. Returns `""`
+    /// when no identifier is reachable.
+    #[inline]
+    pub(crate) fn cst_identifier_text<'p>(
+        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    ) -> &'p str {
+        match cst_find_identifier_cursor(cursor, 4u8) {
+            ::core::option::Option::Some(found) => {
+                let (lo, hi) = found.span();
+                &input[lo as usize..hi as usize]
+            }
+            ::core::option::Option::None => "",
+        }
+    }
+    /// Walk `cursor`'s sub-tree depth-first and return the
+    /// `(lo, hi)` span of the first reachable identifier record.
+    /// Returns `(0, 0)` when no identifier is reachable.
+    #[inline]
+    pub(crate) fn cst_identifier_span<'p>(
+        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        _input: &'p str,
+    ) -> (u32, u32) {
+        cst_find_identifier_cursor(cursor, 4u8).map(|c| c.span()).unwrap_or((0, 0))
+    }
+    /// DFS helper shared by `cst_identifier_text` and
+    /// `cst_identifier_span`. Returns the first cursor under
+    /// `start` whose `variant_idx` matches `target_idx`.
+    #[inline]
+    fn cst_find_identifier_cursor<'p>(
+        start: ::bbnf::runtime::tape::TapeCursor<'p>,
+        target_idx: u8,
+    ) -> ::core::option::Option<::bbnf::runtime::tape::TapeCursor<'p>> {
+        if start.variant_idx() == target_idx {
+            return ::core::option::Option::Some(start);
+        }
+        for child in start.children() {
+            if let ::core::option::Option::Some(found) = cst_find_identifier_cursor(
+                child,
+                target_idx,
+            ) {
+                return ::core::option::Option::Some(found);
+            }
+        }
+        ::core::option::Option::None
+    }
+}
+pub use __ebnfparser_emit_impl::*;

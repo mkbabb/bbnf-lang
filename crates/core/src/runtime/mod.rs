@@ -147,7 +147,7 @@ pub use value_builder::ValueBuilder;
 /// `TapeKind`, `TapeBuildError`) so downstream consumers do not need
 /// a direct `tape` dependency — `bbnf` already carries it as
 /// the substrate for the generated code. This keeps
-/// `#[derive(Parser)]` usage single-dep from the consumer's point
+/// `the proc-macro derive (retired B2)` usage single-dep from the consumer's point
 /// of view.
 pub use tape;
 
@@ -170,7 +170,7 @@ pub use simd_scan as scan;
 /// shims reference. The Rust-side `Color` struct + `ColorSpace`
 /// enum live in the backend's `view/color.rs`; this re-export
 /// surfaces them at the stable `::bbnf::runtime::view::*` path so
-/// generated `#[derive(Parser)]` output reaches the types without
+/// generated `the proc-macro derive (retired B2)` output reaches the types without
 /// depending on crate-internal `backend::rust::view::*` paths.
 pub mod view {
     pub use crate::backend::rust::view::color::{Color, ColorSpace, COLOR_PAYLOAD_BYTES};

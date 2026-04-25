@@ -1,48 +1,392 @@
 //! IR-pipeline + emission entrypoint.
 //!
-//! W0.a lays the function signatures (this file's current shape).
-//! W0.c lands the implementation that mirrors `crates/derive/src/lib.rs`
-//! lines 281-361 — the proc-macro entry that calls
-//! `bbnf::pipeline::compile_paths_request` + `bbnf::generate::generate_all`,
-//! then formats the resulting `TokenStream` via
-//! `prettyplease::unparse(&syn::parse2(stream)?)`, then writes the
-//! formatted output to `crates/core/src/grammar/generated/<ident>.rs`.
+//! Replaces the pre-B2 `bbnf_derive` proc-macro contract that ran the
+//! 17-pass IR pipeline + emission at every consumer's `cargo expand`
+//! time. The pipeline now runs once per `cargo xtask regen` invocation,
+//! producing per-grammar source files at
+//! `crates/core/src/grammar/generated/<ident>.rs`. Consumers
+//! `include!` the on-disk product instead of `#[derive(Parser)]`.
 //!
 //! The grammar manifest lives at `[workspace.metadata.bbnf.grammars]`
-//! in the workspace `Cargo.toml`; see `xtask/Cargo.toml` for the
-//! `cargo_metadata` dep that reads it.
+//! in the workspace `Cargo.toml`; this module reads it via
+//! `cargo_metadata`.
+//!
+//! Mirrors `crates/derive/src/lib.rs` lines 281-361 — the proc-macro
+//! entry that calls `bbnf::pipeline::compile_paths_request` +
+//! `bbnf::generate::generate_all`, formats via
+//! `prettyplease::unparse(&syn::parse2(stream)?)`, and writes the
+//! result to disk.
 
-use anyhow::Result;
+use std::path::{Path, PathBuf};
+
+use anyhow::{Context, Result, anyhow, bail};
+use bbnf::ParserAttributes;
+use bbnf::pipeline::{
+    CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
+};
+use proc_macro2::TokenStream;
+use quote::{format_ident, quote};
+
+/// One row of the workspace grammar manifest at
+/// `[workspace.metadata.bbnf.grammars]`.
+#[derive(serde::Deserialize, Clone, Debug)]
+struct GrammarEntry {
+    ident: String,
+    path: String,
+    #[serde(default)]
+    features: Vec<String>,
+}
+
+impl GrammarEntry {
+    /// Resolve the manifest's relative `path` against the workspace root.
+    fn grammar_source(&self, workspace_root: &Path) -> PathBuf {
+        workspace_root.join(&self.path)
+    }
+
+    /// Marker-struct ident emitted into the per-grammar file. Mirrors
+    /// the proc-macro's `#[derive(Parser)]` consumer-side struct name
+    /// — for the BBNF self-host this is `BbnfBootstrap`, for other
+    /// grammars the per-grammar consumer cutover (B2.W1) declares the
+    /// canonical ident; today the manifest carries it implicitly via
+    /// the W0.b boundary spec. For BBNF (W0.c's only target),
+    /// `BbnfBootstrap`. For the rest the ident derives from
+    /// `entry.ident` PascalCased: `json` → `JsonParser`, etc. — but
+    /// only BBNF emits at W0.c so the rest of the table is
+    /// declarative-only here.
+    fn marker_ident(&self) -> syn::Ident {
+        match self.ident.as_str() {
+            "bbnf" => format_ident!("BbnfBootstrap"),
+            other => {
+                // Default: PascalCase + "Parser" suffix. W1 reviews
+                // each grammar's actual marker name as it migrates;
+                // the table is declarative so collisions surface as
+                // compile failures.
+                let camel = pascal_case(other);
+                format_ident!("{}Parser", camel)
+            }
+        }
+    }
+
+    /// `ParserAttributes` reconstructed from the manifest's `features`
+    /// list. Mirrors the proc-macro's `#[parser(...)]` attribute
+    /// parsing (`crates/derive/src/lib.rs:226-278`).
+    fn parser_attributes(&self, grammar_path: PathBuf) -> ParserAttributes {
+        let mut attrs = ParserAttributes::default();
+        attrs.paths.push(grammar_path);
+        for feat in &self.features {
+            match feat.as_str() {
+                "structural" => attrs.structural = true,
+                "prettify" => attrs.prettify = true,
+                "skip_recover" => attrs.skip_recover = true,
+                "serialize" => attrs.serialize = true,
+                "remove_left_recursion" => attrs.remove_left_recursion = true,
+                "debug" => attrs.debug = true,
+                other => {
+                    // Unknown feature: warn but don't fail; the
+                    // manifest is the source of truth and unknown
+                    // entries indicate a forthcoming feature this
+                    // xtask doesn't yet recognise.
+                    eprintln!("xtask::regen: warning — unknown feature `{other}` on grammar `{}`", self.ident);
+                }
+            }
+        }
+        attrs
+    }
+}
+
+fn pascal_case(input: &str) -> String {
+    let mut out = String::with_capacity(input.len());
+    let mut upper_next = true;
+    for ch in input.chars() {
+        if ch == '_' || ch == '-' {
+            upper_next = true;
+        } else if upper_next {
+            out.extend(ch.to_uppercase());
+            upper_next = false;
+        } else {
+            out.push(ch);
+        }
+    }
+    out
+}
 
 /// Top-level entry. `grammar = None` regenerates every grammar in the
 /// workspace manifest; `Some(ident)` regenerates that grammar only.
 /// `check = true` regenerates to a tempdir + diffs against the
 /// checked-in tree, exiting non-zero on drift.
 pub fn run(grammar: Option<&str>, check: bool) -> Result<()> {
-    // W0.c: read [workspace.metadata.bbnf.grammars] from workspace
-    // Cargo.toml via cargo_metadata; dispatch to regen_grammar /
-    // regen_all / regen_check.
-    let _ = (grammar, check);
-    anyhow::bail!("xtask::regen::run — implementation lands in B2.W0.c")
+    let (workspace_root, grammars) = load_manifest()?;
+
+    if check {
+        regen_check(&workspace_root, &grammars)
+    } else if let Some(ident) = grammar {
+        let entry = grammars
+            .iter()
+            .find(|g| g.ident == ident)
+            .ok_or_else(|| anyhow!("grammar `{ident}` not found in [workspace.metadata.bbnf.grammars]"))?;
+        regen_grammar(&workspace_root, entry, &output_path(&workspace_root, &entry.ident))?;
+        Ok(())
+    } else {
+        regen_all(&workspace_root, &grammars)
+    }
+}
+
+/// Read `[workspace.metadata.bbnf.grammars]` from the workspace
+/// `Cargo.toml` via `cargo_metadata`. Returns the workspace root +
+/// the parsed grammar list.
+fn load_manifest() -> Result<(PathBuf, Vec<GrammarEntry>)> {
+    let metadata = cargo_metadata::MetadataCommand::new()
+        .no_deps()
+        .exec()
+        .context("cargo_metadata: failed to read workspace manifest")?;
+
+    let workspace_root = metadata.workspace_root.clone().into_std_path_buf();
+
+    let bbnf_meta = metadata
+        .workspace_metadata
+        .get("bbnf")
+        .ok_or_else(|| anyhow!("workspace `Cargo.toml` has no [workspace.metadata.bbnf] table"))?;
+
+    let grammars_value = bbnf_meta
+        .get("grammars")
+        .cloned()
+        .ok_or_else(|| anyhow!("[workspace.metadata.bbnf] has no `grammars` array"))?;
+
+    let grammars: Vec<GrammarEntry> = serde_json::from_value(grammars_value)
+        .context("failed to deserialize [workspace.metadata.bbnf.grammars]")?;
+
+    Ok((workspace_root, grammars))
+}
+
+/// Output path for a grammar's per-grammar emission.
+fn output_path(workspace_root: &Path, ident: &str) -> PathBuf {
+    workspace_root
+        .join("crates")
+        .join("core")
+        .join("src")
+        .join("grammar")
+        .join("generated")
+        .join(format!("{ident}.rs"))
 }
 
 /// Regenerate a single grammar. Reads the grammar source, runs the
 /// 17-pass IR pipeline, runs `generate_all`, writes the formatted
-/// output to `crates/core/src/grammar/generated/<ident>.rs`.
-#[allow(dead_code)]
-pub(crate) fn regen_grammar(_ident: &str) -> Result<()> {
-    anyhow::bail!("regen_grammar — implementation lands in B2.W0.c")
+/// output to `target_path`.
+fn regen_grammar(
+    workspace_root: &Path,
+    entry: &GrammarEntry,
+    target_path: &Path,
+) -> Result<usize> {
+    let grammar_path = entry.grammar_source(workspace_root);
+    if !grammar_path.exists() {
+        bail!(
+            "grammar `{}` source file not found: {}",
+            entry.ident,
+            grammar_path.display()
+        );
+    }
+
+    let parser_attrs = entry.parser_attributes(grammar_path.clone());
+    let marker_ident = entry.marker_ident();
+
+    let request = CompileRequest {
+        options: PipelineOptions {
+            remove_left_recursion: parser_attrs.remove_left_recursion,
+            entry_rule: None,
+            structural: parser_attrs.structural,
+        },
+        target: CompileTarget::Rust {
+            requested_prettify: parser_attrs.prettify,
+        },
+    };
+
+    eprintln!(
+        "[xtask::regen] {}: compile_paths_request started ({} paths, structural={}, prettify={})",
+        entry.ident,
+        parser_attrs.paths.len(),
+        parser_attrs.structural,
+        parser_attrs.prettify,
+    );
+    let t0 = std::time::Instant::now();
+
+    let prepared = match compile_paths_request(&parser_attrs.paths, &request) {
+        Ok(CompileOutput::Rust(prepared)) => prepared,
+        Ok(_) => bail!("Rust target produced non-Rust pipeline output"),
+        Err(err) => bail!("compile_paths_request for `{}`: {err}", entry.ident),
+    };
+
+    eprintln!(
+        "[xtask::regen] {}: compile_paths_request done in {:?}",
+        entry.ident,
+        t0.elapsed()
+    );
+
+    // Run `generate_all` to produce the inner `TokenStream` — same
+    // call the proc-macro makes at `crates/derive/src/lib.rs:324`.
+    let t1 = std::time::Instant::now();
+    let inner: TokenStream = bbnf::generate::generate_all(&prepared, &parser_attrs, &marker_ident);
+    eprintln!(
+        "[xtask::regen] {}: generate_all done in {:?}",
+        entry.ident,
+        t1.elapsed()
+    );
+
+    // Wrap the inner stream in the per-grammar emit-impl module —
+    // mirrors the proc-macro's wrapping at
+    // `crates/derive/src/lib.rs:335-353`. The module name is
+    // `__<lowered_ident>_emit_impl`; the `pub use ...::*;` re-export
+    // lifts every emitted item to the parent path. The inner-attribute
+    // `#![allow(...)]` swallows the lint surface the IR codegen
+    // generates.
+    let mod_name = format_ident!("__{}_emit_impl", marker_ident.to_string().to_lowercase());
+    let body: TokenStream = quote! {
+        pub struct #marker_ident;
+
+        mod #mod_name {
+            #![allow(
+                dead_code,
+                unused_variables,
+                unused_mut,
+                unused_parens,
+                unused_assignments,
+                non_camel_case_types,
+                non_snake_case,
+                non_upper_case_globals,
+                clippy::all,
+            )]
+            use super::*;
+            #inner
+        }
+        pub use #mod_name::*;
+    };
+
+    // Format via prettyplease. The IR codegen emits well-formed
+    // Rust; `syn::parse2` succeeds on any valid `TokenStream`.
+    let t2 = std::time::Instant::now();
+    let parsed: syn::File = syn::parse2(body)
+        .with_context(|| format!("syn::parse2 of generated TokenStream for `{}`", entry.ident))?;
+    let formatted_body = prettyplease::unparse(&parsed);
+    eprintln!(
+        "[xtask::regen] {}: prettyplease done in {:?}",
+        entry.ident,
+        t2.elapsed()
+    );
+
+    // Compose the final file: header (doc + crate-level allow + use
+    // imports) + the formatted body. The header mirrors the
+    // bootstrap script's pre-B2 header so byte-equivalent diffing
+    // against `generated.rs` is meaningful.
+    let header = file_header(&entry.ident);
+    let output = format!("{header}{formatted_body}");
+
+    // Ensure the parent directory exists.
+    if let Some(parent) = target_path.parent() {
+        std::fs::create_dir_all(parent).with_context(|| {
+            format!("create parent dir for `{}`", target_path.display())
+        })?;
+    }
+
+    let bytes = output.len();
+    std::fs::write(target_path, &output)
+        .with_context(|| format!("write `{}`", target_path.display()))?;
+
+    Ok(bytes)
+}
+
+/// File header emitted before the per-grammar body. Mirrors the
+/// bootstrap script's pre-B2 header at `scripts/bootstrap-bbnf.sh`
+/// lines 321-342, with the `Regenerate:` comment updated to the
+/// xtask invocation.
+fn file_header(ident: &str) -> String {
+    format!(
+        "//! AUTO-GENERATED from `[workspace.metadata.bbnf.grammars]` — do not edit manually.\n\
+         //! Regenerate: cargo xtask regen --grammar {ident}\n\
+         \n\
+         #![allow(\n    \
+             dead_code,\n    \
+             unused_variables,\n    \
+             unused_mut,\n    \
+             unused_parens,\n    \
+             unused_assignments,\n    \
+             non_camel_case_types,\n    \
+             non_snake_case,\n    \
+             non_upper_case_globals,\n    \
+             clippy::all\n\
+         )]\n\
+         \n\
+         use ::bbnf::runtime::tape::*;\n\
+         use ::bbnf::runtime::{{Parsed, ParseErr, Root}};\n\
+         use ::parse_that::*;\n\
+         \n",
+    )
 }
 
 /// Regenerate every grammar enumerated in the workspace manifest.
-#[allow(dead_code)]
-pub(crate) fn regen_all() -> Result<()> {
-    anyhow::bail!("regen_all — implementation lands in B2.W0.c")
+fn regen_all(workspace_root: &Path, grammars: &[GrammarEntry]) -> Result<()> {
+    for entry in grammars {
+        let target = output_path(workspace_root, &entry.ident);
+        let bytes = regen_grammar(workspace_root, entry, &target)?;
+        println!(
+            "regen {}: wrote {} bytes to {}",
+            entry.ident,
+            bytes,
+            target
+                .strip_prefix(workspace_root)
+                .unwrap_or(&target)
+                .display()
+        );
+    }
+    Ok(())
 }
 
 /// Regenerate to a tempdir; diff against the checked-in tree; exit
 /// non-zero on drift. Used by CI + pre-commit hook.
-#[allow(dead_code)]
-pub(crate) fn regen_check() -> Result<()> {
-    anyhow::bail!("regen_check — implementation lands in B2.W0.c")
+fn regen_check(workspace_root: &Path, grammars: &[GrammarEntry]) -> Result<()> {
+    let tmpdir = tempfile::tempdir().context("create tempdir for regen --check")?;
+    let mut drift = Vec::new();
+
+    for entry in grammars {
+        let tmp_target = tmpdir.path().join(format!("{}.rs", entry.ident));
+        regen_grammar(workspace_root, entry, &tmp_target)?;
+
+        let checked_in = output_path(workspace_root, &entry.ident);
+        if !checked_in.exists() {
+            drift.push(format!(
+                "missing checked-in `{}` — regenerate with `cargo xtask regen --grammar {}`",
+                checked_in.display(),
+                entry.ident
+            ));
+            continue;
+        }
+
+        let regenerated_bytes = std::fs::read(&tmp_target)
+            .with_context(|| format!("read regenerated `{}`", tmp_target.display()))?;
+        let checked_in_bytes = std::fs::read(&checked_in)
+            .with_context(|| format!("read checked-in `{}`", checked_in.display()))?;
+
+        if regenerated_bytes != checked_in_bytes {
+            drift.push(format!(
+                "drift: `{}` differs from `cargo xtask regen --grammar {}` output",
+                checked_in.display(),
+                entry.ident
+            ));
+        }
+    }
+
+    if drift.is_empty() {
+        println!(
+            "regen --check: clean ({} grammars matched)",
+            grammars.len()
+        );
+        Ok(())
+    } else {
+        for msg in &drift {
+            eprintln!("{msg}");
+        }
+        bail!(
+            "regen --check: {} of {} grammars drifted",
+            drift.len(),
+            grammars.len()
+        );
+    }
 }

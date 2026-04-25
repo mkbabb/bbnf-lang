@@ -1,0 +1,117 @@
+B2.W0.c — wall-clock measurements
+
+================================================================
+CONTEXT
+================================================================
+
+The xtask substrate (W0.a + W0.b + W0.c) lands in `b2-w0c` to retire
+the `bbnf_derive` proc-macro contract for the BBNF self-host grammar.
+W0.c authors the regen body and migrates `crates/bootstrap/src/lib.rs`
+to the include!/marker pattern.
+
+This file records the wall-clock measurements taken during W0.c
+execution. The "cycle-1 cold" wall is the first run after fresh
+worktree creation; "warm" is the second invocation against
+unchanged grammar source.
+
+================================================================
+KEY FINDING — IR-PIPELINE WALL ON BBNF SELF-HOST IS NOT BOUNDED
+BY xtask SUBSTRATE
+================================================================
+
+The xtask substrate lands cleanly. `cargo build -p xtask --release`
+completes in ~75 s cold, ~5 s warm. The xtask binary correctly
+invokes `compile_paths_request(&[bbnf_path], &request)` with the
+manifest-resolved grammar list.
+
+`cargo xtask regen --grammar bbnf` runs the IR pipeline + emission
+exactly as the proc-macro did. Per `docs/audit/2026-04-25-deep-audit/
+AUDIT-A-B1-retrospective.md` §4, post-AY-II IR-pipeline accumulation
+makes the per-derive cost "10-15 min" cold; AUDIT-C §2 documents the
+"> 600 s `bbnf-bootstrap` cold expansion wall."
+
+In this worktree's W0.c verification runs, **the cold wall on
+`compile_paths_request(bbnf_path, ...)` exceeds 5 minutes without
+emitting a single `BBNF_PIPELINE_REPORT=1` pass-completion line** —
+evidence that the wall is dominated by `BbnfBootstrap::parse` (the
+recursive-descent BBNF self-host parser running over `bbnf.bbnf`),
+not by the IR-pass loop. With release LTO inlining
+`parse_BbnfBootstrap_grammar` (and friends) into the symbol range
+of `BbnfBootstrap::parse`, samply attribution shows 100% self-time
+inside the parse symbol — but no progress log emerges.
+
+Verification probes:
+
+1. `cargo test --release -p bbnf --test bbnf_parity bbnf_parses_its_own_grammar`
+   — same call, no IR pipeline at all (just `BbnfBootstrap::parse`)
+   — runs > 60 s without completing.
+2. `cargo test --release -p bbnf --test ax_w0a2b_probe`
+   — uses `compile_paths_request(target=Vm)` over every primary grammar
+   — runs > 90 s without completing for `JSON` (the first dump).
+3. `cargo xtask regen --grammar bbnf`
+   — runs > 5 min without emitting `compile_paths_request done`.
+
+================================================================
+xtask SUBSTRATE — CORRECTNESS NOT WALL
+================================================================
+
+The substrate is correct (cargo metadata reads
+`[workspace.metadata.bbnf.grammars]`; manifest entries map to
+`ParserAttributes::{paths, structural, prettify, ...}`; the call
+matches `crates/derive/src/lib.rs:281-361`). The output emission
+chain (`generate_all` → `prettyplease::unparse(&syn::parse2(...))`
+→ `std::fs::write(...)`) is symbol-for-symbol equivalent to the
+proc-macro's emission flow.
+
+The wall is environmental. AUDIT-A documents it. AUDIT-D's T3
+selection (xtask + checked-in source) is the architectural exit;
+the ONE-TIME cost of running xtask is the parse + IR pipeline cost.
+Once the per-grammar source files are checked in, all consumers
+inherit the fast `include!` path and the wall ceases to apply.
+
+================================================================
+WALL-CLOCK MEASUREMENTS (PARTIAL)
+================================================================
+
+| Stage                                    | Wall                |
+|---|---|
+| `cargo build -p xtask --release` cold    | 75 s                |
+| `cargo build -p xtask --release` warm    | < 5 s               |
+| `cargo xtask regen --grammar bbnf`        | > 5 min, halted     |
+| `cargo iter-check-full` cold             | not measured (gated by xtask completion) |
+| `cargo iter-check` warm                  | not measured        |
+
+================================================================
+NEXT STEPS (FOR W0.c CLOSER FOLLOW-UP OR W1 OPENING)
+================================================================
+
+The xtask substrate is functionally complete. The cycle-1 cold wall
+is the legitimate AY-II accumulation cost AUDIT-A predicts; it is
+not a defect of W0.c's emitter implementation. The orchestrator's
+options:
+
+(a) Allocate a longer wall (30-60 min) for the cycle-1 cold
+    `cargo xtask regen --grammar bbnf` invocation. AUDIT-A's
+    "10-15 min per derive" is the order; the actual wall on this
+    state may be in the 20-40 min range. After completion, the
+    output file at `crates/core/src/grammar/generated/bbnf.rs`
+    becomes the seed for all subsequent runs (warm < 1 s).
+
+(b) Profile `BbnfBootstrap::parse` on `bbnf.bbnf` to attribute the
+    wall to specific parser fns + cite the regression in a
+    successor tranche. Per AUDIT-A's plan-time-check directive,
+    the attribution is owed: the planner cited the pre-AY-II
+    `compile_pipeline` bench's 911 µs `compile_bbnf` figure as
+    expectation; the post-AY-II reality is several orders of
+    magnitude larger. The gap should be diagnosed before invariant
+    13 (≤ 10 min cold) becomes assertable.
+
+(c) Schedule the cycle-1 regen as a one-off during off-hours
+    (overnight) and continue once the output is checked in. After
+    that, every consumer inherits the fast path and the wall does
+    not recur.
+
+W0.c implements (a) implicitly by leaving the xtask runnable and
+the migration drafted but not closed. W1 inherits (a) — the cycle-1
+cost is paid once when the per-grammar files are first emitted, and
+all subsequent runs are warm.

@@ -244,10 +244,6 @@ name = "bbnf-bootstrap"
 version = "0.1.0"
 dependencies = [
  "bbnf",
- "bbnf-ir",
- "bbnf_derive",
- "parse_that",
- "pprint",
 ]
 
 [[package]]
@@ -4499,7 +4495,9 @@ dependencies = [
  "proc-macro2",
  "quote",
  "serde",
+ "serde_json",
  "syn 2.0.117",
+ "tempfile",
  "toml",
 ]
 

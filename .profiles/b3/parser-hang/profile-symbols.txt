@@ -1,0 +1,38 @@
+/Users/mkbabb/Programming/bbnf-wt-b3-w0a4-probe/crates/core/src/grammar/generated.rs
+/Users/mkbabb/Programming/bbnf-wt-b3-w0a4-probe/crates/core/src/imports/loader.rs
+/Users/mkbabb/Programming/bbnf-wt-b3-w0a4-probe/crates/core/src/pipeline/compile.rs
+/Users/mkbabb/Programming/bbnf-wt-b3-w0a4-probe/crates/core/src/pipeline/directives.rs
+/Users/mkbabb/Programming/bbnf-wt-b3-w0a4-probe/crates/tape/src/builder/mod.rs
+/Users/mkbabb/Programming/bbnf-wt-b3-w0a4-probe/crates/tape/src/finaliser.rs
+/Users/mkbabb/Programming/bbnf-wt-b3-w0a4-probe/xtask/src/main.rs
+/Users/mkbabb/Programming/bbnf-wt-b3-w0a4-probe/xtask/src/regen.rs
+<bbnf::grammar::generated::BbnfBootstrap>::parse
+<clap_builder::parser::matches::arg_matches::ArgMatches as cargo::util::command_prelude::ArgMatchesExt>::workspace
+<rustup::dist::ParsedToolchainDesc as core::str::traits::FromStr>::from_str
+<tape::builder::FusedBuilder>::finish
+<tape::builder::FusedBuilder>::run_finaliser
+<toml::de::deserializer::Deserializer>::parse
+<toml::map::Map<serde_spanned::spanned::Spanned<alloc::borrow::Cow<str>>, serde_spanned::spanned::Spanned<toml::de::parser::devalue::DeValue>>>::entry::<serde_spanned::spanned::Spanned<alloc::borrow::Cow<str>>>
+<url::ParseOptions>::parse
+<url::host::Host<alloc::borrow::Cow<str>>>::parse_cow
+<url::parser::Parser>::after_double_slash
+<url::parser::Parser>::parse_path
+<url::parser::Parser>::parse_path::push_pending
+<xtask::Cli as clap_builder::derive::Parser>::parse
+bbnf::imports::loader::load_module_graph
+bbnf::imports::loader::load_recursive
+bbnf::pipeline::compile::compile_paths_request
+bbnf::pipeline::directives::load_merged_paths
+bbnf::pipeline::directives::parse_to_pipeline_inputs
+git_config_parse
+regex_syntax::ast::parse::ParserI<P>::bump_space
+rustup::dist::manifest::Manifest::parse
+tape::finaliser::derive_frame_depth
+toml::de::deserializer::Deserializer::parse
+toml::de::parser::document::State::finish_table
+toml::de::parser::document::descend_path
+toml::de::parser::parse_document
+toml::de::parser::value::on_scalar
+toml_parser::decoder::string::decode_basic_string
+toml_parser::parser::document::ws_comment_newline
+tracing_subscriber::filter::env::directive::Directive::parse

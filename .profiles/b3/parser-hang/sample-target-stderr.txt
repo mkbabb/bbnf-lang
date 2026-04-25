@@ -1,0 +1,3 @@
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen][parse-start] source-len=537 bytes
+EXIT xtask: killed

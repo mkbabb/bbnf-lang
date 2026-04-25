@@ -113,6 +113,65 @@ artefact correctness:
 5. W1 divan capture writes JSON directly via `DIVAN_BENCH_FORMAT=json`
    and saves stderr separately for diagnosis.
 
+## 2026-04-25 — W0.a probe #1 (W0' scope) — DISPROVED
+
+**Verdict**: DISPROVED. The W0' revert alone does NOT restore parser
+baseline.
+
+**Probe path**: disposable worktree at
+`/Users/mkbabb/Programming/bbnf-wt-b3-w0a-probe`. Master HEAD pre-probe:
+`d4b9272a`. Disposable-worktree commits (NOT cherry-picked to master):
+
+- `809d4d9c` — feat(xtask): phase-timing instrumentation (W0.a).
+- `a5f0a672`..`f45d7d56` — 14 W0' reverts (clean, 0 conflicts).
+- `cbf84ed7` — audit(b3): W0.a probe verdict + phase-timed xtask output.
+
+**Phase walls**:
+
+| Phase | Wall |
+|---|---|
+| manifest | 11.09 ms |
+| load | NEVER COMPLETED (>= 600 s timeout) |
+| parse | NEVER COMPLETED — `[parse]` line never emitted |
+| ir-pipeline | not reached |
+| generate_all | not reached |
+| prettyplease | not reached |
+| write | not reached |
+| total | not emitted (process killed by `timeout 600`) |
+
+The `[manifest]` log proves the env-gate (`BBNF_REGEN_PHASE_LOG=1`)
+plumbing works. The instrumented `[load]` phase wraps `compile_paths_request`
++ `load_merged_paths`; entry to that wrapper never produced exit, so
+the hang is inside `load_merged_paths -> parse_to_pipeline_inputs ->
+BbnfBootstrap::parse`. Reverting W0' alone does not unwind the
+regression.
+
+**Recommended next action**: Escape 1 — fresh disposable probe with
+wider scope (W0' + AY-II.W0-fix; adds `c9142405` and `f8ac2cd7` to the
+revert chain, totaling 16 commits).
+
+**Latent build break observed (NOT introduced by B3)**:
+`crates/bootstrap/src/bin/cost_grid_sweep.rs` imports
+`bbnf_ir::passes::lift_dta` but `bbnf-ir` was purged from
+`crates/bootstrap/Cargo.toml` at B2.W0.c partial-close `21881591`.
+The break exists on master `d4b9272a` and predates B3. The bin path
+is unrelated to xtask; `cargo build -p xtask --release` and `cargo
+check -p bbnf -p xtask -p bbnf-derive` succeed. B3 does not fix it
+(out of scope); B2.W0.c re-execution will surface it as a residual
+issue.
+
+The W0.a probe worktree was preserved for audit immediately post-
+verdict; it is torn down before the W0.a probe #2 dispatch.
+
+## 2026-04-25 — W0.a probe #2 (W0' + W0-fix scope) — pending dispatch
+
+Pending. Per `B3.md` §Escape clause Escape 1, dispatching a fresh
+disposable probe at
+`/Users/mkbabb/Programming/bbnf-wt-b3-w0a2-probe` with the W0' +
+W0-fix revert scope (16 commits). Same instrumentation; same
+`BBNF_REGEN_PHASE_LOG=1 timeout 600 cargo xtask regen --grammar bbnf`
+probe; same verdict-determination + reporting protocol.
+
 ## Pre-B3 inheritance
 
 B3 inherits the following state from B2:

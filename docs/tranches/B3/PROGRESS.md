@@ -216,29 +216,109 @@ parse-start missing → hang earlier in the path.
 The probe #2 worktree was preserved for audit immediately post-
 verdict; it is torn down before probe #3 dispatch.
 
-## 2026-04-25 — W0.a probe #3 (W0' scope, sharper [parse-start]/[parse-end] instrumentation) — pending dispatch
+## 2026-04-25 — W0.a probe #3 (W0' scope, sharper [parse-start]/[parse-end]) — DISPROVED-PARSE
 
-Pending. Same revert scope as probe #1 (14 W0' commits, NOT W0-fix);
-sharper instrumentation in `crates/core/src/pipeline/directives.rs`
-that emits `[xtask::regen][parse-start]` immediately before the
-`BbnfBootstrap::parse(source)` call site and `[xtask::regen][parse-end]
-{:.2?}` immediately after the call returns. Other phase markers
-unchanged.
+**Verdict**: DISPROVED-PARSE. Hang is **inside `BbnfBootstrap::parse`**.
 
-Verdict-determination protocol:
+**Probe path**: disposable worktree at
+`/Users/mkbabb/Programming/bbnf-wt-b3-w0a3-probe`. Master HEAD pre-probe:
+`c325c13f`. Worktree commits (NOT cherry-picked):
 
-- **CONFIRMED**: `[parse-start]` AND `[parse-end]` both emit; total
-  parse wall < 5 s; xtask completes through `[write]`.
-- **DISPROVED-PARSE**: `[parse-start]` emits; `[parse-end]` never
-  emits. The hang IS inside `BbnfBootstrap::parse`. Beyond W0'
-  reverts already explored; relinquish to user direction (probe
-  cycle exhausted).
-- **DISPROVED-PRE-PARSE**: `[parse-start]` never emits. The hang is
-  BEFORE parse, inside `compile_paths_request` preamble or
-  `load_merged_paths`. Different diagnostic path entirely; relinquish
-  to user direction (regression source is not in W0' parse path).
-- **INDETERMINATE**: build failure or some other non-determinable
-  outcome.
+- `557bf58b` — feat(pipeline): sharper parse-start/parse-end + load +
+  extract-host markers (only in `crates/core/src/pipeline/directives.rs`,
+  env-gated by `BBNF_REGEN_PHASE_LOG=1`).
+- `23a30d76`..`6d0823c1` — 14 W0'-only throwaway reverts (matches
+  probe #1's revert scope, 0 conflicts).
+
+**Build**: `cargo check -p bbnf -p xtask -p bbnf_derive --profile
+ax-iter` exit 0 in 6.21 s. `cargo build -p xtask --release` exit 0
+in 1m 03s.
+
+**Probe output** (`BBNF_REGEN_PHASE_LOG=1 timeout 600 cargo xtask
+regen --grammar bbnf`):
+
+```
+[xtask::regen] bbnf: compile_paths_request started (1 paths, structural=true, prettify=true)
+[xtask::regen][load-start] paths=1
+[xtask::regen][parse-start] source-len=3448 bytes
+EXIT: 124
+```
+
+The `[parse-start]` marker fired with the actual `bbnf.bbnf` source
+length (3448 bytes), proving `BbnfBootstrap::parse(input)` was
+invoked. The `[parse-end]` marker did NOT fire within the 600 s
+timeout. **The parser hung INSIDE `BbnfBootstrap::parse` itself**,
+on a substrate where the W0' source landings were reverted.
+
+This is a stronger result than probe #1 (which couldn't distinguish
+hang-in-parse from hang-before-parse). Probe #3 confirms the hang is
+inside the parser proper.
+
+**Implication**: the W0' source-level changes (FusedBuilder collapse,
+materializer routing, scan-policy splice) are NOT the regression
+source on their own. The regression is either:
+
+1. **Deeper in the AY-II runtime stack** — entangled with W0-fix
+   (begin_compound 6-arg) AND/OR W0 base (ValueBuilder allocation,
+   STRUCTURAL_SCAN_POLICY emission, projection-totality wires). The
+   W0' + W0-fix revert was unprobeable per probe #2's
+   generated.rs / source mismatch.
+2. **In the generated parser table itself** —
+   `crates/core/src/grammar/generated.rs` (33 293 lines) is the BBNF
+   parser's state machine. It was last regenerated near `b5bbda6c`
+   (AY-II.W0 era). If a regression exists in the generated parser's
+   structure (not in helpers), source-level reverts of helpers won't
+   surface it.
+3. **An interaction between recent helper changes and the existing
+   generated table** that compounds at parse time on BBNF-shaped
+   input (deep recursion + dense alternation). Subtle inlining or
+   monomorphization changes between AY-II.W0 era and master could
+   produce O(N^k) behavior on this specific corpus.
+
+**Probe-cycle exhausted within original B3 scope.** Each forward
+move from here requires user judgment:
+
+- **(α) Restore historical generated.rs + retry wider revert**:
+  reset generated.rs to a pre-W0-era version, revert W0' + W0-fix +
+  W0 base, retry probe. Risk: pre-W0-era generated.rs has its own
+  API drift; restoration may need additional source patches.
+- **(β) samply-profile the hung parser**: attach samply to the
+  hung process, capture self-time profile of `BbnfBootstrap::parse`,
+  identify the hot path. May reveal whether the issue is one
+  function or systemic.
+- **(γ) Bisect non-helper commits**: the regression may be in B1
+  toolchain pin / nightly drift / dependency upgrade rather than
+  AY-II runtime work. Bisect from AY-I close forward, looking for
+  the BBNF-parse inflection point.
+- **(δ) Probe with smaller grammar**: re-run probe #3 against
+  `json.bbnf` (537 bytes) to see whether the regression is
+  recursion-density-specific or affects all grammars. Probe #1
+  noted json hung > 39 s but didn't time-bound it. Sharp
+  measurement.
+- **(ε) Acknowledge B3 cannot close as-designed**: the original B3
+  thesis (W0' revert restores baseline) is DISPROVED. Close B3 with
+  the diagnostic record + relinquish to user direction on
+  alternative diagnostic paths (B5+).
+
+The probe #3 worktree is preserved for audit; teardown after this
+record commits. Latent build break (cost_grid_sweep.rs) still present;
+out of B3 scope.
+
+## Recommendation to user
+
+The original R3 path assumed W0' revert restores baseline. That
+assumption is now DISPROVED with sharp evidence. B3 has produced
+honest negative results:
+
+1. W0' alone insufficient (probe #1 + probe #3 with sharper
+   instrumentation).
+2. W0' + W0-fix unprobeable without generated.rs restoration
+   (probe #2).
+
+B3 cannot close on its original thesis. The orchestrator surfaces
+to user direction on the (α/β/γ/δ/ε) options above. B2 resume,
+B4 plan authoring, and AY-II execution all gate on resolving this
+diagnostic.
 
 ## Pre-B3 inheritance
 

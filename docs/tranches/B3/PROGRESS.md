@@ -163,14 +163,82 @@ issue.
 The W0.a probe worktree was preserved for audit immediately post-
 verdict; it is torn down before the W0.a probe #2 dispatch.
 
-## 2026-04-25 — W0.a probe #2 (W0' + W0-fix scope) — pending dispatch
+## 2026-04-25 — W0.a probe #2 (W0' + W0-fix scope) — INDETERMINATE
 
-Pending. Per `B3.md` §Escape clause Escape 1, dispatching a fresh
-disposable probe at
-`/Users/mkbabb/Programming/bbnf-wt-b3-w0a2-probe` with the W0' +
-W0-fix revert scope (16 commits). Same instrumentation; same
-`BBNF_REGEN_PHASE_LOG=1 timeout 600 cargo xtask regen --grammar bbnf`
-probe; same verdict-determination + reporting protocol.
+**Verdict**: INDETERMINATE — wider revert scope is unprobeable as-designed.
+
+**Probe path**: disposable worktree at
+`/Users/mkbabb/Programming/bbnf-wt-b3-w0a2-probe`. Master HEAD pre-probe:
+`ef52c35c`. Worktree commits (NOT cherry-picked):
+
+- `7a55c88d` — feat(xtask): phase-timing instrumentation (probe #2).
+- `c418efea`..`d55f9d88` — 16 throwaway reverts (W0'.a/b/c/d1/d3 + W0-fix
+  c9142405 + f8ac2cd7), 0 conflicts during `git revert`.
+
+**Build verification**: `cargo check -p bbnf -p xtask -p bbnf_derive
+--profile ax-iter` failed with **219 errors** in `bbnf` (lib). The
+errors cluster on:
+
+- `error[E0061]: this method takes 4 arguments but 6 arguments were
+  supplied` — at `begin_compound` callsites.
+- `error[E0599]: no method named end_compound_post_order found for
+  mutable reference &mut TapeBuilder`.
+
+**Root cause (architectural)**: `crates/core/src/grammar/generated.rs`
+(the checked-in 33 293-line BBNF self-host emission) was regenerated
+AFTER W0-fix landed, so it emits the 6-arg `begin_compound` and the
+`end_compound_post_order` method. B3's revert deliberately does not
+touch `generated.rs` (per the W0' source-vs-generated mismatch
+analysis). Reverting W0-fix from source restores the 4-arg signature,
+which `generated.rs` no longer compiles against.
+
+The W0' + W0-fix scope cannot be probed without ALSO restoring a
+pre-W0-fix generated.rs — a larger surgery than the original B3 plan
+envisioned. Restoring an arbitrary historical generated.rs introduces
+its own consistency risks (other API shifts between then and now).
+
+**Recommended next action — sharpen probe #1, not Escape 2**: the
+W0'-only revert (probe #1) succeeded at building cleanly; its hang
+remains the highest-quality data point. Probe #1's instrumentation
+recorded `[load]` not completing AND `[parse]` not emitting, but
+those are ambiguous — both consistent with (a) hang in
+`compile_paths_request` preamble before parse OR (b) hang inside
+`BbnfBootstrap::parse` itself. The next probe (probe #3) re-runs the
+W0'-only revert with **sharper instrumentation**: `[parse-start]`
+log immediately before invoking `BbnfBootstrap::parse` + `[parse-end]`
+log immediately after. This narrows the hang location precisely:
+parse-start emitted + parse-end missing → parse-internal hang;
+parse-start missing → hang earlier in the path.
+
+**Latent build break still present** (NOT introduced by B3):
+`cost_grid_sweep.rs` import issue persists. Out of B3 scope.
+
+The probe #2 worktree was preserved for audit immediately post-
+verdict; it is torn down before probe #3 dispatch.
+
+## 2026-04-25 — W0.a probe #3 (W0' scope, sharper [parse-start]/[parse-end] instrumentation) — pending dispatch
+
+Pending. Same revert scope as probe #1 (14 W0' commits, NOT W0-fix);
+sharper instrumentation in `crates/core/src/pipeline/directives.rs`
+that emits `[xtask::regen][parse-start]` immediately before the
+`BbnfBootstrap::parse(source)` call site and `[xtask::regen][parse-end]
+{:.2?}` immediately after the call returns. Other phase markers
+unchanged.
+
+Verdict-determination protocol:
+
+- **CONFIRMED**: `[parse-start]` AND `[parse-end]` both emit; total
+  parse wall < 5 s; xtask completes through `[write]`.
+- **DISPROVED-PARSE**: `[parse-start]` emits; `[parse-end]` never
+  emits. The hang IS inside `BbnfBootstrap::parse`. Beyond W0'
+  reverts already explored; relinquish to user direction (probe
+  cycle exhausted).
+- **DISPROVED-PRE-PARSE**: `[parse-start]` never emits. The hang is
+  BEFORE parse, inside `compile_paths_request` preamble or
+  `load_merged_paths`. Different diagnostic path entirely; relinquish
+  to user direction (regression source is not in W0' parse path).
+- **INDETERMINATE**: build failure or some other non-determinable
+  outcome.
 
 ## Pre-B3 inheritance
 

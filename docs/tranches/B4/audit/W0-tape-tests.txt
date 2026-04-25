@@ -1,0 +1,8 @@
+   Compiling tape v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b4-w0-syn/crates/tape)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.01s
+────────────
+ Nextest run ID fbf371f9-9462-4de8-8067-cf9735052d1b with nextest profile: ax-iter
+    Starting 100 tests across 7 binaries
+────────────
+     Summary [   0.186s] 100 tests run: 100 passed, 0 skipped
+EXIT: 0

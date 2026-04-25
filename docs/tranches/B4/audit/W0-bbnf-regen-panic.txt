@@ -1,0 +1,90 @@
+B4.W0 — bbnf xtask regen `syn::parse2` panic capture (pre-fix)
+
+Panic surfaces at `xtask::regen::regen_grammar` line 276; the codegen
+pipeline completes the parse + IR + generate_all phases cleanly:
+
+    [xtask::regen] bbnf: compile_paths_request started (1 paths, structural=true, prettify=true)
+    [xtask::regen] bbnf: compile_paths_request done in 3.960458ms
+    [xtask::regen] bbnf: generate_all done in 9.497084ms
+    [xtask::regen] bbnf: token dump written to /tmp/b4-w0-bbnf-tokens.txt
+    Error: syn::parse2 of generated TokenStream for `bbnf`
+
+    Caused by:
+        expected loop or block expression
+
+The TokenStream dump (1,021,246 bytes) reveals a 9,752-token inner
+module body. Item-level bisection identifies item index 363 (`impl
+BbnfBootstrap { ... }`) as the panic-bearing item; in-impl
+bisection narrows to four sibling functions: `__big_comment_prettify`,
+`__comment_prettify`, `__pretty_hint_prettify`, and
+`__grammar_item_prettify`. Token-level bisection of
+`__big_comment_prettify` (4,097 bytes) attributes the failure to the
+following emission inside a SIMD-scan body:
+
+    'avx2_scan: {
+        ...
+        if __mask != 0 {
+            let __rel = __mask.trailing_zeros() as usize;
+            break 'avx2_scan ::core::option::Option::Some(
+                (__i + __rel) - __start,
+            );
+        }
+        ...
+        while __i < __len {
+            let __b = *__ptr.add(__i);
+            if __byte_lut[__b as usize] {
+                break 'avx2_scan ::core::option::Option::Some(
+                    __i - __start,
+                );
+            }
+            __i += 1;
+        }
+    }
+
+The two `break 'avx2_scan ::core::option::Option::Some(...)` forms are
+the offending fragments. Rust's reference grammar admits the form
+`break LIFETIME EXPR` only when EXPR is unambiguously a value
+expression; `syn::parse2` (and earlier rustc forms) require the
+expression to be wrapped in `{ ... }` or `( ... )` when it begins
+with `::path::...` or any other prefix that the parser would
+otherwise consume as a continuation of the label. The error message
+`expected loop or block expression` is the parser's specific
+diagnostic for this surface: after parsing `'avx2_scan` as a label,
+the parser expects either a `loop`, `while`, `for`, `'label: { ... }`,
+or a brace-block expression to follow — `::core::...` does not match
+any of those forms.
+
+The defect lives at:
+
+    crates/core/src/generate/regex/emit/simd.rs:179
+    crates/core/src/generate/regex/emit/simd.rs:200
+
+The emitter is `emit_structural_bitmap_kernel` — the SIMD AVX2
+nibble-LUT scan kernel introduced at AU.2.7 v2. Both `break`
+fragments emit the same shape; both must be wrapped.
+
+The bbnf grammar exercises this emitter where the json grammar does
+not because the bbnf grammar's `prettify` directives target rules
+whose bodies include negated character-class regex bytes that
+`emit_structural_bitmap_kernel` recognises (`big_comment`,
+`comment`, `pretty_hint`, `grammar_item` carry `/[^*]*/`,
+`/.*/`, `/[^)]*/`, and other negated classes that the structural
+bitmap kernel handles). The json grammar's regex emissions either do
+not invoke the kernel or do not invoke it through the prettify
+codegen path; either way, the json regen exits 0 today. The
+bbnf-specific surface is the prettify codegen path emitting
+`emit_structural_bitmap_kernel` output — and the `prettify`
+directive set on bbnf is what activates that path.
+
+Stack trace at panic:
+
+       3: <syn::error::Error as anyhow::context::ext::StdError>::ext_context::<alloc::string::String>
+       4: <core::result::Result<syn::file::File, syn::error::Error> as anyhow::Context>::with_context
+       5: xtask::regen::regen_grammar  at xtask/src/regen.rs:276
+       6: xtask::regen::run  at xtask/src/regen.rs:127
+       7: xtask::main  at xtask/src/main.rs:41
+
+The diagnostic dump-and-bisect tooling that produced this attribution
+lives at `/tmp/syn-bisect/` (worktree-only); it is not part of the
+B4.W0 fix scope. Token-level dumps preserved at
+`/tmp/b4-w0-bbnf-tokens.txt` and `/tmp/b4-w0-culprit-fn-50.txt`.

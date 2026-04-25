@@ -1,0 +1,7 @@
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.21s
+     Running `target/release/xtask regen --grammar json`
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] json: compile_paths_request done in 1.457875ms
+[xtask::regen] json: generate_all done in 3.004334ms
+[xtask::regen] json: prettyplease done in 10.268375ms
+EXIT: 0

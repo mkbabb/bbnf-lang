@@ -1,0 +1,14 @@
+   Compiling egraph-derive v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b4-w0-syn/crates/egraph-derive)
+    Checking csp-solver v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b4-w0-syn/crates/csp-solver)
+    Checking tape v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b4-w0-syn/crates/tape)
+    Checking egraph v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b4-w0-syn/crates/egraph)
+    Checking simd-scan v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b4-w0-syn/crates/simd-scan)
+    Checking bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b4-w0-syn/crates/ser)
+    Checking bbnf-regex v0.1.0 (/Users/mkbabb/Programming/parse-that/rust/regex)
+   Compiling bbnf_derive v0.2.11 (/Users/mkbabb/Programming/bbnf-wt-b4-w0-syn/crates/derive)
+    Checking parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that/rust/parse_that)
+    Checking bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-wt-b4-w0-syn/crates/ir)
+    Checking bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-wt-b4-w0-syn/crates/core)
+    Checking xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b4-w0-syn/xtask)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 5.89s
+EXIT: 0

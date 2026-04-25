@@ -1,0 +1,7 @@
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.11s
+     Running `target/release/xtask regen --grammar bbnf`
+[xtask::regen] bbnf: compile_paths_request started (1 paths, structural=true, prettify=true)
+[xtask::regen] bbnf: compile_paths_request done in 3.148584ms
+[xtask::regen] bbnf: generate_all done in 9.218792ms
+[xtask::regen] bbnf: prettyplease done in 59.234958ms
+EXIT: 0; bbnf.rs lines: 34048

@@ -1,0 +1,7 @@
+compile_pipeline   fastest       │ slowest       │ median        │ mean          │ samples │ iters
+├─ compile_bbnf    2.671 ms      │ 4.362 ms      │ 2.831 ms      │ 2.898 ms      │ 100     │ 100
+├─ compile_css_l4  25.65 ms      │ 28.52 ms      │ 26.72 ms      │ 26.79 ms      │ 100     │ 100
+├─ compile_ebnf    574.7 µs      │ 836.6 µs      │ 602.2 µs      │ 629.6 µs      │ 100     │ 100
+├─ compile_json    173.4 µs      │ 490.6 µs      │ 182 µs        │ 191.4 µs      │ 100     │ 100
+╰─ compile_sheets  11.45 ms      │ 12.66 ms      │ 12.06 ms      │ 12.06 ms      │ 100     │ 100
+

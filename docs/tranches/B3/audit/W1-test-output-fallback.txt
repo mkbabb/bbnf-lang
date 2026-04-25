@@ -1,0 +1,475 @@
+   Compiling serde_core v1.0.228
+   Compiling getrandom v0.3.4
+   Compiling errno v0.3.14
+   Compiling syn v2.0.117
+   Compiling rustix v1.1.4
+   Compiling ahash v0.8.12
+   Compiling hashbrown v0.14.5
+   Compiling serde v1.0.228
+   Compiling indexmap v2.13.0
+   Compiling smallvec v1.15.1
+   Compiling cranelift-bitset v0.116.1
+   Compiling serde_json v1.0.149
+   Compiling cranelift-entity v0.116.1
+   Compiling egraph v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/egraph)
+   Compiling gimli v0.31.1
+   Compiling bbnf-regex v0.1.0 (/Users/mkbabb/Programming/parse-that/rust/regex)
+   Compiling cranelift-bforest v0.116.1
+   Compiling regalloc2 v0.11.2
+   Compiling rmp-serde v1.3.1
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that/rust/parse_that)
+   Compiling semver v1.0.27
+   Compiling wasmparser v0.221.3
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/ir)
+   Compiling cranelift-codegen v0.116.1
+   Compiling object v0.36.7
+   Compiling serde_spanned v0.6.9
+   Compiling toml_datetime v0.6.11
+   Compiling postcard v1.1.3
+   Compiling wit-parser v0.221.3
+   Compiling wasmprinter v0.221.3
+   Compiling toml_edit v0.22.27
+   Compiling bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/core)
+   Compiling cssparser v0.33.0
+   Compiling terminal_size v0.4.4
+   Compiling rustix v0.38.44
+   Compiling wasmtime-wit-bindgen v29.0.1
+   Compiling clap_builder v4.6.0
+   Compiling wasmtime-environ v29.0.1
+   Compiling toml v0.8.23
+   Compiling parking_lot_core v0.9.12
+   Compiling cranelift-frontend v0.116.1
+   Compiling cranelift-native v0.116.1
+   Compiling tree-sitter v0.25.10
+   Compiling halfbrown v0.2.5
+   Compiling simd-scan v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/simd-scan)
+   Compiling parcel_selectors v0.28.2
+   Compiling wasmtime-component-macro v29.0.1
+   Compiling parcel_sourcemap v2.1.1
+   Compiling wasmtime-cache v29.0.1
+   Compiling faststr v0.2.34
+   Compiling wasmtime-fiber v29.0.1
+   Compiling wasmtime-cranelift v29.0.1
+   Compiling value-trait v0.10.1
+   Compiling dashmap v5.5.3
+   Compiling fxprof-processed-profile v0.6.0
+   Compiling clap v4.6.1
+   Compiling cssparser-color v0.1.0
+   Compiling wasmtime-jit-debug v29.0.1
+   Compiling addr2line v0.24.2
+   Compiling serde-content v0.1.2
+   Compiling lightningcss v1.0.0-alpha.71
+   Compiling wasmtime v29.0.1
+   Compiling tempfile v3.27.0
+   Compiling divan v0.1.21
+   Compiling sonic-rs v0.5.8
+   Compiling jiter v0.8.2
+   Compiling simd-json v0.14.3
+   Compiling prettyplease v0.2.37
+   Compiling json-prototype v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/json-prototype)
+   Compiling serde_json_borrow v0.9.0
+   Compiling cssparser v0.34.0
+   Compiling bbnf_derive v0.2.11 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/derive)
+Note: sub-variant type collision between `error_literal::error_literal_0` and `compare_op::compare_op_1` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `error_literal::error_literal_1` and `compare_op::compare_op_0` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `compare_op::compare_op_0` and `error_literal::error_literal_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `compare_op::compare_op_1` and `error_literal::error_literal_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__displayDecl_cont_169::__displayDecl_cont_169_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `alignDecl::alignDecl_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__fontWeightDecl_cont_178::__fontWeightDecl_cont_178_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontWeightDecl::fontWeightDecl_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontProps::fontProps_0` and `flexDirKeyword::flexDirKeyword_1` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontProps::fontProps_2` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontProps::fontProps_6` and `flexDirKeyword::flexDirKeyword_0` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `flexDirDecl::flexDirDecl_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `colorProps::colorProps_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `colorProps::colorProps_1` and `fontProps::fontProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `transformProps::transformProps_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `transformProps::transformProps_3` and `flexDirKeyword::flexDirKeyword_0` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `nthFunctionName::nthFunctionName_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `nthFunctionName::nthFunctionName_1` and `flexDirKeyword::flexDirKeyword_1` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontDecl::fontDecl_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `positionDecl::positionDecl_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `flexWrapKeyword::flexWrapKeyword_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `flexWrapKeyword::flexWrapKeyword_1` and `fontProps::fontProps_3` (Tuple([Span, Tuple([Span, Tuple([Span, U8])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `listTableProps::listTableProps_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `listTableProps::listTableProps_1` and `fontProps::fontProps_5` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `listTableProps::listTableProps_3` and `flexDirKeyword::flexDirKeyword_0` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `displayDecl::displayDecl_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__positionDecl_cont_170::__positionDecl_cont_170_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__flexWrapDecl_cont_174::__flexWrapDecl_cont_174_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__borderWidthDecl_cont_180::__borderWidthDecl_cont_180_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `flexWrapDecl::flexWrapDecl_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__cursorDecl_cont_186::__cursorDecl_cont_186_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__textAlignDecl_cont_184::__textAlignDecl_cont_184_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `value::value_3` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `viewportLengthUnit::viewportLengthUnit_0` and `fontProps::fontProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `viewportLengthUnit::viewportLengthUnit_1` and `flexDirKeyword::flexDirKeyword_0` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `viewportLengthUnit::viewportLengthUnit_3` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `overflowDecl::overflowDecl_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `cursorDecl::cursorDecl_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `visibilityDecl::visibilityDecl_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `anPlusB::anPlusB_1` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__borderStyleDecl_cont_181::__borderStyleDecl_cont_181_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__overflowDecl_cont_171::__overflowDecl_cont_171_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `borderWidthDecl::borderWidthDecl_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__visibilityDecl_cont_172::__visibilityDecl_cont_172_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `transitionProps::transitionProps_0` and `fontProps::fontProps_5` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `transitionProps::transitionProps_1` and `transformProps::transformProps_1` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `transitionProps::transitionProps_2` and `flexDirKeyword::flexDirKeyword_0` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `transitionProps::transitionProps_3` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__fontDecl_cont_164::__fontDecl_cont_164_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `spacingProps::spacingProps_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `spacingProps::spacingProps_1` and `flexDirKeyword::flexDirKeyword_1` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `spacingProps::spacingProps_2` and `colorProps::colorProps_3` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `spacingProps::spacingProps_3` and `flexDirKeyword::flexDirKeyword_0` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `alignKeyword::alignKeyword_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `alignKeyword::alignKeyword_1` and `fontProps::fontProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `alignKeyword::alignKeyword_2` and `flexDirKeyword::flexDirKeyword_1` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `borderStyleKeyword::borderStyleKeyword_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `borderStyleKeyword::borderStyleKeyword_1` and `fontProps::fontProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `bgProps::bgProps_0` and `flexDirKeyword::flexDirKeyword_0` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `bgProps::bgProps_1` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__boxSizingDecl_cont_185::__boxSizingDecl_cont_185_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `resolutionUnit::resolutionUnit_0` and `flexDirKeyword::flexDirKeyword_0` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `resolutionUnit::resolutionUnit_1` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `cursorKeyword::cursorKeyword_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `cursorKeyword::cursorKeyword_1` and `fontProps::fontProps_3` (Tuple([Span, Tuple([Span, Tuple([Span, U8])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `mediaType::mediaType_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `mediaType::mediaType_1` and `fontProps::fontProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `absoluteLengthUnit::absoluteLengthUnit_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `absoluteLengthUnit::absoluteLengthUnit_1` and `fontProps::fontProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `length::length_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__alignDecl_cont_175::__alignDecl_cont_175_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `mathValue::mathValue_0` and `value::value_1` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontLengthUnit::fontLengthUnit_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontLengthUnit::fontLengthUnit_1` and `fontProps::fontProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `namedColor::namedColor_0` and `value::value_2` (U32). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `globalKeyword::globalKeyword_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `globalKeyword::globalKeyword_1` and `flexDirKeyword::flexDirKeyword_0` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `textAlignDecl::textAlignDecl_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `boxSizingDecl::boxSizingDecl_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__flexDirDecl_cont_173::__flexDirDecl_cont_173_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `displayKeyword::displayKeyword_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `displayKeyword::displayKeyword_1` and `flexDirKeyword::flexDirKeyword_1` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `displayKeyword::displayKeyword_3` and `flexDirKeyword::flexDirKeyword_0` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `containerLengthUnit::containerLengthUnit_0` and `fontProps::fontProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `containerLengthUnit::containerLengthUnit_1` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `colorSpace::colorSpace_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `colorSpace::colorSpace_1` and `fontProps::fontProps_3` (Tuple([Span, Tuple([Span, Tuple([Span, U8])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `colorSpace::colorSpace_2` and `flexDirKeyword::flexDirKeyword_0` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `relativeLengthUnit::relativeLengthUnit_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__pattern_db1e96a7fb6ccf5d::__pattern_db1e96a7fb6ccf5d_0` and `value::value_1` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `valueUnit::valueUnit_0` and `value::value_1` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `sizeProps::sizeProps_0` and `borderStyleDecl::borderStyleDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `sizeProps::sizeProps_1` and `fontProps::fontProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+error[E0107]: missing generics for struct `FusedOutput`
+  --> crates/core/tests/sheets_parity.rs:41:10
+   |
+41 | #[derive(Parser)]
+   |          ^^^^^^ expected 1 generic argument
+   |
+note: struct defined here, with 1 generic parameter: `R`
+  --> crates/tape/src/builder/output.rs:36:12
+   |
+36 | pub struct FusedOutput<R> {
+   |            ^^^^^^^^^^^ -
+   = note: this error originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+Note: sub-variant type collision between `value_atom::value_atom_3` and `term::term_2` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `colorProps::colorProps_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `value::value_3` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__fontDecl_cont_164::__fontDecl_cont_164_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__fontWeightDecl_cont_178::__fontWeightDecl_cont_178_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `viewportLengthUnit::viewportLengthUnit_0` and `colorProps::colorProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `viewportLengthUnit::viewportLengthUnit_3` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `textAlignDecl::textAlignDecl_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `boxSizingDecl::boxSizingDecl_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontLengthUnit::fontLengthUnit_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontLengthUnit::fontLengthUnit_1` and `colorProps::colorProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__positionDecl_cont_170::__positionDecl_cont_170_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `globalKeyword::globalKeyword_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `globalKeyword::globalKeyword_1` and `viewportLengthUnit::viewportLengthUnit_1` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `cursorKeyword::cursorKeyword_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontWeightDecl::fontWeightDecl_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `displayKeyword::displayKeyword_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `displayKeyword::displayKeyword_3` and `viewportLengthUnit::viewportLengthUnit_1` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `valueUnit::valueUnit_0` and `value::value_1` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `transitionProps::transitionProps_2` and `viewportLengthUnit::viewportLengthUnit_1` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `transitionProps::transitionProps_3` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `flexDirKeyword::flexDirKeyword_0` and `viewportLengthUnit::viewportLengthUnit_1` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `flexDirKeyword::flexDirKeyword_1` and `displayKeyword::displayKeyword_1` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `listTableProps::listTableProps_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `listTableProps::listTableProps_1` and `transitionProps::transitionProps_0` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `listTableProps::listTableProps_3` and `viewportLengthUnit::viewportLengthUnit_1` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `displayDecl::displayDecl_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__flexDirDecl_cont_173::__flexDirDecl_cont_173_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `relativeLengthUnit::relativeLengthUnit_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `alignDecl::alignDecl_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontDecl::fontDecl_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `flexWrapKeyword::flexWrapKeyword_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `flexWrapKeyword::flexWrapKeyword_1` and `cursorKeyword::cursorKeyword_1` (Tuple([Span, Tuple([Span, Tuple([Span, U8])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `borderStyleKeyword::borderStyleKeyword_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `borderStyleKeyword::borderStyleKeyword_1` and `colorProps::colorProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__borderStyleDecl_cont_181::__borderStyleDecl_cont_181_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `borderStyleDecl::borderStyleDecl_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `colorSpace::colorSpace_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `colorSpace::colorSpace_1` and `cursorKeyword::cursorKeyword_1` (Tuple([Span, Tuple([Span, Tuple([Span, U8])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `colorSpace::colorSpace_2` and `viewportLengthUnit::viewportLengthUnit_1` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `mathValue::mathValue_0` and `value::value_1` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `sizeProps::sizeProps_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `sizeProps::sizeProps_1` and `colorProps::colorProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontProps::fontProps_0` and `displayKeyword::displayKeyword_1` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontProps::fontProps_1` and `colorProps::colorProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontProps::fontProps_2` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontProps::fontProps_3` and `cursorKeyword::cursorKeyword_1` (Tuple([Span, Tuple([Span, Tuple([Span, U8])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontProps::fontProps_5` and `transitionProps::transitionProps_0` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontProps::fontProps_6` and `viewportLengthUnit::viewportLengthUnit_1` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `length::length_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `absoluteLengthUnit::absoluteLengthUnit_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `absoluteLengthUnit::absoluteLengthUnit_1` and `colorProps::colorProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__cursorDecl_cont_186::__cursorDecl_cont_186_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `alignKeyword::alignKeyword_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `alignKeyword::alignKeyword_1` and `colorProps::colorProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `alignKeyword::alignKeyword_2` and `displayKeyword::displayKeyword_1` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `resolutionUnit::resolutionUnit_0` and `viewportLengthUnit::viewportLengthUnit_1` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `resolutionUnit::resolutionUnit_1` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `transformProps::transformProps_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `transformProps::transformProps_1` and `transitionProps::transitionProps_1` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `transformProps::transformProps_3` and `viewportLengthUnit::viewportLengthUnit_1` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__flexWrapDecl_cont_174::__flexWrapDecl_cont_174_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `spacingProps::spacingProps_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `spacingProps::spacingProps_1` and `displayKeyword::displayKeyword_1` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `spacingProps::spacingProps_2` and `colorProps::colorProps_3` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `spacingProps::spacingProps_3` and `viewportLengthUnit::viewportLengthUnit_1` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `mediaType::mediaType_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `mediaType::mediaType_1` and `colorProps::colorProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `visibilityDecl::visibilityDecl_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `nthFunctionName::nthFunctionName_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `nthFunctionName::nthFunctionName_1` and `displayKeyword::displayKeyword_1` (Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, Tuple([Span, U8])])])])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `containerLengthUnit::containerLengthUnit_0` and `colorProps::colorProps_1` (Tuple([Span, U8])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `containerLengthUnit::containerLengthUnit_1` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `borderWidthDecl::borderWidthDecl_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__boxSizingDecl_cont_185::__boxSizingDecl_cont_185_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `overflowDecl::overflowDecl_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__displayDecl_cont_169::__displayDecl_cont_169_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `positionDecl::positionDecl_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__pattern_db1e96a7fb6ccf5d::__pattern_db1e96a7fb6ccf5d_0` and `value::value_1` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__visibilityDecl_cont_172::__visibilityDecl_cont_172_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `flexWrapDecl::flexWrapDecl_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `flexDirDecl::flexDirDecl_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__overflowDecl_cont_171::__overflowDecl_cont_171_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `bgProps::bgProps_0` and `viewportLengthUnit::viewportLengthUnit_1` (Tuple([Span, Tuple([Span, U8])])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `bgProps::bgProps_1` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__borderWidthDecl_cont_180::__borderWidthDecl_cont_180_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `namedColor::namedColor_0` and `value::value_2` (U32). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__textAlignDecl_cont_184::__textAlignDecl_cont_184_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `cursorDecl::cursorDecl_0` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `anPlusB::anPlusB_1` and `__alignDecl_cont_175::__alignDecl_cont_175_0` (U8). Codegen will resolve by rule-scoped lookup.
+For more information about this error, try `rustc --explain E0107`.
+error: could not compile `bbnf` (test "sheets_parity") due to 13 previous errors
+warning: build failed, waiting for other jobs to finish...
+error[E0107]: missing generics for struct `FusedOutput`
+  --> crates/core/tests/css_l4_parity.rs:91:10
+   |
+91 | #[derive(Parser)]
+   |          ^^^^^^ expected 1 generic argument
+   |
+note: struct defined here, with 1 generic parameter: `R`
+  --> crates/tape/src/builder/output.rs:36:12
+   |
+36 | pub struct FusedOutput<R> {
+   |            ^^^^^^^^^^^ -
+   = note: this error originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unreachable statement
+  --> crates/core/tests/css_l4_parity.rs:91:10
+   |
+91 | #[derive(Parser)]
+   |          ^^^^^^
+   |          |
+   |          unreachable statement
+   |          any code following this expression is unreachable
+   |
+   = note: `#[warn(unreachable_code)]` (part of `#[warn(unused)]`) on by default
+   = note: this warning originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0107]: missing generics for struct `FusedOutput`
+  --> crates/core/tests/serialize_roundtrip.rs:11:10
+   |
+11 | #[derive(Parser)]
+   |          ^^^^^^ expected 1 generic argument
+   |
+note: struct defined here, with 1 generic parameter: `R`
+  --> crates/tape/src/builder/output.rs:36:12
+   |
+36 | pub struct FusedOutput<R> {
+   |            ^^^^^^^^^^^ -
+   = note: this error originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0107]: missing generics for struct `FusedOutput`
+  --> crates/core/tests/serialize_roundtrip.rs:15:10
+   |
+15 | #[derive(Parser)]
+   |          ^^^^^^ expected 1 generic argument
+   |
+note: struct defined here, with 1 generic parameter: `R`
+  --> crates/tape/src/builder/output.rs:36:12
+   |
+36 | pub struct FusedOutput<R> {
+   |            ^^^^^^^^^^^ -
+   = note: this error originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0107]: missing generics for struct `FusedOutput`
+  --> crates/core/tests/serialize_roundtrip.rs:19:10
+   |
+19 | #[derive(Parser)]
+   |          ^^^^^^ expected 1 generic argument
+   |
+note: struct defined here, with 1 generic parameter: `R`
+  --> crates/tape/src/builder/output.rs:36:12
+   |
+36 | pub struct FusedOutput<R> {
+   |            ^^^^^^^^^^^ -
+   = note: this error originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0107]: missing generics for struct `FusedOutput`
+  --> crates/core/tests/serialize_roundtrip.rs:23:10
+   |
+23 | #[derive(Parser)]
+   |          ^^^^^^ expected 1 generic argument
+   |
+note: struct defined here, with 1 generic parameter: `R`
+  --> crates/tape/src/builder/output.rs:36:12
+   |
+36 | pub struct FusedOutput<R> {
+   |            ^^^^^^^^^^^ -
+   = note: this error originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0107]: missing generics for struct `FusedOutput`
+  --> crates/core/tests/serialize_roundtrip.rs:27:10
+   |
+27 | #[derive(Parser)]
+   |          ^^^^^^ expected 1 generic argument
+   |
+note: struct defined here, with 1 generic parameter: `R`
+  --> crates/tape/src/builder/output.rs:36:12
+   |
+36 | pub struct FusedOutput<R> {
+   |            ^^^^^^^^^^^ -
+   = note: this error originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0107]: missing generics for struct `FusedOutput`
+  --> crates/core/tests/serialize_roundtrip.rs:31:10
+   |
+31 | #[derive(Parser)]
+   |          ^^^^^^ expected 1 generic argument
+   |
+note: struct defined here, with 1 generic parameter: `R`
+  --> crates/tape/src/builder/output.rs:36:12
+   |
+36 | pub struct FusedOutput<R> {
+   |            ^^^^^^^^^^^ -
+   = note: this error originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0107]: missing generics for struct `FusedOutput`
+  --> crates/core/tests/serialize_roundtrip.rs:35:10
+   |
+35 | #[derive(Parser)]
+   |          ^^^^^^ expected 1 generic argument
+   |
+note: struct defined here, with 1 generic parameter: `R`
+  --> crates/tape/src/builder/output.rs:36:12
+   |
+36 | pub struct FusedOutput<R> {
+   |            ^^^^^^^^^^^ -
+   = note: this error originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0107]: missing generics for struct `FusedOutput`
+  --> crates/core/tests/serialize_roundtrip.rs:40:10
+   |
+40 | #[derive(Parser)]
+   |          ^^^^^^ expected 1 generic argument
+   |
+note: struct defined here, with 1 generic parameter: `R`
+  --> crates/tape/src/builder/output.rs:36:12
+   |
+36 | pub struct FusedOutput<R> {
+   |            ^^^^^^^^^^^ -
+   = note: this error originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0107]: missing generics for struct `FusedOutput`
+   --> crates/core/tests/serialize_roundtrip.rs:117:10
+    |
+117 | #[derive(Parser)]
+    |          ^^^^^^ expected 1 generic argument
+    |
+note: struct defined here, with 1 generic parameter: `R`
+   --> crates/tape/src/builder/output.rs:36:12
+    |
+ 36 | pub struct FusedOutput<R> {
+    |            ^^^^^^^^^^^ -
+    = note: this error originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unreachable statement
+  --> crates/core/tests/css_l4_parity.rs:91:10
+   |
+91 | #[derive(Parser)]
+   |          ^^^^^^
+   |          |
+   |          unreachable statement
+   |          any code following this expression is unreachable
+   |
+   = note: this warning originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unreachable statement
+  --> crates/core/tests/serialize_roundtrip.rs:23:10
+   |
+23 | #[derive(Parser)]
+   |          ^^^^^^
+   |          |
+   |          unreachable statement
+   |          any code following this expression is unreachable
+   |
+   = note: `#[warn(unreachable_code)]` (part of `#[warn(unused)]`) on by default
+   = note: this warning originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unreachable expression
+  --> crates/core/tests/serialize_roundtrip.rs:23:10
+   |
+23 | #[derive(Parser)]
+   |          ^^^^^^
+   |          |
+   |          unreachable expression
+   |          any code following this expression is unreachable
+   |
+   = note: this warning originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unreachable statement
+   --> crates/core/tests/serialize_roundtrip.rs:117:10
+    |
+117 | #[derive(Parser)]
+    |          ^^^^^^
+    |          |
+    |          unreachable statement
+    |          any code following this expression is unreachable
+    |
+    = note: this warning originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unreachable statement
+   --> crates/core/tests/serialize_roundtrip.rs:117:10
+    |
+117 | #[derive(Parser)]
+    |          ^^^^^^
+    |          |
+    |          unreachable statement
+    |          any code following this expression is unreachable
+    |
+    = note: this warning originates in the derive macro `Parser` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: `bbnf` (test "css_l4_parity") generated 2 warnings
+error: could not compile `bbnf` (test "css_l4_parity") due to 52 previous errors; 2 warnings emitted
+warning: `bbnf` (test "serialize_roundtrip") generated 4 warnings
+error: could not compile `bbnf` (test "serialize_roundtrip") due to 107 previous errors; 4 warnings emitted
+error: command `/Users/mkbabb/.rustup/toolchains/nightly-2026-04-11-aarch64-apple-darwin/bin/cargo test --no-run --message-format json-render-diagnostics --package bbnf --package tape --package bbnf_derive` exited with code 101
+EXIT: 101

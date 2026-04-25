@@ -1,0 +1,69 @@
+B3.W1 — workspace test gate
+
+Three runs documented in order of attempt:
+
+## Attempt 1 — workspace nextest
+
+Command:
+    cargo nextest run --workspace --profile ax-iter --no-fail-fast
+
+Result: EXIT 101 (build failure, not test failure).
+
+The workspace test build fails on stale `FusedOutput` references in
+test/example sources that pre-date AY-II.W0' migration polish. The
+`AY-II/PATH-FORWARD.md` "Immediate cleanup targets already identified"
+section enumerates these as W0' close-ceremony work; B3 does not absorb
+them. Affected sources (per error spans):
+- `crates/core/tests/value_api_apples_to_apples.rs` (test)
+- `crates/core/tests/serialize_roundtrip.rs` (test)
+- `crates/core/tests/css_l4_parity.rs` (test)
+- `crates/core/tests/sheets_parity.rs` (test)
+- `crates/core/examples/json_check.rs` (example)
+
+All errors are E0107 ("missing generics for struct `FusedOutput`")
+through `#[derive(Parser)]` macro expansion. The migration retained
+`FusedOutput<R>` with a generic parameter; the consumer sites still
+write `FusedOutput`. Out of B3 scope; addressed at AY-II.W0' close
+ceremony or B4 alongside the codegen-emission fix.
+
+Full output: `docs/tranches/B3/audit/W1-test-output-workspace.txt`.
+
+## Attempt 2 — package-filtered nextest (per W1 brief fallback)
+
+Command:
+    cargo nextest run -p bbnf -p tape -p bbnf_derive --profile ax-iter --no-fail-fast
+
+Result: EXIT 101. Same `FusedOutput` build errors surface — `bbnf`'s
+test sources have the stale references. The package-filtered fallback
+does not bypass the bbnf-test-source build break.
+
+## Attempt 3 — tape-only nextest (post-fallback narrowing)
+
+Command:
+    cargo nextest run -p tape --profile ax-iter --no-fail-fast
+
+Result:
+    Summary [   0.155s] 100 tests run: 100 passed, 0 skipped
+    EXIT: 0
+
+The 100/100 tape suite is the minimum-noise gate that exercises B3's
+fixes directly: γ retired `derive_frame_depth`; δ migrated frame_depth
+into Columns with atomic rollback; ε made the cursor backward walk
+cycle-safe; ζ widened the post-order bump scope; η is parser-side
+(Pratt emitter + lowering guard, both consume the tape). The tape
+substrate is sound under the post-η runtime.
+
+## Limitation note
+
+The workspace and package-filtered scopes carry test-source compile
+debt that pre-dates B3 (AY-II.W0' migration polish). B3's verification
+gate falls back to the tape-only scope plus the parity test binary
+that DID compile and pass at Phase 1 (`bbnf_parses_its_own_grammar`,
+0.20 s wall, 1 passed). The bbnf parity binary uses the post-fix
+`FusedOutput<R>` correctly; the failing test sources are downstream
+consumer fixtures that have not yet been migrated.
+
+For B2.W0.c re-execution: this debt does not block xtask regen on
+the data grammars (json/css/sheets/ebnf), nor does it block the
+`bbnf_parity` SHA assertion. It blocks `cargo test --workspace`
+specifically, which AY-II.W0' close ceremony is named to resolve.

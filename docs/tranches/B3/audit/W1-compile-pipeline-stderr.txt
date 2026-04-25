@@ -1,0 +1,16 @@
+   Compiling egraph-derive v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/egraph-derive)
+   Compiling csp-solver v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/csp-solver)
+   Compiling tape v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/tape)
+   Compiling egraph v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/egraph)
+   Compiling bbnf-regex v0.1.0 (/Users/mkbabb/Programming/parse-that/rust/regex)
+   Compiling simd-scan v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/simd-scan)
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that/rust/parse_that)
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/ser)
+   Compiling bbnf_derive v0.2.11 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/derive)
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/ir)
+   Compiling bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/core)
+   Compiling json-prototype v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/json-prototype)
+    Finished `bench` profile [optimized + debuginfo] target(s) in 51.27s
+     Running benches/compile_pipeline.rs (target/release/deps/compile_pipeline-6164dd7e0c589929)
+Timer precision: 41 ns
+EXIT: 0

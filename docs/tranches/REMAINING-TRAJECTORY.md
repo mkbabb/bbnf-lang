@@ -104,7 +104,8 @@ table above remains the live forecast.
 | AV/AW | DTA/PSI/shape-emitter attempts | JSON shape-emitter demo reached sonic-class once, then lost | CSS/Sheets/BBNF remained far below AU | Retired as Era V rut. |
 | AX.W0b | DTA interpreter deletion | Removes interpreter tax and dead gates | Same | ~78K LOC removed. |
 | AY-I.W1 | Column revert | Twitter recovered to 688 MB/s | CSS recovered from Era V trough but still below AU | Landed. |
-| AY-II.W0' | `FusedBuilder` collapse | `parse` + `to_value` become one fused path | Same-path typed CSS projection | Paused for B1 proof surface. |
+| AY-II.W0' | `FusedBuilder` collapse | `parse` + `to_value` become one fused path | Same-path typed CSS projection | Source landings remain on master through B3; the runtime parser regression originally attributed to W0' was traced to a latent contract violation between the tape finaliser's reverse-walk and the Pratt shape's pre-order emission, resolved at B3.W0 via five forward architectural fixes (γ-η) without any W0' revert. |
+| B3 | Parser-baseline restoration (γ retire `derive_frame_depth`; δ atomic depth rollback in `Columns`; ε cycle-safe cursor walk; ζ widened `end_compound_post_order` bump scope; η Pratt operand seeding + lowering cousin-leak guard) | json regen end-to-end (compile_paths_request 1.48 ms, generate_all 3.02 ms, prettyplease 11.13 ms); `compile_pipeline::compile_bbnf` median 2.831 ms | Same-path improvement on `compile_css_l4` (26.72 ms median) | Closed 2026-04-25. Bbnf self-host xtask regen surfaces a separate downstream `syn::parse2` codegen-emission defect; out of B3 scope, opens B4. |
 
 ## 5. Remaining Optimisation Ledger
 

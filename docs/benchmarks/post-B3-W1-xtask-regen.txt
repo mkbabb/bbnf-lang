@@ -1,0 +1,19 @@
+   Compiling egraph v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/egraph)
+   Compiling egraph-derive v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/egraph-derive)
+   Compiling tape v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/tape)
+   Compiling bbnf-regex v0.1.0 (/Users/mkbabb/Programming/parse-that/rust/regex)
+   Compiling simd-scan v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/simd-scan)
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that/rust/parse_that)
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/ir)
+   Compiling bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/crates/core)
+   Compiling xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity/xtask)
+    Finished `release` profile [optimized + debuginfo] target(s) in 1m 05s
+     Running `target/release/xtask regen --grammar json`
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] json: compile_paths_request done in 1.477833ms
+[xtask::regen] json: generate_all done in 3.016666ms
+[xtask::regen] json: prettyplease done in 11.128375ms
+real 65.45
+user 0.08
+sys 0.11
+EXIT: 0

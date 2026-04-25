@@ -1,0 +1,12 @@
+Test binary: target/release/deps/bbnf_parity-6ecfc4e5926cd745
+-rwxr-xr-x@ 1 mkbabb  staff  1341344 Apr 25 18:26 target/release/deps/bbnf_parity-6ecfc4e5926cd745
+
+running 1 test
+test bbnf_parses_its_own_grammar ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+real 0.20
+user 0.00
+sys 0.00
+EXIT runtime: 0

@@ -1,4 +1,4 @@
-# AY-II — Path Forward (2026-04-24)
+# AY-II — Path Forward (2026-04-24, amended 2026-04-25 post-B3)
 
 AY-II is not on a parallel-infra path any more. The immediate execution
 order is:
@@ -7,12 +7,28 @@ order is:
    (see `docs/tranches/B1/FINAL.md`); substrate is pinned, divan
    harness is live, alias surface is rewritten, abrogation catalog is
    executed, sibling-repo triad is in sync. AY-II.W0' close ceremony
-   is unblocked on this baseline.
-2. **AY-II.W0' closes next** on the refreshed surface: regen,
-   alias-shim retirement, fresh expand, fat-LTO bench matrix, samply,
-   and nm.
-3. **AY-II W1-W5 execute sequentially** on that post-B1, post-W0'
-   truth.
+   was unblocked on this baseline.
+2. **B3 has closed (parser-baseline restoration).** The runtime parser
+   regression originally attributed to AY-II.W0' source landings was
+   traced to a latent contract violation between `derive_frame_depth`'s
+   reverse-walk algorithm and the Pratt shape's pre-order emission;
+   resolved at B3.W0 via five forward architectural fixes (γ retire
+   `derive_frame_depth`; δ atomic depth rollback in `Columns`; ε
+   cycle-safe cursor walk; ζ widened `end_compound_post_order` bump
+   scope; η Pratt operand seeding + lowering cousin-leak guard). No
+   W0' source landings were reverted. See
+   `docs/tranches/B3/FINAL.md`.
+3. **B2 W0.c re-execution unblocks** against the post-B3 substrate;
+   `cargo xtask regen --grammar bbnf` no longer hangs in
+   `BbnfBootstrap::parse`. The bbnf self-host regen surfaces a
+   separate downstream `syn::parse2` codegen-emission defect that
+   opens B4.
+4. **AY-II.W0' close ceremony shifts to B4 close** on the post-B2
+   substrate. The compressed-honest 15-min ceremony per AUDIT-B
+   remains the operational spec; it executes against the post-B4
+   substrate (where the codegen `syn::parse2` defect is fixed).
+   AY-II.W1-W5 sequencing operates on whatever runtime B4 produces,
+   regardless of how B4's emit-correctness work unwinds.
 
 Anything else reintroduces the same ambiguity B1 existed to delete.
 

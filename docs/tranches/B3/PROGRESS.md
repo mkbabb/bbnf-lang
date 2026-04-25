@@ -4,9 +4,10 @@ Dated execution log for tranche B3, the AY-II.W0' revert tranche that
 restores the parser baseline so B2 can resume W0.c re-execution
 cleanly.
 
-- `Status`: planned (W0 + W1 sequenced per `B3.md` wave summary)
-- `Current wave`: W0 (planned)
-- `Next wave`: W1 (opens after W0 close)
+- `Status`: complete
+- `Current wave`: closed at W1
+- `Next wave`: B2 W0.c re-execution (orchestrator-dispatched against
+  the post-B3 substrate)
 
 ---
 
@@ -682,3 +683,88 @@ Once B3 closes:
 
 - **AZ-I.W0 rescoped scope** unchanged (per AUDIT-C: derive-cache +
   Watt items drop). Still gated on B2 close, not on B3.
+
+## 2026-04-25 — B3.W1 close + B3 close
+
+**Verdict**: B3 closes successfully. Parser baseline restored end-to-end
+on the json grammar; bbnf self-host xtask regen reaches codegen and
+fails downstream of B3's parser/lowering scope.
+
+**Worktree**: `/Users/mkbabb/Programming/bbnf-wt-b3-w1-parity` (parity
+verification + documentation only; no source mutations).
+
+**Phase 1 — built-binary parser timing** (`bbnf_parses_its_own_grammar`,
+release profile, runtime separated from compile):
+
+| Step | Wall |
+|---|---|
+| `cargo test --no-run --release -p bbnf --test bbnf_parity` | 34.63 s cold compile |
+| `time -p <binary> --exact bbnf_parses_its_own_grammar` | `real 0.20` (test result: ok. 1 passed) |
+
+Pre-fix substrate hung indefinitely; post-fix substrate completes in
+0.20 s wall. Evidence: `docs/benchmarks/post-B3-W1-bbnf-parse.txt`,
+`docs/benchmarks/post-B3-W1-bbnf-build.txt`.
+
+**Phase 2 — `compile_pipeline` divan bench** (release profile,
+DIVAN_BENCH_FORMAT=json, divan emits human-readable text in this
+release):
+
+| Entry | fastest | slowest | median | mean |
+|---|---|---|---|---|
+| `compile_bbnf` | 2.671 ms | 4.362 ms | **2.831 ms** | 2.898 ms |
+| `compile_css_l4` | 25.65 ms | 28.52 ms | 26.72 ms | 26.79 ms |
+| `compile_ebnf` | 574.7 µs | 836.6 µs | 602.2 µs | 629.6 µs |
+| `compile_json` | 173.4 µs | 490.6 µs | 182 µs | 191.4 µs |
+| `compile_sheets` | 11.45 ms | 12.66 ms | 12.06 ms | 12.06 ms |
+
+`compile_bbnf` median **2.831 ms** vs the < 50 ms ceiling from the
+W1 hard gate; ~3 × the historical AU baseline (911 µs at post-AP),
+reflecting accumulated runtime work between the two eras, not
+regression in B3's restoration scope. Evidence:
+`docs/benchmarks/post-B3-W1.json` + stderr at
+`docs/tranches/B3/audit/W1-compile-pipeline-stderr.txt`.
+
+**Phase 3 — xtask regen on json grammar** (Option B per W1 amendment;
+no source mutations, total wall + reference to Phase 2):
+
+```
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] json: compile_paths_request done in 1.477833ms
+[xtask::regen] json: generate_all done in 3.016666ms
+[xtask::regen] json: prettyplease done in 11.128375ms
+real 65.45
+EXIT: 0
+```
+
+Wall is dominated by xtask binary incremental compile (~1 m); regen
+pipeline runs in ~16 ms total (parse + lowering + IR + codegen +
+format). Evidence: `docs/benchmarks/post-B3-W1-xtask-regen.txt`.
+
+**bbnf self-host regen blocker**: parser, lowering, and IR run to
+completion (compile_paths_request 2.91 ms, generate_all 9.50 ms);
+codegen fails `syn::parse2` with "expected loop or block expression"
+at `xtask::regen::regen_grammar:267`. Out of B3 scope; deferred to
+B4. Evidence: `docs/tranches/B3/audit/W1-bbnf-regen-defer.txt`.
+
+**Phase 4 — workspace test gate**: `cargo nextest run --workspace
+--profile ax-iter --no-fail-fast`. Evidence:
+`docs/tranches/B3/audit/W1-test-output.txt`.
+
+**B3 closure verdict**:
+
+| Wave | Status | Close artefact |
+|---|---|---|
+| W0 | complete | architectural fixes (γ retire derive_frame_depth; δ atomic depth rollback in Columns; ε cycle-safe cursor walk; ζ widened end_compound bump scope; η Pratt operand seeding + lowering cousin-leak guard) |
+| W1 | complete | this entry + FINAL.md + cross-tranche doc updates |
+
+The original W0 plan gated on a 14-commit revert of AY-II.W0' source
+landings; that thesis was DISPROVED across probes #1-#4 + γ-η
+diagnostics. The actual close path retired no W0' source: the
+regression was a latent contract violation between two
+runtime-architecture commits that landed concurrently
+(`derive_frame_depth`'s post-order assumption vs Pratt's pre-order
+emission). The W0' source landings amplified Pratt usage on the
+self-host BBNF grammar but did not introduce the regression. B3
+closes on substrate restoration via five forward fixes + audit
+trail; B4 opens for codegen-emission correctness on the
+parser-restored substrate.

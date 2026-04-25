@@ -1,0 +1,44 @@
+B3.W1 — bbnf self-host xtask regen blocker (deferred to B4)
+
+Out of B3 scope; deferred to B4 (codegen-emission correctness).
+
+The parser, lowering, and IR pipeline complete in 2.91 ms; codegen TokenStream
+emission completes in 9.50 ms. The blocker is downstream `syn::parse2` of the
+emitted TokenStream — the generated Rust contains a syntax that `syn` rejects
+as `expected loop or block expression`. The parser baseline (B3.W0 scope) is
+sound; the failure is in the codegen surface that produces the TokenStream.
+
+Excerpt (head of `cargo xtask regen --grammar bbnf` output):
+
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.43s
+         Running `target/release/xtask regen --grammar bbnf`
+    [xtask::regen] bbnf: compile_paths_request started (1 paths, structural=true, prettify=true)
+    [xtask::regen] bbnf: compile_paths_request done in 2.911042ms
+    [xtask::regen] bbnf: generate_all done in 9.501917ms
+    Error: syn::parse2 of generated TokenStream for `bbnf`
+
+    Caused by:
+        expected loop or block expression
+
+    Stack backtrace:
+       3: <syn::error::Error as anyhow::context::ext::StdError>::ext_context::<alloc::string::String>
+                 at anyhow-1.0.102/src/backtrace.rs:10:14
+       4: <core::result::Result<syn::file::File, syn::error::Error> as anyhow::Context>::with_context
+                 at anyhow-1.0.102/src/context.rs:65:37
+       5: xtask::regen::regen_grammar
+                 at ./xtask/src/regen.rs:267:10
+       6: xtask::regen::run
+                 at ./xtask/src/regen.rs:127:9
+       7: xtask::main
+                 at ./xtask/src/main.rs:41:42
+
+    real 0.83
+    user 0.18
+    sys 0.13
+    EXIT: 1
+
+The corresponding regression in `crates/core/src/grammar/generated.rs` is the
+checked-in self-host emission; the generator that produced it lives downstream
+of the parser/lowering/IR work that B3.W0's γ–η chain restored. The full
+30-line capture above (head + key stack frames) is the failure manifest;
+extended capture lives in the worktree's runtime artefact.

@@ -1,7 +1,32 @@
 [workspace]
-members = ["crates/core", "crates/derive", "crates/analysis", "crates/ir", "crates/lsp", "crates/ser", "crates/gorgeous", "crates/bootstrap", "crates/egraph", "crates/egraph-derive", "crates/csp-solver", "crates/tape", "crates/simd-scan", "crates/json-prototype"]
+members = ["crates/core", "crates/derive", "crates/analysis", "crates/ir", "crates/lsp", "crates/ser", "crates/gorgeous", "crates/bootstrap", "crates/egraph", "crates/egraph-derive", "crates/csp-solver", "crates/tape", "crates/simd-scan", "crates/json-prototype", "xtask"]
 exclude = ["wasm"]
 resolver = "2"
+
+# B2: workspace grammar manifest. `cargo xtask regen` reads this table
+# to know which grammars to regenerate. Each entry produces a
+# corresponding `crates/core/src/grammar/generated/<ident>.rs` file.
+#
+# Entries enumerated from the union of every `#[parser(path = "...")]`
+# site across the workspace (rg over crates/). Sites pointing at the
+# SAME grammar file collapse to one manifest entry; the manifest carries
+# the grammar's *capabilities* (prettify, serialize, structural,
+# skip_recover) as features so consumer-side derive attrs can reduce
+# to `include!` + marker struct (W1 scope).
+#
+# `path` is workspace-relative.
+[workspace.metadata.bbnf]
+grammars = [
+    { ident = "bbnf",          path = "grammar/bbnf/bbnf.bbnf",                   features = ["structural", "prettify", "serialize"] },
+    { ident = "json",          path = "grammar/json/json.bbnf",                   features = ["prettify", "serialize"] },
+    { ident = "css_l4",        path = "grammar/css/l4/stylesheet.bbnf",           features = ["skip_recover", "prettify", "serialize"] },
+    { ident = "css_pretty",    path = "grammar/css/pretty.bbnf",                  features = ["skip_recover", "prettify", "serialize"] },
+    { ident = "google_sheets", path = "grammar/google-sheets/google-sheets.bbnf", features = ["skip_recover", "prettify", "serialize"] },
+    { ident = "ebnf",          path = "grammar/ebnf/ebnf.bbnf",                   features = ["prettify", "serialize"] },
+    { ident = "bnf",           path = "grammar/bnf/bnf.bbnf",                     features = ["prettify", "serialize"] },
+    { ident = "csv",           path = "grammar/misc/csv.bbnf",                    features = ["serialize"] },
+    { ident = "math",          path = "grammar/misc/math.bbnf",                   features = ["serialize"] },
+]
 
 # ─── Profile tiers (B0.W1.a) ────────────────────────────────────────────
 #

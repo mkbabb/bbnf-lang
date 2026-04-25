@@ -1,0 +1,44 @@
+[package]
+name = "xtask"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+# B2 build-time codegen entrypoint. Replaces the proc-macro IR-pipeline
+# contract (`bbnf_derive`) with a workspace-level xtask that runs the
+# 17-pass pipeline + emission once per regen invocation, writing
+# per-grammar source files to `crates/core/src/grammar/generated/`.
+#
+# The xtask runs the IR pipeline directly via `bbnf::pipeline::
+# compile_paths_request` + `bbnf::generate::generate_all`, so it carries
+# path-deps on `bbnf-ir` and `bbnf` (lib-only). It does NOT depend on
+# `bbnf_derive`; the proc-macro retires at B2.W2.
+
+[dependencies]
+# Workspace path-deps. Versions match the workspace's existing pins
+# verified against Cargo.lock at B2.W0.a authorship.
+bbnf-ir         = { path = "../crates/ir" }
+bbnf            = { path = "../crates/core" }
+parse_that      = "0.4"
+pprint          = "0.3"
+
+# Codegen + post-process toolkit. The IR pipeline emits `proc_macro2::
+# TokenStream`; `prettyplease` formats it after `syn::parse2`. Versions
+# pinned to workspace Cargo.lock to avoid `cargo update` fallout.
+proc-macro2     = "1"
+quote           = "1"
+syn             = { version = "2", features = ["full", "extra-traits"] }
+prettyplease    = "0.2"
+
+# CLI dispatch. clap 4 already in workspace lock (4.6.x).
+clap            = { version = "4", features = ["derive"] }
+
+# Workspace metadata reader. Used by `xtask::regen` to read
+# `[workspace.metadata.bbnf.grammars]` from the workspace Cargo.toml.
+cargo_metadata  = "0.18"
+
+# I/O + serialization. `toml` already in workspace lock (0.8.x); `serde`
+# at 1.0.x. `anyhow` at 1.0.x.
+anyhow          = "1"
+serde           = { version = "1", features = ["derive"] }
+toml            = "0.8"

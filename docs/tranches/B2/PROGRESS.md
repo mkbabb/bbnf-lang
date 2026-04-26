@@ -4,10 +4,10 @@ Dated execution log for tranche B2, the build-time codegen
 transposition that retires `bbnf_derive`'s proc-macro IR-pipeline
 contract.
 
-- `Status`: in flight (W0 + W1 + W2 closed; W3-W4 pending)
-- `Current wave`: W2 (complete) → W3 (opens next)
-- `Next wave`: W3 — Script simplification; `bootstrap-bbnf.sh`
-  retires; xtask absorbs cargo-expand + post-process logic
+- `Status`: in flight (W0 + W1 + W2 + W3 closed; W4 pending)
+- `Current wave`: W3 (complete) → W4 (opens next)
+- `Next wave`: W4 — CI gate (`cargo xtask regen --check`) + pre-commit
+  hook; FINAL.md authorship; AY-II handoff refresh; AZ-I.W0 amendment
 
 ---
 
@@ -291,3 +291,89 @@ absorption of cargo-expand + post-process logic; Makefile +
 in-tree script audits.
 
 Full audit: `docs/tranches/B2/audit/W2-close.md`.
+
+## 2026-04-25 — W3 closed
+
+W3 retires `scripts/bootstrap-bbnf.sh` (350 lines: 47 bash + 303
+inlined Python regex post-processor) and
+`scripts/check-bootstrap-clean.sh` (43 lines), retires
+`make ay-prime` + the `clean-cache` Makefile target's
+`target/.bbnf-cache/` + `$XDG_CACHE_HOME/bbnf-derive/` references,
+adds `make regen` / `make regen-check` convenience targets, folds
+the canonical regen documentation into PROFILING.md as a new
+§Grammar regen section, and — the W2 close audit's forward-routed
+defect — fixes the `include_str!` emitter so per-grammar generated
+files no longer embed worktree-specific absolute paths.
+
+The emitter fix lands in two files:
+
+- `crates/core/src/backend/rust/ir_types.rs` —
+  `ParserAttributes` gains a sibling field `grammar_rel_paths:
+  Vec<String>` carrying workspace-root-relative POSIX paths in 1:1
+  index correspondence with the existing `paths: Vec<PathBuf>`
+  (which retains absolute-PathBuf semantics for the IR pipeline's
+  file-read pass). The two vectors populate in lock-step at the
+  xtask call site.
+- `crates/core/src/backend/rust/ir_enums.rs::generate_grammar_arr`
+  — emitter consumes `grammar_rel_paths` and wraps each entry with
+  `concat!(env!("CARGO_MANIFEST_DIR"), "/../../", <rel>)`. For the
+  `bbnf` crate, `CARGO_MANIFEST_DIR` resolves to
+  `<workspace>/crates/core`; two `..` levels lift to the workspace
+  root; the relative path joins the actual grammar source file
+  (e.g. `<workspace>/grammar/bbnf/bbnf.bbnf`). A length-equality
+  `assert_eq!` between `paths` and `grammar_rel_paths` at emit
+  time catches populator drift.
+
+`xtask/src/regen.rs::GrammarEntry::parser_attributes` pushes the
+manifest's raw `path` (already workspace-relative; e.g.
+`grammar/bbnf/bbnf.bbnf`) to `grammar_rel_paths` after normalising
+backslashes to forward slashes for cross-platform stability of the
+embedded literal.
+
+All 9 grammars regenerated against the post-fix emitter:
+`bbnf` (34 048 lines), `json` (5 680), `css_l4` (203 499),
+`css_pretty` (9 890), `google_sheets` (21 533), `ebnf` (12 902),
+`bnf` (4 697), `csv` (2 947), `math` (1 464). Every emitted file
+carries the `concat!(env!("CARGO_MANIFEST_DIR"), "/../../", ...)`
+shape; zero worktree paths appear in any output. Per-grammar walls
+were ~1:25 each (bbnf lib rebuild dominates each invocation
+because the per-grammar `generated/<ident>.rs` overwrite triggers a
+`bbnf` lib rebuild before xtask itself relinks); the full sweep
+ran in ~12:43.
+
+Idempotence verified by snapshotting `bbnf.rs` post-first-regen and
+comparing against the second-regen output: `diff` reports 0 lines.
+The emitter is a fixed point against the checked-in tree.
+
+Verification: `cargo check --workspace --profile ax-iter` exits 0
+in 4.39 s; `cargo iter-check` exits 0 in 0.12 s warm (well under
+the 0.5 s gate per B2.md invariant 12); `cargo iter-check-full`
+exits 0 in 0.12 s warm; workspace nextest pass-rate matches the W2
+close baseline (1 160 pass / 327 fail / 3 timeout / 27 skip — the
+327 + 3 belong to the pre-existing FusedBuilder::finish open-frames
+debug-build assertion class downstream of B2.W1 + the bbnf-lsp
+integration tests; no W3-introduced regression).
+
+Retired surfaces:
+- `ls scripts/bootstrap-bbnf.sh` returns "No such file or directory"
+- `ls scripts/check-bootstrap-clean.sh` returns "No such file or directory"
+- `make ay-prime` returns "No rule to make target `ay-prime`"
+
+Post-process inventory (W3-post-process-inventory.md) catalogues
+all 18 transformations in the deleted scripts and assigns each a
+verdict: 16/18 are **discard** (defect classes originate in
+`cargo expand`'s output noise — rustc-injected prelude,
+`#[automatically_derived]` boilerplate, unstable feature
+attributes, `::core::panicking::panic_fmt` desugaring, doc-comment
+carry-over — that the xtask never produces because it sits
+upstream of expand entirely); 2/18 are **already present in xtask**
+(file-header emission + the CI-clean gate were implemented at W0
+substrate landing). Net: zero new code paths in the xtask. The
+script's role retires by *substrate reformulation*, not by
+reproduction in Rust.
+
+W4 dispatches next: `.github/workflows/*.yml` regen-clean gate +
+pre-commit hook + FINAL.md + AY-II handoff refresh + AZ-I.W0
+amendment + REMAINING-TRAJECTORY + RISK-PERF-MATRIX revisions.
+
+Full audit: `docs/tranches/B2/audit/W3-close.md`.

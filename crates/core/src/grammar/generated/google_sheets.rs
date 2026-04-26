@@ -15597,15 +15597,33 @@ mod __googlesheetsparser_emit_impl {
         /// sub-variant indices).
         Unknown(GoogleSheetsParserNodeView<'p>),
     }
-    /// AY-II.W0'.b — rule-id → RuleKind dispatch local to the
-    /// fused-pipeline projection path. Mirrors the view layer's
-    /// `rule_kind()` dispatch; scoped to the projection module so
-    /// the two consumer paths stay coupled only through the
-    /// `RuleKind` enum.
+    /// B5.W0.6 — joint `(kind, variant_idx)` dispatch local to the
+    /// fused-pipeline projection path.
+    ///
+    /// `variant_idx = (rule_id & 0xFF)` collapses every rule whose
+    /// id-mod-256 collides; for non-rule structural compounds the
+    /// shape emitters stamp `variant_idx = 0` as a placeholder
+    /// (see `emitter/shapes/{flat,array,object,inline}.rs`), which
+    /// pre-B5.W0.6 collided with rule_id=0 (CSS L4 `namedColor`,
+    /// JSON `null`, etc.) and routed Seq/Alt/Repeat intermediates
+    /// to a leaf-rule's materialiser. The materialiser then panicked
+    /// against the compound's `child_off` (a column rank, not an
+    /// arena byte offset) at `payload_bytes`'s precondition assert.
+    ///
+    /// The dispatch now consults `kind` AS WELL AS `variant_idx`:
+    /// a compound-kind frame carrying the placeholder `variant_idx
+    /// = 0` is an intermediate without a rule binding and routes
+    /// to `Unknown`. The `ValueFrame` doc-comment at
+    /// `crates/tape/src/builder/value.rs:47` already declares this
+    /// invariant — pre-B5.W0.6 the codegen ignored it.
     #[inline(always)]
     fn project_rule_kind_GoogleSheetsParser(
+        kind: ::bbnf::runtime::tape::TapeKind,
         variant_idx: u8,
     ) -> GoogleSheetsParserRuleKind {
+        if variant_idx == 0 && kind.is_compound() {
+            return GoogleSheetsParserRuleKind::Unknown;
+        }
         match variant_idx {
             0u8 => GoogleSheetsParserRuleKind::number,
             1u8 => GoogleSheetsParserRuleKind::string,
@@ -15646,34 +15664,94 @@ mod __googlesheetsparser_emit_impl {
             _ => GoogleSheetsParserRuleKind::Unknown,
         }
     }
-    /// AY-II.W0'.b — per-frame projector. Reads one frame from the
+    /// B5.W0.6 — push the projected value(s) for the record at
+    /// `offset` onto `out`. For rule-bound records this is a single
+    /// `<Grammar>Value` variant constructed via [`#frame_fn`]. For
+    /// intermediate compound records (the `variant_idx=0` non-rule
+    /// structural compounds emitted at inner Seq / Repeat / Alt
+    /// positions) it recurses through the children, flattening the
+    /// intermediate transparently — the user-visible value tree
+    /// only carries rule-bound variants.
+    ///
+    /// Mirrors the walker-tape parity contract: the substrate emits
+    /// one tape record per IR production, but only rule-bound
+    /// productions surface as `<Grammar>Value` variants; structural
+    /// intermediates are an implementation detail of the tape
+    /// shape, not of the value tree.
+    ///
+    /// Reads `kind` + `variant_idx` from the tape (not the value
+    /// frame). The materializer pattern at
+    /// `materialize_projection_<rule>_<Grammar>` already treats
+    /// `offset` as a tape offset (`tape.try_get(TapeOffset(offset))`);
+    /// the dispatch is therefore consistent with the materialiser
+    /// surface — tape is the canonical record substrate, the value
+    /// frames are a parallel cache used only for typed scalar
+    /// payload reads on leaves with a payload tag.
+    #[inline]
+    fn project_push_children_GoogleSheetsParser<'p>(
+        output: &::bbnf::runtime::FusedOutput<GoogleSheetsParser>,
+        input: &'p str,
+        offset: u32,
+        out: &mut ::std::vec::Vec<GoogleSheetsParserValue<'p>>,
+    ) {
+        let __tape = output.tape();
+        let __rec = match __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset)) {
+            ::core::option::Option::Some(r) => r,
+            ::core::option::Option::None => return,
+        };
+        if __rec.variant_idx() == 0 && __rec.kind().is_compound() {
+            let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                __tape,
+                ::bbnf::runtime::tape::TapeOffset(offset),
+            );
+            for __child in __cur.children() {
+                project_push_children_GoogleSheetsParser(
+                    output,
+                    input,
+                    __child.offset().0,
+                    out,
+                );
+            }
+        } else {
+            out.push(project_frame_GoogleSheetsParser(output, input, offset));
+        }
+    }
+    /// AY-II.W0'.b — per-frame projector. Reads one record from the
     /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
-    /// value slab and constructs the matching `<Grammar>Value`
-    /// variant. Admitted rules tail-call their grammar-derived
-    /// materializer; non-admitted rules construct the variant
-    /// inline. Compound variants recurse through this same fn.
+    /// tape and constructs the matching `<Grammar>Value` variant.
+    /// Admitted rules tail-call their grammar-derived materializer;
+    /// non-admitted rules construct the variant inline. Compound
+    /// variants recurse through this same fn.
+    ///
+    /// B5.W0.6 — kind + variant_idx + span are read from the tape
+    /// record (not the value frame). The value frame substrate is
+    /// only consulted for typed-scalar payload reads on leaves
+    /// whose `value_payload_for(frame)` returns the column-decoded
+    /// payload — that path remains in the scalar arm.
     #[inline]
     fn project_frame_GoogleSheetsParser<'p>(
         output: &::bbnf::runtime::FusedOutput<GoogleSheetsParser>,
         input: &'p str,
         offset: u32,
     ) -> GoogleSheetsParserValue<'p> {
-        let frame = match output.value_frame_at(offset) {
-            ::core::option::Option::Some(f) => f,
+        let __tape = output.tape();
+        let __rec = match __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset)) {
+            ::core::option::Option::Some(r) => r,
             ::core::option::Option::None => {
                 ::core::panic!(
-                    "AY-II.W0'.b: value frame offset {} out of range (frames: {})",
-                    offset, output.frames().len(),
+                    "AY-II.W0'.b: tape offset {} out of range (tape len: {})", offset,
+                    __tape.len(),
                 );
             }
         };
-        match project_rule_kind_GoogleSheetsParser(frame.variant_idx) {
+        match project_rule_kind_GoogleSheetsParser(__rec.kind(), __rec.variant_idx()) {
             GoogleSheetsParserRuleKind::number => {
                 let v: f64 = output
-                    .value_payload_for(frame)
+                    .value_frame_at(offset)
+                    .and_then(|f| output.value_payload_for(f))
                     .and_then(|p| p.as_f64())
                     .unwrap_or_else(|| {
-                        (&input[frame.span_lo as usize..frame.span_hi as usize])
+                        (&input[__rec.span_lo as usize..__rec.span_hi as usize])
                             .parse::<f64>()
                             .unwrap_or(0.0)
                     });
@@ -15760,43 +15838,55 @@ mod __googlesheetsparser_emit_impl {
                 GoogleSheetsParserValue::cell_ref(proj)
             }
             GoogleSheetsParserRuleKind::cell => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::cell(children)
             }
             GoogleSheetsParserRuleKind::range_ref => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::range_ref(children)
             }
             GoogleSheetsParserRuleKind::cell_or_range => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::cell_or_range(children)
             }
             GoogleSheetsParserRuleKind::identifier => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 GoogleSheetsParserValue::identifier(span)
             }
             GoogleSheetsParserRuleKind::compare_op => {
@@ -15816,26 +15906,34 @@ mod __googlesheetsparser_emit_impl {
                 GoogleSheetsParserValue::compare_op(proj)
             }
             GoogleSheetsParserRuleKind::comparison_expr => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::comparison_expr(children)
             }
             GoogleSheetsParserRuleKind::concat_expr => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::concat_expr(children)
             }
@@ -15856,14 +15954,18 @@ mod __googlesheetsparser_emit_impl {
                 GoogleSheetsParserValue::add_op(proj)
             }
             GoogleSheetsParserRuleKind::add_expr => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::add_expr(children)
             }
@@ -15884,26 +15986,34 @@ mod __googlesheetsparser_emit_impl {
                 GoogleSheetsParserValue::mul_op(proj)
             }
             GoogleSheetsParserRuleKind::mul_expr => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::mul_expr(children)
             }
             GoogleSheetsParserRuleKind::exp_expr => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::exp_expr(children)
             }
@@ -15924,50 +16034,66 @@ mod __googlesheetsparser_emit_impl {
                 GoogleSheetsParserValue::unary_prefix(proj)
             }
             GoogleSheetsParserRuleKind::unary_expr => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::unary_expr(children)
             }
             GoogleSheetsParserRuleKind::postfix_expr => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::postfix_expr(children)
             }
             GoogleSheetsParserRuleKind::primary => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::primary(children)
             }
             GoogleSheetsParserRuleKind::paren_expr => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::paren_expr(children)
             }
@@ -15988,160 +16114,207 @@ mod __googlesheetsparser_emit_impl {
                 GoogleSheetsParserValue::func_open(proj)
             }
             GoogleSheetsParserRuleKind::arg => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::arg(children)
             }
             GoogleSheetsParserRuleKind::func_args => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::func_args(children)
             }
             GoogleSheetsParserRuleKind::func_call => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::func_call(children)
             }
             GoogleSheetsParserRuleKind::let_binding => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::let_binding(children)
             }
             GoogleSheetsParserRuleKind::let_args => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::let_args(children)
             }
             GoogleSheetsParserRuleKind::let_call => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::let_call(children)
             }
             GoogleSheetsParserRuleKind::lambda_params => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::lambda_params(children)
             }
             GoogleSheetsParserRuleKind::lambda_call => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::lambda_call(children)
             }
             GoogleSheetsParserRuleKind::array_row => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::array_row(children)
             }
             GoogleSheetsParserRuleKind::array_rows => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::array_rows(children)
             }
             GoogleSheetsParserRuleKind::array_literal => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::array_literal(children)
             }
             GoogleSheetsParserRuleKind::formula => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children
-                        .push(
-                            project_frame_GoogleSheetsParser(output, input, child_off),
-                        );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 GoogleSheetsParserValue::formula(children)
             }
             _ => {
-                let _ = frame;
                 ::core::panic!(
-                    "AY-II.W0'.b: unclassified variant_idx {} on frame at offset {}",
-                    frame.variant_idx, offset,
+                    "AY-II.W0'.b: unclassified (kind={:?}, variant_idx={}) on tape record at offset {}",
+                    __rec.kind(), __rec.variant_idx(), offset,
                 );
             }
         }
     }
     /// AY-II.W0'.b — fused-pipeline root projector. Reads the root
-    /// frame from the value slab and constructs the grammar's
+    /// record from the tape and constructs the grammar's
     /// `<Grammar>Value<'p>` in one pass. No tape walk, no reparse,
     /// no visitor dispatch.
     #[inline]
@@ -16150,16 +16323,6 @@ mod __googlesheetsparser_emit_impl {
         input: &'p str,
     ) -> GoogleSheetsParserValue<'p> {
         let root_off = output.value_root_offset();
-        match output.value_frame_at(root_off) {
-            ::core::option::Option::Some(_) => {}
-            ::core::option::Option::None => {
-                ::core::panic!(
-                    "AY-II.W0'.b: FusedOutput root frame absent after parse \
-                         (root_offset = {}, frame count = {})",
-                    root_off, output.frames().len(),
-                );
-            }
-        }
         project_frame_GoogleSheetsParser(output, input, root_off)
     }
     impl ::bbnf::runtime::ValueRoot for GoogleSheetsParser {

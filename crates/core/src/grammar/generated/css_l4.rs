@@ -163293,13 +163293,33 @@ mod __cssl4parser_emit_impl {
         /// sub-variant indices).
         Unknown(CssL4ParserNodeView<'p>),
     }
-    /// AY-II.W0'.b — rule-id → RuleKind dispatch local to the
-    /// fused-pipeline projection path. Mirrors the view layer's
-    /// `rule_kind()` dispatch; scoped to the projection module so
-    /// the two consumer paths stay coupled only through the
-    /// `RuleKind` enum.
+    /// B5.W0.6 — joint `(kind, variant_idx)` dispatch local to the
+    /// fused-pipeline projection path.
+    ///
+    /// `variant_idx = (rule_id & 0xFF)` collapses every rule whose
+    /// id-mod-256 collides; for non-rule structural compounds the
+    /// shape emitters stamp `variant_idx = 0` as a placeholder
+    /// (see `emitter/shapes/{flat,array,object,inline}.rs`), which
+    /// pre-B5.W0.6 collided with rule_id=0 (CSS L4 `namedColor`,
+    /// JSON `null`, etc.) and routed Seq/Alt/Repeat intermediates
+    /// to a leaf-rule's materialiser. The materialiser then panicked
+    /// against the compound's `child_off` (a column rank, not an
+    /// arena byte offset) at `payload_bytes`'s precondition assert.
+    ///
+    /// The dispatch now consults `kind` AS WELL AS `variant_idx`:
+    /// a compound-kind frame carrying the placeholder `variant_idx
+    /// = 0` is an intermediate without a rule binding and routes
+    /// to `Unknown`. The `ValueFrame` doc-comment at
+    /// `crates/tape/src/builder/value.rs:47` already declares this
+    /// invariant — pre-B5.W0.6 the codegen ignored it.
     #[inline(always)]
-    fn project_rule_kind_CssL4Parser(variant_idx: u8) -> CssL4ParserRuleKind {
+    fn project_rule_kind_CssL4Parser(
+        kind: ::bbnf::runtime::tape::TapeKind,
+        variant_idx: u8,
+    ) -> CssL4ParserRuleKind {
+        if variant_idx == 0 && kind.is_compound() {
+            return CssL4ParserRuleKind::Unknown;
+        }
         match variant_idx {
             0u8 => CssL4ParserRuleKind::namedColor,
             1u8 => CssL4ParserRuleKind::hex,
@@ -163491,28 +163511,87 @@ mod __cssl4parser_emit_impl {
             _ => CssL4ParserRuleKind::Unknown,
         }
     }
-    /// AY-II.W0'.b — per-frame projector. Reads one frame from the
+    /// B5.W0.6 — push the projected value(s) for the record at
+    /// `offset` onto `out`. For rule-bound records this is a single
+    /// `<Grammar>Value` variant constructed via [`#frame_fn`]. For
+    /// intermediate compound records (the `variant_idx=0` non-rule
+    /// structural compounds emitted at inner Seq / Repeat / Alt
+    /// positions) it recurses through the children, flattening the
+    /// intermediate transparently — the user-visible value tree
+    /// only carries rule-bound variants.
+    ///
+    /// Mirrors the walker-tape parity contract: the substrate emits
+    /// one tape record per IR production, but only rule-bound
+    /// productions surface as `<Grammar>Value` variants; structural
+    /// intermediates are an implementation detail of the tape
+    /// shape, not of the value tree.
+    ///
+    /// Reads `kind` + `variant_idx` from the tape (not the value
+    /// frame). The materializer pattern at
+    /// `materialize_projection_<rule>_<Grammar>` already treats
+    /// `offset` as a tape offset (`tape.try_get(TapeOffset(offset))`);
+    /// the dispatch is therefore consistent with the materialiser
+    /// surface — tape is the canonical record substrate, the value
+    /// frames are a parallel cache used only for typed scalar
+    /// payload reads on leaves with a payload tag.
+    #[inline]
+    fn project_push_children_CssL4Parser<'p>(
+        output: &::bbnf::runtime::FusedOutput<CssL4Parser>,
+        input: &'p str,
+        offset: u32,
+        out: &mut ::std::vec::Vec<CssL4ParserValue<'p>>,
+    ) {
+        let __tape = output.tape();
+        let __rec = match __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset)) {
+            ::core::option::Option::Some(r) => r,
+            ::core::option::Option::None => return,
+        };
+        if __rec.variant_idx() == 0 && __rec.kind().is_compound() {
+            let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                __tape,
+                ::bbnf::runtime::tape::TapeOffset(offset),
+            );
+            for __child in __cur.children() {
+                project_push_children_CssL4Parser(
+                    output,
+                    input,
+                    __child.offset().0,
+                    out,
+                );
+            }
+        } else {
+            out.push(project_frame_CssL4Parser(output, input, offset));
+        }
+    }
+    /// AY-II.W0'.b — per-frame projector. Reads one record from the
     /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
-    /// value slab and constructs the matching `<Grammar>Value`
-    /// variant. Admitted rules tail-call their grammar-derived
-    /// materializer; non-admitted rules construct the variant
-    /// inline. Compound variants recurse through this same fn.
+    /// tape and constructs the matching `<Grammar>Value` variant.
+    /// Admitted rules tail-call their grammar-derived materializer;
+    /// non-admitted rules construct the variant inline. Compound
+    /// variants recurse through this same fn.
+    ///
+    /// B5.W0.6 — kind + variant_idx + span are read from the tape
+    /// record (not the value frame). The value frame substrate is
+    /// only consulted for typed-scalar payload reads on leaves
+    /// whose `value_payload_for(frame)` returns the column-decoded
+    /// payload — that path remains in the scalar arm.
     #[inline]
     fn project_frame_CssL4Parser<'p>(
         output: &::bbnf::runtime::FusedOutput<CssL4Parser>,
         input: &'p str,
         offset: u32,
     ) -> CssL4ParserValue<'p> {
-        let frame = match output.value_frame_at(offset) {
-            ::core::option::Option::Some(f) => f,
+        let __tape = output.tape();
+        let __rec = match __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset)) {
+            ::core::option::Option::Some(r) => r,
             ::core::option::Option::None => {
                 ::core::panic!(
-                    "AY-II.W0'.b: value frame offset {} out of range (frames: {})",
-                    offset, output.frames().len(),
+                    "AY-II.W0'.b: tape offset {} out of range (tape len: {})", offset,
+                    __tape.len(),
                 );
             }
         };
-        match project_rule_kind_CssL4Parser(frame.variant_idx) {
+        match project_rule_kind_CssL4Parser(__rec.kind(), __rec.variant_idx()) {
             CssL4ParserRuleKind::namedColor => {
                 let proj = materialize_projection_namedcolor_CssL4Parser(
                         output,
@@ -163590,11 +163669,18 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::string(proj)
             }
             CssL4ParserRuleKind::funcBody => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::funcBody(children)
             }
@@ -163631,96 +163717,166 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::mathSumOp(proj)
             }
             CssL4ParserRuleKind::mathValue => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::mathValue(children)
             }
             CssL4ParserRuleKind::mathProduct => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::mathProduct(children)
             }
             CssL4ParserRuleKind::mathExpr => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::mathExpr(children)
             }
             CssL4ParserRuleKind::calcFunction => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::calcFunction(children)
             }
             CssL4ParserRuleKind::minFunction => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::minFunction(children)
             }
             CssL4ParserRuleKind::maxFunction => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::maxFunction(children)
             }
             CssL4ParserRuleKind::clampFunction => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::clampFunction(children)
             }
             CssL4ParserRuleKind::varFunction => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::varFunction(children)
             }
             CssL4ParserRuleKind::envFunction => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::envFunction(children)
             }
             CssL4ParserRuleKind::urlFunction => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 CssL4ParserValue::urlFunction(span)
             }
             CssL4ParserRuleKind::genericFunction => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::genericFunction(children)
             }
@@ -163981,69 +164137,118 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::mediaQualifier(proj)
             }
             CssL4ParserRuleKind::mediaFeature => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 CssL4ParserValue::mediaFeature(span)
             }
             CssL4ParserRuleKind::mediaNot => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::mediaNot(children)
             }
             CssL4ParserRuleKind::mediaAnd => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::mediaAnd(children)
             }
             CssL4ParserRuleKind::mediaOr => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::mediaOr(children)
             }
             CssL4ParserRuleKind::mediaInParens => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::mediaInParens(children)
             }
             CssL4ParserRuleKind::mediaCondition => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::mediaCondition(children)
             }
             CssL4ParserRuleKind::mediaQuery => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::mediaQuery(children)
             }
             CssL4ParserRuleKind::mediaQueryList => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::mediaQueryList(children)
             }
@@ -164112,11 +164317,18 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::dashIdent(proj)
             }
             CssL4ParserRuleKind::value => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::value(children)
             }
@@ -164185,11 +164397,18 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::fontProps(proj)
             }
             CssL4ParserRuleKind::bgProps => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::bgProps(children)
             }
@@ -164242,253 +164461,442 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::listTableProps(proj)
             }
             CssL4ParserRuleKind::colorDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::colorDecl(children)
             }
             CssL4ParserRuleKind::sizeDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::sizeDecl(children)
             }
             CssL4ParserRuleKind::spacingDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::spacingDecl(children)
             }
             CssL4ParserRuleKind::fontDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::fontDecl(children)
             }
             CssL4ParserRuleKind::bgDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::bgDecl(children)
             }
             CssL4ParserRuleKind::transformDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::transformDecl(children)
             }
             CssL4ParserRuleKind::transitionDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::transitionDecl(children)
             }
             CssL4ParserRuleKind::listTableDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::listTableDecl(children)
             }
             CssL4ParserRuleKind::displayDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::displayDecl(children)
             }
             CssL4ParserRuleKind::positionDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::positionDecl(children)
             }
             CssL4ParserRuleKind::overflowDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::overflowDecl(children)
             }
             CssL4ParserRuleKind::visibilityDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::visibilityDecl(children)
             }
             CssL4ParserRuleKind::flexDirDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::flexDirDecl(children)
             }
             CssL4ParserRuleKind::flexWrapDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::flexWrapDecl(children)
             }
             CssL4ParserRuleKind::alignDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::alignDecl(children)
             }
             CssL4ParserRuleKind::flexNumDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::flexNumDecl(children)
             }
             CssL4ParserRuleKind::fontSizeDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::fontSizeDecl(children)
             }
             CssL4ParserRuleKind::fontWeightDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::fontWeightDecl(children)
             }
             CssL4ParserRuleKind::lineHeightDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::lineHeightDecl(children)
             }
             CssL4ParserRuleKind::borderWidthDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::borderWidthDecl(children)
             }
             CssL4ParserRuleKind::borderStyleDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::borderStyleDecl(children)
             }
             CssL4ParserRuleKind::borderRadiusDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::borderRadiusDecl(children)
             }
             CssL4ParserRuleKind::opacityDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::opacityDecl(children)
             }
             CssL4ParserRuleKind::textAlignDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::textAlignDecl(children)
             }
             CssL4ParserRuleKind::boxSizingDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::boxSizingDecl(children)
             }
             CssL4ParserRuleKind::cursorDecl => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::cursorDecl(children)
             }
             CssL4ParserRuleKind::customPropertyDecl => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 CssL4ParserValue::customPropertyDecl(span)
             }
             CssL4ParserRuleKind::genericDecl => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 CssL4ParserValue::genericDecl(span)
             }
             CssL4ParserRuleKind::declaration => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::declaration(children)
             }
@@ -164505,19 +164913,19 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::hash(proj)
             }
             CssL4ParserRuleKind::nsPrefix => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 CssL4ParserValue::nsPrefix(span)
             }
             CssL4ParserRuleKind::wqName => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 CssL4ParserValue::wqName(span)
             }
             CssL4ParserRuleKind::typeSelector => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 CssL4ParserValue::typeSelector(span)
             }
             CssL4ParserRuleKind::classSelector => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 CssL4ParserValue::classSelector(span)
             }
             CssL4ParserRuleKind::attrMatcher => {
@@ -164537,93 +164945,157 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::attrMatcher(proj)
             }
             CssL4ParserRuleKind::attrSelector => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::attrSelector(children)
             }
             CssL4ParserRuleKind::anPlusB => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::anPlusB(children)
             }
             CssL4ParserRuleKind::isPseudo => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::isPseudo(children)
             }
             CssL4ParserRuleKind::wherePseudo => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::wherePseudo(children)
             }
             CssL4ParserRuleKind::notPseudo => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::notPseudo(children)
             }
             CssL4ParserRuleKind::hasPseudo => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::hasPseudo(children)
             }
             CssL4ParserRuleKind::nthFunctionName => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::nthFunctionName(children)
             }
             CssL4ParserRuleKind::nthPseudo => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::nthPseudo(children)
             }
             CssL4ParserRuleKind::langPseudo => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::langPseudo(children)
             }
             CssL4ParserRuleKind::dirKeyword => {
                 let v: u8 = output
-                    .value_payload_for(frame)
+                    .value_frame_at(offset)
+                    .and_then(|f| output.value_payload_for(f))
                     .and_then(|p| p.as_u32())
                     .map(|v| v as u8)
                     .unwrap_or_else(|| {
-                        (&input[frame.span_lo as usize..frame.span_hi as usize])
+                        (&input[__rec.span_lo as usize..__rec.span_hi as usize])
                             .parse::<u8>()
                             .unwrap_or(0)
                     });
@@ -164646,68 +165118,110 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::dirPseudo(proj)
             }
             CssL4ParserRuleKind::simplePseudoClass => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 CssL4ParserValue::simplePseudoClass(span)
             }
             CssL4ParserRuleKind::pseudoClass => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::pseudoClass(children)
             }
             CssL4ParserRuleKind::partPseudo => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::partPseudo(children)
             }
             CssL4ParserRuleKind::slottedPseudo => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::slottedPseudo(children)
             }
             CssL4ParserRuleKind::highlightPseudo => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 CssL4ParserValue::highlightPseudo(span)
             }
             CssL4ParserRuleKind::simplePseudoElement => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 CssL4ParserValue::simplePseudoElement(span)
             }
             CssL4ParserRuleKind::pseudoElement => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::pseudoElement(children)
             }
             CssL4ParserRuleKind::colonSelector => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::colonSelector(children)
             }
             CssL4ParserRuleKind::compoundSelector => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::compoundSelector(children)
             }
@@ -164728,38 +165242,66 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::combinator(proj)
             }
             CssL4ParserRuleKind::complexSelector => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::complexSelector(children)
             }
             CssL4ParserRuleKind::relativeSelector => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::relativeSelector(children)
             }
             CssL4ParserRuleKind::relativeSelectorList => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::relativeSelectorList(children)
             }
             CssL4ParserRuleKind::selectorList => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::selectorList(children)
             }
@@ -164781,10 +165323,11 @@ mod __cssl4parser_emit_impl {
             }
             CssL4ParserRuleKind::number => {
                 let v: f64 = output
-                    .value_payload_for(frame)
+                    .value_frame_at(offset)
+                    .and_then(|f| output.value_payload_for(f))
                     .and_then(|p| p.as_f64())
                     .unwrap_or_else(|| {
-                        (&input[frame.span_lo as usize..frame.span_hi as usize])
+                        (&input[__rec.span_lo as usize..__rec.span_hi as usize])
                             .parse::<f64>()
                             .unwrap_or(0.0)
                     });
@@ -164823,11 +165366,18 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::viewportLengthUnit(proj)
             }
             CssL4ParserRuleKind::containerLengthUnit => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::containerLengthUnit(children)
             }
@@ -164848,21 +165398,29 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::fontLengthUnit(proj)
             }
             CssL4ParserRuleKind::relativeLengthUnit => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::relativeLengthUnit(children)
             }
             CssL4ParserRuleKind::angleUnit => {
                 let v: u8 = output
-                    .value_payload_for(frame)
+                    .value_frame_at(offset)
+                    .and_then(|f| output.value_payload_for(f))
                     .and_then(|p| p.as_u32())
                     .map(|v| v as u8)
                     .unwrap_or_else(|| {
-                        (&input[frame.span_lo as usize..frame.span_hi as usize])
+                        (&input[__rec.span_lo as usize..__rec.span_hi as usize])
                             .parse::<u8>()
                             .unwrap_or(0)
                     });
@@ -164870,11 +165428,12 @@ mod __cssl4parser_emit_impl {
             }
             CssL4ParserRuleKind::timeUnit => {
                 let v: u8 = output
-                    .value_payload_for(frame)
+                    .value_frame_at(offset)
+                    .and_then(|f| output.value_payload_for(f))
                     .and_then(|p| p.as_u32())
                     .map(|v| v as u8)
                     .unwrap_or_else(|| {
-                        (&input[frame.span_lo as usize..frame.span_hi as usize])
+                        (&input[__rec.span_lo as usize..__rec.span_hi as usize])
                             .parse::<u8>()
                             .unwrap_or(0)
                     });
@@ -164882,11 +165441,12 @@ mod __cssl4parser_emit_impl {
             }
             CssL4ParserRuleKind::frequencyUnit => {
                 let v: u8 = output
-                    .value_payload_for(frame)
+                    .value_frame_at(offset)
+                    .and_then(|f| output.value_payload_for(f))
                     .and_then(|p| p.as_u32())
                     .map(|v| v as u8)
                     .unwrap_or_else(|| {
-                        (&input[frame.span_lo as usize..frame.span_hi as usize])
+                        (&input[__rec.span_lo as usize..__rec.span_hi as usize])
                             .parse::<u8>()
                             .unwrap_or(0)
                     });
@@ -164894,11 +165454,12 @@ mod __cssl4parser_emit_impl {
             }
             CssL4ParserRuleKind::resolutionUnit => {
                 let v: u8 = output
-                    .value_payload_for(frame)
+                    .value_frame_at(offset)
+                    .and_then(|f| output.value_payload_for(f))
                     .and_then(|p| p.as_u32())
                     .map(|v| v as u8)
                     .unwrap_or_else(|| {
-                        (&input[frame.span_lo as usize..frame.span_hi as usize])
+                        (&input[__rec.span_lo as usize..__rec.span_hi as usize])
                             .parse::<u8>()
                             .unwrap_or(0)
                     });
@@ -164906,11 +165467,12 @@ mod __cssl4parser_emit_impl {
             }
             CssL4ParserRuleKind::flexUnit => {
                 let v: u8 = output
-                    .value_payload_for(frame)
+                    .value_frame_at(offset)
+                    .and_then(|f| output.value_payload_for(f))
                     .and_then(|p| p.as_u32())
                     .map(|v| v as u8)
                     .unwrap_or_else(|| {
-                        (&input[frame.span_lo as usize..frame.span_hi as usize])
+                        (&input[__rec.span_lo as usize..__rec.span_hi as usize])
                             .parse::<u8>()
                             .unwrap_or(0)
                     });
@@ -164918,22 +165480,30 @@ mod __cssl4parser_emit_impl {
             }
             CssL4ParserRuleKind::percentageUnit => {
                 let v: u8 = output
-                    .value_payload_for(frame)
+                    .value_frame_at(offset)
+                    .and_then(|f| output.value_payload_for(f))
                     .and_then(|p| p.as_u32())
                     .map(|v| v as u8)
                     .unwrap_or_else(|| {
-                        (&input[frame.span_lo as usize..frame.span_hi as usize])
+                        (&input[__rec.span_lo as usize..__rec.span_hi as usize])
                             .parse::<u8>()
                             .unwrap_or(0)
                     });
                 CssL4ParserValue::percentageUnit(v)
             }
             CssL4ParserRuleKind::length => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::length(children)
             }
@@ -165026,42 +165596,70 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::percentage(proj)
             }
             CssL4ParserRuleKind::valueUnit => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::valueUnit(children)
             }
             CssL4ParserRuleKind::blockContent => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::blockContent(children)
             }
             CssL4ParserRuleKind::ruleBlock => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 CssL4ParserValue::ruleBlock(span)
             }
             CssL4ParserRuleKind::qualifiedRule => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::qualifiedRule(children)
             }
             CssL4ParserRuleKind::mediaRule => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::mediaRule(children)
             }
@@ -165082,395 +165680,666 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::keyframeStop(proj)
             }
             CssL4ParserRuleKind::keyframeSel => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::keyframeSel(children)
             }
             CssL4ParserRuleKind::keyframesRule => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::keyframesRule(children)
             }
             CssL4ParserRuleKind::atRuleBody => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::atRuleBody(children)
             }
             CssL4ParserRuleKind::genericAtRule => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::genericAtRule(children)
             }
             CssL4ParserRuleKind::atRule => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::atRule(children)
             }
             CssL4ParserRuleKind::ruleItem => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::ruleItem(children)
             }
             CssL4ParserRuleKind::ruleList => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::ruleList(children)
             }
             CssL4ParserRuleKind::stylesheet => {
-                let _ = frame;
                 ::core::panic!(
                     "AY-II.W0'.b: Cursor-shape variant projection not yet \
-                     available; frame offset {}",
+                     available; tape record offset {}",
                     offset,
                 );
             }
             CssL4ParserRuleKind::__pattern_db1e96a7fb6ccf5d => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__pattern_db1e96a7fb6ccf5d(children)
             }
             CssL4ParserRuleKind::__calcFunction_cont_151 => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 CssL4ParserValue::__calcFunction_cont_151(span)
             }
             CssL4ParserRuleKind::__minFunction_cont_152 => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 CssL4ParserValue::__minFunction_cont_152(span)
             }
             CssL4ParserRuleKind::__maxFunction_cont_153 => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 CssL4ParserValue::__maxFunction_cont_153(span)
             }
             CssL4ParserRuleKind::__clampFunction_cont_154 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__clampFunction_cont_154(children)
             }
             CssL4ParserRuleKind::__varFunction_cont_155 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__varFunction_cont_155(children)
             }
             CssL4ParserRuleKind::__envFunction_cont_156 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__envFunction_cont_156(children)
             }
             CssL4ParserRuleKind::__varFunction_cont_157 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__varFunction_cont_157(children)
             }
             CssL4ParserRuleKind::__calcFunction_cont_158 => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 CssL4ParserValue::__calcFunction_cont_158(span)
             }
             CssL4ParserRuleKind::__urlFunction_cont_159 => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 CssL4ParserValue::__urlFunction_cont_159(span)
             }
             CssL4ParserRuleKind::__genericFunction_cont_160 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__genericFunction_cont_160(children)
             }
             CssL4ParserRuleKind::__colorDecl_cont_161 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__colorDecl_cont_161(children)
             }
             CssL4ParserRuleKind::__sizeDecl_cont_162 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__sizeDecl_cont_162(children)
             }
             CssL4ParserRuleKind::__spacingDecl_cont_163 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__spacingDecl_cont_163(children)
             }
             CssL4ParserRuleKind::__fontDecl_cont_164 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__fontDecl_cont_164(children)
             }
             CssL4ParserRuleKind::__bgDecl_cont_165 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__bgDecl_cont_165(children)
             }
             CssL4ParserRuleKind::__transformDecl_cont_166 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__transformDecl_cont_166(children)
             }
             CssL4ParserRuleKind::__transitionDecl_cont_167 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__transitionDecl_cont_167(children)
             }
             CssL4ParserRuleKind::__listTableDecl_cont_168 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__listTableDecl_cont_168(children)
             }
             CssL4ParserRuleKind::__displayDecl_cont_169 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__displayDecl_cont_169(children)
             }
             CssL4ParserRuleKind::__positionDecl_cont_170 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__positionDecl_cont_170(children)
             }
             CssL4ParserRuleKind::__overflowDecl_cont_171 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__overflowDecl_cont_171(children)
             }
             CssL4ParserRuleKind::__visibilityDecl_cont_172 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__visibilityDecl_cont_172(children)
             }
             CssL4ParserRuleKind::__flexDirDecl_cont_173 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__flexDirDecl_cont_173(children)
             }
             CssL4ParserRuleKind::__flexWrapDecl_cont_174 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__flexWrapDecl_cont_174(children)
             }
             CssL4ParserRuleKind::__alignDecl_cont_175 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__alignDecl_cont_175(children)
             }
             CssL4ParserRuleKind::__flexNumDecl_cont_176 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__flexNumDecl_cont_176(children)
             }
             CssL4ParserRuleKind::__fontSizeDecl_cont_177 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__fontSizeDecl_cont_177(children)
             }
             CssL4ParserRuleKind::__fontWeightDecl_cont_178 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__fontWeightDecl_cont_178(children)
             }
             CssL4ParserRuleKind::__lineHeightDecl_cont_179 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__lineHeightDecl_cont_179(children)
             }
             CssL4ParserRuleKind::__borderWidthDecl_cont_180 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__borderWidthDecl_cont_180(children)
             }
             CssL4ParserRuleKind::__borderStyleDecl_cont_181 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__borderStyleDecl_cont_181(children)
             }
             CssL4ParserRuleKind::__borderRadiusDecl_cont_182 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__borderRadiusDecl_cont_182(children)
             }
             CssL4ParserRuleKind::__opacityDecl_cont_183 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__opacityDecl_cont_183(children)
             }
             CssL4ParserRuleKind::__textAlignDecl_cont_184 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__textAlignDecl_cont_184(children)
             }
             CssL4ParserRuleKind::__boxSizingDecl_cont_185 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__boxSizingDecl_cont_185(children)
             }
             CssL4ParserRuleKind::__cursorDecl_cont_186 => {
-                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
-                    frame.child_count as usize,
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
                 );
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(project_frame_CssL4Parser(output, input, child_off));
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
                 }
                 CssL4ParserValue::__cursorDecl_cont_186(children)
             }
             _ => {
-                let _ = frame;
                 ::core::panic!(
-                    "AY-II.W0'.b: unclassified variant_idx {} on frame at offset {}",
-                    frame.variant_idx, offset,
+                    "AY-II.W0'.b: unclassified (kind={:?}, variant_idx={}) on tape record at offset {}",
+                    __rec.kind(), __rec.variant_idx(), offset,
                 );
             }
         }
     }
     /// AY-II.W0'.b — fused-pipeline root projector. Reads the root
-    /// frame from the value slab and constructs the grammar's
+    /// record from the tape and constructs the grammar's
     /// `<Grammar>Value<'p>` in one pass. No tape walk, no reparse,
     /// no visitor dispatch.
     #[inline]
@@ -165479,16 +166348,6 @@ mod __cssl4parser_emit_impl {
         input: &'p str,
     ) -> CssL4ParserValue<'p> {
         let root_off = output.value_root_offset();
-        match output.value_frame_at(root_off) {
-            ::core::option::Option::Some(_) => {}
-            ::core::option::Option::None => {
-                ::core::panic!(
-                    "AY-II.W0'.b: FusedOutput root frame absent after parse \
-                         (root_offset = {}, frame count = {})",
-                    root_off, output.frames().len(),
-                );
-            }
-        }
         project_frame_CssL4Parser(output, input, root_off)
     }
     impl ::bbnf::runtime::ValueRoot for CssL4Parser {

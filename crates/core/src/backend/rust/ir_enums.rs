@@ -14,15 +14,44 @@ use quote::{format_ident, quote};
 
 use super::ir_types::ParserAttributes;
 
-/// Generate the `GRAMMAR_X` const array with `include_str!()` for each path.
+/// Generate the `GRAMMAR_X` const array with `include_str!()` for each
+/// grammar source path.
+///
+/// The emitter consumes `parser_attrs.grammar_rel_paths` —
+/// workspace-root-relative POSIX paths — and wraps each one in a
+/// `concat!(env!("CARGO_MANIFEST_DIR"), "/../../", <rel>)` token so
+/// the resulting `include_str!` resolves at the consumer's compile
+/// time relative to the `bbnf` crate's manifest directory
+/// (`<workspace>/crates/core`). Two `..` levels lift to the workspace
+/// root, then the relative path joins the actual grammar file.
+///
+/// Embedding the relative path keeps the generated file portable
+/// across worktrees and developer checkouts; embedding an absolute
+/// path (the pre-fix shape) silently bound the file to whichever
+/// worktree last ran regen and surfaced as `os error 2` on every
+/// other consumer.
 pub fn generate_grammar_arr(parser_attrs: &ParserAttributes, ident: &syn::Ident) -> TokenStream {
     let grammar_arr_name = format_ident!("GRAMMAR_{}", ident);
-    let len = parser_attrs.paths.len();
-    let include_strs = parser_attrs.paths.iter().map(|path| {
-        let path = path
-            .to_str()
-            .unwrap_or_else(|| panic!("non-UTF8 grammar path: {:?}", path));
-        quote! { include_str!(#path) }
+    let len = parser_attrs.grammar_rel_paths.len();
+    assert_eq!(
+        parser_attrs.paths.len(),
+        parser_attrs.grammar_rel_paths.len(),
+        "ParserAttributes: `paths` and `grammar_rel_paths` length mismatch \
+         ({} vs {}). The populator (xtask::regen) must push to both in \
+         index order.",
+        parser_attrs.paths.len(),
+        parser_attrs.grammar_rel_paths.len(),
+    );
+    let include_strs = parser_attrs.grammar_rel_paths.iter().map(|rel| {
+        // `concat!(env!("CARGO_MANIFEST_DIR"), "/../../", <rel>)` —
+        // CARGO_MANIFEST_DIR for `bbnf` resolves to
+        // `<workspace>/crates/core`; `../../` lifts to the workspace
+        // root; `<rel>` (e.g. `grammar/bbnf/bbnf.bbnf`) joins the
+        // grammar source file.
+        let suffix = format!("/../../{rel}");
+        quote! {
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), #suffix))
+        }
     });
 
     quote! {

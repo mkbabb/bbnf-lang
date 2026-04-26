@@ -70,9 +70,19 @@ impl GrammarEntry {
     /// `ParserAttributes` reconstructed from the manifest's `features`
     /// list. Mirrors the proc-macro's `#[parser(...)]` attribute
     /// parsing (`crates/derive/src/lib.rs:226-278`).
+    ///
+    /// Populates both `paths` (absolute, for the IR pipeline to read
+    /// grammar source bytes at codegen time) and `grammar_rel_paths`
+    /// (workspace-root-relative POSIX, for the emitter to embed in
+    /// `include_str!()` so the generated file is portable across
+    /// worktrees + checkouts). Both are pushed in lock-step.
     fn parser_attributes(&self, grammar_path: PathBuf) -> ParserAttributes {
         let mut attrs = ParserAttributes::default();
         attrs.paths.push(grammar_path);
+        // The manifest's raw `path` is already workspace-relative
+        // (e.g. `grammar/bbnf/bbnf.bbnf`). Normalise to forward
+        // slashes for cross-platform stability of the embedded literal.
+        attrs.grammar_rel_paths.push(self.path.replace('\\', "/"));
         for feat in &self.features {
             match feat.as_str() {
                 "structural" => attrs.structural = true,
@@ -293,10 +303,12 @@ fn regen_grammar(
     Ok(bytes)
 }
 
-/// File header emitted before the per-grammar body. Mirrors the
-/// bootstrap script's pre-B2 header at `scripts/bootstrap-bbnf.sh`
-/// lines 321-342, with the `Regenerate:` comment updated to the
-/// xtask invocation.
+/// File header emitted before the per-grammar body. Carries the
+/// canonical doc comment + crate-level `#![allow(...)]` block + the
+/// runtime imports the per-grammar emission relies on. The
+/// `Regenerate:` line points at `cargo xtask regen --grammar <ident>`,
+/// the canonical entrypoint post-B2.W3 (the pre-B2
+/// `scripts/bootstrap-bbnf.sh` retired with the proc-macro contract).
 fn file_header(ident: &str) -> String {
     format!(
         "//! AUTO-GENERATED from `[workspace.metadata.bbnf.grammars]` — do not edit manually.\n\

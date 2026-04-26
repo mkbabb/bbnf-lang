@@ -21,13 +21,14 @@
         bench bench-json bench-css bench-bbnf bench-sheets bench-compile \
         profile profile-json profile-css \
         expand expand-bootstrap expand-derive asm \
+        regen regen-check \
         ay-expand-json ay-expand-named-type ay-asm-close-compound \
         ay-test-value-api ay-test-wire-contract ay-test-named-type \
         ay-samply-json-twitter ay-samply-json-twitter-lookup \
         ay-bench-close ay-prepare-profile-wave \
         install package \
         bump-patch bump-minor bump-major release \
-        clean clean-vsix clean-incr clean-cache ay-prime watch deploy
+        clean clean-vsix clean-incr watch deploy
 
 # ─── Default ─────────────────────────────────────────────────────────────────
 all: build
@@ -183,30 +184,30 @@ clean:
 clean-vsix:
 	rm -f *.vsix
 
-## ICE recovery: nuke incremental cache; preserve proc-macro .bbnf-cache.
+## ICE recovery: nuke incremental cache.
 ## Invoked when an rustc-ice-*.txt appears at repo root. Documented in
 ## docs/instructions/PROFILING.md §ICE recovery.
 clean-incr:
 	rm -rf target/*/incremental
-	@echo "Incremental cache cleared. Proc-macro .bbnf-cache preserved."
+	@echo "Incremental cache cleared."
 
-## Nuke proc-macro cache (last resort; only if content-keyed cache desyncs).
-## Under the B1 derive-cache design (patches/derive-cache-design.md) this
-## targets $XDG_CACHE_HOME/bbnf-derive/ rather than target/.bbnf-cache/.
-clean-cache:
-	rm -rf target/.bbnf-cache "$${XDG_CACHE_HOME:-$$HOME/.cache}/bbnf-derive"
-
-# ─── Prime / cache setup ─────────────────────────────────────────────────────
+# ─── Regen ───────────────────────────────────────────────────────────────────
 #
-# Seed the bbnf-derive proc-macro cache via a single cold run of the two
-# derive-Parser-heavy crates. B1.W0.d sub-gate requires this target; cache
-# entries land under target/.bbnf-cache/ today (AZ-I.W0 lifts the location
-# to $XDG_CACHE_HOME/bbnf-derive/). Reports the cache-entry count on exit.
-ay-prime:
-	cargo check --profile ax-iter -p bbnf-bootstrap --lib
-	cargo check --profile ax-iter -p gorgeous --lib
-	@count=$$(find target -name .bbnf-cache -type d 2>/dev/null | xargs -I{} find {} -type f 2>/dev/null | wc -l | tr -d ' '); \
-	echo "ay-prime complete; .bbnf-cache entries: $$count"
+# `cargo xtask regen` is the canonical regen entrypoint post-B2 — runs the
+# 17-pass IR pipeline + emission once per invocation, writing per-grammar
+# source to crates/core/src/grammar/generated/<ident>.rs. The pre-B2
+# `scripts/bootstrap-bbnf.sh` (cargo-expand wrapper + Python post-process)
+# retired with `crates/derive/`; the wall fell from 80+ min cold to seconds.
+
+## Regenerate every grammar enumerated in [workspace.metadata.bbnf.grammars].
+regen:
+	cargo xtask regen
+
+## CI / pre-commit gate: regenerate to a tempdir + diff against the
+## checked-in tree; exit non-zero on drift. Replaces the pre-B2
+## `scripts/check-bootstrap-clean.sh`.
+regen-check:
+	cargo xtask regen --check
 
 # ─── Deploy / Watch ──────────────────────────────────────────────────────────
 
@@ -350,10 +351,8 @@ BENCH_PROFILE = $(if $(or $(filter close,$(WAVE)),$(filter %-close,$(WAVE))),ben
 ay-bench-close:
 	@mkdir -p docs/benchmarks
 	@echo "AY bench-close WAVE=$(WAVE) profile=$(BENCH_PROFILE)" >&2
-	@# B1 invariant 12: do NOT destroy target/.bbnf-cache/. Cold-per-parse
-	@# is a divan-harness property (sample_size = 1, skip_ext_time = true),
-	@# not a filesystem-wipe property. Cycle-2 bench measurement stays
-	@# meaningful when the proc-macro cache survives.
+	@# Cold-per-parse is a divan-harness property (sample_size = 1,
+	@# skip_ext_time = true), not a filesystem-wipe property.
 	cargo bench --profile $(BENCH_PROFILE) -p bbnf --bench json_monolithic \
 		> docs/benchmarks/post-AY-$(WAVE)-json.txt 2>&1
 	cargo bench --profile $(BENCH_PROFILE) -p bbnf --bench css_l4 \

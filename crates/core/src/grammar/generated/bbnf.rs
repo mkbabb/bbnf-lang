@@ -33,7 +33,9 @@ mod __bbnfbootstrap_emit_impl {
     use super::*;
     use ::parse_that::*;
     pub const GRAMMAR_BbnfBootstrap: [&'static str; 1usize] = [
-        include_str!("/Users/mkbabb/Programming/bbnf-wt-b2-w1/grammar/bbnf/bbnf.bbnf"),
+        include_str!(
+            concat!(env!("CARGO_MANIFEST_DIR"), "/../../grammar/bbnf/bbnf.bbnf")
+        ),
     ];
     static __GRAMMAR_PROFILE_ALPHABET: [u8; 28usize] = [
         33, 34, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 58, 59, 60, 61, 62, 63, 64,

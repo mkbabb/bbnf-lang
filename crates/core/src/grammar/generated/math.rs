@@ -33,7 +33,9 @@ mod __mathparser_emit_impl {
     use super::*;
     use ::parse_that::*;
     pub const GRAMMAR_MathParser: [&'static str; 1usize] = [
-        include_str!("/Users/mkbabb/Programming/bbnf-wt-b2-w1/grammar/misc/math.bbnf"),
+        include_str!(
+            concat!(env!("CARGO_MANIFEST_DIR"), "/../../grammar/misc/math.bbnf")
+        ),
     ];
     /// Per-grammar codegen fingerprint — consolidated static
     /// profile emitted by Tranche AV Phase 1. Every downstream

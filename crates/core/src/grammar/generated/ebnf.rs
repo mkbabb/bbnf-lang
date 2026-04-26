@@ -33,7 +33,9 @@ mod __ebnfparser_emit_impl {
     use super::*;
     use ::parse_that::*;
     pub const GRAMMAR_EbnfParser: [&'static str; 1usize] = [
-        include_str!("/Users/mkbabb/Programming/bbnf-wt-b2-w1/grammar/ebnf/ebnf.bbnf"),
+        include_str!(
+            concat!(env!("CARGO_MANIFEST_DIR"), "/../../grammar/ebnf/ebnf.bbnf")
+        ),
     ];
     static __GRAMMAR_PROFILE_ALPHABET: [u8; 89usize] = [
         8, 9, 10, 12, 13, 32, 34, 39, 40, 41, 42, 43, 44, 45, 46, 48, 49, 50, 51, 52, 53,

@@ -33,7 +33,7 @@ mod __bnfparser_emit_impl {
     use super::*;
     use ::parse_that::*;
     pub const GRAMMAR_BnfParser: [&'static str; 1usize] = [
-        include_str!("/Users/mkbabb/Programming/bbnf-wt-b2-w1/grammar/bnf/bnf.bbnf"),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../grammar/bnf/bnf.bbnf")),
     ];
     static __GRAMMAR_PROFILE_ALPHABET: [u8; 4usize] = [34, 60, 62, 124];
     /// Per-grammar codegen fingerprint — consolidated static

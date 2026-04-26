@@ -34,7 +34,7 @@ mod __cssl4parser_emit_impl {
     use ::parse_that::*;
     pub const GRAMMAR_CssL4Parser: [&'static str; 1usize] = [
         include_str!(
-            "/Users/mkbabb/Programming/bbnf-wt-b2-w1/grammar/css/l4/stylesheet.bbnf"
+            concat!(env!("CARGO_MANIFEST_DIR"), "/../../grammar/css/l4/stylesheet.bbnf")
         ),
     ];
     static __GRAMMAR_PROFILE_ALPHABET: [u8; 53usize] = [

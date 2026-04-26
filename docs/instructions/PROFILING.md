@@ -53,20 +53,10 @@ make clean-incr
 # equivalent: rm -rf target/*/incremental
 ```
 
-`target/.bbnf-cache/` is preserved by this sequence. The proc-macro
-content-keyed cache survives incremental-cache clears because
-`bbnf-derive` keys its cache on input-grammar content hashes, not
-rustc fingerprints; nuking it poisons cycle-2 bootstrap regen
-measurement (B1 invariant 12). `make clean-cache` exists for the
-last-resort full reset only.
-
 `-Zthreads=8` in `.cargo/config.toml` amplifies the ICE count when one
 fires — one poisoned query produces one ICE per parallel worker — so
 the recovery sequence is part of the routine dev contract on the
 pinned nightly until the on-disk-cache `AttrId` fix lands upstream.
-The B1 derive-cache relocation to `$XDG_CACHE_HOME/bbnf-derive/`
-(routed to AZ-I.W0) closes the dependency on `target/.bbnf-cache/`
-entirely.
 
 ## Routine surface
 
@@ -77,10 +67,10 @@ explicitly (iter-profile-always).
 
 | Alias | Surface | Working set |
 |---|---|---|
-| `cargo iter-check` | workspace minus 4 proc-macro-heavy crates | gorgeous, bbnf-bootstrap, bbnf-analysis, bbnf-lsp excluded |
+| `cargo iter-check` | workspace minus 4 heavy-link crates | gorgeous, bbnf-bootstrap, bbnf-analysis, bbnf-lsp excluded |
 | `cargo iter-check-lsp` | bbnf-analysis + bbnf-lsp fast-path | covers `iter-check`'s exclude |
 | `cargo iter-check-prettify` | gorgeous fast-path | covers `iter-check`'s exclude |
-| `cargo iter-check-bootstrap` | bbnf-bootstrap fast-path | covers `iter-check`'s exclude (AZ-I.W0 routes the > 600 s wall) |
+| `cargo iter-check-bootstrap` | bbnf-bootstrap fast-path | covers `iter-check`'s exclude |
 | `cargo iter-clippy` | clippy under ax-iter, all-targets, deny warnings | matches `iter-check` shape |
 | `cargo iter-test` | nextest workspace | full surface |
 | `cargo iter-test-core`, `iter-test-ir`, `iter-test-analysis`, `iter-test-prettify`, `iter-test-lsp` | per-package nextest fast-paths | one per heavy crate |
@@ -92,12 +82,13 @@ each have a named fast-path alias so the routine surface remains
 truthful per B1 invariant 10.
 
 `cargo iter-check-full` is the workspace close-ceremony gate — full
-workspace under `ax-iter`. It is **not** a routine surface: per B1
-invariant 11, its cold wall is bounded by `bbnf-bootstrap`'s
-single-derive proc-macro expansion (> 600 s observed pre-AZ-I.W0).
-The ≤ 5 min target opens for AZ-I.W0 close once the derive cache
-relocates and Watt wraps proc-macros. Routine iteration never invokes
-it.
+workspace under `ax-iter`. The pre-B2 cold wall (> 600 s, dominated
+by `bbnf-bootstrap`'s single-derive proc-macro expansion of the
+17-pass IR pipeline) retires with B2.W2: the IR pipeline runs in
+`cargo xtask regen` against on-disk source, and consumer compiles
+read the per-grammar emitted files via `include!` rather than
+re-running expand. Routine iteration still uses `iter-check`; the
+full gate runs at close ceremonies only.
 
 The Makefile exposes `make test` (nextest workspace, default profile),
 `make test-ci` (`--profile ci`, retries + junit), and `make test-close`
@@ -108,6 +99,27 @@ post-B1.W0) routes the smallest correctness tier — tape, bbnf-ir,
 egraph, csp-solver, bbnf-ser — for sub-minute pre-dispatch validation.
 A bash-3.2-safe empty-array expansion guard (`"${ARR[@]+"${ARR[@]}"}"`)
 applies on macOS hosts.
+
+## Grammar regen
+
+`cargo xtask regen` runs the 17-pass IR pipeline + Rust emission for
+every grammar enumerated in `[workspace.metadata.bbnf.grammars]`,
+writing per-grammar source to
+`crates/core/src/grammar/generated/<ident>.rs`. `--grammar <ident>`
+narrows to one grammar; `--check` regenerates to a tempdir + diffs
+against the checked-in tree (CI / pre-commit gate).
+
+```bash
+cargo xtask regen                       # full sweep
+cargo xtask regen --grammar bbnf        # single grammar
+cargo xtask regen --check               # CI / pre-commit gate
+```
+
+The Makefile mirrors the two common entrypoints as `make regen` and
+`make regen-check`. Pre-B2 the regen ran through `cargo expand` +
+Python post-process under `scripts/bootstrap-bbnf.sh`; that path
+retired with the proc-macro at B2.W2, and the wall fell from 80+ min
+cold to seconds.
 
 ## Bench alias surface
 

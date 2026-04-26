@@ -34,7 +34,8 @@ mod __googlesheetsparser_emit_impl {
     use ::parse_that::*;
     pub const GRAMMAR_GoogleSheetsParser: [&'static str; 1usize] = [
         include_str!(
-            "/Users/mkbabb/Programming/bbnf-wt-b2-w1/grammar/google-sheets/google-sheets.bbnf"
+            concat!(env!("CARGO_MANIFEST_DIR"),
+            "/../../grammar/google-sheets/google-sheets.bbnf")
         ),
     ];
     static __GRAMMAR_PROFILE_ALPHABET: [u8; 19usize] = [

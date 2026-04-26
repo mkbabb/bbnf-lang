@@ -41,7 +41,6 @@ quote = "1"
 regex = "1"
 tempfile = "3"
 prettyplease = "0.2"
-bbnf_derive = { version = "0.2", path = "../derive" }
 json-prototype = { path = "../json-prototype" }
 pprint = "0.3"
 parse_that = "0.4"

@@ -76,7 +76,6 @@ vm = ["dep:bbnf-ir"]
 
 [dependencies]
 parse_that = { version = "0.4", features = ["diagnostics"] }
-bbnf_derive = { version = "0.2", path = "../derive" }
 bbnf = { version = "0.2", path = "../core" }
 bbnf-ir = { version = "0.1", path = "../ir", optional = true }
 pprint = "0.3"

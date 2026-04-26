@@ -4,15 +4,13 @@ version = "0.1.0"
 edition = "2024"
 publish = false
 
-# B2 build-time codegen entrypoint. Replaces the proc-macro IR-pipeline
-# contract (`bbnf_derive`) with a workspace-level xtask that runs the
-# 17-pass pipeline + emission once per regen invocation, writing
+# B2 build-time codegen entrypoint. The workspace-level xtask runs the
+# 17-pass IR pipeline + emission once per regen invocation, writing
 # per-grammar source files to `crates/core/src/grammar/generated/`.
 #
 # The xtask runs the IR pipeline directly via `bbnf::pipeline::
 # compile_paths_request` + `bbnf::generate::generate_all`, so it carries
-# path-deps on `bbnf-ir` and `bbnf` (lib-only). It does NOT depend on
-# `bbnf_derive`; the proc-macro retires at B2.W2.
+# path-deps on `bbnf-ir` and `bbnf` (lib-only).
 
 [dependencies]
 # Workspace path-deps. Versions match the workspace's existing pins

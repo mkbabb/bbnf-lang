@@ -173,7 +173,7 @@ fn emit_parse_array_wrapped(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,
@@ -592,8 +592,9 @@ fn emit_parse_array_list(
         quote! {
             // AY-II.W0.b — pre-order open for per-iter Seq. The enclosing
             // outer loop wraps this body in a retry closure; on failure
-            // it calls `columns_mut().rollback_to(__iter_save_cols)` to
-            // discard any records this iter partially emitted.
+            // it calls `builder.rollback_to(__iter_save_cols)` to
+            // discard any records this iter partially emitted (atomic
+            // unwind across tape + value substrates per B4.W1).
             let iter_open = *p as u32;
             let iter_off = builder.begin_compound(
                 ::bbnf::runtime::tape::TapeKind::Seq,
@@ -608,8 +609,8 @@ fn emit_parse_array_list(
             let _ = #support_mod::skip_space(input, p, state);
 
             // Value dispatch. Failure surfaces through `?` and unwinds
-            // to the retry closure; the outer loop rolls back columns +
-            // value_builder via rollback_to / value_builder.rollback_to
+            // to the retry closure; the outer loop calls
+            // `builder.rollback_to(...)` (B4.W1 fused-substrate path)
             // so the partially-opened Seq compound leaves no trace.
             #value_call
 
@@ -653,7 +654,7 @@ fn emit_parse_array_list(
                 input: &[u8],
                 p: &mut usize,
                 state: &mut #support_mod::ScanState,
-                builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+                builder: &mut ::bbnf::runtime::tape::FusedBuilder,
             ) -> ::core::result::Result<
                 ::bbnf::runtime::tape::TapeOffset,
                 ::bbnf::runtime::tape::DtaError,
@@ -697,8 +698,9 @@ fn emit_parse_array_list(
                         break;
                     }
                     // Attempt one iteration. On success, continue;
-                    // on failure, roll back `*p` + columns +
-                    // value_builder atomically.
+                    // on failure, roll back `*p` + the fused builder
+                    // (tape + value substrates) atomically via
+                    // `builder.rollback_to`.
                     let iter_result: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError>
                         = (|| {
                             #iter_body
@@ -715,7 +717,7 @@ fn emit_parse_array_list(
                         }
                         Err(_) => {
                             *p = iter_save_p;
-                            builder.columns_mut().rollback_to(__iter_save_cols);
+                            builder.rollback_to(__iter_save_cols);
                             break;
                         }
                     }
@@ -751,7 +753,7 @@ fn emit_parse_array_list(
                 input: &[u8],
                 p: &mut usize,
                 state: &mut #support_mod::ScanState,
-                builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+                builder: &mut ::bbnf::runtime::tape::FusedBuilder,
             ) -> ::core::result::Result<
                 ::bbnf::runtime::tape::TapeOffset,
                 ::bbnf::runtime::tape::DtaError,
@@ -787,7 +789,7 @@ fn emit_parse_array_list(
                         }
                         Err(_) => {
                             *p = iter_save_p;
-                            builder.columns_mut().rollback_to(__iter_save_cols);
+                            builder.rollback_to(__iter_save_cols);
                             break;
                         }
                     }

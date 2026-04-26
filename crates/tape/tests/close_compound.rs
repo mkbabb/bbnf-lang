@@ -1,4 +1,4 @@
-//! AY-II.W0.a/W0-fix — `TapeBuilder::begin_compound` / `end_compound`
+//! AY-II.W0.a/W0-fix — `FusedBuilder::begin_compound` / `end_compound`
 //! / `end_compound_post_order` contract.
 //!
 //! 1. `begin_compound(kind, span_lo, variant_idx, meta_idx,
@@ -20,7 +20,7 @@
 //!    `HAS_CHILDREN_BIT`; otherwise leaves both cleared. Used by
 //!    walker-parity shape emitters whose compound row lands AFTER
 //!    the children subtree.
-//! 4. `TapeBuilder::rollback_to(open_offset)` discards every row
+//! 4. `FusedBuilder::rollback_to(open_offset)` discards every row
 //!    pushed at or after `open_offset` and a subsequent
 //!    `begin_compound` reuses that offset cleanly.
 //! 5. The finaliser derives `sib_skip` unconditionally on every
@@ -30,7 +30,7 @@
 //!    because it could not handle pre-order children of post-order
 //!    parents).
 
-use tape::{Tape, TapeBuilder, TapeCursor, TapeKind, TapeOffset};
+use tape::{Tape, FusedBuilder, TapeCursor, TapeKind, TapeOffset};
 
 /// Build `(root (inner a b) c)` via `begin_compound` / `end_compound`
 /// with the inline-frame-depth path active:
@@ -42,7 +42,7 @@ use tape::{Tape, TapeBuilder, TapeCursor, TapeKind, TapeOffset};
 /// - row 4: leaf c               (depth 1)
 #[test]
 fn nested_begin_end_produces_pre_order_tape() {
-    let mut b = TapeBuilder::new();
+    let mut b = FusedBuilder::new();
 
     // B3.W0.γ — the builder auto-stamps `frame_depth` on every
     // structural push (leaf or compound) via its internal
@@ -145,7 +145,7 @@ fn nested_begin_end_produces_pre_order_tape() {
 /// `HAS_CHILDREN_BIT` in one call. The override path is retired.
 #[test]
 fn end_compound_post_order_stamps_backward_child_off_and_has_children() {
-    let mut b = TapeBuilder::new();
+    let mut b = FusedBuilder::new();
     // B3.W0.γ — the builder auto-stamps `frame_depth` on every
     // push, and `end_compound_post_order` retroactively bumps the
     // child range so leaves emitted before their post-order wrapper
@@ -211,7 +211,7 @@ fn end_compound_post_order_stamps_backward_child_off_and_has_children() {
 /// and `HAS_CHILDREN_BIT` clear.
 #[test]
 fn end_compound_post_order_empty_frame() {
-    let mut b = TapeBuilder::new();
+    let mut b = FusedBuilder::new();
 
     // No children pushed before begin; first_child captures cols.len()
     // which equals the open offset.
@@ -233,7 +233,7 @@ fn end_compound_post_order_empty_frame() {
 /// `span_hi` regardless.
 #[test]
 fn end_compound_without_children() {
-    let mut b = TapeBuilder::new();
+    let mut b = FusedBuilder::new();
     let root = b.begin_compound(TapeKind::Seq, 5, 0, 0, 0, 0);
     b.end_compound(root, 5);
 
@@ -247,13 +247,13 @@ fn end_compound_without_children() {
     assert_eq!(tape.len(), 1);
 }
 
-/// `TapeBuilder::rollback_to(open_offset)` unwinds every row pushed
+/// `FusedBuilder::rollback_to(open_offset)` unwinds every row pushed
 /// at or after `open_offset`, restoring the builder to its pre-
 /// `begin_compound` state. A subsequent `begin_compound` reuses the
 /// same offset. The inline `frame_depth` stream rewinds in lockstep.
 #[test]
 fn rollback_to_unwinds_begin_compound_cleanly() {
-    let mut b = TapeBuilder::new();
+    let mut b = FusedBuilder::new();
 
     let root = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
     assert_eq!(root, 0);
@@ -301,7 +301,7 @@ fn rollback_to_unwinds_begin_compound_cleanly() {
 /// a no-op on the second call.
 #[test]
 fn rollback_to_idempotent() {
-    let mut b = TapeBuilder::new();
+    let mut b = FusedBuilder::new();
     let root = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
     let _leaf = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
     let len_before = b.columns().len();
@@ -332,7 +332,7 @@ fn rollback_to_idempotent() {
 /// `derive_frame_depth` reverse-walk with this in-builder bookkeeping.
 #[test]
 fn post_order_close_bumps_child_frame_depth() {
-    let mut b = TapeBuilder::new();
+    let mut b = FusedBuilder::new();
 
     let mark = TapeOffset(b.columns().len() as u32);
     let _a = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
@@ -359,7 +359,7 @@ fn post_order_close_bumps_child_frame_depth() {
 /// finaliser derives `sib_skip` across all three compound frames.
 #[test]
 fn sibling_begin_end_subtrees_under_outer_begin() {
-    let mut b = TapeBuilder::new();
+    let mut b = FusedBuilder::new();
 
     let outer = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
     assert_eq!(outer, 0);

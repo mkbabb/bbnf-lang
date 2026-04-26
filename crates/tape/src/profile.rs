@@ -6,7 +6,7 @@
 //!
 //! Pre-AV, each per-grammar bit of codegen-time knowledge lived as an
 //! emitter-local constant or an ad-hoc runtime query: push counts were
-//! inlined into `TapeBuilder::with_capacity` at one site, the
+//! inlined into `FusedBuilder::with_capacity` at one site, the
 //! structural alphabet drove a per-site nibble-LUT at another,
 //! fixed-shape e-class facts sat in materialisation analysis. Every
 //! downstream consumer re-derived or re-plumbed the same data.
@@ -57,7 +57,7 @@ pub struct GrammarProfile {
     // ── Per-byte density estimates (V1, derived from push counts) ────
 
     /// Estimated compound records produced per input byte. Drives the
-    /// `TapeBuilder::with_capacity` reservation.
+    /// `FusedBuilder::with_capacity` reservation.
     pub compounds_per_input_byte: f32,
 
     /// Estimated leaf records produced per input byte.
@@ -117,7 +117,7 @@ impl GrammarProfile {
         structural_quote_classes: &[],
     };
 
-    /// Reserve size for `TapeBuilder::with_capacity` given an input
+    /// Reserve size for `FusedBuilder::with_capacity` given an input
     /// length (bytes). Combines the per-grammar density estimate with
     /// the AR-audit floor `input_len / 2 + 2` (sonic-rs ratio) so the
     /// fused-push hot path in [`push_compound_fused`] /

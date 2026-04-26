@@ -15,7 +15,7 @@ pub fn parse_keyword_JsonFixture_bool(
     p: &mut usize,
     first_byte: u8,
     state: &mut __shape_support_JsonFixture::ScanState,
-    builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    builder: &mut ::bbnf::runtime::tape::FusedBuilder,
 ) -> ::core::result::Result<
     ::bbnf::runtime::tape::TapeOffset,
     ::bbnf::runtime::tape::DtaError,

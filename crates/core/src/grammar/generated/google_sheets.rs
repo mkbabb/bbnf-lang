@@ -2244,7 +2244,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         open: usize,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
         variant_idx: u8,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
@@ -2778,7 +2778,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -2831,7 +2831,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         _state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -2894,7 +2894,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -2952,7 +2952,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     Err(_) => {
                         *p = attempt_p;
-                        builder.columns_mut().rollback_to(attempt_len);
+                        builder.rollback_to(attempt_len);
                     }
                 }
             }
@@ -3000,7 +3000,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     Err(_) => {
                         *p = attempt_p;
-                        builder.columns_mut().rollback_to(attempt_len);
+                        builder.rollback_to(attempt_len);
                     }
                 }
             }
@@ -3036,7 +3036,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -3334,7 +3334,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -3388,7 +3388,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     Err(_) => {
                         *p = attempt_p;
-                        builder.columns_mut().rollback_to(attempt_len);
+                        builder.rollback_to(attempt_len);
                     }
                 }
             }
@@ -3432,7 +3432,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     Err(_) => {
                         *p = attempt_p;
-                        builder.columns_mut().rollback_to(attempt_len);
+                        builder.rollback_to(attempt_len);
                     }
                 }
             }
@@ -3457,7 +3457,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -3510,7 +3510,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -3541,7 +3541,7 @@ mod __googlesheetsparser_emit_impl {
             let matched = opt_attempt.is_ok();
             if !matched {
                 *p = iter_save_p;
-                builder.columns_mut().rollback_to(iter_save_cols);
+                builder.rollback_to(iter_save_cols);
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
@@ -3624,7 +3624,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -3655,7 +3655,7 @@ mod __googlesheetsparser_emit_impl {
             let matched = opt_attempt.is_ok();
             if !matched {
                 *p = iter_save_p;
-                builder.columns_mut().rollback_to(iter_save_cols);
+                builder.rollback_to(iter_save_cols);
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
@@ -3726,7 +3726,7 @@ mod __googlesheetsparser_emit_impl {
                             Ok(_) => break 'try_branches,
                             Err(_) => {
                                 *p = attempt_p;
-                                builder.columns_mut().rollback_to(attempt_len);
+                                builder.rollback_to(attempt_len);
                             }
                         }
                     }
@@ -3848,7 +3848,7 @@ mod __googlesheetsparser_emit_impl {
                             Ok(_) => break 'try_branches,
                             Err(_) => {
                                 *p = attempt_p;
-                                builder.columns_mut().rollback_to(attempt_len);
+                                builder.rollback_to(attempt_len);
                             }
                         }
                     }
@@ -3948,7 +3948,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -3972,7 +3972,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     Err(_) => {
                         *p = attempt_p;
-                        builder.columns_mut().rollback_to(attempt_len);
+                        builder.rollback_to(attempt_len);
                     }
                 }
             }
@@ -3986,7 +3986,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     Err(_) => {
                         *p = attempt_p;
-                        builder.columns_mut().rollback_to(attempt_len);
+                        builder.rollback_to(attempt_len);
                     }
                 }
             }
@@ -4011,7 +4011,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -4058,7 +4058,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -4152,7 +4152,7 @@ mod __googlesheetsparser_emit_impl {
                     })();
                     if seq_attempt.is_err() {
                         *p = span_lo as usize;
-                        builder.columns_mut().rollback_to(seq_save_cols);
+                        builder.rollback_to(seq_save_cols);
                         return Err(::bbnf::runtime::tape::DtaError::Syntax {
                             offset: span_lo,
                             failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
@@ -4160,7 +4160,7 @@ mod __googlesheetsparser_emit_impl {
                         });
                     }
                     let span_hi = *p as u32;
-                    builder.columns_mut().rollback_to(seq_save_cols);
+                    builder.rollback_to(seq_save_cols);
                     let off = builder
                         .push_leaf_with(
                             ::bbnf::runtime::tape::TapeKind::Span,
@@ -4284,7 +4284,7 @@ mod __googlesheetsparser_emit_impl {
     /// # Emitted algorithm
     ///
     /// 1. Reserve an outer Rule compound via
-    ///    [`::bbnf::runtime::tape::TapeBuilder::mark_children`] +
+    ///    [`::bbnf::runtime::tape::FusedBuilder::mark_children`] +
     ///    record the parse-open position.
     /// 2. Dispatch the leftmost operand through the grammar's
     ///    value-position dispatcher; the operand's records land
@@ -4326,7 +4326,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -4521,7 +4521,7 @@ mod __googlesheetsparser_emit_impl {
     /// # Emitted algorithm
     ///
     /// 1. Reserve an outer Rule compound via
-    ///    [`::bbnf::runtime::tape::TapeBuilder::mark_children`] +
+    ///    [`::bbnf::runtime::tape::FusedBuilder::mark_children`] +
     ///    record the parse-open position.
     /// 2. Dispatch the leftmost operand through the grammar's
     ///    value-position dispatcher; the operand's records land
@@ -4563,7 +4563,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -4764,7 +4764,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -4841,7 +4841,7 @@ mod __googlesheetsparser_emit_impl {
     /// # Emitted algorithm
     ///
     /// 1. Reserve an outer Rule compound via
-    ///    [`::bbnf::runtime::tape::TapeBuilder::mark_children`] +
+    ///    [`::bbnf::runtime::tape::FusedBuilder::mark_children`] +
     ///    record the parse-open position.
     /// 2. Dispatch the leftmost operand through the grammar's
     ///    value-position dispatcher; the operand's records land
@@ -4883,7 +4883,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -5084,7 +5084,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -5161,7 +5161,7 @@ mod __googlesheetsparser_emit_impl {
     /// # Emitted algorithm
     ///
     /// 1. Reserve an outer Rule compound via
-    ///    [`::bbnf::runtime::tape::TapeBuilder::mark_children`] +
+    ///    [`::bbnf::runtime::tape::FusedBuilder::mark_children`] +
     ///    record the parse-open position.
     /// 2. Dispatch the leftmost operand through the grammar's
     ///    value-position dispatcher; the operand's records land
@@ -5203,7 +5203,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -5398,7 +5398,7 @@ mod __googlesheetsparser_emit_impl {
     /// # Emitted algorithm
     ///
     /// 1. Reserve an outer Rule compound via
-    ///    [`::bbnf::runtime::tape::TapeBuilder::mark_children`] +
+    ///    [`::bbnf::runtime::tape::FusedBuilder::mark_children`] +
     ///    record the parse-open position.
     /// 2. Dispatch the leftmost operand through the grammar's
     ///    value-position dispatcher; the operand's records land
@@ -5440,7 +5440,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -5641,7 +5641,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -5730,7 +5730,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -5771,11 +5771,11 @@ mod __googlesheetsparser_emit_impl {
                 })();
                 if attempt.is_err() {
                     *p = save_p;
-                    builder.columns_mut().rollback_to(save_cols);
+                    builder.rollback_to(save_cols);
                     break;
                 }
                 if *p == save_p {
-                    builder.columns_mut().rollback_to(save_cols);
+                    builder.rollback_to(save_cols);
                     break;
                 }
                 let iter_hi = *p as u32;
@@ -5867,7 +5867,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -5916,11 +5916,11 @@ mod __googlesheetsparser_emit_impl {
                 })();
                 if attempt.is_err() {
                     *p = save_p;
-                    builder.columns_mut().rollback_to(save_cols);
+                    builder.rollback_to(save_cols);
                     break;
                 }
                 if *p == save_p {
-                    builder.columns_mut().rollback_to(save_cols);
+                    builder.rollback_to(save_cols);
                     break;
                 }
                 let iter_hi = *p as u32;
@@ -5999,7 +5999,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -6026,7 +6026,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6045,7 +6045,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6064,7 +6064,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6083,7 +6083,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6102,7 +6102,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6121,7 +6121,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6140,7 +6140,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6159,7 +6159,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6178,7 +6178,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6197,7 +6197,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6216,7 +6216,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6235,7 +6235,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6254,7 +6254,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6273,7 +6273,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6292,7 +6292,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6312,7 +6312,7 @@ mod __googlesheetsparser_emit_impl {
                             }
                             Err(_) => {
                                 *p = attempt_p;
-                                builder.columns_mut().rollback_to(attempt_len);
+                                builder.rollback_to(attempt_len);
                             }
                         }
                     }
@@ -6331,7 +6331,7 @@ mod __googlesheetsparser_emit_impl {
                             }
                             Err(_) => {
                                 *p = attempt_p;
-                                builder.columns_mut().rollback_to(attempt_len);
+                                builder.rollback_to(attempt_len);
                             }
                         }
                     }
@@ -6351,7 +6351,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6370,7 +6370,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6390,7 +6390,7 @@ mod __googlesheetsparser_emit_impl {
                             }
                             Err(_) => {
                                 *p = attempt_p;
-                                builder.columns_mut().rollback_to(attempt_len);
+                                builder.rollback_to(attempt_len);
                             }
                         }
                     }
@@ -6409,7 +6409,7 @@ mod __googlesheetsparser_emit_impl {
                             }
                             Err(_) => {
                                 *p = attempt_p;
-                                builder.columns_mut().rollback_to(attempt_len);
+                                builder.rollback_to(attempt_len);
                             }
                         }
                     }
@@ -6429,7 +6429,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6448,7 +6448,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6469,7 +6469,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     Err(_) => {
                         *p = attempt_p;
-                        builder.columns_mut().rollback_to(attempt_len);
+                        builder.rollback_to(attempt_len);
                     }
                 }
             }
@@ -6488,7 +6488,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     Err(_) => {
                         *p = attempt_p;
-                        builder.columns_mut().rollback_to(attempt_len);
+                        builder.rollback_to(attempt_len);
                     }
                 }
             }
@@ -6507,7 +6507,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     Err(_) => {
                         *p = attempt_p;
-                        builder.columns_mut().rollback_to(attempt_len);
+                        builder.rollback_to(attempt_len);
                     }
                 }
             }
@@ -6543,7 +6543,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -6641,7 +6641,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -6716,7 +6716,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -6752,7 +6752,7 @@ mod __googlesheetsparser_emit_impl {
             let matched = opt_attempt.is_ok();
             if !matched {
                 *p = iter_save_p;
-                builder.columns_mut().rollback_to(iter_save_cols);
+                builder.rollback_to(iter_save_cols);
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
@@ -6829,7 +6829,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -6901,7 +6901,7 @@ mod __googlesheetsparser_emit_impl {
                     let matched = opt_attempt.is_ok();
                     if !matched {
                         *p = iter_save_p;
-                        builder.columns_mut().rollback_to(iter_save_cols);
+                        builder.rollback_to(iter_save_cols);
                     } else {
                         let iter_hi = *p as u32;
                         let __iter_off = builder
@@ -6940,11 +6940,11 @@ mod __googlesheetsparser_emit_impl {
                 })();
                 if attempt.is_err() {
                     *p = save_p;
-                    builder.columns_mut().rollback_to(save_cols);
+                    builder.rollback_to(save_cols);
                     break;
                 }
                 if *p == save_p {
-                    builder.columns_mut().rollback_to(save_cols);
+                    builder.rollback_to(save_cols);
                     break;
                 }
                 let iter_hi = *p as u32;
@@ -7022,7 +7022,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -7057,7 +7057,7 @@ mod __googlesheetsparser_emit_impl {
             })();
             if attempt.is_err() {
                 *p = save_p;
-                builder.columns_mut().rollback_to(iter_save_cols);
+                builder.rollback_to(iter_save_cols);
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
@@ -7140,7 +7140,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -7223,7 +7223,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -7289,11 +7289,11 @@ mod __googlesheetsparser_emit_impl {
                 })();
                 if attempt.is_err() {
                     *p = save_p;
-                    builder.columns_mut().rollback_to(save_cols);
+                    builder.rollback_to(save_cols);
                     break;
                 }
                 if *p == save_p {
-                    builder.columns_mut().rollback_to(save_cols);
+                    builder.rollback_to(save_cols);
                     break;
                 }
                 let iter_hi = *p as u32;
@@ -7377,7 +7377,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -7481,7 +7481,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -7558,7 +7558,7 @@ mod __googlesheetsparser_emit_impl {
                     let matched = opt_attempt.is_ok();
                     if !matched {
                         *p = iter_save_p;
-                        builder.columns_mut().rollback_to(iter_save_cols);
+                        builder.rollback_to(iter_save_cols);
                     } else {
                         let iter_hi = *p as u32;
                         let __iter_off = builder
@@ -7597,11 +7597,11 @@ mod __googlesheetsparser_emit_impl {
                 })();
                 if attempt.is_err() {
                     *p = save_p;
-                    builder.columns_mut().rollback_to(save_cols);
+                    builder.rollback_to(save_cols);
                     break;
                 }
                 if *p == save_p {
-                    builder.columns_mut().rollback_to(save_cols);
+                    builder.rollback_to(save_cols);
                     break;
                 }
                 let iter_hi = *p as u32;
@@ -7679,7 +7679,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -7771,7 +7771,7 @@ mod __googlesheetsparser_emit_impl {
     /// # Emitted algorithm
     ///
     /// 1. Reserve an outer Rule compound via
-    ///    [`::bbnf::runtime::tape::TapeBuilder::mark_children`] +
+    ///    [`::bbnf::runtime::tape::FusedBuilder::mark_children`] +
     ///    record the parse-open position.
     /// 2. Dispatch the leftmost operand through the grammar's
     ///    value-position dispatcher; the operand's records land
@@ -7813,7 +7813,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -8008,7 +8008,7 @@ mod __googlesheetsparser_emit_impl {
     /// # Emitted algorithm
     ///
     /// 1. Reserve an outer Rule compound via
-    ///    [`::bbnf::runtime::tape::TapeBuilder::mark_children`] +
+    ///    [`::bbnf::runtime::tape::FusedBuilder::mark_children`] +
     ///    record the parse-open position.
     /// 2. Dispatch the leftmost operand through the grammar's
     ///    value-position dispatcher; the operand's records land
@@ -8050,7 +8050,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -8257,7 +8257,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -8355,7 +8355,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -8629,7 +8629,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -8646,7 +8646,7 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -16154,7 +16154,7 @@ mod __googlesheetsparser_emit_impl {
             ::core::option::Option::Some(_) => {}
             ::core::option::Option::None => {
                 ::core::panic!(
-                    "AY-II.W0'.b: ValueBuilder root frame absent after parse \
+                    "AY-II.W0'.b: FusedOutput root frame absent after parse \
                          (root_offset = {}, frame count = {})",
                     root_off, output.frames().len(),
                 );
@@ -21412,7 +21412,7 @@ mod __googlesheetsparser_emit_impl {
         ///    column families atomically.
         /// 3. Finalise via `FusedBuilder::finish_fused::<Self>`
         ///    — returns `FusedOutput<Self>` holding tape +
-        ///    value, handed to `Parsed::new_fused` directly.
+        ///    value, handed to `Parsed::new_fused_output` directly.
         pub fn parse(
             input: &str,
         ) -> ::core::result::Result<

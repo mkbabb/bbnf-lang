@@ -80,9 +80,9 @@
 //! # Alignment with the parser's inline column writes
 //!
 //! On every canonical post-order tape (the layout the existing
-//! [`TapeBuilder`](crate::TapeBuilder) emits), Stage-C re-derives
+//! [`FusedBuilder`](crate::FusedBuilder) emits), Stage-C re-derives
 //! exactly the column values the parser's
-//! [`push_compound`](crate::TapeBuilder::push_compound) writes are
+//! [`push_compound`](crate::FusedBuilder::push_compound) writes are
 //! canonical for:
 //!
 //! - `span_hi` for compounds equals the last child's `span_hi` in
@@ -91,7 +91,7 @@
 //!   end-of-children = last child's `span_hi`).
 //! - `child_off` for compounds equals the first direct child's index,
 //!   which matches the `child_off` the parser writes from
-//!   [`TapeBuilder::mark_children`](crate::TapeBuilder::mark_children).
+//!   [`FusedBuilder::mark_children`](crate::FusedBuilder::mark_children).
 //! - `sib_skip` derives from the same direct-child enumeration the
 //!   parser's `child_off` chain encodes, yielding `next_root -
 //!   this_root` per non-last sibling and `0` for the last sibling.
@@ -100,8 +100,8 @@
 //! suite's Stage-C / reference-walk bit-equality assertions. Running
 //! Stage-C on the legacy fn-per-rule path would re-derive values the
 //! parser's inline writes already carry; B3.W0.γ made the
-//! [`crate::TapeBuilder`]'s `frame_depth` stream the sole source for
-//! Stage-C, with [`crate::TapeBuilder::end_compound_post_order`]
+//! [`crate::FusedBuilder`]'s `frame_depth` stream the sole source for
+//! Stage-C, with [`crate::FusedBuilder::end_compound_post_order`]
 //! retroactively bumping the child range so post-order shapes land
 //! leaves at the correct depth before this scan reads them.
 //!
@@ -161,7 +161,7 @@ pub const STACK_DEPTH_HINT: usize = 64;
 ///
 /// AY.W1.2 hard-gate 5 — `#[inline(always)]` so the symbol absents
 /// from `nm` on the bench binaries (LTO collapses the cross-crate
-/// call from `TapeBuilder::finish` into the parser entry; samply
+/// call from `FusedBuilder::finish` into the parser entry; samply
 /// self-time attributes to the per-rule `parse_*` frames instead
 /// of `tape::finaliser::finalise`).
 #[inline(always)]
@@ -305,15 +305,15 @@ pub fn finalise(columns: &mut Columns, frame_depth: &[u8]) {
 // B3.W0.γ — `derive_frame_depth` retired. The reverse-walk
 // reconstruction assumed every compound's `child_off` pointed
 // strictly before the compound's own index (canonical post-order),
-// but the shape emitters mix pre-order [`crate::TapeBuilder::end_compound`]
+// but the shape emitters mix pre-order [`crate::FusedBuilder::end_compound`]
 // (where `child_off == parent + 1`) and post-order
-// [`crate::TapeBuilder::end_compound_post_order`] (where
+// [`crate::FusedBuilder::end_compound_post_order`] (where
 // `child_off < parent`) freely. A pre-order child of a post-order
 // parent caused the reverse walk to leap forward (`pos = child_off > pos`)
 // and the `while pos > start` loop spun on the same record indices
 // forever. The replacement is in-builder bookkeeping:
-// [`crate::TapeBuilder::frame_depth`] is auto-stamped on every
-// structural push from the builder's [`crate::TapeBuilder::current_depth`]
-// counter, with [`crate::TapeBuilder::end_compound_post_order`]
+// [`crate::FusedBuilder::frame_depth`] is auto-stamped on every
+// structural push from the builder's [`crate::FusedBuilder::current_depth`]
+// counter, with [`crate::FusedBuilder::end_compound_post_order`]
 // retroactively bumping the child range to land leaves emitted
 // before the wrapping compound at the correct (parent + 1) depth.

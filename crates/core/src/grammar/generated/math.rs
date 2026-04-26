@@ -507,7 +507,7 @@ mod __mathparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -620,7 +620,7 @@ mod __mathparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -637,7 +637,7 @@ mod __mathparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
     ) -> ::core::result::Result<
         ::bbnf::runtime::tape::TapeOffset,
         ::bbnf::runtime::tape::DtaError,
@@ -1117,7 +1117,7 @@ mod __mathparser_emit_impl {
             ::core::option::Option::Some(_) => {}
             ::core::option::Option::None => {
                 ::core::panic!(
-                    "AY-II.W0'.b: ValueBuilder root frame absent after parse \
+                    "AY-II.W0'.b: FusedOutput root frame absent after parse \
                          (root_offset = {}, frame count = {})",
                     root_off, output.frames().len(),
                 );
@@ -1385,7 +1385,7 @@ mod __mathparser_emit_impl {
         ///    column families atomically.
         /// 3. Finalise via `FusedBuilder::finish_fused::<Self>`
         ///    — returns `FusedOutput<Self>` holding tape +
-        ///    value, handed to `Parsed::new_fused` directly.
+        ///    value, handed to `Parsed::new_fused_output` directly.
         pub fn parse(
             input: &str,
         ) -> ::core::result::Result<

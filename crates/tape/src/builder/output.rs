@@ -6,10 +6,9 @@
 //! R>` carries one `FusedOutput<R>`; the `to_value()` projector reads
 //! value frames directly off the output without touching the tape.
 //!
-//! W0.c's `ValueBuilderOutput<R>` retires in favour of
-//! `FusedOutput<R>`; an alias at the runtime module preserves the
-//! pre-regen call-site name for consumers that have not yet composed
-//! against the renamed type.
+//! W0.c's standalone value-builder output retired in favour of
+//! `FusedOutput<R>` at AY-II.W0'.a; the projection emitter consumes
+//! the fused output directly.
 
 use crate::tape::Tape;
 
@@ -89,10 +88,8 @@ impl<R> FusedOutput<R> {
 
     // ── Value-surface accessors ───────────────────────────────────
     //
-    // These mirror the pre-W0'.a `ValueBuilderOutput<R>` surface so
-    // emitted projection code compiles against `FusedOutput<R>`
-    // without a rewrite. W0'.b reads the value substrate solely
-    // through this API.
+    // The grammar-emitted projection code reads the value substrate
+    // solely through these accessors.
 
     /// Total value-frame count. `0` iff the output is empty (e.g.
     /// substrate-only [`Parsed::new`](crate::runtime::Parsed::new)).

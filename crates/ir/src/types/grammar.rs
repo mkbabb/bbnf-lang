@@ -336,7 +336,7 @@ pub struct GrammarIR {
     /// `classify_materialization` + `compute_payload_layouts`. The
     /// Rust emitter's `parse()` entry point reads the fingerprint at
     /// codegen time and picks a grammar-specific
-    /// `TapeBuilder::with_capacity` divisor so `RawVec::grow_one` /
+    /// `FusedBuilder::with_capacity` divisor so `RawVec::grow_one` /
     /// `_mi_heap_realloc_zero` does not fire on the first parse.
     /// Not serialized: every compile rebuilds it from scratch.
     #[serde(skip, default)]

@@ -15,7 +15,7 @@ pub fn parse_array_JsonFixture_array(
     input: &[u8],
     p: &mut usize,
     state: &mut __shape_support_JsonFixture::ScanState,
-    builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    builder: &mut ::bbnf::runtime::tape::FusedBuilder,
 ) -> ::core::result::Result<
     ::bbnf::runtime::tape::TapeOffset,
     ::bbnf::runtime::tape::DtaError,
@@ -28,9 +28,25 @@ pub fn parse_array_JsonFixture_array(
             failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
         });
     }
-    let outer_child = builder.mark_children();
+    let outer_off = builder
+        .begin_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            span_lo,
+            8u8,
+            0u8,
+            0u8,
+            0u16,
+        );
     let lbracket_open = *p as u32;
-    let next_child = builder.mark_children();
+    let next_off = builder
+        .begin_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            lbracket_open,
+            0,
+            0u8,
+            0u8,
+            0u16,
+        );
     *p += 1;
     let bracket_close = *p as u32;
     let _ = builder
@@ -43,44 +59,34 @@ pub fn parse_array_JsonFixture_array(
             ::bbnf::runtime::tape::PayloadData::None,
         );
     let opt_ws_open = *p as u32;
-    let opt_ws_child = builder.mark_children();
+    let opt_ws_off = builder
+        .begin_compound(
+            ::bbnf::runtime::tape::TapeKind::Seq,
+            opt_ws_open,
+            0,
+            0u8,
+            0u8,
+            0u16,
+        );
     let _ = __shape_support_JsonFixture::skip_space(input, p, state);
     let repeat_open = *p as u32;
-    let repeat_child = builder.mark_children();
+    let repeat_off = builder
+        .begin_compound(
+            ::bbnf::runtime::tape::TapeKind::Rule,
+            repeat_open,
+            0,
+            0u8,
+            0u8,
+            0u16,
+        );
     let maybe_close = input.get(*p).copied();
     if maybe_close == Some(b']') {
         let repeat_close = *p as u32;
-        let _repeat_off = builder
-            .push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
-                repeat_child,
-                repeat_open,
-                repeat_close,
-                0,
-                0,
-            );
+        builder.end_compound(repeat_off, repeat_close);
         let opt_ws_close = *p as u32;
-        let _opt_ws_off = builder
-            .push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                opt_ws_child,
-                opt_ws_open,
-                opt_ws_close,
-                0,
-                0,
-            );
-        let next_close = *p as u32;
-        let _next_off = builder
-            .push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                next_child,
-                lbracket_open,
-                next_close,
-                0,
-                0,
-            );
+        builder.end_compound(opt_ws_off, opt_ws_close);
         *p += 1;
-        let rbracket_lo = next_close;
+        let rbracket_lo = opt_ws_close;
         let rbracket_hi = *p as u32;
         let _ = builder
             .push_leaf_with(
@@ -91,33 +97,51 @@ pub fn parse_array_JsonFixture_array(
                 0,
                 ::bbnf::runtime::tape::PayloadData::None,
             );
+        let next_close = rbracket_hi;
+        builder.end_compound(next_off, next_close);
         let outer_close = *p as u32;
-        let outer_off = builder
-            .push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                outer_child,
-                span_lo,
-                outer_close,
-                8u8,
-                0,
-            );
-        return Ok(outer_off);
+        builder.end_compound(outer_off, outer_close);
+        return Ok(::bbnf::runtime::tape::TapeOffset(outer_off));
     }
     loop {
         let iter_open = *p as u32;
-        let iter_child = builder.mark_children();
+        let iter_off = builder
+            .begin_compound(
+                ::bbnf::runtime::tape::TapeKind::Seq,
+                iter_open,
+                0,
+                0u8,
+                0u8,
+                0u16,
+            );
         let _value_off = ({
             let _ = __shape_support_JsonFixture::skip_space(input, p, state);
             parse_wrap_JsonFixture_value(input, p, state, builder)
         })?;
         let comma_repeat_open = *p as u32;
-        let comma_repeat_child = builder.mark_children();
+        let comma_repeat_off = builder
+            .begin_compound(
+                ::bbnf::runtime::tape::TapeKind::Rule,
+                comma_repeat_open,
+                0,
+                0u8,
+                0u8,
+                0u16,
+            );
         let comma_iter_save_p = *p;
         let _ = __shape_support_JsonFixture::skip_space(input, p, state);
         let has_comma = input.get(*p).copied() == Some(b',');
         if has_comma {
             let comma_iter_open = comma_iter_save_p as u32;
-            let comma_iter_child = builder.mark_children();
+            let comma_iter_off = builder
+                .begin_compound(
+                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    comma_iter_open,
+                    0,
+                    0u8,
+                    0u8,
+                    0u16,
+                );
             let comma_lo = *p as u32;
             *p += 1;
             let comma_hi = *p as u32;
@@ -132,38 +156,14 @@ pub fn parse_array_JsonFixture_array(
                 );
             let _ = __shape_support_JsonFixture::skip_space(input, p, state);
             let comma_iter_close = *p as u32;
-            let _ = builder
-                .push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Seq,
-                    comma_iter_child,
-                    comma_iter_open,
-                    comma_iter_close,
-                    0,
-                    0,
-                );
+            builder.end_compound(comma_iter_off, comma_iter_close);
         } else {
             *p = comma_iter_save_p;
         }
         let comma_repeat_close = *p as u32;
-        let _ = builder
-            .push_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
-                comma_repeat_child,
-                comma_repeat_open,
-                comma_repeat_close,
-                0,
-                0,
-            );
+        builder.end_compound(comma_repeat_off, comma_repeat_close);
         let iter_close = *p as u32;
-        let _ = builder
-            .push_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
-                iter_child,
-                iter_open,
-                iter_close,
-                0,
-                0,
-            );
+        builder.end_compound(iter_off, iter_close);
         let is_value_start = match input.get(*p).copied() {
             Some(b'{')
             | Some(b'[')
@@ -177,26 +177,10 @@ pub fn parse_array_JsonFixture_array(
         };
         if !is_value_start {
             let repeat_close = *p as u32;
-            let _ = builder
-                .push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Rule,
-                    repeat_child,
-                    repeat_open,
-                    repeat_close,
-                    0,
-                    0,
-                );
+            builder.end_compound(repeat_off, repeat_close);
             let _ = __shape_support_JsonFixture::skip_space(input, p, state);
             let opt_ws_close = *p as u32;
-            let _ = builder
-                .push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Seq,
-                    opt_ws_child,
-                    opt_ws_open,
-                    opt_ws_close,
-                    0,
-                    0,
-                );
+            builder.end_compound(opt_ws_off, opt_ws_close);
             if input.get(*p).copied() != Some(b']') {
                 return Err(
                     match input.get(*p).copied() {
@@ -215,38 +199,22 @@ pub fn parse_array_JsonFixture_array(
                     },
                 );
             }
-            let next_close = *p as u32;
-            let _ = builder
-                .push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Seq,
-                    next_child,
-                    lbracket_open,
-                    next_close,
-                    0,
-                    0,
-                );
             *p += 1;
             let rbracket_hi = *p as u32;
             let _ = builder
                 .push_leaf_with(
                     ::bbnf::runtime::tape::TapeKind::Literal,
-                    next_close,
+                    opt_ws_close,
                     rbracket_hi,
                     8u8,
                     0,
                     ::bbnf::runtime::tape::PayloadData::None,
                 );
+            let next_close = rbracket_hi;
+            builder.end_compound(next_off, next_close);
             let outer_close = *p as u32;
-            let outer_off = builder
-                .push_compound(
-                    ::bbnf::runtime::tape::TapeKind::Seq,
-                    outer_child,
-                    span_lo,
-                    outer_close,
-                    8u8,
-                    0,
-                );
-            return Ok(outer_off);
+            builder.end_compound(outer_off, outer_close);
+            return Ok(::bbnf::runtime::tape::TapeOffset(outer_off));
         }
     }
 }

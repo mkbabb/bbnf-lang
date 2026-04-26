@@ -17,15 +17,15 @@ use crate::kind::TapeKind;
 
 /// Stable index into a [`Tape`]'s record stream.
 ///
-/// Constructed by [`TapeBuilder::push_leaf`] /
-/// [`TapeBuilder::push_compound`] and consumed by view-layer accessors
+/// Constructed by [`FusedBuilder::push_leaf`] /
+/// [`FusedBuilder::push_compound`] and consumed by view-layer accessors
 /// via [`Tape::get`]. Two offsets compare equal iff they point to the
 /// same record in the same tape; cross-tape comparison is a logic bug
 /// the view codegen prevents by tying every view type to a `'tape`
 /// lifetime parameter.
 ///
-/// [`TapeBuilder::push_leaf`]: crate::builder::TapeBuilder::push_leaf
-/// [`TapeBuilder::push_compound`]: crate::builder::TapeBuilder::push_compound
+/// [`FusedBuilder::push_leaf`]: crate::builder::FusedBuilder::push_leaf
+/// [`FusedBuilder::push_compound`]: crate::builder::FusedBuilder::push_compound
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct TapeOffset(pub u32);
@@ -166,7 +166,7 @@ impl TapeRec {
     /// AY.W4.2 — bit in [`TapeRec::extra`] marking a numeric `f64`
     /// leaf whose payload was written directly into
     /// [`crate::Columns::pay_f64`] by the Eisel-Lemire fast path
-    /// (`crate::TapeBuilder::push_leaf_with_f64_direct`). When set,
+    /// (`crate::FusedBuilder::push_leaf_with_f64_direct`). When set,
     /// the record's `child_off` carries the column rank into
     /// `pay_f64`; the reader projects `f64::from_bits(pay_f64[rank])`
     /// directly without the `pay_wide` / arena round-trip.
@@ -275,7 +275,7 @@ impl TapeRec {
 
     /// AY.W4.2 — true iff this leaf's `child_off` is a column rank
     /// into [`crate::Columns::pay_f64`] (the Eisel-Lemire direct-write
-    /// column). Set by [`crate::TapeBuilder::push_leaf_with_f64_direct`].
+    /// column). Set by [`crate::FusedBuilder::push_leaf_with_f64_direct`].
     #[inline]
     pub fn payload_f64_direct(&self) -> bool {
         (self.extra & Self::PAYLOAD_F64_DIRECT_BIT) != 0
@@ -384,7 +384,7 @@ impl Tape {
 
     /// Look up a record by offset. Panics on out-of-range offsets —
     /// view codegen never produces out-of-range offsets because every
-    /// offset originates from a `TapeBuilder::push_*` call.
+    /// offset originates from a `FusedBuilder::push_*` call.
     ///
     /// Returns a 16-byte [`TapeRec`] by value, materialised from the
     /// structural columns. Callers that used to bind `&TapeRec` now
@@ -406,11 +406,11 @@ impl Tape {
     /// The caller must guarantee that `offset` is not
     /// [`TapeOffset::NONE`] and that `offset.0 as usize` is less
     /// than `self.len()`. Both invariants hold for every offset
-    /// produced by [`TapeBuilder::push_leaf`] /
-    /// [`TapeBuilder::push_compound`].
+    /// produced by [`FusedBuilder::push_leaf`] /
+    /// [`FusedBuilder::push_compound`].
     ///
-    /// [`TapeBuilder::push_leaf`]: crate::builder::TapeBuilder::push_leaf
-    /// [`TapeBuilder::push_compound`]: crate::builder::TapeBuilder::push_compound
+    /// [`FusedBuilder::push_leaf`]: crate::builder::FusedBuilder::push_leaf
+    /// [`FusedBuilder::push_compound`]: crate::builder::FusedBuilder::push_compound
     #[inline(always)]
     pub unsafe fn get_unchecked(&self, offset: TapeOffset) -> TapeRec {
         debug_assert!(
@@ -642,7 +642,7 @@ impl Tape {
     /// Read a variable-length decoded payload as `&str`.
     ///
     /// Returns the decoded UTF-8 slice for a record whose payload
-    /// was pushed via [`crate::TapeBuilder::push_leaf_with`] with a
+    /// was pushed via [`crate::FusedBuilder::push_leaf_with`] with a
     /// [`crate::PayloadData::Bytes`] shape. The arena frame layout
     /// is `(len: u32 LE, bytes: [u8; len])` at the byte offset
     /// stored in `rec.child_off`.
@@ -690,7 +690,7 @@ impl Tape {
     ///
     /// Decode-kernel leaves push themselves either as borrowed (no
     /// arena write — see
-    /// [`crate::TapeBuilder::push_leaf_borrowed_string`]) or owned
+    /// [`crate::FusedBuilder::push_leaf_borrowed_string`]) or owned
     /// ([`Self::payload_string`] for the arena-frame path). This
     /// accessor honours both.
     #[inline]

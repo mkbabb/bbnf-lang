@@ -1060,17 +1060,14 @@ impl RustEmitter {
 
         // AY-II.W0'.a — parse() routes through the shape dispatcher
         // against a single `FusedBuilder` that owns both the tape
-        // column family and the paired value-frame arena. The pre-
-        // W0'.a dual allocator (TapeBuilder + ValueBuilder::<Self>)
-        // retired alongside the standalone `ValueBuilder<R>` type:
-        // every shape emitter's `begin_compound` / `end_compound` /
-        // `push_leaf_*` call now stamps BOTH column families
-        // atomically inside the fused builder, and
-        // `builder.finish_fused::<Self>(root_off.0)` hands back one
-        // `FusedOutput<Self>` holding the finalised `Tape` + the
-        // grammar-bound `ValueFramesOutput<Self>`. `Parsed::new_fused`
-        // consumes the fused output directly — no second finish call,
-        // no separate value allocation.
+        // column family and the paired value-frame arena. Every shape
+        // emitter's `begin_compound` / `end_compound` / `push_leaf_*`
+        // call stamps BOTH column families atomically inside the fused
+        // builder, and `builder.finish_fused::<Self>(root_off.0)` hands
+        // back one `FusedOutput<Self>` holding the finalised `Tape` +
+        // the grammar-bound `ValueFramesOutput<Self>`.
+        // `Parsed::new_fused_output` consumes the fused output directly
+        // — no second finish call, no separate value allocation.
         let _ = visitor_dispatcher_ident;
         let parse_body = {
             let dispatcher = shape_dispatcher_ident
@@ -1150,12 +1147,6 @@ impl RustEmitter {
                 // value-frame arena. `Parsed::new_fused_output`
                 // stores that handle directly; `to_value()` projects
                 // from the value column without touching the tape.
-                //
-                // The 4-arg `new_fused(tape, input, root, value)` is
-                // reserved for un-regenned `generated.rs` compiling
-                // against the pre-W0'.a dual-allocator shape; the
-                // grammar emitter is the sole caller of the 3-arg
-                // form.
                 let output = builder
                     .finish_fused::<Self>(root_off.0)
                     .map_err(::bbnf::runtime::ParseErr::Tape)?;
@@ -1280,7 +1271,7 @@ impl RustEmitter {
                 ///    column families atomically.
                 /// 3. Finalise via `FusedBuilder::finish_fused::<Self>`
                 ///    — returns `FusedOutput<Self>` holding tape +
-                ///    value, handed to `Parsed::new_fused` directly.
+                ///    value, handed to `Parsed::new_fused_output` directly.
                 pub fn parse(
                     input: &str,
                 ) -> ::core::result::Result<

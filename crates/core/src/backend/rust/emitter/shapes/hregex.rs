@@ -312,7 +312,7 @@ pub fn emit_parse_hregex(
                 input: &[u8],
                 p: &mut usize,
                 state: &mut #support_mod::ScanState,
-                builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+                builder: &mut ::bbnf::runtime::tape::FusedBuilder,
             ) -> ::core::result::Result<
                 ::bbnf::runtime::tape::TapeOffset,
                 ::bbnf::runtime::tape::DtaError,
@@ -335,7 +335,7 @@ pub fn emit_parse_hregex(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,
@@ -435,7 +435,7 @@ pub fn emit_parse_number_via_hregex(
                 input: &[u8],
                 p: &mut usize,
                 first_byte: u8,
-                builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+                builder: &mut ::bbnf::runtime::tape::FusedBuilder,
             ) -> ::core::result::Result<
                 ::bbnf::runtime::tape::TapeOffset,
                 ::bbnf::runtime::tape::DtaError,
@@ -491,7 +491,7 @@ pub fn emit_parse_number_via_hregex(
             input: &[u8],
             p: &mut usize,
             first_byte: u8,
-            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,
@@ -619,7 +619,7 @@ fn emit_unsupported_stub(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,

@@ -296,7 +296,7 @@ pub fn emit_parse_alt_dispatch(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,
@@ -381,7 +381,7 @@ fn emit_dispatch_arms(
 
     // Use linear-attempt form: try each branch in order, rolling *p
     // back on failure. Rollback is span-only (no tape mutation undo
-    // because TapeBuilder has no child truncation; instead each
+    // because FusedBuilder has no child truncation; instead each
     // branch emits in a scoped closure and only commits on success).
     //
     // The match is keyed on `first` to skip branches whose first
@@ -604,7 +604,7 @@ fn emit_branch_body(
                             Ok(_) => break 'try_branches,
                             Err(_) => {
                                 *p = attempt_p;
-                                builder.columns_mut().rollback_to(attempt_len);
+                                builder.rollback_to(attempt_len);
                             }
                         }
                     }

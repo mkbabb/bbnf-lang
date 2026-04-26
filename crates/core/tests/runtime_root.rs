@@ -15,7 +15,7 @@
 //! exercise the API in isolation using a hand-written `Root` impl.
 
 use bbnf::runtime::{Parsed, Root};
-use tape::{Tape, TapeBuilder, TapeCursor, TapeKind, TapeOffset};
+use tape::{Tape, FusedBuilder, TapeCursor, TapeKind, TapeOffset};
 
 /// Stand-in grammar marker for the tests — no parser, just a type
 /// used to carry the `Root` trait impl.
@@ -67,7 +67,7 @@ impl Root for TestGrammar {
 /// input string is long enough to slice `[0..5]` for the leaf's
 /// own span.
 fn parsed_with_one_leaf() -> Parsed<'static, TestGrammar> {
-    let mut builder = TapeBuilder::new();
+    let mut builder = FusedBuilder::new();
     let leaf_off = builder.push_leaf(TapeKind::Span, 0, 5, 7, 0);
     let tape = builder.finish().expect("tape finish");
     Parsed::new(tape, "hello world", leaf_off)

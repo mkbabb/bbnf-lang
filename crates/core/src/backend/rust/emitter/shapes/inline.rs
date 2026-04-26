@@ -390,7 +390,7 @@ fn emit_alt_branch_body_tape(
                         Ok(_) => break 'try_branches,
                         Err(_) => {
                             *p = attempt_p;
-                            builder.columns_mut().rollback_to(attempt_len);
+                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -482,7 +482,7 @@ fn emit_structural_branch_tape(
                 Ok(_) => break 'try_branches,
                 Err(_) => {
                     *p = attempt_p;
-                    builder.columns_mut().rollback_to(attempt_len);
+                    builder.rollback_to(attempt_len);
                 }
             }
         }
@@ -628,7 +628,7 @@ fn emit_branch_position_core(
                         })();
                         if iter_res.is_err() || *p == iter_p {
                             *p = iter_p;
-                            builder.columns_mut().rollback_to(iter_len);
+                            builder.rollback_to(iter_len);
                             break;
                         }
                         iter_count += 1;

@@ -151,7 +151,7 @@ impl TapeKind {
     ///
     /// Returns `TapeKind::None` for unrecognised values (defensive;
     /// should never happen with well-formed tape data produced by
-    /// `TapeBuilder`).
+    /// `FusedBuilder`).
     #[inline]
     pub fn from_u8(v: u8) -> Self {
         match v {

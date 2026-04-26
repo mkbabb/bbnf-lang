@@ -47,7 +47,7 @@ pub fn shape_fn_ident(shape: &str, grammar_suffix: &str, rule_name: &str) -> pro
 /// `parse_<shape>_visitor_<grammar>_<rule>`.
 ///
 /// The visitor-path family mirrors the tape-path per-shape functions
-/// but takes `&mut V: JsonVisitor` instead of `&mut TapeBuilder`,
+/// but takes `&mut V: JsonVisitor` instead of `&mut FusedBuilder`,
 /// emitting visitor method calls (`begin_object`, `key`, `string`,
 /// `number_f64`, etc.) in place of tape record pushes. Monomorphised
 /// per visitor at the call site; zero structural / PSI overhead on
@@ -935,7 +935,7 @@ pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,
@@ -953,7 +953,7 @@ pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,

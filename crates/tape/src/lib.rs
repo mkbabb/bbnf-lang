@@ -14,7 +14,7 @@
 //! ```text
 //!   input bytes ─► parser ─► Tape (Columns SoA substrate) ─► View<'tape>
 //!                     │                                           │
-//!                     └─ TapeBuilder::push_compound(kind, start..end)
+//!                     └─ FusedBuilder::push_compound(kind, start..end)
 //!                                                                 │
 //!                                                                 ▼
 //!                                                      accessor.key() / .value()
@@ -64,7 +64,7 @@ pub mod visitor;
 
 pub use builder::{
     FusedBuilder, FusedOutput, PayloadData, PayloadTag, PayloadValue, TapeBuildError,
-    TapeBuilder, ValueChildren, ValueFrame, ValueFramesOutput,
+    ValueChildren, ValueFrame, ValueFramesOutput,
 };
 pub use columns::{
     ColumnTag, Columns, Count, MaxF64, MinF64, PayAggU8, PayNarrowU32, PayWideF64, PayWideU64,

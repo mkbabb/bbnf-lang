@@ -87,7 +87,7 @@ pub struct Columns {
 
     /// Distance to the next-emission sibling within the parent's
     /// children run. `0` for the last sibling (and for the root).
-    /// Stamped at [`TapeBuilder::finish`](crate::TapeBuilder::finish)
+    /// Stamped at [`FusedBuilder::finish`](crate::FusedBuilder::finish)
     /// time (AY.W1.2 fold pending).
     pub(crate) sib_skip: Vec<u32>,
 
@@ -108,10 +108,10 @@ pub struct Columns {
 
     /// Currently-open compound depth — the depth at which the NEXT
     /// structural push will stamp its `frame_depth` byte. Bumped by
-    /// [`crate::TapeBuilder::begin_compound`] (after stamping the
+    /// [`crate::FusedBuilder::begin_compound`] (after stamping the
     /// compound row at the OUTER depth), decremented by
-    /// [`crate::TapeBuilder::end_compound`] /
-    /// [`crate::TapeBuilder::end_compound_post_order`].
+    /// [`crate::FusedBuilder::end_compound`] /
+    /// [`crate::FusedBuilder::end_compound_post_order`].
     ///
     /// Lives inside `Columns` (alongside `frame_depth`, B3.W0.δ)
     /// because the parser-emitted retry paths bypass the builder's
@@ -243,7 +243,7 @@ impl Columns {
     ///
     /// This is the canonical rollback primitive emitters call when an
     /// emitter retry-IIFE discards everything pushed after a
-    /// [`TapeBuilder::begin_compound`](crate::TapeBuilder::begin_compound)
+    /// [`FusedBuilder::begin_compound`](crate::FusedBuilder::begin_compound)
     /// open point. AY-II.W0.a introduced it in place of the ad-hoc
     /// `columns_mut().truncate(save)` incantation that every retry
     /// site had evolved into — that primitive only touched `records`
@@ -284,7 +284,7 @@ impl Columns {
     /// Run the Stage-C finaliser over `self`, reading the per-record
     /// `frame_depth` column and back-patching `sib_skip` / `child_off`
     /// / `span_hi` on every compound record. Wraps the disjoint-borrow
-    /// dance the `TapeBuilder::finish` path needs (the finaliser
+    /// dance the `FusedBuilder::finish` path needs (the finaliser
     /// signature takes a `&[u8]` for the depth slice alongside a
     /// `&mut Columns`).
     ///
@@ -307,7 +307,7 @@ impl Columns {
     /// where the first borrow ranges over the `Columns` fields the
     /// per-grammar specialised walker mutates (records, sib_skip,
     /// payload columns) and the second projects into the depth
-    /// column. Mirrors the pre-W0.δ shape `TapeBuilder` exposed
+    /// column. Mirrors the pre-W0.δ shape `FusedBuilder` exposed
     /// when `frame_depth` lived on the builder directly.
     ///
     /// SAFETY: callers must not mutate `frame_depth` through the
@@ -506,7 +506,7 @@ impl Columns {
 
     /// AY.W4.2 — read a numeric `f64` payload from the dedicated
     /// direct-write column at `idx`. Caller is responsible for having
-    /// stamped the leaf via [`crate::TapeBuilder::push_leaf_with_f64_direct`]
+    /// stamped the leaf via [`crate::FusedBuilder::push_leaf_with_f64_direct`]
     /// (which sets [`crate::TapeRec::PAYLOAD_F64_DIRECT_BIT`] and writes
     /// the column rank into `child_off`).
     #[inline(always)]

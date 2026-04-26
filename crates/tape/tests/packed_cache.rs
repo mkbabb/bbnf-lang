@@ -118,12 +118,12 @@ fn push_invalidates_packed_cache() {
 
 #[test]
 fn push_structural_via_builder_invalidates_packed_cache() {
-    // The legacy `push_structural` path (exercised by `TapeBuilder`'s
+    // The legacy `push_structural` path (exercised by `FusedBuilder`'s
     // `push_leaf` / `push_compound`) must also honour the contract.
     // Reach it through the public builder API.
-    use tape::TapeBuilder;
+    use tape::FusedBuilder;
 
-    let mut builder = TapeBuilder::new();
+    let mut builder = FusedBuilder::new();
     builder.push_leaf(TapeKind::Span, 0, 5, 0, 0);
 
     // The finished tape's columns are fresh; populate the cache.
@@ -135,7 +135,7 @@ fn push_structural_via_builder_invalidates_packed_cache() {
     // Build a second tape to show the push_structural path lands
     // through the builder without double-populating. Each finished
     // tape has its own cache state.
-    let mut builder2 = TapeBuilder::new();
+    let mut builder2 = FusedBuilder::new();
     builder2.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     builder2.push_leaf(TapeKind::Span, 1, 2, 0, 0);
     let tape2 = builder2.finish().unwrap();

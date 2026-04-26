@@ -52,25 +52,25 @@ use crate::{GrammarIR, IrRule};
 ///
 /// Produced by [`compute_push_fingerprint`]. Consumed at codegen time
 /// by the Rust emitter's `parse()` entry point to pick a grammar-
-/// specific `TapeBuilder::with_capacity` divisor (`AU.6.2`). The same
+/// specific `FusedBuilder::with_capacity` divisor (`AU.6.2`). The same
 /// numbers are used as seed inputs for any future cost-model decision
 /// that keys on grammar density.
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, Default)]
 pub struct PushFingerprint {
     /// Count of rules whose emitted function calls
-    /// `TapeBuilder::push_compound(...)` at its epilogue. Every
+    /// `FusedBuilder::push_compound(...)` at its epilogue. Every
     /// `MaterializationClass::MustTape` rule contributes one push
     /// site; `TransparentElide` rules contribute zero.
     pub compound_pushes: u32,
 
     /// Count of rules whose emitted function calls
-    /// `TapeBuilder::push_leaf(...)` without a payload. Rules with a
+    /// `FusedBuilder::push_leaf(...)` without a payload. Rules with a
     /// scalar or aggregate payload layout do NOT count here — they
     /// count as `leaf_with_pushes`.
     pub leaf_pushes: u32,
 
     /// Count of rules whose emitted function calls a
-    /// `TapeBuilder::push_leaf_with_*` variant (scalar, Span, or
+    /// `FusedBuilder::push_leaf_with_*` variant (scalar, Span, or
     /// aggregate). The rule is `TapeSpanOnly` AND has either an
     /// aggregate `payload_layout` entry or carries a scalar payload
     /// type through its body.
@@ -98,7 +98,7 @@ impl PushFingerprint {
     }
 
     /// Derive the `(numer, denom)` capacity ratio for
-    /// `TapeBuilder::with_capacity(input.len() * numer / denom + 2)`.
+    /// `FusedBuilder::with_capacity(input.len() * numer / denom + 2)`.
     ///
     /// The ratio is chosen to avoid the `RawVec::grow_one` /
     /// `_mi_heap_realloc_zero` path on first-parse: over-allocating

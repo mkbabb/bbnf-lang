@@ -93,7 +93,7 @@ pub fn emit_parse_object(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,

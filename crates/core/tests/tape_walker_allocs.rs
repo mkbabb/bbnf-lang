@@ -15,7 +15,7 @@
 //! enumeration lands on every child without skipping or recursing
 //! into grandchildren.
 
-use bbnf::runtime::tape::{ChildIter, TapeBuilder, TapeCursor, TapeKind, TapeOffset};
+use bbnf::runtime::tape::{ChildIter, FusedBuilder, TapeCursor, TapeKind, TapeOffset};
 
 /// AU.3.2: the iterator's footprint must stay small. Two
 /// [`TapeOffset`]s (`u32` each) plus one shared `&Tape` reference
@@ -43,7 +43,7 @@ fn child_iter_size_bounded() {
 /// zero-alloc forward iterator.
 #[test]
 fn child_iter_yields_three_leaves_in_forward_order() {
-    let mut b = TapeBuilder::new();
+    let mut b = FusedBuilder::new();
     let start = TapeOffset(b.columns().len() as u32);
     let _l0 = b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     let _l1 = b.push_leaf(TapeKind::Span, 1, 2, 0, 0);
@@ -72,7 +72,7 @@ fn child_iter_yields_three_leaves_in_forward_order() {
 /// — the iterator must NOT descend into the compound's grandchildren.
 #[test]
 fn child_iter_does_not_descend_into_grandchildren() {
-    let mut b = TapeBuilder::new();
+    let mut b = FusedBuilder::new();
     // Outer compound's children range begins here.
     let outer_start = TapeOffset(b.columns().len() as u32);
 
@@ -110,7 +110,7 @@ fn child_iter_does_not_descend_into_grandchildren() {
 /// A leaf cursor (no children) must produce an empty iterator.
 #[test]
 fn child_iter_empty_on_leaf() {
-    let mut b = TapeBuilder::new();
+    let mut b = FusedBuilder::new();
     let leaf = b.push_leaf(TapeKind::Span, 0, 5, 0, 0);
     let tape = b.finish().expect("tape build");
 
@@ -124,7 +124,7 @@ fn child_iter_empty_on_leaf() {
 /// iterator must respect it and stop immediately.
 #[test]
 fn child_iter_empty_on_compound_with_no_children() {
-    let mut b = TapeBuilder::new();
+    let mut b = FusedBuilder::new();
     let start = TapeOffset(b.columns().len() as u32);
     let parent_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
     b.end_compound_post_order(parent_off, 0, start);
@@ -141,7 +141,7 @@ fn child_iter_empty_on_compound_with_no_children() {
 /// regressions in either path.
 #[test]
 fn child_iter_matches_children_set() {
-    let mut b = TapeBuilder::new();
+    let mut b = FusedBuilder::new();
     let start = TapeOffset(b.columns().len() as u32);
     let _l0 = b.push_leaf(TapeKind::Span, 0, 2, 0, 0);
     // Inner compound with one leaf grandchild.
@@ -174,7 +174,7 @@ fn child_iter_matches_children_set() {
 /// behavioural; this test just ensures the shape.
 #[test]
 fn child_iter_supports_iterator_combinators() {
-    let mut b = TapeBuilder::new();
+    let mut b = FusedBuilder::new();
     let start = TapeOffset(b.columns().len() as u32);
     let _l0 = b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     let _l1 = b.push_leaf(TapeKind::Span, 1, 2, 0, 0);
@@ -201,7 +201,7 @@ fn child_iter_supports_iterator_combinators() {
 // forever.
 #[test]
 fn child_iter_exit_condition_does_not_underflow() {
-    let mut b = TapeBuilder::new();
+    let mut b = FusedBuilder::new();
     let start = TapeOffset(b.columns().len() as u32);
     let _l = b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     let parent_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);

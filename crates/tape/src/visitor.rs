@@ -18,7 +18,7 @@
 //! Two concrete visitor consumers ship alongside the trait hierarchy:
 //!
 //! - [`TapeVisitor`] — emits into a [`tape::Columns`] substrate via
-//!   a [`TapeBuilder`]. Records the structural + payload bytes the
+//!   a [`FusedBuilder`]. Records the structural + payload bytes the
 //!   `dispatch_one` cold-path replay would produce; parity is the
 //!   sanity gate for the shape-emitter lift in W3.
 //! - [`ValueVisitor`] — placeholder for the per-grammar type resolver
@@ -40,7 +40,7 @@
 //! across grammars by splitting per-shape concerns into sub-traits a
 //! consumer opts into.
 
-use crate::builder::{PayloadData, TapeBuilder};
+use crate::builder::{PayloadData, FusedBuilder};
 use crate::columns::Columns;
 use crate::kind::TapeKind;
 use crate::tape::Tape;
@@ -208,12 +208,12 @@ pub trait PrattVisitor: GrammarVisitor {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// TapeVisitor — default impl that emits into Columns / TapeBuilder
+// TapeVisitor — default impl that emits into Columns / FusedBuilder
 // ─────────────────────────────────────────────────────────────────────
 
 /// The `tape` substrate visitor — emits events into a
 /// [`tape::Columns`] + [`tape::PayloadStream`] backing store
-/// via a [`TapeBuilder`].
+/// via a [`FusedBuilder`].
 ///
 /// # Layout per shape
 ///
@@ -235,15 +235,15 @@ pub trait PrattVisitor: GrammarVisitor {
 ///
 /// Every `impl GrammarVisitor for TapeVisitor` method is
 /// `#[inline(always)]` so the emitter's arm calls collapse to direct
-/// `Columns` / `TapeBuilder` mutations without a function-call
+/// `Columns` / `FusedBuilder` mutations without a function-call
 /// boundary. The visitor carries no state the emitter can't reach —
 /// compound nesting lives on the builder's children-mark stack +
 /// a sidecar `Vec<CompoundFrame>` kept on the visitor.
 pub struct TapeVisitor<'input> {
-    builder: TapeBuilder,
+    builder: FusedBuilder,
     input: &'input [u8],
     /// In-progress compound frames. Each frame records the
-    /// [`mark_children`](TapeBuilder::mark_children) offset, the span
+    /// [`mark_children`](FusedBuilder::mark_children) offset, the span
     /// start, and the compound kind so the matching `end_*` closes
     /// with the right metadata.
     compounds: Vec<CompoundFrame>,
@@ -285,7 +285,7 @@ impl<'input> TapeVisitor<'input> {
     pub fn new(input: &'input [u8]) -> Self {
         let capacity = input.len() / 2 + 2;
         Self {
-            builder: TapeBuilder::with_capacity(capacity),
+            builder: FusedBuilder::with_capacity(capacity),
             input,
             compounds: Vec::new(),
         }
@@ -312,9 +312,9 @@ impl<'input> TapeVisitor<'input> {
     /// Borrow the underlying builder mutably. Used by parser shims
     /// that need direct arena-write access (the JSON decode kernel
     /// streams decoded bytes directly into `pay_agg` via
-    /// [`TapeBuilder::arena_mut`]).
+    /// [`FusedBuilder::arena_mut`]).
     #[inline]
-    pub fn builder_mut(&mut self) -> &mut TapeBuilder {
+    pub fn builder_mut(&mut self) -> &mut FusedBuilder {
         &mut self.builder
     }
 

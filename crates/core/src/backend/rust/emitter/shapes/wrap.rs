@@ -311,7 +311,7 @@ pub fn emit_parse_wrap(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,
@@ -575,7 +575,7 @@ fn emit_wrap_linear_body_tape(call: &TokenStream, branch_ord: u8) -> TokenStream
                 }
                 Err(_) => {
                     *p = attempt_p;
-                    builder.columns_mut().rollback_to(attempt_len);
+                    builder.rollback_to(attempt_len);
                 }
             }
         }

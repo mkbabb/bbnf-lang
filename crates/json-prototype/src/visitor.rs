@@ -6,7 +6,7 @@
 //!   [`crate::Value`]. The speed-ceiling validator: head-to-head
 //!   against `sonic_rs::from_str::<Value>` in the twin-pair bench.
 //! - [`TapeVisitor`] — AW-IV-substrate materialisation into
-//!   `tape::Columns` via a `TapeBuilder`. Validates the same
+//!   `tape::Columns` via a `FusedBuilder`. Validates the same
 //!   parse body over the existing substrate; proves the visitor
 //!   abstraction covers both.
 //!
@@ -14,7 +14,7 @@
 //! body in `lib.rs` is monomorphised at each call site.
 
 use crate::value::{Document, NodeSpan, Number, StringSpan, Value};
-use tape::{PayloadData, Tape, TapeBuilder, TapeKind};
+use tape::{PayloadData, Tape, FusedBuilder, TapeKind};
 
 /// Visitor trait consumed by [`crate::parse_json`].
 ///
@@ -326,7 +326,7 @@ impl JsonVisitor for ValueVisitor {
 // ── TapeVisitor ─────────────────────────────────────────────────────
 
 /// Materialises JSON events into a `tape::Columns` substrate via
-/// a [`TapeBuilder`].
+/// a [`FusedBuilder`].
 ///
 /// Per AW-V.W2 B1 §6, the tape is pre-allocated at
 /// `input.len() / 2 + 2` (the AR-audit heuristic; every parse producing
@@ -349,7 +349,7 @@ impl JsonVisitor for ValueVisitor {
 ///   consumed. For honest AW-IV parity we use `Rule` as the
 ///   compound kind, matching the generated JSON parser's projection.
 pub struct TapeVisitor<'input> {
-    builder: TapeBuilder,
+    builder: FusedBuilder,
     input: &'input [u8],
     /// Stack of (kind, span_lo, child_off) per in-progress compound.
     /// The `child_off` is the tape position marked at the compound's
@@ -373,7 +373,7 @@ impl<'input> TapeVisitor<'input> {
     pub fn new(input: &'input [u8]) -> Self {
         let capacity = input.len() / 2 + 2;
         Self {
-            builder: TapeBuilder::with_capacity(capacity),
+            builder: FusedBuilder::with_capacity(capacity),
             input,
             compounds: Vec::new(),
         }
@@ -404,7 +404,7 @@ impl<'input> TapeVisitor<'input> {
     /// the default path — spans recorded in the tape are zero-width
     /// for leaves and (0, input.len()) for the root compound.
     #[inline]
-    pub fn builder_mut(&mut self) -> &mut TapeBuilder {
+    pub fn builder_mut(&mut self) -> &mut FusedBuilder {
         &mut self.builder
     }
 }

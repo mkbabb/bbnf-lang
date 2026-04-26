@@ -150,7 +150,7 @@ pub fn emit_parse_keyword(
                     p: &mut usize,
                     _first_byte: u8,
                     _state: &mut #support_mod::ScanState,
-                    builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+                    builder: &mut ::bbnf::runtime::tape::FusedBuilder,
                 ) -> ::core::result::Result<
                     ::bbnf::runtime::tape::TapeOffset,
                     ::bbnf::runtime::tape::DtaError,
@@ -312,8 +312,7 @@ pub fn emit_parse_keyword(
                                                 }
                                                 ::core::result::Result::Err(_) => {
                                                     *p = __ref_save_p;
-                                                    builder.columns_mut()
-                                                        .rollback_to(__ref_save_cols);
+                                                    builder.rollback_to(__ref_save_cols);
                                                 }
                                             }
                                         }
@@ -408,8 +407,7 @@ pub fn emit_parse_keyword(
                                                 })();
                                             if seq_attempt.is_err() {
                                                 *p = span_lo as usize;
-                                                builder.columns_mut()
-                                                    .rollback_to(seq_save_cols);
+                                                builder.rollback_to(seq_save_cols);
                                                 return Err(
                                                     ::bbnf::runtime::tape::DtaError::Syntax {
                                                         offset: span_lo,
@@ -427,8 +425,7 @@ pub fn emit_parse_keyword(
                                             // walker's `Keyword` state that
                                             // emits one leaf per matched
                                             // literal.
-                                            builder.columns_mut()
-                                                .rollback_to(seq_save_cols);
+                                            builder.rollback_to(seq_save_cols);
                                             let off = builder.push_leaf_with(
                                                 ::bbnf::runtime::tape::TapeKind::Span,
                                                 span_lo,
@@ -474,7 +471,7 @@ pub fn emit_parse_keyword(
                     p: &mut usize,
                     first_byte: u8,
                     state: &mut #support_mod::ScanState,
-                    builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+                    builder: &mut ::bbnf::runtime::tape::FusedBuilder,
                 ) -> ::core::result::Result<
                     ::bbnf::runtime::tape::TapeOffset,
                     ::bbnf::runtime::tape::DtaError,

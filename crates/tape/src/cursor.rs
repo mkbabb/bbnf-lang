@@ -35,8 +35,8 @@
 //! # Tranche AY-II.W0.a — single-stamping finaliser path
 //!
 //! Compounds emitted via
-//! [`TapeBuilder::begin_compound`](crate::TapeBuilder::begin_compound)
-//! / [`TapeBuilder::end_compound`](crate::TapeBuilder::end_compound)
+//! [`FusedBuilder::begin_compound`](crate::FusedBuilder::begin_compound)
+//! / [`FusedBuilder::end_compound`](crate::FusedBuilder::end_compound)
 //! point at the first direct child's root via
 //! `child_off == parent + 1` (pre-order layout), hitting
 //! [`first_child_root`]'s O(1) fast path. The `sib_skip` column is
@@ -138,12 +138,12 @@ impl<'tape> TapeCursor<'tape> {
     /// The current record, materialised from the structural columns.
     ///
     /// Uses unchecked indexing — safe because every `TapeCursor` is
-    /// constructed from offsets that originate from `TapeBuilder`
+    /// constructed from offsets that originate from `FusedBuilder`
     /// pushes into the same tape, and the tape is immutable during
     /// reads.
     #[inline]
     pub fn record(&self) -> TapeRec {
-        // SAFETY: `self.offset` was produced by a `TapeBuilder::push_*`
+        // SAFETY: `self.offset` was produced by a `FusedBuilder::push_*`
         // call on the same tape and is never the NONE sentinel (cursors
         // are only constructed with valid offsets).
         unsafe { self.tape.get_unchecked(self.offset) }
@@ -590,8 +590,8 @@ impl<'tape> Iterator for ChildIter<'tape> {
 ///
 /// # Post-order fallback
 ///
-/// Legacy tapes built via direct [`TapeBuilder::push_leaf`] /
-/// [`TapeBuilder::push_compound`] calls (pre-DTA test harnesses
+/// Legacy tapes built via direct [`FusedBuilder::push_leaf`] /
+/// [`FusedBuilder::push_compound`] calls (pre-DTA test harnesses
 /// and the in-tree `tape_basic` regression suite) still use
 /// post-order emission — a compound sits AFTER its transitive
 /// subtree, with `child_off` pointing at the first descendant's
@@ -615,9 +615,9 @@ fn first_child_root(columns: &Columns, parent_idx: u32) -> Option<u32> {
     // stamps `child_off` at-or-after the parent row, so `child_off >
     // parent_idx` iff the layout is pre-order. The legacy fast path
     // checked the strict `parent + 1` relation; B3.W0.δ widens the
-    // check because [`crate::TapeBuilder::end_compound`] now scans
+    // check because [`crate::FusedBuilder::end_compound`] now scans
     // for the first record at `parent_depth + 1` (skipping records
-    // that an inner [`crate::TapeBuilder::end_compound_post_order`]
+    // that an inner [`crate::FusedBuilder::end_compound_post_order`]
     // retroactively bumped to a deeper level). The result still
     // satisfies pre-order's "child_off names the first child root"
     // contract for any `start > parent_idx`. Fall through to the

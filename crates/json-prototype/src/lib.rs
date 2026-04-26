@@ -29,7 +29,7 @@
 //! - Two shipped visitors — [`visitor::ValueVisitor`] (the sonic-parity
 //!   validator, materialising into the crate-local [`value::Value`]
 //!   enum) and [`visitor::TapeVisitor`] (the AW-IV substrate validator,
-//!   emitting into `tape::Columns` via `TapeBuilder`).
+//!   emitting into `tape::Columns` via `FusedBuilder`).
 //! - Inline SIMD kernels consumed from `simd-scan`'s `parity` +
 //!   the crate-local [`simd`] module's `nospace64` bitmap cache +
 //!   `first_quote_or_backslash` primitive.

@@ -1,20 +1,18 @@
 //! `FusedBuilder` — the parser's single write interface to the fused
 //! substrate (tape + value columns).
 //!
-//! # Role (Tranche AY-II.W0'.a)
+//! # Role
 //!
-//! Pre-W0'.a the parser wrote two disjoint substrates in lockstep: a
-//! `TapeBuilder` owning the canonical structural tape + a
-//! `ValueBuilder<R>` owning the parallel typed-value slab. W0 landed
-//! the structural rewrite but never threaded the second builder into
-//! the shape-fn signatures, so the value slab stayed empty and
-//! `Parsed::to_value()` panicked. AUDIT-C's Path B absorbed the two
-//! substrates at the type level: every `begin_compound` /
-//! `end_compound` / `push_leaf_*` call stamps BOTH column families
-//! atomically, and `rollback_to(open_offset)` truncates both in
-//! lockstep. Shape emitters see the same API surface they had
-//! against the old `TapeBuilder` — only the type behind
-//! `&mut builder` shifts.
+//! `FusedBuilder` owns BOTH column families the fused parse pipeline
+//! needs: the canonical structural tape (records, sib_skip, payload
+//! arenas) and the paired typed-value slab the projection consumer
+//! reads at `to_value()` time. Every `begin_compound` / `end_compound`
+//! / `push_leaf_*` call stamps both column families atomically, and
+//! `rollback_to(open_offset)` truncates both in lockstep across every
+//! compound the failed branch left open past the rollback boundary
+//! (B4.W1 — each [`ValueCheckpoint`](value::ValueCheckpoint) records
+//! its paired tape row offset so a single `rollback_to` call unwinds
+//! the entire failed branch).
 //!
 //! # Write discipline
 //!
@@ -23,10 +21,9 @@
 //!
 //! - [`FusedBuilder::begin_compound`] stamps a pre-order compound
 //!   row on the tape AND a `Compound` frame on the value arena,
-//!   pushing the frame's offset onto the open-stack. Rollback
-//!   signatures carry the returned `u32` tape-offset; the matching
-//!   value [`ValueCheckpoint`](value::ValueCheckpoint) is resolved
-//!   internally from the open-stack.
+//!   pushing the frame's checkpoint onto the open-stack with the
+//!   tape row index recorded so [`FusedBuilder::rollback_to`] can
+//!   pair the two substrates atomically.
 //! - [`FusedBuilder::end_compound`] /
 //!   [`FusedBuilder::end_compound_post_order`] back-patch
 //!   `(span_hi, child_off, HAS_CHILDREN_BIT)` on the tape row AND
@@ -39,17 +36,11 @@
 //!   scalar.
 //! - [`FusedBuilder::rollback_to`] truncates tape columns + value
 //!   arena + payload columns + open-stack atomically back to the
-//!   state at the matching `begin_compound`.
-//!
-//! # Zero signature churn at shape call sites
-//!
-//! Every `builder.begin_compound(..)`, `builder.end_compound(..)`,
-//! `builder.push_leaf*(..)`, `builder.rollback_to(..)` compiles
-//! unchanged behind `&mut FusedBuilder`. The alias
-//! `pub type TapeBuilder = FusedBuilder;` at the crate root keeps
-//! un-regenned `generated.rs` composing against the renamed type
-//! through the bootstrap escape window; regen retires the alias by
-//! spelling `FusedBuilder` directly.
+//!   state at the matching `begin_compound`. Generated parser code
+//!   calls `builder.rollback_to(...)` (NOT
+//!   `builder.columns_mut().rollback_to(...)`); the latter rewinds
+//!   only the tape column family and is reserved for direct-DTA
+//!   pathways that bypass the value substrate by construction.
 
 use crate::columns::Columns;
 use crate::kind::TapeKind;
@@ -160,9 +151,7 @@ thread_local! {
 ///
 /// `Parsed::to_value()` must not increment this counter — that is
 /// the invariant the `value_api_apples_to_apples` parse-count test
-/// asserts (via the pre-W0'.a
-/// `runtime::value_builder::value_builder_new_call_count` shim path
-/// that aliases to this accessor).
+/// asserts.
 pub fn fused_builder_new_call_count() -> u64 {
     NEW_CALL_COUNT.with(|c| c.get())
 }
@@ -278,10 +267,8 @@ impl FusedBuilder {
     ///
     /// The value arena + payload columns pre-allocate proportionally
     /// so the hot push path never trips a `Vec::push` realloc on
-    /// corpus input. The sizing mirrors the pre-W0'.a
-    /// `TapeBuilder::with_capacity` + `ValueBuilder::new` pair: one
-    /// frame per tape record worst-case, narrow / wide payloads at
-    /// `expected / 4`.
+    /// corpus input: one frame per tape record worst-case, narrow /
+    /// wide payloads at `expected / 4`.
     pub fn with_capacity(expected: usize) -> Self {
         NEW_CALL_COUNT.with(|c| c.set(c.get() + 1));
         Self {
@@ -299,97 +286,71 @@ impl FusedBuilder {
     /// the matching `begin_compound` whose `open_offset` the caller
     /// passes in.
     ///
-    /// Tape-side: delegates to [`Columns::rollback_to`] and truncates
-    /// [`Self::frame_depth`] in lockstep — both columns are owned by
-    /// this builder and are pushed in lockstep on every structural
-    /// emission (B3.W0.γ).
+    /// Tape-side: delegates to [`Columns::rollback_to`], which rewinds
+    /// `records`, `sib_skip`, `frame_depth`, and restores
+    /// `current_depth` to the depth recorded at `open_offset`
+    /// (B3.W0.δ).
     ///
-    /// Value-side: resolves the matching [`ValueCheckpoint`] from the
-    /// open-stack and truncates the value frame arena + narrow / wide
-    /// payload columns atomically. Open-stack entries at or above
-    /// the checkpoint are orphaned frames from the failed branch and
-    /// are discarded — the emitter's rollback contract requires it.
+    /// Value-side: pops every open-stack entry whose paired tape row
+    /// lives at or above `open_offset`, truncating the value frame
+    /// arena + narrow/wide payload columns to the deepest surviving
+    /// checkpoint's pre-open state. The first survivor's
+    /// `direct_child_count` is decremented once — the failed branch's
+    /// outermost compound was a direct child of that survivor at the
+    /// instant `begin_compound` ran — so a subsequent successful retry
+    /// re-opens the same conceptual position without double-counting.
     ///
     /// The `open_offset` argument is the tape-side offset
-    /// [`Self::begin_compound`] returned; it is used to locate the
-    /// paired value checkpoint because the open-stack is pushed in
-    /// the same order as begin_compound calls.
+    /// [`Self::begin_compound`] returned. Each [`ValueCheckpoint`]
+    /// records the tape row index it was paired with at
+    /// `begin_compound` time, so a single boundary on the tape side
+    /// discriminates surviving from rolled-back checkpoints
+    /// regardless of how many compounds the failed branch opened.
     #[inline(always)]
     pub fn rollback_to(&mut self, open_offset: u32) {
-        // Tape side — structural columns + frame_depth in lockstep.
-        // The compound row at `open_offset` was emitted at
-        // `current_depth - 1` (its `begin_compound` bumped depth AFTER
-        // pushing the row), so restoring `current_depth` to that row's
-        // recorded depth re-establishes the pre-`begin_compound`
-        // bookkeeping.
         // Tape side — `Columns::rollback_to` rewinds `records`,
         // `sib_skip`, `frame_depth`, AND restores `current_depth` to
-        // the depth recorded at `open_offset` (B3.W0.δ). Generated
-        // parser code that calls `columns_mut().rollback_to(...)`
-        // directly gets the same restoration without going through
-        // this builder method.
+        // the depth recorded at `open_offset` (B3.W0.δ).
         self.columns.rollback_to(open_offset);
-        // Value side — pop every open frame whose tape_offset-equivalent
-        // landed on or after `open_offset`, resolving the matching
-        // value checkpoint and truncating column families to its
-        // pre-open state. The value open-stack is pushed in lockstep
-        // with tape `begin_compound` calls, so walking from the top
-        // and stopping at the first entry whose `frame_offset` is
-        // below `open_offset`'s value-pair yields the right scope.
-        //
-        // The tape `open_offset` and the value `frame_offset` are
-        // NOT equal in general — shape emitters push multiple tape
-        // rows per conceptual value frame (Seq / Rule wrappers). But
-        // the open-stack is a faithful LIFO of begin_compound calls,
-        // and the caller invariant is: rollback_to(open_offset) is
-        // paired with begin_compound(open_offset). So popping the
-        // top matching checkpoint is correct.
-        //
-        // W0'.b's projection path does not observe orphaned frames
-        // from failed branches — the truncation below guarantees the
-        // value substrate matches the tape at every rollback boundary.
-        while let Some(&checkpoint) = self.value_open_stack.last() {
-            // The top-most checkpoint corresponds to the most-recent
-            // `begin_compound`; if that compound was opened at or
-            // after `open_offset` on the tape, it must rewind.
-            // Because tape rows are monotonic, a value frame whose
-            // paired tape row landed at or above `open_offset` is
-            // always at the top of the open stack (since we closed
-            // any deeper compounds between that open and the rollback
-            // via `end_compound`).
-            //
-            // In practice a single rollback unwinds the SINGLE open
-            // compound the emitter's retry-IIFE opened; the while
-            // loop is defensive against grammar authors who leave
-            // multiple compounds open across a retry boundary.
-            // W0'.a's rollback contract with shape emitters:
-            // rollback_to(open) is always called BEFORE any further
-            // begin_compound in the retry scope, and always matches
-            // the open of the failed branch.
-            self.value_frames.truncate(checkpoint.frame_offset as usize);
-            self.value_payloads_narrow
-                .truncate(checkpoint.narrow_rank as usize);
-            self.value_payloads_wide
-                .truncate(checkpoint.wide_rank as usize);
+        // Value side — pop every open frame whose paired tape row
+        // landed at or above `open_offset`. The open-stack is a
+        // faithful LIFO of `begin_compound` calls, monotonically
+        // ordered by `tape_idx`, so the survivors form a strict
+        // prefix and a single pop loop unwinds the entire failed
+        // branch.
+        let mut popped_any = false;
+        let mut deepest_narrow = u32::MAX;
+        let mut deepest_wide = u32::MAX;
+        let mut deepest_frame = u32::MAX;
+        while let Some(checkpoint) = self.value_open_stack.last().copied() {
+            if checkpoint.tape_idx < open_offset {
+                break;
+            }
+            // Track the deepest (lowest-index) surviving truncation
+            // boundary across nested rolled-back compounds — the
+            // outermost rolled-back compound was opened FIRST, so
+            // ITS checkpoint carries the deepest pre-open state.
+            deepest_frame = checkpoint.frame_offset;
+            deepest_narrow = checkpoint.narrow_rank;
+            deepest_wide = checkpoint.wide_rank;
             self.value_open_stack.pop();
-            // After popping the failed compound, undo the parent-
-            // counter bump that `value_begin_compound` applied when
-            // the failed compound opened. The retry-IIFE will
-            // re-open a fresh compound (which bumps the parent
-            // again), so symmetric decrement here keeps
-            // `direct_child_count` equal to the number of
-            // SURVIVED direct children at close time.
+            popped_any = true;
+        }
+        if popped_any {
+            self.value_frames.truncate(deepest_frame as usize);
+            self.value_payloads_narrow
+                .truncate(deepest_narrow as usize);
+            self.value_payloads_wide
+                .truncate(deepest_wide as usize);
+            // Decrement the survivor's `direct_child_count` once —
+            // the outermost rolled-back compound was registered as a
+            // direct child of the survivor when it opened. A
+            // subsequent successful retry will re-open + close in the
+            // same parent and bump the counter symmetrically.
             if let Some(parent) = self.value_open_stack.last_mut() {
                 parent.direct_child_count =
                     parent.direct_child_count.saturating_sub(1);
             }
-            // Only pop one — the matched retry compound. If the
-            // caller left additional opens deeper than `open_offset`
-            // on the stack (a grammar bug, not an emitter bug) they
-            // are discarded on `finish` via the open-stack empty
-            // assertion. The single-pop discipline matches the
-            // pre-W0'.a `ValueBuilder::rollback_to` semantics.
-            break;
         }
     }
 
@@ -488,7 +449,7 @@ impl FusedBuilder {
         // finaliser's depth-overflow path; saturation keeps the push
         // path branchless.
         self.columns.current_depth = self.columns.current_depth.saturating_add(1);
-        self.value_begin_compound(kind, span_lo, variant_idx);
+        self.value_begin_compound(kind, span_lo, variant_idx, idx);
         idx
     }
 
@@ -1212,8 +1173,19 @@ impl FusedBuilder {
     /// the open-stack and bumps the parent checkpoint's
     /// `direct_child_count` (this nested compound is a direct child
     /// of whatever was on top at entry).
+    ///
+    /// `tape_idx` is the row offset the matching tape compound was
+    /// stamped at; the checkpoint records it so
+    /// [`Self::rollback_to`] can pop every nested compound the failed
+    /// branch opened past the rollback boundary in one pass.
     #[inline(always)]
-    fn value_begin_compound(&mut self, kind: TapeKind, span_lo: u32, variant_idx: u8) {
+    fn value_begin_compound(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        variant_idx: u8,
+        tape_idx: u32,
+    ) {
         // Nested-compound push: bump the PARENT checkpoint's direct-
         // child counter BEFORE pushing this compound's own checkpoint.
         // After the push, this compound becomes top-of-stack; its
@@ -1236,6 +1208,7 @@ impl FusedBuilder {
             narrow_rank: self.value_payloads_narrow.len() as u32,
             wide_rank: self.value_payloads_wide.len() as u32,
             direct_child_count: 0,
+            tape_idx,
         });
     }
 
@@ -1283,9 +1256,3 @@ impl FusedBuilder {
         });
     }
 }
-
-/// Pre-W0'.a compose-boundary alias. Un-regenned `generated.rs` still
-/// spells the builder type as `TapeBuilder`; this alias keeps the
-/// library compiling through the bootstrap escape window. The alias
-/// retires once the orchestrator regens `generated.rs` at W0' close.
-pub type TapeBuilder = FusedBuilder;

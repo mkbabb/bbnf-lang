@@ -9,7 +9,7 @@ pub fn parse_number_JsonFixture_number(
     input: &[u8],
     p: &mut usize,
     first_byte: u8,
-    builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+    builder: &mut ::bbnf::runtime::tape::FusedBuilder,
 ) -> ::core::result::Result<
     ::bbnf::runtime::tape::TapeOffset,
     ::bbnf::runtime::tape::DtaError,

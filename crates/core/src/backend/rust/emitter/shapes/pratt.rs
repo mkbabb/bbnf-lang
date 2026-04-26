@@ -19,8 +19,8 @@
 //!   the [`crate::backend::rust::emitter::precedence`] emitter
 //!   already lowers.
 //! - The outer Pratt compound now opens pre-order via
-//!   [`TapeBuilder::open_compound`] and closes via
-//!   [`TapeBuilder::close_compound`] (AY.W5.b substrate), so its
+//!   [`FusedBuilder::open_compound`] and closes via
+//!   [`FusedBuilder::close_compound`] (AY.W5.b substrate), so its
 //!   direct children (operands, op-leaf Spans, reducer compounds)
 //!   land with write-time `sib_skip` stamping. After `close_compound`
 //!   the outer row's `child_off` is overridden to point at the final
@@ -140,7 +140,7 @@ pub fn emit_parse_pratt(
         /// # Emitted algorithm
         ///
         /// 1. Reserve an outer Rule compound via
-        ///    [`::bbnf::runtime::tape::TapeBuilder::mark_children`] +
+        ///    [`::bbnf::runtime::tape::FusedBuilder::mark_children`] +
         ///    record the parse-open position.
         /// 2. Dispatch the leftmost operand through the grammar's
         ///    value-position dispatcher; the operand's records land
@@ -176,7 +176,7 @@ pub fn emit_parse_pratt(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,

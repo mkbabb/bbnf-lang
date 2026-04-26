@@ -25,10 +25,10 @@
 //! emitted `PathQuery<T>` impls for the lookup surface. The fused
 //! pipeline redirection lives on the eager lane: `Parsed::to_value()`
 //! no longer walks the tape; it projects the already-populated
-//! [`ValueBuilderOutput`](bbnf::runtime::ValueBuilderOutput) the
-//! fused parse substrate built in lockstep with the tape. The
-//! parse-count invariant below asserts the thin-projection
-//! contract — `to_value()` does not trigger a second parse.
+//! [`FusedOutput`](bbnf::runtime::FusedOutput) the fused parse
+//! substrate built in lockstep with the tape. The parse-count
+//! invariant below asserts the thin-projection contract —
+//! `to_value()` does not trigger a second parse.
 //!
 //! ## Round-trip parity
 //!
@@ -207,47 +207,46 @@ fn json_roundtrip_data_xl() {
 // AY-II.W0.c retires `navigate_tape` (DEAD per AUDIT-B §7) and
 // asserts the fused-pipeline contract via a parse-count invariant:
 // `Parsed::to_value()` MUST NOT trigger a second parse. The
-// `ValueBuilder::new` counter instrumented under `#[cfg(test)]` is
-// the observable — every parse increments it exactly once (via the
-// fused parse entry), and `to_value()` must leave it unchanged.
+// `FusedBuilder::new` counter is the observable — every parse
+// increments it exactly once (via the fused parse entry), and
+// `to_value()` must leave it unchanged.
 //
-// The counter lives in `bbnf::runtime::value_builder` and is reset
-// before each test invocation; the invariant's hard gate requires
-// `to_value()` calls to not show up as additional
-// `ValueBuilder::new` calls.
+// The counter lives in `tape::builder` and is reset before each test
+// invocation; the invariant's hard gate requires `to_value()` calls
+// to not show up as additional `FusedBuilder::new` calls.
 
-use bbnf::runtime::value_builder::{
-    reset_value_builder_new_call_count, value_builder_new_call_count,
+use bbnf::runtime::tape::builder::{
+    fused_builder_new_call_count, reset_fused_builder_new_call_count,
 };
 
 #[test]
 fn parse_count_invariant_to_value_is_thin_projection() {
     let src = load_fixture("data.json");
 
-    reset_value_builder_new_call_count();
+    reset_fused_builder_new_call_count();
     let parsed = JsonParser::parse(&src).expect("parse");
-    let baseline = value_builder_new_call_count();
+    let baseline = fused_builder_new_call_count();
     assert_eq!(
         baseline, 1,
-        "parse should construct exactly one ValueBuilder; got {}",
+        "parse should construct exactly one FusedBuilder; got {}",
         baseline,
     );
 
     // Projecting the already-constructed value substrate must not
     // invoke a second parse; the counter must stay at baseline.
     let _ = parsed.to_value();
-    let after = value_builder_new_call_count();
+    let after = fused_builder_new_call_count();
     assert_eq!(
         after, baseline,
         "Parsed::to_value() must be a thin projection; \
-         ValueBuilder::new calls jumped {} → {}",
+         FusedBuilder::new calls jumped {} → {}",
         baseline, after,
     );
 
     // A second to_value() call is likewise free — projection over
     // the same substrate.
     let _ = parsed.to_value();
-    let after_twice = value_builder_new_call_count();
+    let after_twice = fused_builder_new_call_count();
     assert_eq!(
         after_twice, baseline,
         "Multiple Parsed::to_value() calls must all be thin projections; \

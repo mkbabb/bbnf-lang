@@ -10,7 +10,7 @@
 //! falls back to `f64::from_str` on overflow / ambiguous rounding.
 //!
 //! The emitted function pushes a `TapeKind::Span` leaf carrying the
-//! `f64` payload via [`TapeBuilder::push_leaf_with_f64_direct`]
+//! `f64` payload via [`FusedBuilder::push_leaf_with_f64_direct`]
 //! (AY.W4.2). The Eisel-Lemire-decoded bits land in the dedicated
 //! [`Columns::pay_f64`] direct-write column, bypassing the
 //! generic `PayloadData::WideScalar` → `pay_wide` round-trip; the
@@ -48,7 +48,7 @@ pub fn emit_parse_number(
             input: &[u8],
             p: &mut usize,
             first_byte: u8,
-            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,

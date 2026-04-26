@@ -57,14 +57,27 @@ fn format_tokens(ts: &proc_macro2::TokenStream) -> String {
 /// Compare actual emitter output against a committed golden. The
 /// goldens omit the trailing newline `prettyplease` adds so the
 /// diff reads cleanly; we trim both sides before comparison.
+///
+/// Set `BLESS_SHAPE_GOLDENS=1` in the environment to overwrite the
+/// committed golden with the actual emitter output (intentional
+/// emitter changes need this; commit the resulting diff).
 #[track_caller]
 fn assert_matches_golden(actual: &str, expected: &str, golden_name: &str) {
     let a = actual.trim_end();
     let e = expected.trim_end();
+    if std::env::var_os("BLESS_SHAPE_GOLDENS").is_some() {
+        let path = format!(
+            "{}/tests/fixtures/shape_dispatch_emission/{golden_name}.expected",
+            env!("CARGO_MANIFEST_DIR"),
+        );
+        std::fs::write(&path, a)
+            .unwrap_or_else(|err| panic!("write {path}: {err}"));
+        return;
+    }
     assert_eq!(
         a, e,
-        "{golden_name} golden drift — re-run the golden bootstrap if the \
-         emitter intentionally changed.",
+        "{golden_name} golden drift — set BLESS_SHAPE_GOLDENS=1 to \
+         overwrite if the emitter intentionally changed.",
     );
 }
 

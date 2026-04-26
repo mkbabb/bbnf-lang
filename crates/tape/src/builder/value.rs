@@ -1,23 +1,18 @@
 //! Value-side state the fused builder owns alongside the structural
 //! columns.
 //!
-//! # Role (Tranche AY-II.W0'.a)
+//! # Role
 //!
-//! W0.c introduced a standalone `ValueBuilder<R>` type at
-//! `crates/core/src/runtime/value_builder.rs` that every emitted shape
-//! was supposed to drive in lockstep with the structural tape push.
-//! The threading never actually landed — the slab stayed empty and
-//! `Parsed::to_value()` panicked. W0'.a absorbs the substrate into
-//! [`FusedBuilder`](super::FusedBuilder) at the type level so there
-//! is no second builder to thread: every `begin_compound` /
-//! `end_compound` / `push_leaf_*` stamps BOTH columns atomically.
+//! [`FusedBuilder`](super::FusedBuilder) carries the value substrate
+//! alongside the structural tape: every `begin_compound` /
+//! `end_compound` / `push_leaf_*` call stamps BOTH column families
+//! atomically. The types in this module own the write-side bookkeeping.
 //!
 //! The types in this module are the write-side bookkeeping the
 //! fused builder carries and the read-side surface it hands off at
-//! `finish` time. They mirror the pre-W0'.a
-//! `runtime::value_builder::{ValueFrame, PayloadTag, ValueCheckpoint,
-//! ValueBuilderOutput}` surface so downstream emitted projection code
-//! compiles unchanged while regen composes in the renamed type.
+//! `finish` time. The grammar-emitted projection code reads
+//! [`ValueFrame`] / [`PayloadTag`] / [`ValueFramesOutput`] off a
+//! [`FusedOutput<R>`](super::FusedOutput) at `to_value()` time.
 //!
 //! # Grammar-agnostic storage
 //!
@@ -167,6 +162,15 @@ pub(super) struct ValueCheckpoint {
     /// `value_end_compound` into `ValueFrame::child_count` — O(1)
     /// replacement for the pre-W0'.d3 `subtree_size` walk.
     pub(super) direct_child_count: u32,
+    /// Tape-side row offset for the compound row this checkpoint
+    /// pairs with. Stamped in [`super::FusedBuilder::begin_compound`]
+    /// at the same instant the matching tape row is pushed; consumed
+    /// by [`super::FusedBuilder::rollback_to`] to identify every
+    /// checkpoint whose paired compound row lives at or above the
+    /// rollback boundary, so a single `rollback_to(open_offset)` call
+    /// unwinds tape and value substrates atomically regardless of how
+    /// many compounds the failed branch opened.
+    pub(super) tape_idx: u32,
 }
 
 /// The finished value substrate handed off to

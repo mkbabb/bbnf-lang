@@ -57,7 +57,7 @@ pub fn emit_parse_string(
             input: &[u8],
             p: &mut usize,
             _state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,
@@ -160,7 +160,7 @@ pub fn emit_escape_helper(grammar_suffix: &str) -> TokenStream {
             input: &[u8],
             p: &mut usize,
             open: usize,
-            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
             variant_idx: u8,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::TapeOffset,

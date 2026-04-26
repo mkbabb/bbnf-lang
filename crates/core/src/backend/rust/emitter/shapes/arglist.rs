@@ -104,7 +104,7 @@ pub fn emit_parse_arglist(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::TapeBuilder,
+            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
         ) -> ::core::result::Result<
             ::bbnf::runtime::tape::TapeOffset,
             ::bbnf::runtime::tape::DtaError,
@@ -307,7 +307,7 @@ fn emit_tape_position_core(
                     })();
                     if attempt.is_err() {
                         *p = save_p;
-                        builder.columns_mut().rollback_to(iter_save_cols);
+                        builder.rollback_to(iter_save_cols);
                     } else {
                         let iter_hi = *p as u32;
                         let __iter_off = builder.begin_compound(
@@ -342,11 +342,11 @@ fn emit_tape_position_core(
                         })();
                         if attempt.is_err() {
                             *p = save_p;
-                            builder.columns_mut().rollback_to(save_cols);
+                            builder.rollback_to(save_cols);
                             break;
                         }
                         if *p == save_p {
-                            builder.columns_mut().rollback_to(save_cols);
+                            builder.rollback_to(save_cols);
                             break;
                         }
                         let iter_hi = *p as u32;

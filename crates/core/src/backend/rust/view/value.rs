@@ -447,7 +447,7 @@ fn emit_value_root_impl(
                 ::core::option::Option::Some(_) => {}
                 ::core::option::Option::None => {
                     ::core::panic!(
-                        "AY-II.W0'.b: ValueBuilder root frame absent after parse \
+                        "AY-II.W0'.b: FusedOutput root frame absent after parse \
                          (root_offset = {}, frame count = {})",
                         root_off,
                         output.frames().len(),

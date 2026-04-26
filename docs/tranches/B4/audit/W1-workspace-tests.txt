@@ -1,0 +1,401 @@
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:29226:69
+      |
+29226 | / ...                   break 'avx2_scan {
+29227 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+29228 | | ...                   };
+      | |_______________________^
+      |
+      = note: `#[warn(break_with_label_and_loop)]` on by default
+help: wrap this expression in parentheses
+      |
+29226 ~                                                                     break 'avx2_scan ({
+29227 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+29228 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:29245:69
+      |
+29245 | / ...                   break 'avx2_scan {
+29246 | | ...                       ::core::option::Option::Some(__i - __start)
+29247 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+29245 ~                                                                     break 'avx2_scan ({
+29246 |                                                                         ::core::option::Option::Some(__i - __start)
+29247 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:29403:69
+      |
+29403 | / ...                   break 'avx2_scan {
+29404 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+29405 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+29403 ~                                                                     break 'avx2_scan ({
+29404 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+29405 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:29422:69
+      |
+29422 | / ...                   break 'avx2_scan {
+29423 | | ...                       ::core::option::Option::Some(__i - __start)
+29424 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+29422 ~                                                                     break 'avx2_scan ({
+29423 |                                                                         ::core::option::Option::Some(__i - __start)
+29424 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:31806:69
+      |
+31806 | / ...                   break 'avx2_scan {
+31807 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+31808 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+31806 ~                                                                     break 'avx2_scan ({
+31807 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+31808 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:31825:69
+      |
+31825 | / ...                   break 'avx2_scan {
+31826 | | ...                       ::core::option::Option::Some(__i - __start)
+31827 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+31825 ~                                                                     break 'avx2_scan ({
+31826 |                                                                         ::core::option::Option::Some(__i - __start)
+31827 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:32889:81
+      |
+32889 | / ...                   break 'avx2_scan {
+32890 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+32891 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+32889 ~                                                                                 break 'avx2_scan ({
+32890 |                                                                                     ::core::option::Option::Some((__i + __rel) - __start)
+32891 ~                                                                                 });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:32908:81
+      |
+32908 | / ...                   break 'avx2_scan {
+32909 | | ...                       ::core::option::Option::Some(__i - __start)
+32910 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+32908 ~                                                                                 break 'avx2_scan ({
+32909 |                                                                                     ::core::option::Option::Some(__i - __start)
+32910 ~                                                                                 });
+      |
+
+warning: `bbnf` (lib) generated 8 warnings (run `cargo fix --lib -p bbnf` to apply 8 suggestions)
+warning: fields `null`, `colon`, `pair`, and `value` are never read
+  --> crates/core/tests/shape_dispatch_emission/fixtures.rs:29:9
+   |
+28 | pub struct JsonRules {
+   |            --------- fields in this struct
+29 |     pub null: RuleId,
+   |         ^^^^
+...
+33 |     pub colon: RuleId,
+   |         ^^^^^
+34 |     pub string: RuleId,
+35 |     pub pair: RuleId,
+   |         ^^^^
+...
+38 |     pub value: RuleId,
+   |         ^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `bbnf` (test "regen_shape_goldens") generated 1 warning
+warning: unused import: `common::css_types`
+  --> crates/core/tests/projection_totality.rs:68:5
+   |
+68 | use common::css_types;
+   |     ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `bbnf` (test "projection_totality") generated 1 warning (run `cargo fix --test "projection_totality" -p bbnf` to apply 1 suggestion)
+warning: unused imports: `tarjan_scc` and `topological_sort_scc`
+ --> crates/core/tests/pipeline.rs:1:19
+  |
+1 | use bbnf::graph::{tarjan_scc, topological_sort_scc};
+  |                   ^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `DirectiveSet` and `lower_to_ir`
+ --> crates/core/tests/pipeline.rs:3:19
+  |
+3 | use bbnf::lower::{DirectiveSet, lower_to_ir};
+  |                   ^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `bbnf::calculate_ast_deps`
+ --> crates/core/tests/pipeline.rs:5:5
+  |
+5 | use bbnf::calculate_ast_deps;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `bbnf` (test "pipeline") generated 3 warnings (run `cargo fix --test "pipeline" -p bbnf` to apply 3 suggestions)
+warning: `bbnf` (lib test) generated 8 warnings (8 duplicates)
+   Compiling bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-wt-b4-w1/crates/core)
+warning: unused import: `MaterializationClass`
+  --> crates/ir/tests/vm/cross_rule_csp.rs:14:5
+   |
+14 |     MaterializationClass, classify_materialization,
+   |     ^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `PrettyHints` and `RuleDirectives`
+  --> crates/ir/tests/vm/cross_rule_csp.rs:18:55
+   |
+18 |     AltBranch, CostConfig, GrammarIR, IrNode, IrRule, PrettyHints, RuleDirectives, RuleMeta,
+   |                                                       ^^^^^^^^^^^  ^^^^^^^^^^^^^^
+
+warning: function `rule_with_meta` is never used
+  --> crates/ir/tests/vm/cross_rule_csp.rs:84:4
+   |
+84 | fn rule_with_meta(id: u32, name: StringId, body: IrNode, meta: RuleMeta) -> IrRule {
+   |    ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `bbnf-ir` (test "vm") generated 3 warnings (run `cargo fix --test "vm" -p bbnf-ir` to apply 2 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.52s
+────────────
+ Nextest run ID 09cb638c-7a44-4960-b74a-0b1328204778 with nextest profile: ax-iter
+    Starting 1490 tests across 133 binaries (27 tests skipped)
+        FAIL [   0.006s] (   6/1490) bbnf::ay_w3b_value_api_smoke to_value_returns_value_enum
+  stdout ───
+
+    running 1 test
+    test to_value_returns_value_enum ... FAILED
+
+    failures:
+
+    failures:
+        to_value_returns_value_enum
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'to_value_returns_value_enum' (6345912) panicked at crates/core/src/grammar/generated/json.rs:4596:17:
+    AY-II.W0'.b: Cursor-shape variant projection not yet available; frame offset 0
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.010s] ( 414/1490) bbnf::pipeline_compile_request compile_paths_preserves_pretty_directives_across_multiple_explicit_paths
+  stdout ───
+
+    running 1 test
+    test compile_paths_preserves_pretty_directives_across_multiple_explicit_paths ... FAILED
+
+    failures:
+
+    failures:
+        compile_paths_preserves_pretty_directives_across_multiple_explicit_paths
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compile_paths_preserves_pretty_directives_across_multiple_explicit_paths' (6347418) panicked at crates/core/src/backend/rust/ir_enums.rs:36:5:
+    assertion `left == right` failed: ParserAttributes: `paths` and `grammar_rel_paths` length mismatch (2 vs 0). The populator (xtask::regen) must push to both in index order.
+      left: 2
+     right: 0
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.009s] ( 415/1490) bbnf::pipeline_compile_request compile_paths_preserves_pretty_directives_through_import_resolution
+  stdout ───
+
+    running 1 test
+    test compile_paths_preserves_pretty_directives_through_import_resolution ... FAILED
+
+    failures:
+
+    failures:
+        compile_paths_preserves_pretty_directives_through_import_resolution
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compile_paths_preserves_pretty_directives_through_import_resolution' (6347425) panicked at crates/core/src/backend/rust/ir_enums.rs:36:5:
+    assertion `left == right` failed: ParserAttributes: `paths` and `grammar_rel_paths` length mismatch (1 vs 0). The populator (xtask::regen) must push to both in index order.
+      left: 1
+     right: 0
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.006s] ( 445/1490) bbnf::projection_totality projection_totality_runtime_call_count
+  stdout ───
+
+    running 1 test
+    test projection_totality_runtime_call_count ... FAILED
+
+    failures:
+
+    failures:
+        projection_totality_runtime_call_count
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'projection_totality_runtime_call_count' (6347797) panicked at crates/core/src/grammar/generated/json.rs:4568:25:
+    AY-II.W0'.b: materializer for admitted rule `string` returned None at frame offset 0; admission invariant violated
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+     SIGABRT [   0.016s] ( 580/1490) bbnf::sheets_parity child_iter_walks_complex_formula
+  stdout ───
+
+    running 1 test
+  stderr ───
+
+    thread 'child_iter_walks_complex_formula' (6348432) has overflowed its stack
+    fatal runtime error: stack overflow, aborting
+
+    (test aborted with signal 6: SIGABRT)
+
+        FAIL [   0.076s] ( 734/1490) bbnf::value_api_apples_to_apples json_roundtrip_citm_catalog
+  stdout ───
+
+    running 1 test
+    test json_roundtrip_citm_catalog ... FAILED
+
+    failures:
+
+    failures:
+        json_roundtrip_citm_catalog
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.07s
+
+  stderr ───
+
+    thread 'json_roundtrip_citm_catalog' (6348985) panicked at crates/core/src/grammar/generated/json.rs:4596:17:
+    AY-II.W0'.b: Cursor-shape variant projection not yet available; frame offset 0
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.008s] ( 735/1490) bbnf::value_api_apples_to_apples json_roundtrip_data
+  stdout ───
+
+    running 1 test
+    test json_roundtrip_data ... FAILED
+
+    failures:
+
+    failures:
+        json_roundtrip_data
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'json_roundtrip_data' (6348996) panicked at crates/core/src/grammar/generated/json.rs:4579:17:
+    AY-II.W0'.b: Cursor-shape variant projection not yet available; frame offset 0
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.007s] ( 736/1490) bbnf::value_api_apples_to_apples parse_count_invariant_to_value_is_thin_projection
+  stdout ───
+
+    running 1 test
+    test parse_count_invariant_to_value_is_thin_projection ... FAILED
+
+    failures:
+
+    failures:
+        parse_count_invariant_to_value_is_thin_projection
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'parse_count_invariant_to_value_is_thin_projection' (6349000) panicked at crates/core/src/grammar/generated/json.rs:4579:17:
+    AY-II.W0'.b: Cursor-shape variant projection not yet available; frame offset 0
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.032s] ( 739/1490) bbnf::value_api_apples_to_apples json_roundtrip_twitter
+  stdout ───
+
+    running 1 test
+    test json_roundtrip_twitter ... FAILED
+
+    failures:
+
+    failures:
+        json_roundtrip_twitter
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.03s
+
+  stderr ───
+
+    thread 'json_roundtrip_twitter' (6348997) panicked at crates/core/src/grammar/generated/json.rs:4596:17:
+    AY-II.W0'.b: Cursor-shape variant projection not yet available; frame offset 0
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.194s] ( 746/1490) bbnf::value_api_apples_to_apples json_roundtrip_canada
+  stdout ───
+
+    running 1 test
+    test json_roundtrip_canada ... FAILED
+
+    failures:
+
+    failures:
+        json_roundtrip_canada
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.19s
+
+  stderr ───
+
+    thread 'json_roundtrip_canada' (6348979) panicked at crates/core/src/grammar/generated/json.rs:4596:17:
+    AY-II.W0'.b: Cursor-shape variant projection not yet available; frame offset 0
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [  43.930s] 1490 tests run: 1480 passed (2 slow), 10 failed, 27 skipped
+        FAIL [   0.006s] (   6/1490) bbnf::ay_w3b_value_api_smoke to_value_returns_value_enum
+        FAIL [   0.010s] ( 414/1490) bbnf::pipeline_compile_request compile_paths_preserves_pretty_directives_across_multiple_explicit_paths
+        FAIL [   0.009s] ( 415/1490) bbnf::pipeline_compile_request compile_paths_preserves_pretty_directives_through_import_resolution
+        FAIL [   0.006s] ( 445/1490) bbnf::projection_totality projection_totality_runtime_call_count
+     SIGABRT [   0.016s] ( 580/1490) bbnf::sheets_parity child_iter_walks_complex_formula
+        FAIL [   0.076s] ( 734/1490) bbnf::value_api_apples_to_apples json_roundtrip_citm_catalog
+        FAIL [   0.008s] ( 735/1490) bbnf::value_api_apples_to_apples json_roundtrip_data
+        FAIL [   0.007s] ( 736/1490) bbnf::value_api_apples_to_apples parse_count_invariant_to_value_is_thin_projection
+        FAIL [   0.032s] ( 739/1490) bbnf::value_api_apples_to_apples json_roundtrip_twitter
+        FAIL [   0.194s] ( 746/1490) bbnf::value_api_apples_to_apples json_roundtrip_canada
+error: test run failed
+EXIT: 100

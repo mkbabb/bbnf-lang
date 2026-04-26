@@ -94,9 +94,10 @@ on defensible floor. These probabilities are copied from
 |---|---:|---:|---|
 | B1 | closed | closed | Closed 2026-04-24 (`B1/FINAL.md`). |
 | B3 | closed | closed | Closed 2026-04-25 (`B3/FINAL.md`); parser-baseline restored. |
-| B4.W0 | closed | closed | Closed 2026-04-25; codegen `syn::parse2` emit-correctness fix. |
+| B4 | closed | closed | Closed 2026-04-25 (`B4/FINAL.md`); W0 codegen `syn::parse2` emit-correctness fix + W1 unified `builder.rollback_to(...)` atomic-tape+value path + transitional alias retirement; AY-II.W0' close ceremony folded into B4.W1 close. |
 | B2 | closed | closed | Closed 2026-04-25 (`B2/FINAL.md`); proc-macro IR-pipeline contract retired; `cargo xtask regen` canonical. |
-| AY-II | 0.30 | 0.65 | One-path semantic closure on tape substrate; dense integration tranche. Post-B2 lift: W0' close ceremony tractable in ~15 min on the post-B2 substrate (pre-B2 80-min wall retired); compressed-honest form per AUDIT-B is dispatchable, freeing wave-cap budget for W1-W5. |
+| AY-II.W0' | closed | closed | Closed 2026-04-25 at B4.W1 close; the unified atomic-rollback path lands the contract the W0'.a substrate shipped without; transitional aliases retire entirely; 327-failure runtime-parser regression resolves. See `docs/tranches/B4/audit/W1-close.md`. |
+| AY-II (W1-W5) | 0.30 | 0.65 | One-path semantic closure on tape substrate; dense integration tranche. Post-B4: W0' close ceremony complete; W1 cursor-shape projection (10 remaining test failures) is the immediate next dispatch. |
 | AZ-I | 0.080 | 0.36 | Data-grammar performance + CSS typed richness tranche. Post-B2 lift: W0 derive-cache + Watt items drop (T3-superseded); two sub-agents instead of three; classifier unification + IR audit retain load-bearing scope. |
 | AZ-II | 0.20 | 0.50 | BBNF bootstrap byte-equality and tape deletion. Post-B2 lift: byte-equal reproducibility cycles cost seconds rather than hours; reversal narrows. |
 | BA | 0.27 | 0.55 | Path query surface over a settled struct tree. |

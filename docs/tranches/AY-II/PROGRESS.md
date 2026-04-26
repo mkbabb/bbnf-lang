@@ -4,11 +4,69 @@ Dated execution log for tranche AY-II (pass II of AY; see
 `../AY-I/FINAL.md` for pass-I close and `audit/AUDIT-{A,B,C,D}-*.md`
 for the triumvirate that informs this pass).
 
-- `Status`: B1 + B3 + B4.W0 + B2 closed (predecessor sequence); W0'
-  close ceremony unblocked on the post-B2 substrate in compressed-
-  honest form (~15 min); source landings remain in
-- `Current wave`: W0' (close ceremony unblocked, post-B2 substrate)
-- `Next wave`: AY-II.W0' compressed-honest close ceremony, then W1
+- `Status`: W0' closed at B4.W1 (2026-04-25); B1 + B2 + B3 + B4 all
+  closed in the predecessor sequence
+- `Current wave`: W0' close ceremony complete (folded into B4.W1)
+- `Next wave`: W1 (JSON semantic parity + peer-referenced performance)
+
+---
+
+## 2026-04-25 — B4 close lands AY-II.W0' close ceremony
+
+B4.W1 closes the W0' migration debt at source: the 327-failure
+runtime-parser regression that surfaced as
+`FusedBuilder::finish called with N open value frames remaining`
+across the workspace traced to `builder.columns_mut().rollback_to(...)`
+emissions in every shape emitter — a tape-side-only unwind that
+left the paired value substrate (`value_open_stack`,
+`value_frames`, `value_payloads_*`) accumulating leaked compound
+opens across every retry boundary. The fix lands two changes at
+the canonical fused-substrate boundary: `ValueCheckpoint` gains
+`tape_idx: u32` recorded at `value_begin_compound`, and
+`FusedBuilder::rollback_to(open_offset)` pops every open-stack
+entry whose `tape_idx >= open_offset` and truncates the value
+column families to the outermost popped checkpoint's pre-open
+state in one pass. Every shape emitter migrates from
+`builder.columns_mut().rollback_to(...)` (tape-only) to
+`builder.rollback_to(...)` (atomic tape + value).
+
+The transitional alias surface retires entirely on the same
+landing: `TapeBuilder` type alias, `ValueBuilderOutput<R>` alias,
+the `value_builder` shim module, the `_ValueBuilderShim` /
+`ValueBuilder<R>` ZST, the 4-arg `Parsed::new_fused(tape, input,
+root_offset, value_builder_output)` bridge — all five surfaces
+delete from the workspace. Generated parser code uses
+`FusedBuilder` and `Parsed::new_fused_output` (3-arg) directly;
+the consumer test fixtures migrate to the canonical
+`tape::builder::{fused_builder_new_call_count,
+reset_fused_builder_new_call_count}` counter accessors.
+
+Test counts: pre-W1 `1163 / 327 / 0 / 1490` (pass / fail / skip /
+total) → post-W1 `1480 / 10 / 27 / 1490`. The 10 remaining
+failures are pre-existing W0'.b cursor-shape projection stubs (5),
+the `string` materializer's payload-byte addressing bug (1),
+the `ay_w3b_value_api_smoke` cursor-shape trip (1), an ir_enums
+populator gap surfacing in `compile_paths_preserves_pretty_directives`
+(2), and one timing-sensitive packed_cache ratio test (1).
+Cursor-shape projection is scheduled for AY-II.W1; ir_enums
+populator gap is scheduled for AY-II.W1 alongside.
+
+Per `AY-II/PATH-FORWARD.md` §5 the W0' close ceremony lands at B4
+close: that lands here, in the same commit chain that ships W1's
+fix. The compressed-honest cycle-1-regen + invariant grep + close-
+status formalisation discipline holds — `cargo xtask regen
+--check` is clean across 9 grammars; the projection-totality runtime-
+call-count test runs (one materializer-side bug remains, separate
+from the W0' alias scope); `rg -n 'TapeBuilder|ValueBuilderOutput|
+_ValueBuilderShim|new_fused\b|value_builder' --type rust` returns
+zero matches outside `docs/tranches/B2/audit/W0-bbnf-surface-snapshot.rs`
+(historical snapshot).
+
+W0' formal close: `docs/tranches/AY-II/waves/W0p.md` status
+`complete`; `docs/tranches/B4/audit/W1-close.md` carries the close
+audit; `docs/tranches/B4/FINAL.md` records the B4 tranche close.
+
+Worktree HEAD: `<filled-in at cherry-pick>`.
 
 ---
 

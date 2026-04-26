@@ -4,10 +4,10 @@ Dated execution log for tranche B2, the build-time codegen
 transposition that retires `bbnf_derive`'s proc-macro IR-pipeline
 contract.
 
-- `Status`: in flight (W0 + W1 closed; W2-W4 pending)
-- `Current wave`: W1 (complete) → W2 (opens next)
-- `Next wave`: W2 — Proc-macro retirement; `crates/derive/` deletes;
-  `bbnf_derive` purges from every `Cargo.toml`
+- `Status`: in flight (W0 + W1 + W2 closed; W3-W4 pending)
+- `Current wave`: W2 (complete) → W3 (opens next)
+- `Next wave`: W3 — Script simplification; `bootstrap-bbnf.sh`
+  retires; xtask absorbs cargo-expand + post-process logic
 
 ---
 
@@ -219,3 +219,75 @@ The proc-macro contract retires by simple removal — no consumer
 needs a migration path because every consumer is already migrated.
 
 Full audit: `docs/tranches/B2/audit/W1-close.md`.
+
+## 2026-04-25 — W2 closed
+
+W2 deletes the `crates/derive/` proc-macro crate (3 files / 457
+lines) outright, purges `bbnf_derive` from every workspace
+`Cargo.toml`, drops the `[patch.crates-io]` patch line from
+`.cargo/config.toml`, removes `crates/derive` from the workspace
+`[workspace] members` list, retires `BBNF_SCHEMA_VERSION` (its
+sole declaration was `crates/derive/src/lib.rs:81`), and
+regenerates `Cargo.lock` without the `bbnf_derive` package.
+
+Per-Cargo.toml edits:
+
+- `crates/core/Cargo.toml` — `bbnf_derive` dropped from
+  `[dev-dependencies]`.
+- `crates/gorgeous/Cargo.toml` — `bbnf_derive` dropped from
+  `[dependencies]`.
+- `crates/bootstrap/Cargo.toml` — comment narrative scrubbed of
+  the W0.c-era `bbnf_derive` reference (no dep entry to remove;
+  the dep retired at W0.c).
+- `xtask/Cargo.toml` — comment narrative scrubbed of the W0.a-era
+  `bbnf_derive` historical reference (the xtask never depended on
+  the proc-macro). The W2 file-bounds list flagged `xtask/` as
+  forbidden; the literal hard-gate item 2 (`rg -nF
+  'bbnf_derive\|bbnf-derive' --type toml` returns 0) demanded the
+  comment scrub. Audit deviation recorded explicitly in W2-close.
+- `Cargo.toml` (workspace root) — `"crates/derive"` dropped from
+  `[workspace] members`.
+- `.cargo/config.toml` — `bbnf_derive = { path = "crates/derive" }`
+  dropped from `[patch.crates-io]`.
+
+`crates/json-prototype/Cargo.toml` — verified: no `bbnf_derive`
+dep present (the W2 spec flagged it as a possibility; was empty);
+no edit.
+
+`wasm/Cargo.lock` retains its `bbnf_derive` entry. `wasm/` is
+`exclude = ["wasm"]` from the workspace; carries its own lockfile;
+the W2 hard gate is `--type toml` which doesn't match `.lock`.
+The wasm sub-target migrates under its own dispatch.
+
+Verification: `cargo check --workspace --profile ax-iter` exits 0
+in 10.8 s post-edits + post-regen (cold against the orchestrator-
+inherited target/); `cargo iter-check-full` warm 0.13 s exit 0;
+`cargo iter-check` warm 0.11 s exit 0 (well under the 0.5 s gate
+per B2.md invariant 12); `cargo update --workspace` exits 0 with
+the `bbnf_derive` package + its 2 referencing entries dropped from
+the lockfile; `rg -nF 'bbnf_derive\|bbnf-derive' --type toml` over
+the workspace returns 0; `rg -n 'BBNF_SCHEMA_VERSION' --type rust`
+returns 0.
+
+Workspace nextest pass-rate matches the W1 close baseline (1 160
+pass / 327 fail / 3 timeout / 27 skip). The 327 failures + 3
+timeouts are the pre-existing FusedBuilder::finish open-frames
+debug-build assertion class downstream of B2.W1's scope; B4.W1
+owns the consumer-side fixture polish. No W2-introduced regression.
+
+A latent `include_str!` absolute-path issue surfaced and resolved
+in-pass: the W1 close commit shipped per-grammar `generated/<ident>
+.rs` files with `bbnf-wt-b2-w1`-rooted paths. Phase 3's workspace
+check failed on these stale paths; one-shot `sed` correction
+followed by full `cargo xtask regen` re-emitted nine grammars
+clean against the b2-w2 worktree path. The path-embedding question
+is forward-routed (xtask emit-side fix to workspace-relative or
+`env!("CARGO_MANIFEST_DIR")` resolution); the cherry-pick to
+master leaves the regenerated paths OUT of the change-set so it
+doesn't propagate worktree-specific paths upstream.
+
+W3 dispatches next: `scripts/bootstrap-bbnf.sh` retirement; xtask
+absorption of cargo-expand + post-process logic; Makefile +
+in-tree script audits.
+
+Full audit: `docs/tranches/B2/audit/W2-close.md`.

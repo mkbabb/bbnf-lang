@@ -45,6 +45,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::named_types::RustNamedTypes;
+use super::peel;
 use crate::backend::rust::emitter::grammar::{
     collect_projection_admissions, ProjectionAdmission,
 };
@@ -231,8 +232,12 @@ fn classify_shape(
             VariantShape::Scalar(td.clone())
         }
         _ => {
-            // Classify via body shape.
-            match peel_body(&rule.body) {
+            // Classify via body shape — peel structural wrappers
+            // (Map / OptionalWhitespace / Skip / Next / Negate) so
+            // delimiter-bounded compounds (`"[" >> ... << "]"`)
+            // surface as their inner Repeat / Seq kernel rather
+            // than falling through to `Cursor`.
+            match peel::unwrap_structural_wrappers(&rule.body) {
                 IrNode::Seq(_) | IrNode::Alt(_, _) | IrNode::Repeat { .. } => {
                     VariantShape::Compound
                 }
@@ -240,16 +245,6 @@ fn classify_shape(
                 _ => VariantShape::Cursor,
             }
         }
-    }
-}
-
-/// Peel through `Map` / `OptionalWhitespace` to reach the
-/// structurally-significant body node. Mirrors the helper in
-/// `view/mod.rs`.
-fn peel_body(node: &IrNode) -> &IrNode {
-    match node {
-        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => peel_body(inner),
-        other => other,
     }
 }
 
@@ -1079,7 +1074,7 @@ pub fn variant_entries_for(ir: &GrammarIR) -> Vec<VariantInfo> {
                 Some(td) if td.is_scalar_payload() && !matches!(td, TypeDesc::Span) => {
                     VariantInfoShape::Scalar(td.clone())
                 }
-                _ => match peel_body(&rule.body) {
+                _ => match peel::unwrap_structural_wrappers(&rule.body) {
                     IrNode::Seq(_) | IrNode::Alt(_, _) | IrNode::Repeat { .. } => {
                         VariantInfoShape::Compound
                     }

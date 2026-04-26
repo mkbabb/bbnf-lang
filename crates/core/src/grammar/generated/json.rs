@@ -4473,9 +4473,9 @@ mod __jsonparser_emit_impl {
         bool(JsonParserBoolProjection),
         number(f64),
         string(JsonParserStringProjection),
-        array(JsonParserNodeView<'p>),
+        array(&'p str),
         pair(::std::vec::Vec<JsonParserValue<'p>>),
-        object(JsonParserNodeView<'p>),
+        object(&'p str),
         value(::std::vec::Vec<JsonParserValue<'p>>),
         /// Fallback for records whose `variant_idx` is not a
         /// known rule discriminator (recovered records, stray
@@ -4575,12 +4575,8 @@ mod __jsonparser_emit_impl {
                 JsonParserValue::string(proj)
             }
             JsonParserRuleKind::array => {
-                let _ = frame;
-                ::core::panic!(
-                    "AY-II.W0'.b: Cursor-shape variant projection not yet \
-                     available; frame offset {}",
-                    offset,
-                );
+                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                JsonParserValue::array(span)
             }
             JsonParserRuleKind::pair => {
                 let mut children: ::std::vec::Vec<JsonParserValue<'p>> = ::std::vec::Vec::with_capacity(
@@ -4592,12 +4588,8 @@ mod __jsonparser_emit_impl {
                 JsonParserValue::pair(children)
             }
             JsonParserRuleKind::object => {
-                let _ = frame;
-                ::core::panic!(
-                    "AY-II.W0'.b: Cursor-shape variant projection not yet \
-                     available; frame offset {}",
-                    offset,
-                );
+                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                JsonParserValue::object(span)
             }
             JsonParserRuleKind::value => {
                 let mut children: ::std::vec::Vec<JsonParserValue<'p>> = ::std::vec::Vec::with_capacity(

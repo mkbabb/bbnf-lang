@@ -163239,7 +163239,7 @@ mod __cssl4parser_emit_impl {
         percentage(CssL4ParserPercentageProjection),
         valueUnit(::std::vec::Vec<CssL4ParserValue<'p>>),
         blockContent(::std::vec::Vec<CssL4ParserValue<'p>>),
-        ruleBlock(CssL4ParserNodeView<'p>),
+        ruleBlock(&'p str),
         qualifiedRule(::std::vec::Vec<CssL4ParserValue<'p>>),
         mediaRule(::std::vec::Vec<CssL4ParserValue<'p>>),
         keyframeStop(CssL4ParserKeyframeStopProjection),
@@ -163252,14 +163252,14 @@ mod __cssl4parser_emit_impl {
         ruleList(::std::vec::Vec<CssL4ParserValue<'p>>),
         stylesheet(CssL4ParserNodeView<'p>),
         __pattern_db1e96a7fb6ccf5d(::std::vec::Vec<CssL4ParserValue<'p>>),
-        __calcFunction_cont_151(CssL4ParserNodeView<'p>),
-        __minFunction_cont_152(CssL4ParserNodeView<'p>),
-        __maxFunction_cont_153(CssL4ParserNodeView<'p>),
+        __calcFunction_cont_151(&'p str),
+        __minFunction_cont_152(&'p str),
+        __maxFunction_cont_153(&'p str),
         __clampFunction_cont_154(::std::vec::Vec<CssL4ParserValue<'p>>),
         __varFunction_cont_155(::std::vec::Vec<CssL4ParserValue<'p>>),
         __envFunction_cont_156(::std::vec::Vec<CssL4ParserValue<'p>>),
         __varFunction_cont_157(::std::vec::Vec<CssL4ParserValue<'p>>),
-        __calcFunction_cont_158(CssL4ParserNodeView<'p>),
+        __calcFunction_cont_158(&'p str),
         __urlFunction_cont_159(&'p str),
         __genericFunction_cont_160(::std::vec::Vec<CssL4ParserValue<'p>>),
         __colorDecl_cont_161(::std::vec::Vec<CssL4ParserValue<'p>>),
@@ -165044,12 +165044,8 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::blockContent(children)
             }
             CssL4ParserRuleKind::ruleBlock => {
-                let _ = frame;
-                ::core::panic!(
-                    "AY-II.W0'.b: Cursor-shape variant projection not yet \
-                     available; frame offset {}",
-                    offset,
-                );
+                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                CssL4ParserValue::ruleBlock(span)
             }
             CssL4ParserRuleKind::qualifiedRule => {
                 let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
@@ -165166,28 +165162,16 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::__pattern_db1e96a7fb6ccf5d(children)
             }
             CssL4ParserRuleKind::__calcFunction_cont_151 => {
-                let _ = frame;
-                ::core::panic!(
-                    "AY-II.W0'.b: Cursor-shape variant projection not yet \
-                     available; frame offset {}",
-                    offset,
-                );
+                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                CssL4ParserValue::__calcFunction_cont_151(span)
             }
             CssL4ParserRuleKind::__minFunction_cont_152 => {
-                let _ = frame;
-                ::core::panic!(
-                    "AY-II.W0'.b: Cursor-shape variant projection not yet \
-                     available; frame offset {}",
-                    offset,
-                );
+                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                CssL4ParserValue::__minFunction_cont_152(span)
             }
             CssL4ParserRuleKind::__maxFunction_cont_153 => {
-                let _ = frame;
-                ::core::panic!(
-                    "AY-II.W0'.b: Cursor-shape variant projection not yet \
-                     available; frame offset {}",
-                    offset,
-                );
+                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                CssL4ParserValue::__maxFunction_cont_153(span)
             }
             CssL4ParserRuleKind::__clampFunction_cont_154 => {
                 let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::with_capacity(
@@ -165226,12 +165210,8 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::__varFunction_cont_157(children)
             }
             CssL4ParserRuleKind::__calcFunction_cont_158 => {
-                let _ = frame;
-                ::core::panic!(
-                    "AY-II.W0'.b: Cursor-shape variant projection not yet \
-                     available; frame offset {}",
-                    offset,
-                );
+                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                CssL4ParserValue::__calcFunction_cont_158(span)
             }
             CssL4ParserRuleKind::__urlFunction_cont_159 => {
                 let span = &input[frame.span_lo as usize..frame.span_hi as usize];

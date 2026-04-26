@@ -54,6 +54,8 @@ use rustc_hash::FxHashMap;
 use bbnf_ir::passes::NamedTypeResolver;
 use bbnf_ir::{GrammarIR, IrNode, RuleId, StringId, TypeDesc};
 
+use super::peel::unwrap_structural_wrappers;
+
 /// Rust-backend resolver for backend-specific named types.
 ///
 /// Holds a precomputed map from interned name [`StringId`] to the
@@ -160,27 +162,6 @@ fn infer_named_shape(ir: &GrammarIR, rule_id: RuleId) -> Option<Vec<TypeDesc>> {
         // universal fallback picks up `"String"` / `"Bytes"` names
         // below this.
         _ => None,
-    }
-}
-
-/// Strip structural wrappers (`Map`, `OptionalWhitespace`, `Skip`,
-/// `Next`) from a node, returning the inner kernel. For `Skip` /
-/// `Next` the left operand is followed — the right operand is the
-/// discarded boundary (closing delimiter, trailing whitespace).
-fn unwrap_structural_wrappers(node: &IrNode) -> &IrNode {
-    let mut cur = node;
-    loop {
-        match cur {
-            IrNode::Map { inner, .. }
-            | IrNode::OptionalWhitespace(inner)
-            | IrNode::Negate(inner) => {
-                cur = inner.as_ref();
-            }
-            IrNode::Skip(l, _) | IrNode::Next(l, _) => {
-                cur = l.as_ref();
-            }
-            _ => return cur,
-        }
     }
 }
 

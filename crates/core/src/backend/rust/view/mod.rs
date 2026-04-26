@@ -82,6 +82,7 @@ pub mod color;
 mod grammar;
 mod leaves;
 pub mod named_types;
+pub mod peel;
 mod repeat;
 mod seq;
 pub mod value;
@@ -440,9 +441,9 @@ fn emit_typed_accessors(
         return leaves::emit_aggregate_accessors(rule, rule_name, layout, type_desc, ir);
     }
 
-    // Peel the body through Map/OptionalWhitespace to find the
-    // structurally meaningful shape.
-    let body = peel_body(&rule.body);
+    // Peel structural wrappers (Map / OptionalWhitespace / Skip /
+    // Next / Negate) to find the structurally meaningful shape.
+    let body = peel::unwrap_structural_wrappers(&rule.body);
 
     match body {
         IrNode::Seq(_) => seq::emit_seq_accessors(rule, rule_name, ir, grammar_name),
@@ -460,14 +461,5 @@ fn emit_typed_accessors(
                 leaves::emit_leaf_accessors(rule, rule_name, &TypeDesc::Span)
             }
         }
-    }
-}
-
-/// Peel through Map, OptionalWhitespace, and other transparent
-/// wrappers to expose the structurally significant body node.
-fn peel_body(node: &IrNode) -> &IrNode {
-    match node {
-        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => peel_body(inner),
-        other => other,
     }
 }

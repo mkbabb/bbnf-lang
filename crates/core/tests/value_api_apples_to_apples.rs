@@ -114,9 +114,14 @@ fn write_value(v: &JsonParserValue<'_>, out: &mut String) {
             ));
         }
         JsonParserValue::array(view) => {
-            // Arrays carry a NodeView — the verbatim input bytes
-            // include the surrounding `[` / `]` + interior whitespace.
-            out.push_str(view.span_text());
+            // B5.W0 — `array` peels through `Skip(Next("[", body), "]")`
+            // via the consolidated `unwrap_structural_wrappers`; the
+            // outermost kernel surfaces as the opening literal, so the
+            // variant carries the verbatim input span (`&'p str`)
+            // covering `[` … `]` + interior whitespace. Pushing the
+            // span directly preserves the source bytes for the
+            // round-trip ws-strip comparison.
+            out.push_str(view);
         }
         JsonParserValue::pair(children) => {
             // `pair` wraps its key + value + colon as children.
@@ -125,9 +130,11 @@ fn write_value(v: &JsonParserValue<'_>, out: &mut String) {
             }
         }
         JsonParserValue::object(view) => {
-            // Objects carry a NodeView — verbatim bytes cover `{` …
-            // `}` + interior formatting.
-            out.push_str(view.span_text());
+            // B5.W0 — same Span classification as `array`. The variant
+            // carries the verbatim input bytes covering `{` … `}` +
+            // interior formatting; the round-trip ws-strip comparison
+            // sees the source bytes directly.
+            out.push_str(view);
         }
         JsonParserValue::value(children) => {
             // Outer `value` wrapper — recurse into its single child.

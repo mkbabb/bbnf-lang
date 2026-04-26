@@ -7651,7 +7651,7 @@ mod __cssprettyparser_emit_impl {
         important(CssPrettyParserImportantProjection),
         declaration(::std::vec::Vec<CssPrettyParserValue<'p>>),
         blockContent(::std::vec::Vec<CssPrettyParserValue<'p>>),
-        ruleBlock(CssPrettyParserNodeView<'p>),
+        ruleBlock(&'p str),
         qualifiedRule(::std::vec::Vec<CssPrettyParserValue<'p>>),
         mediaRule(::std::vec::Vec<CssPrettyParserValue<'p>>),
         supportsRule(::std::vec::Vec<CssPrettyParserValue<'p>>),
@@ -7662,7 +7662,7 @@ mod __cssprettyparser_emit_impl {
         atRule(::std::vec::Vec<CssPrettyParserValue<'p>>),
         ruleItem(::std::vec::Vec<CssPrettyParserValue<'p>>),
         ruleList(::std::vec::Vec<CssPrettyParserValue<'p>>),
-        stylesheet(CssPrettyParserNodeView<'p>),
+        stylesheet(&'p str),
         /// Fallback for records whose `variant_idx` is not a
         /// known rule discriminator (recovered records, stray
         /// sub-variant indices).
@@ -7753,12 +7753,8 @@ mod __cssprettyparser_emit_impl {
                 CssPrettyParserValue::blockContent(children)
             }
             CssPrettyParserRuleKind::ruleBlock => {
-                let _ = frame;
-                ::core::panic!(
-                    "AY-II.W0'.b: Cursor-shape variant projection not yet \
-                     available; frame offset {}",
-                    offset,
-                );
+                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                CssPrettyParserValue::ruleBlock(span)
             }
             CssPrettyParserRuleKind::qualifiedRule => {
                 let mut children: ::std::vec::Vec<CssPrettyParserValue<'p>> = ::std::vec::Vec::with_capacity(
@@ -7867,12 +7863,8 @@ mod __cssprettyparser_emit_impl {
                 CssPrettyParserValue::ruleList(children)
             }
             CssPrettyParserRuleKind::stylesheet => {
-                let _ = frame;
-                ::core::panic!(
-                    "AY-II.W0'.b: Cursor-shape variant projection not yet \
-                     available; frame offset {}",
-                    offset,
-                );
+                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                CssPrettyParserValue::stylesheet(span)
             }
             _ => {
                 let _ = frame;

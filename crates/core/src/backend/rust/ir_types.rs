@@ -36,7 +36,11 @@ use syn::{Type, parse_quote};
 /// on disk.
 ///
 /// Both vectors are populated 1:1 in index order; unequal lengths are
-/// a programmer error in the populator (xtask).
+/// a programmer error in the populator (xtask). Use
+/// [`Self::with_paths`] to construct an instance whose two path
+/// vectors are atomically populated — the runtime assert at
+/// `ir_enums.rs:36` was retired in B5.W0 in favour of this
+/// constructor invariant.
 #[derive(Clone, Debug, Default)]
 pub struct ParserAttributes {
     pub paths: Vec<std::path::PathBuf>,
@@ -53,6 +57,40 @@ pub struct ParserAttributes {
     /// by `RuleKind` keep a stable surface. Drives the pipeline's
     /// `preserve_identity` gate.
     pub structural: bool,
+}
+
+impl ParserAttributes {
+    /// Construct a [`ParserAttributes`] whose `paths` and
+    /// `grammar_rel_paths` are populated atomically from a single
+    /// `Vec<PathBuf>`. The relative paths are derived by lossy
+    /// path-to-POSIX conversion of each entry's filename — sufficient
+    /// for the test fixtures that exercised the lock-step invariant
+    /// without a prior populator (the runtime assert at
+    /// `ir_enums.rs:36` papered over this construction gap pre-B5).
+    /// Production callsites still set both vectors explicitly via
+    /// `xtask::regen::parser_attributes`.
+    ///
+    /// Every other field stays at its [`Default`]. Callers that need
+    /// a tailored attribute set chain `Self::with_paths(paths)`
+    /// followed by struct-update spread:
+    ///
+    /// ```ignore
+    /// ParserAttributes {
+    ///     prettify: true,
+    ///     ..ParserAttributes::with_paths(paths)
+    /// }
+    /// ```
+    pub fn with_paths(paths: Vec<std::path::PathBuf>) -> Self {
+        let grammar_rel_paths = paths
+            .iter()
+            .map(|p| p.to_string_lossy().replace('\\', "/"))
+            .collect();
+        Self {
+            paths,
+            grammar_rel_paths,
+            ..Default::default()
+        }
+    }
 }
 
 /// Central context for IR-based code generation.

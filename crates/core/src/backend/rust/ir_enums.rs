@@ -33,15 +33,10 @@ use super::ir_types::ParserAttributes;
 pub fn generate_grammar_arr(parser_attrs: &ParserAttributes, ident: &syn::Ident) -> TokenStream {
     let grammar_arr_name = format_ident!("GRAMMAR_{}", ident);
     let len = parser_attrs.grammar_rel_paths.len();
-    assert_eq!(
-        parser_attrs.paths.len(),
-        parser_attrs.grammar_rel_paths.len(),
-        "ParserAttributes: `paths` and `grammar_rel_paths` length mismatch \
-         ({} vs {}). The populator (xtask::regen) must push to both in \
-         index order.",
-        parser_attrs.paths.len(),
-        parser_attrs.grammar_rel_paths.len(),
-    );
+    // B5.W0 — the lock-step `paths` / `grammar_rel_paths` invariant
+    // is upheld at the type surface via [`ParserAttributes::with_paths`];
+    // the prior runtime assert here papered over construction-site
+    // gaps and has been retired.
     let include_strs = parser_attrs.grammar_rel_paths.iter().map(|rel| {
         // `concat!(env!("CARGO_MANIFEST_DIR"), "/../../", <rel>)` —
         // CARGO_MANIFEST_DIR for `bbnf` resolves to

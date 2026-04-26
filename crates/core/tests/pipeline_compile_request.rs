@@ -172,10 +172,7 @@ fn compile_paths_preserves_pretty_directives_across_multiple_explicit_paths() {
     };
 
     assert!(prepared.prep.effective_prettify);
-    let attrs = ParserAttributes {
-        paths,
-        ..ParserAttributes::default()
-    };
+    let attrs = ParserAttributes::with_paths(paths);
     let tokens = render_tokens(&prepared, &attrs, "MultiPathParser");
     assert!(
         tokens.contains("foo_prettify"),
@@ -213,10 +210,7 @@ fn compile_paths_preserves_pretty_directives_through_import_resolution() {
     };
 
     assert!(prepared.prep.effective_prettify);
-    let attrs = ParserAttributes {
-        paths,
-        ..ParserAttributes::default()
-    };
+    let attrs = ParserAttributes::with_paths(paths);
     let tokens = render_tokens(&prepared, &attrs, "ImportPrettyParser");
     assert!(
         tokens.contains("child_prettify"),

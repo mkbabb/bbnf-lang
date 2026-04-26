@@ -18,17 +18,20 @@ the last consumer migration + the substrate deletion.
 
 BBNF self-hosts on a grammar-derived struct. `project_types`
 applied to `grammar/bbnf/bbnf.bbnf` produces a `BbnfAst` struct
-graph whose shape mirrors the compiler's in-memory IR surface. The
-`bbnf-derive` proc-macro's embedded parser — the piece that reads a
-grammar file during build — stops using the tape cursor and reads
-from the derived struct instead.
+graph whose shape mirrors the compiler's in-memory IR surface.
+The xtask regen pipeline's embedded parser (orchestrated by
+`xtask/src/regen.rs`, emitted via `crates/core/src/backend/rust/
+emitter/`) — the piece that reads a grammar file at IR-pipeline
+time — stops using the tape cursor and reads from the derived
+struct instead.
 
 The cutover is byte-equal reproducibility across two stages:
 
 1. **Stage A.** The pre-AZ-II compiler (tape-based, inherited from
    AZ-I close) builds the AZ-II-candidate compiler (struct-based).
-   The candidate's `bbnf-derive` emits struct-writing parsers; the
-   candidate itself was built from a tape-writing parser.
+   The candidate's xtask regen pipeline emits struct-writing
+   parsers; the candidate itself was built from a tape-writing
+   parser.
 2. **Stage B.** The AZ-II-candidate compiler rebuilds itself from
    its own source. The final compiler is built from a struct-
    writing parser and produces struct-writing parsers. The tape
@@ -49,8 +52,8 @@ AZ-II opens on AZ-I's seven-point handoff contract (AZ-I.md
 1. JSON, CSS L4, Sheets direct-to-struct on a single codegen path.
 2. `StructRegistry` closed on those three.
 3. `crates/tape/` compilable on disk.
-4. `grammar/bbnf/bbnf.bbnf` unchanged; `bbnf-derive` produces
-   tape-writing parsers; BBNF bootstrap test suite green.
+4. `grammar/bbnf/bbnf.bbnf` unchanged; `cargo xtask regen`
+   produces tape-writing parsers; BBNF bootstrap test suite green.
 5. 17-entry matrix at AU parity (three-data-slice on struct,
    BBNF-slice on tape).
 6. Classifier scoping disposition (unified or locked-split) landed.
@@ -195,21 +198,25 @@ check`; baseline bench captures the AZ-II opening matrix.
 `Param`, `TypeExpr`, `Import`, `Directive`, `Comment`, and the
 `RegexPattern` / regex-HIR variants per BBNF's grammar.
 
-`bbnf-derive` gains a struct-writing emission mode, wired to
-`StructRegistry`. The tape-writing mode remains present — Stage A
-is the bridge stage where both emission targets are wired.
+The xtask regen pipeline (`xtask/src/regen.rs` orchestration +
+the rust emitter under `crates/core/src/backend/rust/emitter/`)
+gains a struct-writing emission mode, wired to `StructRegistry`.
+The tape-writing mode remains present — Stage A is the bridge
+stage where both emission targets are wired.
 
 Stage A output: the pre-AZ-II compiler (tape-based, inherited
-from AZ-I close) runs `cargo build -p bbnf_derive` with the
-struct-emission mode enabled. The resulting `bbnf-derive` proc-
-macro produces struct-writing parsers for BBNF grammars.
+from AZ-I close) runs `cargo xtask regen --emit-mode struct` with
+the struct-emission mode enabled. The resulting per-grammar
+output under `crates/core/src/grammar/generated/<ident>.rs`
+holds struct-writing parsers for BBNF grammars.
 
-Corpus bench: run `bbnf-derive` on every `.bbnf` fixture in the
-tree (`grammar/*/*.bbnf`, `tests/fixtures/*.bbnf`); collect
-per-fixture parsed output to
+Corpus bench: run `cargo xtask regen --emit-mode struct` against
+every `.bbnf` fixture in the tree (`grammar/*/*.bbnf`,
+`tests/fixtures/*.bbnf`); collect per-fixture parsed output to
 `docs/benchmarks/AZ-II/W1/stage-a-output/`.
 
-Runtime call site: every `cargo build` re-runs `bbnf-derive`; the
+Runtime call site: `cargo xtask regen` is invoked at IR-pipeline
+time (CI + pre-commit gate via `cargo xtask regen --check`); the
 struct-emission path is exercised on every grammar file read.
 
 Bench delta gate: BBNF self-parse throughput ≥ AU baseline minus
@@ -225,8 +232,8 @@ build -p bbnf` executed with the W1-candidate as the bootstrap
 compiler. The resulting compiler is built from a struct-writing
 parser and produces struct-writing parsers.
 
-Stage B output: the same `bbnf-derive` invocations on the same
-`.bbnf` fixture corpus, captured to
+Stage B output: the same `cargo xtask regen --emit-mode struct`
+invocations on the same `.bbnf` fixture corpus, captured to
 `docs/benchmarks/AZ-II/W2/stage-b-output/`.
 
 Byte-equal close gate: `diff -r` between
@@ -342,8 +349,8 @@ authoritative list.
 | `crates/ir/src/passes/types/` | `project_types` extended to close on BBNF | W1 |
 | `crates/ir/src/registry/struct.rs` | `StructRegistry` extended with BBNF entries | W1 |
 | `crates/ir/src/passes/audit/payload_coverage.rs` | Audit pass extended to cover BBNF | W0 |
-| `crates/bbnf_derive/src/emitter.rs` | Struct-writing emission mode alongside tape mode (W1) → struct-only (W2) | W1, W2 |
-| `crates/bbnf_derive/src/loader.rs` | Grammar-file reader routes through struct path | W1 |
+| `crates/core/src/backend/rust/emitter/**` | Struct-writing emission mode alongside tape mode (W1) → struct-only (W2) | W1, W2 |
+| `xtask/src/regen.rs` | Grammar-file orchestration routes through struct path | W1 |
 | `crates/core/src/runtime/bbnf/` | Runtime BBNF loader reads `BbnfAst` directly | W1 |
 | `crates/core/src/runtime/mod.rs` | Alias shims retired at W3 | W3 |
 | `crates/core/src/backend/driver/*` | View layer for BBNF rewritten; `@debug` lowerer migrated | W3 |

@@ -105,13 +105,13 @@ fn write_value(v: &JsonParserValue<'_>, out: &mut String) {
         }
         JsonParserValue::string(proj) => {
             // Post-B2.W1 typed projection: `JsonParserStringProjection`
-            // carries (lo, hi) span offsets into the source buffer.
-            // Without the source slice we emit a placeholder that
-            // preserves byte symmetry for non-string-equality tests.
-            out.push_str(&format!(
-                "\"<span:{}..{}>\"",
-                proj.field_0, proj.field_1
-            ));
+            // carries `field_0: (u32, u32)` (the borrow-via-frame
+            // (span_lo, span_hi) pair) per the B5.W0.2 cluster-B
+            // pluggable-materialiser fix. Without the source slice we
+            // emit a placeholder that preserves byte symmetry for
+            // non-string-equality tests.
+            let (lo, hi) = proj.field_0;
+            out.push_str(&format!("\"<span:{}..{}>\"", lo, hi));
         }
         JsonParserValue::array(view) => {
             // B5.W0 — `array` peels through `Skip(Next("[", body), "]")`

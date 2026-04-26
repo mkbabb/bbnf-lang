@@ -149,12 +149,28 @@ fn infer_named_shape(ir: &GrammarIR, rule_id: RuleId) -> Option<Vec<TypeDesc>> {
         }
         // Single-leaf kernel (e.g. JSON `string = /regex/ ->
         // decode_json_string_to_arena(input) : String`). The
-        // grammar is projecting an opaque owned-bytes value into
-        // an arena handle; the runtime layout is the `(offset,
-        // length)` pair regardless of which name the grammar
-        // chose.
+        // grammar is projecting a borrow-via-frame value: the
+        // runtime emits via `push_leaf_borrowed_string`
+        // (child_off=NONE) on the fast path and
+        // `push_leaf_with_arena_frame` (4-byte length prefix +
+        // bytes) on the escape-decode path. Neither path writes
+        // an `(offset, length)` aggregate to the payload column,
+        // so synthesising `[U32, U32]` produces a layout the
+        // runtime never populates — the materialiser's
+        // `payload_bytes(rec, 8)` returns `None` on every borrow
+        // and reads stale length-prefix bytes on every escape
+        // path.
+        //
+        // B5.W0.2 (Cluster B): admit single-leaf admissions as
+        // `[Span]` instead. The materialiser's Span-field arm
+        // already routes through the frame's own `(span_lo,
+        // span_hi)` slots — no aggregate buffer round-trip; one
+        // pluggable read path shared with bare-`Span` admissions
+        // (BBNF identifier / literal / comment, Sheets
+        // identifiers, …). The frame layout is the runtime fact;
+        // the resolver projection now matches it.
         IrNode::Regex(_) | IrNode::Literal(_) => {
-            Some(vec![TypeDesc::U32, TypeDesc::U32])
+            Some(vec![TypeDesc::Span])
         }
         // Alt / Repeat / Ref / Epsilon / TokenDispatch / unwrapped
         // Map / OptionalWhitespace / Skip / Next kernels are not

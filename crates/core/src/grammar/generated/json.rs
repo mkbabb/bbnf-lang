@@ -3503,23 +3503,20 @@ mod __jsonparser_emit_impl {
         /// written for this record (e.g. an alternative branch
         /// path that never set any fields).
         #[inline]
-        pub fn value(&self) -> (u32, u32) {
+        pub fn value(&self) -> ((u32, u32)) {
             let tape = self.cursor.tape();
             let rec = self.cursor.record();
             match tape.payload_bytes(rec, 8usize) {
                 Some(__bytes) => {
-                    (
-                        u32::from_le_bytes(
-                            <[u8; 4]>::try_from(&__bytes[0usize..4usize])
-                                .expect("aggregate slice is 4 bytes"),
-                        ),
-                        u32::from_le_bytes(
-                            <[u8; 4]>::try_from(&__bytes[4usize..8usize])
-                                .expect("aggregate slice is 4 bytes"),
-                        ),
-                    )
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
                 }
-                None => (0_u32, 0_u32),
+                None => ((0_u32, 0_u32)),
             }
         }
     }
@@ -4099,7 +4096,7 @@ mod __jsonparser_emit_impl {
     pub enum valueValue<'p> {
         object(JsonParserNodeView<'p>),
         array(JsonParserNodeView<'p>),
-        string((u32, u32)),
+        string(((u32, u32))),
         null(u8),
         bool((bool)),
         number(f64),
@@ -4133,16 +4130,14 @@ mod __jsonparser_emit_impl {
                     let __tape = __cursor.tape();
                     let __value = match __tape.payload_bytes(__rec, 8usize) {
                         Some(__bytes) => {
-                            (
-                                u32::from_le_bytes(
-                                    <[u8; 4]>::try_from(&__bytes[0usize..4usize]).unwrap(),
-                                ),
-                                u32::from_le_bytes(
-                                    <[u8; 4]>::try_from(&__bytes[4usize..8usize]).unwrap(),
-                                ),
-                            )
+                            ({
+                                let __raw = u64::from_le_bytes(
+                                    <[u8; 8]>::try_from(&__bytes[0usize..8usize]).unwrap(),
+                                );
+                                (__raw as u32, (__raw >> 32) as u32)
+                            })
                         }
-                        None => (0_u32, 0_u32),
+                        None => ((0_u32, 0_u32)),
                     };
                     Some(valueValue::string(__value))
                 }
@@ -4378,10 +4373,7 @@ mod __jsonparser_emit_impl {
     pub struct JsonParserStringProjection {
         /// Grammar-declared scalar field at packed-buffer offset
         #[doc = concat!("`", stringify!(0), "` (bytes).")]
-        pub field_0: u32,
-        /// Grammar-declared scalar field at packed-buffer offset
-        #[doc = concat!("`", stringify!(4), "` (bytes).")]
-        pub field_1: u32,
+        pub field_0: (u32, u32),
     }
     impl JsonParserStringProjection {
         /// Grammar-declared rule that projects into this
@@ -4396,7 +4388,7 @@ mod __jsonparser_emit_impl {
         /// Number of fields (scalar + cursor) the layout pass
         /// admitted for this projection.
         #[doc(hidden)]
-        pub const FIELD_COUNT: usize = 2;
+        pub const FIELD_COUNT: usize = 1;
         /// Total bytes the projection's packed portion occupies
         /// in the aggregate payload buffer; `0` when every
         /// field is a cursor handle.
@@ -4460,7 +4452,7 @@ mod __jsonparser_emit_impl {
     #[doc(hidden)]
     #[inline(always)]
     pub fn __grammar_projection_string() -> (&'static str, usize, &'static str) {
-        ("string", 2, "String")
+        ("string", 1, "String")
     }
     /// AY-II.W0'.b — grammar-emitted value enum. Eager
     /// materialisation target for `Parsed::to_value()`. Variants
@@ -4874,20 +4866,11 @@ mod __jsonparser_emit_impl {
     ) -> ::core::option::Option<JsonParserStringProjection> {
         let _ = input;
         let frame = output.value_frame_at(offset)?;
-        let __tape = output.tape();
-        let __tape_rec = __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset))?;
-        let __bytes = __tape.payload_bytes(__tape_rec, 8)?;
-        let field_0: u32 = {
-            let __arr = <[u8; 4]>::try_from(&__bytes[0..4]).ok()?;
-            u32::from_le_bytes(__arr)
-        };
-        let field_1: u32 = {
-            let __arr = <[u8; 4]>::try_from(&__bytes[4..8]).ok()?;
-            u32::from_le_bytes(__arr)
-        };
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(JsonParserStringProjection {
             field_0,
-            field_1,
         })
     }
     impl JsonParser {

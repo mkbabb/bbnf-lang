@@ -423,20 +423,36 @@ fn rule_head_materialization(ir: &GrammarIR, rule_id: RuleId) -> Option<Material
 /// AW-II.W5c.1 — project a universal type name to its structural
 /// scalar-tuple shape.
 ///
-/// These names have the same runtime semantics at every backend:
-/// - `"String"` / `"str"` — owned UTF-8, arena-backed. The runtime
-///   scanner writes the decoded bytes into the tape's arena frame
-///   and keeps a `(u32 offset, u32 length)` handle on the record.
-/// - `"Bytes"` — raw byte slice, arena-backed. Same `(offset, length)`
-///   projection; no decode.
+/// These names share borrow-via-frame runtime semantics at every
+/// backend:
+/// - `"String"` / `"str"` — owned UTF-8 borrowed from the input span
+///   on the fast path; arena-decoded only when escape sequences
+///   appear. The materialiser's frame projection reads
+///   `(span_lo, span_hi)` either way.
+/// - `"Bytes"` — raw byte slice, also bounded by the rule's source
+///   span. The frame stamp suffices.
 ///
 /// Consulted by [`compute_payload_layouts_with_resolver`] only when
 /// the backend resolver declines — backend-specific projections
 /// (CSS L4 `"Color"` / `"ColorMix"`) still take priority.
+///
+/// # B5.W0.2 (Cluster B) — `[Span]` admission
+///
+/// Pre-B5.W0 the fallback synthesised `[U32, U32]`, asserting the
+/// runtime had written a `(u32 offset, u32 length)` aggregate into
+/// the payload column. The runtime never honoured that assertion:
+/// `push_leaf_borrowed_string` carries `child_off = NONE`, and
+/// `push_leaf_with_arena_frame` writes a 4-byte length prefix
+/// followed by the decoded bytes (not a second `u32`). Both shapes
+/// fail every `payload_bytes(rec, 8)` read at runtime. Returning
+/// `[Span]` matches the grammar's actual layout — one frame-borrow
+/// span per admission — and routes the materialiser through the
+/// `Scalar { ty: Span }` arm which reads from the frame's own
+/// `(span_lo, span_hi)` slots.
 fn universal_named_shape(name: &str) -> Option<TypeDesc> {
     match name {
         "String" | "str" | "Bytes" => {
-            Some(TypeDesc::Tuple(vec![TypeDesc::U32, TypeDesc::U32]))
+            Some(TypeDesc::Tuple(vec![TypeDesc::Span]))
         }
         _ => None,
     }

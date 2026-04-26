@@ -68,13 +68,30 @@ fn resolver_empty_when_no_named_types() {
     }
 }
 
-// ─── Single-leaf body infers (U32, U32) arena-handle shape ───────────
+// ─── Single-leaf body infers `[Span]` borrow-via-frame shape ─────────
 
 #[test]
 fn regex_body_infers_arena_handle_shape() {
     // JSON-like: `rule = /regex/ -> ... : String` — the body kernel
-    // is a bare regex, the resolver projects `(U32 offset, U32
-    // length)` as the arena-backed owned-bytes shape.
+    // is a bare regex; the resolver projects a single `Span` field.
+    //
+    // # B5.W0.2 (Cluster B)
+    //
+    // Pre-B5.W0 this returned `Tuple([U32, U32])` on the assumption
+    // that the runtime had written a `(u32 offset, u32 length)`
+    // aggregate into the payload column. The runtime never honoured
+    // that assumption: `push_leaf_borrowed_string` carries
+    // `child_off = NONE`, and `push_leaf_with_arena_frame` writes a
+    // 4-byte length prefix followed by the decoded bytes (not a
+    // second `u32`). The materialiser's `payload_bytes(rec, 8)` read
+    // returned `None` on every borrow and stale length-prefix bytes
+    // on every escape path.
+    //
+    // The fix admits these as `Tuple([Span])` so the materialiser's
+    // `Scalar { ty: Span }` arm reads `(frame.span_lo, frame.span_hi)`
+    // — pluggable per `feedback_pluggable_components` and uniform
+    // with bare-`Span` admissions (BBNF identifier / literal /
+    // comment, Sheets identifiers, …).
     let mut ir = GrammarIR::default();
     let regex_sid = ir.strings.len() as StringId;
     ir.strings.push(r#"[a-z]+"#.to_string());
@@ -89,8 +106,8 @@ fn regex_body_infers_arena_handle_shape() {
         resolver.resolve_named(type_sid).expect("String must resolve");
     assert_eq!(
         resolved,
-        TypeDesc::Tuple(vec![TypeDesc::U32, TypeDesc::U32]),
-        "owned-bytes projection shape",
+        TypeDesc::Tuple(vec![TypeDesc::Span]),
+        "borrow-via-frame projection shape",
     );
 }
 

@@ -246,11 +246,11 @@ does not re-audit d4-d7 at close; B1.W0 owns the re-audit
    currently FAILS under W0 landed state (`to_value()` panics).
    **Action**: W0' close satisfies this invariant; BA open is
    unblocked at W0' close.
-9. **BA/W3 file-bound** at `crates/jit/src/lib.rs` — file does
-   not exist (AUDIT-D Q5). Not AY-II's problem; flagged for BA
-   authorship correction before BA opens.
-10. **BB + BC** — both gate on BA close; no AY-II-specific
-    dependency beyond BA's opening. Clean.
+9. **BA/W3 file-bound** flagged for re-home in BA scrub
+   (originally cited a path that does not exist; BA's own scrub
+   redirects to the post-B2 sub-crate substrate).
+10. **BB** — gates on BA close; no AY-II-specific dependency
+    beyond BA's opening. Clean.
 
 ### `f372e7ef` history disposition
 
@@ -307,7 +307,7 @@ AY-II does not close until:
    added in AY-II.
 7. `docs/tranches/AY-II/FINAL.md` authored against the close
    artefacts.
-8. `docs/tranches/BA/BA.md`, `BB/BB.md`, `BC/BC.md` updated to
+8. `docs/tranches/BA/BA.md`, `BB/BB.md` updated to
    reference AY-II (not AY) as their predecessor close; BA's
    beyond-parity thesis carries forward on the fused-substrate
    truth AY-II lands.

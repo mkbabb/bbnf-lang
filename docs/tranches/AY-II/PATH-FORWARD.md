@@ -23,13 +23,13 @@ order is:
    emitter fix; the bbnf self-host regen now reaches `prettyplease`
    end-to-end without rejection.
 4. **B2 has closed (build-time codegen transposition).** The
-   `bbnf_derive` proc-macro IR-pipeline contract retires; `cargo xtask
-   regen` is the canonical regen entrypoint; per-grammar source emerges
+   `bbnf_derive` proc-macro IR-pipeline contract retired; `cargo xtask
+   regen` is the canonical regen entrypoint; per-grammar source lives
    on disk under `crates/core/src/grammar/generated/<ident>.rs`;
    consumer crates `pub use ::bbnf::grammar::generated::<ident>::*` in
-   place of `#[derive(Parser)]`; `crates/derive/` deletes outright
-   (3 files / 457 lines); `BBNF_SCHEMA_VERSION` retires; the pre-B2
-   80-min cold rustc-side IR-pipeline wall ceases to exist; CI +
+   place of `#[derive(Parser)]`; `crates/derive/` deleted outright
+   (3 files / 457 lines); `BBNF_SCHEMA_VERSION` retired; the pre-B2
+   80-min cold rustc-side IR-pipeline wall no longer exists; CI +
    pre-commit gate on `cargo xtask regen --check`. See
    `docs/tranches/B2/FINAL.md`.
 5. **AY-II.W0' close ceremony resumes on the post-B2 substrate.** The

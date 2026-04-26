@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# bbnf-lang pre-commit hook — regen drift gate.
+#
+# Runs `cargo xtask regen --check` when the staged change touches a grammar
+# source, the per-grammar generated tree, or the regen entrypoint. Skips
+# during rebase/merge so half-applied trees do not block conflict resolution.
+# CI carries the canonical enforcement; this hook is the local fast-fail.
+set -euo pipefail
+
+if [ -f .git/MERGE_HEAD ] || [ -f .git/REBASE_HEAD ] || [ -d .git/rebase-merge ] || [ -d .git/rebase-apply ]; then
+    exit 0
+fi
+
+if git diff --cached --name-only | grep -qE '^(grammar/|crates/core/src/grammar/generated/|xtask/src/regen)'; then
+    if ! cargo xtask regen --check; then
+        echo "error: cargo xtask regen --check failed; run 'cargo xtask regen' and stage the result" >&2
+        exit 1
+    fi
+fi

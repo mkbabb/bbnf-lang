@@ -29,13 +29,15 @@ jobs:
         run: cargo install cargo-expand --locked
 
       # ── Preflight (routine surface) ────────────────────────────────
-      # Fast checks on the ax-iter profile: bootstrap regen cleanliness,
+      # Fast checks on the ax-iter profile: regen drift gate (xtask
+      # regenerates per-grammar `crates/core/src/grammar/generated/` to
+      # a tempdir + diffs against checked-in; non-zero exit blocks PR),
       # clippy, and compile-gate via the iter-check alias (excludes the
-      # heavy proc-macro sites per B1.md invariant 10). Short timeout —
+      # heavy link-time crates per B1.md invariant 10). Short timeout —
       # this block is the iteration loop, not the close gate.
-      - name: preflight — bootstrap regen clean
+      - name: preflight — regen check (xtask)
         timeout-minutes: 5
-        run: bash scripts/check-bootstrap-clean.sh
+        run: cargo xtask regen --check
       - name: preflight — clippy (ax-iter)
         timeout-minutes: 10
         run: cargo iter-clippy

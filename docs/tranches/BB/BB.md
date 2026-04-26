@@ -14,8 +14,8 @@ class, and reserves full human review for the novel class only.
 Rules live outside `crates/core`: fleet-wide rules in a new
 `crates/ir/src/rewrites/` module, grammar-specific rules
 colocated with each grammar under `grammar/<name>/rewrites/*.ron`
-via a standardised schema the `bbnf_derive` build step compiles
-into that grammar's cost-config.
+via a standardised schema `cargo xtask regen` scans at IR-pipeline
+time and compiles into that grammar's cost-config.
 
 ## Preflight truth from 2026-04-24
 
@@ -87,7 +87,7 @@ pre-egraph normalizer do not close a BB wave.
 Command packet:
 
 ```bash
-rg -n 'src/rewrites|src/ruler|RuleSet|Provenance|rewrites/' crates/ir crates/egraph crates/derive grammar
+rg -n 'src/rewrites|src/ruler|RuleSet|Provenance|rewrites/' crates/ir crates/egraph crates/core/src/rewrites grammar
 
 BBNF_EGRAPH_REPORT=1 BBNF_HIR_EGRAPH_REPORT=1 \
 cargo run -p bbnf --example egraph_fire_probe --profile ax-iter
@@ -214,12 +214,12 @@ Rule(
 )
 ```
 
-At build time the `bbnf_derive` macro scans `grammar/<name>/
+At IR-pipeline time `cargo xtask regen` scans `grammar/<name>/
 rewrites/` for every grammar it processes, parses each rule file
 against the schema, and compiles matching rules into that grammar's
 `cost_config`. Fleet-wide rules are statically linked from
-`crates/ir/src/rewrites/`. Grammar authors add rules by dropping files
-in — no core edit, no derive edit.
+`crates/ir/src/rewrites/`. Grammar authors add rules by dropping
+files in — no core edit, no regen-emitter edit.
 
 ### Why RON rather than `.rs`
 
@@ -233,7 +233,7 @@ rule. Data-only wins.
 
 Adding a new grammar `foo` with three custom rewrites requires:
 creating `grammar/foo/rewrites/{r1,r2,r3}.ron`. That is the whole
-delta. No `crates/core` edit. No `bbnf_derive` edit. No hand-
+delta. No `crates/core` edit. No regen-emitter edit. No hand-
 authored registry. This is what "grammar-colocated, modular,
 extensible" resolves to.
 
@@ -375,8 +375,8 @@ or after BA.
 
 - `crates/ir/src/rewrites/` compiles standalone; schema validator
   rejects malformed RON with file/line diagnostics.
-- `bbnf_derive` discovers and compiles `grammar/<name>/rewrites/
-  *.ron` for every grammar without per-grammar edits.
+- `cargo xtask regen` discovers and compiles `grammar/<name>/
+  rewrites/*.ron` for every grammar without per-grammar edits.
 
 ## Wave structure
 
@@ -435,7 +435,7 @@ Inheriting AZ-I's discipline:
 | `crates/ir/src/rewrites/schema.rs` | create | RON rule-file schema + validator |
 | `crates/ir/src/rewrites/base/*.ron` | create | Base fleet-wide rule files |
 | `grammar/<name>/rewrites/*.ron` | create per grammar | Grammar-specific rule files |
-| `crates/bbnf_derive/src/rewrites.rs` | create | Build-time scan + compile of rule files into cost-config |
+| `crates/core/src/rewrites/mod.rs` | create | IR-pipeline scan + compile of rule files into cost-config (invoked by `cargo xtask regen`) |
 | `docs/rules/` | create | Per-rule docs, run reports, audit log |
 
 ## Defensible floor

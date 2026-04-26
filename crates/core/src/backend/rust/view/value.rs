@@ -358,6 +358,7 @@ fn emit_value_root_impl(
     let root_fn = format_ident!("project_value_{}", grammar_name);
     let frame_fn = format_ident!("project_frame_{}", grammar_name);
     let dispatch_fn = format_ident!("project_rule_kind_{}", grammar_name);
+    let push_children_fn = format_ident!("project_push_children_{}", grammar_name);
 
     // Rule-id → RuleKind dispatch, scoped to this grammar. The
     // `variant_idx & 0xFF` is the emitter's canonical low-byte slice
@@ -376,52 +377,135 @@ fn emit_value_root_impl(
     // from the frame + input.
     let project_arms: Vec<TokenStream> = variants
         .iter()
-        .map(|v| emit_project_arm(v, value_ident, rule_kind_ident, &frame_fn, grammar_name))
+        .map(|v| emit_project_arm(v, value_ident, rule_kind_ident, &push_children_fn, grammar_name))
         .collect();
 
     quote! {
-        /// AY-II.W0'.b — rule-id → RuleKind dispatch local to the
-        /// fused-pipeline projection path. Mirrors the view layer's
-        /// `rule_kind()` dispatch; scoped to the projection module so
-        /// the two consumer paths stay coupled only through the
-        /// `RuleKind` enum.
+        /// B5.W0.6 — joint `(kind, variant_idx)` dispatch local to the
+        /// fused-pipeline projection path.
+        ///
+        /// `variant_idx = (rule_id & 0xFF)` collapses every rule whose
+        /// id-mod-256 collides; for non-rule structural compounds the
+        /// shape emitters stamp `variant_idx = 0` as a placeholder
+        /// (see `emitter/shapes/{flat,array,object,inline}.rs`), which
+        /// pre-B5.W0.6 collided with rule_id=0 (CSS L4 `namedColor`,
+        /// JSON `null`, etc.) and routed Seq/Alt/Repeat intermediates
+        /// to a leaf-rule's materialiser. The materialiser then panicked
+        /// against the compound's `child_off` (a column rank, not an
+        /// arena byte offset) at `payload_bytes`'s precondition assert.
+        ///
+        /// The dispatch now consults `kind` AS WELL AS `variant_idx`:
+        /// a compound-kind frame carrying the placeholder `variant_idx
+        /// = 0` is an intermediate without a rule binding and routes
+        /// to `Unknown`. The `ValueFrame` doc-comment at
+        /// `crates/tape/src/builder/value.rs:47` already declares this
+        /// invariant — pre-B5.W0.6 the codegen ignored it.
         #[inline(always)]
-        fn #dispatch_fn(variant_idx: u8) -> #rule_kind_ident {
+        fn #dispatch_fn(
+            kind: ::bbnf::runtime::tape::TapeKind,
+            variant_idx: u8,
+        ) -> #rule_kind_ident {
+            // Intermediate compound — non-rule structural frame stamped
+            // with the `variant_idx=0` placeholder by the shape emitters.
+            // No rule binds; drop to `Unknown` so the project arm logic
+            // descends into the children rather than calling a leaf
+            // materialiser against a compound record.
+            if variant_idx == 0 && kind.is_compound() {
+                return #rule_kind_ident::Unknown;
+            }
             match variant_idx {
                 #(#dispatch_arms)*
                 _ => #rule_kind_ident::Unknown,
             }
         }
 
-        /// AY-II.W0'.b — per-frame projector. Reads one frame from the
+        /// B5.W0.6 — push the projected value(s) for the record at
+        /// `offset` onto `out`. For rule-bound records this is a single
+        /// `<Grammar>Value` variant constructed via [`#frame_fn`]. For
+        /// intermediate compound records (the `variant_idx=0` non-rule
+        /// structural compounds emitted at inner Seq / Repeat / Alt
+        /// positions) it recurses through the children, flattening the
+        /// intermediate transparently — the user-visible value tree
+        /// only carries rule-bound variants.
+        ///
+        /// Mirrors the walker-tape parity contract: the substrate emits
+        /// one tape record per IR production, but only rule-bound
+        /// productions surface as `<Grammar>Value` variants; structural
+        /// intermediates are an implementation detail of the tape
+        /// shape, not of the value tree.
+        ///
+        /// Reads `kind` + `variant_idx` from the tape (not the value
+        /// frame). The materializer pattern at
+        /// `materialize_projection_<rule>_<Grammar>` already treats
+        /// `offset` as a tape offset (`tape.try_get(TapeOffset(offset))`);
+        /// the dispatch is therefore consistent with the materialiser
+        /// surface — tape is the canonical record substrate, the value
+        /// frames are a parallel cache used only for typed scalar
+        /// payload reads on leaves with a payload tag.
+        #[inline]
+        fn #push_children_fn<'p>(
+            output: &::bbnf::runtime::FusedOutput<#grammar_ident>,
+            input: &'p str,
+            offset: u32,
+            out: &mut ::std::vec::Vec<#value_ident<'p>>,
+        ) {
+            let __tape = output.tape();
+            let __rec = match __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset)) {
+                ::core::option::Option::Some(r) => r,
+                ::core::option::Option::None => return,
+            };
+            // Intermediate structural compound — descend through its
+            // children without surfacing a wrapper variant. Leaves and
+            // rule-bound compounds project as a single value.
+            if __rec.variant_idx() == 0 && __rec.kind().is_compound() {
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    #push_children_fn(output, input, __child.offset().0, out);
+                }
+            } else {
+                out.push(#frame_fn(output, input, offset));
+            }
+        }
+
+        /// AY-II.W0'.b — per-frame projector. Reads one record from the
         /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
-        /// value slab and constructs the matching `<Grammar>Value`
-        /// variant. Admitted rules tail-call their grammar-derived
-        /// materializer; non-admitted rules construct the variant
-        /// inline. Compound variants recurse through this same fn.
+        /// tape and constructs the matching `<Grammar>Value` variant.
+        /// Admitted rules tail-call their grammar-derived materializer;
+        /// non-admitted rules construct the variant inline. Compound
+        /// variants recurse through this same fn.
+        ///
+        /// B5.W0.6 — kind + variant_idx + span are read from the tape
+        /// record (not the value frame). The value frame substrate is
+        /// only consulted for typed-scalar payload reads on leaves
+        /// whose `value_payload_for(frame)` returns the column-decoded
+        /// payload — that path remains in the scalar arm.
         #[inline]
         fn #frame_fn<'p>(
             output: &::bbnf::runtime::FusedOutput<#grammar_ident>,
             input: &'p str,
             offset: u32,
         ) -> #value_ident<'p> {
-            let frame = match output.value_frame_at(offset) {
-                ::core::option::Option::Some(f) => f,
+            let __tape = output.tape();
+            let __rec = match __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset)) {
+                ::core::option::Option::Some(r) => r,
                 ::core::option::Option::None => {
                     ::core::panic!(
-                        "AY-II.W0'.b: value frame offset {} out of range (frames: {})",
+                        "AY-II.W0'.b: tape offset {} out of range (tape len: {})",
                         offset,
-                        output.frames().len(),
+                        __tape.len(),
                     );
                 }
             };
-            match #dispatch_fn(frame.variant_idx) {
+            match #dispatch_fn(__rec.kind(), __rec.variant_idx()) {
                 #(#project_arms)*
                 _ => {
-                    let _ = frame;
                     ::core::panic!(
-                        "AY-II.W0'.b: unclassified variant_idx {} on frame at offset {}",
-                        frame.variant_idx,
+                        "AY-II.W0'.b: unclassified (kind={:?}, variant_idx={}) on tape record at offset {}",
+                        __rec.kind(),
+                        __rec.variant_idx(),
                         offset,
                     );
                 }
@@ -429,7 +513,7 @@ fn emit_value_root_impl(
         }
 
         /// AY-II.W0'.b — fused-pipeline root projector. Reads the root
-        /// frame from the value slab and constructs the grammar's
+        /// record from the tape and constructs the grammar's
         /// `<Grammar>Value<'p>` in one pass. No tape walk, no reparse,
         /// no visitor dispatch.
         #[inline]
@@ -438,17 +522,6 @@ fn emit_value_root_impl(
             input: &'p str,
         ) -> #value_ident<'p> {
             let root_off = output.value_root_offset();
-            match output.value_frame_at(root_off) {
-                ::core::option::Option::Some(_) => {}
-                ::core::option::Option::None => {
-                    ::core::panic!(
-                        "AY-II.W0'.b: FusedOutput root frame absent after parse \
-                         (root_offset = {}, frame count = {})",
-                        root_off,
-                        output.frames().len(),
-                    );
-                }
-            }
             #frame_fn(output, input, root_off)
         }
 
@@ -490,7 +563,7 @@ fn emit_project_arm(
     v: &VariantEntry,
     value_ident: &syn::Ident,
     rule_kind_ident: &syn::Ident,
-    frame_fn: &syn::Ident,
+    push_children_fn: &syn::Ident,
     grammar_name: &str,
 ) -> TokenStream {
     let kind_variant = format_ident!("{}", v.name);
@@ -521,7 +594,7 @@ fn emit_project_arm(
         }
         VariantShape::Span => quote! {
             #rule_kind_ident::#kind_variant => {
-                let span = &input[frame.span_lo as usize..frame.span_hi as usize];
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 #value_ident::#value_variant(span)
             }
         },
@@ -534,10 +607,25 @@ fn emit_project_arm(
         ),
         VariantShape::Compound => quote! {
             #rule_kind_ident::#kind_variant => {
+                // B5.W0.6 — child iteration descends through intermediate
+                // structural compounds (the `variant_idx=0` placeholders
+                // emitted by inner Seq / Repeat / Alt positions in
+                // `emitter/shapes/{flat,array,object,inline}.rs`). The
+                // `push_children` helper yields rule-bound records only;
+                // intermediate compounds are flattened transparently so
+                // the user-visible `<Grammar>Value` tree omits them.
+                //
+                // Iteration walks the tape's child run via
+                // `TapeCursor::children` — consistent with the dispatcher
+                // reading `kind` / `variant_idx` from the tape record.
                 let mut children: ::std::vec::Vec<#value_ident<'p>> =
-                    ::std::vec::Vec::with_capacity(frame.child_count as usize);
-                for (child_off, _child_frame) in output.value_children(offset) {
-                    children.push(#frame_fn(output, input, child_off));
+                    ::std::vec::Vec::new();
+                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                    __tape,
+                    ::bbnf::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    #push_children_fn(output, input, __child.offset().0, &mut children);
                 }
                 #value_ident::#value_variant(children)
             }
@@ -551,10 +639,9 @@ fn emit_project_arm(
                 // has not yet produced a slab projection for; the
                 // projection panics rather than silently fall back
                 // to tape-walking.
-                let _ = frame;
                 ::core::panic!(
                     "AY-II.W0'.b: Cursor-shape variant projection not yet \
-                     available; frame offset {}",
+                     available; tape record offset {}",
                     offset,
                 );
             }
@@ -562,10 +649,15 @@ fn emit_project_arm(
     }
 }
 
-/// Emit a Scalar variant projection arm — decodes the frame's payload
-/// tag into the typed primitive. Falls back to span-text parsing when
+/// Emit a Scalar variant projection arm — decodes the leaf's payload
+/// into the typed primitive. Falls back to span-text parsing when
 /// no payload was recorded (leaves whose rule did not stage a typed
 /// payload at parse time).
+///
+/// B5.W0.6 — payload reads consult the value substrate via
+/// `value_frame_at(offset).and_then(value_payload_for)` for the
+/// typed-tag column path; the span fallback reads `__rec.span_lo` /
+/// `__rec.span_hi` from the tape record bound in the dispatcher.
 fn emit_scalar_project_arm(
     rule_kind_ident: &syn::Ident,
     kind_variant: &syn::Ident,
@@ -574,10 +666,15 @@ fn emit_scalar_project_arm(
     td: &TypeDesc,
 ) -> TokenStream {
     let fallback = scalar_fallback_from_span(td);
+    let payload_lookup = quote! {
+        output
+            .value_frame_at(offset)
+            .and_then(|f| output.value_payload_for(f))
+    };
     match td {
         TypeDesc::F64 => quote! {
             #rule_kind_ident::#kind_variant => {
-                let v: f64 = output.value_payload_for(frame)
+                let v: f64 = #payload_lookup
                     .and_then(|p| p.as_f64())
                     .unwrap_or_else(|| { #fallback });
                 #value_ident::#value_variant(v)
@@ -585,7 +682,7 @@ fn emit_scalar_project_arm(
         },
         TypeDesc::Bool => quote! {
             #rule_kind_ident::#kind_variant => {
-                let v: bool = output.value_payload_for(frame)
+                let v: bool = #payload_lookup
                     .and_then(|p| p.as_bool())
                     .unwrap_or_else(|| { #fallback });
                 #value_ident::#value_variant(v)
@@ -593,7 +690,7 @@ fn emit_scalar_project_arm(
         },
         TypeDesc::U32 => quote! {
             #rule_kind_ident::#kind_variant => {
-                let v: u32 = output.value_payload_for(frame)
+                let v: u32 = #payload_lookup
                     .and_then(|p| p.as_u32())
                     .unwrap_or_else(|| { #fallback });
                 #value_ident::#value_variant(v)
@@ -606,7 +703,7 @@ fn emit_scalar_project_arm(
             let ty_ident = format_ident!("{}", ident);
             quote! {
                 #rule_kind_ident::#kind_variant => {
-                    let v: #ty_ident = output.value_payload_for(frame)
+                    let v: #ty_ident = #payload_lookup
                         .and_then(|p| p.as_u32())
                         .map(|v| v as #ty_ident)
                         .unwrap_or_else(|| { #fallback });
@@ -618,10 +715,12 @@ fn emit_scalar_project_arm(
 }
 
 /// Scalar fallback — reads the source span and parses into the target
-/// primitive.
+/// primitive. Reads `__rec.span_lo` / `__rec.span_hi` from the tape
+/// record (B5.W0.6 — dispatcher binds `__rec` to the tape record at
+/// the projection's offset).
 fn scalar_fallback_from_span(td: &TypeDesc) -> TokenStream {
     let slice = quote! {
-        (&input[frame.span_lo as usize..frame.span_hi as usize])
+        (&input[__rec.span_lo as usize..__rec.span_hi as usize])
     };
     match td {
         TypeDesc::Bool => quote! { #slice == "true" },

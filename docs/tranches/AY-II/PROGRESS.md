@@ -4,11 +4,39 @@ Dated execution log for tranche AY-II (pass II of AY; see
 `../AY-I/FINAL.md` for pass-I close and `audit/AUDIT-{A,B,C,D}-*.md`
 for the triumvirate that informs this pass).
 
-- `Status`: B1 closed; W0' close ceremony unblocked, source landings
-  remain in, runtime ceremony (regen + double-regen + expand + bench +
-  samply + nm) opens immediately
-- `Current wave`: W0' (close ceremony unblocked)
-- `Next wave`: AY-II.W0' close ceremony, then W1
+- `Status`: B1 + B3 + B4.W0 + B2 closed (predecessor sequence); W0'
+  close ceremony unblocked on the post-B2 substrate in compressed-
+  honest form (~15 min); source landings remain in
+- `Current wave`: W0' (close ceremony unblocked, post-B2 substrate)
+- `Next wave`: AY-II.W0' compressed-honest close ceremony, then W1
+
+---
+
+## 2026-04-25 — B2 close unblocks W0' compressed-honest ceremony
+
+B2 (build-time codegen transposition) closed at the W4 close commit
+(see `docs/tranches/B2/FINAL.md`). The `bbnf_derive` proc-macro
+IR-pipeline contract retired; `cargo xtask regen` is the canonical
+regen entrypoint; per-grammar source emerges on disk under
+`crates/core/src/grammar/generated/<ident>.rs`; consumer crates
+`pub use ::bbnf::grammar::generated::<ident>::*` in place of
+`#[derive(Parser)]`; `crates/derive/` deletes outright; the pre-B2
+80-min cold rustc-side IR-pipeline wall ceases to exist; CI +
+pre-commit gate on `cargo xtask regen --check`.
+
+The W0' close ceremony shrinks to its compressed-honest form per
+AUDIT-B: cycle-1 regen via `cargo xtask regen` (~5 min wall,
+dominated by xtask incremental compile; IR pipeline itself runs in
+milliseconds), invariant greps, `projection_totality.rs` test,
+`<Grammar>Value::Unknown` retirement audit + per-grammar exception
+ledger, close-status formalisation. Cycle-2 idempotency, fat-LTO
+5-bench matrix, samply per primary grammar, and `nm` of bench
+binaries route to wave-specific close gates (W1.c JSON, W2 CSS,
+W3 Sheets, W4.e BBNF) where peer-parity context is meaningful.
+
+No runtime state changed in this entry; this is the substrate shift
+that makes the W0' close ceremony tractable on a post-B2 dev loop
+where the bootstrap wall doesn't exist anymore.
 
 ---
 

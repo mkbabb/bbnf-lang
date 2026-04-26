@@ -4,10 +4,10 @@ Dated execution log for tranche B2, the build-time codegen
 transposition that retires `bbnf_derive`'s proc-macro IR-pipeline
 contract.
 
-- `Status`: in flight (W0 + W1 + W2 + W3 closed; W4 pending)
-- `Current wave`: W3 (complete) → W4 (opens next)
-- `Next wave`: W4 — CI gate (`cargo xtask regen --check`) + pre-commit
-  hook; FINAL.md authorship; AY-II handoff refresh; AZ-I.W0 amendment
+- `Status`: complete (W0 + W1 + W2 + W3 + W4 closed)
+- `Current wave`: W4 (complete) — B2 closed
+- `Next wave`: AY-II.W0' compressed-honest close ceremony (resumes
+  on the post-B2 substrate)
 
 ---
 
@@ -377,3 +377,89 @@ pre-commit hook + FINAL.md + AY-II handoff refresh + AZ-I.W0
 amendment + REMAINING-TRAJECTORY + RISK-PERF-MATRIX revisions.
 
 Full audit: `docs/tranches/B2/audit/W3-close.md`.
+
+## 2026-04-25 — W4 closed; B2 closed
+
+W4 lands the CI + pre-commit gate that prevents drift between the
+checked-in `crates/core/src/grammar/generated/<ident>.rs` tree and
+the xtask's regenerated output, authors `docs/tranches/B2/FINAL.md`,
+refreshes the AY-II planning docs to cite B2 as predecessor on the
+post-B2 substrate, amends `docs/tranches/AZ-I/{AZ-I.md,waves/W0.md}`
+to drop the derive-cache + Watt items as T3-superseded, updates
+`docs/tranches/REMAINING-TRAJECTORY.md` and `docs/RISK-PERF-MATRIX.md`
+to reflect B2's close, and authors `docs/benchmarks/post-B2.json` as
+the aggregate proof matrix.
+
+CI gate: `.github/workflows/ci.yml` `rust` job replaces the
+pre-existing `preflight — bootstrap regen clean` step (which invoked
+the now-deleted `scripts/check-bootstrap-clean.sh`) with
+`preflight — regen check (xtask)` invoking `cargo xtask regen
+--check`. The step lands before `iter-check` so CI catches drift
+without paying a full workspace check; `timeout-minutes: 5`.
+
+Pre-commit hook: the repo carries no husky/lefthook framework; the
+in-tree template lives at `scripts/hooks/pre-commit` (versioned)
+and `scripts/install-hooks.sh` is the fresh-checkout installer. The
+hook skips during rebase/merge, runs `cargo xtask regen --check`
+only when staged changes touch a grammar source / per-grammar
+generated tree / xtask regen entrypoint, and exits non-zero on
+drift with a "run 'cargo xtask regen' and stage the result"
+diagnostic. CI carries the canonical enforcement; the hook is the
+local fast-fail.
+
+FINAL.md: authored as standalone prose (no plan/commit/conversation
+references) covering headline + architectural narrative + perf
+numbers + test results + cross-tranche effects + forward-routed
+work + invariant table (14 rows green) + hard-gate table + commit
+ledger + AY-II handoff block.
+
+post-B2.json: top-level keys `provenance`, `walls`, `tests`,
+`structural`, `ci_gate`, `pre_commit_hook`, `cross_tranche_effects`,
+`forward_routed_work`. Cycle-1 cold regen wall ~12:43 (full sweep,
+9 grammars), ~5 min (single-grammar cold xtask compile);
+IR-pipeline-only ~73 ms per grammar; pre-B2 80-min wall recorded as
+retired.
+
+Cross-tranche updates:
+- `docs/tranches/AY-II/AY-II.md` — header narrative cites B1 + B3 +
+  B2 predecessor sequence; Wave-summary W0' row reflects post-B2
+  substrate + compressed-honest ceremony per AUDIT-B.
+- `docs/tranches/AY-II/PATH-FORWARD.md` — header date amended; five-
+  step ordered work; §2 ceremony spec rewrites to compressed-honest
+  form (cycle-1 regen + invariant verification + projection-totality
+  + Unknown retirement + close-status formalisation).
+- `docs/tranches/AY-II/PROGRESS.md` — "## 2026-04-25 — B2 close
+  unblocks W0' compressed-honest ceremony" entry.
+- `docs/tranches/AY-II/waves/W0p.md` — status line refreshed; close
+  ceremony rewrites; hard gate from 10 items to 7 (cycle-2 + expand
+  + bench + samply + nm route to wave-specific gates).
+- `docs/tranches/AZ-I/AZ-I.md` — §W0 narrative cites the post-B2
+  amendment; §Critical files drops `crates/derive/` rows; Q7
+  dissolves with named rationale; §Handoff §4 cites `cargo xtask
+  regen --grammar bbnf`.
+- `docs/tranches/AZ-I/waves/W0.md` — wholesale rewrite to the
+  post-B2 amendment (3 sub-agents → 2; classifier + IR audit +
+  baseline bench retained); Archaeology section records the
+  supersession.
+- `docs/tranches/REMAINING-TRAJECTORY.md` — sequence updates to
+  `B1 -> B3 -> B4 -> B2 -> AY-II ...`; probability tables get
+  closed rows + post-B2 floor lifts; §4 ledger gets B4.W0 + B2 rows.
+- `docs/RISK-PERF-MATRIX.md` — title + opening prose update;
+  AY-II / AZ-I / AZ-II tranche-close numbers lift on post-B2 floor.
+
+Verification (parallel cycle):
+- `cargo check --workspace --profile ax-iter` — exit 0 in 13.24 s
+  warm (parallel target-lock contention; sequential warm ~4 s).
+- `cargo iter-check` — exit 0 in 13.27 s parallel; 0.11 s
+  sequential warm (well under 0.5 s gate per B2.md invariant 12).
+- `cargo xtask regen --check` — exit 0 in 1.11 s ("regen --check:
+  clean (9 grammars matched)"); zero drift between checked-in tree
+  and xtask regen output.
+- CI YAML valid (`yaml.safe_load` exits 0).
+- post-B2.json valid (`json.load` exits 0).
+
+B2 closes: proc-macro retired; xtask is canonical regen; CI gates
+on regen-check; AY-II.W0' resumes on a substrate where the wall
+doesn't exist anymore.
+
+Full audit: `docs/tranches/B2/audit/W4-close.md`.

@@ -162,7 +162,12 @@ same-commit samply capture.
 
 W0 establishes AZ-I's baseline measurement surface and resolves
 every open question that would otherwise drive a reactive sub-wave
-mid-tranche.
+mid-tranche. The pre-B2 derive-cache relocation + Watt items are
+T3-superseded — B2 retired the proc-macro IR-pipeline contract
+entirely; there is no proc-macro to relocate the cache for, no
+proc-macro to wrap with Watt; the substrate they presupposed
+ceases to exist at B2.W2. The retained items below are the
+load-bearing core.
 
 Landed artefacts:
 
@@ -173,10 +178,6 @@ Landed artefacts:
   produces a unified design or declares unification intractable and
   locks the three classifiers into their current scoping across
   these grammars.
-- Derive-cache lift to `$XDG_CACHE_HOME/bbnf-derive/` with composite
-  fingerprint `(grammar-sha, derive-version, rustc-sha, codegen-flags)`.
-  Cache invalidation test suite under
-  `crates/derive/tests/cache_invalidation/`.
 - IR audit pass at `crates/ir/src/passes/audit/payload_coverage.rs`
   enumerating every typed `->` in JSON, CSS L4, and Sheets and
   reporting emitter coverage. Gates the build on these grammars;
@@ -329,15 +330,16 @@ authoritative list.
 | `crates/core/src/runtime/css_l4/` | CSS L4 runtime — struct-only | W3 |
 | `crates/core/src/backend/emitter.rs` | Emission path — struct builder calls on three data grammars | W2–W3 |
 | `crates/core/src/pipeline/compile.rs` | Compile pipeline — struct path selection per grammar | W2–W3 |
-| `crates/derive/` | Derive-cache lift (W0 only; BBNF remains on tape) | W0 |
-| `crates/derive/tests/cache_invalidation/` (new) | Cache fingerprint tests | W0 |
 | `grammar/json/`, `grammar/css-l4/`, `grammar/sheets/` | Typed-leaf authoring pass | W1–W3 |
 | `tests/*_parity.rs` | Struct-vs-external parity harnesses for three data grammars | W2–W4 |
 | `docs/benchmarks/profiles/AZ-I/W<n>/` | Samply fleet per wave | W0–W4 |
 
 Unchanged (BBNF scope, moves in AZ-II):
-`crates/tape/`, `crates/bbnf_derive/src/` (bootstrap parser
-generator), `grammar/bbnf/`, `crates/core/src/runtime/bbnf/`.
+`crates/tape/`, `grammar/bbnf/`, `crates/core/src/runtime/bbnf/`,
+`xtask/src/regen.rs` BBNF entry (the `bbnf_derive` proc-macro
+referenced here in earlier drafts retired at B2.W2; the BBNF
+self-host parser builds from `crates/core/src/grammar/generated/
+bbnf.rs`, refreshed by `cargo xtask regen`).
 
 ## Open questions absorbed
 
@@ -359,11 +361,14 @@ grammar slice.
    `project_types` does not close produces a build-stop diagnostic
    naming the unclosed rule and type edge. BBNF is exempt in AZ-I.
    AZ-I.W1 owns enforcement.
-3. **Q7 — derive-cache key.** Composite fingerprint
-   `(grammar-sha, derive-version, rustc-sha, codegen-flags)` with a
-   test suite under `crates/derive/tests/cache_invalidation/`
-   validating every component. Lift target
-   `$XDG_CACHE_HOME/bbnf-derive/`. AZ-I.W0 owns.
+3. **Q7 — derive-cache key.** Dissolved at B2.W2: the proc-macro
+   IR-pipeline contract retired and `crates/derive/` deleted
+   outright; there is no proc-macro cache to key, lift, or
+   invalidate. Drift detection now lives in standard "diff after
+   regen" hygiene — `cargo xtask regen --check` regenerates to a
+   tempdir and exits non-zero on divergence; CI invokes it before
+   `iter-check` and pre-commit invokes it when grammar files or the
+   regen entrypoint change. AZ-I.W0 records the dissolution.
 4. **Q9 — classifier collision.** Front-loaded research in AZ-I.W0;
    `CLASSIFIER-UNIFICATION.md` either specifies a unified decision
    surface across regex-HIR, structural-alphabet, and payload-kind
@@ -454,9 +459,12 @@ At AZ-I close, AZ-II opens on the following guaranteed state:
    all present and link. The crate is not shrunk in AZ-I; AZ-II
    owns the full deletion.
 4. **BBNF grammar unchanged.** `grammar/bbnf/bbnf.bbnf` is not
-   edited in AZ-I. `crates/bbnf_derive/` generates a tape-writing
-   parser as before. The BBNF bootstrap test suite is green on the
-   tape path.
+   edited in AZ-I. The BBNF self-host parser regenerates via
+   `cargo xtask regen --grammar bbnf` to
+   `crates/core/src/grammar/generated/bbnf.rs` (the proc-macro
+   IR-pipeline contract retired at B2.W2; the on-disk per-grammar
+   source is the substrate every consumer reads). The BBNF
+   bootstrap test suite is green on the tape path.
 5. **17-entry matrix at AU parity.** The three-data-grammar slice
    on the struct path; the BBNF-slice on the tape path. AZ-II
    carries both forward as its opening budget.

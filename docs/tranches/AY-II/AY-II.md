@@ -10,13 +10,16 @@ remainder. AY-II lands it on one path, grammar-derived, close-gated
 against real semantic peers — not internal ratios.
 
 AY-II now executes as W0 (partial) → W0' → W1 → W2 → W3 → W4 → W5.
-W0' source landings are in; B1 closes first as the bounded prelude
-annex over the proof surface; AY-II resumes immediately afterward on
-the refreshed command/bootstrap/expand/profile/bench surface. Every
-AY-II close gate is a semantic or runtime fact verifiable against an
-external reference (sonic-rs, simd-json, lightningcss, cssparser) or a
-grammar-derived totality check (projection counts, consumer counts,
-materializer counts in agreement).
+W0' source landings are in; B1 (prelude annex), B3 (parser-baseline
+restoration), and B2 (build-time codegen transposition) close in
+sequence as predecessors over the proof surface; AY-II resumes
+immediately afterward on the refreshed substrate where `cargo xtask
+regen` is the canonical regen entrypoint, the proc-macro IR-pipeline
+contract is retired, and the pre-B2 80-min cold rustc-side wall has
+ceased to exist. Every AY-II close gate remains a semantic or runtime
+fact verifiable against an external reference (sonic-rs, simd-json,
+lightningcss, cssparser) or a grammar-derived totality check
+(projection counts, consumer counts, materializer counts in agreement).
 
 ## Architectural thesis
 
@@ -139,14 +142,15 @@ materializer counts in agreement).
 
 ## Wave summary
 
-W0' and W1-W5 all gate on B1 (prelude annex) close. See
-`PATH-FORWARD.md` for program order:
-B1 close → AY-II.W0' close → AY-II.W1-W5 sequential.
+W0' and W1-W5 all gate on the predecessor close sequence
+B1 → B3 → B2. See `PATH-FORWARD.md` for program order:
+B1 close → B3 close → B2 close → AY-II.W0' compressed-honest close →
+AY-II.W1-W5 sequential.
 
 | Wave | Spec | Headline | Opens after | Status |
 |---|---|---|---|---|
 | **W0** | [waves/W0.md](waves/W0.md) | Fused substrate + emitter unification + runtime consolidation + projection totality + structural-scan integration (5 parallel sub-agents) | tranche open | superseded — partial landing retained; W0' owns close |
-| **W0'** | [waves/W0p.md](waves/W0p.md) | FusedBuilder collapse + projection-consumer wiring + scan-policy splice + legacy-cruft deletion (3 parallel sub-agents + d-lineage dev-infra follow-ons) | W0 partial landing | in_progress — B1 closed (2026-04-24); W0' close ceremony unblocked. Source landings in (W0'.a/b/c + d1 test migration + d3 regen-O(1) fix + d4-d7 infra scope routed to B1); regen + double-regen + expand + bench + samply + nm ceremony is the immediate next dispatch |
+| **W0'** | [waves/W0p.md](waves/W0p.md) | FusedBuilder collapse + projection-consumer wiring + scan-policy splice + legacy-cruft deletion (3 parallel sub-agents + d-lineage dev-infra follow-ons) | W0 partial landing | in_progress — B1 (2026-04-24) + B3 + B2 (2026-04-25) closed; W0' source landings remain on master; the close ceremony shrinks to the compressed-honest form (~15 min on the post-B2 substrate per AUDIT-B): cycle-1 regen via `cargo xtask regen` + invariant verification + projection-totality test + close-status formalisation. Cycle-2 idempotency, fat-LTO 5-bench matrix, samply, and nm route to wave-specific gates |
 | **W1** | [waves/W1.md](waves/W1.md) | JSON — semantic parity + peer-referenced perf (sonic + simd-json); grammar-derived typed admission totality; samply-proven hot path | W0' close | planned |
 | **W2** | [waves/W2.md](waves/W2.md) | CSS L4 — lightningcss total typed-semantic parity (Rule, Declaration, Value, Selector, MediaRule, Keyframes families); canonical-output byte parity; zero hardcoded bindings | W1 | planned |
 | **W3** | [waves/W3.md](waves/W3.md) | Google Sheets — grammar-derived typed formula/cell/range families; self-parity + formula_expr parity; samply-proven hot paths | W2 | planned |

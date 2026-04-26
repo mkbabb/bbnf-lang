@@ -1,29 +1,54 @@
 # Remaining Trajectory — Architecture, Optimisation, and Competitor Plan
 
 Status: planning canon. This file explains the remaining path
-`B1 -> AY-II -> AZ-I -> AZ-II -> BA -> BB` after the 2026-04-24
-redress. It does not authorize execution.
+`B1 -> B3 -> B4 -> B2 -> AY-II -> AZ-I -> AZ-II -> BA -> BB` after the
+2026-04-25 B2 close. It does not authorize execution.
 
 ## 1. Path Change From The Redress
 
-The tranche order does not change. The path is still:
+The runway picks up three predecessor tranches between B1 and AY-II:
 
 ```text
-B1 -> AY-II.W0' close + W1-W5 -> AZ-I -> AZ-II -> BA
-                                      \
-                                       -> BB (parallel with AZ-II where disjoint)
+B1 -> B3 -> B4 -> B2 -> AY-II.W0' close + W1-W5 -> AZ-I -> AZ-II -> BA
+                                                          \
+                                                           -> BB (parallel with AZ-II where disjoint)
 ```
 
-The redress changes the floor, not the sequence:
+The redress + post-B1 predecessor sequence changes the floor + the
+post-B2 wall expectations, not the destination order beyond AY-II:
 
-1. **AZ-I is stricter.** CSS L4 may not retain a tape-backed aggregate
+1. **B3 closed (parser-baseline restoration).** Five forward fixes
+   (γ–η) restored `BbnfBootstrap::parse` to microseconds against
+   grammars that previously hung indefinitely; no AY-II.W0' source
+   landings reverted. See `docs/tranches/B3/FINAL.md`.
+2. **B4.W0 closed (codegen `syn::parse2` emit-correctness).** A
+   single-source emitter fix landed against the SIMD bitmap kernel's
+   token sequence; the bbnf self-host regen reaches `prettyplease`
+   end-to-end without rejection.
+3. **B2 closed (build-time codegen transposition).** The `bbnf_derive`
+   proc-macro IR-pipeline contract retires; `cargo xtask regen` is the
+   canonical regen entrypoint; per-grammar source emerges on disk
+   under `crates/core/src/grammar/generated/<ident>.rs`; consumer
+   crates `pub use ::bbnf::grammar::generated::<ident>::*` in place of
+   `#[derive(Parser)]`; `crates/derive/` deletes outright; the pre-B2
+   80-min cold rustc-side IR-pipeline wall ceases to exist; CI +
+   pre-commit gate on `cargo xtask regen --check`. See
+   `docs/tranches/B2/FINAL.md`.
+4. **AZ-I is stricter.** CSS L4 may not retain a tape-backed aggregate
    path. AZ-I's floor is now "JSON, CSS L4, and Sheets are struct-only;
    CSS may have named semantic parity gaps." Tape remains for BBNF only.
-2. **AZ-II remains mandatory.** Full `crates/tape/` deletion is still
-   binding repo policy.
-3. **B1 linker posture is normalized.** macOS lld is opt-in through
+5. **AZ-I.W0 amended post-B2.** The derive-cache relocation + Watt
+   proc-macro precompilation items DROP (T3-superseded; no proc-macro
+   to relocate the cache for, no proc-macro to wrap with Watt). The
+   classifier unification + IR audit items KEEP. Sub-agent count drops
+   from 3 to 2; hard-gate items from 5 to 4.
+6. **AZ-II remains mandatory.** Full `crates/tape/` deletion is still
+   binding repo policy. Post-B2 the byte-equal reproducibility cycles
+   cost seconds rather than the hours the pre-B2 bootstrap wall would
+   have imposed; reversal narrows.
+7. **B1 linker posture is normalized.** macOS lld is opt-in through
    `brew install lld`; default is Apple ld64 until a developer opts in.
-4. **Preflight was executed and folded into canon.** The 2026-04-24
+8. **Preflight was executed and folded into canon.** The 2026-04-24
    four-agent pass showed that several wave plans assumed command
    surfaces or substrates that are not live yet (`cargo-nextest`,
    `StructRegistry`, BB rule storage, typed paths). The path stays
@@ -67,10 +92,13 @@ on defensible floor. These probabilities are copied from
 
 | Tranche | Full landing probability | Defensible-floor probability | Interpretation |
 |---|---:|---:|---|
-| B1 | 0.55 | 0.80 | Highest-confidence; infra work with evidence-backed drafts. |
-| AY-II | 0.20 | 0.55 | One-path semantic closure on tape substrate; dense integration tranche. |
-| AZ-I | 0.070 | 0.29 | Data-grammar performance + CSS typed richness tranche. |
-| AZ-II | 0.17 | 0.45 | BBNF bootstrap byte-equality and tape deletion. |
+| B1 | closed | closed | Closed 2026-04-24 (`B1/FINAL.md`). |
+| B3 | closed | closed | Closed 2026-04-25 (`B3/FINAL.md`); parser-baseline restored. |
+| B4.W0 | closed | closed | Closed 2026-04-25; codegen `syn::parse2` emit-correctness fix. |
+| B2 | closed | closed | Closed 2026-04-25 (`B2/FINAL.md`); proc-macro IR-pipeline contract retired; `cargo xtask regen` canonical. |
+| AY-II | 0.30 | 0.65 | One-path semantic closure on tape substrate; dense integration tranche. Post-B2 lift: W0' close ceremony tractable in ~15 min on the post-B2 substrate (pre-B2 80-min wall retired); compressed-honest form per AUDIT-B is dispatchable, freeing wave-cap budget for W1-W5. |
+| AZ-I | 0.080 | 0.36 | Data-grammar performance + CSS typed richness tranche. Post-B2 lift: W0 derive-cache + Watt items drop (T3-superseded); two sub-agents instead of three; classifier unification + IR audit retain load-bearing scope. |
+| AZ-II | 0.20 | 0.50 | BBNF bootstrap byte-equality and tape deletion. Post-B2 lift: byte-equal reproducibility cycles cost seconds rather than hours; reversal narrows. |
 | BA | 0.27 | 0.55 | Path query surface over a settled struct tree. |
 | BB | 0.10 | 0.32 | E-graph rule inference and automated ranking; useful floor likely. |
 
@@ -86,10 +114,10 @@ table above remains the live forecast.
 
 | Tranche | Post-preflight full landing | Post-preflight floor | Lift mechanism |
 |---|---:|---:|---|
-| B1 | 0.65 | 0.88 | Host/tool packet catches pin, nextest, alias, Make, cache, and bench-harness drift before implementation. |
-| AY-II | 0.28 | 0.65 | Fresh narrow expand matrix proves no second parse, projection totality, and CSS same-path materialization. |
-| AZ-I | 0.10-0.12 | 0.36-0.40 | Struct-only JSON/Sheets/CSS vertical slices prove no tape-backed projection before broad rollout. |
-| AZ-II | 0.23-0.26 | 0.55-0.60 | Bootstrap-cutover executable preflight and live-symbol tape census prevent false byte-equality closes. |
+| B1 | closed | closed | Closed; lift was: host/tool packet caught pin, nextest, alias, Make, cache, and bench-harness drift before implementation. |
+| AY-II | 0.36 | 0.72 | Fresh narrow expand matrix proves no second parse, projection totality, and CSS same-path materialization. Post-B2: compressed-honest W0' close ceremony in ~15 min on a substrate where the 80-min bootstrap wall doesn't exist; wave-cap budget recovered for W1-W5 substrate work. |
+| AZ-I | 0.13-0.15 | 0.42-0.46 | Struct-only JSON/Sheets/CSS vertical slices prove no tape-backed projection before broad rollout. Post-B2: W0 amendment drops the derive-cache + Watt sub-agents; load-bearing classifier + IR audit work retains; bisect cycles run in seconds rather than hours. |
+| AZ-II | 0.28-0.32 | 0.62-0.68 | Bootstrap-cutover executable preflight and live-symbol tape census prevent false byte-equality closes. Post-B2: byte-equal reproducibility cycles cost seconds; reversal cycles tractable; rapid-iteration on drift-source enumeration. |
 | BA | 0.34-0.38 | ~0.65 | BA.W-1 proves no tape, full registry, and typed path/ascent substrate before path APIs open. |
 | BB | 0.18-0.25 | 0.45-0.55 | Rule storage/discovery/oracle/fire-extract-writeback-emission chain must exist before enumeration close. |
 
@@ -106,15 +134,18 @@ table above remains the live forecast.
 | AY-I.W1 | Column revert | Twitter recovered to 688 MB/s | CSS recovered from Era V trough but still below AU | Landed. |
 | AY-II.W0' | `FusedBuilder` collapse | `parse` + `to_value` become one fused path | Same-path typed CSS projection | Source landings remain on master through B3; the runtime parser regression originally attributed to W0' was traced to a latent contract violation between the tape finaliser's reverse-walk and the Pratt shape's pre-order emission, resolved at B3.W0 via five forward architectural fixes (γ-η) without any W0' revert. |
 | B3 | Parser-baseline restoration (γ retire `derive_frame_depth`; δ atomic depth rollback in `Columns`; ε cycle-safe cursor walk; ζ widened `end_compound_post_order` bump scope; η Pratt operand seeding + lowering cousin-leak guard) | json regen end-to-end (compile_paths_request 1.48 ms, generate_all 3.02 ms, prettyplease 11.13 ms); `compile_pipeline::compile_bbnf` median 2.831 ms | Same-path improvement on `compile_css_l4` (26.72 ms median) | Closed 2026-04-25. Bbnf self-host xtask regen surfaces a separate downstream `syn::parse2` codegen-emission defect; out of B3 scope, opens B4. |
+| B4.W0 | SIMD bitmap kernel `syn::parse2` emit-correctness fix at the source emitter | bbnf self-host regen reaches `prettyplease` end-to-end without rejection | Same; data grammars unaffected (defect was bbnf-self-host-specific) | Closed 2026-04-25. Single-source emitter correction; B4.W1 owns FusedOutput<R> / FusedBuilder consumer-fixture polish (327 debug-mode failures + 3 timeouts). |
+| B2 | Build-time codegen transposition: `bbnf_derive` proc-macro IR-pipeline contract retired; `cargo xtask regen` canonical regen entrypoint; per-grammar source on disk under `crates/core/src/grammar/generated/<ident>.rs`; `crates/derive/` deleted; `BBNF_SCHEMA_VERSION` retired; `cargo xtask regen --check` CI + pre-commit gate | No runtime change; cycle-1 cold regen wall drops from > 80 min to ~12:43 (full sweep, 9 grammars; per-grammar bbnf lib rebuild dominates) or ~5 min (single-grammar cold xtask compile); IR pipeline itself ~73 ms per grammar | No runtime change; same-path CSS L4 emission preserved | Closed 2026-04-25. AY-II.W0' close ceremony tractable in compressed-honest ~15 min on the post-B2 substrate; AZ-I.W0 derive-cache + Watt items dropped (T3-superseded). |
 
 ## 5. Remaining Optimisation Ledger
 
 | Tranche | Optimisation / architecture | JSON | CSS L4 | Primary code shape |
 |---|---|---|---|---|
 | B1 | Pinned toolchain, divan, nextest, script abrogation | No runtime change; cold numbers become trustworthy | No runtime change | `rust-toolchain.toml`, divan benches, nextest CI. |
+| B2 | Build-time codegen transposition; proc-macro IR-pipeline retired; `cargo xtask regen` canonical | No runtime change; cold-regen wall ~12:43 (full sweep) vs pre-B2 > 80 min | No runtime change | `xtask/src/regen.rs`, `crates/core/src/grammar/generated/<ident>.rs`, `pub use ::bbnf::grammar::generated::<ident>::*`. |
 | AY-II.W0' | Fused parse/value lane | `Parsed::to_value()` projects from value frames; no reparse | Same projection lane for typed CSS | `FusedBuilder<R>`, `FusedOutput<R>`, `project_value_<Grammar>`. |
 | AY-II.W1-W5 | Projection totality + same-path structural scan | JSON semantic parity, no consumerless substrate | lightningcss-keyed typed parity on tape substrate | materializer helpers + emitted consumers. |
-| AZ-I.W0 | Classifier unification + derive-cache + audit pass | Payload classifier collision resolved before activation | Same for `Length`, `Color`, selector/value payloads | `payload_coverage.rs`, classifier design. |
+| AZ-I.W0 | Classifier unification + audit pass (post-B2: derive-cache + Watt items dropped, T3-superseded) | Payload classifier collision resolved before activation | Same for `Length`, `Color`, selector/value payloads | `payload_coverage.rs`, classifier design. |
 | AZ-I.W1 | `StructRegistry` closure | Every JSON `Named` rule gets `StructLayout` | Every CSS L4 `Named` rule gets `StructLayout` | `crates/ir/src/registry/struct.rs`. |
 | AZ-I.W2 | Scalar direct-to-struct | Numbers, strings, bools, arrays/objects write direct | Out-of-scope except no regression | JSON builder writes fields, not tape records. |
 | AZ-I.W3 | CSS aggregate direct-to-struct | Holds JSON parity | `Length`, `Color`, selectors, declarations write direct | CSS typed enums + struct builder. |

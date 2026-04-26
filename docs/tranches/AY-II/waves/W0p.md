@@ -3,7 +3,7 @@
 **Opens after**: W0 (partial) — supersedes the remainder of W0's close ceremony
 **Agents**: 3 parallel (W0'.a / W0'.b / W0'.c on disjoint file bounds)
 **Hard gate**: `FusedBuilder<R>` replaces the `TapeBuilder<R>` + `ValueBuilder<R>` split at the type level inside the tape crate; every shape's existing `begin_compound` / `end_compound` / `push_leaf_*` write BOTH tape and value columns atomically with zero signature churn; `project_value_output` per-admission arms route through the 69 emitted `materialize_projection_*` fns (currently with zero call sites); `STRUCTURAL_SCAN_POLICY` splices at emission time inside `__path_walk` and object-key-seek hot paths; every W0-era `#[allow(dead_code)]` retires as the annotated surface becomes live OR the surface deletes; `TapeBuilder::push_compound` + `mark_children` public APIs retire; `<Grammar>Value::Unknown` fallback retires where totality holds; `Parsed::to_value()` no longer panics and delivers the fused semantic surface; double-regen cycle-1 = cycle-2 byte-identical; full fat-LTO 5-bench matrix clean at close.
-**Status**: in_progress — source/runtime landings are in; B1 closed 2026-04-24 (`docs/tranches/B1/FINAL.md`); the W0' close ceremony (regen, expand, bench, samply, nm) is the immediate next dispatch on the post-B1 substrate
+**Status**: in_progress — source/runtime landings are in; B1 closed 2026-04-24 (`docs/tranches/B1/FINAL.md`); B3 + B4.W0 + B2 closed 2026-04-25 (`docs/tranches/{B3,B4,B2}/FINAL.md`); the W0' close ceremony shrinks to its compressed-honest form on the post-B2 substrate (~15 min — cycle-1 regen via `cargo xtask regen` + invariant verification + `projection_totality.rs` test + close-status formalisation; cycle-2 idempotency, fat-LTO 5-bench matrix, samply, and nm route to wave-specific close gates) and is the immediate next dispatch
 
 ## Rationale — audit triumvirate synthesis
 
@@ -235,75 +235,72 @@ Sub-gate:
   count strictly less than pre-W0'.
 - `cargo iter-check-full` exits 0.
 
-## Orchestrator-owned close ceremony
+## Orchestrator-owned close ceremony (compressed-honest, post-B2 substrate)
 
-After all 3 sub-agents cherry-pick:
+The pre-B2 ceremony — `bash scripts/bootstrap-bbnf.sh` cycles +
+`.bbnf-cache` clears + a synchronous fat-LTO bench matrix + samply
+per primary grammar + `nm` of bench binaries — presupposed an 80-min
+proc-macro IR-pipeline wall and a content-keyed cache that no longer
+exist. AUDIT-B isolated the load-bearing core from the theatrical
+remainder; B2's close removed the theatrical preconditions.
+Post-B2 the ceremony is ~15 min of formalisation:
 
-1. **Regen**: `bash scripts/bootstrap-bbnf.sh`; capture output.
-2. **Double-regen idempotency**: `cp generated.rs /tmp/gen1.rs`;
-   clear `.bbnf-cache`; `bash scripts/bootstrap-bbnf.sh`;
-   `diff /tmp/gen1.rs crates/core/src/grammar/generated.rs` → empty.
-3. **Fresh expands**: `cargo expand -p bbnf --bench
-   {json_monolithic,css_l4,google_sheets_monolithic,bbnf_monolithic}
-   > target/expand/ay-ii-W0p-<grammar>.rs`.
-4. **5-bench matrix (substrate verification under profiling-prep)**:
-   `make ay-bench-close WAVE=W0p-mid` → per-bench logs under
-   `docs/benchmarks/post-AY-W0p-mid-{json,css,sheets,bbnf,compile}.txt`.
-   Profile is `profiling-prep` (release + thin LTO + samply-resolvable
-   debug); W0' verifies that the FusedBuilder collapse + projection
-   wiring + scan-policy splice produce a no-panic, runtime-correct
-   bench substrate. Fat-LTO publish-grade peer-parity numbers
-   (`bbnf_value_twitter / sonic_value_twitter ≤ 1.15` etc.) capture at
-   AY-II.W1 close per the W1 hard-gate manifest, where the
-   `--profile bench` numbers are keyed to peer references; running
-   fat-LTO twice (here and at W1) would double-pay the wall for
-   numbers W1 republishes anyway.
-5. **Samply per primary grammar**:
-   `.profiles/samply/AY-II-W0p/{json_twitter,css_tailwind,sheets_stress,bbnf_self}/`.
-6. **nm** on each bench binary →
-   `docs/benchmarks/post-AY-II-W0p-nm.txt` (`ValueBuilder` absent,
-   `push_compound` absent, `FusedBuilder` present).
-7. **PROGRESS.md W0' close entry** with commit hashes + artefact
-   paths.
+1. **Cycle-1 regen**: `cargo xtask regen` (full sweep) — wall ~5 min
+   dominated by xtask incremental compile; the IR pipeline itself
+   runs in milliseconds per grammar; output writes to
+   `crates/core/src/grammar/generated/<ident>.rs`. The pre-B2
+   `bash scripts/bootstrap-bbnf.sh` script retired at B2.W3; the
+   xtask is the canonical regen entrypoint.
+2. **Invariant verification**: run the W0' invariant grep suite —
+   `rg 'pub struct ValueBuilder|pub struct ValueBuilderOutput'
+   crates/` → 0; `rg 'pub fn push_compound|pub fn mark_children'
+   crates/tape/src/builder/` → 0; `STRUCTURAL_SCAN_POLICY` reference
+   count ≥ 1 per grammar; `#[allow(dead_code)]` count strictly less
+   than pre-W0'.
+3. **Projection-totality test**: `cargo test -p bbnf --test
+   projection_totality --release` runtime-call-count assertion green.
+4. **`<Grammar>Value::Unknown` retirement audit**: per-grammar
+   exception ledger captured in the W0' close entry.
+5. **Close-status formalisation**: PROGRESS.md W0' close entry +
+   `waves/W0p.md` status flip to closed, with commit hashes.
 
-## Hard gate (wave close)
+Cycle-2 idempotency, fresh expands, the fat-LTO 5-bench matrix,
+samply per primary grammar, and `nm` on bench binaries route to
+wave-specific close gates where peer-parity context is meaningful
+(AY-II.W1.c JSON, W2 CSS, W3 Sheets, W4.e BBNF). Running them at
+W0' close would double-pay walls for numbers the wave-specific
+gates republish anyway.
+
+## Hard gate (wave close, compressed-honest form)
 
 1. `rg 'pub struct ValueBuilder|pub struct ValueBuilderOutput' crates/`
    → 0 matches.
-2. `rg 'pub fn push_compound|pub fn mark_children' crates/tape/src/builder.rs`
+2. `rg 'pub fn push_compound|pub fn mark_children' crates/tape/src/builder/`
    → 0 matches.
-3. `cargo expand -p bbnf --bench json_monolithic` shows
-   `materialize_projection_*_JsonParser` invoked from
-   `project_value_JsonParser`. Same for CSS L4, Sheets, BBNF.
-4. `cargo expand -p bbnf --bench json_monolithic` shows at least
-   one inline `cursor.object_key_seek` / `bounded_lookahead` /
-   `scan_structural_bounded` invocation inside `__path_walk`.
-5. `cargo test -p bbnf --test projection_totality --release` green
+3. `cargo test -p bbnf --test projection_totality --release` green
    with runtime-call-count assertion.
-6. `cargo test -p bbnf --test value_api_apples_to_apples --release`
+4. `cargo test -p bbnf --test value_api_apples_to_apples --release`
    green on all 5 JSON fixtures + one smoke per grammar; no panic
    in `Parsed::to_value()`.
-7. `bash scripts/bootstrap-bbnf.sh` cycle-1 = cycle-2 byte-identical.
-8. `make ay-bench-close WAVE=W0p-close` exits clean on all 5 bench
-   binaries; CSS tailwind + Sheets parse_nested + BBNF bbnf_self
-   complete without panic.
-9. `rg '#\[allow(dead_code)\]' crates/core/src/backend/rust/emitter/
+5. `cargo xtask regen` (full sweep) exits 0; idempotent re-run
+   produces zero-line diff against the checked-in tree. (Replaces
+   the pre-B2 cycle-1 = cycle-2 byte-identical gate; the xtask is
+   the fixed point against the source tree itself.)
+6. `rg '#\[allow(dead_code)\]' crates/core/src/backend/rust/emitter/
    crates/core/src/runtime/ crates/tape/src/` count strictly less
    than pre-W0' (every W0-era addition retires).
-10. Post-W0' projection totality holds per AY-II.md invariant §7:
-    `PROJECTION_DIRECT_TO_STRUCT.len() == materializer count ==
-    production call-site count` per grammar.
+7. Post-W0' projection totality holds per AY-II.md invariant §7:
+   `PROJECTION_DIRECT_TO_STRUCT.len() == materializer count ==
+   production call-site count` per grammar.
 
 ## Verification artefacts
 
-- `target/expand/ay-ii-W0p-{json,css-l4,sheets,bbnf}.rs` —
-  per-grammar expand post-close.
-- `docs/benchmarks/post-AY-II-W0p-bench.txt` — 5-bench fat-LTO matrix.
-- `docs/benchmarks/post-AY-II-W0p-nm.txt` — nm of each bench binary.
-- `docs/benchmarks/post-AY-II-W0p-samply-summary.txt` — top-5
-  self-time per primary grammar.
-- `.profiles/samply/AY-II-W0p/{json_twitter,css_tailwind,sheets_stress,bbnf_self}/profile.json.gz`.
+- W0' close entry in `PROGRESS.md` with commit SHAs + artefact paths.
+- `crates/core/src/grammar/generated/<ident>.rs` per-grammar source
+  (refreshed at cycle-1 regen).
 - Per-sub-agent commit SHAs.
+- Wave-specific close gates carry the deferred artefacts (fresh
+  expands, fat-LTO bench matrix, samply, nm).
 
 ## Dependencies
 

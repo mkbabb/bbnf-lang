@@ -1,0 +1,152 @@
+{
+  "provenance": {
+    "tranche": "B2",
+    "headline": "Build-time codegen transposition: bbnf_derive proc-macro IR-pipeline contract retires; cargo xtask regen is the canonical regen entrypoint; per-grammar source emerges on disk under crates/core/src/grammar/generated/<ident>.rs; consumer crates pub use ::bbnf::grammar::generated::<ident>::* in place of #[derive(Parser)]; pre-B2 80-min cold rustc-side IR-pipeline wall ceases to exist; CI + pre-commit gate on cargo xtask regen --check.",
+    "master_head_pre_w4": "23b51df8",
+    "master_head_at_w4": "set-by-w4-cherry-pick",
+    "predecessor": "B1 (closed 2026-04-24); B3 (parser-baseline restoration); B4.W0 (codegen syn::parse2 emit-correctness)",
+    "successor": "AY-II.W0' close ceremony (compressed-honest dispatch on post-B2 substrate)",
+    "closed_at": "2026-04-25",
+    "source_ledgers": {
+      "w0c_close": "docs/tranches/B2/audit/W0c-close.md",
+      "w1_close": "docs/tranches/B2/audit/W1-close.md",
+      "w2_close": "docs/tranches/B2/audit/W2-close.md",
+      "w3_close": "docs/tranches/B2/audit/W3-close.md",
+      "w4_close": "docs/tranches/B2/audit/W4-close.md"
+    },
+    "wave_close_commits": {
+      "W0_a": "dec67806",
+      "W0_b": "3c68e8c4",
+      "W0_c_partial": "21881591",
+      "W1": "690221bb",
+      "W2": "6142387f",
+      "W3_a": "378aa71b",
+      "W3": "f375cd38",
+      "W3_docs": "23b51df8",
+      "W4": "set-by-w4-cherry-pick"
+    }
+  },
+
+  "walls": {
+    "cycle1_cold_regen_xtask_full_sweep_seconds": 763,
+    "cycle1_cold_regen_xtask_full_sweep_human": "~12:43 (9 grammars; per-grammar bbnf lib rebuild dominates each invocation)",
+    "regen_check_post_build_seconds": 1.11,
+    "regen_check_context": "post-build idempotent diff against checked-in tree; 'regen --check: clean (9 grammars matched)'",
+    "ir_pipeline_only_bbnf_milliseconds": 73,
+    "ir_pipeline_only_context": "compile_paths_request 3 ms + generate_all 9 ms + prettyplease 60 ms (W0.c re-execution capture)",
+    "iter_check_warm_seconds_at_w4_close": 0.21,
+    "iter_check_warm_seconds_at_w3_close": 0.12,
+    "iter_check_warm_seconds_at_w2_close": 0.11,
+    "iter_check_warm_seconds_at_w1_close": 0.31,
+    "iter_check_full_warm_seconds_at_w3_close": 0.13,
+    "iter_check_full_cold_seconds_at_w1_close": 45,
+    "workspace_check_warm_seconds_at_w3_close": 4.39,
+    "rustc_expand_pre_B2_minutes": ">80",
+    "rustc_expand_pre_B2_status": "retired (proc-macro IR-pipeline contract no longer crosses rustc's expand boundary)"
+  },
+
+  "tests": {
+    "source": "docs/tranches/B2/audit/W3-close.md §Phase 3 — gates",
+    "harness": "cargo nextest run --workspace --profile ax-iter --no-fail-fast",
+    "total": 1490,
+    "passed": 1160,
+    "failed": 327,
+    "timed_out": 3,
+    "skipped": 27,
+    "failure_class": "pre-existing FusedBuilder::finish open-frames debug-build assertions at crates/tape/src/builder/mod.rs:1066 + bbnf-lsp integration tests' fixture polish",
+    "failure_origin": "tape-builder finalisation logic; predates B2 scope; downstream of AY-II.W0' migration polish",
+    "failure_destination": "B4.W1 (FusedOutput<R> / FusedBuilder consumer-fixture polish)",
+    "release_mode_parity": {
+      "test": "cargo test --release -p bbnf --test bbnf_parity --exact bbnf_parses_its_own_grammar",
+      "exit": 0,
+      "wall_seconds_exec": 0.20,
+      "context": "BBNF self-host parses its own grammar to known-good fixture; SHA-asserts against the released binary"
+    },
+    "regression_class": "no B2 wave introduced a regression; pass-rate matches W1 + W2 + W3 close baselines exactly"
+  },
+
+  "structural": {
+    "crates_derive_deleted": true,
+    "crates_derive_lines_deleted": 457,
+    "crates_derive_files_deleted": 3,
+    "bbnf_derive_deps_purged_from_workspace_cargo_tomls": true,
+    "BBNF_SCHEMA_VERSION_retired": true,
+    "patch_crates_io_bbnf_derive_dropped": true,
+    "workspace_members_crates_derive_dropped": true,
+    "bootstrap_scripts_retired": ["scripts/bootstrap-bbnf.sh", "scripts/check-bootstrap-clean.sh"],
+    "ay_prime_makefile_target_retired": true,
+    "clean_cache_makefile_target_retired": true,
+    "make_regen_target_added": true,
+    "make_regen_check_target_added": true,
+    "include_str_paths_portable": true,
+    "include_str_path_form": "concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/../../\", <rel>)",
+    "per_grammar_source_files": [
+      { "ident": "bbnf", "lines": 34048 },
+      { "ident": "bnf", "lines": 4697 },
+      { "ident": "css_l4", "lines": 203499 },
+      { "ident": "css_pretty", "lines": 9890 },
+      { "ident": "csv", "lines": 2947 },
+      { "ident": "ebnf", "lines": 12902 },
+      { "ident": "google_sheets", "lines": 21533 },
+      { "ident": "json", "lines": 5680 },
+      { "ident": "math", "lines": 1464 }
+    ],
+    "consumer_sites_migrated": 62,
+    "consumer_files_migrated": 43,
+    "monolithic_generated_rs_deleted": true,
+    "monolithic_generated_rs_pre_B2_lines": 33279,
+    "host_shim_relocation": {
+      "from": "crates/core/tests/common/css_types.rs (per-test-crate copies)",
+      "to": "crates/core/src/css_types.rs (single source of truth)",
+      "rationale": "post-B2 the generated CSS L4 source lives at crates/core/src/grammar/generated/css_l4.rs; crate:: now resolves to bbnf's root, so the host symbol must be exported from bbnf::css_types"
+    }
+  },
+
+  "ci_gate": {
+    "workflow": ".github/workflows/ci.yml",
+    "step_name": "preflight — regen check (xtask)",
+    "command": "cargo xtask regen --check",
+    "timeout_minutes": 5,
+    "placement": "before iter-check (catches drift early without paying full workspace check)",
+    "replaces": "preflight — bootstrap regen clean (bash scripts/check-bootstrap-clean.sh)"
+  },
+
+  "pre_commit_hook": {
+    "in_tree_template": "scripts/hooks/pre-commit",
+    "installer": "scripts/install-hooks.sh",
+    "trigger_pattern": "^(grammar/|crates/core/src/grammar/generated/|xtask/src/regen)",
+    "skip_during": ["MERGE_HEAD", "REBASE_HEAD", "rebase-merge", "rebase-apply"],
+    "command": "cargo xtask regen --check",
+    "rationale": "in-tree template versions the hook (git does not version .git/hooks/); installer copies it into the active hooks directory"
+  },
+
+  "cross_tranche_effects": {
+    "ay_ii_w0_prime_close_ceremony": "compressed-honest ~15 min on post-B2 substrate; cycle-1 regen via 'cargo xtask regen' (~5 min wall, dominated by xtask incremental compile); cycle-2 idempotency + fat-LTO 5-bench matrix + samply per primary grammar route to wave-specific close gates",
+    "az_i_w0_amendment": "derive-cache relocation + Watt proc-macro precompilation items DROP (T3-superseded; B2 retired the proc-macro entirely); classifier unification + IR audit pass items KEEP",
+    "az_ii_tape_deletion": "byte-equal reproducibility cycles cost seconds rather than hours; reversal narrows; full dissolution remains the only acceptable AZ-II close",
+    "ba_bb_anchor": "post-B2 build-time codegen output; no proc-macro to plumb through cross-language binding surface"
+  },
+
+  "forward_routed_work": [
+    {
+      "item": "FusedBuilder::finish open-frames assertion class (327 debug-mode failures + 3 timeouts)",
+      "destination": "B4.W1",
+      "rationale": "pre-existing tape-builder finalisation debt; consumer-fixture polish; release-mode parity green; orthogonal to AY-II runtime invariants"
+    },
+    {
+      "item": "bbnf-bootstrap thin re-export retirement decision",
+      "destination": "post-B2 successor wave",
+      "rationale": "the 'pub use ::bbnf::grammar::generated::bbnf::*;' thin re-export stays useful for downstream consumers that reference bbnf-bootstrap::* paths; full deletion routes under its own dispatch"
+    },
+    {
+      "item": "wasm/Cargo.lock bbnf_derive entry",
+      "destination": "wasm sub-target dispatch",
+      "rationale": "wasm/ is exclude = [\"wasm\"] from the workspace + carries its own lockfile; B2's --type toml gate does not match .lock; migrates when the wasm sub-target's consumer fixtures retire under their own dispatch"
+    },
+    {
+      "item": "Incremental regen polish for single-grammar edits",
+      "destination": "post-B2 polish",
+      "rationale": "not load-bearing; full-sweep wall acceptable today; 'cargo xtask regen --grammar <ident>' already exists"
+    }
+  ]
+}

@@ -1,13 +1,12 @@
-# AY-II — Path Forward (2026-04-24, amended 2026-04-25 post-B3)
+# AY-II — Path Forward (2026-04-24, amended 2026-04-25 post-B2 close)
 
 AY-II is not on a parallel-infra path any more. The immediate execution
 order is:
 
-1. **B1 has closed.** The prelude annex landed at the W3 close commit
-   (see `docs/tranches/B1/FINAL.md`); substrate is pinned, divan
-   harness is live, alias surface is rewritten, abrogation catalog is
-   executed, sibling-repo triad is in sync. AY-II.W0' close ceremony
-   was unblocked on this baseline.
+1. **B1 has closed.** The prelude annex landed at the 2026-04-24 W3
+   close commit (see `docs/tranches/B1/FINAL.md`); substrate is pinned,
+   divan harness is live, alias surface is rewritten, abrogation
+   catalog is executed, sibling-repo triad is in sync.
 2. **B3 has closed (parser-baseline restoration).** The runtime parser
    regression originally attributed to AY-II.W0' source landings was
    traced to a latent contract violation between `derive_frame_depth`'s
@@ -18,17 +17,32 @@ order is:
    scope; η Pratt operand seeding + lowering cousin-leak guard). No
    W0' source landings were reverted. See
    `docs/tranches/B3/FINAL.md`.
-3. **B2 W0.c re-execution unblocks** against the post-B3 substrate;
-   `cargo xtask regen --grammar bbnf` no longer hangs in
-   `BbnfBootstrap::parse`. The bbnf self-host regen surfaces a
-   separate downstream `syn::parse2` codegen-emission defect that
-   opens B4.
-4. **AY-II.W0' close ceremony shifts to B4 close** on the post-B2
-   substrate. The compressed-honest 15-min ceremony per AUDIT-B
-   remains the operational spec; it executes against the post-B4
-   substrate (where the codegen `syn::parse2` defect is fixed).
-   AY-II.W1-W5 sequencing operates on whatever runtime B4 produces,
-   regardless of how B4's emit-correctness work unwinds.
+3. **B4.W0 has closed (codegen `syn::parse2` emit-correctness).** The
+   downstream emit defect B3 surfaced — the SIMD bitmap kernel emitting
+   a token sequence `syn::parse2` rejected — landed a single-source
+   emitter fix; the bbnf self-host regen now reaches `prettyplease`
+   end-to-end without rejection.
+4. **B2 has closed (build-time codegen transposition).** The
+   `bbnf_derive` proc-macro IR-pipeline contract retires; `cargo xtask
+   regen` is the canonical regen entrypoint; per-grammar source emerges
+   on disk under `crates/core/src/grammar/generated/<ident>.rs`;
+   consumer crates `pub use ::bbnf::grammar::generated::<ident>::*` in
+   place of `#[derive(Parser)]`; `crates/derive/` deletes outright
+   (3 files / 457 lines); `BBNF_SCHEMA_VERSION` retires; the pre-B2
+   80-min cold rustc-side IR-pipeline wall ceases to exist; CI +
+   pre-commit gate on `cargo xtask regen --check`. See
+   `docs/tranches/B2/FINAL.md`.
+5. **AY-II.W0' close ceremony resumes on the post-B2 substrate.** The
+   ceremony shrinks to its compressed-honest form (~15 min per
+   AUDIT-B): cycle-1 regen via `cargo xtask regen` (~5 min wall,
+   dominated by xtask incremental compile) + invariant greps +
+   `projection_totality.rs` test + close-status formalisation in
+   `PROGRESS.md` + `waves/W0p.md`. Cycle-2 idempotency, the fat-LTO
+   5-bench matrix, samply per primary grammar, and `nm` of bench
+   binaries route to wave-specific close gates (W1.c JSON, W2 CSS,
+   W3 Sheets, W4.e BBNF) where peer-parity context is meaningful.
+   AY-II.W1-W5 sequencing operates on the post-B2 runtime regardless
+   of subsequent polish.
 
 Anything else reintroduces the same ambiguity B1 existed to delete.
 
@@ -44,11 +58,16 @@ Anything else reintroduces the same ambiguity B1 existed to delete.
   (`../parse-that` + `../pprint`).
 - W0'.a / W0'.b / W0'.c / W0'.d1 / W0'.d3 / W0'.d4-d7 source landings
   are in.
-- `generated.rs` is still pre-regen with the bridge-era parse entry, so
-  AY-II.W0' is **not** formally closed yet — the close ceremony is now
-  unblocked and is the immediate next step.
+- The pre-B2 monolithic `crates/core/src/grammar/generated.rs` retired
+  at B2.W0.c; per-grammar source now lives under
+  `crates/core/src/grammar/generated/<ident>.rs` (9 grammars; bbnf
+  self-host at 34 048 lines), refreshed by `cargo xtask regen`.
 - The W0'.a compose-boundary aliases and shim surfaces are still
-  present by design until the post-B1 regen replaces them.
+  present by design until the W0' close ceremony's invariant audit
+  retires them.
+- AY-II.W0' is **not** formally closed yet — the compressed-honest
+  close ceremony is now unblocked on the post-B2 substrate and is the
+  immediate next step.
 
 ## Ordered work
 
@@ -75,26 +94,30 @@ Close conditions B1 established before AY-II resumed:
    `verify-w2-asm.sh` + `verify-w2-symbols.sh`).
 4. AY-II docs are normalized so B1 is predecessor, not sidecar.
 
-### 2. AY-II.W0' close ceremony (UNBLOCKED — immediate next step)
+### 2. AY-II.W0' close ceremony (UNBLOCKED on post-B2 substrate — immediate next step)
 
-Finish W0' in one uninterrupted sequence:
+The compressed-honest form per AUDIT-B is the operational spec on the
+post-B2 substrate (~15 min, no 80-min bootstrap wall to fight):
 
-1. Run bootstrap regen.
-2. Run double-regen idempotency.
-3. Retire the W0'.a compose-boundary aliases and shim surfaces.
-4. Capture fresh expands for JSON, CSS, Sheets, and BBNF.
-5. Run the fat-LTO 5-bench matrix.
-6. Capture samply on the four primary grammars.
-7. Run `nm` on the bench binaries.
-8. Verify `<Grammar>Value::Unknown` retirement per grammar per
-   `AY-II.md` §Plan-audit findings bullet 2; record the
-   per-grammar exception ledger (`audit/W0p-PAUSE-SNAPSHOT.md:87-89`
-   marked this unresolved at pause).
-9. Update `PROGRESS.md`, `AY-II.md`, and `waves/W0p.md` to mark
-   W0' closed.
+1. **Cycle-1 regen** via `cargo xtask regen` (~5 min wall, dominated
+   by xtask incremental compile; the IR pipeline itself runs in
+   milliseconds per grammar).
+2. **Invariant verification** — run the AY-II.W0' invariant grep
+   suite (`pub struct ValueBuilder|ValueBuilderOutput`, `pub fn
+   push_compound|mark_children`, `STRUCTURAL_SCAN_POLICY` reference
+   count, `#[allow(dead_code)]` delta vs pre-W0').
+3. **Projection-totality test** — `cargo test -p bbnf --test
+   projection_totality --release` runtime-call-count assertion green.
+4. **Retire the W0'.a compose-boundary aliases and shim surfaces** in
+   line with the `<Grammar>Value::Unknown` retirement audit; record
+   the per-grammar exception ledger.
+5. **Close-status formalisation** — update `PROGRESS.md`, `AY-II.md`,
+   and `waves/W0p.md` to mark W0' closed.
 
-The W0' close gate remains the one declared in
-[W0p.md](/Users/mkbabb/Programming/bbnf-lang/docs/tranches/AY-II/waves/W0p.md).
+Cycle-2 idempotency, the fat-LTO 5-bench matrix, samply per primary
+grammar, and `nm` on bench binaries route to wave-specific close
+gates (W1.c JSON, W2 CSS, W3 Sheets, W4.e BBNF) where peer-parity
+context is meaningful.
 
 ### 3. AY-II W1-W5
 

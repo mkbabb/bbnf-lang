@@ -737,13 +737,46 @@ impl Tape {
     /// The caller knows the total byte width from the rule's
     /// [`bbnf_ir::passes::PayloadLayout::total_bytes`]; pass it as
     /// `byte_count`. Returns `None` when the record carries no
-    /// payload or when the arena is too short to satisfy the
-    /// request.
+    /// payload, when its `child_off` is [`TapeOffset::NONE`], or when
+    /// the arena is too short to satisfy the request.
+    ///
+    /// # B5.W0 bonus — `PAYLOAD_IN_ARENA_BIT` precondition assert
+    ///
+    /// Pre-B5.W0 the reader sliced the arena unconditionally — a
+    /// caller that handed in a record whose `child_off` named a
+    /// `pay_narrow` / `pay_wide` column rank could decode garbage on
+    /// any small-rank tape whose rank happened to fit within the
+    /// arena's byte length. Two arena conventions exist:
+    /// `push_leaf_with_arena_payload` sets
+    /// [`TapeRec::PAYLOAD_IN_ARENA_BIT`] on inline-scalar leaves
+    /// whose `child_off` is an arena byte offset; the aggregate /
+    /// large-aggregate / bytes path (`push_leaf_with` for
+    /// `PayloadData::{Aggregate, LargeAggregate, Bytes}`) leaves the
+    /// bit clear but still routes `child_off` at the arena. The
+    /// `debug_assert!` below validates that the leaf's record kind
+    /// belongs to the set those conventions admit — a record that
+    /// reaches this reader without falling into either convention
+    /// trips the assert in debug runs (release elides), enforcing
+    /// the audit-flagged invariant at zero release cost.
     #[inline]
     pub fn payload_bytes(&self, rec: TapeRec, byte_count: usize) -> Option<&[u8]> {
         if rec.child_off.is_none() {
             return None;
         }
+        debug_assert!(
+            rec.payload_in_arena()
+                || matches!(
+                    rec.kind(),
+                    crate::TapeKind::Span
+                        | crate::TapeKind::KvPair
+                        | crate::TapeKind::ShapeRef
+                ),
+            "payload_bytes precondition: record kind {:?} did not fall into \
+             either arena convention (PAYLOAD_IN_ARENA_BIT clear AND kind not \
+             in {{Span, KvPair, ShapeRef}}); `child_off` likely names a column \
+             rank, not an arena byte offset",
+            rec.kind(),
+        );
         let start = rec.child_off.0 as usize;
         let arena = self.arena();
         if start + byte_count > arena.len() {

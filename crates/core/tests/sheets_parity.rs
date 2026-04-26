@@ -42,23 +42,52 @@ use ::bbnf::grammar::generated::google_sheets::*;
 // ─── Walker helpers ──────────────────────────────────────────────────
 
 /// Pre-order tape walk via the AU.3.2 zero-alloc child iterator.
+///
+/// B5.W0 — iterative `Vec<TapeCursor>` worklist replaces the prior
+/// recursive descent. Deeply-nested formulae (e.g.
+/// `=IF(A1>10, SUM(B1:B10), 0)`) overflowed the host stack on the
+/// recursive form because every nested call frame's locals plus the
+/// `children_zero_alloc()` iterator state pinned ~hundreds of bytes
+/// per recursion level. The worklist visits the same pre-order
+/// sequence: pop a cursor, record it, push its children in natural
+/// left-to-right order so the LIFO pop yields them in reverse —
+/// the order the prior recursive form's
+/// `kids.reverse(); for c in kids { walk(c) }` step produced.
+/// A `seen` offset set guards against substrate cycles (defensive,
+/// not expected to trigger).
 fn walk<'t>(
-    tape: &'t Tape,
-    cursor: TapeCursor<'t>,
+    _tape: &'t Tape,
+    root: TapeCursor<'t>,
     out: &mut Vec<(TapeKind, u8, u8, bool)>,
 ) {
-    let rec = cursor.record();
-    out.push((
-        rec.kind(),
-        cursor.variant_idx(),
-        cursor.meta_idx(),
-        rec.has_payload(),
-    ));
-    if rec.has_children() {
-        let mut kids: Vec<TapeCursor<'t>> = cursor.children_zero_alloc().collect();
-        kids.reverse();
-        for c in kids {
-            walk(tape, c, out);
+    let mut stack: Vec<TapeCursor<'t>> = Vec::with_capacity(32);
+    let mut seen: std::collections::HashSet<u32> =
+        std::collections::HashSet::new();
+    stack.push(root);
+    while let Some(cursor) = stack.pop() {
+        if !seen.insert(cursor.offset().0) {
+            // Defensive: a tape with cyclic child_off / sib_skip
+            // should never occur in correctly-built substrate, but
+            // re-visiting an offset would otherwise re-walk its
+            // entire subtree forever.
+            continue;
+        }
+        let rec = cursor.record();
+        out.push((
+            rec.kind(),
+            cursor.variant_idx(),
+            cursor.meta_idx(),
+            rec.has_payload(),
+        ));
+        if rec.has_children() {
+            let kids: Vec<TapeCursor<'t>> =
+                cursor.children_zero_alloc().collect();
+            // Push children in natural order so the LIFO pop yields
+            // them in reverse — matching the recursive form's
+            // `kids.reverse(); for c in kids { walk(c) }`.
+            for c in kids {
+                stack.push(c);
+            }
         }
     }
 }

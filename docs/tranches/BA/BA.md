@@ -101,7 +101,7 @@ BA.W-1 must prove:
 Command packet:
 
 ```bash
-rg -n 'struct TypedPath|enum PathError|PathSegment::Wildcard|fn type_check|AscentStrategy|path_check|parent_pointer_strategies' crates/core/src crates/ir/src crates/derive/src
+rg -n 'struct TypedPath|enum PathError|PathSegment::Wildcard|fn type_check|AscentStrategy|path_check|parent_pointer_strategies' crates/core/src crates/ir/src crates/bbnf-path/src
 cargo test --profile ax-iter -p bbnf --test path_type_errors
 cargo bench -p bbnf --bench parent_pointer_strategies
 ```
@@ -299,7 +299,7 @@ binding is a thin adaptor compiling against that same core.
 
 ### Frontend surfaces
 
-- **Rust proc-macro** (`crates/derive/src/path_macro.rs`): expands
+- **Rust proc-macro** (`crates/bbnf-path/src/path_macro.rs`): expands
   `path!("$.users[0].name", Users)` at compile time to a typed
   accessor. The macro parses the path string with the bespoke
   `bbnf-regex` parser, resolves against the compile-time
@@ -362,7 +362,7 @@ binding imports the other; both import the shared core.
 | `crates/ir/src/passes/path_check.rs` | IR pass validating all compile-time paths against the grammar | W0 |
 | `crates/core/src/path/executor.rs` | Lazy traversal executor over the struct tree | W1 |
 | `crates/core/src/path/view.rs` | `NodeView<'p, T>` — borrowed cursor state | W1 |
-| `crates/derive/src/path_macro.rs` | Rust `path!` proc-macro | W1 |
+| `crates/bbnf-path/src/path_macro.rs` | Rust `path!` proc-macro | W1 |
 | `benches/path_extract.rs` | Per-grammar lazy-path micro-bench | W1 |
 | `tests/path_parity.rs` | Parity harness vs. sonic-rs / simdjson / cssparser / lightningcss | W1 |
 | `crates/bbnf-path-ts/` | WASM sub-crate: TS template-literal tag frontend | W2 |

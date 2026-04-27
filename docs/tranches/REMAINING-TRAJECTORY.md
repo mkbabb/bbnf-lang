@@ -395,3 +395,102 @@ The non-negotiable stance: if a SOTA peer wins, profile the win, extract the
 principle, represent it in grammar/IR/CSP/e-graph form, and re-measure. Treat
 hand-written SIMD wins as missing compiler transpositions until proven
 otherwise.
+
+## 9. Tape-substrate prune candidates (AZ-II.W2 absorbs)
+
+The B7 close-ceremony audit (γ pass, 2026-04-26) catalogued a class of
+dead or near-dead surfaces inside `crates/tape/`. AZ-II.W2 deletes the
+crate wholesale; pruning these surfaces in isolation now would
+duplicate AZ-II's work and force a second round of consumer reroutes
+under cleanup-only commit cadence. They are listed here so the AZ-II
+plan opens with the inventory pre-built and the audit-γ Top-10 list
+does not reappear as "newly discovered" debt.
+
+The principle: cleanup tranches do not pre-empt structural deletions
+already on the runway. If AZ-II.W2 retreats or partitions, this
+section is the inventory the follow-up cleanup tranche works against.
+
+### 9.1 PHF dispatch functions
+
+The DTA walker interpreter retired with AX.W0b; its PHF-keyed dispatch
+helpers persist as orphaned generated surface. The expected resting
+place is total deletion alongside the walker; AZ-I close should
+verify the walker retirement landed end-to-end before AZ-II.W2
+removes the rest of the tape crate.
+
+- Verify: AZ-I close confirms zero live DTA-walker call sites in
+  `crates/core/`, `crates/ir/`, and the bootstrap output.
+- Absorbed by: full `crates/tape/` deletion in AZ-II.W2.
+
+### 9.2 DTA precedence helpers
+
+`crates/tape/src/dta.rs` (`DtaAssociativity`, `DtaPrecedenceEntry`,
+`DtaRuleId`, `DtaStateId`) and the `lookup_precedence` /
+`saturating_u16` helpers in `crates/tape/src/driver.rs` exist solely
+to feed Pratt-operator dispatch through the walker substrate. The
+post-walker shape emitters do not consume them. They retire with the
+crate.
+
+- Files: `crates/tape/src/dta.rs`, `crates/tape/src/driver.rs:229+`.
+- Absorbed by: AZ-II.W2.
+
+### 9.3 Tape value-frame readers
+
+`PayloadValue`, `ValueChildren`, `ValueCheckpoint`, and `ValueFrame`
+in `crates/tape/src/value.rs` are the read-side of the tape value
+lane. Direct-to-struct emission (AZ-I) skips the value lane entirely;
+the readers exist for legacy AY-I value-path consumers that AZ-II.W2
+removes alongside the lane itself.
+
+- File: `crates/tape/src/value.rs`.
+- Absorbed by: AZ-II.W2.
+
+### 9.4 Bloom dedup
+
+`crates/tape/src/dedup.rs` (`BloomDedup`, `columns_range_eq`,
+`push_compound_referring`, `N_WORDS`) was a tape-side compound
+deduplication pass. Direct-to-struct emission has no compound-pool
+identity to dedup; the bloom-filter machinery is dead post-AZ-I.
+
+- File: `crates/tape/src/dedup.rs`.
+- Absorbed by: AZ-II.W2.
+
+### 9.5 Cursor lookahead
+
+`crates/tape/src/cursor.rs` (`BoundedLookahead`, `ChildIter`,
+`ColumnRank`, `ScanResult`, `TapeCursor`) is the tape-walker traversal
+surface. Struct-only consumers walk the typed AST, not the tape, so
+the cursor surface is dead at AZ-I close.
+
+- File: `crates/tape/src/cursor.rs`.
+- Absorbed by: AZ-II.W2.
+
+### 9.6 Stage-1 structural index
+
+`crates/tape/src/stage1.rs` (`StructuralIndex`) materialised the
+SIMD-scan output into a tape-shaped structural index. Post-B5 the
+SIMD-scan crate produces the structural information directly; the
+tape-side wrapper has no remaining consumer.
+
+- File: `crates/tape/src/stage1.rs`.
+- Absorbed by: AZ-II.W2.
+
+### 9.7 Tape visitor re-exports
+
+`crates/tape/src/lib.rs:72-103` re-exports the `TapeVisitor`,
+`ValueVisitor`, `GrammarVisitor` family and the per-shape visitor
+traits (`ArrayVisitor`, `KeywordVisitor`, `NumberVisitor`,
+`ObjectVisitor`, `PrattVisitor`, `StringVisitor`). Post-AZ-I struct-
+only emission these traits have no implementor outside the tape
+crate's own tests; the re-export block retires with the crate.
+
+- File: `crates/tape/src/lib.rs`, lines 72-103.
+- Absorbed by: AZ-II.W2.
+
+### 9.8 Discipline
+
+Any cleanup tranche between now and AZ-II open MUST NOT prune the
+above in isolation. The first acceptable post-AZ-II cleanup pass
+verifies the inventory above retired by deletion, not by patch, and
+flags any surface that survived under a non-tape consumer. Survivors
+indicate an AZ-II reroute miss, not a fresh prune candidate.

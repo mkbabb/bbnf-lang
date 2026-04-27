@@ -1,21 +1,21 @@
 # Remaining Trajectory — Architecture, Optimisation, and Competitor Plan
 
 Status: planning canon. This file explains the remaining path
-`B1 -> B3 -> B4 -> B2 -> AY-II -> AZ-I -> AZ-II -> BA -> BB` after the
-2026-04-25 B2 close. It does not authorize execution.
+`B1 -> B3 -> B4 -> B2 -> B5 -> AY-II -> AZ-I -> AZ-II -> BA -> BB`
+after the 2026-04-26 B5 close. It does not authorize execution.
 
 ## 1. Path Change From The Redress
 
-The runway picks up three predecessor tranches between B1 and AY-II:
+The runway picks up four predecessor tranches between B1 and AY-II:
 
 ```text
-B1 -> B3 -> B4 -> B2 -> AY-II.W0' close + W1-W5 -> AZ-I -> AZ-II -> BA
-                                                          \
-                                                           -> BB (parallel with AZ-II where disjoint)
+B1 -> B3 -> B4 -> B2 -> B5 -> AY-II.W1-W5 -> AZ-I -> AZ-II -> BA
+                                                       \
+                                                        -> BB (parallel with AZ-II where disjoint)
 ```
 
 The redress + post-B1 predecessor sequence changes the floor + the
-post-B2 wall expectations, not the destination order beyond AY-II:
+post-B5 wall expectations, not the destination order beyond AY-II:
 
 1. **B3 closed (parser-baseline restoration).** Five forward fixes
    (γ–η) restored `BbnfBootstrap::parse` to microseconds against
@@ -34,26 +34,46 @@ post-B2 wall expectations, not the destination order beyond AY-II:
    80-min cold rustc-side IR-pipeline wall ceases to exist; CI +
    pre-commit gate on `cargo xtask regen --check`. See
    `docs/tranches/B2/FINAL.md`.
-4. **AZ-I is stricter.** CSS L4 may not retain a tape-backed aggregate
+4. **B5 closed (substrate restoration).** Six post-B4 architectural
+   smells retire across eight waves: the welded `FusedBuilder`
+   surface, the rollback triplication, the `columns_mut()` boundary
+   leak, the `extern crate self as bbnf` self-alias, four god
+   modules (plus seven W3b extensions), and the post-order depth-
+   stamp cascade. The substrate is one type, named correctly:
+   `Tape<R>` over `Columns`, with the value-side state folded into
+   the same column array the structural columns live in. The
+   boundary surface between generated parsers and the substrate
+   collapses to two methods: `Tape::position() -> u32` and
+   `Tape::rollback_to(open)`. Workspace nextest 1477/1477 green;
+   `compile_bbnf` median 2.806 ms (0.9 % under B4 baseline). See
+   `docs/tranches/B5/FINAL.md`.
+5. **AZ-I is stricter.** CSS L4 may not retain a tape-backed aggregate
    path. AZ-I's floor is now "JSON, CSS L4, and Sheets are struct-only;
    CSS may have named semantic parity gaps." Tape remains for BBNF only.
-5. **AZ-I.W0 amended post-B2.** The derive-cache relocation + Watt
+6. **AZ-I.W0 amended post-B2.** The derive-cache relocation + Watt
    proc-macro precompilation items DROP (T3-superseded; no proc-macro
    to relocate the cache for, no proc-macro to wrap with Watt). The
    classifier unification + IR audit items KEEP. Sub-agent count drops
    from 3 to 2; hard-gate items from 5 to 4.
-6. **AZ-II remains mandatory.** Full `crates/tape/` deletion is still
-   binding repo policy. Post-B2 the byte-equal reproducibility cycles
-   cost seconds rather than the hours the pre-B2 bootstrap wall would
-   have imposed; reversal narrows.
-7. **B1 linker posture is normalized.** macOS lld is opt-in through
+7. **AY-II.W0' close already folded into B4.W1.** AY-II.W1 is the
+   immediate next dispatch after B5 close; the post-B5 substrate is
+   the surface AY-II.W1 dispatches against, with `Tape<R>` over
+   `Columns` carrying the unified value/structural state and
+   `Tape::position()` / `Tape::rollback_to()` as the two-method
+   parser-substrate boundary.
+8. **AZ-II remains mandatory.** Full `crates/tape/` deletion is still
+   binding repo policy. Post-B5 the substrate is cleaner (one type,
+   one rollback, single-writer `frame_depth` invariant), so the
+   AZ-II tape-deletion path runs against a smaller, sharper surface;
+   byte-equal reproducibility cycles cost seconds.
+9. **B1 linker posture is normalized.** macOS lld is opt-in through
    `brew install lld`; default is Apple ld64 until a developer opts in.
-8. **Preflight was executed and folded into canon.** The 2026-04-24
-   four-agent pass showed that several wave plans assumed command
-   surfaces or substrates that are not live yet (`cargo-nextest`,
-   `StructRegistry`, BB rule storage, typed paths). The path stays
-   ambitious, but every remaining implementation wave now opens on an
-   executable preflight packet in its owning tranche spec.
+10. **Preflight was executed and folded into canon.** The 2026-04-24
+    four-agent pass showed that several wave plans assumed command
+    surfaces or substrates that are not live yet (`cargo-nextest`,
+    `StructRegistry`, BB rule storage, typed paths). The path stays
+    ambitious, but every remaining implementation wave now opens on an
+    executable preflight packet in its owning tranche spec.
 
 ## 2. Novel Architecture Thesis
 
@@ -96,12 +116,13 @@ on defensible floor. These probabilities are copied from
 | B3 | closed | closed | Closed 2026-04-25 (`B3/FINAL.md`); parser-baseline restored. |
 | B4 | closed | closed | Closed 2026-04-25 (`B4/FINAL.md`); W0 codegen `syn::parse2` emit-correctness fix + W1 unified `builder.rollback_to(...)` atomic-tape+value path + transitional alias retirement; AY-II.W0' close ceremony folded into B4.W1 close. |
 | B2 | closed | closed | Closed 2026-04-25 (`B2/FINAL.md`); proc-macro IR-pipeline contract retired; `cargo xtask regen` canonical. |
+| B5 | closed | closed | Closed 2026-04-26 (`B5/FINAL.md`); substrate restoration across eight waves: FusedBuilder weld dissolves into `Tape<R>` over `Columns`; rollback triplication collapses to one primitive; `columns_mut()` retires in favour of `Tape::position()`; `extern crate self as bbnf` removed; six god modules + seven W3b extensions split; post-order depth-stamp cascade retires under W6 invariant inversion. Workspace nextest 1477/1477 green; `compile_bbnf` median 2.806 ms (0.9 % under B4 baseline). |
 | AY-II.W0' | closed | closed | Closed 2026-04-25 at B4.W1 close; the unified atomic-rollback path lands the contract the W0'.a substrate shipped without; transitional aliases retire entirely; 327-failure runtime-parser regression resolves. See `docs/tranches/B4/audit/W1-close.md`. |
-| AY-II (W1-W5) | 0.30 | 0.65 | One-path semantic closure on tape substrate; dense integration tranche. Post-B4: W0' close ceremony complete; W1 cursor-shape projection (10 remaining test failures) is the immediate next dispatch. |
-| AZ-I | 0.080 | 0.36 | Data-grammar performance + CSS typed richness tranche. Post-B2 lift: W0 derive-cache + Watt items drop (T3-superseded); two sub-agents instead of three; classifier unification + IR audit retain load-bearing scope. |
-| AZ-II | 0.20 | 0.50 | BBNF bootstrap byte-equality and tape deletion. Post-B2 lift: byte-equal reproducibility cycles cost seconds rather than hours; reversal narrows. |
-| BA | 0.27 | 0.55 | Path query surface over a settled struct tree. |
-| BB | 0.10 | 0.32 | E-graph rule inference and automated ranking; useful floor likely. |
+| AY-II (W1-W5) | 0.32 | 0.68 | One-path semantic closure on the post-B5 substrate (`Tape<R>` + `Columns`); dense integration tranche. Post-B5 lift: substrate is one type with two-method parser boundary; cousin-leak guard at iteration boundary; depth-stamp single-writer invariant; module decomposition retires god-module hot-path navigation tax. |
+| AZ-I | 0.085 | 0.38 | Data-grammar performance + CSS typed richness tranche. Post-B5 lift: bisect cycles run against a sharper substrate (one rollback, one position accessor); module decomposition makes change-blast-radius locatable; classifier unification + IR audit retain load-bearing scope from post-B2 amendment. |
+| AZ-II | 0.21 | 0.52 | BBNF bootstrap byte-equality and tape deletion. Post-B5 lift: tape deletion target shrinks (no FusedBuilder weld, no welded value-side wrapper, no escape hatch); byte-equal reproducibility cycles cost seconds; reversal narrows. |
+| BA | 0.28 | 0.56 | Path query surface over a settled struct tree. Post-B5: substrate-truth canon for typed cursor surface. |
+| BB | 0.10 | 0.33 | E-graph rule inference and automated ranking; useful floor likely. Post-B5 unaffected (rules operate on substrate-independent IrNode). |
 
 The declared-gate joint probability is small because the runway stacks
 many ambitious gates, not because the target is too high. The response
@@ -137,6 +158,7 @@ table above remains the live forecast.
 | B3 | Parser-baseline restoration (γ retire `derive_frame_depth`; δ atomic depth rollback in `Columns`; ε cycle-safe cursor walk; ζ widened `end_compound_post_order` bump scope; η Pratt operand seeding + lowering cousin-leak guard) | json regen end-to-end (compile_paths_request 1.48 ms, generate_all 3.02 ms, prettyplease 11.13 ms); `compile_pipeline::compile_bbnf` median 2.831 ms | Same-path improvement on `compile_css_l4` (26.72 ms median) | Closed 2026-04-25. Bbnf self-host xtask regen surfaces a separate downstream `syn::parse2` codegen-emission defect; out of B3 scope, opens B4. |
 | B4.W0 | SIMD bitmap kernel `syn::parse2` emit-correctness fix at the source emitter | bbnf self-host regen reaches `prettyplease` end-to-end without rejection | Same; data grammars unaffected (defect was bbnf-self-host-specific) | Closed 2026-04-25. Single-source emitter correction; B4.W1 owns FusedOutput<R> / FusedBuilder consumer-fixture polish (327 debug-mode failures + 3 timeouts). |
 | B2 | Build-time codegen transposition: `bbnf_derive` proc-macro IR-pipeline contract retired; `cargo xtask regen` canonical regen entrypoint; per-grammar source on disk under `crates/core/src/grammar/generated/<ident>.rs`; `crates/derive/` deleted; `BBNF_SCHEMA_VERSION` retired; `cargo xtask regen --check` CI + pre-commit gate | No runtime change; cycle-1 cold regen wall drops from > 80 min to ~12:43 (full sweep, 9 grammars; per-grammar bbnf lib rebuild dominates) or ~5 min (single-grammar cold xtask compile); IR pipeline itself ~73 ms per grammar | No runtime change; same-path CSS L4 emission preserved | Closed 2026-04-25. AY-II.W0' close ceremony tractable in compressed-honest ~15 min on the post-B2 substrate; AZ-I.W0 derive-cache + Watt items dropped (T3-superseded). |
+| B5 | Substrate restoration: `FusedBuilder` weld + `FusedOutput<R>` + `ValueFramesOutput<R>` + welded value-side wrappers retire (~1500 LOC across three files deleted); value-side state promotes into `Columns`; rollback triplication collapses to one `Columns::rollback_to(open)`; `columns_mut()` boundary leak retires (1061+ CSS L4 callsites flatten through regen sweep) in favour of `Tape::position() -> u32`; `extern crate self as bbnf` self-alias removed; six god modules (`expression.rs` 2140, `dispatcher.rs` 1969, `inline.rs` 1687, `flat.rs` 1342, `columns.rs` 1287, `emitter/grammar.rs` 1286) plus seven W3b extensions split into directory modules; post-order depth-stamp cascade and `leftmost_descendant_offset` helper retire under W6 invariant inversion (`enter_post_order_children` bumps depth before body emits; single-writer `frame_depth` invariant); cousin-leak guard migrates from two lowering sites to `cursor.rs::ChildIter`; Pratt outer's post-call `set_child_off_at` surgery retires in favour of `end_compound_with_child_off` substrate variant | No runtime change; `compile_json` median 179.1 µs (1.6 % under B4 baseline 182 µs); `compile_bbnf` median 2.806 ms (0.9 % under B4 baseline 2.831 ms) | No runtime change; `compile_css_l4` median 26.82 ms (0.4 % over B4 baseline 26.72 ms — within bench noise) | Closed 2026-04-26. Eight waves (W0 → W6b); workspace nextest 1477/1477 green; AY-II.W1 dispatches against the post-B5 substrate (`Tape<R>` + `Columns` + 2-method parser-substrate boundary). |
 
 ## 5. Remaining Optimisation Ledger
 
@@ -144,8 +166,9 @@ table above remains the live forecast.
 |---|---|---|---|---|
 | B1 | Pinned toolchain, divan, nextest, script abrogation | No runtime change; cold numbers become trustworthy | No runtime change | `rust-toolchain.toml`, divan benches, nextest CI. |
 | B2 | Build-time codegen transposition; proc-macro IR-pipeline retired; `cargo xtask regen` canonical | No runtime change; cold-regen wall ~12:43 (full sweep) vs pre-B2 > 80 min | No runtime change | `xtask/src/regen.rs`, `crates/core/src/grammar/generated/<ident>.rs`, `pub use ::bbnf::grammar::generated::<ident>::*`. |
-| AY-II.W0' | Fused parse/value lane | `Parsed::to_value()` projects from value frames; no reparse | Same projection lane for typed CSS | `FusedBuilder<R>`, `FusedOutput<R>`, `project_value_<Grammar>`. |
-| AY-II.W1-W5 | Projection totality + same-path structural scan | JSON semantic parity, no consumerless substrate | lightningcss-keyed typed parity on tape substrate | materializer helpers + emitted consumers. |
+| B5 | Substrate restoration: substrate is `Tape<R>` over `Columns` (one type, named correctly); two-method parser boundary (`Tape::position()`, `Tape::rollback_to(open)`); single-writer depth-stamp invariant; module decomposition along natural concern boundaries | `compile_json` median 179.1 µs (1.6 % under B4 baseline) | `compile_css_l4` median 26.82 ms (within bench noise of B4 baseline) | `Tape<R>` + `Columns` + `Parsed<'p, R>` 3-field record. |
+| AY-II.W0' | Fused parse/value lane (closed at B4.W1; semantics preserved at B5) | `Parsed::to_value()` projects from value frames on the unified substrate; no reparse | Same projection lane for typed CSS on the unified substrate | `Tape<R>`, `Columns`, `project_value_<Grammar>`. |
+| AY-II.W1-W5 | Projection totality + same-path structural scan on the post-B5 substrate | JSON semantic parity, no consumerless substrate | lightningcss-keyed typed parity on the unified `Tape<R>` substrate | materializer helpers + emitted consumers. |
 | AZ-I.W0 | Classifier unification + audit pass (post-B2: derive-cache + Watt items dropped, T3-superseded) | Payload classifier collision resolved before activation | Same for `Length`, `Color`, selector/value payloads | `payload_coverage.rs`, classifier design. |
 | AZ-I.W1 | `StructRegistry` closure | Every JSON `Named` rule gets `StructLayout` | Every CSS L4 `Named` rule gets `StructLayout` | `crates/ir/src/registry/struct.rs`. |
 | AZ-I.W2 | Scalar direct-to-struct | Numbers, strings, bools, arrays/objects write direct | Out-of-scope except no regression | JSON builder writes fields, not tape records. |
@@ -163,22 +186,24 @@ APIs; they show how the architecture should change.
 ### JSON at AY-II Close
 
 ```rust
-pub fn parse_json(src: &str) -> Result<Parsed<JsonParser>, Error> {
+pub fn parse_json(src: &str) -> Result<Parsed<'_, JsonParser>, Error> {
+    let mut tape = Tape::<JsonParser>::with_capacity(src.len());
     let mut state = JsonState::new(src);
-    let mut out = FusedBuilder::<JsonParser>::new(src);
-    __json_value(&mut state, &mut out)?;
-    Ok(Parsed::from_fused(src, out.finish_fused()))
+    __json_value(&mut state, &mut tape)?;
+    let root_offset = tape.finish();
+    Ok(Parsed { tape, input: src, root_offset })
 }
 
 impl<'p> Parsed<'p, JsonParser> {
     pub fn to_value(&'p self) -> JsonValue<'p> {
-        project_value_JsonParser(self.value_frames(), self.root())
+        project_value_JsonParser(&self.tape, self.root_offset)
     }
 }
 ```
 
-Shape: still tape-backed, but value materialisation is fused into the
-same parse output. No second parse, no visitor reconstruction.
+Shape: still tape-backed (post-B5 unified substrate `Tape<R>` over
+`Columns`), with value materialisation reading off the same tape.
+No second parse, no visitor reconstruction, no welded wrapper.
 
 ### JSON at AZ-I.W2
 

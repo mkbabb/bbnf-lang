@@ -75,7 +75,7 @@ tranches with plan docs, 6 FINAL docs on master):
 | Tranches with hard perf gate that hit it | 4 | AP.5 (delim-scan), AO (structural), AJ (zero-alloc child), B5 (`compile_bbnf` within 5 % of B4 baseline) |
 | Tranches whose perf gate missed by > 20 % | 6 | Every tranche in Era V's AV-AW-AX cluster |
 | Mid-tranche audit-driven re-routing without revert | 1 | B5.W2b architectural diagnosis routed Parts 1+2 to W6 substrate-level depth-stamp inversion; the wave's plan-incorrect prescription retired, the tranche stayed open, and the substrate transposition landed at W6+W6b without breaking the workspace |
-| B1/B3/B4/B2/B5/B6/B7 closed declared | 7 | All landed declared gates; B6/B7 infrastructure-only, no declared perf gate |
+| B-series closed (B1/B3/B4/B2/B5/B6/B7) | 7 | B1/B3/B4/B2/B5 closed on declared gates; B6.W0 closed on declared (192× cold-wall speedup); B6.W1+W2 closed on rationale-satisfied per SPEC §Plan-time miscalibration (prescribed mechanisms structurally incapable of moving prescribed metrics); B7 closed on declared gates (cross-repo modernization, infrastructure-only) |
 
 Probabilities below reflect post-B7 substrate closure. B7's
 cross-repo modernization (divan/nextest unification, 2026-04-27)

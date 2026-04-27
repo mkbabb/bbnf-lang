@@ -113,10 +113,10 @@ first-class work items, not "upstream" deferrals.
   `generated.rs` is produced by `scripts/bootstrap-bbnf.sh`. The
   only legitimate edits are via that script.
 - **Tests live in `tests/` directories only.** Never inline
-  `#[cfg(test)]` modules under `src/`. (Enforced post-B7:
-  B7.W1.A5 hoisted all 69 inline tests from
-  `parse-that/rust/parse_that/src/`; CI enforces no
-  `#[cfg(test)]` blocks under `src/` per workspace convention.)
+  `#[cfg(test)]` modules under `src/`. (Convention-enforced via
+  code review; B7.W1.A5 hoisted all 69 inline tests from
+  `parse-that/rust/parse_that/src/` to bring that repo into
+  alignment with bbnf-lang and pprint, which already conformed.)
 - **One codegen path, no fallbacks, no hybrids.** A new optimisation
   integrates with the existing pass pipeline, cost model, and
   rewrite framework; it does not create a parallel one.

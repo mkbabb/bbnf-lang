@@ -130,9 +130,14 @@ inside that single harness pass (bench-single-run,
 bench-sequential-regression). Cold-per-parse only —
 `no-warm-benches`. Post-B7 (2026-04-27), divan is the only harness
 across bbnf-lang, parse-that, and pprint; legacy bencher / libtest /
-unstable-harness paths retired entirely. Cross-repo coverage:
-bbnf-lang (simd-scan + others), parse-that (13 parse_that-crate
-benches + 5 sub-crate benches), pprint (26 + 12 benches).
+unstable-harness paths retired entirely. Cross-repo bench-target
+counts at B7 close: bbnf-lang ~30 divan bench files (core, ir,
+egraph, csp-solver, simd-scan, json-prototype, tape; B7.W0.A1
+ported simd-scan from manual `std::time::Instant` to divan);
+parse-that 18 (13 parse_that-crate + 1 bootstrap + 4 regex; all
+ported from `bencher = "0.1.5"` at B7.W1.A2 + A3); pprint 38
+(26 in `pprint.rs` + 12 in `digit_count.rs`; ported from
+`#![feature(test)]` + `extern crate test` at B7.W2.A6 + A7).
 
 | Alias | Coverage | Profile |
 |---|---|---|

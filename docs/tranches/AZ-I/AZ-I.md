@@ -274,6 +274,21 @@ AZ-I's close matrix:
 `FINAL.md` records deltas, reversals taken, and hands off to AZ-II
 under the contract in §Handoff contract to AZ-II.
 
+### AZ-I.W4 absorbs durable AY-III gates
+
+AY-III.W0 + W1 durable gates fold into the AZ-I.W4 close ceremony
+as grammar-general infrastructure. The admission-totality test is
+parameterized over the eight-grammar corpus (JSON, CSS L4, Sheets,
+BBNF, BNF, EBNF, CSV, math) — each grammar's `Named`-rule axis
+verifies admission count ≡ materialiser count ≡ consumer count,
+executed via a single macro-driven test harness. The competitor-
+keyed close gates (sonic-rs / simd-json for JSON, lightningcss /
+cssparser for CSS, where applicable) ride on the post-struct samply
+capture; no internal ratio gates. The fused-pipeline wire contract
+(parse-root invocation count == `to_value()` invocation count)
+generalises to: parse-root invocation count == grammar-derived view
+materialisation count, parameterized per grammar.
+
 ## Reversal criteria
 
 AZ-I inherits AQ.5's reversal discipline (~32 commits, the cleanest

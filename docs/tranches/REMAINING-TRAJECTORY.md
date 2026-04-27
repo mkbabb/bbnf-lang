@@ -1,17 +1,19 @@
 # Remaining Trajectory — Architecture, Optimisation, and Competitor Plan
 
 Status: planning canon. This file explains the remaining path
-`B1 -> B3 -> B4 -> B2 -> B5 -> AY-II -> AZ-I -> AZ-II -> BA -> BB`
-after the 2026-04-26 B5 close. It does not authorize execution.
+`B1 -> B3 -> B4 -> B2 -> B5 -> B6 -> B7 -> AZ-I -> AZ-II -> BA -> BB`
+after the 2026-04-26 B5 close, with AY-III deferred and its durable
+gates absorbed into AZ-I.W4 + AZ-II.W2. It does not authorize
+execution.
 
 ## 1. Path Change From The Redress
 
 The runway picks up four predecessor tranches between B1 and AY-II:
 
 ```text
-B1 -> B3 -> B4 -> B2 -> B5 -> AY-II.W1-W5 -> AZ-I -> AZ-II -> BA
-                                                       \
-                                                        -> BB (parallel with AZ-II where disjoint)
+B1 -> B3 -> B4 -> B2 -> B5 -> B6 -> B7 -> AZ-I -> AZ-II -> BA -> BB
+                                             |
+                                             AY-III deferred (gates absorb into AZ-I.W4 + AZ-II.W2)
 ```
 
 The redress + post-B1 predecessor sequence changes the floor + the

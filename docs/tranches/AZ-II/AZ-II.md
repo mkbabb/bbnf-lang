@@ -151,6 +151,17 @@ grammar-read step; it is measured but lightly weighted — regression
 - Pass count ≥ 967, fail count ≤ 33, ignored count ≤ 30 on
   `cargo nextest run --workspace --profile ax-iter`.
 
+### AZ-II.W2 absorbs durable AY-III gates
+
+AY-III.W2's BBNF self-host identity gate folds into AZ-II.W2 as the
+post-cutover regen check. After Stage-B's struct-only rebuild from
+struct-only source, `cargo xtask regen --check` exit 0 across the
+full 9-grammar corpus is the byte-equal close ceremony. The grammar-
+general totality test (parameterized per primary grammar) verifies
+admission ≡ materialiser ≡ consumer for the post-tape struct-only
+path; this generalises AY-III.W2's BBNF-only assertion to all four
+primary grammars on the struct substrate.
+
 ## Wave structure
 
 Three waves plus FINAL. Each wave has a same-commit runtime call

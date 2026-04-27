@@ -1,5 +1,15 @@
 # Tranche AY-III — Gestalt Continuation on the Post-B5 Substrate (Pass III)
 
+**STATUS: DEFERRED — 2026-04-27.** Per the fifth /plan synthesis cycle,
+AY-III's tape-substrate verification is on a deprecating substrate
+(direct-to-struct in AZ-I supersedes the tape lane for the three
+primary data grammars; AZ-II deletes the tape crate entirely).
+Durable AY-III gates absorb forward as grammar-general infrastructure:
+AY-III.W0 + W1 admission-totality + competitor-keyed close gates +
+fused-pipeline wire contracts → AZ-I.W4 close ceremony; AY-III.W2
+BBNF self-host identity gate → AZ-II.W2 post-cutover regen-check.
+This document remains as historical record.
+
 AY-III closes the AY arc on the substrate B5 delivered. Pass I
 (`../AY-I/AY-I.md`, `../AY-I/FINAL.md`) proved the visitor-lane
 shape reaches 0.99× sonic on eager JSON and broadened

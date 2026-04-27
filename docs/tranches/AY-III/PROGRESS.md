@@ -6,9 +6,10 @@ predecessor passes, and `../AY-II-I/audit/AY-II-AUDIT-{A,B,C,D}-*.md`
 for the triumvirate that informs this pass on the post-B5
 substrate).
 
-- `Status`: planned (pre-W0 dispatch)
-- `Current wave`: tranche open
-- `Next wave`: W0 (JSON closure on the post-B5 substrate)
+- `Status`: deferred (2026-04-27; durable gates absorb into AZ-I.W4 + AZ-II.W2)
+- `Current wave`: none (no dispatch will fire)
+- `Next wave`: none — AZ-I.W0 is the next active dispatch on the
+  post-B7 trajectory
 
 ---
 
@@ -243,3 +244,23 @@ deferral opens AY-IV; otherwise AZ-I.W2 inherits.
    L4 grammar extensions land only when an admission already
    shapes the rule. The W1 plan enumerates the carve-out
    discipline.
+
+---
+
+## 2026-04-27 — AY-III dispatch deferred
+
+Per the fifth /plan synthesis (B7 prelude annex authored 2026-04-27):
+AY-III dispatch skipped. The tape-substrate verification AY-III
+performs is on a deprecating substrate; direct-to-struct (AZ-I)
+replaces the tape projection lane for JSON, CSS L4, and Sheets, and
+AZ-II deletes `crates/tape/` entirely. AY-III's durable gates fold
+forward as grammar-general infrastructure absorbed into AZ-I.W4 +
+AZ-II.W2 close ceremonies. The plan documents stay on disk as
+historical record; no further AY-III commits will land.
+
+- `Status`: deferred
+- `Current wave`: none (no dispatch will fire)
+- `Successor`: AZ-I.W0 dispatches against the post-B7 master HEAD;
+  AY-III.W0 + W1 durable gates absorb into AZ-I.W4 close ceremony;
+  AY-III.W2 BBNF self-host identity gate absorbs into AZ-II.W2
+  post-cutover regen-check.

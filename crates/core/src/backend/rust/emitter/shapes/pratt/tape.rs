@@ -309,11 +309,18 @@ pub fn emit_parse_pratt(
                     // Post-order: its children already live in the tape
                     // (LHS + op leaf + RHS at indices [lhs_idx..len]);
                     // begin_compound allocates a new row at the post-
-                    // position; end_compound_post_order closes and
-                    // points child_off at `lhs_idx` so the cursor walk
-                    // names LHS as first child. flags carries
-                    // op_discriminant so reducer-variant projection
-                    // distinguishes per-op.
+                    // position; the reducer wraps the existing range.
+                    //
+                    // B5.W6 — the reducer is the unique post-order
+                    // pattern where children exist BEFORE the wrapping
+                    // compound is conceived; no `enter_post_order_children`
+                    // bracket could anticipate them. The reducer row
+                    // stamps via `begin_compound` (outer Pratt frame's
+                    // current depth at the call site = the reducer's
+                    // depth), and `wrap_existing_children_post_order`
+                    // owns the depth retrofit over `[lhs_idx..compound_idx)`
+                    // — a flat-slice `+1` bump that lifts every record
+                    // in the wrapped range into the reducer's frame.
                     let reducer_span_hi = *p as u32;
                     let compound_idx = builder.begin_compound(
                         crate::runtime::tape::TapeKind::Rule,
@@ -322,7 +329,7 @@ pub fn emit_parse_pratt(
                         0u8,
                         0u16,
                     );
-                    builder.end_compound_post_order(
+                    builder.wrap_existing_children_post_order(
                         compound_idx,
                         reducer_span_hi,
                         crate::runtime::tape::TapeOffset(lhs_idx),

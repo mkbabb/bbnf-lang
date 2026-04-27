@@ -1611,7 +1611,7 @@ mod __jsonparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let _ = __shape_support_JsonParser::skip_space(input, p, state);
@@ -1649,7 +1649,7 @@ mod __jsonparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 5u8,

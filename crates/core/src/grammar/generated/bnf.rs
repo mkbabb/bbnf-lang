@@ -797,7 +797,7 @@ mod __bnfparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -869,7 +869,7 @@ mod __bnfparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 0u8,
@@ -913,7 +913,7 @@ mod __bnfparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -985,7 +985,7 @@ mod __bnfparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 1u8,
@@ -1029,16 +1029,16 @@ mod __bnfparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -1129,15 +1129,17 @@ mod __bnfparser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -1153,6 +1155,7 @@ mod __bnfparser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (1usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -1161,7 +1164,7 @@ mod __bnfparser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -1177,13 +1180,13 @@ mod __bnfparser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -1258,13 +1261,13 @@ mod __bnfparser_emit_impl {
                             );
                     }
                     let repeat_lo = *p as u32;
-                    let repeat_child = builder.position();
+                    let repeat_child = builder.enter_post_order_children();
                     let mut iter_count: u32 = 0;
                     loop {
                         let save_p = *p;
                         let save_cols = builder.position();
                         let iter_lo = *p as u32;
-                        let iter_child = builder.position();
+                        let iter_child = builder.enter_post_order_children();
                         let attempt = (|| -> ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -1355,15 +1358,17 @@ mod __bnfparser_emit_impl {
                         if attempt.is_err() {
                             *p = save_p;
                             builder.rollback_to(save_cols);
+                            builder.exit_post_order_children();
                             break;
                         }
                         if *p == save_p {
                             builder.rollback_to(save_cols);
+                            builder.exit_post_order_children();
                             break;
                         }
                         let iter_hi = *p as u32;
                         let __iter_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Seq,
                                 iter_lo,
                                 0u8,
@@ -1379,6 +1384,7 @@ mod __bnfparser_emit_impl {
                         iter_count = iter_count.saturating_add(1);
                     }
                     if iter_count < (1usize as u32) {
+                        builder.exit_post_order_children();
                         return Err(crate::runtime::tape::DtaError::Syntax {
                             offset: *p as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -1387,7 +1393,7 @@ mod __bnfparser_emit_impl {
                     }
                     let repeat_hi = *p as u32;
                     let __repeat_off = builder
-                        .begin_compound(
+                        .begin_compound_post(
                             crate::runtime::tape::TapeKind::Repeat,
                             repeat_lo,
                             0u8,
@@ -1405,15 +1411,17 @@ mod __bnfparser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -1429,6 +1437,7 @@ mod __bnfparser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -1437,7 +1446,7 @@ mod __bnfparser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -1453,7 +1462,7 @@ mod __bnfparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 2u8,
@@ -1497,7 +1506,7 @@ mod __bnfparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let _ = __shape_support_BnfParser::skip_space(input, p, state);
@@ -1602,11 +1611,11 @@ mod __bnfparser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -1638,10 +1647,11 @@ mod __bnfparser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -1657,7 +1667,7 @@ mod __bnfparser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -1673,7 +1683,7 @@ mod __bnfparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 3u8,

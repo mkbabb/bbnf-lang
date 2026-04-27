@@ -111,12 +111,13 @@ pub fn emit_parse_arglist(
         > {
             let span_lo = *p as u32;
             // AY-II.W0.b — walker-parity post-order outer Rule compound.
-            let outer_child = builder.position();
+            // B5.W6 — bracket the post-order children scope.
+            let outer_child = builder.enter_post_order_children();
 
             #body_emission
 
             let span_hi = *p as u32;
-            let outer_off = builder.begin_compound(
+            let outer_off = builder.begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 #variant_idx,
@@ -294,12 +295,18 @@ fn emit_tape_position_core(
             if *hi == 1 && *lo == 0 {
                 // Optional — attempt once, restore on failure.
                 // AY-II.W0.b — post-order iter Seq compound via
-                // begin/end; retry uses rollback_to (iter_save_cols).
+                // begin_compound_post / end_compound_post_order; retry
+                // uses rollback_to (iter_save_cols).
+                //
+                // B5.W6 — bracket the iter Seq's post-order children
+                // scope; on failure exit the bracket alongside the
+                // rollback so `current_depth` mirrors the structural
+                // rewind.
                 quote! {
                     let save_p = *p;
                     let iter_save_cols = builder.position();
                     let iter_lo = *p as u32;
-                    let iter_child = builder.position();
+                    let iter_child = builder.enter_post_order_children();
                     let attempt = (|| -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
                         #inner_emit
                         Ok(())
@@ -307,9 +314,10 @@ fn emit_tape_position_core(
                     if attempt.is_err() {
                         *p = save_p;
                         builder.rollback_to(iter_save_cols);
+                        builder.exit_post_order_children();
                     } else {
                         let iter_hi = *p as u32;
-                        let __iter_off = builder.begin_compound(
+                        let __iter_off = builder.begin_compound_post(
                             crate::runtime::tape::TapeKind::Seq,
                             iter_lo,
                             0,
@@ -325,15 +333,20 @@ fn emit_tape_position_core(
                 }
             } else {
                 // Generic repeat — iterate greedily, count iters.
+                // B5.W6 — bracket the outer Repeat scope and each
+                // per-iter Seq scope; failure paths close the inner
+                // bracket; the outer bracket closes either via the
+                // `end_compound_post_order` success path or via
+                // `exit_post_order_children` on the underflow error.
                 quote! {
                     let repeat_lo = *p as u32;
-                    let repeat_child = builder.position();
+                    let repeat_child = builder.enter_post_order_children();
                     let mut iter_count: u32 = 0;
                     loop {
                         let save_p = *p;
                         let save_cols = builder.position();
                         let iter_lo = *p as u32;
-                        let iter_child = builder.position();
+                        let iter_child = builder.enter_post_order_children();
                         let attempt = (|| -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
                             #inner_emit
                             Ok(())
@@ -341,14 +354,16 @@ fn emit_tape_position_core(
                         if attempt.is_err() {
                             *p = save_p;
                             builder.rollback_to(save_cols);
+                            builder.exit_post_order_children();
                             break;
                         }
                         if *p == save_p {
                             builder.rollback_to(save_cols);
+                            builder.exit_post_order_children();
                             break;
                         }
                         let iter_hi = *p as u32;
-                        let __iter_off = builder.begin_compound(
+                        let __iter_off = builder.begin_compound_post(
                             crate::runtime::tape::TapeKind::Seq,
                             iter_lo,
                             0,
@@ -363,6 +378,7 @@ fn emit_tape_position_core(
                         iter_count = iter_count.saturating_add(1);
                     }
                     if iter_count < (#lo_lit as u32) {
+                        builder.exit_post_order_children();
                         return Err(crate::runtime::tape::DtaError::Syntax {
                             offset: *p as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -370,7 +386,7 @@ fn emit_tape_position_core(
                         });
                     }
                     let repeat_hi = *p as u32;
-                    let __repeat_off = builder.begin_compound(
+                    let __repeat_off = builder.begin_compound_post(
                         crate::runtime::tape::TapeKind::Rule,
                         repeat_lo,
                         0,
@@ -398,10 +414,11 @@ fn emit_tape_position_core(
             }
             quote! {
                 let seq_lo = *p as u32;
-                let seq_child = builder.position();
+                // B5.W6 — bracket the post-order Seq's children.
+                let seq_child = builder.enter_post_order_children();
                 #(#out)*
                 let seq_hi = *p as u32;
-                let __seq_off = builder.begin_compound(
+                let __seq_off = builder.begin_compound_post(
                     crate::runtime::tape::TapeKind::Seq,
                     seq_lo,
                     0,

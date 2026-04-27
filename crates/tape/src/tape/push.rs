@@ -15,6 +15,74 @@ use crate::value::PayloadTag;
 use super::{leftmost_descendant_offset, PayloadData, Tape, TapeOffset, TapeRec};
 
 impl<R> Tape<R> {
+    // ── Write surface — depth-bracket primitives (B5.W6) ─────────────
+
+    /// Open a post-order shape's children scope.
+    ///
+    /// Bumps `current_depth` so children pushed by the body stamp
+    /// `frame_depth` at the correct (parent + 1) depth at push time.
+    /// Returns the current write position, which the caller threads
+    /// to [`Self::end_compound_post_order`] as `first_child` after
+    /// the body completes.
+    ///
+    /// Pairs with one of:
+    /// - [`Self::end_compound_post_order`] — successful close, body
+    ///   emitted ≥ 1 child + the post-order compound row;
+    /// - [`Self::exit_post_order_children`] — failure / rollback path
+    ///   where the body either emitted nothing or was rolled back
+    ///   without a post-order compound row landing.
+    ///
+    /// # Architectural role (B5.W6 depth-stamp invariant inversion)
+    ///
+    /// Pre-W6 the substrate stamped `frame_depth` at push-time using
+    /// the OUTER frame's depth, then retroactively bumped every byte
+    /// in the closed compound's subtree by `+1` inside
+    /// `end_compound_post_order` (the leftmost-descendant cascade).
+    /// W6 inverts the invariant: depth bumps explicitly at the
+    /// children-enter point, so children push at the correct depth
+    /// without retroactive correction.
+    ///
+    /// # Self-host transition (B5.W6 phase-A)
+    ///
+    /// During the self-host bootstrap window the bracket is a position-
+    /// only no-op so generated code calling the new API produces tapes
+    /// byte-identical to the legacy `position()` form, allowing the
+    /// regen sweep to land on a working parser. Phase B flips the
+    /// bracket to actually bump `current_depth` and removes the cascade
+    /// from [`Self::end_compound_post_order`]. The two-commit transition
+    /// preserves the workspace-green invariant across the substrate
+    /// flip.
+    #[inline(always)]
+    pub fn enter_post_order_children(&mut self) -> u32 {
+        // Phase A — position-only no-op. Phase B replaces with
+        // `current_depth = current_depth.saturating_add(1)`.
+        self.columns.records.len() as u32
+    }
+
+    /// Cancel a post-order children scope without emitting the
+    /// compound row.
+    ///
+    /// Decrements `current_depth` to undo the bump
+    /// [`Self::enter_post_order_children`] applied. Called from
+    /// retry-loop rollback sites where the failing branch's body
+    /// rolled back to the bracket's open position (no post-order
+    /// compound row will land, so no
+    /// [`Self::end_compound_post_order`] will run to absorb the
+    /// bump). The matching [`Self::rollback_to`] still rewinds the
+    /// structural columns; this primitive owns the depth-counter
+    /// half of the symmetric retreat.
+    ///
+    /// # Self-host transition (B5.W6 phase-A)
+    ///
+    /// Phase A is a no-op companion to the no-op
+    /// [`Self::enter_post_order_children`]; phase B activates the
+    /// decrement once every emitter site uses the bracket discipline.
+    #[inline(always)]
+    pub fn exit_post_order_children(&mut self) {
+        // Phase A — no-op. Phase B replaces with
+        // `current_depth = current_depth.saturating_sub(1)`.
+    }
+
     // ── Write surface — pre-order compound emission API ──────────────
 
     /// Begin a compound in pre-order.
@@ -25,10 +93,12 @@ impl<R> Tape<R> {
     /// the value checkpoint onto the open-stack.
     ///
     /// Returns the tape row offset the caller passes back to
-    /// [`Self::end_compound`] (pre-order) or
-    /// [`Self::end_compound_post_order`] (post-order). Emitter retry
-    /// paths rewind via [`Self::rollback_to`] with the returned
-    /// offset; the next `begin_compound` reuses the same row.
+    /// [`Self::end_compound`]. Emitter retry paths rewind via
+    /// [`Self::rollback_to`] with the returned offset; the next
+    /// `begin_compound` reuses the same row.
+    ///
+    /// Post-order shapes use [`Self::begin_compound_post`] paired
+    /// with a preceding [`Self::enter_post_order_children`].
     #[inline(always)]
     pub fn begin_compound(
         &mut self,
@@ -62,21 +132,56 @@ impl<R> Tape<R> {
         idx
     }
 
+    /// Begin a compound in post-order — the compound row lands
+    /// AFTER its children have been emitted.
+    ///
+    /// Pairs with [`Self::enter_post_order_children`] / [`Self::end_compound_post_order`].
+    ///
+    /// # Self-host transition (B5.W6 phase-A)
+    ///
+    /// Phase A is byte-identical to [`Self::begin_compound`]: stamps
+    /// the row at `current_depth`, bumps `current_depth` for the
+    /// children that follow (none, in post-order — the children
+    /// already landed). Phase B flips this to stamp at the OUTER
+    /// depth (`current_depth - 1`) without bumping, in concert with
+    /// [`Self::enter_post_order_children`] now bumping at the
+    /// children-enter point. The phase-A choice keeps tapes byte-
+    /// identical so the regen sweep lands on a working parser; the
+    /// `_post` suffix advertises the discipline emitters now satisfy.
+    #[inline(always)]
+    pub fn begin_compound_post(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        variant_idx: u8,
+        meta_idx: u8,
+        extra_flags: u16,
+    ) -> u32 {
+        // Phase A — identical semantics to `begin_compound`. Phase B
+        // replaces with: stamp at `current_depth - 1`, no bump.
+        self.begin_compound(kind, span_lo, variant_idx, meta_idx, extra_flags)
+    }
+
     /// Finalise a compound opened via [`Self::begin_compound`] in
     /// pre-order — the caller emitted the compound row BEFORE its
     /// children, so the first child's root sits at `open_offset + 1`.
+    ///
+    /// # Self-host transition (B5.W6 phase-A)
+    ///
+    /// Phase A retains the forward scan over `frame_depth` because
+    /// inner [`Self::end_compound_post_order`] calls retroactively
+    /// bump `frame_depth` over their child ranges (the cascade is
+    /// still live in phase A). Phase B deletes both: the bracket
+    /// discipline lifts every record at push time, so `child_off =
+    /// open_offset + 1` is authoritative directly. The forward scan's
+    /// pre-W6 rationale is preserved on this method until the flip.
     #[inline(always)]
     pub fn end_compound(&mut self, open_offset: u32, span_hi: u32) {
         self.columns.set_span_hi_at(open_offset, span_hi);
-        // The compound was emitted at its outer frame's depth; its
-        // direct children are stamped at `open_depth + 1`. Pre-order
-        // layout normally puts the first child at `open_offset + 1`,
-        // BUT when an inner [`Self::end_compound_post_order`] retro-
-        // actively bumps `frame_depth` over its child range, records
-        // that landed between this compound's open and the nested
-        // post-order close move one level deeper. The true first
-        // child is then the first row at exactly `open_depth + 1`,
-        // bounded by the compound's structural scope.
+        // Phase A — forward scan accommodates the inner
+        // `end_compound_post_order` cascade. Phase B replaces the body
+        // below with `let n = self.columns.len() as u32; let first_child
+        // = open_offset + 1; if first_child < n { … }`.
         let open_depth = self.columns.frame_depth[open_offset as usize];
         let target_depth = open_depth.saturating_add(1);
         let n = self.columns.len() as u32;
@@ -137,11 +242,21 @@ impl<R> Tape<R> {
         self.value_end_compound(span_hi);
     }
 
-    /// Finalise a compound opened via [`Self::begin_compound`] in
-    /// post-order — the compound row was allocated AFTER its
+    /// Finalise a compound opened via [`Self::begin_compound_post`]
+    /// in post-order — the compound row was allocated AFTER its
     /// children, so `open_offset` is the LAST record and the first
-    /// child's root is `first_child` (captured at children-enter via
-    /// `tape.position()`).
+    /// child's root is `first_child` (captured by the matching
+    /// [`Self::enter_post_order_children`] before the body).
+    ///
+    /// # Self-host transition (B5.W6 phase-A)
+    ///
+    /// Phase A retains the leftmost-descendant cascade because the
+    /// bracket primitives are no-ops (children still stamp at the
+    /// outer depth). Phase B activates the bracket and deletes the
+    /// cascade — under the bracket discipline, children stamp at the
+    /// correct depth at push time, so the cascade is no longer
+    /// structurally necessary. The two-phase transition keeps tapes
+    /// byte-identical across the regen sweep.
     #[inline(always)]
     pub fn end_compound_post_order(
         &mut self,
@@ -154,11 +269,89 @@ impl<R> Tape<R> {
             self.columns.set_child_off_at(open_offset, first_child);
             self.columns
                 .or_extra_at(open_offset, TapeRec::HAS_CHILDREN_BIT);
-            // B3.W0.ζ — bump the entire subtree's `frame_depth`, not
-            // just the offset range `[first_child, open_offset)`.
-            // Walking the leftmost-descendant chain finds the lowest
-            // offset of any record in our subtree; bumping
-            // `[leftmost, open_offset)` covers every descendant.
+            // Phase A — leftmost-descendant cascade lifts every
+            // descendant in `[leftmost(first_child), open_offset)` by
+            // +1 because the bracket primitives are no-ops. Phase B
+            // deletes the cascade entirely.
+            let lo = leftmost_descendant_offset(&self.columns, first_child.0) as usize;
+            let hi = open_offset as usize;
+            for slot in &mut self.columns.frame_depth[lo..hi] {
+                *slot = slot.saturating_add(1);
+            }
+        }
+        self.columns.current_depth = self.columns.current_depth.saturating_sub(1);
+        self.value_end_compound(span_hi);
+    }
+
+    /// Wrap a contiguous tail of already-emitted records as the
+    /// children of a compound row that was opened pre-order via
+    /// [`Self::begin_compound`] AFTER the children themselves landed.
+    ///
+    /// The Pratt reducer pattern is the sole consumer: operand /
+    /// operator records were emitted into the tape by the operand-
+    /// dispatch loop and the operator-leaf push, then the reducer
+    /// fires and allocates a NEW compound row via
+    /// [`Self::begin_compound`] at the post-position. The new row
+    /// sits at the same depth as the operand records (both are
+    /// children of the outer Pratt frame), but conceptually the
+    /// operands are now children OF the reducer — one level deeper.
+    /// Because the operand records were already pushed before the
+    /// reducer compound existed, no bracket pair could anticipate
+    /// them; the depth retrofit happens here as a flat-slice bump
+    /// over `[first_child, open_offset)`.
+    ///
+    /// # B5.W6 distinction from `end_compound_post_order`
+    ///
+    /// Ordinary post-order shapes (Wrap, Seq, Repeat, Alt) bracket
+    /// their children before emission via
+    /// [`Self::enter_post_order_children`], so depth is correct at
+    /// push time and `end_compound_post_order` only back-patches.
+    /// The Pratt reducer pattern is uniquely retroactive — the
+    /// "children" are emitted before the wrapping compound is even
+    /// conceived — so the substrate offers a dedicated primitive
+    /// that owns the flat-slice retrofit. The leftmost-descendant
+    /// chain walk that pre-W6 `end_compound_post_order` performed is
+    /// gone: under the new invariant the operand subtrees emitted
+    /// inside `[first_child, open_offset)` are already self-
+    /// consistent (their per-shape brackets stamped each interior
+    /// at the correct relative depth), so a flat `+1` over the slice
+    /// lifts the entire range uniformly.
+    ///
+    /// `open_offset` is the row produced by the matching
+    /// [`Self::begin_compound`]; that call already bumped
+    /// `current_depth` so the reducer row stamped one level above
+    /// its eventual children. This method decrements `current_depth`
+    /// once to restore the parent's frame, mirroring
+    /// [`Self::end_compound_post_order`]'s discipline.
+    ///
+    /// # Self-host transition (B5.W6 phase-A)
+    ///
+    /// In phase A this method must use the leftmost-descendant chain
+    /// walk because nested post-order operands' interiors still stamp
+    /// at the outer depth (the bracket primitives are no-ops). Phase B
+    /// flips to the flat-slice form once every emitter site uses the
+    /// active bracket discipline.
+    #[inline(always)]
+    pub fn wrap_existing_children_post_order(
+        &mut self,
+        open_offset: u32,
+        span_hi: u32,
+        first_child: TapeOffset,
+    ) {
+        self.columns.set_span_hi_at(open_offset, span_hi);
+        if !first_child.is_none() && first_child.0 < open_offset {
+            self.columns.set_child_off_at(open_offset, first_child);
+            self.columns
+                .or_extra_at(open_offset, TapeRec::HAS_CHILDREN_BIT);
+            // Phase A — leftmost-descendant cascade matches
+            // `end_compound_post_order`'s phase-A behaviour because
+            // the operand subtrees still stamp interior records at
+            // the outer Pratt depth (the per-shape brackets are
+            // currently no-ops). Phase B replaces with a flat slice
+            // bump over `[first_child, open_offset)` — under the
+            // active bracket discipline the operand interiors are
+            // already correct relative to their own outer rows, so
+            // the flat slice lifts the entire range uniformly.
             let lo = leftmost_descendant_offset(&self.columns, first_child.0) as usize;
             let hi = open_offset as usize;
             for slot in &mut self.columns.frame_depth[lo..hi] {

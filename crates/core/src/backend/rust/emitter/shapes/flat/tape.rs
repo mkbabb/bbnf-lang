@@ -147,10 +147,14 @@ pub(super) fn emit_tape_position_core(
             );
             quote! {
                 let seq_lo = *p as u32;
-                let seq_child = builder.position();
+                // B5.W6 — bracket the post-order children scope so
+                // child records stamp `frame_depth` at the correct
+                // (parent + 1) depth at push time. The matching
+                // `end_compound_post_order` absorbs the bracket bump.
+                let seq_child = builder.enter_post_order_children();
                 #inner
                 let seq_hi = *p as u32;
-                let __seq_off = builder.begin_compound(
+                let __seq_off = builder.begin_compound_post(
                     crate::runtime::tape::TapeKind::Seq,
                     seq_lo,
                     0u8,
@@ -309,14 +313,21 @@ fn emit_tape_repeat(
         //
         // AY-II.W0.b — truncate→rollback_to on iter failure; per-iter
         // Seq and outer Repeat compounds use begin_compound/end_compound.
+        //
+        // B5.W6 — outer Repeat opens its post-order bracket UNCONDITIONALLY
+        // around the iteration; the per-iter Seq opens its own bracket
+        // inside the attempt and either closes it via
+        // `end_compound_post_order` on success, or `exit_post_order_children`
+        // (paired with `rollback_to`) on failure. The depth columns
+        // become correct at push time without any retroactive cascade.
         let _ = lo_lit;
         quote! {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<(), crate::runtime::tape::DtaError> =
                 (|| {
                     #inner_emit
@@ -326,9 +337,10 @@ fn emit_tape_repeat(
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
-                let __iter_off = builder.begin_compound(
+                let __iter_off = builder.begin_compound_post(
                     crate::runtime::tape::TapeKind::Seq,
                     iter_lo,
                     0u8,
@@ -344,7 +356,7 @@ fn emit_tape_repeat(
             let repeat_hi = *p as u32;
             // AX.W0a.2.j — `TapeKind::Repeat` (not `Rule`) so
             // downstream IR-lowering's `iter_rep_children` peels it.
-            let __repeat_off = builder.begin_compound(
+            let __repeat_off = builder.begin_compound_post(
                 crate::runtime::tape::TapeKind::Repeat,
                 repeat_lo,
                 0u8,
@@ -367,15 +379,21 @@ fn emit_tape_repeat(
         //
         // AY-II.W0.b — truncate→rollback_to across the 2 rollback sites
         // + per-iter Seq + outer Repeat compounds on begin/end_compound.
+        //
+        // B5.W6 — outer Repeat opens its post-order bracket once at
+        // the loop entry; each iteration opens a per-iter Seq
+        // bracket; on iter failure the bracket closes via
+        // `exit_post_order_children` paired with `rollback_to` so the
+        // depth counter mirrors the structural rewind.
         quote! {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
                     #inner_emit
                     Ok(())
@@ -383,15 +401,17 @@ fn emit_tape_repeat(
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 // Protect against non-progressing iterations.
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
-                let __iter_off = builder.begin_compound(
+                let __iter_off = builder.begin_compound_post(
                     crate::runtime::tape::TapeKind::Seq,
                     iter_lo,
                     0u8,
@@ -406,6 +426,10 @@ fn emit_tape_repeat(
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (#lo_lit as u32) {
+                // B5.W6 — close the outer Repeat bracket before
+                // returning the error so `current_depth` reflects the
+                // outer frame.
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -413,7 +437,7 @@ fn emit_tape_repeat(
                 });
             }
             let repeat_hi = *p as u32;
-            let __repeat_off = builder.begin_compound(
+            let __repeat_off = builder.begin_compound_post(
                 crate::runtime::tape::TapeKind::Repeat,
                 repeat_lo,
                 0u8,

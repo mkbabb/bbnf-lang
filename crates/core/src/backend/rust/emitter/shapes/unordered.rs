@@ -326,10 +326,12 @@ pub fn emit_parse_unordered(
         > {
             let span_lo = *p as u32;
             // AY-II.W0.b — walker-parity post-order Repeat Rule
-            // compound via begin_compound/end_compound. Capture first-
-            // child index; iterate; allocate compound row post-children;
-            // override child_off to first-child.
-            let outer_child = builder.position();
+            // compound via begin_compound_post/end_compound_post_order.
+            //
+            // B5.W6 — bracket the post-order children scope so child
+            // records stamp `frame_depth` at the correct (parent + 1)
+            // depth at push time.
+            let outer_child = builder.enter_post_order_children();
             // The walker's Repeat entry doesn't skip leading ws on
             // its own — the Alt's ByteDispatch does. Mirror that: the
             // per-grammar value-position dispatcher does its own
@@ -344,6 +346,8 @@ pub fn emit_parse_unordered(
                 }
             }
             if iters < #iters_lo_lit {
+                // B5.W6 — close the bracket before returning the error.
+                builder.exit_post_order_children();
                 return ::core::result::Result::Err(
                     match input.get(*p).copied() {
                         None => crate::runtime::tape::DtaError::UnexpectedEnd {
@@ -358,7 +362,7 @@ pub fn emit_parse_unordered(
                 );
             }
             let span_hi = *p as u32;
-            let outer_off = builder.begin_compound(
+            let outer_off = builder.begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 #variant_idx,
@@ -418,10 +422,11 @@ fn emit_parse_unordered_fallback(
             let _ = state;
             let span_lo = *p as u32;
             // AY-II.W0.b — empty-compound fallback via begin/end.
-            let outer_child = builder.position();
+            // B5.W6 — bracket the (empty) post-order children scope.
+            let outer_child = builder.enter_post_order_children();
             let span_hi = *p as u32;
             let _ = input;
-            let outer_off = builder.begin_compound(
+            let outer_off = builder.begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 #variant_idx,

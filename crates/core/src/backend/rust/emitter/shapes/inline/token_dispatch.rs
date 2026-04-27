@@ -87,7 +87,11 @@ pub(super) fn emit_token_dispatch_tape(
             // compound. Capture first-child index pre-emission;
             // allocate the compound row post-children; override
             // child_off to point back at first-child.
-            let td_child = builder.position();
+            //
+            // B5.W6 — bracket the post-order children scope so child
+            // records stamp `frame_depth` at the correct
+            // (parent + 1) depth at push time.
+            let td_child = builder.enter_post_order_children();
             let token_lo = *p;
             #token_emit
             let token_span: &[u8] = &input[token_lo..*p];
@@ -97,7 +101,7 @@ pub(super) fn emit_token_dispatch_tape(
                 #fallback_emit
             }
             let td_hi = *p as u32;
-            let __td_off = builder.begin_compound(
+            let __td_off = builder.begin_compound_post(
                 crate::runtime::tape::TapeKind::TokenDispatch,
                 td_lo,
                 #variant_lit,

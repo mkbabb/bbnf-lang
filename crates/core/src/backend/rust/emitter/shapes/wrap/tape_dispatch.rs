@@ -189,7 +189,12 @@ pub(super) fn emit_alt_tape_dispatch(
     } else {
         quote! {
             let __wrap_enter_p = *p as u32;
-            let __wrap_enter_child = builder.position();
+            // B5.W6 — open the post-order children scope. The bracket
+            // bumps `current_depth` so child records pushed inside the
+            // chosen branch stamp `frame_depth` at the correct
+            // (parent + 1) value at push time. The matching
+            // `end_compound_post_order` below absorbs the bump.
+            let __wrap_enter_child = builder.enter_post_order_children();
             let mut __wrap_chosen_meta: u8 = 0;
             #first_peek
             'try_branches: loop {
@@ -198,6 +203,12 @@ pub(super) fn emit_alt_tape_dispatch(
                     _ => {}
                 }
                 #(#linear_arms)*
+                // B5.W6 — every branch failed; close the bracket
+                // explicitly so `current_depth` reflects the outer
+                // frame before the error propagates. Rollback inside
+                // each branch only rewinds the structural columns;
+                // the bracket counter is the emitter's responsibility.
+                builder.exit_post_order_children();
                 return ::core::result::Result::Err(
                     crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
@@ -206,18 +217,23 @@ pub(super) fn emit_alt_tape_dispatch(
                     },
                 );
             }
-            // AY-II.W0.b — unified compound emission via begin_compound /
-            // end_compound. The Wrap rule's compound is walker-parity
+            // AY-II.W0.b — unified compound emission via begin_compound_post /
+            // end_compound_post_order. The Wrap rule's compound is walker-parity
             // post-order: it lands AFTER the chosen branch's records.
             // Post-W0.a the outer Rule row is allocated at the current
-            // (post-branch) columns.len() via begin_compound; the
-            // matching end_compound back-patches span_hi + child_off
+            // (post-branch) columns.len(); the matching
+            // end_compound_post_order back-patches span_hi + child_off
             // + HAS_CHILDREN (child_off stamps to __wrap_enter_child,
             // the first branch record). `flags` carries the chosen
             // meta discriminant so sub-variant projection distinguishes
-            // branches. `frame_depth` = variant_idx as before.
+            // branches.
+            //
+            // B5.W6 — `begin_compound_post` stamps the outer row at the
+            // outer-frame depth without bumping `current_depth`, the
+            // bracket having already done so via
+            // `enter_post_order_children`.
             let __wrap_exit_p = *p as u32;
-            let __wrap_off = builder.begin_compound(
+            let __wrap_off = builder.begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 __wrap_enter_p,
                 #rule_variant_idx,

@@ -256,12 +256,18 @@ pub(super) fn emit_alt_typed_payload_tape(
                 })?;
             let alt_lo = *p as u32;
             // AY-II.W0.b — walker-parity post-order Alt compound.
-            let alt_child = builder.position();
+            // B5.W6 — bracket the post-order children scope; the
+            // compound row stamps via `begin_compound_post` and
+            // `end_compound_post_order` absorbs the bracket bump.
+            let alt_child = builder.enter_post_order_children();
             'try_branches: loop {
                 match first {
                     #(#byte_arms)*
                     _ => {}
                 }
+                // B5.W6 — every byte-arm fell through; close the
+                // bracket explicitly before propagating the error.
+                builder.exit_post_order_children();
                 return ::core::result::Result::Err(
                     crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
@@ -271,7 +277,7 @@ pub(super) fn emit_alt_typed_payload_tape(
                 );
             }
             let alt_hi = *p as u32;
-            let __alt_off = builder.begin_compound(
+            let __alt_off = builder.begin_compound_post(
                 crate::runtime::tape::TapeKind::Alt,
                 alt_lo,
                 0u8,

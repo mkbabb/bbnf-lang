@@ -160,15 +160,22 @@ pub(super) fn emit_alt_tape(
             let alt_lo = *p as u32;
             // AY-II.W0.b — walker-parity post-order Alt compound. Capture
             // first-child index before branches emit; allocate the
-            // compound row post-branches via begin_compound; close
+            // compound row post-branches via begin_compound_post; close
             // immediately; override child_off.
-            let alt_child = builder.position();
+            //
+            // B5.W6 — bracket the post-order children scope so child
+            // records stamp `frame_depth` at the correct (parent + 1)
+            // depth at push time.
+            let alt_child = builder.enter_post_order_children();
             'try_branches: loop {
                 match first {
                     #(#byte_arms)*
                     _ => {}
                 }
                 #(#fallback_arms)*
+                // B5.W6 — every branch failed; close the bracket
+                // before propagating the error.
+                builder.exit_post_order_children();
                 return ::core::result::Result::Err(
                     crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
@@ -178,7 +185,7 @@ pub(super) fn emit_alt_tape(
                 );
             }
             let alt_hi = *p as u32;
-            let __alt_off = builder.begin_compound(
+            let __alt_off = builder.begin_compound_post(
                 crate::runtime::tape::TapeKind::Alt,
                 alt_lo,
                 #variant_lit,

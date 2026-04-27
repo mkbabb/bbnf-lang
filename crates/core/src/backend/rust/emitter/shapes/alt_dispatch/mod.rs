@@ -101,13 +101,21 @@ pub fn emit_parse_alt_dispatch(
             // branch records emit first, then the outer Rule row lands
             // after them. Capture the first-child index before branch
             // emission; allocate the compound row at post-branch
-            // position via begin_compound; close immediately; override
-            // child_off to name the first branch record.
-            let alt_child = builder.position();
+            // position via begin_compound_post; close immediately;
+            // override child_off to name the first branch record.
+            //
+            // B5.W6 — bracket the post-order children scope so child
+            // records stamp `frame_depth` at the correct (parent + 1)
+            // depth at push time. Branch-failure paths inside the
+            // dispatch arms call `exit_post_order_children` paired with
+            // `rollback_to` per the alt_dispatch/branches.rs retry
+            // template; the success path absorbs the bracket bump via
+            // `end_compound_post_order` below.
+            let alt_child = builder.enter_post_order_children();
             let _ = alt_child;
             #dispatch_arms
             let alt_hi = *p as u32;
-            let off = builder.begin_compound(
+            let off = builder.begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 alt_lo,
                 #variant_idx,

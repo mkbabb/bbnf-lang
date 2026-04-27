@@ -3042,7 +3042,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -3075,7 +3075,7 @@ mod __googlesheetsparser_emit_impl {
                         offset: *p as u32,
                     })?;
                 let alt_lo = *p as u32;
-                let alt_child = builder.position();
+                let alt_child = builder.enter_post_order_children();
                 'try_branches: loop {
                     match first {
                         68u8 => {
@@ -3276,6 +3276,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                         _ => {}
                     }
+                    builder.exit_post_order_children();
                     return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -3284,7 +3285,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 let alt_hi = *p as u32;
                 let __alt_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Alt,
                         alt_lo,
                         0u8,
@@ -3301,7 +3302,7 @@ mod __googlesheetsparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 3u8,
@@ -3514,14 +3515,14 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -3540,10 +3541,11 @@ mod __googlesheetsparser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -3559,7 +3561,7 @@ mod __googlesheetsparser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -3581,7 +3583,7 @@ mod __googlesheetsparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 6u8,
@@ -3625,14 +3627,14 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -3651,10 +3653,11 @@ mod __googlesheetsparser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -3670,7 +3673,7 @@ mod __googlesheetsparser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -3695,7 +3698,7 @@ mod __googlesheetsparser_emit_impl {
                         offset: *p as u32,
                     })?;
                 let alt_lo = *p as u32;
-                let alt_child = builder.position();
+                let alt_child = builder.enter_post_order_children();
                 'try_branches: loop {
                     match first {
                         _ => {}
@@ -3761,6 +3764,7 @@ mod __googlesheetsparser_emit_impl {
                             break 'try_branches;
                         }
                     }
+                    builder.exit_post_order_children();
                     return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -3769,7 +3773,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 let alt_hi = *p as u32;
                 let __alt_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Alt,
                         alt_lo,
                         7u8,
@@ -3816,7 +3820,7 @@ mod __googlesheetsparser_emit_impl {
                         offset: *p as u32,
                     })?;
                 let alt_lo = *p as u32;
-                let alt_child = builder.position();
+                let alt_child = builder.enter_post_order_children();
                 'try_branches: loop {
                     match first {
                         _ => {}
@@ -3882,6 +3886,7 @@ mod __googlesheetsparser_emit_impl {
                             break 'try_branches;
                         }
                     }
+                    builder.exit_post_order_children();
                     return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -3890,7 +3895,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 let alt_hi = *p as u32;
                 let __alt_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Alt,
                         alt_lo,
                         7u8,
@@ -3907,7 +3912,7 @@ mod __googlesheetsparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 7u8,
@@ -4395,7 +4400,7 @@ mod __googlesheetsparser_emit_impl {
                         0u16,
                     );
                 builder
-                    .end_compound_post_order(
+                    .wrap_existing_children_post_order(
                         compound_idx,
                         reducer_span_hi,
                         crate::runtime::tape::TapeOffset(lhs_idx),
@@ -4629,7 +4634,7 @@ mod __googlesheetsparser_emit_impl {
                         0u16,
                     );
                 builder
-                    .end_compound_post_order(
+                    .wrap_existing_children_post_order(
                         compound_idx,
                         reducer_span_hi,
                         crate::runtime::tape::TapeOffset(lhs_idx),
@@ -4946,7 +4951,7 @@ mod __googlesheetsparser_emit_impl {
                         0u16,
                     );
                 builder
-                    .end_compound_post_order(
+                    .wrap_existing_children_post_order(
                         compound_idx,
                         reducer_span_hi,
                         crate::runtime::tape::TapeOffset(lhs_idx),
@@ -5263,7 +5268,7 @@ mod __googlesheetsparser_emit_impl {
                         0u16,
                     );
                 builder
-                    .end_compound_post_order(
+                    .wrap_existing_children_post_order(
                         compound_idx,
                         reducer_span_hi,
                         crate::runtime::tape::TapeOffset(lhs_idx),
@@ -5497,7 +5502,7 @@ mod __googlesheetsparser_emit_impl {
                         0u16,
                     );
                 builder
-                    .end_compound_post_order(
+                    .wrap_existing_children_post_order(
                         compound_idx,
                         reducer_span_hi,
                         crate::runtime::tape::TapeOffset(lhs_idx),
@@ -5711,16 +5716,16 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -5747,15 +5752,17 @@ mod __googlesheetsparser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -5771,6 +5778,7 @@ mod __googlesheetsparser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -5779,7 +5787,7 @@ mod __googlesheetsparser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -5801,7 +5809,7 @@ mod __googlesheetsparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 19u8,
@@ -5845,7 +5853,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
@@ -5854,13 +5862,13 @@ mod __googlesheetsparser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -5889,15 +5897,17 @@ mod __googlesheetsparser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -5913,6 +5923,7 @@ mod __googlesheetsparser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -5921,7 +5932,7 @@ mod __googlesheetsparser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -5937,7 +5948,7 @@ mod __googlesheetsparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 20u8,
@@ -6518,7 +6529,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -6571,7 +6582,7 @@ mod __googlesheetsparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 22u8,
@@ -6615,7 +6626,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
@@ -6645,7 +6656,7 @@ mod __googlesheetsparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 23u8,
@@ -6689,14 +6700,14 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -6720,10 +6731,11 @@ mod __googlesheetsparser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -6739,7 +6751,7 @@ mod __googlesheetsparser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -6755,7 +6767,7 @@ mod __googlesheetsparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 24u8,
@@ -6799,16 +6811,16 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -6822,11 +6834,11 @@ mod __googlesheetsparser_emit_impl {
                         parse_flat_GoogleSheetsParser_arg(input, p, state, builder)
                     })?;
                     let repeat_lo = *p as u32;
-                    let repeat_child = builder.position();
+                    let repeat_child = builder.enter_post_order_children();
                     let iter_save_p = *p;
                     let iter_save_cols = builder.position();
                     let iter_lo = *p as u32;
-                    let iter_child = builder.position();
+                    let iter_child = builder.enter_post_order_children();
                     let opt_attempt: ::core::result::Result<
                         (),
                         crate::runtime::tape::DtaError,
@@ -6866,10 +6878,11 @@ mod __googlesheetsparser_emit_impl {
                     if !matched {
                         *p = iter_save_p;
                         builder.rollback_to(iter_save_cols);
+                        builder.exit_post_order_children();
                     } else {
                         let iter_hi = *p as u32;
                         let __iter_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Seq,
                                 iter_lo,
                                 0u8,
@@ -6885,7 +6898,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     let repeat_hi = *p as u32;
                     let __repeat_off = builder
-                        .begin_compound(
+                        .begin_compound_post(
                             crate::runtime::tape::TapeKind::Repeat,
                             repeat_lo,
                             0u8,
@@ -6903,15 +6916,17 @@ mod __googlesheetsparser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -6927,6 +6942,7 @@ mod __googlesheetsparser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (1usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -6935,7 +6951,7 @@ mod __googlesheetsparser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -6951,7 +6967,7 @@ mod __googlesheetsparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 25u8,
@@ -6987,7 +7003,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
@@ -6999,7 +7015,7 @@ mod __googlesheetsparser_emit_impl {
             let save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let attempt = (|| -> ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -7017,10 +7033,11 @@ mod __googlesheetsparser_emit_impl {
             if attempt.is_err() {
                 *p = save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0,
@@ -7059,7 +7076,7 @@ mod __googlesheetsparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 26u8,
@@ -7103,7 +7120,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
@@ -7141,7 +7158,7 @@ mod __googlesheetsparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 27u8,
@@ -7185,16 +7202,16 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -7246,15 +7263,17 @@ mod __googlesheetsparser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -7270,6 +7289,7 @@ mod __googlesheetsparser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -7278,7 +7298,7 @@ mod __googlesheetsparser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -7300,7 +7320,7 @@ mod __googlesheetsparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 28u8,
@@ -7336,7 +7356,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             {
                 let span_lo = *p as u32;
@@ -7395,7 +7415,7 @@ mod __googlesheetsparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 29u8,
@@ -7439,16 +7459,16 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -7467,11 +7487,11 @@ mod __googlesheetsparser_emit_impl {
                         )
                     })?;
                     let repeat_lo = *p as u32;
-                    let repeat_child = builder.position();
+                    let repeat_child = builder.enter_post_order_children();
                     let iter_save_p = *p;
                     let iter_save_cols = builder.position();
                     let iter_lo = *p as u32;
-                    let iter_child = builder.position();
+                    let iter_child = builder.enter_post_order_children();
                     let opt_attempt: ::core::result::Result<
                         (),
                         crate::runtime::tape::DtaError,
@@ -7511,10 +7531,11 @@ mod __googlesheetsparser_emit_impl {
                     if !matched {
                         *p = iter_save_p;
                         builder.rollback_to(iter_save_cols);
+                        builder.exit_post_order_children();
                     } else {
                         let iter_hi = *p as u32;
                         let __iter_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Seq,
                                 iter_lo,
                                 0u8,
@@ -7530,7 +7551,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     let repeat_hi = *p as u32;
                     let __repeat_off = builder
-                        .begin_compound(
+                        .begin_compound_post(
                             crate::runtime::tape::TapeKind::Repeat,
                             repeat_lo,
                             0u8,
@@ -7548,15 +7569,17 @@ mod __googlesheetsparser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -7572,6 +7595,7 @@ mod __googlesheetsparser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (1usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -7580,7 +7604,7 @@ mod __googlesheetsparser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -7596,7 +7620,7 @@ mod __googlesheetsparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 30u8,
@@ -7632,7 +7656,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             {
                 let span_lo = *p as u32;
@@ -7691,7 +7715,7 @@ mod __googlesheetsparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 31u8,
@@ -7838,7 +7862,7 @@ mod __googlesheetsparser_emit_impl {
                         0u16,
                     );
                 builder
-                    .end_compound_post_order(
+                    .wrap_existing_children_post_order(
                         compound_idx,
                         reducer_span_hi,
                         crate::runtime::tape::TapeOffset(lhs_idx),
@@ -8072,7 +8096,7 @@ mod __googlesheetsparser_emit_impl {
                         0u16,
                     );
                 builder
-                    .end_compound_post_order(
+                    .wrap_existing_children_post_order(
                         compound_idx,
                         reducer_span_hi,
                         crate::runtime::tape::TapeOffset(lhs_idx),
@@ -8203,7 +8227,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -8256,7 +8280,7 @@ mod __googlesheetsparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 34u8,
@@ -8300,7 +8324,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             {
                 let span_lo = *p as u32;
@@ -8333,7 +8357,7 @@ mod __googlesheetsparser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 35u8,

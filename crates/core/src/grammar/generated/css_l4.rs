@@ -4907,7 +4907,7 @@ mod __cssl4parser_emit_impl {
                 offset: *p as u32,
             })?;
         let alt_lo = *p as u32;
-        let alt_child = builder.position();
+        let alt_child = builder.enter_post_order_children();
         let _ = alt_child;
         let save_p = *p;
         let save_child = builder.position();
@@ -8920,6 +8920,7 @@ mod __cssl4parser_emit_impl {
                 }
                 _ => {}
             }
+            builder.exit_post_order_children();
             return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -8928,7 +8929,7 @@ mod __cssl4parser_emit_impl {
         }
         let alt_hi = *p as u32;
         let off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 alt_lo,
                 0u8,
@@ -8972,7 +8973,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -9030,7 +9031,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 1u8,
@@ -9252,7 +9253,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             98u8 => {
@@ -9294,6 +9295,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -9302,7 +9304,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -9402,7 +9404,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             122u8 => {
@@ -9489,6 +9491,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -9497,7 +9500,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -9577,7 +9580,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 5usize;
@@ -9667,7 +9670,7 @@ mod __cssl4parser_emit_impl {
             let save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let attempt = (|| -> ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -9705,10 +9708,11 @@ mod __cssl4parser_emit_impl {
             if attempt.is_err() {
                 *p = save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0,
@@ -9746,7 +9750,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 3u8,
@@ -9832,16 +9836,16 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -9982,15 +9986,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -10006,6 +10012,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -10014,7 +10021,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -10030,7 +10037,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 5u8,
@@ -10243,7 +10250,7 @@ mod __cssl4parser_emit_impl {
                 offset: *p as u32,
             })?;
         let alt_lo = *p as u32;
-        let alt_child = builder.position();
+        let alt_child = builder.enter_post_order_children();
         let _ = alt_child;
         let save_p = *p;
         let save_child = builder.position();
@@ -10902,6 +10909,7 @@ mod __cssl4parser_emit_impl {
                 }
                 _ => {}
             }
+            builder.exit_post_order_children();
             return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -10910,7 +10918,7 @@ mod __cssl4parser_emit_impl {
         }
         let alt_hi = *p as u32;
         let off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 alt_lo,
                 8u8,
@@ -11057,7 +11065,7 @@ mod __cssl4parser_emit_impl {
                         0u16,
                     );
                 builder
-                    .end_compound_post_order(
+                    .wrap_existing_children_post_order(
                         compound_idx,
                         reducer_span_hi,
                         crate::runtime::tape::TapeOffset(lhs_idx),
@@ -11291,7 +11299,7 @@ mod __cssl4parser_emit_impl {
                         0u16,
                     );
                 builder
-                    .end_compound_post_order(
+                    .wrap_existing_children_post_order(
                         compound_idx,
                         reducer_span_hi,
                         crate::runtime::tape::TapeOffset(lhs_idx),
@@ -11414,7 +11422,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 4usize;
@@ -11486,7 +11494,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 11u8,
@@ -11522,7 +11530,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 3usize;
@@ -11573,13 +11581,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -11612,15 +11620,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0,
@@ -11636,6 +11646,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (1usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -11644,7 +11655,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Rule,
                     repeat_lo,
                     0,
@@ -11681,7 +11692,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 12u8,
@@ -11717,7 +11728,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 3usize;
@@ -11768,13 +11779,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -11807,15 +11818,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0,
@@ -11831,6 +11844,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (1usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -11839,7 +11853,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Rule,
                     repeat_lo,
                     0,
@@ -11876,7 +11890,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 13u8,
@@ -11912,7 +11926,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 5usize;
@@ -12038,7 +12052,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 14u8,
@@ -12074,7 +12088,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 3usize;
@@ -12145,7 +12159,7 @@ mod __cssl4parser_emit_impl {
             let save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let attempt = (|| -> ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -12178,10 +12192,11 @@ mod __cssl4parser_emit_impl {
             if attempt.is_err() {
                 *p = save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0,
@@ -12219,7 +12234,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 15u8,
@@ -12255,7 +12270,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 3usize;
@@ -12329,7 +12344,7 @@ mod __cssl4parser_emit_impl {
             let save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let attempt = (|| -> ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -12362,10 +12377,11 @@ mod __cssl4parser_emit_impl {
             if attempt.is_err() {
                 *p = save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0,
@@ -12403,7 +12419,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 16u8,
@@ -12439,7 +12455,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 3usize;
@@ -12578,7 +12594,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 17u8,
@@ -12614,7 +12630,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             {
                 let span_lo = *p as u32;
@@ -12692,7 +12708,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 18u8,
@@ -12956,7 +12972,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             101u8 => {
@@ -13051,6 +13067,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -13059,7 +13076,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -13244,7 +13261,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             101u8 => {
@@ -13329,6 +13346,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -13337,7 +13355,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -13967,7 +13985,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             110u8 => {
@@ -14011,6 +14029,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -14019,7 +14038,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -14119,7 +14138,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             119u8 => {
@@ -14163,6 +14182,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -14171,7 +14191,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -14347,7 +14367,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             112u8 => {
@@ -14391,6 +14411,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -14399,7 +14420,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -16053,7 +16074,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             98u8 => {
@@ -16094,6 +16115,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -16102,7 +16124,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -16912,7 +16934,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -16946,11 +16968,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -17006,10 +17028,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -17025,7 +17048,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -17062,7 +17085,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 35u8,
@@ -17106,7 +17129,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -17147,7 +17170,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 36u8,
@@ -17191,7 +17214,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -17209,13 +17232,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -17263,15 +17286,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -17287,6 +17312,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (1usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -17295,7 +17321,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -17311,7 +17337,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 37u8,
@@ -17355,7 +17381,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -17373,13 +17399,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -17427,15 +17453,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -17451,6 +17479,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (1usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -17459,7 +17488,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -17475,7 +17504,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 38u8,
@@ -17755,14 +17784,14 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -17790,10 +17819,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -17809,7 +17839,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -17825,11 +17855,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -17857,10 +17887,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -17876,7 +17907,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -17892,13 +17923,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -17946,15 +17977,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -17970,6 +18003,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -17978,7 +18012,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -17994,7 +18028,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 41u8,
@@ -18141,7 +18175,7 @@ mod __cssl4parser_emit_impl {
                         0u16,
                     );
                 builder
-                    .end_compound_post_order(
+                    .wrap_existing_children_post_order(
                         compound_idx,
                         reducer_span_hi,
                         crate::runtime::tape::TapeOffset(lhs_idx),
@@ -18314,14 +18348,14 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -18375,10 +18409,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -18394,7 +18429,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -18410,7 +18445,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 44u8,
@@ -18538,7 +18573,7 @@ mod __cssl4parser_emit_impl {
                 offset: *p as u32,
             })?;
         let alt_lo = *p as u32;
-        let alt_child = builder.position();
+        let alt_child = builder.enter_post_order_children();
         let _ = alt_child;
         let save_p = *p;
         let save_child = builder.position();
@@ -19298,6 +19333,7 @@ mod __cssl4parser_emit_impl {
                     }
                 }
             }
+            builder.exit_post_order_children();
             return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -19306,7 +19342,7 @@ mod __cssl4parser_emit_impl {
         }
         let alt_hi = *p as u32;
         let off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 alt_lo,
                 47u8,
@@ -19913,7 +19949,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             97u8 => {
@@ -20090,6 +20126,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -20098,7 +20135,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -20443,7 +20480,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             110u8 => {
@@ -20549,6 +20586,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -20557,7 +20595,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -20717,7 +20755,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             103u8 => {
@@ -20823,6 +20861,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -20831,7 +20870,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -21054,7 +21093,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             116u8 => {
@@ -21151,6 +21190,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -21159,7 +21199,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -21549,7 +21589,7 @@ mod __cssl4parser_emit_impl {
                                                                         offset: *p as u32,
                                                                     })?;
                                                                 let alt_lo = *p as u32;
-                                                                let alt_child = builder.position();
+                                                                let alt_child = builder.enter_post_order_children();
                                                                 'try_branches: loop {
                                                                     match first {
                                                                         110u8 => {
@@ -21647,6 +21687,7 @@ mod __cssl4parser_emit_impl {
                                                                         }
                                                                         _ => {}
                                                                     }
+                                                                    builder.exit_post_order_children();
                                                                     return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                                                         offset: *p as u32,
                                                                         failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -21655,7 +21696,7 @@ mod __cssl4parser_emit_impl {
                                                                 }
                                                                 let alt_hi = *p as u32;
                                                                 let __alt_off = builder
-                                                                    .begin_compound(
+                                                                    .begin_compound_post(
                                                                         crate::runtime::tape::TapeKind::Alt,
                                                                         alt_lo,
                                                                         0u8,
@@ -22110,7 +22151,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -22307,7 +22348,7 @@ mod __cssl4parser_emit_impl {
                         offset: *p as u32,
                     })?;
                 let alt_lo = *p as u32;
-                let alt_child = builder.position();
+                let alt_child = builder.enter_post_order_children();
                 'try_branches: loop {
                     match first {
                         100u8 => {
@@ -22463,6 +22504,7 @@ mod __cssl4parser_emit_impl {
                         }
                         _ => {}
                     }
+                    builder.exit_post_order_children();
                     return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -22471,7 +22513,7 @@ mod __cssl4parser_emit_impl {
                 }
                 let alt_hi = *p as u32;
                 let __alt_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Alt,
                         alt_lo,
                         52u8,
@@ -22488,7 +22530,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 52u8,
@@ -22729,7 +22771,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             101u8 => {
@@ -22771,6 +22813,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -22779,7 +22822,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -22969,7 +23012,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             109u8 => {
@@ -23055,6 +23098,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -23063,7 +23107,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -23286,7 +23330,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             110u8 => {
@@ -23450,6 +23494,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -23458,7 +23503,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -23663,7 +23708,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             110u8 => {
@@ -23774,6 +23819,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -23782,7 +23828,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -24291,7 +24337,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             101u8 => {
@@ -24387,6 +24433,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -24395,7 +24442,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -24545,7 +24592,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -24580,13 +24627,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -24602,15 +24649,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -24626,6 +24675,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -24634,7 +24684,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -24656,11 +24706,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -24690,10 +24740,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -24709,7 +24760,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -24725,7 +24776,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 56u8,
@@ -24769,7 +24820,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -24804,13 +24855,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -24826,15 +24877,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -24850,6 +24903,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -24858,7 +24912,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -24880,11 +24934,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -24914,10 +24968,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -24933,7 +24988,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -24949,7 +25004,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 57u8,
@@ -24993,7 +25048,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -25028,13 +25083,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -25050,15 +25105,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -25074,6 +25131,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -25082,7 +25140,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -25104,11 +25162,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -25138,10 +25196,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -25157,7 +25216,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -25173,7 +25232,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 58u8,
@@ -25217,7 +25276,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -25252,13 +25311,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -25274,7 +25333,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 98u8 => {
@@ -25383,6 +25442,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -25391,7 +25451,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 59u8,
@@ -25411,15 +25471,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -25435,6 +25497,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -25443,7 +25506,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -25465,11 +25528,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -25499,10 +25562,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -25518,7 +25582,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -25534,7 +25598,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 59u8,
@@ -25578,7 +25642,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
@@ -25610,13 +25674,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -25632,15 +25696,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -25656,6 +25722,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -25664,7 +25731,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -25686,11 +25753,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -25720,10 +25787,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -25739,7 +25807,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -25755,7 +25823,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 60u8,
@@ -25799,7 +25867,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -25840,13 +25908,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -25862,15 +25930,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -25886,6 +25956,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -25894,7 +25965,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -25916,11 +25987,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -25950,10 +26021,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -25969,7 +26041,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -25985,7 +26057,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 61u8,
@@ -26029,7 +26101,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -26070,13 +26142,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -26092,15 +26164,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -26116,6 +26190,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -26124,7 +26199,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -26146,11 +26221,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -26180,10 +26255,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -26199,7 +26275,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -26215,7 +26291,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 62u8,
@@ -26259,7 +26335,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -26300,13 +26376,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -26322,15 +26398,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -26346,6 +26424,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -26354,7 +26433,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -26376,11 +26455,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -26410,10 +26489,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -26429,7 +26509,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -26445,7 +26525,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 63u8,
@@ -26489,7 +26569,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 7usize;
@@ -26538,13 +26618,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -26560,7 +26640,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 98u8 => {
@@ -26804,6 +26884,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -26812,7 +26893,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 64u8,
@@ -26832,15 +26913,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -26856,6 +26939,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -26864,7 +26948,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -26886,11 +26970,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -26920,10 +27004,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -26939,7 +27024,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -26955,7 +27040,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 64u8,
@@ -26999,7 +27084,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 8usize;
@@ -27049,13 +27134,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -27071,7 +27156,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 97u8 => {
@@ -27207,6 +27292,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -27215,7 +27301,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 65u8,
@@ -27235,15 +27321,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -27259,6 +27347,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -27267,7 +27356,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -27289,11 +27378,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -27323,10 +27412,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -27342,7 +27432,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -27358,7 +27448,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 65u8,
@@ -27402,7 +27492,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -27667,13 +27757,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -27689,7 +27779,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 97u8 => {
@@ -27852,6 +27942,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -27860,7 +27951,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 66u8,
@@ -27880,15 +27971,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -27904,6 +27997,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -27912,7 +28006,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -27934,11 +28028,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -27968,10 +28062,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -27987,7 +28082,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -28003,7 +28098,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 66u8,
@@ -28047,7 +28142,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 10usize;
@@ -28100,13 +28195,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -28122,7 +28217,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 99u8 => {
@@ -28231,6 +28326,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -28239,7 +28335,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 67u8,
@@ -28259,15 +28355,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -28283,6 +28381,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -28291,7 +28390,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -28313,11 +28412,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -28347,10 +28446,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -28366,7 +28466,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -28382,7 +28482,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 67u8,
@@ -28426,7 +28526,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 14usize;
@@ -28479,13 +28579,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -28501,7 +28601,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 99u8 => {
@@ -28583,6 +28683,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -28591,7 +28692,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 68u8,
@@ -28611,15 +28712,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -28635,6 +28738,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -28643,7 +28747,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -28665,11 +28769,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -28699,10 +28803,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -28718,7 +28823,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -28734,7 +28839,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 68u8,
@@ -28778,7 +28883,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 9usize;
@@ -28828,13 +28933,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -28850,7 +28955,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 110u8 => {
@@ -28932,6 +29037,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -28940,7 +29046,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 69u8,
@@ -28960,15 +29066,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -28984,6 +29092,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -28992,7 +29101,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -29014,11 +29123,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -29048,10 +29157,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -29067,7 +29177,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -29083,7 +29193,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 69u8,
@@ -29127,7 +29237,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             {
                 let first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -29135,7 +29245,7 @@ mod __cssl4parser_emit_impl {
                         offset: *p as u32,
                     })?;
                 let alt_lo = *p as u32;
-                let alt_child = builder.position();
+                let alt_child = builder.enter_post_order_children();
                 'try_branches: loop {
                     match first {
                         97u8 => {
@@ -29359,6 +29469,7 @@ mod __cssl4parser_emit_impl {
                         }
                         _ => {}
                     }
+                    builder.exit_post_order_children();
                     return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -29367,7 +29478,7 @@ mod __cssl4parser_emit_impl {
                 }
                 let alt_hi = *p as u32;
                 let __alt_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Alt,
                         alt_lo,
                         70u8,
@@ -29407,13 +29518,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -29429,7 +29540,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 98u8 => {
@@ -29592,6 +29703,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -29600,7 +29712,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 70u8,
@@ -29620,15 +29732,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -29644,6 +29758,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -29652,7 +29767,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -29674,11 +29789,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -29708,10 +29823,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -29727,7 +29843,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -29743,7 +29859,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 70u8,
@@ -29787,7 +29903,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             {
                 let first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -29949,13 +30065,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -29971,15 +30087,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -29995,6 +30113,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -30003,7 +30122,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -30025,11 +30144,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -30059,10 +30178,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -30078,7 +30198,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -30094,7 +30214,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 71u8,
@@ -30138,7 +30258,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 9usize;
@@ -30188,13 +30308,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -30210,15 +30330,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -30234,6 +30356,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -30242,7 +30365,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -30264,11 +30387,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -30298,10 +30421,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -30317,7 +30441,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -30333,7 +30457,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 72u8,
@@ -30377,7 +30501,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 11usize;
@@ -30430,13 +30554,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -30452,7 +30576,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 98u8 => {
@@ -30561,6 +30685,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -30569,7 +30694,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 73u8,
@@ -30589,15 +30714,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -30613,6 +30740,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -30621,7 +30749,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -30643,11 +30771,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -30677,10 +30805,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -30696,7 +30825,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -30712,7 +30841,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 73u8,
@@ -30756,7 +30885,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 11usize;
@@ -30809,13 +30938,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -30831,15 +30960,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -30855,6 +30986,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -30863,7 +30995,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -30885,11 +31017,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -30919,10 +31051,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -30938,7 +31071,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -30954,7 +31087,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 74u8,
@@ -30998,7 +31131,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -31294,13 +31427,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -31316,7 +31449,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 109u8 => {
@@ -31398,6 +31531,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -31406,7 +31540,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 75u8,
@@ -31426,15 +31560,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -31450,6 +31586,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -31458,7 +31595,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -31480,11 +31617,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -31514,10 +31651,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -31533,7 +31671,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -31549,7 +31687,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 75u8,
@@ -31593,7 +31731,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -31889,13 +32027,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -31911,7 +32049,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 100u8 => {
@@ -32155,6 +32293,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -32163,7 +32302,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 76u8,
@@ -32183,15 +32322,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -32207,6 +32348,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -32215,7 +32357,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -32237,11 +32379,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -32271,10 +32413,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -32290,7 +32433,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -32306,7 +32449,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 76u8,
@@ -32350,7 +32493,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -32742,13 +32885,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -32764,15 +32907,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -32788,6 +32933,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -32796,7 +32942,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -32818,11 +32964,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -32852,10 +32998,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -32871,7 +33018,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -32887,7 +33034,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 77u8,
@@ -32931,7 +33078,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 7usize;
@@ -32980,13 +33127,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -33002,15 +33149,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -33026,6 +33175,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -33034,7 +33184,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -33056,11 +33206,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -33090,10 +33240,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -33109,7 +33260,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -33125,7 +33276,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 78u8,
@@ -33169,7 +33320,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 10usize;
@@ -33222,13 +33373,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -33244,7 +33395,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 99u8 => {
@@ -33434,6 +33585,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -33442,7 +33594,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 79u8,
@@ -33462,15 +33614,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -33486,6 +33640,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -33494,7 +33649,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -33516,11 +33671,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -33550,10 +33705,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -33569,7 +33725,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -33585,7 +33741,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 79u8,
@@ -33629,7 +33785,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 10usize;
@@ -33682,13 +33838,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -33704,7 +33860,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 98u8 => {
@@ -33786,6 +33942,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -33794,7 +33951,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 80u8,
@@ -33814,15 +33971,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -33838,6 +33997,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -33846,7 +34006,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -33868,11 +34028,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -33902,10 +34062,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -33921,7 +34082,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -33937,7 +34098,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 80u8,
@@ -33981,7 +34142,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 6usize;
@@ -34030,13 +34191,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -34052,7 +34213,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 97u8 => {
@@ -34350,6 +34511,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -34358,7 +34520,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 81u8,
@@ -34378,15 +34540,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -34402,6 +34566,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -34410,7 +34575,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -34432,11 +34597,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -34466,10 +34631,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -34485,7 +34651,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -34501,7 +34667,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 81u8,
@@ -34545,7 +34711,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             {
                 let span_lo = *p as u32;
@@ -34628,11 +34794,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -34662,10 +34828,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -34681,7 +34848,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -34697,7 +34864,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 82u8,
@@ -34741,7 +34908,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             {
@@ -34831,11 +34998,11 @@ mod __cssl4parser_emit_impl {
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -34865,10 +35032,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -34884,7 +35052,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -34901,7 +35069,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 83u8,
@@ -36116,7 +36284,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             {
                 let first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -36197,7 +36365,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 86u8,
@@ -36241,14 +36409,14 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -36263,10 +36431,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -36282,7 +36451,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -36304,7 +36473,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 87u8,
@@ -36351,7 +36520,7 @@ mod __cssl4parser_emit_impl {
                 offset: *p as u32,
             })?;
         let alt_lo = *p as u32;
-        let alt_child = builder.position();
+        let alt_child = builder.enter_post_order_children();
         let _ = alt_child;
         let save_p = *p;
         let save_child = builder.position();
@@ -36436,6 +36605,7 @@ mod __cssl4parser_emit_impl {
                     }
                 }
             }
+            builder.exit_post_order_children();
             return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -36444,7 +36614,7 @@ mod __cssl4parser_emit_impl {
         }
         let alt_hi = *p as u32;
         let off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 alt_lo,
                 88u8,
@@ -36488,7 +36658,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -36518,7 +36688,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 89u8,
@@ -36747,7 +36917,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -36779,7 +36949,7 @@ mod __cssl4parser_emit_impl {
                         offset: *p as u32,
                     })?;
                 let alt_lo = *p as u32;
-                let alt_child = builder.position();
+                let alt_child = builder.enter_post_order_children();
                 'try_branches: loop {
                     match first {
                         42u8 => {
@@ -36962,6 +37132,7 @@ mod __cssl4parser_emit_impl {
                             }
                         }
                     }
+                    builder.exit_post_order_children();
                     return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -36970,7 +37141,7 @@ mod __cssl4parser_emit_impl {
                 }
                 let alt_hi = *p as u32;
                 let __alt_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Alt,
                         alt_lo,
                         91u8,
@@ -36988,11 +37159,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -37094,11 +37265,11 @@ mod __cssl4parser_emit_impl {
                 }
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let repeat_lo = *p as u32;
-                let repeat_child = builder.position();
+                let repeat_child = builder.enter_post_order_children();
                 let iter_save_p = *p;
                 let iter_save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let opt_attempt: ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -37134,10 +37305,11 @@ mod __cssl4parser_emit_impl {
                 if !matched {
                     *p = iter_save_p;
                     builder.rollback_to(iter_save_cols);
+                    builder.exit_post_order_children();
                 } else {
                     let iter_hi = *p as u32;
                     let __iter_off = builder
-                        .begin_compound(
+                        .begin_compound_post(
                             crate::runtime::tape::TapeKind::Seq,
                             iter_lo,
                             0u8,
@@ -37153,7 +37325,7 @@ mod __cssl4parser_emit_impl {
                 }
                 let repeat_hi = *p as u32;
                 let __repeat_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Repeat,
                         repeat_lo,
                         0u8,
@@ -37172,10 +37344,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -37191,7 +37364,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -37228,7 +37401,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 91u8,
@@ -37275,7 +37448,7 @@ mod __cssl4parser_emit_impl {
                 offset: *p as u32,
             })?;
         let alt_lo = *p as u32;
-        let alt_child = builder.position();
+        let alt_child = builder.enter_post_order_children();
         let _ = alt_child;
         let save_p = *p;
         let save_child = builder.position();
@@ -37376,6 +37549,7 @@ mod __cssl4parser_emit_impl {
                     break 'try_branches;
                 }
             }
+            builder.exit_post_order_children();
             return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -37384,7 +37558,7 @@ mod __cssl4parser_emit_impl {
         }
         let alt_hi = *p as u32;
         let off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 alt_lo,
                 92u8,
@@ -37420,7 +37594,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 3usize;
@@ -37492,7 +37666,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 93u8,
@@ -37528,7 +37702,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 6usize;
@@ -37602,7 +37776,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 94u8,
@@ -37638,7 +37812,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 4usize;
@@ -37710,7 +37884,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 95u8,
@@ -37746,7 +37920,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 4usize;
@@ -37818,7 +37992,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 96u8,
@@ -37862,7 +38036,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -38085,7 +38259,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 97u8,
@@ -38129,7 +38303,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -38186,11 +38360,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -38224,10 +38398,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -38243,7 +38418,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -38280,7 +38455,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 98u8,
@@ -38316,7 +38491,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 5usize;
@@ -38367,13 +38542,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -38406,15 +38581,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0,
@@ -38430,6 +38607,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -38438,7 +38616,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Rule,
                     repeat_lo,
                     0,
@@ -38475,7 +38653,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 99u8,
@@ -38598,7 +38776,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 4usize;
@@ -38673,7 +38851,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 101u8,
@@ -38717,7 +38895,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -38747,7 +38925,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 102u8,
@@ -38969,7 +39147,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 6usize;
@@ -39022,13 +39200,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -39061,15 +39239,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0,
@@ -39085,6 +39265,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -39093,7 +39274,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Rule,
                     repeat_lo,
                     0,
@@ -39130,7 +39311,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 104u8,
@@ -39166,7 +39347,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 9usize;
@@ -39241,7 +39422,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 105u8,
@@ -39277,7 +39458,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 11usize;
@@ -39355,7 +39536,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 106u8,
@@ -39399,7 +39580,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 2usize;
@@ -39429,7 +39610,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 107u8,
@@ -39673,7 +39854,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         let mut iters: u32 = 0;
         loop {
             let Some(b) = input.get(*p).copied() else {
@@ -39728,6 +39909,7 @@ mod __cssl4parser_emit_impl {
             }
         }
         if iters < 1 {
+            builder.exit_post_order_children();
             return ::core::result::Result::Err(
                 match input.get(*p).copied() {
                     None => {
@@ -39747,7 +39929,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 110u8,
@@ -40007,7 +40189,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
@@ -40016,13 +40198,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -40044,15 +40226,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -40068,6 +40252,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -40076,7 +40261,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -40092,7 +40277,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 112u8,
@@ -40136,14 +40321,14 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -40157,10 +40342,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -40176,7 +40362,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -40198,7 +40384,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 113u8,
@@ -40242,7 +40428,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
@@ -40251,13 +40437,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -40296,15 +40482,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -40320,6 +40508,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -40328,7 +40517,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -40344,7 +40533,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 114u8,
@@ -40388,7 +40577,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
@@ -40397,13 +40586,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -40442,15 +40631,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -40466,6 +40657,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -40474,7 +40666,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -40490,7 +40682,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 115u8,
@@ -41763,7 +41955,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -41813,7 +42005,7 @@ mod __cssl4parser_emit_impl {
                         offset: *p as u32,
                     })?;
                 let alt_lo = *p as u32;
-                let alt_child = builder.position();
+                let alt_child = builder.enter_post_order_children();
                 'try_branches: loop {
                     match first {
                         98u8 => {
@@ -41948,6 +42140,7 @@ mod __cssl4parser_emit_impl {
                         }
                         _ => {}
                     }
+                    builder.exit_post_order_children();
                     return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -41956,7 +42149,7 @@ mod __cssl4parser_emit_impl {
                 }
                 let alt_hi = *p as u32;
                 let __alt_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Alt,
                         alt_lo,
                         0u8,
@@ -41973,7 +42166,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 120u8,
@@ -42298,7 +42491,7 @@ mod __cssl4parser_emit_impl {
                                             offset: *p as u32,
                                         })?;
                                     let alt_lo = *p as u32;
-                                    let alt_child = builder.position();
+                                    let alt_child = builder.enter_post_order_children();
                                     'try_branches: loop {
                                         match first {
                                             99u8 => {
@@ -42371,6 +42564,7 @@ mod __cssl4parser_emit_impl {
                                             }
                                             _ => {}
                                         }
+                                        builder.exit_post_order_children();
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -42379,7 +42573,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                     let alt_hi = *p as u32;
                                     let __alt_off = builder
-                                        .begin_compound(
+                                        .begin_compound_post(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
                                             0u8,
@@ -43308,7 +43502,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -43325,7 +43519,7 @@ mod __cssl4parser_emit_impl {
                         offset: *p as u32,
                     })?;
                 let alt_lo = *p as u32;
-                let alt_child = builder.position();
+                let alt_child = builder.enter_post_order_children();
                 'try_branches: loop {
                     match first {
                         81u8 => {
@@ -43653,6 +43847,7 @@ mod __cssl4parser_emit_impl {
                         }
                         _ => {}
                     }
+                    builder.exit_post_order_children();
                     return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -43661,7 +43856,7 @@ mod __cssl4parser_emit_impl {
                 }
                 let alt_hi = *p as u32;
                 let __alt_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Alt,
                         alt_lo,
                         129u8,
@@ -43678,7 +43873,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 129u8,
@@ -43722,7 +43917,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -43743,7 +43938,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 130u8,
@@ -43787,7 +43982,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -43808,7 +44003,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 131u8,
@@ -43852,7 +44047,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -43879,7 +44074,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 132u8,
@@ -43923,7 +44118,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -43950,7 +44145,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 133u8,
@@ -43994,7 +44189,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -44015,7 +44210,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 134u8,
@@ -44059,7 +44254,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
@@ -44086,7 +44281,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 135u8,
@@ -45846,16 +46041,16 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -45871,7 +46066,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 _ => {}
@@ -45912,6 +46107,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -45920,7 +46116,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 137u8,
@@ -45940,15 +46136,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -45964,6 +46162,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -45972,7 +46171,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -45988,7 +46187,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 137u8,
@@ -46032,7 +46231,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -46085,7 +46284,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 138u8,
@@ -46129,7 +46328,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let _ = ({
@@ -46148,7 +46347,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 139u8,
@@ -46192,7 +46391,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -46234,7 +46433,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 140u8,
@@ -46281,7 +46480,7 @@ mod __cssl4parser_emit_impl {
                 offset: *p as u32,
             })?;
         let alt_lo = *p as u32;
-        let alt_child = builder.position();
+        let alt_child = builder.enter_post_order_children();
         let _ = alt_child;
         let save_p = *p;
         let save_child = builder.position();
@@ -46352,6 +46551,7 @@ mod __cssl4parser_emit_impl {
                     break 'try_branches;
                 }
             }
+            builder.exit_post_order_children();
             return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -46360,7 +46560,7 @@ mod __cssl4parser_emit_impl {
         }
         let alt_hi = *p as u32;
         let off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 alt_lo,
                 141u8,
@@ -46404,7 +46604,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = ({
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
@@ -46413,13 +46613,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -46463,15 +46663,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -46487,6 +46689,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -46495,7 +46698,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -46511,7 +46714,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 142u8,
@@ -46555,7 +46758,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -46617,20 +46820,20 @@ mod __cssl4parser_emit_impl {
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
                 > {
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     let seq_lo = *p as u32;
-                    let seq_child = builder.position();
+                    let seq_child = builder.enter_post_order_children();
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     let _ = ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
@@ -46658,13 +46861,13 @@ mod __cssl4parser_emit_impl {
                         );
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     let repeat_lo = *p as u32;
-                    let repeat_child = builder.position();
+                    let repeat_child = builder.enter_post_order_children();
                     let mut iter_count: u32 = 0;
                     loop {
                         let save_p = *p;
                         let save_cols = builder.position();
                         let iter_lo = *p as u32;
-                        let iter_child = builder.position();
+                        let iter_child = builder.enter_post_order_children();
                         let attempt = (|| -> ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -46692,15 +46895,17 @@ mod __cssl4parser_emit_impl {
                         if attempt.is_err() {
                             *p = save_p;
                             builder.rollback_to(save_cols);
+                            builder.exit_post_order_children();
                             break;
                         }
                         if *p == save_p {
                             builder.rollback_to(save_cols);
+                            builder.exit_post_order_children();
                             break;
                         }
                         let iter_hi = *p as u32;
                         let __iter_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Seq,
                                 iter_lo,
                                 0u8,
@@ -46716,6 +46921,7 @@ mod __cssl4parser_emit_impl {
                         iter_count = iter_count.saturating_add(1);
                     }
                     if iter_count < (0usize as u32) {
+                        builder.exit_post_order_children();
                         return Err(crate::runtime::tape::DtaError::Syntax {
                             offset: *p as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -46724,7 +46930,7 @@ mod __cssl4parser_emit_impl {
                     }
                     let repeat_hi = *p as u32;
                     let __repeat_off = builder
-                        .begin_compound(
+                        .begin_compound_post(
                             crate::runtime::tape::TapeKind::Repeat,
                             repeat_lo,
                             0u8,
@@ -46759,7 +46965,7 @@ mod __cssl4parser_emit_impl {
                         );
                     let seq_hi = *p as u32;
                     let __seq_off = builder
-                        .begin_compound(
+                        .begin_compound_post(
                             crate::runtime::tape::TapeKind::Seq,
                             seq_lo,
                             0u8,
@@ -46778,15 +46984,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -46802,6 +47010,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -46810,7 +47019,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -46848,7 +47057,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 143u8,
@@ -46970,7 +47179,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             {
                 let span_lo = *p as u32;
@@ -47033,7 +47242,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 145u8,
@@ -47335,16 +47544,16 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -47360,15 +47569,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -47384,6 +47595,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -47392,7 +47604,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -47408,7 +47620,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 148u8,
@@ -47968,7 +48180,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -48019,7 +48231,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 151u8,
@@ -48063,7 +48275,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -48093,13 +48305,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -48132,15 +48344,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -48156,6 +48370,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (1usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -48164,7 +48379,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -48201,7 +48416,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 152u8,
@@ -48245,7 +48460,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -48275,13 +48490,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -48314,15 +48529,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -48338,6 +48555,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (1usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -48346,7 +48564,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -48383,7 +48601,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 153u8,
@@ -48427,7 +48645,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -48532,7 +48750,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 154u8,
@@ -48576,7 +48794,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -48624,11 +48842,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -48662,10 +48880,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -48681,7 +48900,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -48718,7 +48937,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 155u8,
@@ -48762,7 +48981,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -48813,11 +49032,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -48851,10 +49070,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -48870,7 +49090,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -48907,7 +49127,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 156u8,
@@ -48951,7 +49171,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -48999,11 +49219,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -49037,10 +49257,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -49056,7 +49277,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -49093,7 +49314,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 157u8,
@@ -49137,7 +49358,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -49188,7 +49409,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 158u8,
@@ -49232,7 +49453,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -49350,7 +49571,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 159u8,
@@ -49394,7 +49615,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let at = *p;
             let end = at + 1usize;
@@ -49445,7 +49666,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 160u8,
@@ -49489,7 +49710,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -49515,13 +49736,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -49537,15 +49758,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -49561,6 +49784,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -49569,7 +49793,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -49591,11 +49815,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -49625,10 +49849,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -49644,7 +49869,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -49660,7 +49885,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 161u8,
@@ -49704,7 +49929,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -49730,13 +49955,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -49752,15 +49977,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -49776,6 +50003,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -49784,7 +50012,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -49806,11 +50034,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -49840,10 +50068,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -49859,7 +50088,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -49875,7 +50104,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 162u8,
@@ -49919,7 +50148,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -49945,13 +50174,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -49967,15 +50196,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -49991,6 +50222,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -49999,7 +50231,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -50021,11 +50253,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -50055,10 +50287,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -50074,7 +50307,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -50090,7 +50323,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 163u8,
@@ -50134,7 +50367,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -50160,13 +50393,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -50182,7 +50415,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 98u8 => {
@@ -50291,6 +50524,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -50299,7 +50533,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 164u8,
@@ -50319,15 +50553,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -50343,6 +50579,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -50351,7 +50588,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -50373,11 +50610,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -50407,10 +50644,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -50426,7 +50664,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -50442,7 +50680,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 164u8,
@@ -50486,7 +50724,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -50512,13 +50750,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -50534,15 +50772,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -50558,6 +50798,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -50566,7 +50807,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -50588,11 +50829,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -50622,10 +50863,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -50641,7 +50883,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -50657,7 +50899,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 165u8,
@@ -50701,7 +50943,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -50727,13 +50969,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -50749,15 +50991,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -50773,6 +51017,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -50781,7 +51026,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -50803,11 +51048,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -50837,10 +51082,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -50856,7 +51102,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -50872,7 +51118,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 166u8,
@@ -50916,7 +51162,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -50942,13 +51188,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -50964,15 +51210,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -50988,6 +51236,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -50996,7 +51245,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -51018,11 +51267,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -51052,10 +51301,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -51071,7 +51321,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -51087,7 +51337,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 167u8,
@@ -51131,7 +51381,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -51157,13 +51407,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -51179,15 +51429,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -51203,6 +51455,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -51211,7 +51464,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -51233,11 +51486,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -51267,10 +51520,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -51286,7 +51540,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -51302,7 +51556,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 168u8,
@@ -51346,7 +51600,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -51372,13 +51626,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -51394,7 +51648,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 98u8 => {
@@ -51638,6 +51892,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -51646,7 +51901,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 169u8,
@@ -51666,15 +51921,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -51690,6 +51947,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -51698,7 +51956,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -51720,11 +51978,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -51754,10 +52012,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -51773,7 +52032,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -51789,7 +52048,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 169u8,
@@ -51833,7 +52092,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -51859,13 +52118,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -51881,7 +52140,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 97u8 => {
@@ -52017,6 +52276,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -52025,7 +52285,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 170u8,
@@ -52045,15 +52305,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -52069,6 +52331,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -52077,7 +52340,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -52099,11 +52362,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -52133,10 +52396,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -52152,7 +52416,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -52168,7 +52432,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 170u8,
@@ -52212,7 +52476,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -52238,13 +52502,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -52260,7 +52524,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 97u8 => {
@@ -52423,6 +52687,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -52431,7 +52696,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 171u8,
@@ -52451,15 +52716,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -52475,6 +52742,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -52483,7 +52751,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -52505,11 +52773,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -52539,10 +52807,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -52558,7 +52827,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -52574,7 +52843,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 171u8,
@@ -52618,7 +52887,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -52644,13 +52913,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -52666,7 +52935,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 99u8 => {
@@ -52775,6 +53044,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -52783,7 +53053,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 172u8,
@@ -52803,15 +53073,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -52827,6 +53099,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -52835,7 +53108,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -52857,11 +53130,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -52891,10 +53164,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -52910,7 +53184,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -52926,7 +53200,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 172u8,
@@ -52970,7 +53244,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -52996,13 +53270,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -53018,7 +53292,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 99u8 => {
@@ -53100,6 +53374,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -53108,7 +53383,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 173u8,
@@ -53128,15 +53403,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -53152,6 +53429,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -53160,7 +53438,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -53182,11 +53460,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -53216,10 +53494,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -53235,7 +53514,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -53251,7 +53530,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 173u8,
@@ -53295,7 +53574,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -53321,13 +53600,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -53343,7 +53622,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 110u8 => {
@@ -53425,6 +53704,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -53433,7 +53713,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 174u8,
@@ -53453,15 +53733,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -53477,6 +53759,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -53485,7 +53768,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -53507,11 +53790,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -53541,10 +53824,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -53560,7 +53844,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -53576,7 +53860,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 174u8,
@@ -53620,7 +53904,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -53646,13 +53930,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -53668,7 +53952,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 98u8 => {
@@ -53831,6 +54115,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -53839,7 +54124,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 175u8,
@@ -53859,15 +54144,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -53883,6 +54170,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -53891,7 +54179,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -53913,11 +54201,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -53947,10 +54235,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -53966,7 +54255,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -53982,7 +54271,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 175u8,
@@ -54026,7 +54315,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -54052,13 +54341,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -54074,15 +54363,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -54098,6 +54389,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -54106,7 +54398,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -54128,11 +54420,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -54162,10 +54454,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -54181,7 +54474,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -54197,7 +54490,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 176u8,
@@ -54241,7 +54534,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -54267,13 +54560,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -54289,15 +54582,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -54313,6 +54608,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -54321,7 +54617,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -54343,11 +54639,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -54377,10 +54673,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -54396,7 +54693,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -54412,7 +54709,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 177u8,
@@ -54456,7 +54753,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -54482,13 +54779,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -54504,7 +54801,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 98u8 => {
@@ -54613,6 +54910,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -54621,7 +54919,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 178u8,
@@ -54641,15 +54939,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -54665,6 +54965,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -54673,7 +54974,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -54695,11 +54996,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -54729,10 +55030,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -54748,7 +55050,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -54764,7 +55066,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 178u8,
@@ -54808,7 +55110,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -54834,13 +55136,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -54856,15 +55158,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -54880,6 +55184,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -54888,7 +55193,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -54910,11 +55215,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -54944,10 +55249,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -54963,7 +55269,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -54979,7 +55285,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 179u8,
@@ -55023,7 +55329,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -55049,13 +55355,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -55071,7 +55377,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 109u8 => {
@@ -55153,6 +55459,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -55161,7 +55468,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 180u8,
@@ -55181,15 +55488,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -55205,6 +55514,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -55213,7 +55523,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -55235,11 +55545,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -55269,10 +55579,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -55288,7 +55599,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -55304,7 +55615,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 180u8,
@@ -55348,7 +55659,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -55374,13 +55685,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -55396,7 +55707,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 100u8 => {
@@ -55640,6 +55951,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -55648,7 +55960,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 181u8,
@@ -55668,15 +55980,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -55692,6 +56006,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -55700,7 +56015,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -55722,11 +56037,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -55756,10 +56071,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -55775,7 +56091,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -55791,7 +56107,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 181u8,
@@ -55835,7 +56151,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -55861,13 +56177,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -55883,15 +56199,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -55907,6 +56225,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -55915,7 +56234,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -55937,11 +56256,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -55971,10 +56290,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -55990,7 +56310,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -56006,7 +56326,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 182u8,
@@ -56050,7 +56370,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -56076,13 +56396,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -56098,15 +56418,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -56122,6 +56444,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -56130,7 +56453,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -56152,11 +56475,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -56186,10 +56509,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -56205,7 +56529,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -56221,7 +56545,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 183u8,
@@ -56265,7 +56589,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -56291,13 +56615,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -56313,7 +56637,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 99u8 => {
@@ -56503,6 +56827,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -56511,7 +56836,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 184u8,
@@ -56531,15 +56856,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -56555,6 +56882,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -56563,7 +56891,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -56585,11 +56913,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -56619,10 +56947,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -56638,7 +56967,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -56654,7 +56983,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 184u8,
@@ -56698,7 +57027,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -56724,13 +57053,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -56746,7 +57075,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 98u8 => {
@@ -56828,6 +57157,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -56836,7 +57166,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 185u8,
@@ -56856,15 +57186,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -56880,6 +57212,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -56888,7 +57221,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -56910,11 +57243,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -56944,10 +57277,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -56963,7 +57297,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -56979,7 +57313,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 185u8,
@@ -57023,7 +57357,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.position();
+        let outer_child = builder.enter_post_order_children();
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let at = *p;
@@ -57049,13 +57383,13 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
                 let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.position();
+                let iter_child = builder.enter_post_order_children();
                 let attempt = (|| -> ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -57071,7 +57405,7 @@ mod __cssl4parser_emit_impl {
                                 offset: *p as u32,
                             })?;
                         let alt_lo = *p as u32;
-                        let alt_child = builder.position();
+                        let alt_child = builder.enter_post_order_children();
                         'try_branches: loop {
                             match first {
                                 97u8 => {
@@ -57369,6 +57703,7 @@ mod __cssl4parser_emit_impl {
                                     }
                                 }
                             }
+                            builder.exit_post_order_children();
                             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
                                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -57377,7 +57712,7 @@ mod __cssl4parser_emit_impl {
                         }
                         let alt_hi = *p as u32;
                         let __alt_off = builder
-                            .begin_compound(
+                            .begin_compound_post(
                                 crate::runtime::tape::TapeKind::Alt,
                                 alt_lo,
                                 186u8,
@@ -57397,15 +57732,17 @@ mod __cssl4parser_emit_impl {
                 if attempt.is_err() {
                     *p = save_p;
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 if *p == save_p {
                     builder.rollback_to(save_cols);
+                    builder.exit_post_order_children();
                     break;
                 }
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -57421,6 +57758,7 @@ mod __cssl4parser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
+                builder.exit_post_order_children();
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -57429,7 +57767,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -57451,11 +57789,11 @@ mod __cssl4parser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.position();
+            let repeat_child = builder.enter_post_order_children();
             let iter_save_p = *p;
             let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.position();
+            let iter_child = builder.enter_post_order_children();
             let opt_attempt: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -57485,10 +57823,11 @@ mod __cssl4parser_emit_impl {
             if !matched {
                 *p = iter_save_p;
                 builder.rollback_to(iter_save_cols);
+                builder.exit_post_order_children();
             } else {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
-                    .begin_compound(
+                    .begin_compound_post(
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
@@ -57504,7 +57843,7 @@ mod __cssl4parser_emit_impl {
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
-                .begin_compound(
+                .begin_compound_post(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
@@ -57520,7 +57859,7 @@ mod __cssl4parser_emit_impl {
         }
         let span_hi = *p as u32;
         let outer_off = builder
-            .begin_compound(
+            .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 186u8,

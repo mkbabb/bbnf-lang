@@ -102,7 +102,7 @@ pub(super) fn emit_dispatch_arms(
         let save_p = *p;
         // AY-II.W0.b — structural-save index for the outer emission
         // window; kept as a read-only columns.len() snapshot (not a
-        // checkpoint for rollback — the outer's own begin_compound
+        // checkpoint for rollback — the outer's own begin_compound_post
         // will back-patch child_off once branch records land).
         let save_child = builder.position();
         let _ = save_p;
@@ -113,6 +113,12 @@ pub(super) fn emit_dispatch_arms(
                 _ => {}
             }
             #(#fallback_arms)*
+            // B5.W6 — the outer alt_dispatch frame opened a
+            // post-order children bracket via
+            // `enter_post_order_children`; close it explicitly before
+            // propagating the error so `current_depth` matches the
+            // outer frame's depth.
+            builder.exit_post_order_children();
             return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,

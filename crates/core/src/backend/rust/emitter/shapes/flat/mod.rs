@@ -142,15 +142,17 @@ pub fn emit_parse_flat(
         > {
             let span_lo = *p as u32;
             // AY-II.W0.b — walker-parity POST-ORDER outer Seq compound.
-            // Capture first-child index pre-emission; allocate the
-            // compound row post-children via begin_compound; close
-            // immediately; override child_off to point at first-child.
-            let outer_child = builder.position();
+            // B5.W6 — bracket the post-order children scope so child
+            // records stamp `frame_depth` at the correct (parent + 1)
+            // depth at push time. The matching `end_compound_post_order`
+            // absorbs the bracket bump; `begin_compound_post` stamps the
+            // outer row at the outer-frame depth without bumping.
+            let outer_child = builder.enter_post_order_children();
 
             #body_emission
 
             let span_hi = *p as u32;
-            let outer_off = builder.begin_compound(
+            let outer_off = builder.begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 #variant_idx,

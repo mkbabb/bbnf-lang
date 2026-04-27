@@ -38,6 +38,7 @@ bbnf-regex      = { path = "../parse-that/rust/regex" }
 gorgeous        = { path = "crates/gorgeous" }
 bbnf            = { path = "crates/core" }
 bbnf-ir         = { path = "crates/ir" }
+bbnf-ser        = { path = "crates/ser" }
 csp-solver      = { path = "crates/csp-solver" }
 egraph          = { path = "crates/egraph" }
 egraph-derive   = { path = "crates/egraph-derive" }

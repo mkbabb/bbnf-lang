@@ -4,7 +4,7 @@
 //! These tests exercise both the counting logic (walks `ir.rules` +
 //! `ir.materialization` + `ir.payload_layouts`) and the fingerprint →
 //! `(numer, denom)` divisor function that `grammar.rs` emits into
-//! `FusedBuilder::with_capacity`.
+//! `Tape<R>::with_capacity`.
 
 use std::collections::HashMap;
 

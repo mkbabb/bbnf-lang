@@ -19,8 +19,8 @@
 //!   the [`crate::backend::rust::emitter::precedence`] emitter
 //!   already lowers.
 //! - The outer Pratt compound now opens pre-order via
-//!   [`FusedBuilder::open_compound`] and closes via
-//!   [`FusedBuilder::close_compound`] (AY.W5.b substrate), so its
+//!   [`Tape<R>::open_compound`] and closes via
+//!   [`Tape<R>::close_compound`] (AY.W5.b substrate), so its
 //!   direct children (operands, op-leaf Spans, reducer compounds)
 //!   land with write-time `sib_skip` stamping. After `close_compound`
 //!   the outer row's `child_off` is overridden to point at the final

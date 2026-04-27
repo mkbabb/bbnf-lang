@@ -15,14 +15,14 @@
 //!
 //! ```ignore
 //! fn materialize_projection_<rule>_<Grammar>(
-//!     output: &FusedOutput,
+//!     output: &Tape<R>,
 //!     input: &'p str,
 //!     offset: u32,
 //! ) -> Option<<Grammar><RuleCamel>Projection>
 //! ```
 //!
 //! The helper reads from the fused slab (W0'.a-published
-//! [`FusedOutput`](crate::runtime::tape::Tape)) via:
+//! [`Tape<R>`](crate::runtime::tape::Tape)) via:
 //!
 //! - `output.frame(offset)` — the admission's own frame,
 //!   carrying its `span_lo`/`span_hi` + `variant_idx`.
@@ -30,10 +30,10 @@
 //!   parse time (`f64`, `bool`, `u32`).
 //! - `output.children(offset)` — direct child frames for rich
 //!   admissions with cursor-child fields.
-//! - `output.tape().payload_bytes(rec, N)` — the tape's aggregate
+//! - `output.payload_bytes(rec, N)` — the tape's aggregate
 //!   payload buffer for multi-field packed admissions (the grammar-
 //!   derived byte offsets the layout pass assigned). The access is
-//!   through `output.tape()`, NOT through `view.cursor().tape()`; the
+//!   through `output`, NOT through `view.cursor().tape()`; the
 //!   W0'.b hard gate prohibits the latter pattern.
 //!
 //! Span-typed admissions decode directly from the frame's span slots
@@ -100,7 +100,7 @@ fn emit_projection_fns(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
 /// AY-II.W0'.b — emit a single direct-to-struct projection helper.
 ///
 /// The emitted `#[inline]` fn consumes
-/// `(output: &FusedOutput, input: &'p str, offset: u32)` and returns
+/// `(output: &Tape<R>, input: &'p str, offset: u32)` and returns
 /// `Option<<Grammar><RuleCamel>Projection>` (owned projection struct
 /// when the admission is packed-only; `<...Projection><'p>` when rich
 /// fields are present).
@@ -112,9 +112,9 @@ fn emit_projection_fns(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
 ///   stamps span slots on every frame, so `Span` fields read directly
 ///   from the admission's own frame — no aggregate byte decoding.
 /// - **Non-Span scalar** (other `ProjectionFieldKind::Scalar`): decodes
-///   from `output.tape().payload_bytes(rec, TOTAL_BYTES)` at the
+///   from `output.payload_bytes(rec, TOTAL_BYTES)` at the
 ///   admitted byte offset. `rec` comes from
-///   `output.tape().try_get(TapeOffset(offset))`; the frame offset
+///   `output.try_get(TapeOffset(offset))`; the frame offset
 ///   equals the tape record offset by construction (every
 ///   `begin_compound` / `push_leaf` pushes one row into each
 ///   substrate in lockstep).
@@ -138,11 +138,11 @@ fn emit_projection_fn(
     );
     let struct_ident = admission.struct_ident(grammar_prefix);
     // The grammar marker struct ident (e.g. `BbnfBootstrap`) parameterises
-    // `FusedOutput<R>` so the slab read carries the same `R` the consumer
+    // `Tape<R><R>` so the slab read carries the same `R` the consumer
     // declared via `impl ValueRoot for #grammar_ident`. Without this `R`
     // the emitted fn loses type-grammar coupling and `syn::parse2` accepts
-    // it as `FusedOutput` without a generic argument — which then fails
-    // `cargo check` against the `FusedOutput<R>` definition in
+    // it as `Tape<R>` without a generic argument — which then fails
+    // `cargo check` against the `Tape<R><R>` definition in
     // `crates/tape/src/builder/output.rs`.
     let grammar_ident = format_ident!("{}", grammar_prefix);
     let plan = admission.plan();
@@ -167,7 +167,7 @@ fn emit_projection_fn(
 
     // Detect the need for a tape bytes read. Any `Scalar` field whose
     // type is NOT `Span` drives a packed-byte read from the tape
-    // arena (via `output.tape()`, not through a cursor). `Span`
+    // arena (via `output`, not through a cursor). `Span`
     // fields + `CursorChild` fields never require the aggregate
     // buffer — Span reads from the frame's own span slots; cursor
     // reads walk the value children.
@@ -183,7 +183,7 @@ fn emit_projection_fn(
         }
     } else {
         quote! {
-            let __tape = output.tape();
+            let __tape = output;
             let __tape_rec = __tape
                 .try_get(crate::runtime::tape::TapeOffset(offset))?;
             let __bytes = __tape.payload_bytes(__tape_rec, #total_bytes_lit)?;
@@ -211,7 +211,7 @@ fn emit_projection_fn(
     quote! {
         /// AY-II.W0'.b — grammar-derived direct-to-struct projection
         /// helper. Reads the admitted rule's frame from the
-        /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+        /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
         /// slab and constructs the matching projection struct;
         /// returns `None` when the slab's frame is absent or the
         /// tape's aggregate buffer is too short.

@@ -29,25 +29,23 @@ pub use path::{IntoPathSegment, Path, PathSegment};
 
 // B5.W1 — the unified [`tape::Tape<R>`] substrate is the sole write
 // + read + projection surface the grammar-emitted parse entry uses.
-// Pre-B5.W1 `FusedBuilder` / `FusedOutput<R>` / `ValueFramesOutput<R>`
-// triumvirate retired alongside the welded boundary; transitional
-// `pub use` aliases keep pre-regen generated code resolving until
-// `cargo xtask regen` rewrites every callsite.
-#[allow(deprecated)]
-pub use tape::{
-    FusedBuilder, FusedOutput, PayloadTag, PayloadValue, ValueChildren, ValueFrame,
-    ValueFramesOutput,
-};
+// The pre-B5.W1 builder/output/value-output triumvirate retired
+// alongside the welded boundary.
+pub use tape::{PayloadTag, PayloadValue, ValueChildren, ValueFrame};
 
 /// Re-export the full `tape` public surface from `bbnf::runtime`.
 ///
 /// Generated parsers reference `crate::runtime::tape::*` for tape
-/// types (`Tape`, `FusedBuilder`, `TapeOffset`, `TapeCursor`,
-/// `TapeKind`, `TapeBuildError`) so downstream consumers do not need
-/// a direct `tape` dependency — `bbnf` already carries it as
-/// the substrate for the generated code. This keeps
-/// `the proc-macro derive (retired B2)` usage single-dep from the consumer's point
-/// of view.
+/// types ([`Tape`], [`TapeOffset`], [`TapeCursor`], [`TapeKind`],
+/// [`TapeBuildError`]) so downstream consumers do not need a direct
+/// `tape` dependency — `bbnf` already carries it as the substrate
+/// for the generated code.
+///
+/// [`Tape`]: tape::Tape
+/// [`TapeOffset`]: tape::TapeOffset
+/// [`TapeCursor`]: tape::TapeCursor
+/// [`TapeKind`]: tape::TapeKind
+/// [`TapeBuildError`]: tape::TapeBuildError
 pub use tape;
 
 /// Re-export the `simd-scan` public surface from `bbnf::runtime`.

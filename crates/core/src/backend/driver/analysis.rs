@@ -155,7 +155,7 @@ pub fn analyze_grammar(ir: &mut GrammarIR, config: &EffectiveBackendConfig) -> B
     // Tranche AU.6.2 — count (push_compound, push_leaf,
     // push_leaf_with_*) sites across every emitted rule function so
     // the Rust emitter's `parse()` entry point can pick a grammar-
-    // specific `FusedBuilder::with_capacity` divisor. Must run after
+    // specific `Tape<R>::with_capacity` divisor. Must run after
     // `classify_materialization` (fills `ir.materialization`) and
     // `compute_payload_layouts` (fills `ir.payload_layouts`) — both
     // are already in place at this point in `analyze_grammar`.

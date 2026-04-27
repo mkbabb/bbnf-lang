@@ -1,8 +1,8 @@
-// B5.W1 — self-alias temporarily restored for the regen sweep.
-// Generated code references `::bbnf::runtime::*` paths so the post-
-// regen state can resolve those paths inside `bbnf` crate. After the
-// regen sweep emits `crate::runtime::*` paths, the alias retires.
-extern crate self as bbnf;
+// B5.W1 — self-alias retired alongside the welded substrate
+// boundary. Generated code uses `crate::runtime::*` paths uniformly
+// inside the `bbnf` crate; downstream consumers (`bbnf-bootstrap`,
+// integration tests) reach the same types via `bbnf::runtime::*`
+// where `bbnf` is the cargo dependency, not the self-alias.
 
 pub mod types;
 pub use types::*;

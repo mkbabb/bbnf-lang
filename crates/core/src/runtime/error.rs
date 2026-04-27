@@ -30,7 +30,7 @@ pub enum ParseErr {
 
     /// The tape builder's sticky error fired during construction.
     /// Only possible when the generated parser calls
-    /// [`tape::FusedBuilder::set_error`] from a recovery path
+    /// [`tape::Tape<R>::set_error`] from a recovery path
     /// — otherwise the builder never surfaces an error.
     Tape(TapeBuildError),
 }

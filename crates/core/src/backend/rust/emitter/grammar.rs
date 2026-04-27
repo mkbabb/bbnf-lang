@@ -1059,13 +1059,13 @@ impl RustEmitter {
         let _ = rule_functions;
 
         // AY-II.W0'.a — parse() routes through the shape dispatcher
-        // against a single `FusedBuilder` that owns both the tape
+        // against a single `Tape<R>` that owns both the tape
         // column family and the paired value-frame arena. Every shape
         // emitter's `begin_compound` / `end_compound` / `push_leaf_*`
         // call stamps BOTH column families atomically inside the fused
         // builder, and `builder.finish_fused::<Self>(root_off.0)` hands
-        // back one `FusedOutput<Self>` holding the finalised `Tape` +
-        // the grammar-bound `ValueFramesOutput<Self>`.
+        // back one `Tape<Self>` holding the finalised `Tape` +
+        // the grammar-bound `Tape<R><Self>`.
         // `Parsed::new_fused_output` consumes the fused output directly
         // — no second finish call, no separate value allocation.
         let _ = visitor_dispatcher_ident;
@@ -1141,16 +1141,24 @@ impl RustEmitter {
                     }
                     off
                 };
-                // B5.W1 — `Tape::finish_fused::<Self>(root)` runs
-                // Stage-C finalisation, stamps the root offset, and
-                // re-binds the phantom `R` from `()` to `Self` so
-                // projection-time consumers (Parsed::to_value) see
+                // B5.W1 — `Tape::finish(root)` runs Stage-C
+                // finalisation + stamps the root offset on the
+                // substrate. The substrate is parse-time
+                // grammar-agnostic (`Tape<()>`); at finish time we
+                // re-bind the phantom `R` from `()` to `Self` so
+                // projection-time consumers (`Parsed::to_value`) see
                 // the grammar-bound substrate. Layout-identical
-                // transmute is sound because `R` is `PhantomData<fn()
-                // -> R>`.
-                let tape = tape
-                    .finish_fused::<Self>(root_off.0)
+                // transmute is sound because `R` is
+                // `PhantomData<fn() -> R>`.
+                let tape: crate::runtime::tape::Tape<()> = tape
+                    .finish(root_off.0)
                     .map_err(crate::runtime::ParseErr::Tape)?;
+                let tape: crate::runtime::tape::Tape<Self> =
+                    // SAFETY: `Tape<R>` is layout-identical for all
+                    // `R` (the marker is `PhantomData<fn() -> R>`,
+                    // a ZST). `()` and `Self` differ only in the
+                    // phantom binding.
+                    unsafe { ::core::mem::transmute(tape) };
                 ::core::result::Result::Ok(
                     crate::runtime::Parsed::new(tape, input, root_off),
                 )
@@ -1259,17 +1267,17 @@ impl RustEmitter {
                 /// `Parsed<'_, Self>` that borrows the input directly.
                 ///
                 /// AY-II.W0'.a: `parse()` routes through the shape
-                /// dispatcher against a single `FusedBuilder`. The
+                /// dispatcher against a single `Tape<R>`. The
                 /// hot path here:
                 ///
-                /// 1. Allocate a sized `FusedBuilder` — owns both
+                /// 1. Allocate a sized `Tape<R>` — owns both
                 ///    tape + value-frame substrates in one handle.
                 /// 2. Call the shape dispatcher, which decomposes
                 ///    into per-shape bodies inlined at the call
                 ///    site. Every compound / leaf push stamps both
                 ///    column families atomically.
-                /// 3. Finalise via `FusedBuilder::finish_fused::<Self>`
-                ///    — returns `FusedOutput<Self>` holding tape +
+                /// 3. Finalise via `Tape<R>::finish_fused::<Self>`
+                ///    — returns `Tape<Self>` holding tape +
                 ///    value, handed to `Parsed::new_fused_output` directly.
                 pub fn parse(
                     input: &str,

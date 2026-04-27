@@ -47,7 +47,7 @@ pub fn shape_fn_ident(shape: &str, grammar_suffix: &str, rule_name: &str) -> pro
 /// `parse_<shape>_visitor_<grammar>_<rule>`.
 ///
 /// The visitor-path family mirrors the tape-path per-shape functions
-/// but takes `&mut V: JsonVisitor` instead of `&mut FusedBuilder`,
+/// but takes `&mut V: JsonVisitor` instead of `&mut Tape<R>`,
 /// emitting visitor method calls (`begin_object`, `key`, `string`,
 /// `number_f64`, etc.) in place of tape record pushes. Monomorphised
 /// per visitor at the call site; zero structural / PSI overhead on

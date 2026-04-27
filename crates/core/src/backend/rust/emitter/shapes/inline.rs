@@ -371,7 +371,7 @@ fn emit_alt_tape(
 /// may push a compound + leaves on partial success before the shape
 /// fn's own internal parse fails; without the truncation those rows
 /// persist after the branch's `Err` is observed here. Every branch
-/// attempt below saves `builder.columns_mut().len()` and truncates
+/// attempt below saves `builder.position()` and truncates
 /// back on failure, matching the walker's rollback semantics.
 fn emit_alt_branch_body_tape(
     node: &IrNode,
@@ -702,7 +702,7 @@ fn emit_branch_position_core(
 /// already pushed to `builder`; on rejection the outer attempt
 /// returns `Err(())`, and the caller (`emit_structural_branch_tape`
 /// / `emit_seq_branch_structural_tape`) handles rollback of `*p` +
-/// `builder.columns_mut().truncate(...)`.
+/// `builder.rollback_to(...)`.
 fn wrap_dta_err_to_unit(rule_emit: TokenStream) -> TokenStream {
     quote! {
         {

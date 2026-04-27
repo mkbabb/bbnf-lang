@@ -116,17 +116,6 @@ impl<'p, R> Parsed<'p, R> {
         }
     }
 
-    /// B5.W1 transitional: pre-W1 generated grammars call
-    /// `Parsed::new_fused_output(output, input, root)`. The
-    /// substrate transposition collapses this to
-    /// `Parsed::new(tape, input, root)`; this alias preserves source
-    /// compatibility for the regen sweep only, and retires
-    /// alongside the other transitional aliases at wave-close.
-    #[doc(hidden)]
-    #[inline]
-    pub fn new_fused_output(tape: Tape<R>, input: &'p str, root_offset: TapeOffset) -> Self {
-        Self::new(tape, input, root_offset)
-    }
 
     /// Borrow the underlying tape (the unified substrate).
     #[inline]
@@ -168,40 +157,6 @@ impl<'p, R> Parsed<'p, R> {
         self.tape
     }
 
-    /// B5.W1 transitional: pre-W1 `Parsed::value_frames_output()`
-    /// returned a `&ValueFramesOutput<R>`. Post-W1 the substrate IS
-    /// the tape; this alias preserves source compatibility for the
-    /// regen sweep only.
-    #[doc(hidden)]
-    #[inline]
-    pub fn value_frames_output(&self) -> &Tape<R> {
-        &self.tape
-    }
-
-    /// B5.W1 transitional: pre-W1 `Parsed::output()` returned a
-    /// `&FusedOutput<R>`. Post-W1 the substrate IS the tape.
-    #[doc(hidden)]
-    #[inline]
-    pub fn output(&self) -> &Tape<R> {
-        &self.tape
-    }
-
-    /// B5.W1 transitional: pre-W1 `Parsed::into_output()` returned
-    /// `FusedOutput<R>`. Post-W1 the substrate IS the tape.
-    #[doc(hidden)]
-    #[inline]
-    pub fn into_output(self) -> Tape<R> {
-        self.tape
-    }
-
-    /// B5.W1 transitional: pre-W1 `Parsed::into_value_frames_output()`
-    /// returned `ValueFramesOutput<R>`. Post-W1 the substrate IS
-    /// the tape.
-    #[doc(hidden)]
-    #[inline]
-    pub fn into_value_frames_output(self) -> Tape<R> {
-        self.tape
-    }
 }
 
 impl<'p, R: Root> Parsed<'p, R> {

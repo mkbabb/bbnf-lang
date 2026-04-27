@@ -326,8 +326,8 @@ fn file_header(ident: &str) -> String {
              clippy::all\n\
          )]\n\
          \n\
-         use ::bbnf::runtime::tape::*;\n\
-         use ::bbnf::runtime::{{Parsed, ParseErr, Root}};\n\
+         use crate::runtime::tape::*;\n\
+         use crate::runtime::{{Parsed, ParseErr, Root}};\n\
          use ::parse_that::*;\n\
          \n",
     )

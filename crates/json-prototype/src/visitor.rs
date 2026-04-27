@@ -6,7 +6,7 @@
 //!   [`crate::Value`]. The speed-ceiling validator: head-to-head
 //!   against `sonic_rs::from_str::<Value>` in the twin-pair bench.
 //! - [`TapeVisitor`] — AW-IV-substrate materialisation into
-//!   `tape::Columns` via a `FusedBuilder`. Validates the same
+//!   `tape::Columns` via a `Tape<R>`. Validates the same
 //!   parse body over the existing substrate; proves the visitor
 //!   abstraction covers both.
 //!

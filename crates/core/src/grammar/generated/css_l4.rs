@@ -13,8 +13,8 @@
     clippy::all
 )]
 
-use ::bbnf::runtime::tape::*;
-use ::bbnf::runtime::{Parsed, ParseErr, Root};
+use crate::runtime::tape::*;
+use crate::runtime::{Parsed, ParseErr, Root};
 use ::parse_that::*;
 
 pub struct CssL4Parser;
@@ -163538,7 +163538,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
         out: &mut ::std::vec::Vec<CssL4ParserValue<'p>>,
     ) {
-        let __tape = output.tape();
+        let __tape = output;
         let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(offset)) {
             ::core::option::Option::Some(r) => r,
             ::core::option::Option::None => return,
@@ -163561,7 +163561,7 @@ mod __cssl4parser_emit_impl {
         }
     }
     /// AY-II.W0'.b — per-frame projector. Reads one record from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// tape and constructs the matching `<Grammar>Value` variant.
     /// Admitted rules tail-call their grammar-derived materializer;
     /// non-admitted rules construct the variant inline. Compound
@@ -163578,7 +163578,7 @@ mod __cssl4parser_emit_impl {
         input: &'p str,
         offset: u32,
     ) -> CssL4ParserValue<'p> {
-        let __tape = output.tape();
+        let __tape = output;
         let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(offset)) {
             ::core::option::Option::Some(r) => r,
             ::core::option::Option::None => {
@@ -166485,7 +166485,7 @@ mod __cssl4parser_emit_impl {
         input: &'p str,
     ) -> CssL4ParserValue<'p> {
         let root_off = output.root_offset();
-        let __tape = output.tape();
+        let __tape = output;
         let mut __cur_off = root_off;
         loop {
             let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(__cur_off))
@@ -167023,7 +167023,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167043,7 +167043,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserNamedColorProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 4)?;
         let field_0: u32 = {
@@ -167056,7 +167056,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167076,7 +167076,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserHexProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 4)?;
         let field_0: u32 = {
@@ -167089,7 +167089,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167109,7 +167109,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserColorSpaceProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167123,7 +167123,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167177,7 +167177,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167206,7 +167206,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167226,7 +167226,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserMathProductOpProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167240,7 +167240,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167260,7 +167260,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserMathSumOpProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167274,7 +167274,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167294,7 +167294,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserDisplayKeywordProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167308,7 +167308,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167328,7 +167328,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserPositionKeywordProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167342,7 +167342,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167362,7 +167362,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserOverflowKeywordProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167376,7 +167376,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167396,7 +167396,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserVisibilityKeywordProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167410,7 +167410,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167430,7 +167430,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserFlexDirKeywordProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167444,7 +167444,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167464,7 +167464,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserFlexWrapKeywordProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167478,7 +167478,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167498,7 +167498,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserAlignKeywordProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167512,7 +167512,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167532,7 +167532,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserBorderStyleKeywordProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167546,7 +167546,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167566,7 +167566,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserBorderWidthKeywordProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167580,7 +167580,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167600,7 +167600,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserFontWeightKeywordProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167614,7 +167614,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167634,7 +167634,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserTextAlignKeywordProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167648,7 +167648,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167668,7 +167668,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserBoxSizingKeywordProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167682,7 +167682,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167702,7 +167702,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserCursorKeywordProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167716,7 +167716,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167736,7 +167736,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserGlobalKeywordProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167750,7 +167750,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167770,7 +167770,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserMediaTypeProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167784,7 +167784,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167804,7 +167804,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserMediaQualifierProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167818,7 +167818,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167847,7 +167847,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167876,7 +167876,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167905,7 +167905,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167934,7 +167934,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167954,7 +167954,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserColorPropsProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -167968,7 +167968,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -167988,7 +167988,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserSizePropsProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -168002,7 +168002,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168022,7 +168022,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserSpacingPropsProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -168036,7 +168036,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168056,7 +168056,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserFontPropsProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -168070,7 +168070,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168090,7 +168090,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserTransformPropsProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -168104,7 +168104,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168124,7 +168124,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserTransitionPropsProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -168138,7 +168138,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168158,7 +168158,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserListTablePropsProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -168172,7 +168172,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168201,7 +168201,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168221,7 +168221,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserAttrMatcherProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -168235,7 +168235,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168255,7 +168255,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserDirPseudoProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -168269,7 +168269,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168289,7 +168289,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserCombinatorProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -168303,7 +168303,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168332,7 +168332,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168352,7 +168352,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserAbsoluteLengthUnitProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -168366,7 +168366,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168386,7 +168386,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserViewportLengthUnitProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -168400,7 +168400,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168420,7 +168420,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserFontLengthUnitProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -168434,7 +168434,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168454,7 +168454,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserAngleProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 9)?;
         let field_0: f64 = {
@@ -168473,7 +168473,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168493,7 +168493,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserTimeProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 9)?;
         let field_0: f64 = {
@@ -168512,7 +168512,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168532,7 +168532,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserFrequencyProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 9)?;
         let field_0: f64 = {
@@ -168551,7 +168551,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168571,7 +168571,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserResolutionProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 9)?;
         let field_0: f64 = {
@@ -168590,7 +168590,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168610,7 +168610,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserFlexProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 9)?;
         let field_0: f64 = {
@@ -168629,7 +168629,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168649,7 +168649,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserPercentageProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 9)?;
         let field_0: f64 = {
@@ -168668,7 +168668,7 @@ mod __cssl4parser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -168688,7 +168688,7 @@ mod __cssl4parser_emit_impl {
     ) -> ::core::option::Option<CssL4ParserKeyframeStopProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
@@ -204410,17 +204410,17 @@ mod __cssl4parser_emit_impl {
         /// `Parsed<'_, Self>` that borrows the input directly.
         ///
         /// AY-II.W0'.a: `parse()` routes through the shape
-        /// dispatcher against a single `FusedBuilder`. The
+        /// dispatcher against a single `Tape<R>`. The
         /// hot path here:
         ///
-        /// 1. Allocate a sized `FusedBuilder` — owns both
+        /// 1. Allocate a sized `Tape<R>` — owns both
         ///    tape + value-frame substrates in one handle.
         /// 2. Call the shape dispatcher, which decomposes
         ///    into per-shape bodies inlined at the call
         ///    site. Every compound / leaf push stamps both
         ///    column families atomically.
-        /// 3. Finalise via `FusedBuilder::finish_fused::<Self>`
-        ///    — returns `FusedOutput<Self>` holding tape +
+        /// 3. Finalise via `Tape<R>::finish_fused::<Self>`
+        ///    — returns `Tape<Self>` holding tape +
         ///    value, handed to `Parsed::new_fused_output` directly.
         pub fn parse(
             input: &str,
@@ -204474,9 +204474,12 @@ mod __cssl4parser_emit_impl {
                 }
                 off
             };
-            let tape = tape
-                .finish_fused::<Self>(root_off.0)
+            let tape: crate::runtime::tape::Tape<()> = tape
+                .finish(root_off.0)
                 .map_err(crate::runtime::ParseErr::Tape)?;
+            let tape: crate::runtime::tape::Tape<Self> = unsafe {
+                ::core::mem::transmute(tape)
+            };
             ::core::result::Result::Ok(
                 crate::runtime::Parsed::new(tape, input, root_off),
             )

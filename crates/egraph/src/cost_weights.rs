@@ -77,7 +77,7 @@ pub struct CostWeights {
     /// against call overhead.
     pub inline_body_size_penalty: f64,
 
-    /// Cost of a single `FusedBuilder::push_*` invocation. Applied
+    /// Cost of a single `Tape<R>::push_*` invocation. Applied
     /// to every node that materializes to a tape record
     /// (`MustTape` / `TapeSpanOnly`); elided for `TransparentElide`
     /// nodes. Drives the scalar payload tier vs full-tape decision

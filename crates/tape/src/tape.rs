@@ -361,22 +361,6 @@ pub enum PayloadData<'a> {
     Bytes(&'a [u8]),
 }
 
-// ─── B5.W1 transitional compat aliases (REMOVED post-regen) ────────
-//
-// The pre-B5.W1 `FusedBuilder` / `FusedOutput<R>` / `ValueFramesOutput<R>`
-// surface is collapsed into [`Tape<R>`]. These aliases let the
-// pre-regen generated grammars compile during the regen sweep; they
-// retire as part of the wave-close commit.
-/// Transitional alias for [`Tape<()>`] — pre-B5.W1 builder type.
-#[deprecated(note = "B5.W1 transitional alias; use Tape<R> directly")]
-pub type FusedBuilder = Tape<()>;
-/// Transitional alias for [`Tape<R>`] — pre-B5.W1 output type.
-#[deprecated(note = "B5.W1 transitional alias; use Tape<R> directly")]
-pub type FusedOutput<R> = Tape<R>;
-/// Transitional alias for [`Tape<R>`] — pre-B5.W1 value output type.
-#[deprecated(note = "B5.W1 transitional alias; use Tape<R> directly")]
-pub type ValueFramesOutput<R> = Tape<R>;
-
 // ─── Tape<R> ───────────────────────────────────────────────────────
 
 /// The unified parser substrate — write surface + read surface +
@@ -1317,109 +1301,6 @@ impl<R> Tape<R> {
     }
 
     // ── Finalisation — Stage-C sib_skip + close-compound back-patch ──
-
-    /// B5.W1 transitional: pre-W1 generated grammars call
-    /// `builder.finish_fused::<Self>(root_off.0)`. The substrate
-    /// transposition collapses this to `tape.finish(root_off)`; this
-    /// alias preserves source compatibility for the regen sweep
-    /// only, and retires alongside the other transitional aliases at
-    /// wave-close.
-    #[doc(hidden)]
-    #[inline(always)]
-    pub fn finish_fused<R2>(self, root_off: u32) -> Result<Tape<R2>, TapeBuildError>
-    where
-        R: 'static,
-        R2: 'static,
-    {
-        let finished = self.finish(root_off)?;
-        // R is a phantom — Tape<R> and Tape<R2> have identical
-        // memory layout (the marker is `PhantomData<fn() -> R>`).
-        // SAFETY: transmute is sound because R is `PhantomData`-only.
-        Ok(unsafe { core::mem::transmute::<Tape<R>, Tape<R2>>(finished) })
-    }
-
-    /// B5.W1 transitional: pre-W1 generated grammars call
-    /// `builder.columns_mut()` to get a `&mut Columns` for direct
-    /// rollback / position queries. Post-W1 the canonical accessors
-    /// are [`Self::position`] (read-only) and [`Self::rollback_to`].
-    #[doc(hidden)]
-    #[inline(always)]
-    pub fn columns_mut(&mut self) -> &mut Columns {
-        &mut self.columns
-    }
-
-    /// B5.W1 transitional: pre-W1 generated grammars call
-    /// `output.tape()` to access the tape from a `FusedOutput<R>`.
-    /// Post-W1 the substrate IS the tape.
-    #[doc(hidden)]
-    #[inline(always)]
-    pub fn tape(&self) -> &Self {
-        self
-    }
-
-    /// B5.W1 transitional alias for [`Self::frame`].
-    #[doc(hidden)]
-    #[inline]
-    pub fn value_frame_at(&self, offset: u32) -> Option<&ValueFrame> {
-        self.frame(offset)
-    }
-
-    /// B5.W1 transitional alias for [`Self::payload_for`].
-    #[doc(hidden)]
-    #[inline]
-    pub fn value_payload_for(&self, frame: &ValueFrame) -> Option<PayloadValue> {
-        self.payload_for(frame)
-    }
-
-    /// B5.W1 transitional alias for [`Self::children`].
-    #[doc(hidden)]
-    #[inline]
-    pub fn value_children(&self, offset: u32) -> ValueChildren<'_, R> {
-        self.children(offset)
-    }
-
-    /// B5.W1 transitional alias — returns the tape root offset.
-    /// Pre-W1 `FusedOutput<R>::value_root_offset()` returned the
-    /// value-frame arena's root index; post-W1 the value frames
-    /// are pushed in lockstep with the tape, so the root value
-    /// frame's index equals the root tape offset.
-    #[doc(hidden)]
-    #[inline]
-    pub fn value_root_offset(&self) -> u32 {
-        self.root_offset
-    }
-
-    /// B5.W1 transitional alias for `Tape<R>` itself — the value
-    /// substrate is now part of the tape directly.
-    #[doc(hidden)]
-    #[inline]
-    pub fn as_value_output(&self) -> &Self {
-        self
-    }
-
-    /// B5.W1 transitional alias for [`Self::frame_count`].
-    #[doc(hidden)]
-    #[inline]
-    pub fn into_value(self) -> Self {
-        self
-    }
-
-    /// B5.W1 transitional alias — into the unified tape.
-    #[doc(hidden)]
-    #[inline]
-    pub fn into_tape(self) -> Self {
-        self
-    }
-
-    /// B5.W1 transitional alias — into the unified tape.
-    #[doc(hidden)]
-    #[inline]
-    pub fn into_parts(self) -> (Self, Self) where R: Default + Copy {
-        // Pre-W1 `FusedOutput<R>::into_parts() -> (Tape, ValueFramesOutput<R>)`.
-        // Post-W1 the substrate IS one tape; this alias is unused
-        // post-regen.
-        unreachable!("B5.W1: Tape::into_parts is a regen-time placeholder")
-    }
 
     /// Consume the tape's write surface, run the Stage-C finaliser,
     /// stamp the root offset, and return `Self` ready for read access.

@@ -93,10 +93,9 @@ pub use profile::{
 pub use psi::{PayloadJob, PayloadKind, PayloadStream};
 pub use stage1::StructuralIndex;
 pub use structural_scan::{next_structural_at_or_after, scan_structural};
-#[allow(deprecated)]
 pub use tape::{
-    reset_tape_new_call_count, tape_new_call_count, FusedBuilder, FusedOutput, PayloadData,
-    Tape, TapeBuildError, TapeIter, TapeOffset, TapeRec, ValueFramesOutput,
+    reset_tape_new_call_count, tape_new_call_count, PayloadData, Tape, TapeBuildError,
+    TapeIter, TapeOffset, TapeRec,
 };
 pub use value::{PayloadTag, PayloadValue, ValueChildren, ValueCheckpoint, ValueFrame};
 pub use visitor::{

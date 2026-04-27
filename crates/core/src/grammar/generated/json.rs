@@ -13,8 +13,8 @@
     clippy::all
 )]
 
-use ::bbnf::runtime::tape::*;
-use ::bbnf::runtime::{Parsed, ParseErr, Root};
+use crate::runtime::tape::*;
+use crate::runtime::{Parsed, ParseErr, Root};
 use ::parse_that::*;
 
 pub struct JsonParser;
@@ -4543,7 +4543,7 @@ mod __jsonparser_emit_impl {
         offset: u32,
         out: &mut ::std::vec::Vec<JsonParserValue<'p>>,
     ) {
-        let __tape = output.tape();
+        let __tape = output;
         let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(offset)) {
             ::core::option::Option::Some(r) => r,
             ::core::option::Option::None => return,
@@ -4561,7 +4561,7 @@ mod __jsonparser_emit_impl {
         }
     }
     /// AY-II.W0'.b — per-frame projector. Reads one record from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// tape and constructs the matching `<Grammar>Value` variant.
     /// Admitted rules tail-call their grammar-derived materializer;
     /// non-admitted rules construct the variant inline. Compound
@@ -4578,7 +4578,7 @@ mod __jsonparser_emit_impl {
         input: &'p str,
         offset: u32,
     ) -> JsonParserValue<'p> {
-        let __tape = output.tape();
+        let __tape = output;
         let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(offset)) {
             ::core::option::Option::Some(r) => r,
             ::core::option::Option::None => {
@@ -4708,7 +4708,7 @@ mod __jsonparser_emit_impl {
         input: &'p str,
     ) -> JsonParserValue<'p> {
         let root_off = output.root_offset();
-        let __tape = output.tape();
+        let __tape = output;
         let mut __cur_off = root_off;
         loop {
             let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(__cur_off))
@@ -4924,7 +4924,7 @@ mod __jsonparser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -4944,7 +4944,7 @@ mod __jsonparser_emit_impl {
     ) -> ::core::option::Option<JsonParserBoolProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output.tape();
+        let __tape = output;
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: bool = {
@@ -4958,7 +4958,7 @@ mod __jsonparser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -5677,17 +5677,17 @@ mod __jsonparser_emit_impl {
         /// `Parsed<'_, Self>` that borrows the input directly.
         ///
         /// AY-II.W0'.a: `parse()` routes through the shape
-        /// dispatcher against a single `FusedBuilder`. The
+        /// dispatcher against a single `Tape<R>`. The
         /// hot path here:
         ///
-        /// 1. Allocate a sized `FusedBuilder` — owns both
+        /// 1. Allocate a sized `Tape<R>` — owns both
         ///    tape + value-frame substrates in one handle.
         /// 2. Call the shape dispatcher, which decomposes
         ///    into per-shape bodies inlined at the call
         ///    site. Every compound / leaf push stamps both
         ///    column families atomically.
-        /// 3. Finalise via `FusedBuilder::finish_fused::<Self>`
-        ///    — returns `FusedOutput<Self>` holding tape +
+        /// 3. Finalise via `Tape<R>::finish_fused::<Self>`
+        ///    — returns `Tape<Self>` holding tape +
         ///    value, handed to `Parsed::new_fused_output` directly.
         pub fn parse(
             input: &str,
@@ -5741,9 +5741,12 @@ mod __jsonparser_emit_impl {
                 }
                 off
             };
-            let tape = tape
-                .finish_fused::<Self>(root_off.0)
+            let tape: crate::runtime::tape::Tape<()> = tape
+                .finish(root_off.0)
                 .map_err(crate::runtime::ParseErr::Tape)?;
+            let tape: crate::runtime::tape::Tape<Self> = unsafe {
+                ::core::mem::transmute(tape)
+            };
             ::core::result::Result::Ok(
                 crate::runtime::Parsed::new(tape, input, root_off),
             )

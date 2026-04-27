@@ -381,7 +381,7 @@ fn emit_dispatch_arms(
 
     // Use linear-attempt form: try each branch in order, rolling *p
     // back on failure. Rollback is span-only (no tape mutation undo
-    // because FusedBuilder has no child truncation; instead each
+    // because Tape<R> has no child truncation; instead each
     // branch emits in a scoped closure and only commits on success).
     //
     // The match is keyed on `first` to skip branches whose first

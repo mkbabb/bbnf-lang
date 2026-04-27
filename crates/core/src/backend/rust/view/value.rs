@@ -16,7 +16,7 @@
 //! 2. `impl crate::runtime::ValueRoot for <Grammar>` — the GAT
 //!    binding with `type Value<'p> = <Grammar>Value<'p>` + the
 //!    `project_value_output` entry-point that consumes the
-//!    W0'.a-published [`FusedOutput`](crate::runtime::tape::Tape)
+//!    W0'.a-published [`Tape<R>`](crate::runtime::tape::Tape)
 //!    slab and drives the grammar's per-admission
 //!    `materialize_projection_<rule>_<Grammar>(output, input, offset)`
 //!    helpers. Non-admitted rules fall through to the existing
@@ -469,7 +469,7 @@ fn emit_value_root_impl(
             offset: u32,
             out: &mut ::std::vec::Vec<#value_ident<'p>>,
         ) {
-            let __tape = output.tape();
+            let __tape = output;
             let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(offset)) {
                 ::core::option::Option::Some(r) => r,
                 ::core::option::Option::None => return,
@@ -491,7 +491,7 @@ fn emit_value_root_impl(
         }
 
         /// AY-II.W0'.b — per-frame projector. Reads one record from the
-        /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
+        /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
         /// tape and constructs the matching `<Grammar>Value` variant.
         /// Admitted rules tail-call their grammar-derived materializer;
         /// non-admitted rules construct the variant inline. Compound
@@ -508,7 +508,7 @@ fn emit_value_root_impl(
             input: &'p str,
             offset: u32,
         ) -> #value_ident<'p> {
-            let __tape = output.tape();
+            let __tape = output;
             let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(offset)) {
                 ::core::option::Option::Some(r) => r,
                 ::core::option::Option::None => {
@@ -550,7 +550,7 @@ fn emit_value_root_impl(
             input: &'p str,
         ) -> #value_ident<'p> {
             let root_off = output.root_offset();
-            let __tape = output.tape();
+            let __tape = output;
             // Skip every structural-intermediate (variant_idx=0 and
             // compound) wrapper at the root, descending through
             // `child_off` until a rule-bound record surfaces. The

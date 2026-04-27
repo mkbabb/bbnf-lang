@@ -68,6 +68,12 @@ Compile-time code generation. Reads `.bbnf`, emits Rust `TokenStream`.
 `factor_common_prefixes` → `refine_span_eligibility` → `compute_follow_sets` →
 `factor_regex_with_lookahead` → `generate_dispatch_tables` → `project_types`
 
+Post-B2, the single canonical regen entrypoint is `cargo xtask
+regen` (Rust AOT path) or `cargo xtask regen --check` (CI gate);
+the pre-B2 bootstrap.sh / `cargo expand` + Python post-process
+pipeline retired entirely at B2.W2. Per-grammar source emitted to
+`crates/core/src/grammar/generated/<ident>.rs`.
+
 **Generated code per struct:**
 - `ParserFn` trait impl — one method per rule, returns `Parser<'a, Enum<'a>>`
 - `to_doc()` method — `@pretty`-directed `Doc` emission (if `#[parser(prettify)]`)
@@ -106,6 +112,13 @@ Rust `TokenStream`.
 6. **(VM only)** Compile IR → `BytecodeProgram` (`bbnf-ir::compiler`)
 7. Serialize via MessagePack (for WASM boundary crossing)
 8. Interpret bytecode against input (`bbnf-ir::interpreter`)
+
+The VM path shares the post-B2 canonical pipeline with AOT: regen
+is driven by `cargo xtask regen` (or `cargo xtask regen --check`
+as the CI gate). The pre-B2 `cargo expand` + Python post-process
+bootstrap retired at B2.W2 and the Rust AOT path is the sole
+entrypoint that materialises per-grammar source under
+`crates/core/src/grammar/generated/<ident>.rs`.
 
 **Bytecode opcodes** (`bbnf-ir::bytecode::Op`):
 `MatchString` | `MatchRegex` | `Epsilon` | `Jump` | `Call` |

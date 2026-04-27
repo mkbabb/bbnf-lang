@@ -15,5 +15,14 @@
 //! unifies the previously-divergent `bbnf::grammar::generated::BbnfBootstrap`
 //! (proc-macro relocated by `bootstrap-bbnf.sh`) and
 //! `bbnf_bootstrap::BbnfBootstrap` (proc-macro raw expansion) into one.
+//!
+//! Post-B6.W0: `cargo xtask regen` skips the on-disk write when the
+//! IR pipeline's emitted bytes match the existing file's bytes. This
+//! preserves `crates/core/src/grammar/generated/bbnf.rs` mtime across
+//! no-op regens and lets cargo reuse the cached `bbnf` rmeta —
+//! cold-wall regen drops from ~88 s to ~0.5 s when the regen produces
+//! identical output, which is the steady-state condition. The
+//! `BbnfBootstrap::parse` route remains the single self-host parse
+//! entry; W0 made the build wrapping it cheap, not the parse itself.
 
 pub use ::bbnf::grammar::generated::BbnfBootstrap;

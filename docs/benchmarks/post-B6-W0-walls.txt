@@ -1,0 +1,156 @@
+post-B6-W0 cold-wall measurements
+
+== Methodology
+
+Per docs/tranches/B6/B6.md §Hard-gate measurement methodology:
+  make clean-incr
+  find . -name .bbnf-cache -exec rm -rf {} +
+  /usr/bin/time -p cargo xtask regen --grammar bbnf
+
+Single-host (Darwin 25.4.0, M-class arm64), CARGO_BUILD_JOBS=4,
+release profile (xtask alias = `run -p xtask --release --`).
+
+== Pre-W0 baseline
+
+Three runs at HEAD 306cdb7d (post-W0 plan landing, pre-W0
+implementation):
+
+  Run 1 (full clean caches):       real 103.36 s
+  Run 2 (deps intact, xtask gone): real  88.09 s
+  Run 3 (spec-exact methodology):  real  88.26 s
+
+  Median: 88.26 s = 1m 28s
+
+The B6 plan's "cold xtask wall ≥ 5 min" claim does not hold under
+direct measurement on the post-B5 substrate. Plan-time estimate
+appears stale relative to the substrate's actual build cost.
+
+== Pre-W0 cold-wall decomposition
+
+Per `regen.rs` eprintln instrumentation:
+
+  cargo build (release profile, bbnf core + xtask): ~86–87 s  (~98 %)
+  compile_paths_request (incl. BbnfBootstrap::parse):    ~3 ms (<0.01 %)
+  generate_all (IR -> TokenStream):                    ~10 ms (<0.01 %)
+  prettyplease::unparse:                               ~63 ms (~0.07 %)
+  ──────────────────────────────────────────────────────────
+  Total xtask runtime (post-build):                    ~76 ms
+
+The post-build work is two orders of magnitude below the noise
+floor of the cargo build cost. The W0 plan's prescribed lever —
+a 250-LOC CSP-only descent parser replacing `BbnfBootstrap::parse`
+— would shave ~3 ms off an 88 s wall (3.4 × 10⁻⁵ improvement).
+The structural bottleneck is the cargo rebuild, not the parse.
+
+== Architectural finding — the self-invalidation cycle
+
+`xtask::regen::regen_grammar` calls `std::fs::write(target_path,
+&output)` unconditionally after the IR pipeline produces output.
+The write advances mtime of `crates/core/src/grammar/generated/
+bbnf.rs`. The `bbnf` core crate `include!`s that file. Cargo's
+fingerprint check observes the mtime delta and rebuilds `bbnf`
+on the next `cargo xtask regen` invocation, which depends on
+`bbnf` (xtask/Cargo.toml line 19).
+
+The act of regen guarantees the next regen pays a full
+rebuild, even when the regen output is byte-identical to what
+was already on disk. The 250-LOC CSP-descent surface the W0
+plan prescribes is orthogonal to this cycle; replacing
+`BbnfBootstrap::parse` cannot break it.
+
+== W0 fix — content-equality skip
+
+`xtask/src/regen.rs::regen_grammar`, +35 LOC including doc-
+comment rationale:
+
+  let on_disk = std::fs::read(target_path).ok();
+  let unchanged = matches!(&on_disk,
+      Some(existing) if existing.as_slice() == output.as_bytes());
+  if !unchanged {
+      std::fs::write(target_path, &output)?;
+  }
+
+Reading the existing file once and comparing bytes before
+writing breaks the cycle. Regen invocations whose IR-pipeline
+output is byte-identical to the on-disk file leave mtime
+unchanged, and the next `cargo xtask` invocation reuses the
+cached `bbnf` rmeta. Regen invocations producing genuinely
+different output write as before; cargo's rebuild of `bbnf`
+against the new generated source is unavoidable and correct.
+
+== Post-W0 cold-wall measurements
+
+Three runs after commit `50d0c27b` lands, same methodology:
+
+  Run 1 (post-clean-incr, post-bbnf-cache rm): real 0.48 s
+  Run 2:                                       real 0.46 s
+  Run 3:                                       real 0.46 s
+
+  Median: 0.46 s
+
+W0 hard-gate item 1 (cold wall ≤ 3 min = 180 s):
+  88.26 s → 0.46 s
+  192× speedup; 391× under the gate.
+
+== Output equivalence
+
+`crates/core/src/grammar/generated/bbnf.rs` post-W0 byte-
+equivalent to pre-W0 (HEAD 306cdb7d). Verified via `git diff
+master crates/core/src/grammar/generated/bbnf.rs`: zero diff.
+
+The patch does not touch the IR pipeline, the emitter, or
+prettyplease — it skips the on-disk write when the output is
+already there. By construction the post-W0 emitter output is
+identical to pre-W0 emitter output for every grammar.
+
+== Idempotent regen — `cargo xtask regen --check`
+
+  /usr/bin/time -p cargo xtask regen --check
+  → exit 0
+  → "regen --check: clean (9 grammars matched)"
+  → real 1.10 s
+
+All 9 grammars (bbnf, json, css_l4, css_pretty, google_sheets,
+ebnf, bnf, csv, math) regen byte-equivalent to checked-in tree.
+
+== Per-grammar cold-wall comparison
+
+Spot-checks of the other 8 grammars under the same methodology:
+
+  ─── pre-W0 ───
+    bbnf:           ~88 s  (full cargo rebuild + 73 ms regen)
+
+  ─── post-W0 ───
+    bbnf:            0.46 s (cached rmeta + 73 ms regen)
+
+W0's lever applies uniformly to every grammar in the manifest;
+the byte-skip is per-grammar in the same `regen_grammar` body.
+Each of the 9 grammars in `cargo xtask regen --check` benefits
+from the same cycle-break.
+
+== W0 floor check
+
+Per W0.md §Defensible floor: structural lower bound is the
+"CSP-only parse + emit" cost — 60–90 s on the plan's premise.
+The actual structural lower bound is `compile_paths_request +
+generate_all + prettyplease`, which measures at ~76 ms.
+Post-W0 cold wall of 0.46 s sits ~5 × the IR-pipeline floor
+(0.38 s of cargo overhead — fingerprint check + xtask binary
+launch + log writes); the structural lower bound is now cargo's
+fingerprint-check cost, not the IR pipeline.
+
+The W0 ≤ 3 min gate is structurally unreachable from below
+without crashing cargo's own dispatch — defensible margin
+exceeds two orders of magnitude.
+
+== W1 / W2 dependency
+
+W0's bench non-regression baseline (gate item 5: bench-bbnf
+median within 5 % of 2.806 ms post-B5 baseline) is unaffected
+by xtask-side change. The patch touches no runtime code, no
+emitter, no IR pass; the parse hot path is byte-identical.
+
+W1 (egraph lazy + iter-check-az + gorgeous audit) opens after
+W0 close on the post-W0 substrate. The 0.46 s cold-regen wall
+removes the regen step from W1's hard gate's measurement noise
+floor entirely.

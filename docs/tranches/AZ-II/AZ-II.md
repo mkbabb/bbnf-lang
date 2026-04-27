@@ -25,7 +25,8 @@ emitter/`) — the piece that reads a grammar file at IR-pipeline
 time — stops using the tape cursor and reads from the derived
 struct instead.
 
-The cutover is byte-equal reproducibility across two stages:
+The cutover is byte-equal reproducibility across two stages, both
+landed atomically inside W1:
 
 1. **Stage A.** The pre-AZ-II compiler (tape-based, inherited from
    AZ-I close) builds the AZ-II-candidate compiler (struct-based).
@@ -39,10 +40,19 @@ The cutover is byte-equal reproducibility across two stages:
 3. **Close gate.** Stage B output is byte-equal to Stage A output
    on the full BBNF grammar corpus (every `.bbnf` fixture in the
    tree, including `grammar/bbnf/bbnf.bbnf` itself). Any divergence
-   reverts the W2 substrate and invokes the escape clause.
+   reverts the W1 substrate and invokes the escape clause.
 
-Once Stage B is green, `crates/tape/` has no remaining consumers.
-AZ-II W3 deletes the crate and recodes every downstream reference.
+Stage A and Stage B are folded into one wave because the
+intermediate state — Stage A produced but Stage B not yet
+verified — leaves the tree with two emission targets wired side by
+side and no proof that either is reproducible. Splitting the
+cutover across wave boundaries would force master to carry that
+unworkability between waves; merging them makes the unworkability
+window honest and bounded to the wave's own internal stages.
+
+Once W1 is green, `crates/tape/` has no remaining consumers. AZ-II
+W2 (FINAL) deletes the crate and recodes every downstream
+reference.
 
 ## Dependency on AZ-I
 
@@ -117,10 +127,8 @@ grammar-read step; it is measured but lightly weighted — regression
 
 **Bootstrap reproducibility gate:**
 
-- Stage A output (pre-AZ-II compiler builds candidate) is captured
-  at W1 close.
-- Stage B output (candidate rebuilds itself) is captured at W2
-  close.
+- Stage A output (pre-AZ-II compiler builds candidate) and Stage B
+  output (candidate rebuilds itself) are both captured at W1 close.
 - `diff -r <stage-A-output> <stage-B-output>` returns zero byte
   differences across the entire BBNF fixture corpus.
 
@@ -164,15 +172,17 @@ primary grammars on the struct substrate.
 
 ## Wave structure
 
-Three waves plus FINAL. Each wave has a same-commit runtime call
-site, a same-commit bench delta, and a same-commit samply capture.
+Three waves total: a research preflight, a single cutover wave that
+lands Stage A and Stage B atomically, and a FINAL that deletes the
+tape and recodes downstream consumers. Each wave has a same-commit
+runtime call site, a same-commit bench delta, and a same-commit
+samply capture.
 
 | Wave | Headline | Opens after | Status |
 |---|---|---|---|
 | **W0** | BBNF bootstrap research + cutover design + classifier extension | AZ-II open | planned |
-| **W1** | Stage A — tape-compiler builds struct-compiler candidate | W0 | planned |
-| **W2** | Stage B — candidate rebuilds itself + byte-equal close gate | W1 | planned |
-| **W3** | FINAL — `crates/tape/` deletion + parity recode + BA handoff | W2 | planned |
+| **W1** | Stage A + Stage B atomic byte-equal cutover | W0 | planned |
+| **W2** | FINAL — `crates/tape/` deletion + parity recode + BA handoff | W1 | planned |
 
 ### W0 — Research + cutover design + classifier extension
 
@@ -197,70 +207,74 @@ Landed artefacts:
   against AZ-I close. Emits
   `docs/benchmarks/AZ-II/W0/baseline.json`.
 - IR audit pass extended to cover `grammar/bbnf/bbnf.bbnf`.
-  Initially red (BBNF not yet migrated); W1/W2 drive it to 100%.
+  Initially red (BBNF not yet migrated); W1 drives it to 100%.
 
 Runtime call site: classifier extension runs on every `cargo
 check`; baseline bench captures the AZ-II opening matrix.
 
-### W1 — Stage A (tape-compiler builds struct-compiler candidate)
+### W1 — Stage A + Stage B atomic byte-equal cutover
 
-`project_types` extended to close on `grammar/bbnf/bbnf.bbnf`.
-`StructRegistry` populates `BbnfAst`, `Rule`, `Expr`, `Ident`,
-`Param`, `TypeExpr`, `Import`, `Directive`, `Comment`, and the
-`RegexPattern` / regex-HIR variants per BBNF's grammar.
+W1 lands the cutover end-to-end. `project_types` extends to close
+on `grammar/bbnf/bbnf.bbnf`; `StructRegistry` populates `BbnfAst`,
+`Rule`, `Expr`, `Ident`, `Param`, `TypeExpr`, `Import`,
+`Directive`, `Comment`, and the `RegexPattern` / regex-HIR
+variants per BBNF's grammar; the xtask regen pipeline
+(`xtask/src/regen.rs` orchestration + the rust emitter under
+`crates/core/src/backend/rust/emitter/`) gains a struct-writing
+emission mode wired to `StructRegistry`.
 
-The xtask regen pipeline (`xtask/src/regen.rs` orchestration +
-the rust emitter under `crates/core/src/backend/rust/emitter/`)
-gains a struct-writing emission mode, wired to `StructRegistry`.
-The tape-writing mode remains present — Stage A is the bridge
-stage where both emission targets are wired.
+**Stage A.** The pre-AZ-II compiler (tape-based, inherited from
+AZ-I close) runs `cargo xtask regen --emit-mode struct` with the
+struct-emission mode enabled. The tape-writing mode remains
+present in this stage — Stage A is the bridge state where both
+emission targets are wired. The resulting per-grammar output
+under `crates/core/src/grammar/generated/<ident>.rs` holds
+struct-writing parsers for BBNF grammars. Corpus output is
+captured to `docs/benchmarks/AZ-II/W1/stage-a-output/` for every
+`.bbnf` fixture in the tree (`grammar/*/*.bbnf`,
+`tests/fixtures/*.bbnf`, `grammar/bbnf/bbnf.bbnf` itself).
 
-Stage A output: the pre-AZ-II compiler (tape-based, inherited
-from AZ-I close) runs `cargo xtask regen --emit-mode struct` with
-the struct-emission mode enabled. The resulting per-grammar
-output under `crates/core/src/grammar/generated/<ident>.rs`
-holds struct-writing parsers for BBNF grammars.
+**Stage B.** The Stage A candidate compiler rebuilds itself.
+`cargo clean && cargo build -p bbnf` runs with the candidate as
+the bootstrap toolchain; the resulting xtask regen pipeline is
+itself built from a struct-writing parser and produces
+struct-writing parsers. Tape is unwired in both directions for
+BBNF's bootstrap. The same `cargo xtask regen --emit-mode struct`
+invocations on the same fixture corpus are captured to
+`docs/benchmarks/AZ-II/W1/stage-b-output/`.
 
-Corpus bench: run `cargo xtask regen --emit-mode struct` against
-every `.bbnf` fixture in the tree (`grammar/*/*.bbnf`,
-`tests/fixtures/*.bbnf`); collect per-fixture parsed output to
-`docs/benchmarks/AZ-II/W1/stage-a-output/`.
+**Byte-equal close gate.** `diff -r
+docs/benchmarks/AZ-II/W1/stage-a-output/
+docs/benchmarks/AZ-II/W1/stage-b-output/` returns zero byte
+differences across the entire BBNF fixture corpus. Any divergence
+at wave close triggers the reversal path; the W1 substrate
+reverts and AZ-II re-plans against the observed drift.
+
+The two stages must land in the same wave because Stage A's
+intermediate state — both emission targets wired, no
+reproducibility proof — is unworkable as a master-green
+checkpoint. Merging the stages into one wave keeps the
+unworkability bounded to the wave's interior, where the close
+gate is the sole arbiter.
 
 Runtime call site: `cargo xtask regen` is invoked at IR-pipeline
 time (CI + pre-commit gate via `cargo xtask regen --check`); the
 struct-emission path is exercised on every grammar file read.
+Post-W1, the W1-final compiler is the new default. `cargo build
+-p bbnf` produces a tape-free binary (the tape crate is still
+present on disk but no production code path imports it).
+
+`tests/bbnf_bootstrap_reproducibility.rs` lands at W1 close as a
+permanent CI gate: it encodes the Stage A / Stage B diff as a
+repeatable test that runs on every commit post-W1.
 
 Bench delta gate: BBNF self-parse throughput ≥ AU baseline minus
 10% (this entry is not on the 20% wave rule because it is
-internal build-time, not user-facing). No regression on JSON,
-CSS L4, Sheets (they are on the AZ-I close struct path; any
-regression here is a W1 fault).
+internal build-time, not user-facing); full 17-entry matrix at or
+above AZ-I close on JSON, CSS L4, Sheets (any regression here is
+a W1 fault).
 
-### W2 — Stage B (candidate rebuilds itself + byte-equal close gate)
-
-The W1 candidate compiler rebuilds itself. `cargo clean && cargo
-build -p bbnf` executed with the W1-candidate as the bootstrap
-compiler. The resulting compiler is built from a struct-writing
-parser and produces struct-writing parsers.
-
-Stage B output: the same `cargo xtask regen --emit-mode struct`
-invocations on the same `.bbnf` fixture corpus, captured to
-`docs/benchmarks/AZ-II/W2/stage-b-output/`.
-
-Byte-equal close gate: `diff -r` between
-`docs/benchmarks/AZ-II/W1/stage-a-output/` and
-`docs/benchmarks/AZ-II/W2/stage-b-output/` returns zero byte
-differences. Any divergence at wave close triggers the reversal
-path.
-
-Runtime call site: the W2-final compiler is the new default.
-`cargo build -p bbnf` produces a tape-free binary (the tape crate
-is still present on disk but no production code path imports it).
-
-Bench delta gate: full 17-entry matrix at or above AZ-I close.
-Any regression reverts the W2 substrate.
-
-### W3 — FINAL (tape deletion + parity recode + BA handoff)
+### W2 — FINAL (tape deletion + parity recode + BA handoff)
 
 `crates/tape/` is deleted. Its symbols (`TapeRec`, `TapeBuilder`,
 `TapeCursor`, `Columns`, `Visitor`, `Finaliser`, `DTA`, `PSI`,

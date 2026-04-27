@@ -304,3 +304,163 @@ Status: W0 closed on alternative mechanism; W1 / W2 dispatch
 unblocked.
 
 ---
+
+## 2026-04-27 — B6.W1 dispatched + closed (plan-time miscalibration)
+
+W1 dispatched against `b6-w1` worktree at master HEAD `1c96a4d5`.
+Two-agent parallel plan (W1.a egraph lazy + W1.b iter-check-az).
+The dispatch directive carried an explicit Phase-0 measurement
+gate ("If iter-check-full cold < 200 s OR warm < 5 s, the W1 gate
+is vacuous; halt and report"). Phase 0 triggered the vacuous
+verdict; W1 closes on rationale-satisfied without source-code
+or alias edits.
+
+### Phase 0 baseline measurements
+
+Methodology per B6.md §Hard-gate measurement methodology:
+target/ wiped (the worktree's `target` symlink to a non-existent
+orchestrator path replaced with a real directory inside the
+worktree), .bbnf-cache cleared, CARGO_BUILD_JOBS=4.
+
+  iter-check-full cold (truly cold; target/ empty):  17.02 s
+  iter-check-full warm (median of 3):                 0.14 s
+  iter-check       warm (median of run 2-3):          0.13 s
+  iter-test --no-run, run 1 (fresh test compile):   129.04 s
+  iter-test --no-run, runs 2-3 (warm-state):        0.66 s,
+                                                    0.76 s
+
+Plan-asserted iter-check-full cold baseline (W1.md L11–13,
+B6.md L194): "> 660 s". Direct measurement: 17.02 s. The plan
+baseline is stale by 38.8× relative to the post-B5/post-W0
+substrate.
+
+### Decision-criterion outcome
+
+Per the dispatch's explicit decision criterion:
+
+  Cold:  17.02 s  <  200 s   (vacuous; gate is 27× below threshold)
+  Warm:   0.14 s  <    5 s   (vacuous; gate is 35× below threshold)
+
+Both vacuity conditions trigger.
+
+### Architectural reconciliation — W1.a infeasibility
+
+The W1.a lazy-pass mechanism cannot reduce the wall it targets,
+independent of the baseline value:
+
+1. The 9 egraph rules in `crates/ir/src/egraph/rules/mod.rs::
+   default_rules` are all consumed by `bbnf_ir::egraph::build_
+   and_saturate` at `crates/core/src/pipeline/compile.rs:593` —
+   the runtime parse-compile path. Every rule has `--check`
+   consumer-count > 0 because `cargo xtask regen --check` runs
+   `compile_paths_request` which runs `build_and_saturate`.
+   There is no rule the plan's classification step would
+   classify as "deferred".
+2. `cargo iter-check-full` performs typechecking only —
+   `build_and_saturate` does NOT execute during typecheck. The
+   iter-check wall is rustc compile time, not egraph saturation
+   work. Lazy-deferring rule firing at runtime cannot reduce a
+   typecheck cold wall.
+3. Reducing the iter-check link surface would require `#[cfg]`-
+   gating rules out of the binary — a feature-flag mechanism
+   the plan does not prescribe and that would conflict with
+   the existing always-on rule consumer at compile.rs:593.
+
+The plan's premise ("the full-workspace ax-iter check links
+the egraph and CSP scheduler with every saturation rule eager")
+conflates runtime saturation work with compile-time link cost.
+
+### Architectural reconciliation — W1.b duplication
+
+The prescribed `iter-check-az` alias is byte-identical to the
+existing `iter-check` alias on the same exclude set. Adding it
+violates B6 invariant 6 (no source-code path duplications) and
+SPEC §Edicts no-shim rule. The plan's "additional excludes per
+AY-III's plan declarations" does not yet have AY-III declarations
+to back it.
+
+### Architectural reconciliation — W1.c gorgeous audit
+
+`crates/gorgeous/Cargo.toml:63` already carries `default = []`.
+No drift; no edit needed. The dispatch scoped W1.c as no-op
+verification — that scope is satisfied by the artefact at
+`docs/benchmarks/post-B6-W1-walls.txt` §Plan reconciliation —
+gorgeous.
+
+### Hard-gate verification
+
+| Gate | Plan threshold | Measured | Status |
+|------|----------------|----------|--------|
+| iter-check-full cold ≥ 30 % reduction | ≤ 460 s | 17.02 s | VACUOUS (27× under threshold) |
+| iter-check-az cold ≤ 30 s | ≤ 30 s | iter-check duplicate | VACUOUS (alias rejected) |
+| Workspace nextest 1477/1477 | 1477 | inherited from W0 close | PRESERVED |
+| cargo xtask regen --check exit 0 | 9/9 | inherited from W0 close | PRESERVED |
+| cargo bench-bbnf within 5 % | n/a | no runtime change | N/A |
+| iter-check warm ≤ 0.5 s | ≤ 0.5 s | 0.13 s | PRESERVED |
+| No #[allow] introduced | 0 | 0 (no edits) | PRESERVED |
+| audit/W1-egraph-lazy-trace.md | exists | not authored — mechanism rejected | N/A (rationale-satisfied) |
+| audit/W1-iter-az-scope.md | exists | not authored — alias rejected | N/A (rationale-satisfied) |
+| gorgeous default = [] verified | grep citation | line 63 verified in walls.txt | PRESERVED |
+
+### Per-spec halt-and-report
+
+Per dispatch §"If scope reveals further", Phase 0 measurements
+show iter-check-full cold is 17.02 s (well under the 200 s
+vacuity threshold). W1 closes on rationale-satisfied per SPEC
+§Plan-time miscalibration: "If the floor analysis is hard (the
+metric depends on code not yet written), declare the gate as a
+soft-target + rationale-satisfied fallback rather than a hard
+numeric. Don't ship a gate that can't close." The W1 gate
+cannot close on the prescribed mechanism because (a) the
+baseline is stale by 38.8× and (b) the prescribed mechanism is
+architecturally incapable of moving the wall regardless of the
+baseline.
+
+The W0 precedent is identical in shape: W0's "5-min cold xtask
+wall" measured 1m 28s on the substrate (a 3.4× staleness),
+then collapsed to 0.46 s after a fingerprint-cycle fix the W0
+plan did not anticipate. W1's "660 s iter-check-full" baseline
+appears to inherit the same staleness — likely because the W0
+fix transitively eliminated the regen-induced rebuild cost
+that `iter-check-full` at plan time was paying. Without the
+self-invalidation cycle, every cargo invocation post-W0
+preserves the previous build's rmeta, and a workspace-wide
+typecheck on a warm-rmeta substrate is dramatically cheaper
+than the plan supposed.
+
+### Orchestrator triumvirate consideration
+
+The orchestrator may consider:
+
+1. Whether B6.W1 should retire entirely (rationale-satisfied
+   close), or sub-divide into W1a (this Phase-0 close) and
+   W1b (deferred or void) for any later case where AY-III's
+   actual workload pattern reveals a genuine carve-out need.
+2. Whether B6.W2 (JSON test partitioning + IR audit lazy)
+   should re-verify its own ~20 s warm-iter-test baseline
+   before dispatch — the same staleness pattern likely
+   affects W2's measured numbers.
+3. Whether the egraph lazy-pass mechanism has independent
+   value at runtime (e.g. for `compile_paths_request` cold-
+   start latency in the LSP) outside the iter-check context;
+   if so, that work belongs in AY-III or a successor tranche
+   rather than in B6's dev-loop annex scope.
+
+### Commit lineage
+
+| Commit | One-line |
+|--------|----------|
+| TBD    | docs(b6): W1 plan-time miscalibration close + measurements |
+
+Branch `b6-w1` against master `1c96a4d5`. The single commit
+adds `docs/benchmarks/post-B6-W1-walls.txt` and appends to this
+PROGRESS.md. No source files modified; no aliases changed; no
+new audit docs authored (the rationale-satisfied close obviates
+their need per SPEC §Plan-time miscalibration).
+
+Status: W1 closed on rationale-satisfied (plan-time misclassified
+baseline + architecturally infeasible mechanism); W2 dispatch
+unblocked, but its baseline should be re-verified per the same
+methodology before dispatch.
+
+---

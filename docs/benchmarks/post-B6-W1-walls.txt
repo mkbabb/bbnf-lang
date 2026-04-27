@@ -1,0 +1,210 @@
+post-B6-W1 wall measurements + plan-time miscalibration verdict
+
+== Methodology
+
+Per `docs/tranches/B6/B6.md` §Hard-gate measurement methodology:
+  rm -rf target/*/incremental
+  find . -name .bbnf-cache -exec rm -rf {} +
+  CARGO_BUILD_JOBS=4 /usr/bin/time -p <command>
+
+Single-host (Darwin 25.4.0, M-class arm64). All measurements taken
+in worktree `/Users/mkbabb/Programming/bbnf-wt-b6-w1` on branch
+`b6-w1` at HEAD `1c96a4d5` (post-B6.W0 close). The worktree began
+with `target` symlinked to a non-existent path in the orchestrator's
+checkout; the symlink was replaced with a real `target/` directory
+inside the worktree before measurement (otherwise cargo cannot
+create artefacts and exits 101). All runs below are against this
+real-target worktree-local cache.
+
+== Pre-W1 cold `iter-check-full` baseline
+
+  Run 1 (truly cold; target/ empty):  real 17.02 s
+
+The worktree's fresh state plus a single iter-check-full pass
+populated target/ax-iter/{deps,incremental} from scratch. Per
+`feedback_no_warm_benches`, only the truly-cold first run is the
+authoritative cold-wall measurement; subsequent invocations
+re-use rmeta and are warm-state.
+
+Plan-asserted baseline (W1.md L11–13, B6.md L194):
+  > 660 s
+
+Direct measurement: 17.02 s. The plan's baseline is stale by
+38.8× relative to the post-B5/post-W0 substrate. The W1 hard-gate
+(≥ 30 % cold-wall reduction; ≤ 460 s) is structurally vacuous: the
+current cold wall is 17.02 s, already 27× under the gate's
+threshold.
+
+== Pre-W1 warm `iter-check-full` (3-run median)
+
+  Run 1: 0.16 s
+  Run 2: 0.14 s
+  Run 3: 0.14 s
+  Median: 0.14 s
+
+Warm wall is 0.14 s — 35× under the dispatch's vacuity threshold of
+5 s (per the dispatch decision criterion). Per B6.md invariant 3,
+warm `iter-check` ≤ 0.5 s is a tranche invariant; the existing
+warm surface holds at 0.14 s without W1's lazy-pass infrastructure.
+
+== Pre-W1 warm `iter-check` (workspace minus 4 heavy crates)
+
+  Run 1: 14.70 s   (incremental rebuild after iter-check-full
+                    invalidated the LSP/gorgeous/analysis/bootstrap
+                    targets; first iter-check pass paid the
+                    re-typecheck cost on a different target shape)
+  Run 2: 0.14 s
+  Run 3: 0.13 s
+  Median (run 2-3): 0.13 s
+
+Warm `iter-check` median 0.13 s holds well below B6 invariant 3's
+0.5 s ceiling.
+
+== Pre-W1 `iter-test --no-run` (3-run; nextest --no-run)
+
+  Run 1: 129.04 s   (fresh test-target compilation; first time
+                     test cfg-instantiates parse-that, gorgeous,
+                     and the per-grammar test artefacts)
+  Run 2: 0.76 s
+  Run 3: 0.66 s
+
+Run 1 is a first-time-after-cargo-check fresh test compile; runs
+2–3 are warm-state.
+
+== Plan reconciliation — egraph lazy-pass infeasibility
+
+The W1.a hypothesis cannot reduce the targeted wall:
+
+1. The egraph rule set (`crates/ir/src/egraph/rules/mod.rs::default_rules`)
+   constructs 9 boxed `RewriteFn`s — `DeduplicateAltBranches`,
+   `SupersetAbsorbAlt`, `UnionMergeAlt`, `FuseAltRegexBranches`,
+   `CommonSuffixFactor`, `AltOfSingle`, `RepeatOfSingle`,
+   `WrapOfEpsilonScalar`, `ConcatLiterals`. Every rule is consumed
+   by `bbnf_ir::egraph::build_and_saturate` at
+   `crates/core/src/pipeline/compile.rs:593` — the runtime parse-
+   compile path. There is no rule whose `--check` consumer-count
+   is zero, because the runtime path consumes them all.
+
+2. `cargo iter-check-full` is a `cargo check` invocation under the
+   `ax-iter` profile. `cargo check` performs typechecking only —
+   it does NOT execute `build_and_saturate`. The egraph saturation
+   is runtime work; the iter-check wall is rustc compile time.
+   Lazy-deferring rule firing at runtime cannot reduce a typecheck
+   cold wall, because the rules never fire during typecheck.
+
+3. To genuinely shrink iter-check's link surface one would need
+   `#[cfg]`-gate rules out of the binary — not "lazy-run" them.
+   The plan's lazy-run mechanism leaves every rule's monomorphized
+   `Box<dyn RewriteFn>` instantiation in the rmeta and the linker
+   sees identical symbol surface either way.
+
+The plan's premise ("the full-workspace ax-iter check links the
+four heavy crates plus the egraph and CSP scheduler with every
+saturation rule eager") conflates runtime saturation work with
+compile-time link cost. The two are independent.
+
+== Plan reconciliation — `iter-check-az` alias
+
+W1.b prescribes adding `iter-check-az = "check --profile ax-iter
+--workspace --exclude bbnf-bootstrap --exclude gorgeous --exclude
+bbnf-analysis --exclude bbnf-lsp"` to `.cargo/config.toml`. That
+exclude set is byte-identical to the existing `iter-check` alias
+(line 110 of `.cargo/config.toml`). Adding `iter-check-az` as a
+duplicate of `iter-check` violates B6 invariant 6 (no source-code
+path duplications) and SPEC §Edicts no-shim rule.
+
+The plan allows for "additional excludes per AY-III's plan
+declarations", but no such declarations exist in the AY-III
+docs presently. Without those, the alias is a literal duplicate.
+
+The plan's ≤ 30 s gate for `iter-check-az` is already satisfied
+by the existing `iter-check` alias: warm 0.13 s; cold (estimated
+from the iter-check-full 17.02 s wall minus the four heavy
+crates' typecheck contribution) is ≤ 17 s, which is ≤ 30 s.
+
+== Plan reconciliation — gorgeous default-features audit
+
+`crates/gorgeous/Cargo.toml` line 63: `default = []`. Verified
+via direct read. No drift; no edit needed. W1.c was scoped as
+"no-op verification" by the dispatch — that scope is satisfied
+by this artefact's grep citation.
+
+== Verdict — Phase 0 VACUOUS-CLOSE
+
+Per the dispatch's explicit decision criterion ("If iter-check-
+full cold is < 200s OR if iter-check-full warm is already < 5s,
+the W1 gate is either vacuous or unreachable in 30%-relative
+terms"), both conditions trigger:
+
+  Cold:  17.02 s  <  200 s   (vacuous; gate is 27× below threshold)
+  Warm:   0.14 s  <    5 s   (vacuous; gate is 35× below threshold)
+
+Per SPEC §Plan-time miscalibration (lines 224–240): when a numeric
+gate's measured baseline is dramatically different from the plan's
+asserted baseline, the gate is reclassified as plan-time
+miscalibration and the wave closes on rationale-satisfied. The
+W1 plan was authored against a stale or different-substrate
+baseline; the post-B5/post-W0 cold wall is 17.02 s, not 660 s.
+
+The architectural conclusion compounds the verdict:
+
+  - The lazy-pass mechanism the W1.a plan prescribes cannot reduce
+    the wall it targets, regardless of the baseline value.
+  - The `iter-check-az` alias the W1.b plan prescribes is a
+    duplicate of `iter-check` and violates invariant 6.
+  - The gorgeous audit is no-op verified.
+
+Recommended W1 disposition: close on rationale-satisfied per
+SPEC §Plan-time miscalibration. The infrastructure is healthy;
+the bottleneck is genuinely elsewhere. The 192× speedup W0
+landed (the unconditional-write fingerprint cycle) was the real
+substrate-wide breakthrough; W1 finds nothing because there is
+nothing left for its prescribed levers to find.
+
+The W0 precedent (W0 plan's 5-min asserted baseline measured
+1m 28s on the substrate, then collapsed to 0.46 s after the
+self-invalidation cycle was broken) suggests B6 was authored
+against a substrate snapshot that was already partially obsolete
+at plan time. W1 inherits the same staleness.
+
+== Hard-gate verification
+
+| Gate | Plan threshold | Measured | Status |
+|------|----------------|----------|--------|
+| iter-check-full cold ≥ 30 % reduction | ≤ 460 s | 17.02 s | VACUOUS (already 27× under) |
+| iter-check-az cold ≤ 30 s | ≤ 30 s | n/a (alias is duplicate) | VACUOUS (existing iter-check satisfies) |
+| Workspace nextest 1477/1477 | 1477 | not re-run; W0 close ceremony confirmed 1477/1477 in 42.4 s | INHERITED |
+| cargo xtask regen --check exit 0 | 9/9 | not re-run; W0 close confirmed | INHERITED |
+| cargo bench-bbnf within 5 % | n/a (no runtime change) | not re-run; W1 prescribes no runtime change | N/A |
+| iter-check warm ≤ 0.5 s | ≤ 0.5 s | 0.13 s | PRESERVED |
+| No #[allow] introduced | 0 | 0 | PRESERVED (no edits made) |
+
+== Cold-wall reproduction recipe
+
+For any reviewer wishing to reproduce the 17.02 s cold figure:
+
+  cd /Users/mkbabb/Programming/bbnf-wt-b6-w1
+  rm -rf target          # or `rm -rf target/*/incremental` on warm host
+  ls -la target          # confirm: not a broken symlink
+  mkdir -p target        # if symlink was deleted
+  find . -name .bbnf-cache -exec rm -rf {} +
+  CARGO_BUILD_JOBS=4 /usr/bin/time -p cargo iter-check-full
+
+The first-run wall after a target wipe is the authoritative cold
+wall. Subsequent runs are warm-state and should report ≤ 0.2 s.
+
+== Files modified by W1 work
+
+NONE. Per Phase 0 vacuous-close, no source code or alias edits
+land. The only artefact this dispatch produces is this measurements
+file plus a PROGRESS.md append below.
+
+== Forward dependency note for W2
+
+W2 (JSON test partitioning + IR audit lazy gates) opens after W1
+close. With W1 closing on rationale-satisfied, W2 dispatches
+against the same substrate W1 measured: cold iter-check-full
+17 s, warm 0.14 s, warm iter-test (post first-run) ≤ 1 s. The
+W2 plan should re-verify its own ~20 s warm-iter-test baseline
+against direct measurement before dispatch — the same staleness
+that invalidated W1's baseline likely affects W2's.

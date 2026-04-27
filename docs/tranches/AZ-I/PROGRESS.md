@@ -73,20 +73,61 @@ fire under `finalize_compile`). Verification on master:
 
 ## 2026-04-27 — W1 dispatch
 
-W1 opens on the post-W0 substrate. Per `AZ-I.md` §W1 the wave fans
-out into 3 parallel agents (one per data grammar). Hard-fail-and-
-block on any unclosed `project_types` edge.
+W1 opens on the post-W0 substrate. The original W1.md split into 3
+per-grammar agents collided on shared `crates/ir/src/passes/types/`
+and the new `crates/ir/src/registry/` files; per SPEC §Parallelism
+disjoint-bounds the wave is re-shaped into a 2-stage flow that
+preserves W1.md's hard gates (registry closure on three grammars +
+emitter consumer wired):
 
-- **W1.1** — JSON `project_types` closure + `StructRegistry` entries
-  for `value`, `array`, `object`, `pair` (~7 layouts expected).
-- **W1.2** — Sheets `project_types` closure + entries for `sheet`,
-  `row`, `cell`, `formula`, `reference`, value sub-shapes (~8 layouts).
-- **W1.3** — CSS L4 `project_types` closure + entries for
-  `stylesheet`, at-rule kinds, selector kinds, `declaration`, every
-  typed-value enum (~60 layouts).
-- **Orchestrator** owns `crates/core/src/backend/emitter.rs` registry-
-  read wiring (W1.4) after the three closures land — the emitter
-  edit composes across all three grammars and is consolidator-shaped.
+**Stage 1 (W1.A solo)** — registry crate-substrate + closure +
+audit-probe rewire. Pure bbnf-ir scope.
+
+**Stage 2 (4 parallel agents)** — per-grammar typed-leaf authoring
+(W1.B1/B2/B3) + emitter registry-read consumer (W1.B4). Disjoint
+file bounds. Per-worktree `CARGO_TARGET_DIR` to avoid the shared-
+target lock contention from `feedback_single-cargo-per-target`.
+
+### W1.A close (2026-04-27)
+
+W1.A closed in ~17 min real wall (60-min cap; well under). Four
+commits land on master:
+
+| SHA | Description |
+|---|---|
+| `e0e0af30` | `feat(ir): land StructRegistry substrate` — `registry/{mod,struct}.rs` + `lib.rs` re-exports + `GrammarIR.struct_registry` field |
+| `43ea56bb` | `feat(ir): project_types populates StructRegistry; probe accepts &StructRegistry` — `passes/types/registry.rs` + closure wired into `project_types` |
+| `710d3952` | `test(ir): leaf tests for StructRegistry + fixture conformance` — 12 leaf tests + 38-fixture init-site update for the new `GrammarIR` field |
+| `d1528d2d` | `fix: untrack target symlink (AZ-I.W1.A fixup)` — net-zero with 710d3952's accidental capture |
+
+`StructLayout` carries `LayoutKind` (`Struct` / `TaggedEnum` /
+`UntaggedEnum` / `NewtypeWrapper`) + per-field `FieldSource`
+provenance (`TypedLeaf` / `BranchTag` / `SeqPosition` /
+`RepeatElement` / `RuleReference`); discriminator is data, not
+match-arm in the consumer (per `feedback_pluggable-components`).
+`project_types` populates the registry as part of fixed-point
+closure. `&StructRegistry` impls `StructRegistryProbe`; the audit
+pass produces `Mapped` rows when fed a populated registry.
+
+`cargo nextest run --profile ax-iter -p bbnf-ir` → 375 / 375 green
+on master (363 baseline + 12 new).
+
+### W1.B dispatch (2026-04-27)
+
+Four parallel agents on disjoint file bounds:
+
+- **W1.B1 JSON** — `grammar/json/json.bbnf` typed-leaf authoring +
+  `crates/core/tests/project_types_json.rs` registry-shape test.
+- **W1.B2 Sheets** — `grammar/sheets/sheets.bbnf` + per-grammar test.
+- **W1.B3 CSS L4** — `grammar/css-l4/css-l4.bbnf` + per-grammar test.
+- **W1.B4 Emitter** — `crates/core/src/backend/rust/emitter/`
+  registry-read on every compound emission, bridge mode preserves
+  the existing tape co-emission for AZ-I.W1 stability (W2/W3 sever
+  the tape per their plan).
+
+Each W1.B worktree seeded with `scripts/seed-worktree.sh
+--no-target`; the agent uses `CARGO_TARGET_DIR=$(pwd)/target.local`
+for cargo invocations to avoid the shared-target serialisation.
 
 AZ-I ships direct-to-struct materialisation for the three primary
 data grammars — JSON, CSS L4, and Sheets — via `project_types` +

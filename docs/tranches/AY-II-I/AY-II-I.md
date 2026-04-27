@@ -1,5 +1,34 @@
 # Tranche AY-II — Fused Substrate + Full Grammar-Derived Semantic Parity (Pass II)
 
+**STATUS: SUPERSEDED-BY-AY-III + DEFERRED — 2026-04-27.** Per the
+post-B7 audit cycle, AY-II-I.W1-W5 was never executed. AY-III was
+authored to absorb these waves on the post-B5/B6 substrate and is
+itself DEFERRED per the fifth /plan synthesis (durable gates absorb
+into AZ-I.W4 + AZ-II.W2 close ceremonies). The pending-debt ledger
+below names destinations for every AY-II-I planned item that did
+not land. This document remains as historical record; no further
+AY-II-I commits will land.
+
+## Pending-debt ledger (post-2026-04-27 audit)
+
+| Item | Source wave | Class | Destination |
+|---|---|---|---|
+| Substrate landings (FusedBuilder collapse, alias retirement, atomic rollback) | W0 + W0' | absorbed | B4.W1 + B5 substrate restoration (`Tape<R>` over `Columns`) |
+| `STRUCTURAL_SCAN_POLICY` const + `lookup_scan_policy` codegen consumer | W0.e | wired-and-active (per post-B7 grep audit) | already wired: `view/value.rs:844-894` consumes the policy at codegen time; per-rule `__path_walk` arms inline `bounded_lookahead`/`object_key_seek`/`scan_structural_bounded` cursor primitives. Performance ceiling lifts via AZ-I direct-to-struct removing value-construction allocation overhead. |
+| W0.d & W0.e test coverage | W0 close | deferred | AZ-I.W4 admission-totality test (parameterized over 8-grammar corpus) |
+| W2 panic-fix bench confirmation (CSS + Sheets fat-LTO) | W0 close + W2/W3 | deferred | AZ-I.W2/W3 close ceremony (struct-only path supersedes the panic-class entirely) |
+| JSON semantic parity + samply | W1 | superseded | AZ-I.W2 (twitter ≥ 1967 MB/s gate on direct-to-struct path) |
+| CSS L4 lightningcss parity | W2 | superseded | AZ-I.W3 (struct-only CSS L4 emission with lightningcss + cssparser parity) |
+| Sheets parity + samply | W3 | superseded | AZ-I.W2 (Sheets parse_simple struct-only path) |
+| BBNF self-host identity (`cargo xtask regen --check`) | W4 | superseded | AZ-II.W2 post-cutover regen-check |
+| Cross-grammar close matrix + FINAL + handoff | W5 | superseded | AZ-I.W4 close ceremony + AZ-II.W2 FINAL |
+| BA invariant §7 satisfaction ("BA does not inherit unfinished AY parity debt") | post-W5 | partially-resolved | BA.W-1 preflight (post-AZ-I close) |
+| AY-I hard-gate audit (every gate closes or retires with rationale) | W5 | deferred | AZ-II.W2 FINAL (post-AY-arc close audit) |
+| Bootstrap double-regen idempotency | W4 close | replaced | post-B2 `cargo xtask regen --check` gate (B2 + B6 + AZ-II.W2 cover) |
+| `f372e7ef` hand-patched `generated.rs` squash | W0 compose | historical-only | post-B2 regen overwrote; not actionable |
+| `cell_ref` / `range_end` typed annotations blocked on AU.6.7 | W3.a | already-routed | BA (per AY-II.md §Plan-audit findings item 5) |
+| `scale_interop_tailwind` calc-evaluator + OUT-OF-SCOPE rows | W2 | already-routed | BA (per AY-II.md §Plan-audit findings items 6–7) |
+
 AY-II executes the architectural close of AY. Pass I
 (`../AY-I/AY-I.md`, `../AY-I/FINAL.md`) proved the emitted visitor-
 lane shape reaches 0.99× sonic on eager JSON, mapped the

@@ -4,10 +4,11 @@ Dated execution log for tranche AY-II (pass II of AY; see
 `../AY-I/FINAL.md` for pass-I close and `audit/AUDIT-{A,B,C,D}-*.md`
 for the triumvirate that informs this pass).
 
-- `Status`: W0' closed at B4.W1 (2026-04-25); B1 + B2 + B3 + B4 all
-  closed in the predecessor sequence
-- `Current wave`: W0' close ceremony complete (folded into B4.W1)
-- `Next wave`: W1 (JSON semantic parity + peer-referenced performance)
+- `Status`: SUPERSEDED-BY-AY-III + DEFERRED (2026-04-27); W0' closed
+  at B4.W1 (2026-04-25); W1-W5 never executed; durable gates absorb
+  into AZ-I.W4 + AZ-II.W2 per fifth /plan synthesis
+- `Current wave`: closed (deferred)
+- `Next wave`: AZ-I.W0 dispatch (post-B7 close)
 
 ---
 

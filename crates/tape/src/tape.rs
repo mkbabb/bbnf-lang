@@ -175,16 +175,17 @@ impl TapeRec {
     /// pre-W1.A `flags` bit 7 alongside [`Self::HAS_CHILDREN_BIT`].
     pub const META_IDX_HI_BIT: u16 = 0x0008;
 
-    /// AY.W4.2 — bit in [`TapeRec::extra`] marking a numeric `f64`
-    /// leaf whose payload was written directly into
-    /// [`crate::Columns::pay_f64`] by the Eisel-Lemire fast path.
-    /// When set, the record's `child_off` carries the column rank
-    /// into `pay_f64`; the reader projects `f64::from_bits(pay_f64[rank])`
-    /// directly without the `pay_wide` / arena round-trip.
+    /// AY.W4.2 + B5.W2.4 — bit in [`TapeRec::extra`] marking a
+    /// numeric `f64` leaf whose payload bits live in
+    /// [`crate::Columns::pay_wide`] under f64 interpretation. Set by
+    /// the Eisel-Lemire fast path; the reader projects via
+    /// `f64::from_bits(pay_wide[rank])` rather than re-reading bytes
+    /// through the arena.
     ///
     /// Mutually exclusive with [`Self::PAYLOAD_IN_ARENA_BIT`] — the
     /// arena-bit path slices `pay_agg` for an 8-byte LE encoding;
-    /// this bit selects the dense `pay_f64` column.
+    /// this bit selects the f64 reinterpretation of the unified
+    /// `pay_wide` column entry.
     pub const PAYLOAD_F64_DIRECT_BIT: u16 = 0x0010;
 
     /// Pack a [`TapeKind`] and `meta_idx` into the `kind_meta` byte
@@ -269,9 +270,9 @@ impl TapeRec {
         (self.extra & Self::PAYLOAD_IN_ARENA_BIT) != 0
     }
 
-    /// AY.W4.2 — true iff this leaf's `child_off` is a column rank
-    /// into [`crate::Columns::pay_f64`] (the Eisel-Lemire direct-write
-    /// column).
+    /// AY.W4.2 + B5.W2.4 — true iff this leaf's `child_off` is a
+    /// column rank into [`crate::Columns::pay_wide`] under f64
+    /// interpretation (the Eisel-Lemire direct-write path).
     #[inline]
     pub fn payload_f64_direct(&self) -> bool {
         (self.extra & Self::PAYLOAD_F64_DIRECT_BIT) != 0
@@ -388,7 +389,7 @@ pub enum PayloadData<'a> {
 ///
 /// All state lives in [`Columns`]: structural columns
 /// (`records`, `sib_skip`, `frame_depth`), typed payload columns
-/// (`pay_narrow`, `pay_wide`, `pay_f64`, `pay_agg`), value-side state
+/// (`pay_narrow`, `pay_wide`, `pay_agg`), value-side state
 /// (`value_frames`, `value_payloads_narrow`, `value_payloads_wide`,
 /// `value_open_stack`).
 #[derive(Debug)]
@@ -583,21 +584,17 @@ impl<R> Tape<R> {
         }
     }
 
-    /// Read a wide (8-byte) scalar payload from `pay_wide` / `pay_agg`
-    /// / `pay_f64`.
+    /// Read a wide (8-byte) scalar payload from `pay_wide` (column-
+    /// rank path; the [`TapeRec::PAYLOAD_F64_DIRECT_BIT`] flag selects
+    /// f64-vs-u64 interpretation at the typed cast below) or `pay_agg`
+    /// (arena byte-offset path).
     #[inline]
     fn payload_wide<T: Copy>(&self, rec: TapeRec) -> Option<T> {
         debug_assert!(std::mem::size_of::<T>() == 8);
         if rec.child_off.is_none() {
             return None;
         }
-        let raw = if rec.payload_f64_direct() {
-            let rank = rec.child_off.0 as usize;
-            if rank >= self.columns.pay_f64.len() {
-                return None;
-            }
-            self.columns.pay_f64[rank].to_le_bytes()
-        } else if rec.payload_in_arena() {
+        let raw = if rec.payload_in_arena() {
             let off = rec.child_off.0 as usize;
             let arena = &self.columns.pay_agg;
             if off + 8 > arena.len() {
@@ -606,6 +603,10 @@ impl<R> Tape<R> {
             let arr: [u8; 8] = arena[off..off + 8].try_into().ok()?;
             arr
         } else {
+            // B5.W2.4 — the `PAYLOAD_F64_DIRECT_BIT` and the generic
+            // `WideScalar` path both project from `pay_wide`; the bit
+            // is now an f64-interpretation marker on the unified
+            // column rather than a column selector.
             let rank = rec.child_off.0 as usize;
             if rank >= self.columns.pay_wide.len() {
                 return None;
@@ -1235,8 +1236,12 @@ impl<R> Tape<R> {
             "push_leaf_with_f64_direct on compound kind {:?}",
             kind
         );
-        let rank = self.columns.pay_f64.len() as u32;
-        self.columns.pay_f64.push(f64_bits);
+        // B5.W2.4 — both the f64-direct path and the generic wide
+        // scalar path project through `pay_wide`; the
+        // `PAYLOAD_F64_DIRECT_BIT` survives as the f64-interpretation
+        // marker on the unified column.
+        let rank = self.columns.pay_wide.len() as u32;
+        self.columns.pay_wide.push(f64_bits);
         let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, 0);
         let extra = extra_meta_bit | TapeRec::PAYLOAD_F64_DIRECT_BIT;
         let idx = self.columns.push_structural(

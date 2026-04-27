@@ -119,25 +119,19 @@ pub struct Columns {
     /// Inline scalars ≤ 4 B. The record's `child_off` holds the
     /// column rank.
     pub pay_narrow: Vec<u32>,
-    /// 8-byte scalars (`u64` / `i64` / packed `Span`). Stored as raw
-    /// bits; readers reinterpret via the typed cast. The record's
-    /// `child_off` holds the column rank.
+    /// 8-byte scalars — `u64` / `i64` / `f64`-bits / packed `Span`.
+    /// Stored as raw bits; readers reinterpret via the typed cast.
+    /// The record's `child_off` holds the column rank.
     ///
-    /// Numeric `f64` leaves whose value comes through the Eisel-Lemire
-    /// fast path (AY.W4.2) bypass this column entirely — they land in
-    /// [`Self::pay_f64`] and the record carries
-    /// [`TapeRec::PAYLOAD_F64_DIRECT_BIT`] so the reader knows which
-    /// column to consult.
+    /// B5.W2.4 — the pre-W2 split into `pay_wide` + `pay_f64` collapsed
+    /// onto this single column. The Eisel-Lemire-decoded `f64` numeric
+    /// leaves (AY.W4.2) write `f64::to_bits()` here directly and the
+    /// record carries [`TapeRec::PAYLOAD_F64_DIRECT_BIT`] so the
+    /// reader projects via `f64::from_bits(pay_wide[rank])` rather
+    /// than through the arena round-trip. The bit selects the
+    /// interpretation (f64 vs u64/i64) at READ time; column selection
+    /// is no longer load-bearing.
     pub pay_wide: Vec<u64>,
-    /// AY.W4.2 — direct-write column for Eisel-Lemire-decoded `f64`
-    /// numeric leaves. Bypasses the arena and the generic `pay_wide`
-    /// `PayloadData::WideScalar` round-trip: the number-shape emitter
-    /// writes `f64::to_bits()` straight into this column and stamps
-    /// the record's `child_off` with the column rank +
-    /// [`TapeRec::PAYLOAD_F64_DIRECT_BIT`] so the reader hits this
-    /// column directly. Saves one load + one store per number literal
-    /// on heavy-numeric fixtures (canada).
-    pub pay_f64: Vec<u64>,
     /// Unified payload arena — aggregate tuple bytes, decoded
     /// strings, and byte-string frames all land here. Continues to
     /// back [`Tape::arena`](crate::Tape::arena) for external
@@ -191,7 +185,6 @@ impl Columns {
             current_depth: 0,
             pay_narrow: Vec::new(),
             pay_wide: Vec::new(),
-            pay_f64: Vec::new(),
             pay_agg: Vec::with_capacity(expected / 8 * 8),
             value_frames: Vec::with_capacity(expected),
             value_payloads_narrow: Vec::with_capacity(expected / 4),
@@ -254,8 +247,8 @@ impl Columns {
     /// instant `begin_compound` ran — so a subsequent successful retry
     /// re-opens the same conceptual position without double-counting.
     ///
-    /// Typed-payload columns (`pay_narrow`, `pay_wide`, `pay_f64`,
-    /// `pay_agg`) are NOT rewound — the compound row itself never
+    /// Typed-payload columns (`pay_narrow`, `pay_wide`, `pay_agg`)
+    /// are NOT rewound — the compound row itself never
     /// wrote into them, so they already match the state the caller
     /// observed at `begin_compound` time. Leaf-payload writes that
     /// landed after the open point are discarded along with their
@@ -449,20 +442,26 @@ impl Columns {
         self.records[i as usize].flags
     }
 
-    /// AY.W4.2 — read a numeric `f64` payload from the dedicated
-    /// direct-write column at `idx`. Caller is responsible for having
-    /// stamped the leaf via [`crate::FusedBuilder::push_leaf_with_f64_direct`]
-    /// (which sets [`crate::TapeRec::PAYLOAD_F64_DIRECT_BIT`] and writes
-    /// the column rank into `child_off`).
+    /// AY.W4.2 — read a numeric `f64`-bits payload from the unified
+    /// `pay_wide` column at `idx`. Caller is responsible for having
+    /// stamped the leaf via [`crate::Tape::push_leaf_with_f64_direct`]
+    /// (which sets [`crate::TapeRec::PAYLOAD_F64_DIRECT_BIT`] and
+    /// writes the column rank into `child_off`).
+    ///
+    /// B5.W2.4 — `pay_f64` collapsed onto `pay_wide`; the bit on
+    /// `extra` selects f64-vs-u64 interpretation at read time. The
+    /// accessor stays as a named entry point so the number-shape
+    /// emitter's read site documents intent without re-asserting the
+    /// bit lookup.
     #[inline(always)]
     pub fn pay_f64_at(&self, idx: usize) -> u64 {
         debug_assert!(
-            idx < self.pay_f64.len(),
-            "pay_f64_at: idx {} out of range (pay_f64 len {})",
+            idx < self.pay_wide.len(),
+            "pay_f64_at: idx {} out of range (pay_wide len {})",
             idx,
-            self.pay_f64.len(),
+            self.pay_wide.len(),
         );
-        self.pay_f64[idx]
+        self.pay_wide[idx]
     }
 
     /// Read a record's `extra` packed flag word directly.

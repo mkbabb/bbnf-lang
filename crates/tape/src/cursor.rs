@@ -215,60 +215,22 @@ impl<'tape, R> TapeCursor<'tape, R> {
     /// compound record. Returns `None` if the current record is a
     /// leaf or `i` is out of range.
     ///
-    /// Uses forward sibling-skip traversal from the first-child
-    /// root: locate the first child's root via a single backward
-    /// seed, then step `i` times via `sib_skip` column reads.
+    /// Routes through [`Self::children`] so the cousin-leak boundary
+    /// (B5.W4) and empty-span filter apply uniformly across random
+    /// access and iteration.
     #[inline]
     pub fn child(self, i: usize) -> Option<TapeCursor<'tape, R>> {
-        let columns = self.tape.columns();
-        if !columns.has_children_at(self.offset.0) {
-            return None;
-        }
-        let first_child_root = first_child_root(columns, self.offset.0)?;
-        // Walk forward across sib_skip.
-        let mut current = first_child_root;
-        for _ in 0..i {
-            let step = columns.sib_skip_at(current);
-            if step == 0 {
-                return None;
-            }
-            current = current.checked_add(step)?;
-        }
-        Some(TapeCursor {
-            tape: self.tape,
-            offset: TapeOffset(current),
-            // Reset rank — random-access via `child(i)` is not a
-            // monotonic-push walk, and the child's `child_off` is
-            // the authoritative pointer for payload lookup.
-            rank: ColumnRank::default(),
-        })
+        self.children().nth(i)
     }
 
     /// Number of direct children of the current compound record.
     ///
-    /// Forward walk via `sib_skip`. Zero-allocation.
+    /// Routes through [`Self::children`] so the cousin-leak boundary
+    /// (B5.W4) and empty-span filter apply uniformly across random
+    /// access and iteration. Zero-allocation.
     #[inline]
     pub fn child_count(self) -> usize {
-        let columns = self.tape.columns();
-        if !columns.has_children_at(self.offset.0) {
-            return 0;
-        }
-        let Some(first_child_root) = first_child_root(columns, self.offset.0) else {
-            return 0;
-        };
-        let mut count = 1usize;
-        let mut current = first_child_root;
-        loop {
-            let step = columns.sib_skip_at(current);
-            if step == 0 {
-                return count;
-            }
-            let Some(next) = current.checked_add(step) else {
-                return count;
-            };
-            current = next;
-            count += 1;
-        }
+        self.children().count()
     }
 
     /// Iterate every direct child of the current compound record,
@@ -284,9 +246,20 @@ impl<'tape, R> TapeCursor<'tape, R> {
         let Some(first_child_root) = first_child_root(columns, self.offset.0) else {
             return ChildIter::empty(self.tape);
         };
+        // B5.W4 — cousin-leak guard. The parent's `span_hi` bounds the
+        // walk: any candidate child whose `span_lo` lies at or beyond
+        // the parent's `span_hi` is a same-depth cousin record outside
+        // the parent's source extent (the finaliser's depth-only
+        // `sib_skip` computation can chain to such a record after a
+        // cascade of `end_compound_post_order` retroactive depth bumps;
+        // see W2b architecture diagnosis). Empty-span records (`hi <= lo`)
+        // are anchor markers, not semantic operands, and are filtered
+        // here so every consumer sees the same well-formed child set.
+        let parent_hi = columns.span_at(self.offset.0).1;
         ChildIter {
             tape: self.tape,
             next: Some(first_child_root),
+            parent_hi,
         }
     }
 
@@ -564,12 +537,21 @@ impl<'tape, R> TapeCursor<'tape, R> {
 ///
 /// Zero heap allocation. Each step reads the current record's
 /// [`Columns::sib_skip`](crate::columns::Columns::sib_skip) slot in
-/// one indexed column load; iteration ends when that slot reads zero.
+/// one indexed column load; iteration ends when that slot reads zero
+/// or when the candidate's `span_lo` reaches the parent's `span_hi`
+/// (cousin-leak boundary, see [`TapeCursor::children`]).
 #[derive(Debug)]
 pub struct ChildIter<'tape, R = ()> {
     tape: &'tape Tape<R>,
     /// Next record offset to yield. `None` when iteration is over.
     next: Option<u32>,
+    /// Parent compound's `span_hi`. A candidate whose `span_lo` is at
+    /// or beyond this bound is a same-depth cousin record outside the
+    /// parent's extent; the iterator terminates rather than yielding it.
+    /// Empty iterators (constructed via [`Self::empty`]) carry `0` here
+    /// since the `next` sentinel short-circuits before the bound is
+    /// consulted.
+    parent_hi: u32,
 }
 
 impl<'tape, R> Clone for ChildIter<'tape, R> {
@@ -584,7 +566,11 @@ impl<'tape, R> ChildIter<'tape, R> {
     /// Iterator that immediately yields `None`.
     #[inline]
     fn empty(tape: &'tape Tape<R>) -> Self {
-        Self { tape, next: None }
+        Self {
+            tape,
+            next: None,
+            parent_hi: 0,
+        }
     }
 }
 
@@ -593,19 +579,35 @@ impl<'tape, R> Iterator for ChildIter<'tape, R> {
 
     #[inline]
     fn next(&mut self) -> Option<TapeCursor<'tape, R>> {
-        let current = self.next?;
-        let columns = self.tape.columns();
-        let step = columns.sib_skip_at(current);
-        self.next = if step == 0 {
-            None
-        } else {
-            current.checked_add(step)
-        };
-        Some(TapeCursor {
-            tape: self.tape,
-            offset: TapeOffset(current),
-            rank: ColumnRank::default(),
-        })
+        loop {
+            let current = self.next?;
+            let columns = self.tape.columns();
+            let (lo, hi) = columns.span_at(current);
+            // Cousin-leak boundary: a candidate at or past the parent's
+            // span_hi is outside the parent's source extent. Terminate
+            // the walk; subsequent records cannot be inside either
+            // (the finaliser's sib_skip chain is monotonic in offset).
+            if lo >= self.parent_hi {
+                self.next = None;
+                return None;
+            }
+            let step = columns.sib_skip_at(current);
+            self.next = if step == 0 {
+                None
+            } else {
+                current.checked_add(step)
+            };
+            // Skip empty-span anchor records (zero-width position
+            // markers) — they are not semantic children of the parent.
+            if hi <= lo {
+                continue;
+            }
+            return Some(TapeCursor {
+                tape: self.tape,
+                offset: TapeOffset(current),
+                rank: ColumnRank::default(),
+            });
+        }
     }
 }
 

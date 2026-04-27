@@ -207,23 +207,14 @@ fn collect_binary_operands<'a>(
         return chain;
     }
 
-    // B3.W0.η — bound the children walk by `node`'s span. The
-    // finaliser's depth-only sib_skip computation chains a Pratt
-    // outer's direct child to a same-depth cousin record sitting
-    // AFTER the Pratt outer's span_hi (the post-AY-II.W0.b cascade
-    // of `end_compound_post_order` bumps puts pre-order Pratt-body
-    // records and post-order Seq-wrapper sibling records at the
-    // same `parent + N` depth). Strict containment by `node.span().1`
-    // discards the leaked cousins; legitimate operands inside the
-    // chain remain admitted.
-    let node_hi = node.span().1;
-    let in_scope = |c: &BbnfBootstrapNodeView<'a>| {
-        let (lo, hi) = c.span();
-        hi > lo && lo < node_hi
-    };
+    // The cousin-leak boundary that previously lived here lives in
+    // [`crate::runtime::tape::ChildIter`] post-B5.W4 — the iterator
+    // terminates when a candidate's `span_lo` reaches the parent's
+    // `span_hi`, so the walker-era iteration-pair branch sees only
+    // operands strictly inside the parent's source extent.
 
     // Walker-era iteration-pair branch.
-    let mut children = node.children().filter(in_scope);
+    let mut children = node.children();
     let Some(first) = children.next() else {
         return Vec::new();
     };
@@ -236,7 +227,7 @@ fn collect_binary_operands<'a>(
     // first mapped_factor.
     let pairs: Vec<BbnfBootstrapNodeView<'a>> =
         if rest.len() == 1 && matches!(rest[0].kind(), TapeKind::Repeat | TapeKind::Rule) {
-            rest[0].children().filter(in_scope).collect()
+            rest[0].children().collect()
         } else {
             rest
         };
@@ -248,9 +239,7 @@ fn collect_binary_operands<'a>(
         // keep it whole otherwise.
         if is_iteration_pair_wrapper(pair) {
             for grandchild in iter_pair_children(pair) {
-                if in_scope(&grandchild) {
-                    operands.push(grandchild);
-                }
+                operands.push(grandchild);
             }
         } else {
             operands.push(pair);

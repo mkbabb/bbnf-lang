@@ -120,21 +120,11 @@ pub(super) fn fold_value_chain<'a>(
 /// compound — descend through anonymous wrappers first to reach the
 /// true operand layout.
 ///
-/// # Pratt cousin-leak guard (B3.W0.η)
-///
-/// Pratt-shape `value_X` rules emit a pre-order outer Rule compound
-/// whose body sits at depth `parent + 1` while subsequent post-order
-/// Seq/Repeat wrappers around the rule's outer iteration body push
-/// records that, after their own `end_compound_post_order` bumps
-/// cascade, settle at the same `parent + 1` depth. The finaliser's
-/// depth-only sib_skip computation then erroneously chains
-/// `value_X`'s direct child to a cousin record sitting AFTER
-/// `value_X`'s span_hi (the type-annotation iteration's Seq wrapper,
-/// for example). Bound the children walk by the parent compound's
-/// span: any child whose span_lo lies at or beyond `node.span().1`
-/// is NOT an operand of `node` — discard it. The check is a strict
-/// span containment, so contiguous operand spans inside the chain
-/// remain admitted.
+/// The cousin-leak boundary that previously lived here lives in
+/// [`crate::runtime::tape::ChildIter`] post-B5.W4 — the iterator
+/// terminates when a candidate's `span_lo` reaches the parent's
+/// `span_hi`, so consumers see only operands strictly inside the
+/// parent's source extent.
 ///
 /// Note: a single-operand chain compound (no operators) collapses
 /// to one element; the loop in `fold_value_chain` simply returns
@@ -149,13 +139,8 @@ pub(super) fn collect_chain_operands<'a>(
     // compound whose direct children are the semantic operand
     // layout `[first, iter_wrapper]`.
     let body = descend_anonymous_wrappers(node);
-    let body_hi = body.span().1;
-    let in_scope = |c: &BbnfBootstrapNodeView<'a>| {
-        let (lo, hi) = c.span();
-        hi > lo && lo < body_hi
-    };
 
-    let mut children = body.children().filter(in_scope);
+    let mut children = body.children();
     let Some(first) = children.next() else {
         return Vec::new();
     };
@@ -171,7 +156,7 @@ pub(super) fn collect_chain_operands<'a>(
         matches!(c.kind(), TapeKind::Repeat | TapeKind::Rule)
     };
     if rest.len() == 1 && is_iteration_wrapper(&rest[0]) {
-        for child in rest[0].children().filter(in_scope) {
+        for child in rest[0].children() {
             operands.push(child);
         }
     } else {

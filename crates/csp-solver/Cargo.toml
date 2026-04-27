@@ -4,12 +4,6 @@ version = "0.1.0"
 edition = "2024"
 description = "Generalized CSP/COP substrate vendored from the sibling csc411 course repo. See crates/CLAUDE.md for the Tranche AA.2 vendoring rationale."
 
-[features]
-default = []
-# Optional pyo3 bindings — not built by the bbnf-lang workspace.
-# Present for symmetry with the upstream csc411 repo.
-py = []
-
 [dependencies]
 
 [lib]

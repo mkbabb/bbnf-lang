@@ -12,8 +12,6 @@ pub mod adjacency;
 pub mod constraint;
 pub mod domain;
 pub mod ordering;
-#[cfg(feature = "py")]
-pub mod py;
 pub mod puzzles;
 pub mod solver;
 pub mod variable;

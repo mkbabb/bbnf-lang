@@ -240,6 +240,7 @@ pub fn lower_to_ir<'a>(
         push_fingerprint: None,
         dedup_eligible_rules: Vec::new(),
         shape_assignments: bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     }
 }
 

@@ -56,6 +56,7 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 
 use crate::passes::PayloadLayout;
+use crate::registry::StructRegistry;
 use crate::types::{FnDescriptor, FnId, GrammarIR, IrNode, IrRule, RuleId, TypeDesc};
 
 // ── Public report shape ─────────────────────────────────────────────────
@@ -212,29 +213,45 @@ impl AuditCoverageReport {
 
 // ── Probe trait — registry presence projection ──────────────────────────
 
-/// Pluggable projection of "does this rule have a `StructLayout`?".
+/// Pluggable projection of "does this rule have a registered layout
+/// admitting this typed marker?".
 ///
-/// `StructRegistry` is W1's substrate; the audit pass cannot depend
-/// on it concretely from W0. This trait abstracts the question so:
+/// The trait abstracts the registry-presence + coverage decision so
+/// the audit pass composes against three substrates:
 ///
-/// 1. W0 wires [`AbsentRegistryProbe`] (every rule unmapped → every
-///    marker `Pending`). The audit reports the baseline denominator.
-/// 2. W1 onward wires a probe over the real `StructRegistry`; rules
-///    whose layout admits the marker's type project as `Mapped`,
-///    rules with no entry stay `Pending`, rules whose layout fails to
-///    cover the type project as `Missing`.
-/// 3. Until then, [`PayloadLayoutsProbe`] can stand in as a
-///    present-day proxy whose entries are populated by
-///    `compute_payload_layouts` in `finalize_compile`.
+/// 1. [`AbsentRegistryProbe`] — every rule unmapped → every marker
+///    `Pending`. The W0 baseline.
+/// 2. [`PayloadLayoutsProbe`] — present-day proxy over
+///    `GrammarIR::payload_layouts` populated by
+///    `compute_payload_layouts`. A rule with an entry is `Mapped`
+///    when the layout admits the marker's typed leaf.
+/// 3. `&StructRegistry` — W1.A's substrate. The probe consults the
+///    layout's [`crate::registry::StructLayout::admits_type`] /
+///    [`crate::registry::StructLayout::admits_scalar_payload`] for
+///    coverage, returning `Mapped` / `Missing` accordingly.
+///
+/// The trait exposes two surfaces:
+///
+/// - The legacy `layout()` + `layout_covers()` pair, which routes
+///   through `PayloadLayout` and is the default-implementation path
+///   for substrates whose primary data shape is `PayloadLayout`.
+/// - The newer [`Self::classify`] method, which returns
+///   [`MarkerStatus`] directly. Default-implementation routes through
+///   `layout()` / `layout_covers()`; new substrates (notably
+///   `&StructRegistry`) override `classify` to skip the
+///   `PayloadLayout` adapter step entirely.
 pub trait StructRegistryProbe {
-    /// Return the rule's registered layout, if any.
+    /// Return the rule's registered `PayloadLayout`, if any. The
+    /// default-implementation route — substrates whose primary data
+    /// shape is `PayloadLayout` (`AbsentRegistryProbe`,
+    /// `PayloadLayoutsProbe`) implement this and inherit the default
+    /// `classify` route.
     fn layout(&self, rule_id: RuleId) -> Option<&PayloadLayout>;
 
     /// Decide whether `layout` admits the typed leaf — true iff the
     /// emitter would write `typed` directly into the layout for the
-    /// marker site under audit. Implementations default to "any
-    /// scalar payload covers any scalar typed leaf"; the W1
-    /// implementation tightens this to enum-variant identity.
+    /// marker site under audit. Default-implementation matches the
+    /// scalar-payload covers-any-scalar rule.
     fn layout_covers(&self, layout: &PayloadLayout, typed: Option<&TypeDesc>) -> bool {
         match typed {
             None => !layout.fields.is_empty(),
@@ -243,6 +260,29 @@ pub trait StructRegistryProbe {
                 .iter()
                 .any(|f| f.ty == *t || f.ty.is_scalar_payload()),
             Some(_) => !layout.fields.is_empty(),
+        }
+    }
+
+    /// Return the [`MarkerStatus`] for a rule + typed-leaf pair.
+    ///
+    /// Default-implementation routes through `layout()` /
+    /// `layout_covers()` so substrates whose primary data shape is
+    /// `PayloadLayout` work without override. Substrates whose
+    /// primary data shape is non-`PayloadLayout` (the W1
+    /// `&StructRegistry` impl) override this method to bypass the
+    /// adapter; they implement `layout()` to return `None` (no
+    /// `PayloadLayout` projection) and let `classify` route directly
+    /// against their native shape.
+    fn classify(&self, rule_id: RuleId, typed: Option<&TypeDesc>) -> MarkerStatus {
+        match self.layout(rule_id) {
+            None => MarkerStatus::Pending,
+            Some(layout) => {
+                if self.layout_covers(layout, typed) {
+                    MarkerStatus::Mapped
+                } else {
+                    MarkerStatus::Missing
+                }
+            }
         }
     }
 }
@@ -277,6 +317,72 @@ impl<'ir> PayloadLayoutsProbe<'ir> {
 impl<'ir> StructRegistryProbe for PayloadLayoutsProbe<'ir> {
     fn layout(&self, rule_id: RuleId) -> Option<&PayloadLayout> {
         self.layouts.get(&rule_id)
+    }
+}
+
+/// AZ-I.W1.A — probe over the real [`StructRegistry`].
+///
+/// A rule with a registered [`crate::registry::StructLayout`] whose
+/// fields admit the typed leaf projects as `Mapped`. A rule with a
+/// registered layout whose fields fail to cover the typed leaf
+/// projects as `Missing`. A rule with no registered layout projects
+/// as `Pending`.
+///
+/// Coverage policy (bypasses the `PayloadLayout` adapter):
+///
+/// - Marker carries no typed leaf (`None`) — `Mapped` whenever the
+///   layout has any field at all (mirrors the default
+///   `layout_covers` no-typed-leaf admission rule).
+/// - Marker's typed leaf is a scalar payload — `Mapped` when any
+///   layout field carries the same `TypeDesc`, OR any layout field
+///   admits a scalar payload (the same scalar-cover-any-scalar rule
+///   the legacy default-impl applies).
+/// - Marker's typed leaf is non-scalar (e.g. `TypeDesc::Named`) —
+///   `Mapped` when any layout field admits the same `TypeDesc`,
+///   else `Mapped` when the layout has any field at all (mirrors
+///   the default-impl's non-scalar admission).
+impl<'r> StructRegistryProbe for &'r StructRegistry {
+    fn layout(&self, _rule_id: RuleId) -> Option<&PayloadLayout> {
+        // The registry's native layout is `StructLayout`, not
+        // `PayloadLayout`. The classify override below routes
+        // directly against `StructLayout`; this method exists only to
+        // satisfy the trait surface and never fires on the
+        // registry's classify path.
+        None
+    }
+
+    fn classify(&self, rule_id: RuleId, typed: Option<&TypeDesc>) -> MarkerStatus {
+        let Some(layout) = StructRegistry::layout(self, rule_id) else {
+            return MarkerStatus::Pending;
+        };
+        if registry_layout_covers(layout, typed) {
+            MarkerStatus::Mapped
+        } else {
+            MarkerStatus::Missing
+        }
+    }
+}
+
+/// Coverage decision for a [`crate::registry::StructLayout`] against a
+/// typed-leaf marker.
+///
+/// Mirrors the legacy `PayloadLayout` covers rule:
+///
+/// - `None` typed leaf — covered iff the layout has any field.
+/// - Scalar typed leaf — covered iff some field's `TypeDesc` matches
+///   the leaf, OR some field's `TypeDesc` is scalar-payload-eligible.
+/// - Non-scalar typed leaf — covered iff some field's `TypeDesc`
+///   matches the leaf, else iff the layout has any field at all.
+fn registry_layout_covers(
+    layout: &crate::registry::StructLayout,
+    typed: Option<&TypeDesc>,
+) -> bool {
+    match typed {
+        None => layout.field_count() > 0,
+        Some(t) if t.is_scalar_payload() => {
+            layout.admits_type(t) || layout.admits_scalar_payload()
+        }
+        Some(t) => layout.admits_type(t) || layout.field_count() > 0,
     }
 }
 
@@ -350,23 +456,18 @@ pub fn audit_payload_coverage<P: StructRegistryProbe>(
     }
 }
 
-/// Resolve a marker to its three-way status by consulting the probe
-/// and the per-rule layout coverage check.
+/// Resolve a marker to its three-way status by consulting the probe.
+///
+/// Routes through [`StructRegistryProbe::classify`] so substrates
+/// whose primary data shape is non-`PayloadLayout` (the
+/// `&StructRegistry` impl) decide directly against their native
+/// layout shape rather than through the `PayloadLayout` adapter.
 fn classify_marker<P: StructRegistryProbe>(
     probe: &P,
     rule: &IrRule,
     typed_leaf: Option<&TypeDesc>,
 ) -> MarkerStatus {
-    match probe.layout(rule.id) {
-        None => MarkerStatus::Pending,
-        Some(layout) => {
-            if probe.layout_covers(layout, typed_leaf) {
-                MarkerStatus::Mapped
-            } else {
-                MarkerStatus::Missing
-            }
-        }
-    }
+    probe.classify(rule.id, typed_leaf)
 }
 
 // ── Marker classifier ───────────────────────────────────────────────────

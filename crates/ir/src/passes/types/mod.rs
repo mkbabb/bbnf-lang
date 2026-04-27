@@ -11,6 +11,7 @@
 
 pub mod constraint;
 pub mod generate;
+mod registry;
 mod subvariants;
 mod type_map;
 
@@ -392,6 +393,21 @@ pub fn project_types(ir: &mut GrammarIR) {
     let mut interner = TypeDescInterner::new();
     populate_interner(&type_map, &types_map, &ir.rules, &mut interner);
     ir.type_desc_interner = interner;
+
+    // Tranche AZ-I.W1 — populate the StructRegistry.
+    //
+    // Once the upstream solver has produced `types_map` and `type_map`,
+    // every `Named` rule projects a `StructLayout` whose discriminator
+    // and fields derive from the rule's `IrNode` body shape. The
+    // registry-population phase reads the projected types but does not
+    // mutate them; it only writes into `ir.struct_registry`. Idempotent:
+    // structurally identical IR + types produce the same registry.
+    //
+    // The closure collects rule_types into a fast-hash map keyed by
+    // RuleId so the per-rule layout build is O(1) per lookup.
+    let rule_types_for_registry: FxHashMap<RuleId, TypeDesc> =
+        types_map.iter().map(|(id, ty)| (*id, ty.clone())).collect();
+    registry::populate_struct_registry(ir, &rule_types_for_registry, &type_map);
 
     ir.type_map = Some(type_map);
     ir.types = types_map.into_iter().collect();

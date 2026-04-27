@@ -270,6 +270,7 @@ dependencies = [
  "bbnf",
  "bbnf-analysis",
  "bbnf-ir",
+ "divan",
  "serde",
  "serde_json",
  "tempfile",

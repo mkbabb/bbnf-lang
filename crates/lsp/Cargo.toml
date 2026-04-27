@@ -24,4 +24,10 @@ bbnf-analysis = { version = "0.1", path = "../analysis" }
 
 [dev-dependencies]
 tempfile = "3"
+divan = "0.1"
+
+[[bench]]
+name = "bench_lsp"
+path = "benches/bench_lsp.rs"
+harness = false
 

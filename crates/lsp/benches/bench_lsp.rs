@@ -1,8 +1,23 @@
 //! LSP performance benchmarks.
 //!
-//! Run with: cargo test -p bbnf-lsp --test bench_lsp -- --nocapture
+//! Run with: cargo bench -p bbnf-lsp --bench bench_lsp
 //!
-//! These tests measure latency of each LSP action on grammars of varying sizes.
+//! These benches measure latency of each LSP action on grammars of varying
+//! sizes. Re-routed from `tests/bench_lsp.rs` under B7.W0.A9: the matrix
+//! is bench-class (full server spin-up + 8 LSP actions across 5 grammar
+//! sizes and 3 generators) and was inflating the routine `iter-test`
+//! wall by ~16.5 s.
+//!
+//! Each top-level `#[divan::bench]` corresponds to one of the two original
+//! `#[test]` functions; divan reports per-iteration latency, and each
+//! function does its own internal grid printout for human inspection.
+//!
+//! The auxiliary helpers below are unchanged from the test version —
+//! verbatim port — so the bench surface is byte-equivalent on a per-action
+//! basis.
+//!
+//! Per `feedback_no-warm-benches`: divan's defaults provide cold-per-iter
+//! sampling without warming.
 
 use std::io::{BufReader, Read, Write};
 use std::process::{Command, Stdio};
@@ -173,12 +188,11 @@ fn timed<F: FnOnce() -> R, R>(f: F) -> (R, Duration) {
     (r, start.elapsed())
 }
 
-// ---------------------------------------------------------------------------
-// The benchmark
-// ---------------------------------------------------------------------------
-
-#[test]
-fn bench_lsp_actions() {
+/// Run the full LSP-actions matrix once: 5 grammar sizes × 3 generators × 8
+/// actions, with one server spin-up per (size, generator) cell. The matrix
+/// emits a per-cell printout to stdout for human inspection, mirroring the
+/// pre-B7 test-surface output.
+fn run_lsp_actions_matrix() {
     let sizes = [10, 50, 100, 500, 1000];
     type Generator = (&'static str, Box<dyn Fn(usize) -> String>);
     let generators: Vec<Generator> = vec![
@@ -310,9 +324,10 @@ fn bench_lsp_actions() {
     println!("\n{}", "=".repeat(100));
 }
 
-/// Benchmark incremental edit performance.
-#[test]
-fn bench_incremental_edits() {
+/// Run the incremental-edit matrix once: 3 grammar sizes × {full reopen,
+/// incremental insert, incremental replace}, with one server spin-up per
+/// size.
+fn run_incremental_edits_matrix() {
     println!("\n{}", "=".repeat(80));
     println!("Incremental Edit Performance");
     println!("{}", "=".repeat(80));
@@ -382,4 +397,22 @@ fn bench_incremental_edits() {
     }
 
     println!("{}", "=".repeat(80));
+}
+
+// ---------------------------------------------------------------------------
+// Divan benches
+// ---------------------------------------------------------------------------
+
+#[divan::bench(sample_count = 1, sample_size = 1)]
+fn bench_lsp_actions(b: divan::Bencher) {
+    b.bench_local(run_lsp_actions_matrix);
+}
+
+#[divan::bench(sample_count = 1, sample_size = 1)]
+fn bench_incremental_edits(b: divan::Bencher) {
+    b.bench_local(run_incremental_edits_matrix);
+}
+
+fn main() {
+    divan::main();
 }

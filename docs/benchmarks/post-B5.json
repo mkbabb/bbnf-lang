@@ -1,0 +1,211 @@
+{
+  "provenance": {
+    "tranche": "B5",
+    "headline": "Substrate restoration: FusedBuilder weld dissolves into Tape<R> over Columns; rollback triplication collapses to one Columns::rollback_to; columns_mut() escape hatch retires in favour of Tape::position(); extern crate self as bbnf removed; six god modules + seven W3b extensions split along natural concern boundaries; post-order depth-stamp cascade retires under the W6 enter_post_order_children invariant inversion. Workspace nextest 1477/1477 green.",
+    "master_head_at_close": "877736b6",
+    "predecessor": "B4 (closed 2026-04-25; B4/FINAL.md); pre-B5 master HEAD bb52da85",
+    "successor": "AY-II.W1 dispatches against post-B5 substrate (Tape<R> + Columns + Tape::position + Tape::rollback_to surface)",
+    "closed_at": "2026-04-26",
+    "source_audit": "docs/tranches/B5/audit/W2b-architecture-diagnosis.md",
+    "wave_close_commits": {
+      "W0": "(landed pre-W2; cluster A+B+C+D fixes)",
+      "W1": "(substrate transposition; FusedBuilder deletion)",
+      "W2": "0daf6f01",
+      "W2b_audit": "12f4265c",
+      "W3": ["357a0e43", "b0a00400", "1cd98204", "101de354", "eaf32920", "c8a6b3e3"],
+      "W3b": ["c4a53978", "94e492ed", "2400035b", "c7173aa7", "26f51cff", "1dc10784", "c45deb31", "8e2da16e"],
+      "W4_1_cousin_leak_migration": "b2cee7d7",
+      "W4_2_pratt_child_off_override": "4292550d",
+      "W4_3_regen": "6f95f39a",
+      "W6_phase_A": "eeee1a5d",
+      "W6b_iife_wrap": "614a516d",
+      "W6b_bracket_activate": "db92a576",
+      "W6b_doc_polish": "877736b6"
+    }
+  },
+
+  "compile_pipeline_divan": {
+    "harness": "cargo bench -p bbnf --bench compile_pipeline",
+    "captured_at": "2026-04-26",
+    "anchor": "compile_bbnf median is the W1-gated hot-path benchmark per B5/B5.md invariant 4",
+    "samples_per_bench": 100,
+    "iters_per_sample": 100,
+    "results": {
+      "compile_bbnf": {
+        "fastest_ms": 2.663,
+        "slowest_ms": 4.243,
+        "median_ms": 2.806,
+        "mean_ms": 2.855,
+        "delta_vs_b4_baseline_pct": -0.9,
+        "b4_baseline_ms": 2.831,
+        "gate_5pct_within_b4": true
+      },
+      "compile_css_l4": {
+        "fastest_ms": 26.21,
+        "slowest_ms": 28.42,
+        "median_ms": 26.82,
+        "mean_ms": 26.84,
+        "delta_vs_b4_baseline_pct": 0.4,
+        "b4_baseline_ms": 26.72
+      },
+      "compile_ebnf": {
+        "fastest_us": 561.4,
+        "slowest_us": 832.0,
+        "median_us": 581.7,
+        "mean_us": 596.8,
+        "delta_vs_b4_baseline_pct": -3.4,
+        "b4_baseline_us": 602.2
+      },
+      "compile_json": {
+        "fastest_us": 174.7,
+        "slowest_us": 493.1,
+        "median_us": 179.1,
+        "mean_us": 186.1,
+        "delta_vs_b4_baseline_pct": -1.6,
+        "b4_baseline_us": 182.0
+      },
+      "compile_sheets": {
+        "fastest_ms": 11.40,
+        "slowest_ms": 13.65,
+        "median_ms": 11.96,
+        "mean_ms": 11.98,
+        "delta_vs_b4_baseline_pct": -0.8,
+        "b4_baseline_ms": 12.06
+      }
+    },
+    "summary": "Every bench within 1% of B4 baseline; four of five improve. The substrate transposition lands neutral-to-positive: O(spine-depth) cascade retirement at every post-order close offsets push-time bookkeeping the inverted invariant adds."
+  },
+
+  "peer_bench_matrix_scope": {
+    "decision": "deferred to AY-II.W1+",
+    "rationale": "B5 is a substrate-cleanup tranche; the close-matrix gate is bench non-regression vs B4 at the canonical hot path (compile_bbnf), which holds at 2.806 ms vs 2.831 ms baseline. Full peer-bench matrix (json_monolithic, css_l4_monolithic, google_sheets_monolithic against sonic-rs / lightningcss / cssparser under divan) is AY-II.W1+'s domain where peer comparisons against SOTA libraries become load-bearing per the AY-II tranche plan.",
+    "non_load_bearing_for_b5_close": [
+      "json_monolithic vs sonic-rs (canada / citm / twitter / data / data_xl)",
+      "css_l4_monolithic vs lightningcss (normalize / bootstrap / tailwind)",
+      "google_sheets_monolithic (simple / nested / stress)",
+      "BBNF self-hosting MB/s (ebnf / json / css_pretty / sheets / bbnf_self / css_l4_grammar)"
+    ]
+  },
+
+  "tests": {
+    "harness": "cargo nextest run --workspace --profile ax-iter --no-fail-fast",
+    "captured_at": "2026-04-26 (post-W6b)",
+    "total": 1477,
+    "passed": 1477,
+    "failed": 0,
+    "skipped": 27,
+    "skipped_class": "pre-existing release-only / feature-gated fixtures unrelated to B5 scope",
+    "regression_class": "no B5 wave introduced a regression; W0 closes 10 pre-tranche failures at root cause across 4 β clusters",
+    "pretrancher_baseline": {
+      "context": "B4 close at master HEAD bb52da85",
+      "passed": 1480,
+      "failed": 10,
+      "skipped": 27,
+      "total": 1490,
+      "delta_vs_b5_close": "10 root-cause closures (β clusters A+B+C+D); workspace count adjusted from 1490 to 1477 reflects test-set evolution across W3 / W3b / W4 / W6 / W6b"
+    }
+  },
+
+  "structural": {
+    "fused_builder_deleted": true,
+    "fused_builder_files_deleted": [
+      "crates/tape/src/builder/mod.rs",
+      "crates/tape/src/builder/output.rs",
+      "crates/tape/src/builder/value.rs"
+    ],
+    "fused_builder_loc_deleted_estimate": 1500,
+    "fused_output_aliases_collapsed": [
+      "value_frame_at -> frame",
+      "value_payload_for -> payload_for",
+      "value_children -> children",
+      "value_payload_narrow -> payload_narrow",
+      "value_payload_wide -> payload_wide",
+      "value_frame_index_at -> frame_index_at",
+      "value_open_at -> open_at"
+    ],
+    "parsed_field_count_post_b5": 3,
+    "parsed_fields": ["tape", "input", "root_offset"],
+    "extern_crate_self_as_bbnf_removed": true,
+    "tape_position_accessor_added": true,
+    "tape_position_signature": "pub fn position(&self) -> u32",
+    "rollback_collapsed_to": "Columns::rollback_to(open: TapeOffset)",
+    "columns_mut_retired": true,
+    "columns_mut_callsite_count_pre_b5_css_l4": 1061,
+    "frame_depth_mut_retired": true,
+    "single_writer_invariant_frame_depth": true,
+    "post_order_cascade_retired": true,
+    "leftmost_descendant_offset_helper_deleted": true,
+    "packed_cache_OnceLock_deleted": true,
+    "pay_f64_merged_into_pay_wide": true
+  },
+
+  "module_decomposition": {
+    "w3_splits": [
+      { "from": "crates/core/src/lower/expression.rs (2140 LOC)", "to": "lower/expression/{alt,repeat,pratt,wrap,closures,mod}.rs" },
+      { "from": "crates/core/src/backend/rust/emitter/shapes/dispatcher.rs (1969 LOC)", "to": "shapes/dispatcher/{cross_shape,symbol_composition,support,mod}.rs" },
+      { "from": "crates/core/src/backend/rust/emitter/shapes/inline.rs (1687 LOC)", "to": "shapes/inline/ directory module" },
+      { "from": "crates/core/src/backend/rust/emitter/shapes/flat.rs (1342 LOC)", "to": "shapes/flat/ directory module" },
+      { "from": "crates/tape/src/columns.rs (1287 LOC)", "to": "tape/src/columns/ directory module + tape/src/simd/ extracted" }
+    ],
+    "w3b_splits": [
+      { "from": "crates/tape/src/tape.rs", "to": "tape/src/tape/ directory module" },
+      { "from": "crates/tape/src/psi.rs", "to": "tape/src/psi/ directory module" },
+      { "from": "crates/core/src/lower/value_expr.rs", "to": "lower/value_expr/ directory module" },
+      { "from": "crates/core/src/backend/rust/emitter/shapes/array.rs", "to": "shapes/array/ directory module" },
+      { "from": "crates/core/src/backend/rust/emitter/shapes/alt_dispatch.rs", "to": "shapes/alt_dispatch/ directory module" },
+      { "from": "crates/core/src/backend/rust/emitter/shapes/wrap.rs", "to": "shapes/wrap/ directory module" },
+      { "from": "crates/core/src/backend/rust/emitter/shapes/keyword.rs", "to": "shapes/keyword/ directory module" },
+      { "from": "crates/core/src/backend/rust/emitter/shapes/pratt.rs", "to": "shapes/pratt/ directory module" }
+    ],
+    "kitchen_sink_modules_retired": ["helpers.rs", "utils.rs", "common.rs"],
+    "max_file_loc_in_target_dirs_post_b5": 759,
+    "audit": "find crates/core/src/lower crates/core/src/backend/rust/emitter/shapes crates/tape/src -name '*.rs' -exec wc -l {} + | awk '$1 > 800' returns empty"
+  },
+
+  "w0_clusters": {
+    "cluster_a_peel_consolidation": {
+      "failures_closed": 6,
+      "tests": [
+        "value_api_apples_to_apples json_roundtrip_object",
+        "value_api_apples_to_apples json_roundtrip_array_of_strings",
+        "value_api_apples_to_apples json_roundtrip_nested_array",
+        "value_api_apples_to_apples json_roundtrip_mixed_value_types",
+        "ay_w3b_value_api_smoke",
+        "parse_count_invariant"
+      ],
+      "fix": "view/peel.rs hoists unwrap_structural_wrappers; peel_body retires; named_types and value.rs callsites route through shared logic"
+    },
+    "cluster_b_pluggable_materialiser": {
+      "failures_closed": 1,
+      "tests": ["projection_totality projection_totality_runtime_call_count"],
+      "fix": "MaterializerKind::SpanFromFrame admits borrow-via-frame; TypeDesc::Span removed from is_scalar_payload(); [U32, U32] synthesis stops for non-Tuple kernel admissions"
+    },
+    "cluster_c_constructor_invariant": {
+      "failures_closed": 2,
+      "tests": [
+        "pipeline_compile_request compile_paths_preserves_pretty_directives_json",
+        "pipeline_compile_request compile_paths_preserves_pretty_directives_bbnf"
+      ],
+      "fix": "ParserAttributes::with_paths(paths) populates paths and grammar_rel_paths atomically; runtime lock-step assert deleted"
+    },
+    "cluster_d_iterative_walker": {
+      "failures_closed": 1,
+      "tests": ["sheets_parity::child_iter_walks_complex_formula"],
+      "fix": "walk() helper converted from recursion to Vec<TapeCursor> worklist"
+    },
+    "bonus_payload_bytes_precondition": {
+      "fix": "PAYLOAD_IN_ARENA_BIT precondition added at tape::tape::payload_bytes; latent silent-misread risk closes"
+    }
+  },
+
+  "cross_tranche_effects": {
+    "ay_ii_w1_dispatch_substrate": "post-B5: Tape<R> + Columns (with value-side state); Tape::position() + Tape::rollback_to(open) as the boundary surface; Parsed<'p, R> a 3-field record; FusedBuilder / FusedOutput / ValueFramesOutput retired entirely; cousin-leak guard at ChildIter; depth-stamp single-writer invariant",
+    "az_i_anchor": "no proc-macro to plumb (B2 retired it); post-B5 substrate cleanup retires the largest aesthetic-debt risk; bisect cycles seconds-cost on iter-check",
+    "az_ii_anchor": "byte-equal reproducibility cycles preserved at seconds-cost (B2 cycle); B5 substrate transposition does not affect AZ-II's tape-deletion path because B5 retires the surface, not the substrate's structural role; AZ-II remains binding repo policy",
+    "ba_anchor": "post-B5 build-time codegen output reads off Tape<R> directly; no FusedOutput<R> wrapper to bind through cross-language",
+    "bb_anchor": "rule inference operates on IrNode (substrate-independent); post-B5 substrate cleanup is orthogonal to BB's e-graph workload"
+  },
+
+  "forward_routed_work": [],
+  "forward_routed_rationale": "B5 is terminal substrate cleanup. The post-B5 substrate is the floor AY-II.W1 dispatches against. Inherited debt (10 β failures, FusedBuilder weld, rollback triplication, columns_mut leak, self-alias, god modules, post-order cascade) closes wholesale within the tranche; no item forwards."
+}

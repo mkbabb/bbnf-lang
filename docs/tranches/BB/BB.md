@@ -347,6 +347,13 @@ or after BA.
 - **Soundness rediscovery**: the enumerator must rediscover at
   least 80% of Tranche H's hand-coded rules on matching grammars.
   A miss there is a soundness bug, not a coverage gap.
+- **Corpus hit-rate measurement.** Every retained rule fires
+  ≥ 0.1 times per parse averaged across the 4 primary grammars
+  (JSON, CSS L4, Sheets, BBNF); rules below the floor retire per
+  the e-graph cost model. The measurement is artefact-bound —
+  W0's `docs/benchmarks/post-BB-W0-hit-rate.json` plus samply
+  attribution proving firings register on the parse hot path —
+  and refreshes at every subsequent wave's close.
 
 **Ranker gates:**
 
@@ -385,7 +392,7 @@ commit. Each wave spec is ≤ 150 LOC.
 
 | Wave | Spec | Headline | Opens after | Status |
 |---|---|---|---|---|
-| **W0** | [waves/W0.md](waves/W0.md) | Enumerator + VM oracle + ranker + `crates/ir/src/rewrites/` scaffold; Tranche H soundness rediscovery | AZ-I + AY-II close | planned |
+| **W0** | [waves/W0.md](waves/W0.md) | Enumerator + VM oracle + ranker + `crates/ir/src/rewrites/` scaffold; Tranche H soundness rediscovery; corpus-wide rule hit-rate measurement (≥ 0.1 firings/parse retention floor) | AZ-I + AY-II close | planned |
 | **W1** | [waves/W1.md](waves/W1.md) | First enumeration run — JSON + Sheets, curated Class-1/2 batch | W0 | planned |
 | **W2** | [waves/W2.md](waves/W2.md) | Wide alphabet — CSS L4 + BBNF self-hosting | W1 | planned |
 | **W3** | [waves/W3.md](waves/W3.md) | Grammar-specific rule discovery + per-grammar `rewrites/*.ron` authoring | W2 | planned |

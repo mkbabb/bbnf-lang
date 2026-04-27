@@ -128,7 +128,11 @@ Benches ride the `ay-final` profile (release inheriting fat LTO + debug
 is one cargo invocation; divan's per-sample regression check runs
 inside that single harness pass (bench-single-run,
 bench-sequential-regression). Cold-per-parse only —
-`no-warm-benches`.
+`no-warm-benches`. Post-B7 (2026-04-27), divan is the only harness
+across bbnf-lang, parse-that, and pprint; legacy bencher / libtest /
+unstable-harness paths retired entirely. Cross-repo coverage:
+bbnf-lang (simd-scan + others), parse-that (13 parse_that-crate
+benches + 5 sub-crate benches), pprint (26 + 12 benches).
 
 | Alias | Coverage | Profile |
 |---|---|---|

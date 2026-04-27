@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-04-27 — B-series (B2-B7) cross-cutting closures
+
+Six tranches landed in sequence post-B1: B3 (parser-baseline
+restoration), B4 (codegen syn::parse2 emit-fix), B2 (build-time
+codegen transposition; `cargo xtask regen` canonical), B5 (substrate
+restoration; FusedBuilder dissolved into `Tape<R>` over `Columns`;
+eight waves), B6 (dev-loop annex; xtask cycle fix delivered 192× cold-
+wall speedup), B7 (cross-repo modernization; divan + nextest unified
+across bbnf-lang / parse-that / pprint; 10 agents, 20 commits, ~15 min
+real wall).
+
 ## 2026-04-23 — second streamlining pass
 
 Applied the W4 streamlining thesis to the expanded uppercase surface

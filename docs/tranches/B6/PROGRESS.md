@@ -464,3 +464,187 @@ unblocked, but its baseline should be re-verified per the same
 methodology before dispatch.
 
 ---
+
+## 2026-04-27 — B6.W2 dispatched + closed (plan-time miscalibration)
+
+W2 dispatched against `b6-w2` worktree at master HEAD `f685a9a6`.
+Two-agent parallel plan (W2.a JSON bench partition + W2.b IR
+audit feature-gate). Per the W1 close-ceremony recommendation,
+the W2 dispatch carried explicit Phase-0 baseline re-verification
+as load-bearing prelude. Phase 0 measurements showed both W2
+levers structurally incapable of moving the gate's metric; W2
+closes on rationale-satisfied per SPEC §Plan-time miscalibration
+without source-code or alias edits.
+
+### Phase 0 baseline measurements
+
+The orchestrator measured directly on the post-W1 substrate.
+Second-run (truly-warm) `cargo iter-test --profile ax-iter`
+against the workspace:
+
+  user time:    84.15 s
+  system time:   6.90 s
+  total wall:   22.353 s
+  CPU usage:   407 %  (parallel; nextest process pool)
+
+Test execution dominates: 21.609 s of 22.353 s (96.7 %) is
+test-binary execution. Slowest individual tests:
+
+  bbnf-lsp::bench_lsp::bench_lsp_actions       16.485 s
+  simd-scan::fuzz::json_alphabet_skewed        17.794 s
+  simd-scan::fuzz::css_with_digraphs           19.5–20.3 s
+
+Plan-asserted baseline (W2.md L201–202, B6.md L146): "~20 s".
+Direct measurement: 22.353 s — close to plan estimate (~12 %
+above), so the baseline staleness is mild compared to W0's
+3.4× and W1's 38.8× drift. The vacuity verdict comes from a
+different angle: the prescribed levers cannot move the actual
+bottleneck.
+
+### Architectural reconciliation — W2.a JSON bench partition
+
+`cargo iter-test` is defined in `.cargo/config.toml`:
+
+  iter-test = "nextest run --cargo-profile ax-iter --workspace"
+
+Nextest runs `[[test]]` targets only — the `tests/` directories
+of every crate. It does NOT run `[[bench]]` targets. The five
+JSON bench fixtures (`twitter`, `canada`, `citm`, `data_s`,
+`data_xl`) sit inside `crates/core/benches/json/monolithic.rs`,
+registered as `[[bench]]` in `crates/core/Cargo.toml`. They
+neither compile nor run on the iter-test surface.
+
+Partitioning `monolithic.rs` into a directory module is a
+reorganisation purely on the bench surface; it cannot reduce a
+wall measured on the test surface. The W2.a lever has zero
+structural effect on the gate's metric.
+
+### Architectural reconciliation — W2.b IR audit feature-gate
+
+The W2.b plan identifies `crates/core/tests/payload_layouts.rs`
+(314 LOC) and `crates/core/tests/projection_totality.rs` (417
+LOC) as the IR audit surface and proposes feature-gating both
+behind `ir-audit`. Direct measurement contradicts the underlying
+premise: `payload_layouts` and `projection_totality` are not in
+the slowest-test census.
+
+The warm wall floor is set by `simd-scan::fuzz::css_with_
+digraphs` at ~20.3 s — the single longest individual test.
+Removing the IR audits cannot drop the wall below 20.3 s; the
+gate's 16 s threshold is structurally unreachable via W2.b.
+
+The framing ("IR audit tests are wire-contracts that only fire
+at close ceremony") is correct in its categorical claim — these
+tests ARE close-ceremony wire-contracts and routine iteration
+shouldn't pay for them. But the wall-clock argument the plan
+attaches to that framing does not hold against measurement.
+
+### Architectural finding — surface boundary, not feature flag
+
+The actual bottleneck is bench-class and fuzz-class tests
+running on the routine-iteration surface:
+
+- `bbnf-lsp::bench_lsp::bench_lsp_actions` is a benchmark in
+  name and behaviour; its 16.5 s wall is nearly the entire
+  16 s gate threshold.
+- `simd-scan::fuzz::css_with_digraphs` and friends are
+  property-based fuzz tests running for ~20 s by design — fuzz
+  saturation, not unit-test verification.
+
+Both classes belong on a close-ceremony or dedicated-fuzz
+surface. Re-routing them is a test-surface partition — a scope-
+revealing architectural correction beyond W2's prescribed
+levers and beyond B6's annex bounds. The natural destination is
+AY-III's close-ceremony surface design (`make ay-bench-close
+WAVE=close` already factors close-vs-routine; the missing piece
+is partitioning within the routine tier between fast-iteration
+and saturation-fuzz tests).
+
+### Hard-gate verification
+
+| Gate | Plan threshold | Measured | Status |
+|------|----------------|----------|--------|
+| warm iter-test ≥ 20 % reduction | ≤ 16 s | 22.353 s | VACUOUS (lever-incapable) |
+| Per-fixture JSON bench within 1 % | bench parity | unaffected | N/A (no edit) |
+| Workspace nextest 1477/1477 | 1477 | inherited from W1 close | PRESERVED |
+| nextest with --features ir-audit | gated tests visible | not edited | N/A |
+| `make ay-bench-close WAVE=close` exit 0 | gated tests visible | unchanged | PRESERVED |
+| cargo iter-test --features ir-audit exit 0 | gated tests run | not edited | N/A |
+| cargo xtask regen --check exit 0 | 9/9 | inherited from W1 close | PRESERVED |
+| cargo bench-bbnf within 5 % | n/a | no runtime change | N/A |
+| iter-check warm ≤ 0.5 s | ≤ 0.5 s | inherited (0.13 s) | PRESERVED |
+| No #[allow] introduced | 0 | 0 (no edits) | PRESERVED |
+
+### Per-spec halt-and-report
+
+Per dispatch §"If scope reveals further", Phase 0 measurements
+show the W2 plan's prescribed levers (W2.a JSON bench partition,
+W2.b IR audit feature-gate) are structurally incapable of moving
+the gate's metric. W2 closes on rationale-satisfied per SPEC
+§Plan-time miscalibration: "If the floor analysis is hard (the
+metric depends on code not yet written), declare the gate as a
+soft-target + rationale-satisfied fallback rather than a hard
+numeric. Don't ship a gate that can't close." The W2 gate cannot
+close on the prescribed mechanisms because (a) W2.a operates on
+a surface (`[[bench]]`) the gate's metric (`nextest --workspace`
+on `[[test]]`) does not measure, and (b) W2.b cannot drop the
+wall below the simd-scan fuzz saturation floor.
+
+### B6 tranche-level disposition
+
+B6 closes with W0 landed (192× cold xtask wall speedup), W1
+vacuous-close (plan-time miscalibrated baseline + architecturally
+infeasible mechanism), and W2 vacuous-close (architecturally
+infeasible mechanisms against accurate baseline). The user's
+"expedite testing/benching/building" directive is partially
+served by W0's regen mtime-cycle fix; the iter-test slow-test
+issue routes to a separate consideration (potentially AY-III.W0's
+close-ceremony surface design) rather than B6's annex.
+
+### B6 → AY-III handoff
+
+AY-III opens against the post-B6 substrate. W0's mtime-cycle fix
+is the only behavior-changing landing across the tranche; W1 +
+W2 close on rationale. The post-B6 dev-loop floor:
+
+- cold xtask wall: 0.46 s (192× faster than pre-B6)
+- cold iter-check-full: 17.02 s (vs plan's 660 s assertion)
+- warm iter-check: 0.13 s (under the 0.5 s invariant)
+- warm iter-test: 22.353 s (bench-class/fuzz tests dominate;
+  AY-III handoff item)
+- workspace nextest: 1477/1477 green
+- cargo xtask regen --check: exit 0 across 9 grammars
+
+### Orchestrator triumvirate consideration
+
+The orchestrator may consider:
+
+1. Whether B6.W2 should retire entirely (rationale-satisfied
+   close), with the JSON bench partition and IR audit feature-
+   gate observations preserved as architectural records but not
+   landed in the substrate.
+2. Whether the bench-class + fuzz-saturation surface partition
+   surfaces in AY-III.W0's plan as a named close-ceremony
+   surface refinement, with the slow-test census this dispatch
+   captured as the prelude evidence.
+3. Whether B6's plan-time-miscalibration pattern across W1 + W2
+   informs a methodological correction for future prelude annex
+   tranches: Phase-0 baseline measurement before plan-time gate
+   commitment, not after.
+
+### Commit lineage
+
+| Commit | One-line |
+|--------|----------|
+| TBD    | docs(b6): W2 plan-time miscalibration close + Phase-0 measurements |
+| TBD    | docs(b6): FINAL — B6 tranche close ceremony |
+| TBD    | docs(b6): waves/W2.md status stamp closed |
+
+Branch `b6-w2` against master `f685a9a6`. No source files
+modified; no aliases changed; no new audit docs authored.
+
+Status: W2 closed on rationale-satisfied (plan-time miscalibrated
+levers against accurate baseline); B6 closes; AY-III dispatch
+unblocked.
+
+---

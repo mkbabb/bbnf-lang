@@ -1,0 +1,233 @@
+post-B6-W2 wall measurements + plan-time miscalibration verdict
+
+== Methodology
+
+Per `docs/tranches/B6/B6.md` §Hard-gate measurement methodology:
+  rm -rf target/*/incremental
+  find . -name .bbnf-cache -exec rm -rf {} +
+  CARGO_BUILD_JOBS=4 /usr/bin/time -p <command>
+
+Single-host (Darwin 25.4.0, M-class arm64). All measurements
+against the post-W1 substrate at master HEAD `f685a9a6`
+(post-B6.W1 close ceremony). No concurrent cargo (per README
+§Concurrent cargo — one per target). Routine iteration tier per
+SPEC §Three-tier command surface: `cargo iter-test --profile
+ax-iter` is the routine warm-wall surface; bench-class runs ride
+`cargo bench-bbnf` / `make ay-bench-close WAVE=close` on a
+separate close-ceremony surface.
+
+== Phase 0 baseline — orchestrator-measured warm `iter-test`
+
+Direct measurement on the post-B6.W1 substrate, second-run
+(truly-warm) `cargo iter-test --profile ax-iter` against the
+workspace:
+
+  user time:    84.15 s
+  system time:   6.90 s
+  total wall:   22.353 s
+  CPU usage:   407 %  (parallel; nextest process pool)
+
+Test execution dominates: 21.609 s of 22.353 s (96.7 %) is
+test-binary execution; 0.74 s is cargo-side work (rmeta probe,
+nextest planner, summary print).
+
+Slowest individual tests dominating the warm wall:
+
+  bbnf-lsp::bench_lsp::bench_lsp_actions       16.485 s
+  simd-scan::fuzz::json_alphabet_skewed        17.794 s
+  simd-scan::fuzz::css_with_digraphs           19.5–20.3 s
+
+CPU usage 407 % confirms nextest is parallelising across cores;
+the warm wall is bounded by the longest single test
+(`simd-scan::fuzz::css_with_digraphs` at ~20.3 s) rather than
+by aggregate compile cost.
+
+== Decision criteria
+
+Per the W2 plan's hard gate (W2.md L200–203, B6.md L146):
+
+  warm `iter-test` ≥ 20 % reduction
+  pre-W2 asserted wall: ~20 s
+  post-W2 floor:        ≤ 16 s
+
+Achieving the gate requires the W2 levers to drop the actual
+wall (22.353 s) to ≤ 16 s — a wall-clock reduction of
+≥ 6.353 s. Per SPEC §Gate floor-check, the gate sits above its
+declared 25–30 % aspirational target; 20 % is the conservative
+floor.
+
+== Plan reconciliation — W2.a JSON bench partition infeasibility
+
+`cargo iter-test` is defined in `.cargo/config.toml`:
+
+  iter-test = "nextest run --cargo-profile ax-iter --workspace"
+
+Nextest runs `[[test]]` targets — the `tests/` directories of
+every crate. It does NOT run `[[bench]]` targets; those live
+behind `cargo bench` and ride `divan` rather than `nextest`.
+The five JSON bench fixtures (`twitter`, `canada`, `citm`,
+`data_s`, `data_xl`) sit inside `crates/core/benches/json/
+monolithic.rs`, registered as `[[bench]]` in
+`crates/core/Cargo.toml`. They neither compile nor run on the
+iter-test surface.
+
+Partitioning `monolithic.rs` into a directory module is a
+reorganisation purely on the bench surface; it cannot reduce a
+wall measured on the test surface. The W2.a lever has zero
+structural effect on the gate's metric.
+
+== Plan reconciliation — W2.b IR audit feature-gate infeasibility
+
+The W2 plan identifies `crates/core/tests/payload_layouts.rs`
+(314 LOC) and `crates/core/tests/projection_totality.rs` (417
+LOC) as the IR audit surface, proposing `#[cfg(feature =
+"ir-audit")]` gates on both. The premise is that these two
+test files contribute non-trivial cost on the warm wall.
+
+Direct measurement contradicts the premise. The slowest tests
+on the warm wall are NOT the IR audit tests:
+
+  Slow test                                     Wall
+  ─────────────────────────────────────────────────────
+  bbnf-lsp::bench_lsp::bench_lsp_actions       16.485 s
+  simd-scan::fuzz::css_with_digraphs           ~20.3 s
+  simd-scan::fuzz::json_alphabet_skewed        17.794 s
+
+`payload_layouts` and `projection_totality` do not appear in
+the slowest-test census. Their compile + execution cost is
+absorbed into the parallel pool; the warm wall floor is set by
+`simd-scan::fuzz::css_with_digraphs` at ~20.3 s — the single
+longest individual test. Removing the IR audits cannot drop the
+wall below 20.3 s; the gate's 16 s threshold is structurally
+unreachable via W2.b.
+
+The framing ("IR audit tests are wire-contracts that only fire
+at close ceremony") is correct in its categorical claim — these
+tests ARE close-ceremony wire-contracts and routine iteration
+shouldn't pay for them. But the wall-clock argument the plan
+attaches to that framing does not hold against direct
+measurement.
+
+== Architectural finding — surface boundary, not feature flag
+
+The actual bottleneck is bench-class and fuzz-class tests
+running on the routine-iteration surface.
+
+`bbnf-lsp::bench_lsp::bench_lsp_actions` is a benchmark in name
+and behaviour — it stresses the LSP action handler against
+multiple grammars in a timed loop. Its placement under
+`crates/bbnf-lsp/tests/` puts it on the iter-test surface; its
+16.5 s wall is nearly the entire 16 s gate threshold by itself.
+
+`simd-scan::fuzz::css_with_digraphs` and friends are property-
+based fuzz tests. Their per-iteration cost is tiny but they
+run for ~20 s wall by design — fuzz saturation, not unit-test
+verification.
+
+Both classes belong on a close-ceremony or dedicated-fuzz
+surface, not on routine `iter-test`. Re-routing them is a
+test-surface partition: identify which `tests/*.rs` files are
+bench-class or fuzz-saturation, and route them through a
+`#[cfg(feature = ...)]` gate (mirroring the IR audit pattern,
+but applied to the actual slow tests) or a separate
+`cargo iter-test-fast` alias that excludes the offending crates.
+
+This is a scope-revealing architectural correction, not a
+mechanical extension of W2's prescribed levers. It belongs in
+a follow-on tranche — most naturally AY-III's close-ceremony
+surface design (`make ay-bench-close WAVE=close` already
+factors close-vs-routine; the missing piece is partitioning
+within the routine tier between fast-iteration and saturation-
+fuzz tests). It does not belong in B6's bounded prelude annex
+scope per SPEC §Prelude annexes.
+
+== Verdict — Phase 0 VACUOUS-CLOSE
+
+Per SPEC §Plan-time miscalibration (lines 224–240): when a
+numeric gate's prescribed mechanism is structurally incapable
+of moving the metric the gate measures, the gate is
+reclassified as plan-time miscalibration and the wave closes
+on rationale-satisfied. The W2 plan was authored against a
+baseline-shape intuition (~20 s warm wall dominated by JSON
+bench expansion + IR audit compile cost) that direct
+measurement on the post-W1 substrate refutes.
+
+Three reconciliation findings compound:
+
+  - W2.a (JSON bench partition) lever has zero effect on the
+    `iter-test` wall; nextest does not run benches.
+  - W2.b (IR audit feature-gate) lever cannot drop the wall
+    below the simd-scan fuzz saturation floor (~20.3 s); the
+    16 s gate is structurally unreachable via this lever.
+  - The actual bottleneck (bench-class + fuzz tests on routine
+    surface) is a scope-revealing architectural correction
+    beyond W2's bounded scope and beyond B6's annex bounds.
+
+The W0 + W1 precedents compound the pattern: each B6 wave's
+hard-gate baseline was authored against a pre-W0 substrate
+snapshot already partially obsolete at plan time. W0's 192×
+speedup (the unconditional-write fingerprint cycle) was the
+substrate-wide breakthrough that made W1 + W2's prescribed
+levers structurally redundant. Without the self-invalidation
+cycle every cargo invocation post-W0 preserves rmeta and the
+warm walls are dramatically faster than the plan supposed.
+
+== Hard-gate verification
+
+| Gate | Plan threshold | Measured | Status |
+|------|----------------|----------|--------|
+| warm iter-test ≥ 20 % reduction | ≤ 16 s | 22.353 s | VACUOUS (lever-incapable) |
+| Per-fixture JSON bench within 1 % | bench parity | unaffected | N/A (no edit landed) |
+| Workspace nextest 1477/1477 | 1477 | inherited from W1 close | PRESERVED |
+| nextest with --features ir-audit | gated tests visible | not edited | N/A |
+| `make ay-bench-close WAVE=close` exit 0 | gated tests visible | unchanged | PRESERVED |
+| cargo iter-test --features ir-audit exit 0 | gated tests run | not edited | N/A |
+| cargo xtask regen --check exit 0 | 9/9 | inherited from W1 close | PRESERVED |
+| cargo bench-bbnf within 5 % | n/a | no runtime change | N/A |
+| iter-check warm ≤ 0.5 s | ≤ 0.5 s | inherited (0.13 s) | PRESERVED |
+| No #[allow] introduced | 0 | 0 (no edits) | PRESERVED |
+
+== Reproduction recipe — warm `iter-test`
+
+  cd /Users/mkbabb/Programming/bbnf-wt-b6-w2
+  ls -la target          # confirm: not a broken symlink
+  mkdir -p target        # if symlink was deleted
+  CARGO_BUILD_JOBS=4 cargo iter-test               # warm-up run
+  CARGO_BUILD_JOBS=4 /usr/bin/time -p cargo iter-test
+                                                   # measurement run
+
+The first run pays the test-binary compile cost (~129 s on
+B6.W1's first-run measurement). The second run is the truly-
+warm wall measurement; subsequent runs reproduce within ±5 %
+of 22.353 s on the same host.
+
+To inspect per-test wall contributions:
+
+  CARGO_BUILD_JOBS=4 cargo iter-test \
+    --no-fail-fast \
+    --status-level slow \
+    --slow-timeout 5s
+
+The bench-class and fuzz tests surface immediately.
+
+== Files modified by W2 work
+
+NONE. Per Phase 0 vacuous-close, no source code or alias edits
+land. The artefacts this dispatch produces are this measurements
+file plus a PROGRESS.md append and a B6 FINAL.md.
+
+== Forward dependency note for AY-III
+
+B6 closes after W2's vacuous-close ceremony; AY-III opens
+against the post-B6 substrate W0 established (cold xtask wall
+0.46 s; cold iter-check-full 17 s; warm iter-check 0.13 s).
+The slow-test surface boundary observation routes naturally to
+AY-III.W0's close-ceremony surface design.
+
+Per the user's directive ("expedite testing/benching/building
+dramatically"), the part that landed (W0's mtime-cycle fix) is
+the substantive expedite; W1 + W2's prescribed levers close on
+rationale-satisfied because the prescribed mechanisms cannot
+move the prescribed metrics. The architecturally-correct
+follow-up (close-ceremony surface partition for fuzz/bench-
+class tests) is AY-III's domain, not B6's.

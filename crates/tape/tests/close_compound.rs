@@ -143,38 +143,41 @@ fn nested_begin_end_produces_pre_order_tape() {
 /// Post-W0-fix, `end_compound_post_order(open_off, span_hi,
 /// first_child)` atomically stamps span_hi + child_off (backward) +
 /// `HAS_CHILDREN_BIT` in one call. The override path is retired.
+///
+/// B5.W6 — the canonical post-order shape pattern is
+/// `enter_post_order_children` (bumps depth) → push children →
+/// `begin_compound_post` (stamps row at outer-frame depth, no bump) →
+/// `end_compound_post_order` (back-patches + decrements depth).
 #[test]
 fn end_compound_post_order_stamps_backward_child_off_and_has_children() {
     let mut b = Tape::<()>::new();
-    // B3.W0.γ — the builder auto-stamps `frame_depth` on every
-    // push, and `end_compound_post_order` retroactively bumps the
-    // child range so leaves emitted before their post-order wrapper
-    // land at the correct (parent + 1) depth.
+    // B5.W6 — bracket the outer compound's post-order children scope.
+    // The bracket bumps `current_depth` so child records stamp
+    // `frame_depth` at the correct (parent + 1) depth at push time;
+    // the matching `end_compound_post_order` absorbs the bump.
+    let outer_child = b.enter_post_order_children();
 
-    // Simulate Flat emission: capture first-child index PRE children,
-    // emit children (each child uses its own begin/end in pre-order),
-    // THEN open the compound row and close via end_compound_post_order.
-    let outer_child = b.columns().len() as u32; // == 0
-
-    // Child 1: `push_compound` (legacy post-order leaf-walker style).
-    let inner_mark = TapeOffset(b.columns().len() as u32);
+    // Child 1: a nested post-order compound, opened via its own
+    // bracket. `frame_depth` for its body's leaf and its compound row
+    // both stamp under the inner bracket's bumped depth.
+    let inner_mark = b.enter_post_order_children();
     let _a = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
-    let inner_open = b.begin_compound(TapeKind::Seq, 0, 1, 0, 0);
-    b.end_compound_post_order(inner_open, 1, inner_mark);
+    let inner_open = b.begin_compound_post(TapeKind::Seq, 0, 1, 0, 0);
+    b.end_compound_post_order(inner_open, 1, TapeOffset(inner_mark));
     let _inner = TapeOffset(inner_open);
 
     // Child 2: a leaf.
     let _c = b.push_leaf(TapeKind::Literal, 1, 2, 0, 0);
 
     // Post-order outer compound: allocated AFTER children at current
-    // columns.len(). begin + end_compound_post_order mirrors the
-    // emitter pattern.
+    // columns.len(). begin_compound_post + end_compound_post_order
+    // mirrors the emitter pattern under the active bracket.
     let span_lo = 0;
     let span_hi = 2;
-    let outer_off = b.begin_compound(TapeKind::Seq, span_lo, 7, 3, 0);
+    let outer_off = b.begin_compound_post(TapeKind::Seq, span_lo, 7, 3, 0);
     assert_eq!(
         outer_off, 3,
-        "post-order begin_compound lands after children at cols.len()"
+        "post-order begin_compound_post lands after children at cols.len()"
     );
     b.end_compound_post_order(outer_off, span_hi, TapeOffset(outer_child));
 
@@ -393,20 +396,21 @@ fn rollback_to_idempotent() {
 }
 
 /// Post-order shape emission with leaves emitted before the
-/// wrapping compound: `end_compound_post_order` retroactively bumps
-/// the inline `frame_depth` over the child range so leaves stamped
-/// at the outer frame's depth migrate to (parent + 1) before the
-/// finaliser derives `sib_skip`. B3.W0.γ replaced the legacy
-/// `derive_frame_depth` reverse-walk with this in-builder bookkeeping.
+/// wrapping compound: under the bracket discipline children stamp
+/// `frame_depth` at the bumped depth at push time;
+/// `end_compound_post_order` absorbs the bump on close. B5.W6
+/// replaced the legacy `derive_frame_depth` reverse-walk and the
+/// retroactive in-close cascade with single-writer bracket
+/// bookkeeping.
 #[test]
 fn post_order_close_bumps_child_frame_depth() {
     let mut b = Tape::<()>::new();
 
-    let mark = TapeOffset(b.columns().len() as u32);
+    let mark = b.enter_post_order_children();
     let _a = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
     let _bl = b.push_leaf(TapeKind::Literal, 1, 2, 0, 0);
-    let root_open = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
-    b.end_compound_post_order(root_open, 2, mark);
+    let root_open = b.begin_compound_post(TapeKind::Seq, 0, 0, 0, 0);
+    b.end_compound_post_order(root_open, 2, TapeOffset(mark));
     let root = TapeOffset(root_open);
 
     let tape = b.finish(0).expect("finish() succeeds");

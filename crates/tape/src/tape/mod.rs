@@ -414,43 +414,6 @@ impl<R> Default for Tape<R> {
     }
 }
 
-/// Walk the leftmost-descendant chain from `start` to find the lowest
-/// offset of any record in `start`'s subtree.
-///
-/// Used by `end_compound_post_order` (phase A) and
-/// `wrap_existing_children_post_order` to extend the depth-bump range
-/// down to descendants whose offsets sit strictly below `first_child`.
-/// When `first_child` is itself a post-order compound, its body lives
-/// at offsets below `first_child` (post-order layout); those
-/// descendants belong to the closing compound's subtree and need the
-/// same `+1` adjustment.
-///
-/// The walk follows `child_off` while it points strictly backward
-/// (`co_child_off < co` — canonical post-order subtree root). For
-/// pre-order children (`child_off > co`) and leaves the walk stops:
-/// pre-order child ranges live at offsets ABOVE the parent, so the
-/// parent's offset is already the leftmost in that subtree's prefix.
-///
-/// # Self-host transition (B5.W6)
-///
-/// Phase A retains this helper because the cascade is still live in
-/// `end_compound_post_order`. Phase B retires this helper from
-/// `end_compound_post_order` (single-writer invariant) and keeps it
-/// only as `wrap_existing_children_post_order`'s internal bumping
-/// target (the Pratt-reducer retrofit).
-#[inline]
-pub(super) fn leftmost_descendant_offset(columns: &Columns, start: u32) -> u32 {
-    let mut off = start;
-    while columns.has_children_at(off) {
-        let co = columns.child_off_at(off);
-        if co.is_none() || co.0 >= off {
-            break;
-        }
-        off = co.0;
-    }
-    off
-}
-
 /// Iterator over every record in a tape, materialising owned
 /// [`TapeRec`]s in column order.
 #[derive(Debug)]

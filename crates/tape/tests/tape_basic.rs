@@ -46,14 +46,16 @@ fn push_leaf_round_trip() {
 fn push_compound_with_children() {
     let mut b = Tape::<()>::new();
 
-    // Mark children start for a rule with two leaf children.
-    let children_start = TapeOffset(b.columns().len() as u32);
+    // B5.W6 — bracket the post-order children scope; the bracket
+    // bumps `current_depth` so leaves stamp `frame_depth` at the
+    // correct (parent + 1) depth at push time.
+    let children_start = b.enter_post_order_children();
     let _c1 = b.push_leaf(TapeKind::Span, 0, 3, 0, 0);
     let _c2 = b.push_leaf(TapeKind::Literal, 3, 6, 1, 0);
 
     // Now push the compound header that points at the run.
-    let compound_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
-    b.end_compound_post_order(compound_off, 6, children_start);
+    let compound_off = b.begin_compound_post(TapeKind::Seq, 0, 0, 0, 0);
+    b.end_compound_post_order(compound_off, 6, TapeOffset(children_start));
     let compound = TapeOffset(compound_off);
     assert_eq!(compound, TapeOffset(2));
 
@@ -83,12 +85,13 @@ fn cursor_accesses_record_fields() {
 #[test]
 fn cursor_walks_children() {
     let mut b = Tape::<()>::new();
-    let children_start = TapeOffset(b.columns().len() as u32);
+    // B5.W6 — bracket the post-order children scope.
+    let children_start = b.enter_post_order_children();
     b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     b.push_leaf(TapeKind::Span, 1, 2, 0, 0);
     b.push_leaf(TapeKind::Span, 2, 3, 0, 0);
-    let compound_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
-    b.end_compound_post_order(compound_off, 3, children_start);
+    let compound_off = b.begin_compound_post(TapeKind::Seq, 0, 0, 0, 0);
+    b.end_compound_post_order(compound_off, 3, TapeOffset(children_start));
     let compound = TapeOffset(compound_off);
 
     // Post-order legacy-API tape — `finish()` derives frame_depth
@@ -159,10 +162,11 @@ fn flags_encode_variant_and_has_children() {
     // non-empty. `push_compound` clears `has_children` for empty
     // runs (fixes the parent-as-own-child cycle in `TapeCursor`).
     let mut b2 = Tape::<()>::new();
-    let compound_children = TapeOffset(b2.columns().len() as u32);
+    // B5.W6 — bracket the post-order children scope.
+    let compound_children = b2.enter_post_order_children();
     let _inner_leaf_off = b2.push_leaf(TapeKind::Literal, 0, 4, 7, 0);
-    let compound_open = b2.begin_compound(TapeKind::Rule, 0, 2, 0, 0);
-    b2.end_compound_post_order(compound_open, 4, compound_children);
+    let compound_open = b2.begin_compound_post(TapeKind::Rule, 0, 2, 0, 0);
+    b2.end_compound_post_order(compound_open, 4, TapeOffset(compound_children));
     let compound_off = TapeOffset(compound_open);
 
     let tape = b.finish(0).unwrap();
@@ -185,9 +189,11 @@ fn empty_compound_clears_has_children() {
     // parent and recurses forever.
     let mut b = Tape::<()>::new();
     let leaf_off = b.push_leaf(TapeKind::Literal, 0, 4, 7, 0);
-    let compound_children = TapeOffset(b.columns().len() as u32);
-    let compound_open = b.begin_compound(TapeKind::Rule, 0, 2, 0, 0);
-    b.end_compound_post_order(compound_open, 4, compound_children);
+    // B5.W6 — bracket an empty post-order scope; no children pushed
+    // between enter and begin_compound_post.
+    let compound_children = b.enter_post_order_children();
+    let compound_open = b.begin_compound_post(TapeKind::Rule, 0, 2, 0, 0);
+    b.end_compound_post_order(compound_open, 4, TapeOffset(compound_children));
     let compound_off = TapeOffset(compound_open);
     let tape = b.finish(0).unwrap();
     let _ = tape.get(leaf_off);
@@ -210,9 +216,11 @@ fn empty_compound_stamps_child_off_none() {
     // (yet-unwritten) slot — exactly the same slot the compound will
     // occupy.
     let _ = b.push_leaf(TapeKind::Literal, 0, 4, 0, 0);
-    let marked = TapeOffset(b.columns().len() as u32);
-    let compound_open = b.begin_compound(TapeKind::Rule, 4, 0, 0, 0);
-    b.end_compound_post_order(compound_open, 4, marked);
+    // B5.W6 — bracket an empty post-order scope (no children land
+    // between enter and begin_compound_post).
+    let marked = b.enter_post_order_children();
+    let compound_open = b.begin_compound_post(TapeKind::Rule, 4, 0, 0, 0);
+    b.end_compound_post_order(compound_open, 4, TapeOffset(marked));
     let compound_off = TapeOffset(compound_open);
     let tape = b.finish(0).unwrap();
 
@@ -234,17 +242,18 @@ fn nonempty_compound_preserves_child_off() {
     // Complement to the NONE-stamping test: a compound with at least
     // one child keeps the caller-supplied `child_off` verbatim.
     let mut b = Tape::<()>::new();
-    let marked = TapeOffset(b.columns().len() as u32);
+    // B5.W6 — bracket the post-order children scope.
+    let marked = b.enter_post_order_children();
     b.push_leaf(TapeKind::Literal, 0, 4, 0, 0);
     b.push_leaf(TapeKind::Literal, 4, 8, 0, 0);
-    let compound_open = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
-    b.end_compound_post_order(compound_open, 8, marked);
+    let compound_open = b.begin_compound_post(TapeKind::Seq, 0, 0, 0, 0);
+    b.end_compound_post_order(compound_open, 8, TapeOffset(marked));
     let compound_off = TapeOffset(compound_open);
     let tape = b.finish(0).unwrap();
 
     let rec = tape.get(compound_off);
     assert!(rec.has_children());
-    assert_eq!(rec.child_off, marked);
+    assert_eq!(rec.child_off, TapeOffset(marked));
     assert_ne!(rec.child_off, TapeOffset::NONE);
     // `has_payload()` is false for every compound — the payload
     // bit is gated on `!has_children`.
@@ -720,10 +729,11 @@ fn meta_idx_round_trip_leaf() {
 #[test]
 fn meta_idx_round_trip_compound() {
     let mut b = Tape::<()>::new();
-    let children_start = TapeOffset(b.columns().len() as u32);
+    // B5.W6 — bracket the post-order children scope.
+    let children_start = b.enter_post_order_children();
     b.push_leaf(TapeKind::Span, 0, 3, 0, 7);
-    let compound_open = b.begin_compound(TapeKind::Rule, 0, 4, 27, 0); // CSS L4 max meta_idx
-    b.end_compound_post_order(compound_open, 3, children_start);
+    let compound_open = b.begin_compound_post(TapeKind::Rule, 0, 4, 27, 0); // CSS L4 max meta_idx
+    b.end_compound_post_order(compound_open, 3, TapeOffset(children_start));
     let compound = TapeOffset(compound_open);
     let tape = b.finish(0).unwrap();
 
@@ -803,10 +813,11 @@ fn meta_idx_15_16_boundary() {
 #[test]
 fn meta_idx_and_has_children_coexist() {
     let mut b = Tape::<()>::new();
-    let children_start = TapeOffset(b.columns().len() as u32);
+    // B5.W6 — bracket the post-order children scope.
+    let children_start = b.enter_post_order_children();
     b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
-    let compound_open = b.begin_compound(TapeKind::Rule, 0, 5, 20, 0);
-    b.end_compound_post_order(compound_open, 1, children_start);
+    let compound_open = b.begin_compound_post(TapeKind::Rule, 0, 5, 20, 0);
+    b.end_compound_post_order(compound_open, 1, TapeOffset(children_start));
     let compound = TapeOffset(compound_open);
     let tape = b.finish(0).unwrap();
 
@@ -1033,22 +1044,28 @@ fn columns_pay_agg_holds_aggregate_and_bytes() {
 fn sibling_skip_walks_direct_children_forward() {
     // Build `(a (b c) d)` and verify sib_skip drives forward sibling
     // iteration through the outer compound's three children.
+    //
+    // B5.W6 — nested brackets: outer's children scope wraps `a`, the
+    // inner `(b c)` post-order compound, and `d`. The inner compound's
+    // children scope wraps `b` and `c`. Each bracket bumps
+    // `current_depth` so the leaves stamp `frame_depth` at the
+    // correct relative depth at push time.
     let mut b = Tape::<()>::new();
+    let outer_children = b.enter_post_order_children();
     // a
     b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
-    // (b c)
-    let bc_children = TapeOffset(b.columns().len() as u32);
+    // (b c) — nested post-order compound under its own bracket.
+    let bc_children = b.enter_post_order_children();
     b.push_leaf(TapeKind::Span, 1, 2, 1, 0);
     b.push_leaf(TapeKind::Span, 2, 3, 2, 0);
-    let bc_open = b.begin_compound(TapeKind::Seq, 1, 0, 0, 0);
-    b.end_compound_post_order(bc_open, 3, bc_children);
+    let bc_open = b.begin_compound_post(TapeKind::Seq, 1, 0, 0, 0);
+    b.end_compound_post_order(bc_open, 3, TapeOffset(bc_children));
     let _bc = TapeOffset(bc_open);
     // d
     b.push_leaf(TapeKind::Span, 3, 4, 3, 0);
     // outer compound (children at 0, 3, 4)
-    let outer_children = TapeOffset(0);
-    let outer_open = b.begin_compound(TapeKind::Rule, 0, 0, 0, 0);
-    b.end_compound_post_order(outer_open, 4, outer_children);
+    let outer_open = b.begin_compound_post(TapeKind::Rule, 0, 0, 0, 0);
+    b.end_compound_post_order(outer_open, 4, TapeOffset(outer_children));
     let outer = TapeOffset(outer_open);
     // Post-order legacy tape — `finish()` derives frame_depth from
     // `child_off` and closes `sib_skip` via `finalise`.
@@ -1083,21 +1100,24 @@ fn sibling_skip_walks_direct_children_forward() {
 fn sibling_skip_nested_compound() {
     // Build `(x y)` nested inside `(z (x y) w)`; verify sib_skip
     // inside the nested compound.
+    //
+    // B5.W6 — nested brackets: outer's scope wraps `z`, `(x y)`, and
+    // `w`; the inner `(x y)` scope wraps `x` and `y`.
     let mut b = Tape::<()>::new();
+    let outer_children = b.enter_post_order_children();
     // z
     b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     // (x y)
-    let xy_children = TapeOffset(b.columns().len() as u32);
+    let xy_children = b.enter_post_order_children();
     b.push_leaf(TapeKind::Span, 1, 2, 1, 0);
     b.push_leaf(TapeKind::Span, 2, 3, 2, 0);
-    let xy_open = b.begin_compound(TapeKind::Seq, 1, 0, 0, 0);
-    b.end_compound_post_order(xy_open, 3, xy_children);
+    let xy_open = b.begin_compound_post(TapeKind::Seq, 1, 0, 0, 0);
+    b.end_compound_post_order(xy_open, 3, TapeOffset(xy_children));
     let xy = TapeOffset(xy_open);
     // w
     b.push_leaf(TapeKind::Span, 3, 4, 3, 0);
-    let outer_children = TapeOffset(0);
-    let outer_open = b.begin_compound(TapeKind::Rule, 0, 0, 0, 0);
-    b.end_compound_post_order(outer_open, 4, outer_children);
+    let outer_open = b.begin_compound_post(TapeKind::Rule, 0, 0, 0, 0);
+    b.end_compound_post_order(outer_open, 4, TapeOffset(outer_children));
     let _outer = TapeOffset(outer_open);
     // Post-order legacy tape — `finish()` closes `sib_skip` via the
     // derived-depth Stage-C pass.
@@ -1121,9 +1141,10 @@ fn empty_compound_sibling_skip_is_zero() {
     // An empty compound's `sib_skip` stays at the default `0`
     // because there are no direct children to enumerate.
     let mut b = Tape::<()>::new();
-    let marked = TapeOffset(b.columns().len() as u32);
-    let empty_open = b.begin_compound(TapeKind::Rule, 0, 0, 0, 0);
-    b.end_compound_post_order(empty_open, 0, marked);
+    // B5.W6 — bracket an empty post-order scope.
+    let marked = b.enter_post_order_children();
+    let empty_open = b.begin_compound_post(TapeKind::Rule, 0, 0, 0, 0);
+    b.end_compound_post_order(empty_open, 0, TapeOffset(marked));
     let empty = TapeOffset(empty_open);
     let tape = b.finish(0).unwrap();
     assert_eq!(tape.columns().sib_skip_at(empty.0), 0);

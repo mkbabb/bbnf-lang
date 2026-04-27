@@ -26,10 +26,6 @@
 //!   **`pay_agg: Vec<u8>`** — the three typed-payload columns. Kept
 //!   unchanged: they are orthogonal to structural layout and carry
 //!   the AY.W4 Eisel-Lemire direct-column work surface.
-//! - **`packed_cache: OnceLock<Vec<PackedRecord>>`** — the AoS read-
-//!   side sidecar (W1.D). Source of truth changes from the SoA
-//!   columns to `records` + `sib_skip`; transpose becomes near-
-//!   identity (copy + 32-byte align). Invalidated per push.
 //!
 //! # Sibling skip (Tranche AV.2.2 contract preserved)
 //!
@@ -68,18 +64,14 @@
 //! fold so the API stays portable.
 
 use crate::kind::TapeKind;
-use crate::packed::PackedRecord;
 use crate::tape::{TapeOffset, TapeRec};
 use crate::value::{ValueCheckpoint, ValueFrame};
-
-use std::sync::OnceLock;
 
 /// Flat-AoS structural substrate.
 ///
 /// `records` is the structural row column (16 B per record); `sib_skip`
 /// is the post-finalise sibling-stride column (4 B per record); the
-/// three `pay_*` columns hold typed payloads. The lazy AoS sidecar
-/// (`packed_cache`) is populated on first random-access read.
+/// three `pay_*` columns hold typed payloads.
 #[derive(Debug, Default)]
 pub struct Columns {
     /// Flat AoS structural rows. Each entry is 16 bytes (kind_meta,
@@ -152,16 +144,6 @@ pub struct Columns {
     /// consumers that slice raw bytes.
     pub pay_agg: Vec<u8>,
 
-    // ── AX.W1.D — AoS sidecar for hybrid random-access reads ──────
-    /// Lazy AoS projection. Populated on first call to
-    /// [`Self::packed_cache`]; invalidated by every mutating call
-    /// that touches a structural column.
-    ///
-    /// Post-AY.W1.1 the source of truth is `records` directly — the
-    /// transpose is near-identity: copy each [`TapeRec`] into a
-    /// 32-byte aligned [`PackedRecord`] paired with its `sib_skip`.
-    packed_cache: OnceLock<Vec<PackedRecord>>,
-
     // ── B5.W1 — value-side substrate (promoted from FusedBuilder) ──
     //
     // Pre-B5.W1 these four fields lived on a separate `FusedBuilder`
@@ -211,7 +193,6 @@ impl Columns {
             pay_wide: Vec::new(),
             pay_f64: Vec::new(),
             pay_agg: Vec::with_capacity(expected / 8 * 8),
-            packed_cache: OnceLock::new(),
             value_frames: Vec::with_capacity(expected),
             value_payloads_narrow: Vec::with_capacity(expected / 4),
             value_payloads_wide: Vec::with_capacity(expected / 4),
@@ -233,7 +214,7 @@ impl Columns {
 
     /// Direct reference to the flat AoS row column. Used by readers
     /// that want to slice the records dense (the `dedup` hash, the
-    /// `packed_cache` transpose, range-equality checks).
+    /// range-equality checks).
     #[inline(always)]
     pub(crate) fn records(&self) -> &[TapeRec] {
         &self.records
@@ -339,7 +320,6 @@ impl Columns {
         self.records.truncate(new_len);
         self.sib_skip.truncate(new_len);
         self.frame_depth.truncate(new_len);
-        self.invalidate_packed();
     }
 
     /// Run the Stage-C finaliser over `self`, reading the per-record
@@ -351,7 +331,7 @@ impl Columns {
     ///
     /// SAFETY: the depth slice aliases the heap buffer of the
     /// in-place `frame_depth` `Vec`. The finaliser's mutating writes
-    /// touch only `records` / `sib_skip` / `packed_cache`; it never
+    /// touch only `records` / `sib_skip`; it never
     /// reads or writes `frame_depth`. So the slice and the `&mut
     /// Columns` borrow over `self` describe disjoint memory.
     #[inline(always)]
@@ -362,77 +342,6 @@ impl Columns {
             std::slice::from_raw_parts(ptr, len)
         };
         crate::finaliser::finalise(self, depth_slice);
-    }
-
-    // ── AX.W1.D — AoS sidecar (`packed_cache`) readers/invalidators ──
-
-    /// Get (populating on first call) the AoS sidecar view.
-    ///
-    /// The first call transposes `records` + `sib_skip` into a dense
-    /// `Vec<PackedRecord>` — O(n) one-time cost. Subsequent calls
-    /// return the cached slice without re-transposing.
-    ///
-    /// The cache is invalidated whenever the structural primary is
-    /// mutated (any `push_*` or `truncate`); the next call re-
-    /// transposes the updated state.
-    ///
-    /// Uses [`OnceLock::get_or_init`], so concurrent readers across
-    /// threads observe the same immutable transpose without racing.
-    /// The populate closure captures `self` by `&` so the transpose
-    /// reads the columns directly; no extra clone.
-    #[inline]
-    pub fn packed_cache(&self) -> &[PackedRecord] {
-        self.packed_cache
-            .get_or_init(|| self.transpose_to_packed())
-            .as_slice()
-    }
-
-    /// `None` if the AoS sidecar is not currently populated; `Some`
-    /// if a prior read has materialised it and no subsequent write
-    /// has invalidated it. Exposed so consumers wanting to probe
-    /// whether a hot path exercised the sidecar — e.g. the AX.W1.7
-    /// Twitter lazy-field bench — can assert the contract without
-    /// forcing the transpose.
-    #[inline]
-    pub fn packed_cache_populated(&self) -> bool {
-        self.packed_cache.get().is_some()
-    }
-
-    /// Invalidate the AoS sidecar. Called by every mutation that
-    /// touches a structural column; the next `packed_cache()` call
-    /// re-transposes from the (updated) primary.
-    ///
-    /// Idempotent: invalidating an already-empty cache is a no-op.
-    /// `#[inline(always)]` because the hot-path push sites call this
-    /// once per row — the body compiles down to a single
-    /// `OnceLock::take` which is a conditional pointer-write.
-    #[inline(always)]
-    pub fn invalidate_packed(&mut self) {
-        let _ = self.packed_cache.take();
-    }
-
-    /// Transpose `records` + `sib_skip` into a fresh AoS `Vec`.
-    /// Internal helper for [`Self::packed_cache`]; kept at module
-    /// scope so tests can call it directly without going through the
-    /// lock.
-    fn transpose_to_packed(&self) -> Vec<PackedRecord> {
-        let n = self.records.len();
-        debug_assert_eq!(self.sib_skip.len(), n, "sib_skip length mismatch");
-        let mut out: Vec<PackedRecord> = Vec::with_capacity(n);
-        for i in 0..n {
-            let rec = self.records[i];
-            out.push(PackedRecord {
-                kind_meta: rec.kind_meta,
-                flags: rec.flags,
-                extra: rec.extra,
-                span_lo: rec.span_lo,
-                span_hi: rec.span_hi,
-                child_off: rec.child_off,
-                sib_skip: self.sib_skip[i],
-                _pad: [0u8; 12],
-            });
-        }
-        out
     }
 
     /// Append one structural row, returning the row's position.
@@ -473,7 +382,6 @@ impl Columns {
         // `Columns` would assign at the root.
         self.frame_depth.push(self.current_depth);
         // AX.W1.D — primary mutation invalidates the AoS sidecar.
-        self.invalidate_packed();
         idx
     }
 
@@ -580,7 +488,6 @@ impl Columns {
     #[inline(always)]
     pub fn set_sib_skip_at(&mut self, i: u32, value: u32) {
         self.sib_skip[i as usize] = value;
-        self.invalidate_packed();
     }
 
     /// Set `child_off` on row `i` directly. Used by `close_compound`
@@ -588,7 +495,6 @@ impl Columns {
     #[inline(always)]
     pub fn set_child_off_at(&mut self, i: u32, value: TapeOffset) {
         self.records[i as usize].child_off = value;
-        self.invalidate_packed();
     }
 
     /// Set `span_hi` on row `i` directly. Used by `close_compound`
@@ -596,7 +502,6 @@ impl Columns {
     #[inline(always)]
     pub fn set_span_hi_at(&mut self, i: u32, value: u32) {
         self.records[i as usize].span_hi = value;
-        self.invalidate_packed();
     }
 
     /// OR bits into `extra` on row `i`. Used by `close_compound` to
@@ -604,7 +509,6 @@ impl Columns {
     #[inline(always)]
     pub fn or_extra_at(&mut self, i: u32, mask: u16) {
         self.records[i as usize].extra |= mask;
-        self.invalidate_packed();
     }
 
     /// AY.W1.1 — flat-AoS compound-row push.
@@ -894,7 +798,7 @@ impl Columns {
     /// the M-series Firestorm front-end into macro-op fusion. Post-
     /// AY both span endpoints live in the same 16-byte `TapeRec`;
     /// the writer is one indexed AoS field-update + one
-    /// `invalidate_packed` call. Same semantics, simpler code.
+    /// Same semantics, simpler code.
     #[inline(always)]
     pub fn stp_span(&mut self, idx: usize, span_lo_val: u32, span_hi_val: u32) {
         debug_assert!(
@@ -906,7 +810,6 @@ impl Columns {
         let rec = &mut self.records[idx];
         rec.span_lo = span_lo_val;
         rec.span_hi = span_hi_val;
-        self.invalidate_packed();
     }
 
     // ── AW-IV.W5.1 — reduce_column<C, R> consumer API ────────────────

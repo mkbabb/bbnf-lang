@@ -29,21 +29,13 @@ pub fn parse_array_JsonFixture_array(
         });
     }
     let outer_off = builder
-        .begin_compound(
-            crate::runtime::tape::TapeKind::Seq,
-            span_lo,
-            8u8,
-            0u8,
-            0u8,
-            0u16,
-        );
+        .begin_compound(crate::runtime::tape::TapeKind::Seq, span_lo, 8u8, 0u8, 0u16);
     let lbracket_open = *p as u32;
     let next_off = builder
         .begin_compound(
             crate::runtime::tape::TapeKind::Seq,
             lbracket_open,
             0,
-            0u8,
             0u8,
             0u16,
         );
@@ -60,25 +52,11 @@ pub fn parse_array_JsonFixture_array(
         );
     let opt_ws_open = *p as u32;
     let opt_ws_off = builder
-        .begin_compound(
-            crate::runtime::tape::TapeKind::Seq,
-            opt_ws_open,
-            0,
-            0u8,
-            0u8,
-            0u16,
-        );
+        .begin_compound(crate::runtime::tape::TapeKind::Seq, opt_ws_open, 0, 0u8, 0u16);
     let _ = __shape_support_JsonFixture::skip_space(input, p, state);
     let repeat_open = *p as u32;
     let repeat_off = builder
-        .begin_compound(
-            crate::runtime::tape::TapeKind::Rule,
-            repeat_open,
-            0,
-            0u8,
-            0u8,
-            0u16,
-        );
+        .begin_compound(crate::runtime::tape::TapeKind::Rule, repeat_open, 0, 0u8, 0u16);
     let maybe_close = input.get(*p).copied();
     if maybe_close == Some(b']') {
         let repeat_close = *p as u32;
@@ -111,7 +89,6 @@ pub fn parse_array_JsonFixture_array(
                 iter_open,
                 0,
                 0u8,
-                0u8,
                 0u16,
             );
         let _value_off = ({
@@ -125,7 +102,6 @@ pub fn parse_array_JsonFixture_array(
                 comma_repeat_open,
                 0,
                 0u8,
-                0u8,
                 0u16,
             );
         let comma_iter_save_p = *p;
@@ -138,7 +114,6 @@ pub fn parse_array_JsonFixture_array(
                     crate::runtime::tape::TapeKind::Seq,
                     comma_iter_open,
                     0,
-                    0u8,
                     0u8,
                     0u16,
                 );

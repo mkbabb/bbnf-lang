@@ -202,26 +202,6 @@ fn rollback_to_idempotent_at_columns_level() {
     assert_eq!(cols.len(), 1);
 }
 
-/// AY-II.W0.a — rollback invalidates the AoS sidecar so subsequent
-/// packed_cache reads re-transpose from the truncated primary.
-#[test]
-fn rollback_to_invalidates_packed_cache() {
-    let mut cols = Columns::new();
-    cols.push_compound_fused(TapeKind::Seq, 0);
-    cols.push_leaf_fused(TapeKind::Literal, 0, 0, 0, 1, TapeOffset::NONE);
-
-    // Populate the sidecar.
-    let _ = cols.packed_cache();
-    assert!(cols.packed_cache_populated());
-
-    // Rollback invalidates.
-    cols.rollback_to(1);
-    assert!(
-        !cols.packed_cache_populated(),
-        "rollback_to must invalidate the AoS sidecar"
-    );
-}
-
 /// AY-II.W0.a — the finaliser is the sole writer of `sib_skip`.
 /// Build a compound manually via the fused Columns primitives, hand
 /// a matching `frame_depth` stream to the finaliser, and verify the

@@ -60,7 +60,6 @@ pub mod driver;
 pub mod dta;
 pub mod finaliser;
 pub mod kind;
-pub mod packed;
 pub mod profile;
 pub mod psi;
 pub mod stage1;
@@ -86,7 +85,6 @@ pub use driver::{
 pub use dta::{DtaAssociativity, DtaPrecedenceEntry, DtaRuleId, DtaStateId};
 pub use finaliser::{finalise, STACK_DEPTH_HINT};
 pub use kind::TapeKind;
-pub use packed::PackedRecord;
 pub use profile::{
     GrammarProfile, RuleId, ScanActivationFlags, ScanAlphabetClass, ScanPolicyEntry,
 };

@@ -358,6 +358,5 @@ pub fn push_compound_referring(
     rec.span_hi = span.1;
     rec.child_off = crate::tape::TapeOffset(existing);
     rec.extra = crate::tape::TapeRec::HAS_CHILDREN_BIT;
-    columns.invalidate_packed();
     idx
 }

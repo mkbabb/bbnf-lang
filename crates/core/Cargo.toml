@@ -170,11 +170,6 @@ name = "bbnf_monolithic"
 path = "benches/bbnf/monolithic.rs"
 harness = false
 
-[[bench]]
-name = "twitter_lazy_field"
-path = "benches/twitter_lazy_field.rs"
-harness = false
-
 
 # iai-callgrind is a Linux-only dev-dep (requires valgrind linkage).
 # macOS dev-hosts skip it; the `iai` feature + `required-features` on the

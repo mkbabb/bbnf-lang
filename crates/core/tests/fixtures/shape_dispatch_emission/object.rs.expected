@@ -23,24 +23,10 @@ pub fn parse_object_JsonFixture_object(
         });
     }
     let outer_off = builder
-        .begin_compound(
-            crate::runtime::tape::TapeKind::Seq,
-            span_lo,
-            9u8,
-            0u8,
-            0u8,
-            0u16,
-        );
+        .begin_compound(crate::runtime::tape::TapeKind::Seq, span_lo, 9u8, 0u8, 0u16);
     let lbrace_open = *p as u32;
     let next_off = builder
-        .begin_compound(
-            crate::runtime::tape::TapeKind::Seq,
-            lbrace_open,
-            0,
-            0u8,
-            0u8,
-            0u16,
-        );
+        .begin_compound(crate::runtime::tape::TapeKind::Seq, lbrace_open, 0, 0u8, 0u16);
     *p += 1;
     let brace_close = *p as u32;
     let _ = builder
@@ -54,25 +40,11 @@ pub fn parse_object_JsonFixture_object(
         );
     let opt_ws_open = *p as u32;
     let opt_ws_off = builder
-        .begin_compound(
-            crate::runtime::tape::TapeKind::Seq,
-            opt_ws_open,
-            0,
-            0u8,
-            0u8,
-            0u16,
-        );
+        .begin_compound(crate::runtime::tape::TapeKind::Seq, opt_ws_open, 0, 0u8, 0u16);
     let _ = __shape_support_JsonFixture::skip_space(input, p, state);
     let repeat_open = *p as u32;
     let repeat_off = builder
-        .begin_compound(
-            crate::runtime::tape::TapeKind::Rule,
-            repeat_open,
-            0,
-            0u8,
-            0u8,
-            0u16,
-        );
+        .begin_compound(crate::runtime::tape::TapeKind::Rule, repeat_open, 0, 0u8, 0u16);
     if input.get(*p).copied() == Some(b'}') {
         let repeat_close = *p as u32;
         builder.end_compound(repeat_off, repeat_close);
@@ -103,7 +75,6 @@ pub fn parse_object_JsonFixture_object(
                 iter_open,
                 0,
                 0u8,
-                0u8,
                 0u16,
             );
         let pair_open = *p as u32;
@@ -112,7 +83,6 @@ pub fn parse_object_JsonFixture_object(
                 crate::runtime::tape::TapeKind::Seq,
                 pair_open,
                 7u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -131,7 +101,6 @@ pub fn parse_object_JsonFixture_object(
                 colon_next_open,
                 0,
                 0u8,
-                0u8,
                 0u16,
             );
         let opt_colon_open = *p as u32;
@@ -140,7 +109,6 @@ pub fn parse_object_JsonFixture_object(
                 crate::runtime::tape::TapeKind::Seq,
                 opt_colon_open,
                 0,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -182,7 +150,6 @@ pub fn parse_object_JsonFixture_object(
                 comma_repeat_open,
                 0,
                 0u8,
-                0u8,
                 0u16,
             );
         let comma_iter_save_p = *p;
@@ -195,7 +162,6 @@ pub fn parse_object_JsonFixture_object(
                     crate::runtime::tape::TapeKind::Seq,
                     comma_iter_open,
                     0,
-                    0u8,
                     0u8,
                     0u16,
                 );

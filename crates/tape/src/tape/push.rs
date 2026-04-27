@@ -103,6 +103,40 @@ impl<R> Tape<R> {
         self.value_end_compound(span_hi);
     }
 
+    /// Finalise a pre-order compound and stamp `child_off` to a
+    /// caller-supplied override rather than the leftmost-descendant
+    /// scan [`Self::end_compound`] performs.
+    ///
+    /// Pratt outers admit a non-trivial first-child semantics: their
+    /// reduced operator tree's root (the final reducer) is the
+    /// authoritative `child_off`, not the lexically-first operand the
+    /// pre-order scan would name. B5.W4 collapses the historical
+    /// pattern of `end_compound` + `set_child_off_at` post-call surgery
+    /// into a single primitive — the override rides through the close
+    /// natively, and the post-call surgery surface (`set_child_off_at`
+    /// outside the substrate's own finalisation paths) is no longer
+    /// reachable from emitted code.
+    ///
+    /// Symmetric with [`Self::end_compound_post_order`], which already
+    /// accepts a caller-supplied `first_child` for tapes whose post-
+    /// order layout makes the lexical first-child unrecoverable from
+    /// `open_offset + 1`. Stamps `HAS_CHILDREN_BIT`; the value-arena
+    /// frame closes identically to [`Self::end_compound`].
+    #[inline(always)]
+    pub fn end_compound_with_child_off(
+        &mut self,
+        open_offset: u32,
+        span_hi: u32,
+        child_off: TapeOffset,
+    ) {
+        self.columns.set_span_hi_at(open_offset, span_hi);
+        self.columns.set_child_off_at(open_offset, child_off);
+        self.columns
+            .or_extra_at(open_offset, TapeRec::HAS_CHILDREN_BIT);
+        self.columns.current_depth = self.columns.current_depth.saturating_sub(1);
+        self.value_end_compound(span_hi);
+    }
+
     /// Finalise a compound opened via [`Self::begin_compound`] in
     /// post-order — the compound row was allocated AFTER its
     /// children, so `open_offset` is the LAST record and the first

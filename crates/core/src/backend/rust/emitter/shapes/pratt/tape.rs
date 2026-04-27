@@ -196,16 +196,17 @@ pub fn emit_parse_pratt(
             // emit their interior records first and the outer compound
             // LAST (post-order), returning the outer compound's row.
             // Seeding `this_operand_root = outer_off + 1` (the leftmost
-            // descendant of the operand subtree) made the post-close
-            // `set_child_off_at(outer_off, this_operand_root)` point at
-            // an interior record rather than the operand's outer row.
-            // For single-operand chains (no reducers fire) the cursor's
-            // children iteration on the Pratt outer then entered the
-            // operand's INTERIOR — surfacing multiple records as
-            // separate "operands" to `lower_binary_factor` and tripping
-            // its operator-resolution panic. Using the dispatcher's
-            // returned offset gives the canonical operand root in both
-            // single-operand and multi-operand reducer paths.
+            // descendant of the operand subtree) made the close-time
+            // `child_off` override (B5.W4 routes this through
+            // `end_compound_with_child_off`) point at an interior record
+            // rather than the operand's outer row. For single-operand
+            // chains (no reducers fire) the cursor's children iteration
+            // on the Pratt outer then entered the operand's INTERIOR —
+            // surfacing multiple records as separate "operands" to
+            // `lower_binary_factor` and tripping its operator-resolution
+            // panic. Using the dispatcher's returned offset gives the
+            // canonical operand root in both single-operand and
+            // multi-operand reducer paths.
             #operand_call
             // AW-V.W5.2 — per-Ref operand call returns the operand
             // outer-compound offset; the post-order shape contract is
@@ -308,11 +309,11 @@ pub fn emit_parse_pratt(
                     // Post-order: its children already live in the tape
                     // (LHS + op leaf + RHS at indices [lhs_idx..len]);
                     // begin_compound allocates a new row at the post-
-                    // position; end_compound closes; set_child_off_at
-                    // retroactively points child_off at `lhs_idx` so the
-                    // cursor walk names LHS as first child. flags
-                    // carries op_discriminant so reducer-variant
-                    // projection distinguishes per-op.
+                    // position; end_compound_post_order closes and
+                    // points child_off at `lhs_idx` so the cursor walk
+                    // names LHS as first child. flags carries
+                    // op_discriminant so reducer-variant projection
+                    // distinguishes per-op.
                     let reducer_span_hi = *p as u32;
                     let compound_idx = builder.begin_compound(
                         crate::runtime::tape::TapeKind::Rule,
@@ -480,25 +481,26 @@ pub fn emit_parse_pratt(
                 this_operand_root = _rhs_off.0;
             }
 
-            // ── Close outer compound (AY.W6.c) ───────────────────
-            // `close_compound` back-patches `span_hi`, sets
-            // `HAS_CHILDREN_BIT`, and stamps the frame's recorded
-            // first-child index onto the outer row's `child_off`.
-            // For walker-parity, the outer Pratt compound's
-            // `child_off` must name the FINAL REDUCER (the root of
-            // the reduced operator tree), not the lexical first
-            // child (first operand). Override via
-            // `set_child_off_at` after close: the finaliser honours
-            // the override because `SIB_SKIP_STAMPED_BIT` is set on
-            // the outer row's open, and Stage-C skips re-derivation.
+            // ── Close outer compound (AY.W6.c, B5.W4) ───────────
+            // `end_compound_with_child_off` back-patches `span_hi`,
+            // sets `HAS_CHILDREN_BIT`, and stamps the caller-supplied
+            // override directly onto the outer row's `child_off`. For
+            // walker-parity, the outer Pratt compound's `child_off`
+            // must name the FINAL REDUCER (the root of the reduced
+            // operator tree), not the lexical first child (first
+            // operand). When no reduction fired (single-operand
+            // Pratt), the final reducer is the first operand's root,
+            // which `this_operand_root` already tracks.
+            //
+            // Pre-B5.W4 this was a two-call dance: `end_compound`
+            // wrote the leftmost-descendant child_off, then a
+            // post-call `set_child_off_at` rewrote it. B5.W4 collapses
+            // both writes into one substrate primitive — the override
+            // rides through the close natively.
             let outer_span_hi = *p as u32;
-            builder.end_compound(outer_off, outer_span_hi);
-            // Walker-parity override: child_off ← final reducer.
-            // When no reduction fired (single-operand Pratt), the
-            // final reducer is the first operand's root, which
-            // `this_operand_root` already tracks.
-            builder.set_child_off_at(
+            builder.end_compound_with_child_off(
                 outer_off,
+                outer_span_hi,
                 crate::runtime::tape::TapeOffset(this_operand_root),
             );
             Ok(crate::runtime::tape::TapeOffset(outer_off))

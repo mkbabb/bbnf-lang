@@ -77,15 +77,6 @@ impl<R> Tape<R> {
         &self.columns
     }
 
-    /// Set `child_off` on row `i` directly. Used by the Pratt
-    /// reducer's walker-parity override after `end_compound` to
-    /// re-stamp the outer row's `child_off` to the final reducer's
-    /// root (B4.W2 substrate parity).
-    #[inline(always)]
-    pub fn set_child_off_at(&mut self, i: u32, value: TapeOffset) {
-        self.columns.set_child_off_at(i, value);
-    }
-
     // ── Read accessors — column-indexed materialisation ──────────────
 
     /// Look up a record by offset. Panics on out-of-range offsets.

@@ -18,16 +18,15 @@
 //! - Operator reduction uses the per-grammar `PRECEDENCE_LUT` const
 //!   the [`crate::backend::rust::emitter::precedence`] emitter
 //!   already lowers.
-//! - The outer Pratt compound now opens pre-order via
-//!   [`Tape<R>::open_compound`] and closes via
-//!   [`Tape<R>::close_compound`] (AY.W5.b substrate), so its
-//!   direct children (operands, op-leaf Spans, reducer compounds)
-//!   land with write-time `sib_skip` stamping. After `close_compound`
-//!   the outer row's `child_off` is overridden to point at the final
-//!   reducer root via [`Columns::set_child_off_at`] — preserving the
-//!   walker's ShuntingYard invariant (outer compound's `child_off`
-//!   names the reduced operator-tree root) while participating in
-//!   the W5.b write-time close-stamp contract.
+//! - The outer Pratt compound opens pre-order via
+//!   [`Tape<R>::begin_compound`] and closes via
+//!   [`Tape<R>::end_compound_with_child_off`] (B5.W4 substrate), so
+//!   its direct children (operands, op-leaf Spans, reducer compounds)
+//!   land with write-time `sib_skip` stamping. The close primitive
+//!   stamps the outer row's `child_off` directly to the final reducer
+//!   root — preserving the walker's ShuntingYard invariant (outer
+//!   compound's `child_off` names the reduced operator-tree root) in
+//!   one substrate call, with no post-close surgery.
 //! - Reducer inner compounds remain `push_compound` post-order: a
 //!   reducer is synthesised at reduce time, AFTER its lhs + op-leaf +
 //!   rhs have already been pushed, with its `child_off` pointing at

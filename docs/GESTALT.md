@@ -22,7 +22,7 @@ HIR→NFA→DFA regex engine (`bbnf-regex`) that replaces the `regex`
 crate at emission sites. A pprint substrate (`../pprint`) carries the
 gorgeous auto-formatter.
 
-The fleet state at the current read-of-record: 1,898 master commits,
+The fleet state at the current read-of-record: ~1,920 master commits,
 1,001 unpushed, 55 local branch refs, 18 tranches
 of substrate work landed between 2026-04-08 and 2026-04-15,
 followed by a five-day DTA/PSI rut (Era V, 2026-04-15 → 2026-04-19,
@@ -305,8 +305,15 @@ revert (Tranche Y's seven structural Vecs collapsed back to one
 `Vec<TapeRec>` plus a parallel `sib_skip`), ending the column
 experiment; AY-II wrote the rest-of-AY path forward and paused at
 W0'; AZ opened as a planning-only tranche; B0 landed the bounded
-prelude (profile tiers + `ay-*` Makefile); B1 is mid-flight. The
-present is Era VI's infra-truth restart. AY-I's honest relinquish
+prelude (profile tiers + `ay-*` Makefile); B1 closed the dev-loop
+truth annex; and the substrate-closure arc B3 → B4 → B2 → B5 → B6 → B7
+followed — parser-baseline restoration (B3), codegen emit-correctness
+(B4), build-time codegen transposition (B2), substrate restoration
+collapsing the welded `FusedBuilder`/rollback/columns surfaces into
+`Tape<R>` over `Columns` (B5), dev-loop annex (B6), cross-repo
+modernization (B7) — closing Era VI's substrate before AZ-I's
+direct-to-struct transformation opens. The present is Era VI's
+infra-truth restart. AY-I's honest relinquish
 — not "the thesis failed", but "the thesis's prerequisites were
 unmet" — is Era VI's tonal signature. The commit record contains
 three `FINAL.md` files admitting partial close (AY-I, AY-II, AV)
@@ -446,7 +453,7 @@ in any implementation) is what makes reversal a health signal: the
 alternative — layering a workaround over a failing substrate — is
 prohibited. Reversal is the mechanism of correctness maintenance.
 
-## 5. The current plan — B1 → AY-II.W0' → AY-II W1–W5 → AZ-I → AZ-II → BA → BB
+## 5. The current plan — B1 → B3 → B4 → B2 → B5 → B6 → B7 → AZ-I → AZ-II → BA → BB
 
 ### B1 — dev-loop truth + proof-surface hardening
 
@@ -487,28 +494,28 @@ ported bench; there is no dual-harness window — `feedback_no-backward-compat`.
 
 ### AY-II.W0' close + W1–W5 resume
 
-AY-II.W0' consolidated `TapeBuilder` + `ValueBuilder` into
-`FusedBuilder` (`bd563c1d`, 2026-04-21; follow-on `4edfac88` renaming
+AY-II.W0' consolidated `TapeBuilder` + `ValueBuilder` into a fused
+path (`bd563c1d`, 2026-04-21; follow-on `4edfac88` renaming
 `finish` → `finish_fused`, `9c9906c8` retiring standalone
-`ValueBuilder`, `0beda457` hoisting the single FusedBuilder parse-
-entry, `f768f50d` landing O(1) `direct_child_count`) before the
-infra audit revealed that the public command surface was diverged
-from what the repo actually executed. `PATH-FORWARD.md` reordered
-the remainder. `generated.rs` is still pre-regen with the bridge-era
-parse entry, so AY-II.W0' is not formally closed; the W0'.a compose-
-boundary aliases and shim surfaces are present by design until the
-post-B1 regen replaces them (`feedback_no-backward-compat`'s
-transient-boundary carve-out). B1 is the bounded prelude that must
-close before W0' closes its ceremony and W1 dispatches. The paused
-runtime work is typed-materialisation closure on the settled
+`ValueBuilder`, `0beda457` hoisting the single fused parse-entry,
+`f768f50d` landing O(1) `direct_child_count`) before the infra
+audit revealed that the public command surface was diverged from
+what the repo actually executed. `PATH-FORWARD.md` reordered the
+remainder. The W0' close ceremony itself folded into B4.W1; B5
+substrate dissolution then retired the `FusedBuilder` wrapper
+outright — the substrate is now `Tape<R>` over `Columns` with
+value-side state folded into the same column array (post-B5.W6b),
+and the boundary surface between generated parsers and the substrate
+collapses to `Tape::position()` plus `Tape::rollback_to(open)`. The
+paused runtime work is typed-materialisation closure on the settled
 parse-that substrate — no architectural surprises, but every gate
-re-anchors against the post-B1 bench matrix. W0'.d1 through W0'.d7
+re-anchors against the post-B5 bench matrix. W0'.d1 through W0'.d7
 already migrated `push_compound` / `mark_children` tests to the
-FusedBuilder API, gated `gorgeous` derive sites, dropped `gorgeous`
+fused builder API, gated `gorgeous` derive sites, dropped `gorgeous`
 as a mandatory dev-dep, narrowed the `build.rs` fingerprint, and
 excluded heavy proc-macro crates from iter-check. W1 resumes on the
 refreshed proof surface with all of this settled; agent-slot count
-is specifically sized at W1 open against the measured post-B1
+is specifically sized at W1 open against the measured post-B5
 matrix.
 
 ### AZ-I — direct-to-struct for JSON + CSS L4 + Sheets

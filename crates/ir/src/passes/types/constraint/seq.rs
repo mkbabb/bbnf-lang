@@ -8,7 +8,7 @@ use crate::TypeDesc;
 
 use super::TypeVarId;
 use super::domain::TypeDomain;
-use super::helpers::{assign, project_seq_type};
+use super::revise::{assign, project_seq_type};
 
 /// Metadata about a Seq child for span-method override revert decisions.
 #[derive(Clone, Debug)]

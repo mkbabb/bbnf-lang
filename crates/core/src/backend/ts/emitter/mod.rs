@@ -33,7 +33,7 @@ use crate::backend::{
 };
 
 pub use super::code::{TsCode, TsEmitCtx, TsEmitter};
-pub use super::helpers::{
+pub use super::projection::{
     compile_map_expr_to_js, translate_rust_constant_to_js, ts_escape, type_desc_to_ts,
     unescape_literal, ws_skip_stmts,
 };

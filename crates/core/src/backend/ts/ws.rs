@@ -1,7 +1,7 @@
 //! Whitespace trim codegen helpers for the TS emitter.
 
 use super::code::{TsCode, TsEmitCtx, TsEmitter};
-use super::helpers::ws_skip_stmts;
+use super::projection::ws_skip_stmts;
 
 impl TsEmitter {
     pub(in crate::backend::ts) fn ws_trim(

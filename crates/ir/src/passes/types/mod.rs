@@ -12,7 +12,7 @@
 pub mod constraint;
 pub mod generate;
 mod subvariants;
-mod utils;
+mod type_map;
 
 use std::collections::HashMap;
 
@@ -26,7 +26,7 @@ use generate::generate_constraints;
 use subvariants::{collect_sub_variants_raw, validate_sub_variant_uniqueness_raw};
 
 // Re-export for codegen.
-pub use utils::{TypeMap, try_flatten_pair};
+pub use type_map::{TypeMap, try_flatten_pair};
 
 /// Project types for all rules and populate `ir.types`.
 ///
@@ -305,7 +305,7 @@ pub fn project_types(ir: &mut GrammarIR) {
 
     fn collect_repeat_scratch(
         node: &IrNode,
-        map: &utils::TypeMap,
+        map: &type_map::TypeMap,
         dag: &GrammarDag,
         out: &mut Vec<TypeDesc>,
     ) {
@@ -406,7 +406,7 @@ pub fn project_types(ir: &mut GrammarIR) {
 /// shapes collapse to the same id, so the resulting table is exactly
 /// as many entries as the grammar has distinct structural types.
 fn populate_interner(
-    type_map: &utils::TypeMap,
+    type_map: &type_map::TypeMap,
     types_map: &HashMap<RuleId, TypeDesc>,
     rules: &[crate::IrRule],
     interner: &mut TypeDescInterner,
@@ -484,7 +484,7 @@ fn intern_recursive(ty: &TypeDesc, interner: &mut TypeDescInterner) {
 fn correct_repeat_elem_types(
     node: &IrNode,
     rule_type: &TypeDesc,
-    map: &mut utils::TypeMap,
+    map: &mut type_map::TypeMap,
     dag: &GrammarDag,
 ) {
     fn extract_all_vec_inners<'a>(td: &'a TypeDesc, out: &mut Vec<&'a TypeDesc>) {
@@ -510,7 +510,7 @@ fn correct_repeat_elem_types(
     fn walk_and_correct(
         node: &IrNode,
         vec_inner: &TypeDesc,
-        map: &mut utils::TypeMap,
+        map: &mut type_map::TypeMap,
         dag: &GrammarDag,
     ) {
         match node {
@@ -548,7 +548,7 @@ fn correct_repeat_elem_types(
 /// 3. try_flatten_pair: (T, Vec(T)) collapsed to Vec(T)
 fn compute_structural_types_for_node(
     node: &IrNode,
-    type_map: &mut utils::TypeMap,
+    type_map: &mut type_map::TypeMap,
     dag: &GrammarDag,
 ) {
     match node {

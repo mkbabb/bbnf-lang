@@ -14,7 +14,7 @@ use crate::backend::{
     SepByConfig, SeqChildGroup, TokenDispatchArmCompiled, ValuePlacement,
 };
 pub use super::code::{WasmEmitCtx, WasmEmitter};
-pub use super::helpers::unescape_literal;
+pub use super::escape::unescape_literal;
 
 impl Emitter for WasmEmitter {
     type Output = String;

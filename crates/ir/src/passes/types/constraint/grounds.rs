@@ -8,7 +8,7 @@ use crate::TypeDesc;
 
 use super::TypeVarId;
 use super::domain::TypeDomain;
-use super::helpers::assign;
+use super::revise::assign;
 
 /// Ground constraint: assigns a fixed type to a variable.
 /// AC-3: singleton domain, immediately resolved.

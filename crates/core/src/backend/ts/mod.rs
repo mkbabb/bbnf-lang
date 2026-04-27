@@ -3,7 +3,7 @@ mod alt;
 pub mod code;
 mod dispatch;
 pub mod emitter;
-pub mod helpers;
+pub mod projection;
 mod repeat;
 mod ws;
 pub use code::{TsCode, TsEmitCtx, TsEmitter};

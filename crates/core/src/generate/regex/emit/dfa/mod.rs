@@ -16,10 +16,10 @@
 //!
 //! [`CostModel`]: crate::generate::regex::cost_model::CostModel
 
-mod helpers;
+mod accel;
 mod table;
 
-use helpers::{build_class_predicate, try_emit_accel_expr, try_emit_accel_scan};
+use accel::{build_class_predicate, try_emit_accel_expr, try_emit_accel_scan};
 use table::emit_tier_b;
 
 use crate::generate::regex::cost_model::EmitOpts;
@@ -475,5 +475,5 @@ pub fn canonical_dfa_hash(pattern: &str) -> Option<u64> {
     let _hir = parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
         .ok()?;
     let dfa = Dfa::compile(pattern)?;
-    Some(helpers::hash_dfa_structure(&dfa))
+    Some(accel::hash_dfa_structure(&dfa))
 }

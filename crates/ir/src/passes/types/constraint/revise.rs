@@ -1,6 +1,11 @@
-//! Internal solver helpers shared by every constraint impl: assign once,
-//! project a Seq's child types into a result type, and join (LUB) Alt
-//! branch types.
+//! Constraint-revise primitives — domain assignment, Seq-child
+//! projection, Alt-branch type-join (LUB).
+//!
+//! Shared by every constraint impl in this module: AltConstraint,
+//! SeqConstraint, GroundConstraint, ReferenceConstraint, the operator
+//! constraints. The contract is "single-step revise": each helper
+//! mutates one variable's domain or projects across a fixed-shape
+//! child set; no propagation orchestration lives here.
 //!
 //! Tranche Y.10: the `project_seq_type` and `join_types` helpers take
 //! `&[&TypeDesc]` instead of `&[TypeDesc]` so that constraint
@@ -12,7 +17,7 @@
 use csp_solver::variable::Variable;
 
 use crate::TypeDesc;
-use crate::passes::types::utils::try_flatten_pair;
+use crate::passes::types::type_map::try_flatten_pair;
 
 use super::TypeVarId;
 use super::domain::TypeDomain;

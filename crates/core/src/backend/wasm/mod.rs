@@ -1,7 +1,7 @@
 //! WASM backend: generates WebAssembly Text (WAT) parser modules.
 pub mod code;
 pub mod emitter;
-pub mod helpers;
+pub mod escape;
 
 mod alt;
 mod dispatch;

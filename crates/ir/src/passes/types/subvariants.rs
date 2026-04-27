@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use crate::dag::GrammarDag;
 use crate::{IrNode, RuleId, TypeDesc};
 
-use super::utils::TypeMap;
+use super::type_map::TypeMap;
 
 /// Raw sub-variant data before string interning.
 pub(super) struct RawSubVariant {

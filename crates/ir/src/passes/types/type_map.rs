@@ -1,4 +1,14 @@
-//! Helper types and utility functions for type projection.
+//! [`TypeMap`] — precomputed sub-expression types per IR node.
+//!
+//! Built during `project_types` (CSP solver) and consumed by codegen.
+//! Eliminates codegen re-inference — lookups are O(1) HashMap access.
+//! Carries normal-context types, structural (pre-collapse) types, vec-
+//! context types, per-Seq child + result types, and `preserve_spans`
+//! flags.
+//!
+//! Also exposes [`try_flatten_pair`] — the `(T, Vec<T>)` /
+//! `(Vec<T>, T)` flattening helper consumed by the CSP solver's revise
+//! step + by codegen.
 
 use std::collections::HashMap;
 

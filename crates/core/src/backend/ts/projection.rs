@@ -1,4 +1,8 @@
-//! TS codegen helper functions.
+//! TypeScript projection — `TypeDesc → TS source`, literal escape,
+//! Rust-suffix stripping, MapExpr → JS expression compilation.
+//!
+//! Every emitted-TS body routes its type and value translation through
+//! these helpers so the per-rule emitters remain projection-agnostic.
 
 use bbnf_ir::{GrammarIR, MapExpr, TypeDesc};
 

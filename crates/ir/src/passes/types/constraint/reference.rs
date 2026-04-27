@@ -28,7 +28,7 @@ use crate::TypeDesc;
 
 use super::TypeVarId;
 use super::domain::TypeDomain;
-use super::helpers::assign;
+use super::revise::assign;
 
 /// Ref constraint: the reference's type equals the target rule's
 /// type when scalar, else `BoxedEnum`.

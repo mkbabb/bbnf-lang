@@ -22,14 +22,14 @@
 //! - [`reference`] — `RefConstraint` (scalar-propagating Ref).
 //! - [`operators`] — `OptionalConstraint`, `RepeatConstraint`,
 //!   `ProjectConstraint`, `MapConstraint`.
-//! - [`helpers`] — internal `assign`, `project_seq_type`, `join_types`.
+//! - [`revise`] — internal `assign`, `project_seq_type`, `join_types`.
 
 pub mod alt;
 pub mod domain;
 pub mod grounds;
-pub mod helpers;
 pub mod operators;
 pub mod reference;
+pub mod revise;
 pub mod seq;
 
 pub use csp_solver::constraint::VarId as TypeVarId;

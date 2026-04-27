@@ -3,7 +3,7 @@
 use crate::backend::{DelimScanConfig, TokenDispatchArmCompiled};
 
 use super::code::{TsCode, TsEmitCtx, TsEmitter};
-use super::helpers::ts_escape;
+use super::projection::ts_escape;
 
 impl TsEmitter {
     pub(in crate::backend::ts) fn token_dispatch(

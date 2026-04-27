@@ -1,8 +1,15 @@
-//! Pure utility functions shared by DFA emission tiers.
+//! DFA acceleration primitives — byte-class predicates, shorthand
+//! recognition, accel-emission shortcuts.
 //!
-//! - Byte-predicate construction from equivalence classes.
-//! - Shorthand detection (`\d`, `\w`, `\s`, etc.).
+//! - Byte-predicate construction from equivalence classes
+//!   (`build_class_predicate`).
+//! - Shorthand detection (`\d`, `\w`, `\s`, etc.) for accel-fast-path
+//!   admission.
 //! - Byte-to-range compression.
+//! - `try_emit_accel_expr` / `try_emit_accel_scan` — emit a tight
+//!   accel-only loop when the DFA collapses to a single classified
+//!   step, bypassing the full state-table emission.
+//! - `hash_dfa_structure` — content-hash for DFA-table interning.
 //! - SIMD-accelerated self-loop scanning.
 //! - Canonical DFA hashing for cross-rule deduplication.
 

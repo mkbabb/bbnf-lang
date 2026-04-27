@@ -8,7 +8,7 @@ use crate::TypeDesc;
 
 use super::TypeVarId;
 use super::domain::TypeDomain;
-use super::helpers::{assign, join_types};
+use super::revise::{assign, join_types};
 
 /// Alt constraint: join (least upper bound) of alternation branch types.
 #[derive(Debug)]

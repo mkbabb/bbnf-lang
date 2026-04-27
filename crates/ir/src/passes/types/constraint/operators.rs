@@ -9,7 +9,7 @@ use crate::TypeDesc;
 
 use super::TypeVarId;
 use super::domain::TypeDomain;
-use super::helpers::assign;
+use super::revise::assign;
 
 /// Optional constraint: wraps inner type in `Option<T>`.
 /// Optional Span collapses to Span. Transparent refs get Option<Enum>.

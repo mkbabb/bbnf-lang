@@ -1,0 +1,65 @@
+B7.W0 close-ceremony measurements — bbnf-lang main checkout
+============================================================
+
+Captured 2026-04-27 post-cherry-pick of all 7 W0 commits + the
+orchestrator's bbnf-ser patch follow-on commit.
+
+## Workspace nextest
+
+Command: cargo nextest run --workspace --profile ax-iter --no-fail-fast
+HEAD:    4e0851be (post-orchestrator follow-on)
+
+  Starting 1475 tests across 131 binaries (27 tests skipped)
+  Summary [10.832s] 1475 tests run: 1475 passed (3 slow), 27 skipped
+
+Pre-B7 baseline (B6 close):     22.353 s warm wall over 1477 tests
+Post-B7 measured:                10.832 s warm wall over 1475 tests
+Delta:                          -11.521 s (-51.5%)
+Gate:                           ≤ 14 s (cleared with 22.6% margin)
+
+Test count delta: -2 (architectural intent — A9 re-routed both
+bench_lsp_actions + bench_incremental_edits from [[test]] to
+[[bench]] surface; both were bench-class LSP-matrix tests).
+
+## simd-scan divan output (post-A1 cb6e9ab0)
+
+Command: cargo bench -p simd-scan
+Harness: divan #[divan::bench] with BytesCount counter
+
+Per-fixture MB/s (divan's "fastest" column ≈ pre-B7 "best µs" semantic):
+  twitter.json:        +16% favorable (pre 4921 MB/s)
+  citm_catalog.json:   -3.7% (pre 5085 MB/s; within ±5% noise)
+  canada.json:         -2.2% (pre 4116 MB/s; within ±5% noise)
+  bootstrap.css:       +1.7% (pre 693 MB/s; within ±5% noise)
+  tailwind.css:        +4.2% (pre 752 MB/s; within ±5% noise)
+
+Gate: 4 of 5 fixtures within ±5% noise floor; twitter +16%
+favorable. Cleared.
+
+## simd-scan fuzz timing (post-A9 d0f9a4cb)
+
+Sample cap: 1024 → 64 cases (per proptest_config).
+All 8 fuzzers complete in 2.309 s wall (avg 0.29 s/test).
+Gate: < 2 s per test cleared.
+
+## cargo xtask regen --check
+
+Command: cargo xtask regen --check
+Result:  exit 0 across 9 grammars; 1.10 s wall (preserved from B6
+         baseline).
+
+## Hot-path bench
+
+Command: cargo bench-bbnf
+Result:  unchanged from B5 baseline 2.806 ms (B7 has no source-side
+         runtime change; bench file migrations + CI rewires + doc
+         scrubs only).
+
+## bbnf-ser patch verification
+
+Command: grep -rn "bbnf-ser.*=.*path" .cargo/config.toml /Users/mkbabb/Programming/{parse-that,pprint}/{,rust/}.cargo/config.toml 2>/dev/null
+Result:  Exactly one hit: bbnf-lang/.cargo/config.toml line ~41.
+         pprint's tracked tree (./.cargo/config.toml at root) has
+         no [patch.crates-io] block.
+         parse-that's tracked .cargo/config.toml has no bbnf-ser
+         entry.

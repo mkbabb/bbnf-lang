@@ -370,6 +370,26 @@ pub struct GrammarIR {
     /// scratch.
     #[serde(skip, default)]
     pub shape_assignments: passes::recognizers::shape_dispatch::ShapeAssignments,
+
+    /// AZ-I.W1 — grammar-derived native struct shapes.
+    ///
+    /// Populated by [`passes::project_types`]'s registry-population
+    /// phase. For every Named rule the closure registers a
+    /// [`crate::registry::StructLayout`] whose fields project from
+    /// the rule's body shape: `Alt` → tagged enum, `Seq` → struct,
+    /// `Map` of single typed leaf → newtype wrapper.
+    ///
+    /// Consumed by the typed-`->` audit pass at
+    /// [`passes::audit::payload_coverage`] (via the
+    /// [`passes::audit::StructRegistryProbe`] trait impl on
+    /// `&StructRegistry`) and by the W2 / W3 emitter rewires that
+    /// drop tape materialisation on the three primary data grammars
+    /// (JSON, CSS L4, Sheets). Empty until `project_types` runs;
+    /// `BTreeMap`-stable iteration order keeps audit JSON snapshots
+    /// byte-identical across runs. Not serialized: every compile
+    /// rebuilds it from scratch.
+    #[serde(skip, default)]
+    pub struct_registry: crate::registry::StructRegistry,
 }
 
 impl GrammarIR {

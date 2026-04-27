@@ -17,10 +17,12 @@ pub mod dag;
 pub mod egraph;
 pub mod passes;
 pub mod recognizer;
+pub mod registry;
 pub mod types;
 pub mod vm;
 
 pub use cost_config::CostConfig;
+pub use registry::{FieldSource, LayoutKind, StructField, StructLayout, StructRegistry};
 
 // Re-export from bbnf-regex (canonical source of CharSet128, regex_first, classify)
 pub use bbnf_regex::sets::charset::CharSet128;

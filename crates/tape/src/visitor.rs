@@ -334,7 +334,7 @@ impl<'input> ObjectVisitor for TapeVisitor<'input> {
         // the paired value frame in lockstep.
         let open_offset = self
             .tape
-            .begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
+            .begin_compound(TapeKind::Rule, 0, 0, 0, 0);
         self.compounds.push(CompoundFrame {
             span_lo: 0,
             open_offset,
@@ -366,7 +366,7 @@ impl<'input> ArrayVisitor for TapeVisitor<'input> {
     fn begin_array(&mut self) -> Result<(), Self::Error> {
         let open_offset = self
             .tape
-            .begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
+            .begin_compound(TapeKind::Rule, 0, 0, 0, 0);
         self.compounds.push(CompoundFrame {
             span_lo: 0,
             open_offset,
@@ -448,7 +448,7 @@ impl<'input> PrattVisitor for TapeVisitor<'input> {
         // retired under the fused builder collapse.
         let open_offset = self
             .tape
-            .begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
+            .begin_compound(TapeKind::Rule, 0, 0, 0, 0);
         self.compounds.push(CompoundFrame {
             span_lo: 0,
             open_offset,

@@ -121,7 +121,6 @@ pub fn emit_parse_arglist(
                 span_lo,
                 #variant_idx,
                 0u8,
-                0u8,
                 0u16,
             );
             builder.end_compound_post_order(
@@ -315,7 +314,6 @@ fn emit_tape_position_core(
                             iter_lo,
                             0,
                             0u8,
-                            0u8,
                             0u16,
                         );
                         builder.end_compound_post_order(
@@ -355,7 +353,6 @@ fn emit_tape_position_core(
                             iter_lo,
                             0,
                             0u8,
-                            0u8,
                             0u16,
                         );
                         builder.end_compound_post_order(
@@ -377,7 +374,6 @@ fn emit_tape_position_core(
                         crate::runtime::tape::TapeKind::Rule,
                         repeat_lo,
                         0,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -409,7 +405,6 @@ fn emit_tape_position_core(
                     crate::runtime::tape::TapeKind::Seq,
                     seq_lo,
                     0,
-                    0u8,
                     0u8,
                     0u16,
                 );

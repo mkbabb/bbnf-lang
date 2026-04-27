@@ -536,7 +536,6 @@ fn emit_alt_tape_dispatch(
                 __wrap_enter_p,
                 #rule_variant_idx,
                 __wrap_chosen_meta,
-                0u8,
                 0u16,
             );
             // AY-II.W0-fix — end_compound_post_order stamps span_hi +

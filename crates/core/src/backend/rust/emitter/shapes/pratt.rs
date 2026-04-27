@@ -232,7 +232,6 @@ pub fn emit_parse_pratt(
                 outer_span_lo,
                 #variant_idx,
                 0u8,
-                0u8,
                 0u16,
             );
             // ── Leftmost operand ────────────────────────────────────
@@ -365,7 +364,6 @@ pub fn emit_parse_pratt(
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );

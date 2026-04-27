@@ -1405,7 +1405,6 @@ mod __jsonparser_emit_impl {
                 span_lo,
                 4u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let lbracket_open = *p as u32;
@@ -1414,7 +1413,6 @@ mod __jsonparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 lbracket_open,
                 0,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -1436,7 +1434,6 @@ mod __jsonparser_emit_impl {
                 opt_ws_open,
                 0,
                 0u8,
-                0u8,
                 0u16,
             );
         let _ = __shape_support_JsonParser::skip_space(input, p, state);
@@ -1446,7 +1443,6 @@ mod __jsonparser_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 repeat_open,
                 0,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -1482,7 +1478,6 @@ mod __jsonparser_emit_impl {
                     iter_open,
                     0,
                     0u8,
-                    0u8,
                     0u16,
                 );
             let _value_off = ({
@@ -1496,7 +1491,6 @@ mod __jsonparser_emit_impl {
                     comma_repeat_open,
                     0,
                     0u8,
-                    0u8,
                     0u16,
                 );
             let comma_iter_save_p = *p;
@@ -1509,7 +1503,6 @@ mod __jsonparser_emit_impl {
                         crate::runtime::tape::TapeKind::Seq,
                         comma_iter_open,
                         0,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -1661,7 +1654,6 @@ mod __jsonparser_emit_impl {
                 span_lo,
                 5u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -1702,7 +1694,6 @@ mod __jsonparser_emit_impl {
                 span_lo,
                 6u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let lbrace_open = *p as u32;
@@ -1711,7 +1702,6 @@ mod __jsonparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 lbrace_open,
                 0,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -1733,7 +1723,6 @@ mod __jsonparser_emit_impl {
                 opt_ws_open,
                 0,
                 0u8,
-                0u8,
                 0u16,
             );
         let _ = __shape_support_JsonParser::skip_space(input, p, state);
@@ -1743,7 +1732,6 @@ mod __jsonparser_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 repeat_open,
                 0,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -1777,7 +1765,6 @@ mod __jsonparser_emit_impl {
                     iter_open,
                     0,
                     0u8,
-                    0u8,
                     0u16,
                 );
             let pair_open = *p as u32;
@@ -1786,7 +1773,6 @@ mod __jsonparser_emit_impl {
                     crate::runtime::tape::TapeKind::Seq,
                     pair_open,
                     5u8,
-                    0u8,
                     0u8,
                     0u16,
                 );
@@ -1805,7 +1791,6 @@ mod __jsonparser_emit_impl {
                     colon_next_open,
                     0,
                     0u8,
-                    0u8,
                     0u16,
                 );
             let opt_colon_open = *p as u32;
@@ -1814,7 +1799,6 @@ mod __jsonparser_emit_impl {
                     crate::runtime::tape::TapeKind::Seq,
                     opt_colon_open,
                     0,
-                    0u8,
                     0u8,
                     0u16,
                 );
@@ -1856,7 +1840,6 @@ mod __jsonparser_emit_impl {
                     comma_repeat_open,
                     0,
                     0u8,
-                    0u8,
                     0u16,
                 );
             let comma_iter_save_p = *p;
@@ -1869,7 +1852,6 @@ mod __jsonparser_emit_impl {
                         crate::runtime::tape::TapeKind::Seq,
                         comma_iter_open,
                         0,
-                        0u8,
                         0u8,
                         0u16,
                     );

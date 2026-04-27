@@ -874,7 +874,6 @@ mod __bnfparser_emit_impl {
                 span_lo,
                 0u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -990,7 +989,6 @@ mod __bnfparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 1u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -1144,7 +1142,6 @@ mod __bnfparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -1167,7 +1164,6 @@ mod __bnfparser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -1372,7 +1368,6 @@ mod __bnfparser_emit_impl {
                                 iter_lo,
                                 0u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -1395,7 +1390,6 @@ mod __bnfparser_emit_impl {
                         .begin_compound(
                             crate::runtime::tape::TapeKind::Repeat,
                             repeat_lo,
-                            0u8,
                             0u8,
                             0u8,
                             0u16,
@@ -1424,7 +1418,6 @@ mod __bnfparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -1449,7 +1442,6 @@ mod __bnfparser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -1465,7 +1457,6 @@ mod __bnfparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 2u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -1655,7 +1646,6 @@ mod __bnfparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -1670,7 +1660,6 @@ mod __bnfparser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -1688,7 +1677,6 @@ mod __bnfparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 3u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -1729,7 +1717,6 @@ mod __bnfparser_emit_impl {
                 repeat_open,
                 0u8,
                 0u8,
-                0u8,
                 0u16,
             );
         loop {
@@ -1748,7 +1735,6 @@ mod __bnfparser_emit_impl {
                         crate::runtime::tape::TapeKind::Seq,
                         iter_open,
                         0,
-                        0u8,
                         0u8,
                         0u16,
                     );

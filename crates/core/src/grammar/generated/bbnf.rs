@@ -2674,7 +2674,6 @@ mod __bbnfbootstrap_emit_impl {
                 span_lo,
                 3u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -2800,7 +2799,6 @@ mod __bbnfbootstrap_emit_impl {
                 outer_span_lo,
                 5u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let _operand_off = ({
@@ -2856,7 +2854,6 @@ mod __bbnfbootstrap_emit_impl {
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -3073,7 +3070,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -3098,7 +3094,6 @@ mod __bbnfbootstrap_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -3114,7 +3109,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 6u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -3248,7 +3242,6 @@ mod __bbnfbootstrap_emit_impl {
                                 seq_lo,
                                 0,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -3275,7 +3268,6 @@ mod __bbnfbootstrap_emit_impl {
                             iter_lo,
                             0,
                             0u8,
-                            0u8,
                             0u16,
                         );
                     builder
@@ -3300,7 +3292,6 @@ mod __bbnfbootstrap_emit_impl {
                         repeat_lo,
                         0,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -3315,7 +3306,6 @@ mod __bbnfbootstrap_emit_impl {
                         crate::runtime::tape::TapeKind::Seq,
                         seq_lo,
                         0,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -3337,7 +3327,6 @@ mod __bbnfbootstrap_emit_impl {
                         crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -3376,7 +3365,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 7u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -4021,7 +4009,6 @@ mod __bbnfbootstrap_emit_impl {
                 alt_lo,
                 8u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -4468,7 +4455,6 @@ mod __bbnfbootstrap_emit_impl {
                                             alt_lo,
                                             0u8,
                                             0u8,
-                                            0u8,
                                             0u16,
                                         );
                                     builder
@@ -4580,7 +4566,6 @@ mod __bbnfbootstrap_emit_impl {
                                             alt_lo,
                                             0u8,
                                             0u8,
-                                            0u8,
                                             0u16,
                                         );
                                     builder
@@ -4649,7 +4634,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 alt_lo,
                 12u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -4734,7 +4718,6 @@ mod __bbnfbootstrap_emit_impl {
                 outer_span_lo,
                 13u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let _operand_off = ({
@@ -4790,7 +4773,6 @@ mod __bbnfbootstrap_emit_impl {
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -4970,7 +4952,6 @@ mod __bbnfbootstrap_emit_impl {
                 outer_span_lo,
                 14u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let _operand_off = ({
@@ -5026,7 +5007,6 @@ mod __bbnfbootstrap_emit_impl {
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -5206,7 +5186,6 @@ mod __bbnfbootstrap_emit_impl {
                 outer_span_lo,
                 15u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let _operand_off = ({
@@ -5262,7 +5241,6 @@ mod __bbnfbootstrap_emit_impl {
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -5442,7 +5420,6 @@ mod __bbnfbootstrap_emit_impl {
                 outer_span_lo,
                 16u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let _operand_off = ({
@@ -5498,7 +5475,6 @@ mod __bbnfbootstrap_emit_impl {
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -5678,7 +5654,6 @@ mod __bbnfbootstrap_emit_impl {
                 outer_span_lo,
                 17u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let _operand_off = ({
@@ -5734,7 +5709,6 @@ mod __bbnfbootstrap_emit_impl {
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -5958,7 +5932,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -5981,7 +5954,6 @@ mod __bbnfbootstrap_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -6026,7 +5998,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 18u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -6175,7 +6146,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 20u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -6430,7 +6400,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 alt_lo,
                 21u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -6875,7 +6844,6 @@ mod __bbnfbootstrap_emit_impl {
                 span_lo,
                 24u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -6995,7 +6963,6 @@ mod __bbnfbootstrap_emit_impl {
                 span_lo,
                 25u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -7090,7 +7057,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 26u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -7220,7 +7186,6 @@ mod __bbnfbootstrap_emit_impl {
                                 iter_lo,
                                 0u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -7235,7 +7200,6 @@ mod __bbnfbootstrap_emit_impl {
                         .begin_compound(
                             crate::runtime::tape::TapeKind::Repeat,
                             repeat_lo,
-                            0u8,
                             0u8,
                             0u8,
                             0u16,
@@ -7264,7 +7228,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -7289,7 +7252,6 @@ mod __bbnfbootstrap_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -7305,7 +7267,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 28u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -7928,7 +7889,6 @@ mod __bbnfbootstrap_emit_impl {
                 alt_lo,
                 29u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -8113,7 +8073,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -8128,7 +8087,6 @@ mod __bbnfbootstrap_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -8190,7 +8148,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -8205,7 +8162,6 @@ mod __bbnfbootstrap_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -8246,7 +8202,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -8261,7 +8216,6 @@ mod __bbnfbootstrap_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -8279,7 +8233,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 31u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -8402,7 +8355,6 @@ mod __bbnfbootstrap_emit_impl {
                             iter_lo,
                             0u8,
                             0u8,
-                            0u8,
                             0u16,
                         );
                     builder
@@ -8419,7 +8371,6 @@ mod __bbnfbootstrap_emit_impl {
                         repeat_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -8433,7 +8384,6 @@ mod __bbnfbootstrap_emit_impl {
                     .begin_compound(
                         crate::runtime::tape::TapeKind::Seq,
                         seq_lo,
-                        0u8,
                         0u8,
                         0u8,
                         0u16,
@@ -8458,7 +8408,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -8473,7 +8422,6 @@ mod __bbnfbootstrap_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -8491,7 +8439,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 32u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -8675,7 +8622,6 @@ mod __bbnfbootstrap_emit_impl {
                 outer_span_lo,
                 34u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let _operand_off = ({
@@ -8731,7 +8677,6 @@ mod __bbnfbootstrap_emit_impl {
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -8934,7 +8879,6 @@ mod __bbnfbootstrap_emit_impl {
                                 iter_lo,
                                 0u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -8949,7 +8893,6 @@ mod __bbnfbootstrap_emit_impl {
                         .begin_compound(
                             crate::runtime::tape::TapeKind::Repeat,
                             repeat_lo,
-                            0u8,
                             0u8,
                             0u8,
                             0u16,
@@ -8978,7 +8921,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -9003,7 +8945,6 @@ mod __bbnfbootstrap_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -9019,7 +8960,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 35u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -9127,7 +9067,6 @@ mod __bbnfbootstrap_emit_impl {
                                 iter_lo,
                                 0u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -9142,7 +9081,6 @@ mod __bbnfbootstrap_emit_impl {
                         .begin_compound(
                             crate::runtime::tape::TapeKind::Repeat,
                             repeat_lo,
-                            0u8,
                             0u8,
                             0u8,
                             0u16,
@@ -9171,7 +9109,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -9196,7 +9133,6 @@ mod __bbnfbootstrap_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -9212,7 +9148,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 36u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -9341,7 +9276,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -9364,7 +9298,6 @@ mod __bbnfbootstrap_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -9411,7 +9344,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 37u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -9614,7 +9546,6 @@ mod __bbnfbootstrap_emit_impl {
                         alt_lo,
                         39u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -9631,7 +9562,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 39u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -9748,7 +9678,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 40u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -9882,7 +9811,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -9905,7 +9833,6 @@ mod __bbnfbootstrap_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -9945,7 +9872,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 41u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -10146,7 +10072,6 @@ mod __bbnfbootstrap_emit_impl {
                         alt_lo,
                         42u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -10229,7 +10154,6 @@ mod __bbnfbootstrap_emit_impl {
                             alt_lo,
                             42u8,
                             0u8,
-                            0u8,
                             0u16,
                         );
                     builder
@@ -10253,7 +10177,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -10268,7 +10191,6 @@ mod __bbnfbootstrap_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -10286,7 +10208,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 42u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -10441,7 +10362,6 @@ mod __bbnfbootstrap_emit_impl {
                             alt_lo,
                             43u8,
                             0u8,
-                            0u8,
                             0u16,
                         );
                     builder
@@ -10465,7 +10385,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -10480,7 +10399,6 @@ mod __bbnfbootstrap_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -10498,7 +10416,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 43u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -10631,7 +10548,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -10646,7 +10562,6 @@ mod __bbnfbootstrap_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -10664,7 +10579,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 44u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -10796,7 +10710,6 @@ mod __bbnfbootstrap_emit_impl {
                         alt_lo,
                         45u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -10849,7 +10762,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -10872,7 +10784,6 @@ mod __bbnfbootstrap_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -10955,7 +10866,6 @@ mod __bbnfbootstrap_emit_impl {
                             alt_lo,
                             45u8,
                             0u8,
-                            0u8,
                             0u16,
                         );
                     builder
@@ -10979,7 +10889,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -10994,7 +10903,6 @@ mod __bbnfbootstrap_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -11012,7 +10920,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 45u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -11156,7 +11063,6 @@ mod __bbnfbootstrap_emit_impl {
                             alt_lo,
                             46u8,
                             0u8,
-                            0u8,
                             0u16,
                         );
                     builder
@@ -11180,7 +11086,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -11195,7 +11100,6 @@ mod __bbnfbootstrap_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -11213,7 +11117,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 46u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -11359,7 +11262,6 @@ mod __bbnfbootstrap_emit_impl {
                             alt_lo,
                             47u8,
                             0u8,
-                            0u8,
                             0u16,
                         );
                     builder
@@ -11383,7 +11285,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -11398,7 +11299,6 @@ mod __bbnfbootstrap_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -11416,7 +11316,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 47u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -11548,7 +11447,6 @@ mod __bbnfbootstrap_emit_impl {
                         alt_lo,
                         48u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -11631,7 +11529,6 @@ mod __bbnfbootstrap_emit_impl {
                             alt_lo,
                             48u8,
                             0u8,
-                            0u8,
                             0u16,
                         );
                     builder
@@ -11655,7 +11552,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -11670,7 +11566,6 @@ mod __bbnfbootstrap_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -11688,7 +11583,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 48u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -11814,7 +11708,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -11829,7 +11722,6 @@ mod __bbnfbootstrap_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -11912,7 +11804,6 @@ mod __bbnfbootstrap_emit_impl {
                             alt_lo,
                             49u8,
                             0u8,
-                            0u8,
                             0u16,
                         );
                     builder
@@ -11936,7 +11827,6 @@ mod __bbnfbootstrap_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -11951,7 +11841,6 @@ mod __bbnfbootstrap_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -11969,7 +11858,6 @@ mod __bbnfbootstrap_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 49u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -12346,7 +12234,6 @@ mod __bbnfbootstrap_emit_impl {
                 repeat_open,
                 0u8,
                 0u8,
-                0u8,
                 0u16,
             );
         loop {
@@ -12365,7 +12252,6 @@ mod __bbnfbootstrap_emit_impl {
                         crate::runtime::tape::TapeKind::Seq,
                         iter_open,
                         0,
-                        0u8,
                         0u8,
                         0u16,
                     );

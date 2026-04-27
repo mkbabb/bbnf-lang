@@ -143,7 +143,6 @@ pub fn emit_parse_flat(
                 span_lo,
                 #variant_idx,
                 0u8,
-                0u8,
                 0u16,
             );
             builder.end_compound_post_order(
@@ -357,7 +356,6 @@ fn emit_tape_position_core(
                     seq_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
                 builder.end_compound_post_order(
@@ -536,7 +534,6 @@ fn emit_tape_repeat(
                     iter_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
                 builder.end_compound_post_order(
@@ -551,7 +548,6 @@ fn emit_tape_repeat(
             let __repeat_off = builder.begin_compound(
                 crate::runtime::tape::TapeKind::Repeat,
                 repeat_lo,
-                0u8,
                 0u8,
                 0u8,
                 0u16,
@@ -601,7 +597,6 @@ fn emit_tape_repeat(
                     iter_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
                 builder.end_compound_post_order(
@@ -622,7 +617,6 @@ fn emit_tape_repeat(
             let __repeat_off = builder.begin_compound(
                 crate::runtime::tape::TapeKind::Repeat,
                 repeat_lo,
-                0u8,
                 0u8,
                 0u8,
                 0u16,
@@ -1327,7 +1321,6 @@ fn emit_alt_typed_payload_tape(
             let __alt_off = builder.begin_compound(
                 crate::runtime::tape::TapeKind::Alt,
                 alt_lo,
-                0u8,
                 0u8,
                 0u8,
                 0u16,

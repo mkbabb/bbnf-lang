@@ -837,7 +837,6 @@ impl<R> Tape<R> {
         span_lo: u32,
         variant_idx: u8,
         meta_idx: u8,
-        _frame_depth: u8,
         extra_flags: u16,
     ) -> u32 {
         debug_assert!(

@@ -346,7 +346,6 @@ fn emit_alt_tape(
                 alt_lo,
                 #variant_lit,
                 0u8,
-                0u8,
                 0u16,
             );
             builder.end_compound_post_order(
@@ -1535,7 +1534,6 @@ fn emit_token_dispatch_tape(
                 crate::runtime::tape::TapeKind::TokenDispatch,
                 td_lo,
                 #variant_lit,
-                0u8,
                 0u8,
                 0u16,
             );

@@ -3289,7 +3289,6 @@ mod __googlesheetsparser_emit_impl {
                         alt_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -3306,7 +3305,6 @@ mod __googlesheetsparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 3u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -3550,7 +3548,6 @@ mod __googlesheetsparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -3565,7 +3562,6 @@ mod __googlesheetsparser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -3589,7 +3585,6 @@ mod __googlesheetsparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 6u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -3664,7 +3659,6 @@ mod __googlesheetsparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -3679,7 +3673,6 @@ mod __googlesheetsparser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -3780,7 +3773,6 @@ mod __googlesheetsparser_emit_impl {
                         crate::runtime::tape::TapeKind::Alt,
                         alt_lo,
                         7u8,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -3903,7 +3895,6 @@ mod __googlesheetsparser_emit_impl {
                         alt_lo,
                         7u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -3920,7 +3911,6 @@ mod __googlesheetsparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 7u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -4346,7 +4336,6 @@ mod __googlesheetsparser_emit_impl {
                 outer_span_lo,
                 11u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let _operand_off = ({
@@ -4402,7 +4391,6 @@ mod __googlesheetsparser_emit_impl {
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -4582,7 +4570,6 @@ mod __googlesheetsparser_emit_impl {
                 outer_span_lo,
                 12u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let _operand_off = ({
@@ -4638,7 +4625,6 @@ mod __googlesheetsparser_emit_impl {
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -4901,7 +4887,6 @@ mod __googlesheetsparser_emit_impl {
                 outer_span_lo,
                 14u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let _operand_off = ({
@@ -4957,7 +4942,6 @@ mod __googlesheetsparser_emit_impl {
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -5220,7 +5204,6 @@ mod __googlesheetsparser_emit_impl {
                 outer_span_lo,
                 16u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let _operand_off = ({
@@ -5276,7 +5259,6 @@ mod __googlesheetsparser_emit_impl {
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -5456,7 +5438,6 @@ mod __googlesheetsparser_emit_impl {
                 outer_span_lo,
                 17u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let _operand_off = ({
@@ -5512,7 +5493,6 @@ mod __googlesheetsparser_emit_impl {
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -5780,7 +5760,6 @@ mod __googlesheetsparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -5805,7 +5784,6 @@ mod __googlesheetsparser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -5827,7 +5805,6 @@ mod __googlesheetsparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 19u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -5925,7 +5902,6 @@ mod __googlesheetsparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -5950,7 +5926,6 @@ mod __googlesheetsparser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -5966,7 +5941,6 @@ mod __googlesheetsparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 20u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -6602,7 +6576,6 @@ mod __googlesheetsparser_emit_impl {
                 span_lo,
                 22u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -6676,7 +6649,6 @@ mod __googlesheetsparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 23u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -6756,7 +6728,6 @@ mod __googlesheetsparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -6771,7 +6742,6 @@ mod __googlesheetsparser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -6789,7 +6759,6 @@ mod __googlesheetsparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 24u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -6905,7 +6874,6 @@ mod __googlesheetsparser_emit_impl {
                                 iter_lo,
                                 0u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -6920,7 +6888,6 @@ mod __googlesheetsparser_emit_impl {
                         .begin_compound(
                             crate::runtime::tape::TapeKind::Repeat,
                             repeat_lo,
-                            0u8,
                             0u8,
                             0u8,
                             0u16,
@@ -6949,7 +6916,6 @@ mod __googlesheetsparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -6974,7 +6940,6 @@ mod __googlesheetsparser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -6990,7 +6955,6 @@ mod __googlesheetsparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 25u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -7061,7 +7025,6 @@ mod __googlesheetsparser_emit_impl {
                         iter_lo,
                         0,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -7100,7 +7063,6 @@ mod __googlesheetsparser_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 26u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -7183,7 +7145,6 @@ mod __googlesheetsparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 27u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -7298,7 +7259,6 @@ mod __googlesheetsparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -7323,7 +7283,6 @@ mod __googlesheetsparser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -7345,7 +7304,6 @@ mod __googlesheetsparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 28u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -7441,7 +7399,6 @@ mod __googlesheetsparser_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 29u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -7562,7 +7519,6 @@ mod __googlesheetsparser_emit_impl {
                                 iter_lo,
                                 0u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -7577,7 +7533,6 @@ mod __googlesheetsparser_emit_impl {
                         .begin_compound(
                             crate::runtime::tape::TapeKind::Repeat,
                             repeat_lo,
-                            0u8,
                             0u8,
                             0u8,
                             0u16,
@@ -7606,7 +7561,6 @@ mod __googlesheetsparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -7631,7 +7585,6 @@ mod __googlesheetsparser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -7647,7 +7600,6 @@ mod __googlesheetsparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 30u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -7744,7 +7696,6 @@ mod __googlesheetsparser_emit_impl {
                 span_lo,
                 31u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -7828,7 +7779,6 @@ mod __googlesheetsparser_emit_impl {
                 outer_span_lo,
                 32u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let _operand_off = ({
@@ -7884,7 +7834,6 @@ mod __googlesheetsparser_emit_impl {
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -8064,7 +8013,6 @@ mod __googlesheetsparser_emit_impl {
                 outer_span_lo,
                 33u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let _operand_off = ({
@@ -8120,7 +8068,6 @@ mod __googlesheetsparser_emit_impl {
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -8314,7 +8261,6 @@ mod __googlesheetsparser_emit_impl {
                 span_lo,
                 34u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -8391,7 +8337,6 @@ mod __googlesheetsparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 35u8,
-                0u8,
                 0u8,
                 0u16,
             );

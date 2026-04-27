@@ -363,7 +363,6 @@ pub fn emit_parse_unordered(
                 span_lo,
                 #variant_idx,
                 0u8,
-                0u8,
                 0u16,
             );
             builder.end_compound_post_order(
@@ -426,7 +425,6 @@ fn emit_parse_unordered_fallback(
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 #variant_idx,
-                0u8,
                 0u8,
                 0u16,
             );

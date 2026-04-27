@@ -203,7 +203,6 @@ fn emit_parse_array_wrapped(
                 span_lo,
                 #variant_idx,
                 0u8,
-                0u8,
                 0u16,
             );
 
@@ -213,7 +212,6 @@ fn emit_parse_array_wrapped(
                 crate::runtime::tape::TapeKind::Seq,
                 lbracket_open,
                 0,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -242,7 +240,6 @@ fn emit_parse_array_wrapped(
                 opt_ws_open,
                 0,
                 0u8,
-                0u8,
                 0u16,
             );
 
@@ -255,7 +252,6 @@ fn emit_parse_array_wrapped(
                 crate::runtime::tape::TapeKind::Rule,
                 repeat_open,
                 0,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -313,7 +309,6 @@ fn emit_parse_array_wrapped(
                     iter_open,
                     0,
                     0u8,
-                    0u8,
                     0u16,
                 );
 
@@ -331,7 +326,6 @@ fn emit_parse_array_wrapped(
                     crate::runtime::tape::TapeKind::Rule,
                     comma_repeat_open,
                     0,
-                    0u8,
                     0u8,
                     0u16,
                 );
@@ -353,7 +347,6 @@ fn emit_parse_array_wrapped(
                         crate::runtime::tape::TapeKind::Seq,
                         comma_iter_open,
                         0,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -601,7 +594,6 @@ fn emit_parse_array_list(
                 iter_open,
                 0,
                 0u8,
-                0u8,
                 0u16,
             );
 
@@ -668,6 +660,7 @@ fn emit_parse_array_list(
                     span_lo,
                     // AX.W0a.2.g — entry-rule OW-Seq stamps variant=0.
                     0u8,
+                    0u8,
                     0u16,
                 );
 
@@ -680,7 +673,6 @@ fn emit_parse_array_list(
                     crate::runtime::tape::TapeKind::Rule,
                     repeat_open,
                     0,
-                    0u8,
                     0u8,
                     0u16,
                 );
@@ -764,7 +756,6 @@ fn emit_parse_array_list(
                 let repeat_off = builder.begin_compound(
                     crate::runtime::tape::TapeKind::Rule,
                     repeat_open,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,

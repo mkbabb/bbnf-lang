@@ -123,7 +123,6 @@ pub fn emit_parse_object(
                 span_lo,
                 #variant_idx,
                 0u8,
-                0u8,
                 0u16,
             );
 
@@ -133,7 +132,6 @@ pub fn emit_parse_object(
                 crate::runtime::tape::TapeKind::Seq,
                 lbrace_open,
                 0,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -159,7 +157,6 @@ pub fn emit_parse_object(
                 opt_ws_open,
                 0,
                 0u8,
-                0u8,
                 0u16,
             );
 
@@ -169,7 +166,6 @@ pub fn emit_parse_object(
                 crate::runtime::tape::TapeKind::Rule,
                 repeat_open,
                 0,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -218,7 +214,6 @@ pub fn emit_parse_object(
                     iter_open,
                     0,
                     0u8,
-                    0u8,
                     0u16,
                 );
 
@@ -229,7 +224,6 @@ pub fn emit_parse_object(
                     crate::runtime::tape::TapeKind::Seq,
                     pair_open,
                     #pair_variant,
-                    0u8,
                     0u8,
                     0u16,
                 );
@@ -254,7 +248,6 @@ pub fn emit_parse_object(
                     colon_next_open,
                     0,
                     0u8,
-                    0u8,
                     0u16,
                 );
 
@@ -266,7 +259,6 @@ pub fn emit_parse_object(
                     crate::runtime::tape::TapeKind::Seq,
                     opt_colon_open,
                     0,
-                    0u8,
                     0u8,
                     0u16,
                 );
@@ -319,7 +311,6 @@ pub fn emit_parse_object(
                     comma_repeat_open,
                     0,
                     0u8,
-                    0u8,
                     0u16,
                 );
 
@@ -332,7 +323,6 @@ pub fn emit_parse_object(
                         crate::runtime::tape::TapeKind::Seq,
                         comma_iter_open,
                         0,
-                        0u8,
                         0u8,
                         0u16,
                     );

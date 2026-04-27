@@ -1469,7 +1469,6 @@ mod __cssprettyparser_emit_impl {
                 span_lo,
                 0u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -1747,7 +1746,6 @@ mod __cssprettyparser_emit_impl {
                             iter_lo,
                             0u8,
                             0u8,
-                            0u8,
                             0u16,
                         );
                     builder
@@ -1772,7 +1770,6 @@ mod __cssprettyparser_emit_impl {
                         repeat_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -1795,7 +1792,6 @@ mod __cssprettyparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -1810,7 +1806,6 @@ mod __cssprettyparser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -1851,7 +1846,6 @@ mod __cssprettyparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -1866,7 +1860,6 @@ mod __cssprettyparser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -1922,7 +1915,6 @@ mod __cssprettyparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -1937,7 +1929,6 @@ mod __cssprettyparser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -1982,7 +1973,6 @@ mod __cssprettyparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 1u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -2131,7 +2121,6 @@ mod __cssprettyparser_emit_impl {
                                 alt_lo,
                                 2u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -2159,7 +2148,6 @@ mod __cssprettyparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -2184,7 +2172,6 @@ mod __cssprettyparser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -2200,7 +2187,6 @@ mod __cssprettyparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 2u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -2351,7 +2337,6 @@ mod __cssprettyparser_emit_impl {
                 span_lo,
                 3u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -2456,7 +2441,6 @@ mod __cssprettyparser_emit_impl {
                 span_lo,
                 4u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -2556,7 +2540,6 @@ mod __cssprettyparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 5u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -2658,7 +2641,6 @@ mod __cssprettyparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 6u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -2763,7 +2745,6 @@ mod __cssprettyparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 7u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -2955,7 +2936,6 @@ mod __cssprettyparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -2978,7 +2958,6 @@ mod __cssprettyparser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -3017,7 +2996,6 @@ mod __cssprettyparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 8u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -3217,7 +3195,6 @@ mod __cssprettyparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 10u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -3527,7 +3504,6 @@ mod __cssprettyparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -3552,7 +3528,6 @@ mod __cssprettyparser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -3568,7 +3543,6 @@ mod __cssprettyparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 13u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -3676,7 +3650,6 @@ mod __cssprettyparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 14u8,
-                0u8,
                 0u8,
                 0u16,
             );

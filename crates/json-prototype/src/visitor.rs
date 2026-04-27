@@ -402,7 +402,7 @@ impl<'input> JsonVisitor for TapeVisitor<'input> {
 
     #[inline(always)]
     fn begin_object(&mut self) -> Result<(), Self::Error> {
-        let open_offset = self.tape.begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
+        let open_offset = self.tape.begin_compound(TapeKind::Rule, 0, 0, 0, 0);
         self.compounds.push(CompoundFrame {
             span_lo: 0,
             open_offset,
@@ -437,7 +437,7 @@ impl<'input> JsonVisitor for TapeVisitor<'input> {
 
     #[inline(always)]
     fn begin_array(&mut self) -> Result<(), Self::Error> {
-        let open_offset = self.tape.begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
+        let open_offset = self.tape.begin_compound(TapeKind::Rule, 0, 0, 0, 0);
         self.compounds.push(CompoundFrame {
             span_lo: 0,
             open_offset,

@@ -734,7 +734,6 @@ mod __csvparser_emit_impl {
                 span_lo,
                 0u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -963,7 +962,6 @@ mod __csvparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -988,7 +986,6 @@ mod __csvparser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -1004,7 +1001,6 @@ mod __csvparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 2u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -1106,7 +1102,6 @@ mod __csvparser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -1131,7 +1126,6 @@ mod __csvparser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -1147,7 +1141,6 @@ mod __csvparser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 3u8,
-                0u8,
                 0u8,
                 0u16,
             );

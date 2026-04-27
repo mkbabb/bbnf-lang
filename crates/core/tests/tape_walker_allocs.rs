@@ -48,7 +48,7 @@ fn child_iter_yields_three_leaves_in_forward_order() {
     let _l0 = b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     let _l1 = b.push_leaf(TapeKind::Span, 1, 2, 0, 0);
     let _l2 = b.push_leaf(TapeKind::Span, 2, 3, 0, 0);
-    let parent_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    let parent_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     b.end_compound_post_order(parent_off, 3, start);
     let parent = TapeOffset(parent_off);
     let tape = b.finish(0).expect("tape build");
@@ -80,14 +80,14 @@ fn child_iter_does_not_descend_into_grandchildren() {
     let inner_start = TapeOffset(b.columns().len() as u32);
     let _g0 = b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     let _g1 = b.push_leaf(TapeKind::Span, 1, 2, 0, 0);
-    let inner_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    let inner_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     b.end_compound_post_order(inner_off, 2, inner_start);
 
     // A second leaf sibling (so the outer compound has K = 2).
     let _l = b.push_leaf(TapeKind::Span, 2, 3, 0, 0);
 
     // Outer compound header.
-    let outer_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    let outer_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     b.end_compound_post_order(outer_off, 3, outer_start);
     let outer = TapeOffset(outer_off);
     let tape = b.finish(0).expect("tape build");
@@ -126,7 +126,7 @@ fn child_iter_empty_on_leaf() {
 fn child_iter_empty_on_compound_with_no_children() {
     let mut b = Tape::<()>::new();
     let start = TapeOffset(b.columns().len() as u32);
-    let parent_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    let parent_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     b.end_compound_post_order(parent_off, 0, start);
     let parent = TapeOffset(parent_off);
     let tape = b.finish(0).expect("tape build");
@@ -147,10 +147,10 @@ fn child_iter_matches_children_set() {
     // Inner compound with one leaf grandchild.
     let inner_start = TapeOffset(b.columns().len() as u32);
     let _g = b.push_leaf(TapeKind::Span, 2, 4, 0, 0);
-    let inner_off = b.begin_compound(TapeKind::Seq, 2, 0, 0, 0, 0);
+    let inner_off = b.begin_compound(TapeKind::Seq, 2, 0, 0, 0);
     b.end_compound_post_order(inner_off, 4, inner_start);
     let _l1 = b.push_leaf(TapeKind::Span, 4, 6, 0, 0);
-    let parent_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    let parent_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     b.end_compound_post_order(parent_off, 6, start);
     let parent = TapeOffset(parent_off);
     let tape = b.finish(0).expect("tape build");
@@ -178,7 +178,7 @@ fn child_iter_supports_iterator_combinators() {
     let start = TapeOffset(b.columns().len() as u32);
     let _l0 = b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     let _l1 = b.push_leaf(TapeKind::Span, 1, 2, 0, 0);
-    let parent_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    let parent_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     b.end_compound_post_order(parent_off, 2, start);
     let parent = TapeOffset(parent_off);
     let tape = b.finish(0).expect("tape build");
@@ -204,7 +204,7 @@ fn child_iter_exit_condition_does_not_underflow() {
     let mut b = Tape::<()>::new();
     let start = TapeOffset(b.columns().len() as u32);
     let _l = b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
-    let parent_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    let parent_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     b.end_compound_post_order(parent_off, 1, start);
     let parent = TapeOffset(parent_off);
     let tape = b.finish(0).expect("tape build");

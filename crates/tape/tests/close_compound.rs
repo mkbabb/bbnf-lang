@@ -48,10 +48,10 @@ fn nested_begin_end_produces_pre_order_tape() {
     // structural push (leaf or compound) via its internal
     // `current_depth` counter. Tests no longer manage the depth
     // stream manually.
-    let root = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    let root = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     assert_eq!(root, 0);
 
-    let inner = b.begin_compound(TapeKind::Seq, 0, 0, 0, 1, 0);
+    let inner = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     assert_eq!(inner, 1);
 
     let a = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
@@ -159,7 +159,7 @@ fn end_compound_post_order_stamps_backward_child_off_and_has_children() {
     // Child 1: `push_compound` (legacy post-order leaf-walker style).
     let inner_mark = TapeOffset(b.columns().len() as u32);
     let _a = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
-    let inner_open = b.begin_compound(TapeKind::Seq, 0, 1, 0, 0, 0);
+    let inner_open = b.begin_compound(TapeKind::Seq, 0, 1, 0, 0);
     b.end_compound_post_order(inner_open, 1, inner_mark);
     let _inner = TapeOffset(inner_open);
 
@@ -171,7 +171,7 @@ fn end_compound_post_order_stamps_backward_child_off_and_has_children() {
     // emitter pattern.
     let span_lo = 0;
     let span_hi = 2;
-    let outer_off = b.begin_compound(TapeKind::Seq, span_lo, 7, 3, 0, 0);
+    let outer_off = b.begin_compound(TapeKind::Seq, span_lo, 7, 3, 0);
     assert_eq!(
         outer_off, 3,
         "post-order begin_compound lands after children at cols.len()"
@@ -241,7 +241,7 @@ fn derive_frame_depth_terminates_on_mixed_pre_and_post_order_tape() {
 
     // Row 2: pre-order compound wrapping rows 3-4 (children
     // emitted after the compound row).
-    let pre_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    let pre_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     assert_eq!(pre_off, 2);
     let _c0 = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
     let _c1 = b.push_leaf(TapeKind::Literal, 1, 2, 0, 0);
@@ -250,7 +250,7 @@ fn derive_frame_depth_terminates_on_mixed_pre_and_post_order_tape() {
     // Row 5: post-order compound wrapping rows 0-4 (its children
     // sit BEFORE this row in emission order).
     let first_child = 0u32;
-    let post_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    let post_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     assert_eq!(post_off, 5);
     b.end_compound_post_order(post_off, 2, TapeOffset(first_child));
 
@@ -284,7 +284,7 @@ fn end_compound_post_order_empty_frame() {
     // No children pushed before begin; first_child captures cols.len()
     // which equals the open offset.
     let first_child = b.columns().len() as u32;
-    let outer_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    let outer_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     assert_eq!(first_child, outer_off);
     b.end_compound_post_order(outer_off, 0, TapeOffset(first_child));
 
@@ -302,7 +302,7 @@ fn end_compound_post_order_empty_frame() {
 #[test]
 fn end_compound_without_children() {
     let mut b = Tape::<()>::new();
-    let root = b.begin_compound(TapeKind::Seq, 5, 0, 0, 0, 0);
+    let root = b.begin_compound(TapeKind::Seq, 5, 0, 0, 0);
     b.end_compound(root, 5);
 
     let cols = b.columns();
@@ -323,14 +323,14 @@ fn end_compound_without_children() {
 fn rollback_to_unwinds_begin_compound_cleanly() {
     let mut b = Tape::<()>::new();
 
-    let root = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    let root = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     assert_eq!(root, 0);
     assert_eq!(b.columns().len(), 1);
 
     // First attempt: open an inner compound, push some children,
     // then roll back. Simulates an emitter retry-IIFE discarding a
     // failed alt branch.
-    let attempt_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 1, 0);
+    let attempt_off = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     assert_eq!(attempt_off, 1);
     let _l0 = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
     let _l1 = b.push_leaf(TapeKind::Literal, 1, 2, 0, 0);
@@ -345,7 +345,7 @@ fn rollback_to_unwinds_begin_compound_cleanly() {
     assert_eq!(b.columns().len(), 1);
 
     // Second attempt: reuse the same offset for a different subtree.
-    let retry_off = b.begin_compound(TapeKind::Alt, 0, 0, 0, 1, 0);
+    let retry_off = b.begin_compound(TapeKind::Alt, 0, 0, 0, 0);
     assert_eq!(
         retry_off, attempt_off,
         "begin_compound reuses the rolled-back offset",
@@ -370,7 +370,7 @@ fn rollback_to_unwinds_begin_compound_cleanly() {
 #[test]
 fn rollback_to_idempotent() {
     let mut b = Tape::<()>::new();
-    let root = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    let root = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     let _leaf = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
     let len_before = b.columns().len();
 
@@ -405,7 +405,7 @@ fn post_order_close_bumps_child_frame_depth() {
     let mark = TapeOffset(b.columns().len() as u32);
     let _a = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
     let _bl = b.push_leaf(TapeKind::Literal, 1, 2, 0, 0);
-    let root_open = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    let root_open = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     b.end_compound_post_order(root_open, 2, mark);
     let root = TapeOffset(root_open);
 
@@ -429,15 +429,15 @@ fn post_order_close_bumps_child_frame_depth() {
 fn sibling_begin_end_subtrees_under_outer_begin() {
     let mut b = Tape::<()>::new();
 
-    let outer = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
+    let outer = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     assert_eq!(outer, 0);
 
-    let left = b.begin_compound(TapeKind::Seq, 0, 0, 0, 1, 0);
+    let left = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0);
     assert_eq!(left, 1);
     let _la = b.push_leaf(TapeKind::Literal, 0, 1, 0, 0);
     b.end_compound(left, 1);
 
-    let right = b.begin_compound(TapeKind::Seq, 1, 0, 0, 1, 0);
+    let right = b.begin_compound(TapeKind::Seq, 1, 0, 0, 0);
     assert_eq!(right, 3);
     let _ra = b.push_leaf(TapeKind::Literal, 1, 2, 0, 0);
     b.end_compound(right, 2);

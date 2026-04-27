@@ -8933,7 +8933,6 @@ mod __cssl4parser_emit_impl {
                 alt_lo,
                 0u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -9035,7 +9034,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 1u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -9309,7 +9307,6 @@ mod __cssl4parser_emit_impl {
                                             alt_lo,
                                             0u8,
                                             0u8,
-                                            0u8,
                                             0u16,
                                         );
                                     builder
@@ -9503,7 +9500,6 @@ mod __cssl4parser_emit_impl {
                                         .begin_compound(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
-                                            0u8,
                                             0u8,
                                             0u8,
                                             0u16,
@@ -9717,7 +9713,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -9755,7 +9750,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 3u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -10001,7 +9995,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -10026,7 +10019,6 @@ mod __cssl4parser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -10042,7 +10034,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 5u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -10924,7 +10915,6 @@ mod __cssl4parser_emit_impl {
                 alt_lo,
                 8u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -11008,7 +10998,6 @@ mod __cssl4parser_emit_impl {
                 outer_span_lo,
                 9u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let _operand_off = ({
@@ -11064,7 +11053,6 @@ mod __cssl4parser_emit_impl {
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -11244,7 +11232,6 @@ mod __cssl4parser_emit_impl {
                 outer_span_lo,
                 10u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let _operand_off = ({
@@ -11300,7 +11287,6 @@ mod __cssl4parser_emit_impl {
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -11505,7 +11491,6 @@ mod __cssl4parser_emit_impl {
                 span_lo,
                 11u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -11640,7 +11625,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -11664,7 +11648,6 @@ mod __cssl4parser_emit_impl {
                     crate::runtime::tape::TapeKind::Rule,
                     repeat_lo,
                     0,
-                    0u8,
                     0u8,
                     0u16,
                 );
@@ -11702,7 +11685,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 12u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -11838,7 +11820,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -11862,7 +11843,6 @@ mod __cssl4parser_emit_impl {
                     crate::runtime::tape::TapeKind::Rule,
                     repeat_lo,
                     0,
-                    0u8,
                     0u8,
                     0u16,
                 );
@@ -11900,7 +11880,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 13u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -12064,7 +12043,6 @@ mod __cssl4parser_emit_impl {
                 span_lo,
                 14u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -12208,7 +12186,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -12246,7 +12223,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 15u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -12394,7 +12370,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -12432,7 +12407,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 16u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -12609,7 +12583,6 @@ mod __cssl4parser_emit_impl {
                 span_lo,
                 17u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -12723,7 +12696,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 18u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -13092,7 +13064,6 @@ mod __cssl4parser_emit_impl {
                                             alt_lo,
                                             0u8,
                                             0u8,
-                                            0u8,
                                             0u16,
                                         );
                                     builder
@@ -13369,7 +13340,6 @@ mod __cssl4parser_emit_impl {
                                         .begin_compound(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
-                                            0u8,
                                             0u8,
                                             0u8,
                                             0u16,
@@ -14054,7 +14024,6 @@ mod __cssl4parser_emit_impl {
                                             alt_lo,
                                             0u8,
                                             0u8,
-                                            0u8,
                                             0u16,
                                         );
                                     builder
@@ -14205,7 +14174,6 @@ mod __cssl4parser_emit_impl {
                                         .begin_compound(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
-                                            0u8,
                                             0u8,
                                             0u8,
                                             0u16,
@@ -14434,7 +14402,6 @@ mod __cssl4parser_emit_impl {
                                         .begin_compound(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
-                                            0u8,
                                             0u8,
                                             0u8,
                                             0u16,
@@ -16140,7 +16107,6 @@ mod __cssl4parser_emit_impl {
                                             alt_lo,
                                             0u8,
                                             0u8,
-                                            0u8,
                                             0u16,
                                         );
                                     builder
@@ -17048,7 +17014,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -17063,7 +17028,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -17102,7 +17066,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 35u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -17188,7 +17151,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 36u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -17314,7 +17276,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -17339,7 +17300,6 @@ mod __cssl4parser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -17355,7 +17315,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 37u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -17481,7 +17440,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -17506,7 +17464,6 @@ mod __cssl4parser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -17522,7 +17479,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 38u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -17842,7 +17798,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -17857,7 +17812,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -17911,7 +17865,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -17926,7 +17879,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -18007,7 +17959,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -18032,7 +17983,6 @@ mod __cssl4parser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -18048,7 +17998,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 41u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -18133,7 +18082,6 @@ mod __cssl4parser_emit_impl {
                 outer_span_lo,
                 42u8,
                 0u8,
-                0u8,
                 0u16,
             );
         let _operand_off = ({
@@ -18189,7 +18137,6 @@ mod __cssl4parser_emit_impl {
                         crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
-                        0u8,
                         0u8,
                         0u16,
                     );
@@ -18436,7 +18383,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -18451,7 +18397,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -18469,7 +18414,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 44u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -19367,7 +19311,6 @@ mod __cssl4parser_emit_impl {
                 alt_lo,
                 47u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -20160,7 +20103,6 @@ mod __cssl4parser_emit_impl {
                                             alt_lo,
                                             0u8,
                                             0u8,
-                                            0u8,
                                             0u16,
                                         );
                                     builder
@@ -20620,7 +20562,6 @@ mod __cssl4parser_emit_impl {
                                             alt_lo,
                                             0u8,
                                             0u8,
-                                            0u8,
                                             0u16,
                                         );
                                     builder
@@ -20893,7 +20834,6 @@ mod __cssl4parser_emit_impl {
                                         .begin_compound(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
-                                            0u8,
                                             0u8,
                                             0u8,
                                             0u16,
@@ -21222,7 +21162,6 @@ mod __cssl4parser_emit_impl {
                                         .begin_compound(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
-                                            0u8,
                                             0u8,
                                             0u8,
                                             0u16,
@@ -21719,7 +21658,6 @@ mod __cssl4parser_emit_impl {
                                                                     .begin_compound(
                                                                         crate::runtime::tape::TapeKind::Alt,
                                                                         alt_lo,
-                                                                        0u8,
                                                                         0u8,
                                                                         0u8,
                                                                         0u16,
@@ -22538,7 +22476,6 @@ mod __cssl4parser_emit_impl {
                         alt_lo,
                         52u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -22555,7 +22492,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 52u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -22848,7 +22784,6 @@ mod __cssl4parser_emit_impl {
                                             alt_lo,
                                             0u8,
                                             0u8,
-                                            0u8,
                                             0u16,
                                         );
                                     builder
@@ -23131,7 +23066,6 @@ mod __cssl4parser_emit_impl {
                                         .begin_compound(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
-                                            0u8,
                                             0u8,
                                             0u8,
                                             0u16,
@@ -23529,7 +23463,6 @@ mod __cssl4parser_emit_impl {
                                             alt_lo,
                                             0u8,
                                             0u8,
-                                            0u8,
                                             0u16,
                                         );
                                     builder
@@ -23852,7 +23785,6 @@ mod __cssl4parser_emit_impl {
                                         .begin_compound(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
-                                            0u8,
                                             0u8,
                                             0u8,
                                             0u16,
@@ -24468,7 +24400,6 @@ mod __cssl4parser_emit_impl {
                                             alt_lo,
                                             0u8,
                                             0u8,
-                                            0u8,
                                             0u16,
                                         );
                                     builder
@@ -24684,7 +24615,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -24707,7 +24637,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -24769,7 +24698,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -24784,7 +24712,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -24802,7 +24729,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 56u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -24913,7 +24839,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -24936,7 +24861,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -24998,7 +24922,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -25013,7 +24936,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -25031,7 +24953,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 57u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -25142,7 +25063,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -25165,7 +25085,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -25227,7 +25146,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -25242,7 +25160,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -25260,7 +25177,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 58u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -25480,7 +25396,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 59u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -25509,7 +25424,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -25532,7 +25446,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -25594,7 +25507,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -25609,7 +25521,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -25627,7 +25538,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 59u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -25735,7 +25645,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -25758,7 +25667,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -25820,7 +25728,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -25835,7 +25742,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -25853,7 +25759,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 60u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -25970,7 +25875,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -25993,7 +25897,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -26055,7 +25958,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -26070,7 +25972,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -26088,7 +25989,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 61u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -26205,7 +26105,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -26228,7 +26127,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -26290,7 +26188,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -26305,7 +26202,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -26323,7 +26219,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 62u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -26440,7 +26335,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -26463,7 +26357,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -26525,7 +26418,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -26540,7 +26432,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -26558,7 +26449,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 63u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -26927,7 +26817,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 64u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -26956,7 +26845,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -26979,7 +26867,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -27041,7 +26928,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -27056,7 +26942,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -27074,7 +26959,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 64u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -27336,7 +27220,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 65u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -27365,7 +27248,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -27388,7 +27270,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -27450,7 +27331,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -27465,7 +27345,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -27483,7 +27362,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 65u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -27987,7 +27865,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 66u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -28016,7 +27893,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -28039,7 +27915,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -28101,7 +27976,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -28116,7 +27990,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -28134,7 +28007,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 66u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -28372,7 +28244,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 67u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -28401,7 +28272,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -28424,7 +28294,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -28486,7 +28355,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -28501,7 +28369,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -28519,7 +28386,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 67u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -28730,7 +28596,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 68u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -28759,7 +28624,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -28782,7 +28646,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -28844,7 +28707,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -28859,7 +28721,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -28877,7 +28738,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 68u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -29085,7 +28945,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 69u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -29114,7 +28973,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -29137,7 +28995,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -29199,7 +29056,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -29214,7 +29070,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -29232,7 +29087,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 69u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -29518,7 +29372,6 @@ mod __cssl4parser_emit_impl {
                         alt_lo,
                         70u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -29752,7 +29605,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 70u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -29781,7 +29633,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -29804,7 +29655,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -29866,7 +29716,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -29881,7 +29730,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -29899,7 +29747,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 70u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -30137,7 +29984,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -30160,7 +30006,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -30222,7 +30067,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -30237,7 +30081,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -30255,7 +30098,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 71u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -30381,7 +30223,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -30404,7 +30245,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -30466,7 +30306,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -30481,7 +30320,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -30499,7 +30337,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 72u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -30737,7 +30574,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 73u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -30766,7 +30602,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -30789,7 +30624,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -30851,7 +30685,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -30866,7 +30699,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -30884,7 +30716,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 73u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -31013,7 +30844,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -31036,7 +30866,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -31098,7 +30927,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -31113,7 +30941,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -31131,7 +30958,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 74u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -31585,7 +31411,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 75u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -31614,7 +31439,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -31637,7 +31461,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -31699,7 +31522,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -31714,7 +31536,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -31732,7 +31553,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 75u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -32348,7 +32168,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 76u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -32377,7 +32196,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -32400,7 +32218,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -32462,7 +32279,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -32477,7 +32293,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -32495,7 +32310,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 76u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -32963,7 +32777,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -32986,7 +32799,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -33048,7 +32860,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -33063,7 +32874,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -33081,7 +32891,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 77u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -33206,7 +33015,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -33229,7 +33037,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -33291,7 +33098,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -33306,7 +33112,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -33324,7 +33129,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 78u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -33643,7 +33447,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 79u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -33672,7 +33475,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -33695,7 +33497,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -33757,7 +33558,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -33772,7 +33572,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -33790,7 +33589,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 79u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -34001,7 +33799,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 80u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -34030,7 +33827,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -34053,7 +33849,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -34115,7 +33910,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -34130,7 +33924,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -34148,7 +33941,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 80u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -34571,7 +34363,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 81u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -34600,7 +34391,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -34623,7 +34413,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -34685,7 +34474,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -34700,7 +34488,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -34718,7 +34505,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 81u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -34884,7 +34670,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -34899,7 +34684,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -34917,7 +34701,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 82u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -35090,7 +34873,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -35105,7 +34887,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -35124,7 +34905,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 83u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -36422,7 +36202,6 @@ mod __cssl4parser_emit_impl {
                 span_lo,
                 86u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -36492,7 +36271,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -36507,7 +36285,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -36531,7 +36308,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 87u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -36673,7 +36449,6 @@ mod __cssl4parser_emit_impl {
                 alt_lo,
                 88u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -36747,7 +36522,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 89u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -37201,7 +36975,6 @@ mod __cssl4parser_emit_impl {
                         alt_lo,
                         91u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -37369,7 +37142,6 @@ mod __cssl4parser_emit_impl {
                             iter_lo,
                             0u8,
                             0u8,
-                            0u8,
                             0u16,
                         );
                     builder
@@ -37384,7 +37156,6 @@ mod __cssl4parser_emit_impl {
                     .begin_compound(
                         crate::runtime::tape::TapeKind::Repeat,
                         repeat_lo,
-                        0u8,
                         0u8,
                         0u8,
                         0u16,
@@ -37409,7 +37180,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -37424,7 +37194,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -37463,7 +37232,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 91u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -37621,7 +37389,6 @@ mod __cssl4parser_emit_impl {
                 alt_lo,
                 92u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -37729,7 +37496,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 93u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -37841,7 +37607,6 @@ mod __cssl4parser_emit_impl {
                 span_lo,
                 94u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -37950,7 +37715,6 @@ mod __cssl4parser_emit_impl {
                 span_lo,
                 95u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -38058,7 +37822,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 96u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -38327,7 +38090,6 @@ mod __cssl4parser_emit_impl {
                 span_lo,
                 97u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -38470,7 +38232,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -38485,7 +38246,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -38524,7 +38284,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 98u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -38660,7 +38419,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -38684,7 +38442,6 @@ mod __cssl4parser_emit_impl {
                     crate::runtime::tape::TapeKind::Rule,
                     repeat_lo,
                     0,
-                    0u8,
                     0u8,
                     0u16,
                 );
@@ -38722,7 +38479,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 99u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -38922,7 +38678,6 @@ mod __cssl4parser_emit_impl {
                 span_lo,
                 101u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -38996,7 +38751,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 102u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -39320,7 +39074,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -39344,7 +39097,6 @@ mod __cssl4parser_emit_impl {
                     crate::runtime::tape::TapeKind::Rule,
                     repeat_lo,
                     0,
-                    0u8,
                     0u8,
                     0u16,
                 );
@@ -39382,7 +39134,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 104u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -39494,7 +39245,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 105u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -39610,7 +39360,6 @@ mod __cssl4parser_emit_impl {
                 span_lo,
                 106u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -39684,7 +39433,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 107u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -40004,7 +39752,6 @@ mod __cssl4parser_emit_impl {
                 span_lo,
                 110u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -40310,7 +40057,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -40335,7 +40081,6 @@ mod __cssl4parser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -40351,7 +40096,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 112u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -40421,7 +40165,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -40436,7 +40179,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -40460,7 +40202,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 113u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -40568,7 +40309,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -40593,7 +40333,6 @@ mod __cssl4parser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -40609,7 +40348,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 114u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -40717,7 +40455,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -40742,7 +40479,6 @@ mod __cssl4parser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -40758,7 +40494,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 115u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -42226,7 +41961,6 @@ mod __cssl4parser_emit_impl {
                         alt_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -42243,7 +41977,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 120u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -42649,7 +42382,6 @@ mod __cssl4parser_emit_impl {
                                         .begin_compound(
                                             crate::runtime::tape::TapeKind::Alt,
                                             alt_lo,
-                                            0u8,
                                             0u8,
                                             0u8,
                                             0u16,
@@ -43934,7 +43666,6 @@ mod __cssl4parser_emit_impl {
                         alt_lo,
                         129u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -43951,7 +43682,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 129u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -44018,7 +43748,6 @@ mod __cssl4parser_emit_impl {
                 span_lo,
                 130u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -44083,7 +43812,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 131u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -44156,7 +43884,6 @@ mod __cssl4parser_emit_impl {
                 span_lo,
                 132u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -44228,7 +43955,6 @@ mod __cssl4parser_emit_impl {
                 span_lo,
                 133u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -44293,7 +44019,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 134u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -44365,7 +44090,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 135u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -46201,7 +45925,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 137u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -46230,7 +45953,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -46255,7 +45977,6 @@ mod __cssl4parser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -46271,7 +45992,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 137u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -46370,7 +46090,6 @@ mod __cssl4parser_emit_impl {
                 span_lo,
                 138u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -46433,7 +46152,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 139u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -46520,7 +46238,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 140u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -46648,7 +46365,6 @@ mod __cssl4parser_emit_impl {
                 alt_lo,
                 141u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -46760,7 +46476,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -46785,7 +46500,6 @@ mod __cssl4parser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -46801,7 +46515,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 142u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -46992,7 +46705,6 @@ mod __cssl4parser_emit_impl {
                                 iter_lo,
                                 0u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -47015,7 +46727,6 @@ mod __cssl4parser_emit_impl {
                         .begin_compound(
                             crate::runtime::tape::TapeKind::Repeat,
                             repeat_lo,
-                            0u8,
                             0u8,
                             0u8,
                             0u16,
@@ -47053,7 +46764,6 @@ mod __cssl4parser_emit_impl {
                             seq_lo,
                             0u8,
                             0u8,
-                            0u8,
                             0u16,
                         );
                     builder
@@ -47081,7 +46791,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -47104,7 +46813,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -47144,7 +46852,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 143u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -47330,7 +47037,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 145u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -47667,7 +47373,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -47692,7 +47397,6 @@ mod __cssl4parser_emit_impl {
                     repeat_lo,
                     0u8,
                     0u8,
-                    0u8,
                     0u16,
                 );
             builder
@@ -47708,7 +47412,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 148u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -48321,7 +48024,6 @@ mod __cssl4parser_emit_impl {
                 span_lo,
                 151u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -48443,7 +48145,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -48466,7 +48167,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -48505,7 +48205,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 152u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -48628,7 +48327,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -48651,7 +48349,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -48690,7 +48387,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 153u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -48841,7 +48537,6 @@ mod __cssl4parser_emit_impl {
                 span_lo,
                 154u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -48975,7 +48670,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -48990,7 +48684,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -49029,7 +48722,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 155u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -49167,7 +48859,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -49182,7 +48873,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -49221,7 +48911,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 156u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -49356,7 +49045,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -49371,7 +49059,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -49410,7 +49097,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 157u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -49506,7 +49192,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 158u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -49670,7 +49355,6 @@ mod __cssl4parser_emit_impl {
                 span_lo,
                 159u8,
                 0u8,
-                0u8,
                 0u16,
             );
         builder
@@ -49765,7 +49449,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 160u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -49867,7 +49550,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -49890,7 +49572,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -49952,7 +49633,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -49967,7 +49647,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -49985,7 +49664,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 161u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -50087,7 +49765,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -50110,7 +49787,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -50172,7 +49848,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -50187,7 +49862,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -50205,7 +49879,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 162u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -50307,7 +49980,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -50330,7 +50002,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -50392,7 +50063,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -50407,7 +50077,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -50425,7 +50094,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 163u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -50636,7 +50304,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 164u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -50665,7 +50332,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -50688,7 +50354,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -50750,7 +50415,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -50765,7 +50429,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -50783,7 +50446,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 164u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -50885,7 +50547,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -50908,7 +50569,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -50970,7 +50630,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -50985,7 +50644,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -51003,7 +50661,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 165u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -51105,7 +50762,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -51128,7 +50784,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -51190,7 +50845,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -51205,7 +50859,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -51223,7 +50876,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 166u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -51325,7 +50977,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -51348,7 +50999,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -51410,7 +51060,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -51425,7 +51074,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -51443,7 +51091,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 167u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -51545,7 +51192,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -51568,7 +51214,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -51630,7 +51275,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -51645,7 +51289,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -51663,7 +51306,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 168u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -52009,7 +51651,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 169u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -52038,7 +51679,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -52061,7 +51701,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -52123,7 +51762,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -52138,7 +51776,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -52156,7 +51793,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 169u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -52394,7 +52030,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 170u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -52423,7 +52058,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -52446,7 +52080,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -52508,7 +52141,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -52523,7 +52155,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -52541,7 +52172,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 170u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -52806,7 +52436,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 171u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -52835,7 +52464,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -52858,7 +52486,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -52920,7 +52547,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -52935,7 +52561,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -52953,7 +52578,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 171u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -53164,7 +52788,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 172u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -53193,7 +52816,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -53216,7 +52838,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -53278,7 +52899,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -53293,7 +52913,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -53311,7 +52930,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 172u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -53495,7 +53113,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 173u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -53524,7 +53141,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -53547,7 +53163,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -53609,7 +53224,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -53624,7 +53238,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -53642,7 +53255,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 173u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -53826,7 +53438,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 174u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -53855,7 +53466,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -53878,7 +53488,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -53940,7 +53549,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -53955,7 +53563,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -53973,7 +53580,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 174u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -54238,7 +53844,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 175u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -54267,7 +53872,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -54290,7 +53894,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -54352,7 +53955,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -54367,7 +53969,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -54385,7 +53986,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 175u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -54487,7 +54087,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -54510,7 +54109,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -54572,7 +54170,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -54587,7 +54184,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -54605,7 +54201,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 176u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -54707,7 +54302,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -54730,7 +54324,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -54792,7 +54385,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -54807,7 +54399,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -54825,7 +54416,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 177u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -55036,7 +54626,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 178u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -55065,7 +54654,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -55088,7 +54676,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -55150,7 +54737,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -55165,7 +54751,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -55183,7 +54768,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 178u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -55285,7 +54869,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -55308,7 +54891,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -55370,7 +54952,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -55385,7 +54966,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -55403,7 +54983,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 179u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -55587,7 +55166,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 180u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -55616,7 +55194,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -55639,7 +55216,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -55701,7 +55277,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -55716,7 +55291,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -55734,7 +55308,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 180u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -56080,7 +55653,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 181u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -56109,7 +55681,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -56132,7 +55703,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -56194,7 +55764,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -56209,7 +55778,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -56227,7 +55795,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 181u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -56329,7 +55896,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -56352,7 +55918,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -56414,7 +55979,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -56429,7 +55993,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -56447,7 +56010,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 182u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -56549,7 +56111,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -56572,7 +56133,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -56634,7 +56194,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -56649,7 +56208,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -56667,7 +56225,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 183u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -56959,7 +56516,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 184u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -56988,7 +56544,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -57011,7 +56566,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -57073,7 +56627,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -57088,7 +56641,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -57106,7 +56658,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 184u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -57290,7 +56841,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 185u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -57319,7 +56869,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -57342,7 +56891,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -57404,7 +56952,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -57419,7 +56966,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -57437,7 +56983,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 185u8,
-                0u8,
                 0u8,
                 0u16,
             );
@@ -57837,7 +57382,6 @@ mod __cssl4parser_emit_impl {
                                 alt_lo,
                                 186u8,
                                 0u8,
-                                0u8,
                                 0u16,
                             );
                         builder
@@ -57866,7 +57410,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -57889,7 +57432,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -57951,7 +57493,6 @@ mod __cssl4parser_emit_impl {
                         iter_lo,
                         0u8,
                         0u8,
-                        0u8,
                         0u16,
                     );
                 builder
@@ -57966,7 +57507,6 @@ mod __cssl4parser_emit_impl {
                 .begin_compound(
                     crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
-                    0u8,
                     0u8,
                     0u8,
                     0u16,
@@ -57984,7 +57524,6 @@ mod __cssl4parser_emit_impl {
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 186u8,
-                0u8,
                 0u8,
                 0u16,
             );

@@ -325,7 +325,7 @@ impl<'a> IrCodegenCtx<'a> {
         // AC.2: recovery uses TapeKind::Recovered at the emit site;
         // no static enum sentinel is needed. Returning `None` keeps
         // any residual call-site that weaves this in compile-safe.
-        quote::quote! { None::<::bbnf::runtime::tape::TapeOffset> }
+        quote::quote! { None::<crate::runtime::tape::TapeOffset> }
     }
 
     pub fn collection_builder_type_from_elem_desc(&self, elem_desc: &TypeDesc) -> Type {

@@ -219,13 +219,13 @@ pub fn emit_aggregate_accessors(
                 /// aggregate payload.
                 ///
                 /// Wraps `.value()` via
-                /// `::bbnf::runtime::view::Color::from_tuple`.
+                /// `crate::runtime::view::Color::from_tuple`.
                 /// Panics on an out-of-range `space` discriminant;
                 /// use [`Self::try_as_color`] for the fallible
                 /// variant.
                 #[inline]
-                pub fn as_color(&self) -> ::bbnf::runtime::view::Color {
-                    ::bbnf::runtime::view::Color::from_tuple(self.value())
+                pub fn as_color(&self) -> crate::runtime::view::Color {
+                    crate::runtime::view::Color::from_tuple(self.value())
                 }
 
                 /// Fallible variant of [`Self::as_color`]: returns
@@ -235,8 +235,8 @@ pub fn emit_aggregate_accessors(
                 /// not have come from the BBNF emitter's colour-
                 /// function arm.
                 #[inline]
-                pub fn try_as_color(&self) -> ::core::option::Option<::bbnf::runtime::view::Color> {
-                    ::bbnf::runtime::view::Color::try_from_tuple(self.value())
+                pub fn try_as_color(&self) -> ::core::option::Option<crate::runtime::view::Color> {
+                    crate::runtime::view::Color::try_from_tuple(self.value())
                 }
             });
         }

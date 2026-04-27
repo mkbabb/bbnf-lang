@@ -104,20 +104,20 @@ pub fn emit_parse_arglist(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+            builder: &mut crate::runtime::tape::Tape<()>,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::TapeOffset,
-            ::bbnf::runtime::tape::DtaError,
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
         > {
             let span_lo = *p as u32;
             // AY-II.W0.b — walker-parity post-order outer Rule compound.
-            let outer_child = builder.columns_mut().len() as u32;
+            let outer_child = builder.position();
 
             #body_emission
 
             let span_hi = *p as u32;
             let outer_off = builder.begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 #variant_idx,
                 0u8,
@@ -127,9 +127,9 @@ pub fn emit_parse_arglist(
             builder.end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-            Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+            Ok(crate::runtime::tape::TapeOffset(outer_off))
         }
     }
 }
@@ -247,20 +247,20 @@ fn emit_tape_position_core(
                 let at = *p;
                 let end = at + #len;
                 if input.len() < end || input[at..end] != [#(#byte_lits),*] {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    return Err(crate::runtime::tape::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
                 let _ = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     #variant_idx,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
             }
         }
@@ -298,10 +298,10 @@ fn emit_tape_position_core(
                 // begin/end; retry uses rollback_to (iter_save_cols).
                 quote! {
                     let save_p = *p;
-                    let iter_save_cols = builder.columns_mut().len() as u32;
+                    let iter_save_cols = builder.position();
                     let iter_lo = *p as u32;
-                    let iter_child = builder.columns_mut().len() as u32;
-                    let attempt = (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
+                    let iter_child = builder.position();
+                    let attempt = (|| -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
                         #inner_emit
                         Ok(())
                     })();
@@ -311,7 +311,7 @@ fn emit_tape_position_core(
                     } else {
                         let iter_hi = *p as u32;
                         let __iter_off = builder.begin_compound(
-                            ::bbnf::runtime::tape::TapeKind::Seq,
+                            crate::runtime::tape::TapeKind::Seq,
                             iter_lo,
                             0,
                             0u8,
@@ -321,7 +321,7 @@ fn emit_tape_position_core(
                         builder.end_compound_post_order(
                             __iter_off,
                             iter_hi,
-                            ::bbnf::runtime::tape::TapeOffset(iter_child),
+                            crate::runtime::tape::TapeOffset(iter_child),
                         );
                     }
                 }
@@ -329,14 +329,14 @@ fn emit_tape_position_core(
                 // Generic repeat — iterate greedily, count iters.
                 quote! {
                     let repeat_lo = *p as u32;
-                    let repeat_child = builder.columns_mut().len() as u32;
+                    let repeat_child = builder.position();
                     let mut iter_count: u32 = 0;
                     loop {
                         let save_p = *p;
-                        let save_cols = builder.columns_mut().len() as u32;
+                        let save_cols = builder.position();
                         let iter_lo = *p as u32;
-                        let iter_child = builder.columns_mut().len() as u32;
-                        let attempt = (|| -> ::core::result::Result<(), ::bbnf::runtime::tape::DtaError> {
+                        let iter_child = builder.position();
+                        let attempt = (|| -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
                             #inner_emit
                             Ok(())
                         })();
@@ -351,7 +351,7 @@ fn emit_tape_position_core(
                         }
                         let iter_hi = *p as u32;
                         let __iter_off = builder.begin_compound(
-                            ::bbnf::runtime::tape::TapeKind::Seq,
+                            crate::runtime::tape::TapeKind::Seq,
                             iter_lo,
                             0,
                             0u8,
@@ -361,20 +361,20 @@ fn emit_tape_position_core(
                         builder.end_compound_post_order(
                             __iter_off,
                             iter_hi,
-                            ::bbnf::runtime::tape::TapeOffset(iter_child),
+                            crate::runtime::tape::TapeOffset(iter_child),
                         );
                         iter_count = iter_count.saturating_add(1);
                     }
                     if iter_count < (#lo_lit as u32) {
-                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        return Err(crate::runtime::tape::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                     let repeat_hi = *p as u32;
                     let __repeat_off = builder.begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Rule,
+                        crate::runtime::tape::TapeKind::Rule,
                         repeat_lo,
                         0,
                         0u8,
@@ -384,7 +384,7 @@ fn emit_tape_position_core(
                     builder.end_compound_post_order(
                         __repeat_off,
                         repeat_hi,
-                        ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                        crate::runtime::tape::TapeOffset(repeat_child),
                     );
                 }
             }
@@ -402,11 +402,11 @@ fn emit_tape_position_core(
             }
             quote! {
                 let seq_lo = *p as u32;
-                let seq_child = builder.columns_mut().len() as u32;
+                let seq_child = builder.position();
                 #(#out)*
                 let seq_hi = *p as u32;
                 let __seq_off = builder.begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    crate::runtime::tape::TapeKind::Seq,
                     seq_lo,
                     0,
                     0u8,
@@ -416,7 +416,7 @@ fn emit_tape_position_core(
                 builder.end_compound_post_order(
                     __seq_off,
                     seq_hi,
-                    ::bbnf::runtime::tape::TapeOffset(seq_child),
+                    crate::runtime::tape::TapeOffset(seq_child),
                 );
             }
         }
@@ -508,13 +508,13 @@ pub fn emit_parse_arglist_visitor(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             visitor: &mut V,
-        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: ::bbnf::runtime::tape::ObjectVisitor
-                + ::bbnf::runtime::tape::ArrayVisitor
-                + ::bbnf::runtime::tape::StringVisitor
-                + ::bbnf::runtime::tape::NumberVisitor
-                + ::bbnf::runtime::tape::KeywordVisitor,
+            V: crate::runtime::tape::ObjectVisitor
+                + crate::runtime::tape::ArrayVisitor
+                + crate::runtime::tape::StringVisitor
+                + crate::runtime::tape::NumberVisitor
+                + crate::runtime::tape::KeywordVisitor,
         {
             #body_emission
             Ok(())
@@ -579,7 +579,7 @@ fn emit_visitor_position_core(
                 let at = *p;
                 let end = at + #len;
                 if input.len() < end || input[at..end] != [#(#byte_lits),*] {
-                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                    return Err(crate::runtime::ParseErr::Syntax {
                         offset: at as u32, rule: None,
                     });
                 }
@@ -616,7 +616,7 @@ fn emit_visitor_position_core(
             if *hi == 1 && *lo == 0 {
                 quote! {
                     let save_p = *p;
-                    let res = (|| -> ::core::result::Result<(), ::bbnf::runtime::ParseErr> {
+                    let res = (|| -> ::core::result::Result<(), crate::runtime::ParseErr> {
                         #inner_emit
                         Ok(())
                     })();
@@ -629,7 +629,7 @@ fn emit_visitor_position_core(
                     let mut iter_count: u32 = 0;
                     loop {
                         let save_p = *p;
-                        let res = (|| -> ::core::result::Result<(), ::bbnf::runtime::ParseErr> {
+                        let res = (|| -> ::core::result::Result<(), crate::runtime::ParseErr> {
                             #inner_emit
                             Ok(())
                         })();
@@ -641,7 +641,7 @@ fn emit_visitor_position_core(
                         iter_count = iter_count.saturating_add(1);
                     }
                     if iter_count < (#lo_lit as u32) {
-                        return Err(::bbnf::runtime::ParseErr::Syntax {
+                        return Err(crate::runtime::ParseErr::Syntax {
                             offset: *p as u32, rule: None,
                         });
                     }

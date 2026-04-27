@@ -173,17 +173,17 @@ fn emit_parse_array_wrapped(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+            builder: &mut crate::runtime::tape::Tape<()>,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::TapeOffset,
-            ::bbnf::runtime::tape::DtaError,
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
         > {
             let span_lo = *p as u32;
             if input.get(*p).copied() != Some(b'[') {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
 
@@ -199,7 +199,7 @@ fn emit_parse_array_wrapped(
             // rule itself. Variant_idx comes from the Ref's pending
             // stamp = rule.id & 0xFF.
             let outer_off = builder.begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 #variant_idx,
                 0u8,
@@ -210,7 +210,7 @@ fn emit_parse_array_wrapped(
             // Inner Next compound: Next("[", OptionalWhitespace(Repeat(...))).
             let lbracket_open = *p as u32;
             let next_off = builder.begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 lbracket_open,
                 0,
                 0u8,
@@ -227,18 +227,18 @@ fn emit_parse_array_wrapped(
             *p += 1;
             let bracket_close = *p as u32;
             let _ = builder.push_leaf_with(
-                ::bbnf::runtime::tape::TapeKind::Literal,
+                crate::runtime::tape::TapeKind::Literal,
                 lbracket_open,
                 bracket_close,
                 #variant_idx,
                 0,
-                ::bbnf::runtime::tape::PayloadData::None,
+                crate::runtime::tape::PayloadData::None,
             );
 
             // OptionalWhitespace Seq compound — contains the Repeat.
             let opt_ws_open = *p as u32;
             let opt_ws_off = builder.begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 opt_ws_open,
                 0,
                 0u8,
@@ -252,7 +252,7 @@ fn emit_parse_array_wrapped(
 
             // Repeat compound — one per rule invocation, regardless of iterations.
             let repeat_off = builder.begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 repeat_open,
                 0,
                 0u8,
@@ -273,18 +273,18 @@ fn emit_parse_array_wrapped(
                 let rbracket_lo = opt_ws_close;
                 let rbracket_hi = *p as u32;
                 let _ = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     rbracket_lo,
                     rbracket_hi,
                     #variant_idx,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
                 let next_close = rbracket_hi;
                 builder.end_compound(next_off, next_close);
                 let outer_close = *p as u32;
                 builder.end_compound(outer_off, outer_close);
-                return Ok(::bbnf::runtime::tape::TapeOffset(outer_off));
+                return Ok(crate::runtime::tape::TapeOffset(outer_off));
             }
 
             // Non-empty loop: parse iterations. Each iteration emits:
@@ -309,7 +309,7 @@ fn emit_parse_array_wrapped(
             loop {
                 let iter_open = *p as u32;
                 let iter_off = builder.begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    crate::runtime::tape::TapeKind::Seq,
                     iter_open,
                     0,
                     0u8,
@@ -328,7 +328,7 @@ fn emit_parse_array_wrapped(
                 // `Repeat(comma)` in the iter-body IR.
                 let comma_repeat_open = *p as u32;
                 let comma_repeat_off = builder.begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    crate::runtime::tape::TapeKind::Rule,
                     comma_repeat_open,
                     0,
                     0u8,
@@ -350,7 +350,7 @@ fn emit_parse_array_wrapped(
                     // `OptionalWhitespace(Literal(","))`).
                     let comma_iter_open = comma_iter_save_p as u32;
                     let comma_iter_off = builder.begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        crate::runtime::tape::TapeKind::Seq,
                         comma_iter_open,
                         0,
                         0u8,
@@ -361,12 +361,12 @@ fn emit_parse_array_wrapped(
                     *p += 1;
                     let comma_hi = *p as u32;
                     let _ = builder.push_leaf_with(
-                        ::bbnf::runtime::tape::TapeKind::Literal,
+                        crate::runtime::tape::TapeKind::Literal,
                         comma_lo,
                         comma_hi,
                         #variant_idx,
                         0,
-                        ::bbnf::runtime::tape::PayloadData::None,
+                        crate::runtime::tape::PayloadData::None,
                     );
                     // Trailing WsTrim inside the comma Seq.
                     let _ = #support_mod::skip_space(input, p, state);
@@ -415,13 +415,13 @@ fn emit_parse_array_wrapped(
                     // (Skip's RHS literal mismatches).
                     if input.get(*p).copied() != Some(b']') {
                         return Err(match input.get(*p).copied() {
-                            None => ::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                            None => crate::runtime::tape::DtaError::UnexpectedEnd {
                                 offset: *p as u32,
                             },
-                            _ => ::bbnf::runtime::tape::DtaError::Syntax {
+                            _ => crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             },
                         });
                     }
@@ -429,18 +429,18 @@ fn emit_parse_array_wrapped(
                     *p += 1;
                     let rbracket_hi = *p as u32;
                     let _ = builder.push_leaf_with(
-                        ::bbnf::runtime::tape::TapeKind::Literal,
+                        crate::runtime::tape::TapeKind::Literal,
                         opt_ws_close,
                         rbracket_hi,
                         #variant_idx,
                         0,
-                        ::bbnf::runtime::tape::PayloadData::None,
+                        crate::runtime::tape::PayloadData::None,
                     );
                     let next_close = rbracket_hi;
                     builder.end_compound(next_off, next_close);
                     let outer_close = *p as u32;
                     builder.end_compound(outer_off, outer_close);
-                    return Ok(::bbnf::runtime::tape::TapeOffset(outer_off));
+                    return Ok(crate::runtime::tape::TapeOffset(outer_off));
                 }
                 // Continue: next iter's dispatcher call handles its own
                 // leading ws-skip before byte-dispatching the value.
@@ -597,7 +597,7 @@ fn emit_parse_array_list(
             // unwind across tape + value substrates per B4.W1).
             let iter_open = *p as u32;
             let iter_off = builder.begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 iter_open,
                 0,
                 0u8,
@@ -654,17 +654,17 @@ fn emit_parse_array_list(
                 input: &[u8],
                 p: &mut usize,
                 state: &mut #support_mod::ScanState,
-                builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+                builder: &mut crate::runtime::tape::Tape<()>,
             ) -> ::core::result::Result<
-                ::bbnf::runtime::tape::TapeOffset,
-                ::bbnf::runtime::tape::DtaError,
+                crate::runtime::tape::TapeOffset,
+                crate::runtime::tape::DtaError,
             > {
                 let span_lo = *p as u32;
 
                 // AY-II.W0.b — outer Seq compound (OW lowering:
                 // Seq[WsTrim, Repeat, WsTrim]); pre-order open.
                 let outer_off = builder.begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    crate::runtime::tape::TapeKind::Seq,
                     span_lo,
                     // AX.W0a.2.g — entry-rule OW-Seq stamps variant=0.
                     0u8,
@@ -677,7 +677,7 @@ fn emit_parse_array_list(
                 // Rule compound (the Repeat frame) — pre-order open.
                 let repeat_open = *p as u32;
                 let repeat_off = builder.begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    crate::runtime::tape::TapeKind::Rule,
                     repeat_open,
                     0,
                     0u8,
@@ -688,7 +688,7 @@ fn emit_parse_array_list(
                 // Iterate until the value dispatcher rejects or EOF.
                 loop {
                     let iter_save_p = *p;
-                    let __iter_save_cols = builder.columns_mut().len() as u32;
+                    let __iter_save_cols = builder.position();
                     // Peek the current byte; EOF or a byte outside
                     // the dispatcher's first set terminates the loop.
                     // The dispatcher's own byte-dispatch performs the
@@ -701,7 +701,7 @@ fn emit_parse_array_list(
                     // on failure, roll back `*p` + the fused builder
                     // (tape + value substrates) atomically via
                     // `builder.rollback_to`.
-                    let iter_result: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError>
+                    let iter_result: ::core::result::Result<(), crate::runtime::tape::DtaError>
                         = (|| {
                             #iter_body
                             Ok(())
@@ -731,7 +731,7 @@ fn emit_parse_array_list(
 
                 let outer_close = *p as u32;
                 builder.end_compound(outer_off, outer_close);
-                Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+                Ok(crate::runtime::tape::TapeOffset(outer_off))
             }
         }
     } else {
@@ -753,16 +753,16 @@ fn emit_parse_array_list(
                 input: &[u8],
                 p: &mut usize,
                 state: &mut #support_mod::ScanState,
-                builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+                builder: &mut crate::runtime::tape::Tape<()>,
             ) -> ::core::result::Result<
-                ::bbnf::runtime::tape::TapeOffset,
-                ::bbnf::runtime::tape::DtaError,
+                crate::runtime::tape::TapeOffset,
+                crate::runtime::tape::DtaError,
             > {
                 let repeat_open = *p as u32;
                 // AY-II.W0.b — pre-order Rule compound. Shape 2 direct-
                 // Repeat stamps variant=0 per AX.W0a.2.g (entry-only).
                 let repeat_off = builder.begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Rule,
+                    crate::runtime::tape::TapeKind::Rule,
                     repeat_open,
                     0u8,
                     0u8,
@@ -772,11 +772,11 @@ fn emit_parse_array_list(
 
                 loop {
                     let iter_save_p = *p;
-                    let __iter_save_cols = builder.columns_mut().len() as u32;
+                    let __iter_save_cols = builder.position();
                     if input.get(*p).is_none() {
                         break;
                     }
-                    let iter_result: ::core::result::Result<(), ::bbnf::runtime::tape::DtaError>
+                    let iter_result: ::core::result::Result<(), crate::runtime::tape::DtaError>
                         = (|| {
                             #iter_body
                             Ok(())
@@ -797,7 +797,7 @@ fn emit_parse_array_list(
 
                 let repeat_close = *p as u32;
                 builder.end_compound(repeat_off, repeat_close);
-                Ok(::bbnf::runtime::tape::TapeOffset(repeat_off))
+                Ok(crate::runtime::tape::TapeOffset(repeat_off))
             }
         }
     }
@@ -850,10 +850,10 @@ fn emit_element_position_tape(
                 // rather than a silently-broken parse.
                 quote! {
                     return ::core::result::Result::Err(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
+                        crate::runtime::tape::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         },
                     );
                 }
@@ -871,23 +871,23 @@ fn emit_element_position_tape(
                     let end = at + #len;
                     if input.len() < end || input[at..end] != [#(#byte_lits),*] {
                         return ::core::result::Result::Err(
-                            ::bbnf::runtime::tape::DtaError::Syntax {
+                            crate::runtime::tape::DtaError::Syntax {
                                 offset: at as u32,
                                 failing_state:
-                                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                                    crate::runtime::tape::DtaStateId::NONE,
                                 failing_rule:
-                                    ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                    crate::runtime::tape::DtaRuleId(u32::MAX),
                             },
                         );
                     }
                     *p = end;
                     let _ = builder.push_leaf_with(
-                        ::bbnf::runtime::tape::TapeKind::Literal,
+                        crate::runtime::tape::TapeKind::Literal,
                         at as u32,
                         end as u32,
                         #var,
                         0,
-                        ::bbnf::runtime::tape::PayloadData::None,
+                        crate::runtime::tape::PayloadData::None,
                     );
                 }
             }
@@ -934,7 +934,7 @@ fn emit_element_position_tape(
                 loop {
                     let __inner_save_p = *p;
                     let __inner_result:
-                        ::core::result::Result<(), ::bbnf::runtime::tape::DtaError>
+                        ::core::result::Result<(), crate::runtime::tape::DtaError>
                         = (|| {
                             #body
                             Ok(())
@@ -1086,34 +1086,34 @@ pub fn emit_parse_array_visitor(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             visitor: &mut V,
-        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: ::bbnf::runtime::tape::ObjectVisitor
-                + ::bbnf::runtime::tape::ArrayVisitor
-                + ::bbnf::runtime::tape::StringVisitor
-                + ::bbnf::runtime::tape::NumberVisitor
-                + ::bbnf::runtime::tape::KeywordVisitor,
+            V: crate::runtime::tape::ObjectVisitor
+                + crate::runtime::tape::ArrayVisitor
+                + crate::runtime::tape::StringVisitor
+                + crate::runtime::tape::NumberVisitor
+                + crate::runtime::tape::KeywordVisitor,
         {
             let begin_at = *p;
             if input.get(*p).copied() != Some(b'[') {
-                return Err(::bbnf::runtime::ParseErr::Syntax {
+                return Err(crate::runtime::ParseErr::Syntax {
                     offset: begin_at as u32, rule: None,
                 });
             }
             *p += 1;
-            visitor.begin_array().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+            visitor.begin_array().map_err(|_| crate::runtime::ParseErr::Syntax {
                 offset: begin_at as u32, rule: None,
             })?;
             // Fast-empty check: `]` immediately closes.
             if let Some(b) = #support_mod::skip_space(input, p, state) {
                 if b == b']' {
                     *p += 1;
-                    return visitor.end_array().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                    return visitor.end_array().map_err(|_| crate::runtime::ParseErr::Syntax {
                         offset: *p as u32, rule: None,
                     });
                 }
             } else {
-                return Err(::bbnf::runtime::ParseErr::Syntax {
+                return Err(crate::runtime::ParseErr::Syntax {
                     offset: *p as u32, rule: None,
                 });
             }
@@ -1123,7 +1123,7 @@ pub fn emit_parse_array_visitor(
                 match #support_mod::skip_space(input, p, state) {
                     Some(b']') => {
                         *p += 1;
-                        return visitor.end_array().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                        return visitor.end_array().map_err(|_| crate::runtime::ParseErr::Syntax {
                             offset: *p as u32, rule: None,
                         });
                     }
@@ -1131,7 +1131,7 @@ pub fn emit_parse_array_visitor(
                         *p += 1;
                         let _ = #support_mod::skip_space(input, p, state);
                     }
-                    _ => return Err(::bbnf::runtime::ParseErr::Syntax {
+                    _ => return Err(crate::runtime::ParseErr::Syntax {
                         offset: *p as u32, rule: None,
                     }),
                 }

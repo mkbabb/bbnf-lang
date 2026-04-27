@@ -68,14 +68,19 @@ pub struct ColumnRank {
     pub pay_agg: u32,
 }
 
-/// A pointer into a specific record in a specific [`Tape`].
+/// A pointer into a specific record in a specific [`Tape<R>`].
 ///
 /// Tied to `'tape` — the lifetime of the underlying tape — so the
 /// borrow checker guarantees the cursor never outlives the arena it
-/// points into.
-#[derive(Clone, Copy, Debug)]
-pub struct TapeCursor<'tape> {
-    tape: &'tape Tape,
+/// points into. `R` is the grammar-root marker the cursor's `tape`
+/// reference is parameterised over; cursor accessors that surface
+/// raw column data (`columns()`, `kind()`, `span()`, `record()`)
+/// are R-agnostic, while accessors that touch the value substrate
+/// (none currently — value-substrate reads route through
+/// [`Tape<R>`] directly) inherit the binding from the tape.
+#[derive(Debug)]
+pub struct TapeCursor<'tape, R = ()> {
+    tape: &'tape Tape<R>,
     offset: TapeOffset,
     /// Per-column rank as of this cursor's position.
     ///
@@ -86,13 +91,24 @@ pub struct TapeCursor<'tape> {
     rank: ColumnRank,
 }
 
-impl<'tape> TapeCursor<'tape> {
+// Manual `Clone + Copy` impls — derive would require `R: Copy`,
+// which user grammar markers don't satisfy. The cursor's only
+// `R`-typed field is `&Tape<R>` which is `Copy` regardless of `R`.
+impl<'tape, R> Clone for TapeCursor<'tape, R> {
+    #[inline]
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+impl<'tape, R> Copy for TapeCursor<'tape, R> {}
+
+impl<'tape, R> TapeCursor<'tape, R> {
     /// Construct a cursor pointing at `offset` within `tape`.
     ///
     /// The column-rank counters start at zero; callers that want to
     /// honour the monotonic-rank invariant use [`Self::with_rank`].
     #[inline]
-    pub fn new(tape: &'tape Tape, offset: TapeOffset) -> Self {
+    pub fn new(tape: &'tape Tape<R>, offset: TapeOffset) -> Self {
         Self {
             tape,
             offset,
@@ -103,7 +119,7 @@ impl<'tape> TapeCursor<'tape> {
     /// Construct a cursor pointing at `offset` within `tape`, with
     /// an explicit starting [`ColumnRank`].
     #[inline]
-    pub fn with_rank(tape: &'tape Tape, offset: TapeOffset, rank: ColumnRank) -> Self {
+    pub fn with_rank(tape: &'tape Tape<R>, offset: TapeOffset, rank: ColumnRank) -> Self {
         Self {
             tape,
             offset,
@@ -113,7 +129,7 @@ impl<'tape> TapeCursor<'tape> {
 
     /// Access the underlying tape.
     #[inline]
-    pub fn tape(&self) -> &'tape Tape {
+    pub fn tape(&self) -> &'tape Tape<R> {
         self.tape
     }
 
@@ -203,7 +219,7 @@ impl<'tape> TapeCursor<'tape> {
     /// root: locate the first child's root via a single backward
     /// seed, then step `i` times via `sib_skip` column reads.
     #[inline]
-    pub fn child(self, i: usize) -> Option<TapeCursor<'tape>> {
+    pub fn child(self, i: usize) -> Option<TapeCursor<'tape, R>> {
         let columns = self.tape.columns();
         if !columns.has_children_at(self.offset.0) {
             return None;
@@ -260,7 +276,7 @@ impl<'tape> TapeCursor<'tape> {
     ///
     /// Forward walk via `sib_skip`; zero heap allocations per call.
     #[inline]
-    pub fn children(self) -> ChildIter<'tape> {
+    pub fn children(self) -> ChildIter<'tape, R> {
         let columns = self.tape.columns();
         if !columns.has_children_at(self.offset.0) {
             return ChildIter::empty(self.tape);
@@ -281,7 +297,7 @@ impl<'tape> TapeCursor<'tape> {
     /// makes forward source-order iteration zero-alloc, so the two
     /// methods collapse into one.
     #[inline]
-    pub fn children_zero_alloc(self) -> ChildIter<'tape> {
+    pub fn children_zero_alloc(self) -> ChildIter<'tape, R> {
         self.children()
     }
 
@@ -317,9 +333,9 @@ impl<'tape> TapeCursor<'tape> {
 /// leaf-heavy rules); a single `SmallVec`-shaped inline buffer is
 /// avoided in favour of lazy iteration via [`Self::iter`] so
 /// consumers that only need the first match pay no heap cost at all.
-#[derive(Clone, Copy, Debug)]
-pub struct ScanResult<'tape> {
-    tape: &'tape Tape,
+#[derive(Debug)]
+pub struct ScanResult<'tape, R = ()> {
+    tape: &'tape Tape<R>,
     /// Inclusive first offset admitted by the scan (or `None` when
     /// empty).
     first: Option<u32>,
@@ -328,10 +344,18 @@ pub struct ScanResult<'tape> {
     end_span: u32,
 }
 
-impl<'tape> ScanResult<'tape> {
+impl<'tape, R> Clone for ScanResult<'tape, R> {
+    #[inline]
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+impl<'tape, R> Copy for ScanResult<'tape, R> {}
+
+impl<'tape, R> ScanResult<'tape, R> {
     /// The tape this scan was produced from.
     #[inline]
-    pub fn tape(&self) -> &'tape Tape {
+    pub fn tape(&self) -> &'tape Tape<R> {
         self.tape
     }
 
@@ -349,7 +373,7 @@ impl<'tape> ScanResult<'tape> {
     /// allocation per step — the walker reads `sib_skip` + `span_hi`
     /// at each position to advance.
     #[inline]
-    pub fn iter(&self) -> BoundedLookahead<'tape> {
+    pub fn iter(&self) -> BoundedLookahead<'tape, R> {
         BoundedLookahead {
             tape: self.tape,
             next: self.first,
@@ -359,12 +383,8 @@ impl<'tape> ScanResult<'tape> {
 
     /// First offset in the scan result, as a cursor. `None` when the
     /// bounded window is empty.
-    ///
-    /// Hot path for structural-scan consumers that only want the
-    /// earliest landmark (e.g. object-key seek's value-position
-    /// entry).
     #[inline]
-    pub fn first(&self) -> Option<TapeCursor<'tape>> {
+    pub fn first(&self) -> Option<TapeCursor<'tape, R>> {
         self.first.map(|off| TapeCursor::new(self.tape, TapeOffset(off)))
     }
 }
@@ -380,9 +400,9 @@ impl<'tape> ScanResult<'tape> {
 /// Produced by [`TapeCursor::bounded_lookahead`] and
 /// [`ScanResult::iter`]. Zero heap allocation per step; every advance
 /// is two column reads (`sib_skip_at`, `span_at`).
-#[derive(Clone, Copy, Debug)]
-pub struct BoundedLookahead<'tape> {
-    tape: &'tape Tape,
+#[derive(Debug)]
+pub struct BoundedLookahead<'tape, R = ()> {
+    tape: &'tape Tape<R>,
     /// Next record offset to yield. `None` once the iterator is
     /// exhausted or the window is empty.
     next: Option<u32>,
@@ -391,11 +411,19 @@ pub struct BoundedLookahead<'tape> {
     end_span: u32,
 }
 
-impl<'tape> Iterator for BoundedLookahead<'tape> {
-    type Item = TapeCursor<'tape>;
+impl<'tape, R> Clone for BoundedLookahead<'tape, R> {
+    #[inline]
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+impl<'tape, R> Copy for BoundedLookahead<'tape, R> {}
+
+impl<'tape, R> Iterator for BoundedLookahead<'tape, R> {
+    type Item = TapeCursor<'tape, R>;
 
     #[inline]
-    fn next(&mut self) -> Option<TapeCursor<'tape>> {
+    fn next(&mut self) -> Option<TapeCursor<'tape, R>> {
         let current = self.next?;
         let columns = self.tape.columns();
         let (_, span_hi) = columns.span_at(current);
@@ -413,7 +441,7 @@ impl<'tape> Iterator for BoundedLookahead<'tape> {
     }
 }
 
-impl<'tape> TapeCursor<'tape> {
+impl<'tape, R> TapeCursor<'tape, R> {
     /// Seek to the value record associated with the key whose source
     /// span equals `key_span`, under the current compound.
     ///
@@ -435,7 +463,7 @@ impl<'tape> TapeCursor<'tape> {
     /// `SCAN_STRUCTURAL_BOUNDED` additionally route the scan window
     /// through a structural index to amortise multi-key lookups.
     #[inline]
-    pub fn object_key_seek(&self, key_span: (u32, u32)) -> Option<TapeCursor<'tape>> {
+    pub fn object_key_seek(&self, key_span: (u32, u32)) -> Option<TapeCursor<'tape, R>> {
         let columns = self.tape.columns();
         if !columns.has_children_at(self.offset.0) {
             return None;
@@ -470,7 +498,7 @@ impl<'tape> TapeCursor<'tape> {
     /// records past a known end-of-structure marker (e.g. the
     /// closing `}` of a CSS block). Zero heap allocation per step.
     #[inline]
-    pub fn bounded_lookahead(&self, end_span: u32) -> BoundedLookahead<'tape> {
+    pub fn bounded_lookahead(&self, end_span: u32) -> BoundedLookahead<'tape, R> {
         let columns = self.tape.columns();
         let next = if columns.has_children_at(self.offset.0) {
             first_child_root(columns, self.offset.0)
@@ -493,7 +521,7 @@ impl<'tape> TapeCursor<'tape> {
     /// directly — the emitter's generated materializer keys its
     /// per-rule dispatch off the [`ScanResult`] shape.
     #[inline]
-    pub fn scan_structural_bounded(&self, end_span: u32) -> ScanResult<'tape> {
+    pub fn scan_structural_bounded(&self, end_span: u32) -> ScanResult<'tape, R> {
         let columns = self.tape.columns();
         let first = if columns.has_children_at(self.offset.0) {
             match first_child_root(columns, self.offset.0) {
@@ -537,26 +565,34 @@ impl<'tape> TapeCursor<'tape> {
 /// Zero heap allocation. Each step reads the current record's
 /// [`Columns::sib_skip`](crate::columns::Columns::sib_skip) slot in
 /// one indexed column load; iteration ends when that slot reads zero.
-#[derive(Clone, Copy, Debug)]
-pub struct ChildIter<'tape> {
-    tape: &'tape Tape,
+#[derive(Debug)]
+pub struct ChildIter<'tape, R = ()> {
+    tape: &'tape Tape<R>,
     /// Next record offset to yield. `None` when iteration is over.
     next: Option<u32>,
 }
 
-impl<'tape> ChildIter<'tape> {
+impl<'tape, R> Clone for ChildIter<'tape, R> {
+    #[inline]
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+impl<'tape, R> Copy for ChildIter<'tape, R> {}
+
+impl<'tape, R> ChildIter<'tape, R> {
     /// Iterator that immediately yields `None`.
     #[inline]
-    fn empty(tape: &'tape Tape) -> Self {
+    fn empty(tape: &'tape Tape<R>) -> Self {
         Self { tape, next: None }
     }
 }
 
-impl<'tape> Iterator for ChildIter<'tape> {
-    type Item = TapeCursor<'tape>;
+impl<'tape, R> Iterator for ChildIter<'tape, R> {
+    type Item = TapeCursor<'tape, R>;
 
     #[inline]
-    fn next(&mut self) -> Option<TapeCursor<'tape>> {
+    fn next(&mut self) -> Option<TapeCursor<'tape, R>> {
         let current = self.next?;
         let columns = self.tape.columns();
         let step = columns.sib_skip_at(current);

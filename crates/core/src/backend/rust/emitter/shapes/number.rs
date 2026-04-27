@@ -48,10 +48,10 @@ pub fn emit_parse_number(
             input: &[u8],
             p: &mut usize,
             first_byte: u8,
-            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+            builder: &mut crate::runtime::tape::Tape<()>,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::TapeOffset,
-            ::bbnf::runtime::tape::DtaError,
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
         > {
             const POW10_U64: [u64; 17] = [
                 1, 10, 100, 1_000, 10_000, 100_000, 1_000_000,
@@ -78,10 +78,10 @@ pub fn emit_parse_number(
                 } else { break; }
             }
             if *p == int_start {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: start as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             let int_digit_count = *p - int_start;
@@ -101,10 +101,10 @@ pub fn emit_parse_number(
                 }
                 fractional_digit_count = (*p - frac_start) as i64;
                 if fractional_digit_count == 0 {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    return Err(crate::runtime::tape::DtaError::Syntax {
                         offset: start as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 if int_digit_count as i64 + fractional_digit_count > 19 {
@@ -138,10 +138,10 @@ pub fn emit_parse_number(
                     } else { break; }
                 }
                 if *p == exp_start {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    return Err(crate::runtime::tape::DtaError::Syntax {
                         offset: start as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 exponent += if exp_negative { -exp_val } else { exp_val };
@@ -166,7 +166,7 @@ pub fn emit_parse_number(
             // via `f64::from_bits(cols.pay_f64_at(child_off))` without
             // the `pay_wide` / arena round-trip.
             let off = builder.push_leaf_with_f64_direct(
-                ::bbnf::runtime::tape::TapeKind::Span,
+                crate::runtime::tape::TapeKind::Span,
                 start as u32,
                 end as u32,
                 #variant_idx,
@@ -222,9 +222,9 @@ pub fn emit_parse_number_visitor(
             p: &mut usize,
             first_byte: u8,
             visitor: &mut V,
-        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: ::bbnf::runtime::tape::NumberVisitor,
+            V: crate::runtime::tape::NumberVisitor,
         {
             const POW10_U64: [u64; 17] = [
                 1, 10, 100, 1_000, 10_000, 100_000, 1_000_000,
@@ -250,7 +250,7 @@ pub fn emit_parse_number_visitor(
                 } else { break; }
             }
             if *p == int_start {
-                return Err(::bbnf::runtime::ParseErr::Syntax {
+                return Err(crate::runtime::ParseErr::Syntax {
                     offset: start as u32, rule: None,
                 });
             }
@@ -289,7 +289,7 @@ pub fn emit_parse_number_visitor(
                 }
                 fractional_digit_count = (*p - frac_start) as i64;
                 if fractional_digit_count == 0 {
-                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                    return Err(crate::runtime::ParseErr::Syntax {
                         offset: start as u32, rule: None,
                     });
                 }
@@ -324,7 +324,7 @@ pub fn emit_parse_number_visitor(
                     } else { break; }
                 }
                 if *p == exp_start {
-                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                    return Err(crate::runtime::ParseErr::Syntax {
                         offset: start as u32, rule: None,
                     });
                 }
@@ -344,7 +344,7 @@ pub fn emit_parse_number_visitor(
                 }
             };
             visitor.number_f64(value)
-                .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                .map_err(|_| crate::runtime::ParseErr::Syntax {
                     offset: start as u32, rule: None,
                 })
         }

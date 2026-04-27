@@ -127,8 +127,8 @@ fn wrap_rule_leaf_kind(rule: &IrRule, ir: &GrammarIR) -> TokenStream {
         }
     });
     match ty {
-        Some(TypeDesc::U8) => quote! { ::bbnf::runtime::tape::TapeKind::KvPair },
-        _ => quote! { ::bbnf::runtime::tape::TapeKind::Span },
+        Some(TypeDesc::U8) => quote! { crate::runtime::tape::TapeKind::KvPair },
+        _ => quote! { crate::runtime::tape::TapeKind::Span },
     }
 }
 
@@ -264,12 +264,12 @@ pub fn emit_parse_wrap(
                 Some(call) => quote! { #call },
                 None => quote! {
                     ::core::result::Result::Err(
-                        ::bbnf::runtime::tape::DtaError::Syntax {
+                        crate::runtime::tape::DtaError::Syntax {
                             offset: *p as u32,
                             failing_state:
-                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                crate::runtime::tape::DtaStateId::NONE,
                             failing_rule:
-                                ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                crate::runtime::tape::DtaRuleId(u32::MAX),
                         },
                     )
                 },
@@ -282,12 +282,12 @@ pub fn emit_parse_wrap(
             let _ = dispatcher_ident;
             quote! {
                 ::core::result::Result::Err(
-                    ::bbnf::runtime::tape::DtaError::Syntax {
+                    crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
                         failing_state:
-                            ::bbnf::runtime::tape::DtaStateId::NONE,
+                            crate::runtime::tape::DtaStateId::NONE,
                         failing_rule:
-                            ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            crate::runtime::tape::DtaRuleId(u32::MAX),
                     },
                 )
             }
@@ -311,10 +311,10 @@ pub fn emit_parse_wrap(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+            builder: &mut crate::runtime::tape::Tape<()>,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::TapeOffset,
-            ::bbnf::runtime::tape::DtaError,
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
         > {
             #dispatch
         }
@@ -460,14 +460,14 @@ fn emit_alt_tape_dispatch(
         quote! {
             let first = *input
                 .get(*p)
-                .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
         }
     } else {
         quote! {
             let first = #support_mod::skip_space(input, p, state)
-                .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
         }
@@ -490,20 +490,20 @@ fn emit_alt_tape_dispatch(
                 }
                 #(#linear_arms)*
                 return ::core::result::Result::Err(
-                    ::bbnf::runtime::tape::DtaError::Syntax {
+                    crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     },
                 );
             }
             let _ = __wrap_chosen_meta;
-            Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+            Ok(crate::runtime::tape::TapeOffset::NONE)
         }
     } else {
         quote! {
             let __wrap_enter_p = *p as u32;
-            let __wrap_enter_child = builder.columns_mut().len() as u32;
+            let __wrap_enter_child = builder.position();
             let mut __wrap_chosen_meta: u8 = 0;
             #first_peek
             'try_branches: loop {
@@ -513,10 +513,10 @@ fn emit_alt_tape_dispatch(
                 }
                 #(#linear_arms)*
                 return ::core::result::Result::Err(
-                    ::bbnf::runtime::tape::DtaError::Syntax {
+                    crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     },
                 );
             }
@@ -532,7 +532,7 @@ fn emit_alt_tape_dispatch(
             // branches. `frame_depth` = variant_idx as before.
             let __wrap_exit_p = *p as u32;
             let __wrap_off = builder.begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 __wrap_enter_p,
                 #rule_variant_idx,
                 __wrap_chosen_meta,
@@ -550,9 +550,9 @@ fn emit_alt_tape_dispatch(
             builder.end_compound_post_order(
                 __wrap_off,
                 __wrap_exit_p,
-                ::bbnf::runtime::tape::TapeOffset(__wrap_enter_child),
+                crate::runtime::tape::TapeOffset(__wrap_enter_child),
             );
-            Ok(::bbnf::runtime::tape::TapeOffset(__wrap_off))
+            Ok(crate::runtime::tape::TapeOffset(__wrap_off))
         }
     }
 }
@@ -567,7 +567,7 @@ fn emit_wrap_linear_body_tape(call: &TokenStream, branch_ord: u8) -> TokenStream
             // AY-II.W0.b — capture columns length as an explicit u32
             // open_offset; rollback_to (W0.a) replaces truncate to
             // signal checkpoint/restore intent to the fused pipeline.
-            let attempt_len = builder.columns_mut().len() as u32;
+            let attempt_len = builder.position();
             match #call {
                 Ok(_) => {
                     __wrap_chosen_meta = #branch_ord;
@@ -671,18 +671,18 @@ fn emit_wrap_branch_call_tape(
                                         1u32,
                                     );
                                     ::core::result::Result::<
-                                        ::bbnf::runtime::tape::TapeOffset,
-                                        ::bbnf::runtime::tape::DtaError,
-                                    >::Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+                                        crate::runtime::tape::TapeOffset,
+                                        crate::runtime::tape::DtaError,
+                                    >::Ok(crate::runtime::tape::TapeOffset::NONE)
                                 }
                                 ::core::option::Option::None => {
                                     ::core::result::Result::Err(
-                                        ::bbnf::runtime::tape::DtaError::Syntax {
+                                        crate::runtime::tape::DtaError::Syntax {
                                             offset: span_lo,
                                             failing_state:
-                                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                                crate::runtime::tape::DtaStateId::NONE,
                                             failing_rule:
-                                                ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                                crate::runtime::tape::DtaRuleId(u32::MAX),
                                         },
                                     )
                                 }
@@ -700,26 +700,26 @@ fn emit_wrap_branch_call_tape(
                                 ::core::option::Option::Some(len) => {
                                     *p += len as usize;
                                     let _ = builder.push_leaf_with(
-                                        ::bbnf::runtime::tape::TapeKind::Span,
+                                        crate::runtime::tape::TapeKind::Span,
                                         span_lo,
                                         *p as u32,
                                         0,
                                         0,
-                                        ::bbnf::runtime::tape::PayloadData::None,
+                                        crate::runtime::tape::PayloadData::None,
                                     );
                                     ::core::result::Result::<
-                                        ::bbnf::runtime::tape::TapeOffset,
-                                        ::bbnf::runtime::tape::DtaError,
-                                    >::Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+                                        crate::runtime::tape::TapeOffset,
+                                        crate::runtime::tape::DtaError,
+                                    >::Ok(crate::runtime::tape::TapeOffset::NONE)
                                 }
                                 ::core::option::Option::None => {
                                     ::core::result::Result::Err(
-                                        ::bbnf::runtime::tape::DtaError::Syntax {
+                                        crate::runtime::tape::DtaError::Syntax {
                                             offset: span_lo,
                                             failing_state:
-                                                ::bbnf::runtime::tape::DtaStateId::NONE,
+                                                crate::runtime::tape::DtaStateId::NONE,
                                             failing_rule:
-                                                ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                                crate::runtime::tape::DtaRuleId(u32::MAX),
                                         },
                                     )
                                 }
@@ -814,13 +814,13 @@ pub fn emit_parse_wrap_visitor(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             visitor: &mut V,
-        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: ::bbnf::runtime::tape::ObjectVisitor
-                + ::bbnf::runtime::tape::ArrayVisitor
-                + ::bbnf::runtime::tape::StringVisitor
-                + ::bbnf::runtime::tape::NumberVisitor
-                + ::bbnf::runtime::tape::KeywordVisitor,
+            V: crate::runtime::tape::ObjectVisitor
+                + crate::runtime::tape::ArrayVisitor
+                + crate::runtime::tape::StringVisitor
+                + crate::runtime::tape::NumberVisitor
+                + crate::runtime::tape::KeywordVisitor,
         {
             #dispatch
         }
@@ -891,7 +891,7 @@ fn emit_alt_visitor_dispatch(
 
     quote! {
         let first = #support_mod::skip_space(input, p, state)
-            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+            .ok_or(crate::runtime::ParseErr::Syntax {
                 offset: *p as u32, rule: None,
             })?;
         match first {

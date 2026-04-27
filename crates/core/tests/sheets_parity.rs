@@ -55,12 +55,12 @@ use ::bbnf::grammar::generated::google_sheets::*;
 /// `kids.reverse(); for c in kids { walk(c) }` step produced.
 /// A `seen` offset set guards against substrate cycles (defensive,
 /// not expected to trigger).
-fn walk<'t>(
-    _tape: &'t Tape,
-    root: TapeCursor<'t>,
+fn walk<'t, R>(
+    _tape: &'t Tape<R>,
+    root: TapeCursor<'t, R>,
     out: &mut Vec<(TapeKind, u8, u8, bool)>,
 ) {
-    let mut stack: Vec<TapeCursor<'t>> = Vec::with_capacity(32);
+    let mut stack: Vec<TapeCursor<'t, R>> = Vec::with_capacity(32);
     let mut seen: std::collections::HashSet<u32> =
         std::collections::HashSet::new();
     stack.push(root);
@@ -80,7 +80,7 @@ fn walk<'t>(
             rec.has_payload(),
         ));
         if rec.has_children() {
-            let kids: Vec<TapeCursor<'t>> =
+            let kids: Vec<TapeCursor<'t, R>> =
                 cursor.children_zero_alloc().collect();
             // Push children in natural order so the LIFO pop yields
             // them in reverse — matching the recursive form's

@@ -1091,39 +1091,39 @@ impl RustEmitter {
                 // capacity falls back to the per-grammar density
                 // estimate via `GRAMMAR_PROFILE.capacity_for`.
                 let mut state = #support_mod_ident::ScanState::new();
-                // AY-II.W0'.a — single fused builder allocation. The
-                // builder owns both the tape column family and the
-                // paired value-frame arena; every `begin_compound` /
-                // `end_compound` / `push_leaf_*` writes to both in
-                // lockstep, and `finish_fused::<Self>(root)` returns a
-                // single `FusedOutput<Self>` holding tape + value.
-                let mut builder =
-                    ::bbnf::runtime::tape::FusedBuilder::with_capacity(
-                        GRAMMAR_PROFILE.capacity_for(input.len()),
-                    );
+                // B5.W1 — single unified [`Tape<()>`] allocation.
+                // The substrate owns both the structural columns and
+                // the paired value-frame arena; every `begin_compound`
+                // / `end_compound` / `push_leaf_*` writes to both in
+                // lockstep, and `finish(root)` returns the finalised
+                // [`Tape<()>`] with sib_skip / span_hi / child_off
+                // back-patched.
+                let mut tape = crate::runtime::tape::Tape::<()>::with_capacity(
+                    GRAMMAR_PROFILE.capacity_for(input.len()),
+                );
                 let root_off = {
                     let mut pos: usize = 0;
                     let off = #dispatcher(
                         __input_bytes,
                         &mut pos,
                         &mut state,
-                        &mut builder,
+                        &mut tape,
                     )
                     .map_err(|e| match e {
-                        ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                        crate::runtime::tape::DtaError::Syntax { offset, .. } => {
+                            crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset } => {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                        crate::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                            crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        ::bbnf::runtime::tape::DtaError::InvalidState { .. } => {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                        crate::runtime::tape::DtaError::InvalidState { .. } => {
+                            crate::runtime::ParseErr::Syntax {
                                 offset: 0,
                                 rule: None,
                             }
@@ -1134,26 +1134,25 @@ impl RustEmitter {
                         __input_bytes, &mut pos, &mut state,
                     );
                     if pos != input.len() {
-                        return Err(::bbnf::runtime::ParseErr::Syntax {
+                        return Err(crate::runtime::ParseErr::Syntax {
                             offset: pos as u32,
                             rule: None,
                         });
                     }
                     off
                 };
-                // AY-II.W0'.a — `finish_fused` consumes the fused
-                // builder and returns a `FusedOutput<Self>` holding
-                // both the finalised tape substrate and the paired
-                // value-frame arena. `Parsed::new_fused_output`
-                // stores that handle directly; `to_value()` projects
-                // from the value column without touching the tape.
-                let output = builder
+                // B5.W1 — `Tape::finish_fused::<Self>(root)` runs
+                // Stage-C finalisation, stamps the root offset, and
+                // re-binds the phantom `R` from `()` to `Self` so
+                // projection-time consumers (Parsed::to_value) see
+                // the grammar-bound substrate. Layout-identical
+                // transmute is sound because `R` is `PhantomData<fn()
+                // -> R>`.
+                let tape = tape
                     .finish_fused::<Self>(root_off.0)
-                    .map_err(::bbnf::runtime::ParseErr::Tape)?;
+                    .map_err(crate::runtime::ParseErr::Tape)?;
                 ::core::result::Result::Ok(
-                    ::bbnf::runtime::Parsed::new_fused_output(
-                        output, input, root_off,
-                    ),
+                    crate::runtime::Parsed::new(tape, input, root_off),
                 )
             }
         };
@@ -1217,7 +1216,7 @@ impl RustEmitter {
                 /// multiple grammars coexist in the same test file —
                 /// the module-scope `pub use ...::*` would otherwise
                 /// collide on the unqualified `GRAMMAR_PROFILE` name.
-                pub const GRAMMAR_PROFILE: ::bbnf::runtime::tape::GrammarProfile =
+                pub const GRAMMAR_PROFILE: crate::runtime::tape::GrammarProfile =
                     GRAMMAR_PROFILE;
 
                 /// AY.W6.2 — associated-constant accessor for the
@@ -1275,8 +1274,8 @@ impl RustEmitter {
                 pub fn parse(
                     input: &str,
                 ) -> ::core::result::Result<
-                    ::bbnf::runtime::Parsed<'_, Self>,
-                    ::bbnf::runtime::ParseErr,
+                    crate::runtime::Parsed<'_, Self>,
+                    crate::runtime::ParseErr,
                 > {
                     #parse_body
                 }

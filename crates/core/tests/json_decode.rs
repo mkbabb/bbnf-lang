@@ -17,8 +17,8 @@ use ::bbnf::grammar::generated::json::*;
 /// escapes) resolve via direct source slicing — matching the bench
 /// walker's accessor — and escape-bearing strings still read from
 /// the arena frame.
-fn find_first_decoded_string<'t, 's: 't>(
-    tape: &'t Tape,
+fn find_first_decoded_string<'t, 's: 't, R>(
+    tape: &'t Tape<R>,
     root: TapeOffset,
     source: &'s str,
 ) -> Option<&'t str> {
@@ -26,7 +26,7 @@ fn find_first_decoded_string<'t, 's: 't>(
     walk_for_decoded(cursor, source.as_bytes())
 }
 
-fn walk_for_decoded<'t, 's: 't>(cursor: TapeCursor<'t>, source: &'s [u8]) -> Option<&'t str> {
+fn walk_for_decoded<'t, 's: 't, R>(cursor: TapeCursor<'t, R>, source: &'s [u8]) -> Option<&'t str> {
     let rec = cursor.record();
     if rec.kind() == TapeKind::Span {
         if let Some(s) = cursor.tape().payload_string_with_source(rec, source) {
@@ -104,8 +104,8 @@ fn decode_json_object_string_keys_and_values() {
     assert!(collected.contains(&"plain".to_string()));
 }
 
-fn collect_strings<'t, 's: 't>(
-    cursor: TapeCursor<'t>,
+fn collect_strings<'t, 's: 't, R>(
+    cursor: TapeCursor<'t, R>,
     source: &'s [u8],
     out: &mut Vec<String>,
 ) {

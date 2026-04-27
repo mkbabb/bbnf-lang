@@ -222,8 +222,8 @@ fn is_ident_cont(b: u8) -> bool {
 /// Project a grammar tape into a RefGrammar by walking records in
 /// source order. Rule LHS identifiers and directive `@<kind>`
 /// tokens are extracted from the leaves.
-fn tape_to_grammar<'p>(
-    tape: &'p bbnf::runtime::tape::Tape,
+fn tape_to_grammar<'p, R>(
+    tape: &'p bbnf::runtime::tape::Tape<R>,
     input: &'p str,
     _root: TapeOffset,
 ) -> RefGrammar {
@@ -508,7 +508,11 @@ fn bbnf_view_children_non_empty() {
     // one child for every non-trivial grammar input.
     let input = r#"foo = "a" ; bar = "b" ;"#;
     let parsed = BbnfBootstrap::parse(input).expect("parse");
-    let node = BbnfBootstrapNodeView::new(parsed.tape(), input, parsed.root_offset());
+    // Erase phantom R for the NodeView::new(tape: &Tape, ...) shape.
+    let tape_unit: &bbnf::runtime::tape::Tape<()> = unsafe {
+        &*(parsed.tape() as *const _ as *const bbnf::runtime::tape::Tape<()>)
+    };
+    let node = BbnfBootstrapNodeView::new(tape_unit, input, parsed.root_offset());
     let child_count = node.children().count();
     assert!(child_count >= 1, "root children: {}", child_count);
 }

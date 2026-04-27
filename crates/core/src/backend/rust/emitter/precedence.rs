@@ -183,7 +183,7 @@ pub fn emit_precedence_lut(
                 /// body when the LUT byte's bit-7 two-byte flag is
                 /// set, to resolve the second byte + discriminant.
                 pub const #rule_entries_ident:
-                    &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
+                    &[crate::runtime::tape::DtaPrecedenceEntry] = &[
                     #(#entry_literals),*
                 ];
             }
@@ -232,7 +232,7 @@ pub fn emit_precedence_lut(
         /// Flat union of every rule's mined operator entries.
         /// Consulted by the walker cold-path until W0b retires it.
         pub const #entries_ident:
-            &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
+            &[crate::runtime::tape::DtaPrecedenceEntry] = &[
             #(#aggregate_entry_literals),*
         ];
 
@@ -254,21 +254,21 @@ fn entry_literal(e: &OperatorChainEntry) -> TokenStream {
     let prec = e.precedence;
     let assoc = match e.associativity {
         Associativity::Left => {
-            quote! { ::bbnf::runtime::tape::DtaAssociativity::Left }
+            quote! { crate::runtime::tape::DtaAssociativity::Left }
         }
         Associativity::Right => {
-            quote! { ::bbnf::runtime::tape::DtaAssociativity::Right }
+            quote! { crate::runtime::tape::DtaAssociativity::Right }
         }
     };
     let op_rule = e.op_rule;
     let disc = e.op_discriminant;
     quote! {
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: #byte,
             second_byte: #second,
             precedence: #prec,
             associativity: #assoc,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(#op_rule),
+            op_rule: crate::runtime::tape::DtaRuleId(#op_rule),
             op_discriminant: #disc,
         }
     }

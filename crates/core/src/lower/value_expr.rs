@@ -343,7 +343,7 @@ fn fold_value_chain<'a>(
 fn collect_chain_operands<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> Vec<BbnfBootstrapNodeView<'a>> {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
 
     // Under DTA the chain body may sit inside one or more anonymous
     // Seq wrappers. Descend through those wrappers to reach the
@@ -419,7 +419,7 @@ fn descend_anonymous_wrappers<'a>(
 /// in-file to avoid cross-module coupling; mirrors the helper in
 /// `lower/tape_walk.rs` that gates sibling descents.
 fn is_anonymous_wrapper(view: BbnfBootstrapNodeView<'_>) -> bool {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     if !matches!(
         view.kind(),
         TapeKind::Rule | TapeKind::Seq | TapeKind::Alt | TapeKind::Repeat,
@@ -801,7 +801,7 @@ fn collect_fn_call_args<'a>(
     node: BbnfBootstrapNodeView<'a>,
     ctx: &mut LowerCtx<'a>,
 ) -> Vec<MapExpr> {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     let mut args: Vec<MapExpr> = Vec::new();
 
     // Descend through the DTA Seq wrapper to reach the atom body
@@ -1017,7 +1017,7 @@ fn lower_value_closure<'a>(
     // rather than the real value_expr. Descend to the value_expr
     // descendant; fall back to the first TapeKind::Rule child for
     // non-DTA shapes.
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     let body = find_descendant_by_kind(node, BbnfBootstrapRuleKind::value_expr)
         .or_else(|| node.children().find(|c| c.kind() == TapeKind::Rule))
         .expect("lower_value_closure: missing body value_expr child");
@@ -1074,7 +1074,7 @@ fn lookup_value_env(name: &str, env: &[HashMap<&str, MapExpr>]) -> Option<MapExp
 pub(crate) fn unwrap_value_ident_str<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> Option<&'a str> {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     let mut cur = node;
     loop {
         match cur.rule_kind() {

@@ -3,7 +3,7 @@
 //! Verifies:
 //! 1. `TapeRec` size is 16 bytes (compile-time assert already
 //!    enforces this; this test is a runtime-visible proof).
-//! 2. `FusedBuilder::push_leaf` / `push_compound` append records in
+//! 2. `Tape::push_leaf` / `push_compound` append records in
 //!    insertion order with stable offsets.
 //! 3. `TapeCursor::record` / `kind` / `span` / `child` round-trip.
 //! 4. Flat Vec storage holds arbitrary record counts without data
@@ -14,7 +14,7 @@
 //!    the shared arena.
 
 use tape::{
-    GrammarProfile, PayloadData, Tape, FusedBuilder, TapeCursor, TapeKind, TapeOffset, TapeRec,
+    GrammarProfile, PayloadData, Tape, TapeCursor, TapeKind, TapeOffset, TapeRec,
 };
 
 #[test]
@@ -25,11 +25,11 @@ fn tape_rec_size() {
 
 #[test]
 fn push_leaf_round_trip() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off = b.push_leaf(TapeKind::Span, 0, 5, 0, 0);
     assert_eq!(off, TapeOffset(0));
 
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     assert_eq!(tape.len(), 1);
 
     let rec = tape.get(off);
@@ -44,7 +44,7 @@ fn push_leaf_round_trip() {
 
 #[test]
 fn push_compound_with_children() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
 
     // Mark children start for a rule with two leaf children.
     let children_start = TapeOffset(b.columns().len() as u32);
@@ -57,7 +57,7 @@ fn push_compound_with_children() {
     let compound = TapeOffset(compound_off);
     assert_eq!(compound, TapeOffset(2));
 
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     assert_eq!(tape.len(), 3);
 
     let rec = tape.get(compound);
@@ -70,9 +70,9 @@ fn push_compound_with_children() {
 
 #[test]
 fn cursor_accesses_record_fields() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off = b.push_leaf(TapeKind::Literal, 10, 20, 3, 0);
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     let cursor = TapeCursor::new(&tape, off);
     assert_eq!(cursor.kind(), TapeKind::Literal);
@@ -82,7 +82,7 @@ fn cursor_accesses_record_fields() {
 
 #[test]
 fn cursor_walks_children() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let children_start = TapeOffset(b.columns().len() as u32);
     b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     b.push_leaf(TapeKind::Span, 1, 2, 0, 0);
@@ -94,7 +94,7 @@ fn cursor_walks_children() {
     // Post-order legacy-API tape — `finish()` derives frame_depth
     // from the `child_off` column and sweeps it through `finalise`
     // to close `sib_skip`. No inline frame-depth opt-in required.
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     let cursor = TapeCursor::new(&tape, compound);
 
     // Forward iteration via `children` (Vec-backed, source order).
@@ -120,12 +120,12 @@ fn cursor_walks_children() {
 #[test]
 fn large_tape_round_trip() {
     // Push 5000 leaves and verify every record is readable by offset.
-    let mut b = FusedBuilder::with_capacity(5000);
+    let mut b = Tape::<()>::with_capacity(5000);
     let mut offsets = Vec::with_capacity(5000);
     for i in 0..5000u32 {
         offsets.push(b.push_leaf(TapeKind::Span, i, i + 1, 0, 0));
     }
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     assert_eq!(tape.len(), 5000);
 
     for (i, &off) in offsets.iter().enumerate() {
@@ -137,40 +137,40 @@ fn large_tape_round_trip() {
 
 #[test]
 fn empty_tape() {
-    let tape = Tape::new();
+    let tape: Tape<()> = Tape::new();
     assert!(tape.is_empty());
     assert_eq!(tape.len(), 0);
 }
 
 #[test]
 fn try_get_none_sentinel() {
-    let tape = Tape::new();
+    let tape: Tape<()> = Tape::new();
     assert!(tape.try_get(TapeOffset::NONE).is_none());
     assert!(tape.try_get(TapeOffset(9999)).is_none());
 }
 
 #[test]
 fn flags_encode_variant_and_has_children() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let leaf_off = b.push_leaf(TapeKind::Literal, 0, 4, 7, 0);
 
     // Compound with at least one child — mark the child pointer
     // BEFORE pushing the leaf so the compound's child run is
     // non-empty. `push_compound` clears `has_children` for empty
     // runs (fixes the parent-as-own-child cycle in `TapeCursor`).
-    let mut b2 = FusedBuilder::new();
+    let mut b2 = Tape::<()>::new();
     let compound_children = TapeOffset(b2.columns().len() as u32);
     let _inner_leaf_off = b2.push_leaf(TapeKind::Literal, 0, 4, 7, 0);
     let compound_open = b2.begin_compound(TapeKind::Rule, 0, 2, 0, 0, 0);
     b2.end_compound_post_order(compound_open, 4, compound_children);
     let compound_off = TapeOffset(compound_open);
 
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     let leaf = tape.get(leaf_off);
     assert_eq!(leaf.variant_idx(), 7);
     assert!(!leaf.has_children());
 
-    let tape2 = b2.finish().unwrap();
+    let tape2 = b2.finish(0).unwrap();
     let compound = tape2.get(compound_off);
     assert_eq!(compound.variant_idx(), 2);
     assert!(compound.has_children());
@@ -183,13 +183,13 @@ fn empty_compound_clears_has_children() {
     // record slot must not advertise `has_children` — otherwise
     // `TapeCursor::children` follows `child_off` back to the
     // parent and recurses forever.
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let leaf_off = b.push_leaf(TapeKind::Literal, 0, 4, 7, 0);
     let compound_children = TapeOffset(b.columns().len() as u32);
     let compound_open = b.begin_compound(TapeKind::Rule, 0, 2, 0, 0, 0);
     b.end_compound_post_order(compound_open, 4, compound_children);
     let compound_off = TapeOffset(compound_open);
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     let _ = tape.get(leaf_off);
     let compound = tape.get(compound_off);
     assert_eq!(compound.variant_idx(), 2);
@@ -204,7 +204,7 @@ fn empty_compound_stamps_child_off_none() {
     // the payload encoding `has_children=false && child_off != NONE`
     // that identifies payload-bearing leaves, so the reader's
     // `has_payload()` would light up spuriously for empty compounds.
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     // Push a real child first so parent_idx > 0; the empty compound
     // lands after the leaf and its mark_children points at the next
     // (yet-unwritten) slot — exactly the same slot the compound will
@@ -214,7 +214,7 @@ fn empty_compound_stamps_child_off_none() {
     let compound_open = b.begin_compound(TapeKind::Rule, 4, 0, 0, 0, 0);
     b.end_compound_post_order(compound_open, 4, marked);
     let compound_off = TapeOffset(compound_open);
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     let rec = tape.get(compound_off);
     assert!(!rec.has_children(), "empty compound must not report children");
@@ -233,14 +233,14 @@ fn empty_compound_stamps_child_off_none() {
 fn nonempty_compound_preserves_child_off() {
     // Complement to the NONE-stamping test: a compound with at least
     // one child keeps the caller-supplied `child_off` verbatim.
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let marked = TapeOffset(b.columns().len() as u32);
     b.push_leaf(TapeKind::Literal, 0, 4, 0, 0);
     b.push_leaf(TapeKind::Literal, 4, 8, 0, 0);
     let compound_open = b.begin_compound(TapeKind::Seq, 0, 0, 0, 0, 0);
     b.end_compound_post_order(compound_open, 8, marked);
     let compound_off = TapeOffset(compound_open);
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     let rec = tape.get(compound_off);
     assert!(rec.has_children());
@@ -255,7 +255,7 @@ fn nonempty_compound_preserves_child_off() {
 
 #[test]
 fn payload_f64_round_trip() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off = b.push_leaf_with(
         TapeKind::Regex,
         0,
@@ -264,7 +264,7 @@ fn payload_f64_round_trip() {
         0,
         PayloadData::WideScalar(std::f64::consts::PI.to_bits()),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     let rec = tape.get(off);
     assert_eq!(rec.kind(), TapeKind::Regex);
@@ -275,7 +275,7 @@ fn payload_f64_round_trip() {
 
 #[test]
 fn payload_bool_round_trip() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off_t = b.push_leaf_with(
         TapeKind::Literal,
         0,
@@ -292,7 +292,7 @@ fn payload_bool_round_trip() {
         0,
         PayloadData::InlineScalar(0),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     assert_eq!(tape.payload_bool(tape.get(off_t)), Some(true));
     assert_eq!(tape.payload_bool(tape.get(off_f)), Some(false));
@@ -300,7 +300,7 @@ fn payload_bool_round_trip() {
 
 #[test]
 fn payload_u8_round_trip() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off = b.push_leaf_with(
         TapeKind::Literal,
         0,
@@ -309,16 +309,16 @@ fn payload_u8_round_trip() {
         0,
         PayloadData::InlineScalar(42),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     assert_eq!(tape.payload_u8(tape.get(off)), Some(42));
 }
 
 #[test]
 fn payload_absent_returns_none() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off = b.push_leaf(TapeKind::Span, 0, 5, 0, 0);
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     let rec = tape.get(off);
 
     assert!(rec.child_off.is_none());
@@ -331,7 +331,7 @@ fn payload_absent_returns_none() {
 
 #[test]
 fn multiple_payloads_independent() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off1 = b.push_leaf_with(
         TapeKind::Regex,
         0,
@@ -357,7 +357,7 @@ fn multiple_payloads_independent() {
         PayloadData::InlineScalar(255),
     );
     let off_plain = b.push_leaf(TapeKind::Span, 8, 10, 0, 0);
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     let v1 = tape.payload_f64(tape.get(off1)).unwrap();
     let v2 = tape.payload_f64(tape.get(off2)).unwrap();
@@ -371,7 +371,7 @@ fn multiple_payloads_independent() {
 
 #[test]
 fn payload_i8_round_trip() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off_min = b.push_leaf_with(
         TapeKind::Literal,
         0,
@@ -396,7 +396,7 @@ fn payload_i8_round_trip() {
         0,
         PayloadData::InlineScalar(u32::from_le_bytes([(-7i8) as u8, 0, 0, 0])),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     assert_eq!(tape.payload_i8(tape.get(off_min)), Some(i8::MIN));
     assert_eq!(tape.payload_i8(tape.get(off_max)), Some(i8::MAX));
     assert_eq!(tape.payload_i8(tape.get(off_neg)), Some(-7));
@@ -404,7 +404,7 @@ fn payload_i8_round_trip() {
 
 #[test]
 fn payload_i16_u16_round_trip() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off_i = b.push_leaf_with(
         TapeKind::Literal,
         0,
@@ -427,14 +427,14 @@ fn payload_i16_u16_round_trip() {
             [bytes[0], bytes[1], 0, 0]
         })),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     assert_eq!(tape.payload_i16(tape.get(off_i)), Some(-32_000));
     assert_eq!(tape.payload_u16(tape.get(off_u)), Some(60_000));
 }
 
 #[test]
 fn payload_i32_u32_round_trip() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off_i = b.push_leaf_with(
         TapeKind::Literal,
         0,
@@ -455,14 +455,14 @@ fn payload_i32_u32_round_trip() {
         0,
         PayloadData::InlineScalar(u32::MAX - 1),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     assert_eq!(tape.payload_i32(tape.get(off_i)), Some(i32::MIN + 1));
     assert_eq!(tape.payload_u32(tape.get(off_u)), Some(u32::MAX - 1));
 }
 
 #[test]
 fn payload_i64_u64_round_trip() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off_i = b.push_leaf_with(
         TapeKind::Literal,
         0,
@@ -479,14 +479,14 @@ fn payload_i64_u64_round_trip() {
         0,
         PayloadData::WideScalar(u64::MAX),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     assert_eq!(tape.payload_i64(tape.get(off_i)), Some(i64::MIN));
     assert_eq!(tape.payload_u64(tape.get(off_u)), Some(u64::MAX));
 }
 
 #[test]
 fn payload_scalar_generic_round_trip() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off = b.push_leaf_with(
         TapeKind::Literal,
         0,
@@ -495,7 +495,7 @@ fn payload_scalar_generic_round_trip() {
         0,
         PayloadData::InlineScalar(0xDEAD_BEEF_u32),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     assert_eq!(tape.payload_scalar::<u32>(tape.get(off)), Some(0xDEAD_BEEF));
 }
 
@@ -506,7 +506,7 @@ fn payload_aggregate_round_trip() {
     bytes[..8].copy_from_slice(&1.5_f64.to_le_bytes());
     bytes[8] = 7;
 
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off = b.push_leaf_with(
         TapeKind::Span,
         0,
@@ -515,7 +515,7 @@ fn payload_aggregate_round_trip() {
         0,
         PayloadData::Aggregate(&bytes),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     let rec = tape.get(off);
     let slice = tape.payload_bytes(rec, 9).expect("aggregate payload");
     let f = f64::from_le_bytes(<[u8; 8]>::try_from(&slice[0..8]).unwrap());
@@ -542,7 +542,7 @@ fn payload_large_aggregate_round_trip() {
     bytes[24..32].copy_from_slice(&CHANNELS[2].to_le_bytes());
     bytes[32..40].copy_from_slice(&ALPHA.to_le_bytes());
 
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off = b.push_leaf_with(
         TapeKind::KvPair,
         0,
@@ -551,7 +551,7 @@ fn payload_large_aggregate_round_trip() {
         0,
         PayloadData::LargeAggregate(&bytes),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     let rec = tape.get(off);
     assert!(
         rec.has_payload(),
@@ -586,7 +586,7 @@ fn payload_large_aggregate_empty_is_none() {
     // Empty `LargeAggregate` must not allocate an arena slot — the
     // record stores `TapeOffset::NONE` in `child_off` and reports
     // no payload, symmetric with the empty-`Aggregate` path.
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let empty: [u8; 0] = [];
     let off = b.push_leaf_with(
         TapeKind::KvPair,
@@ -596,7 +596,7 @@ fn payload_large_aggregate_empty_is_none() {
         0,
         PayloadData::LargeAggregate(&empty),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     let rec = tape.get(off);
     assert_eq!(rec.child_off, tape::TapeOffset::NONE);
     assert!(!rec.has_payload());
@@ -608,7 +608,7 @@ fn payload_large_aggregate_slot_padding_is_zero() {
     // trailing pad bytes must be zero-initialised so the payload is
     // deterministic across builds.
     let bytes: [u8; 33] = core::array::from_fn(|i| i as u8);
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off = b.push_leaf_with(
         TapeKind::KvPair,
         0,
@@ -617,7 +617,7 @@ fn payload_large_aggregate_slot_padding_is_zero() {
         0,
         PayloadData::LargeAggregate(&bytes),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     let rec = tape.get(off);
     let slot = tape.payload_bytes(rec, 40).expect("padded slot");
     assert_eq!(&slot[..33], &bytes[..]);
@@ -635,7 +635,7 @@ fn payload_large_aggregate_multiple_records_independent() {
     let a: [u8; 33] = [0x11; 33];
     let b_bytes: [u8; 48] = [0x22; 48];
 
-    let mut builder = FusedBuilder::new();
+    let mut builder = Tape::<()>::new();
     let off_a = builder.push_leaf_with(
         TapeKind::KvPair,
         0,
@@ -652,7 +652,7 @@ fn payload_large_aggregate_multiple_records_independent() {
         0,
         PayloadData::LargeAggregate(&b_bytes),
     );
-    let tape = builder.finish().unwrap();
+    let tape = builder.finish(0).unwrap();
 
     let slice_a = tape.payload_bytes(tape.get(off_a), 33).unwrap();
     let slice_b = tape.payload_bytes(tape.get(off_b), 48).unwrap();
@@ -662,7 +662,7 @@ fn payload_large_aggregate_multiple_records_independent() {
 
 #[test]
 fn payload_bytes_round_trip() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off = b.push_leaf_with(
         TapeKind::Span,
         0,
@@ -671,7 +671,7 @@ fn payload_bytes_round_trip() {
         0,
         PayloadData::Bytes(b"hello"),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     let rec = tape.get(off);
     assert_eq!(tape.payload_string(rec), Some("hello"));
     assert_eq!(tape.payload_string_bytes(rec), Some(&b"hello"[..]));
@@ -679,7 +679,7 @@ fn payload_bytes_round_trip() {
 
 #[test]
 fn payload_span_round_trip() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let packed = (10u64) | ((42u64) << 32);
     let off = b.push_leaf_with(
         TapeKind::Span,
@@ -689,7 +689,7 @@ fn payload_span_round_trip() {
         0,
         PayloadData::WideScalar(packed),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     let rec = tape.get(off);
     assert_eq!(tape.payload_Span(rec), Some((10, 42)));
 }
@@ -698,11 +698,11 @@ fn payload_span_round_trip() {
 
 #[test]
 fn meta_idx_round_trip_leaf() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off0 = b.push_leaf(TapeKind::Span, 0, 3, 1, 0);
     let off1 = b.push_leaf(TapeKind::Literal, 3, 6, 2, 5);
     let off2 = b.push_leaf(TapeKind::Span, 6, 9, 3, 31); // 31 = max 5-bit meta_idx
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     let c0 = TapeCursor::new(&tape, off0);
     let c1 = TapeCursor::new(&tape, off1);
@@ -719,13 +719,13 @@ fn meta_idx_round_trip_leaf() {
 
 #[test]
 fn meta_idx_round_trip_compound() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let children_start = TapeOffset(b.columns().len() as u32);
     b.push_leaf(TapeKind::Span, 0, 3, 0, 7);
     let compound_open = b.begin_compound(TapeKind::Rule, 0, 4, 27, 0, 0); // CSS L4 max meta_idx
     b.end_compound_post_order(compound_open, 3, children_start);
     let compound = TapeOffset(compound_open);
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     let cursor = TapeCursor::new(&tape, compound);
     assert_eq!(cursor.meta_idx(), 27);
@@ -738,7 +738,7 @@ fn meta_idx_round_trip_compound() {
 
 #[test]
 fn meta_idx_round_trip_payload_leaf() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off = b.push_leaf_with(
         TapeKind::Regex,
         0,
@@ -747,7 +747,7 @@ fn meta_idx_round_trip_payload_leaf() {
         3,
         PayloadData::WideScalar(2.718_f64.to_bits()),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     let cursor = TapeCursor::new(&tape, off);
     assert_eq!(cursor.meta_idx(), 3);
@@ -757,9 +757,9 @@ fn meta_idx_round_trip_payload_leaf() {
 
 #[test]
 fn meta_idx_default_zero_for_plain_pushes() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off = b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     assert_eq!(TapeCursor::new(&tape, off).meta_idx(), 0);
 }
 
@@ -767,12 +767,12 @@ fn meta_idx_default_zero_for_plain_pushes() {
 
 #[test]
 fn meta_idx_all_5bit_values_round_trip() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let mut offsets = Vec::new();
     for m in 0..=TapeRec::MAX_META_IDX {
         offsets.push(b.push_leaf(TapeKind::Span, 0, 1, 0, m));
     }
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     for (m, &off) in offsets.iter().enumerate() {
         let rec = tape.get(off);
         assert_eq!(rec.meta_idx(), m as u8, "meta_idx mismatch at {}", m);
@@ -782,10 +782,10 @@ fn meta_idx_all_5bit_values_round_trip() {
 
 #[test]
 fn meta_idx_15_16_boundary() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off_15 = b.push_leaf(TapeKind::Literal, 0, 1, 10, 15);
     let off_16 = b.push_leaf(TapeKind::Literal, 1, 2, 10, 16);
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     let r15 = tape.get(off_15);
     assert_eq!(r15.meta_idx(), 15);
@@ -802,13 +802,13 @@ fn meta_idx_15_16_boundary() {
 
 #[test]
 fn meta_idx_and_has_children_coexist() {
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let children_start = TapeOffset(b.columns().len() as u32);
     b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     let compound_open = b.begin_compound(TapeKind::Rule, 0, 5, 20, 0, 0);
     b.end_compound_post_order(compound_open, 1, children_start);
     let compound = TapeOffset(compound_open);
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     let rec = tape.get(compound);
     assert_eq!(rec.meta_idx(), 20);
@@ -824,9 +824,9 @@ fn meta_idx_max_value_with_all_kinds() {
         TapeKind::Regex, TapeKind::KvPair,
     ];
     for &kind in &kinds {
-        let mut b = FusedBuilder::new();
+        let mut b = Tape::<()>::new();
         let off = b.push_leaf(kind, 0, 1, 0, TapeRec::MAX_META_IDX);
-        let tape = b.finish().unwrap();
+        let tape = b.finish(0).unwrap();
         let rec = tape.get(off);
         assert_eq!(rec.kind(), kind, "kind mismatch for {:?} with max meta_idx", kind);
         assert_eq!(rec.meta_idx(), TapeRec::MAX_META_IDX);
@@ -904,10 +904,10 @@ use tape::Columns;
 fn columns_struct_holds_soa_layout() {
     // Build a minimal tape and verify the six structural columns
     // grow in lockstep.
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     b.push_leaf(TapeKind::Literal, 1, 2, 1, 0);
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     // AY.W1.1 — flat-AoS substrate: structural rows live in
     // `records` (16 B AoS) + parallel `sib_skip`. The legacy SoA
@@ -926,7 +926,7 @@ fn columns_struct_holds_soa_layout() {
 fn columns_pay_narrow_holds_inline_scalars() {
     // AV.2.3: inline scalars land in `pay_narrow`; the record's
     // `child_off` stores the column rank.
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off0 = b.push_leaf_with(
         TapeKind::Literal,
         0,
@@ -943,7 +943,7 @@ fn columns_pay_narrow_holds_inline_scalars() {
         0,
         PayloadData::InlineScalar(42),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     let cols = tape.columns();
     assert_eq!(cols.pay_narrow, vec![7u32, 42u32]);
@@ -963,7 +963,7 @@ fn columns_pay_narrow_holds_inline_scalars() {
 fn columns_pay_wide_holds_wide_scalars() {
     // AV.2.3: 8-byte scalars land in `pay_wide`; `child_off` stores
     // the column rank.
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off0 = b.push_leaf_with(
         TapeKind::Regex,
         0,
@@ -980,7 +980,7 @@ fn columns_pay_wide_holds_wide_scalars() {
         0,
         PayloadData::WideScalar((-99.0_f64).to_bits()),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     let cols = tape.columns();
     assert_eq!(cols.pay_wide.len(), 2);
@@ -997,7 +997,7 @@ fn columns_pay_wide_holds_wide_scalars() {
 fn columns_pay_agg_holds_aggregate_and_bytes() {
     // Aggregate + Bytes payloads continue to land in the unified
     // arena (`pay_agg`). `child_off` holds the arena byte offset.
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let agg_bytes: [u8; 9] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
     let off_agg = b.push_leaf_with(
         TapeKind::KvPair,
@@ -1015,7 +1015,7 @@ fn columns_pay_agg_holds_aggregate_and_bytes() {
         0,
         PayloadData::Bytes(b"hello"),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     let cols = tape.columns();
     assert!(cols.pay_agg.len() >= 9 + 4 + 5, "arena stores aggregate + bytes frame");
@@ -1033,7 +1033,7 @@ fn columns_pay_agg_holds_aggregate_and_bytes() {
 fn sibling_skip_walks_direct_children_forward() {
     // Build `(a (b c) d)` and verify sib_skip drives forward sibling
     // iteration through the outer compound's three children.
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     // a
     b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     // (b c)
@@ -1052,7 +1052,7 @@ fn sibling_skip_walks_direct_children_forward() {
     let outer = TapeOffset(outer_open);
     // Post-order legacy tape — `finish()` derives frame_depth from
     // `child_off` and closes `sib_skip` via `finalise`.
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     let cursor = TapeCursor::new(&tape, outer);
 
@@ -1083,7 +1083,7 @@ fn sibling_skip_walks_direct_children_forward() {
 fn sibling_skip_nested_compound() {
     // Build `(x y)` nested inside `(z (x y) w)`; verify sib_skip
     // inside the nested compound.
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     // z
     b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     // (x y)
@@ -1101,7 +1101,7 @@ fn sibling_skip_nested_compound() {
     let _outer = TapeOffset(outer_open);
     // Post-order legacy tape — `finish()` closes `sib_skip` via the
     // derived-depth Stage-C pass.
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     // Inner (x y) children: x@1, y@2. sib_skip[1]=1, sib_skip[2]=0.
     let cols = tape.columns();
@@ -1120,12 +1120,12 @@ fn sibling_skip_nested_compound() {
 fn empty_compound_sibling_skip_is_zero() {
     // An empty compound's `sib_skip` stays at the default `0`
     // because there are no direct children to enumerate.
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let marked = TapeOffset(b.columns().len() as u32);
     let empty_open = b.begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
     b.end_compound_post_order(empty_open, 0, marked);
     let empty = TapeOffset(empty_open);
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     assert_eq!(tape.columns().sib_skip_at(empty.0), 0);
     assert_eq!(TapeCursor::new(&tape, empty).child_count(), 0);
 }
@@ -1134,11 +1134,11 @@ fn empty_compound_sibling_skip_is_zero() {
 fn tape_iter_materialises_all_records() {
     // The tape iterator yields each record exactly once in push
     // order.
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
     b.push_leaf(TapeKind::Literal, 1, 2, 1, 0);
     b.push_leaf(TapeKind::Regex, 2, 3, 2, 0);
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     let recs: Vec<_> = tape.iter().collect();
     assert_eq!(recs.len(), 3);
     assert_eq!(recs[0].kind(), TapeKind::Span);
@@ -1150,7 +1150,7 @@ fn tape_iter_materialises_all_records() {
 fn payload_data_variant_coverage() {
     // Round-trip every PayloadData variant through the columnar
     // substrate.
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off_none = b.push_leaf_with(TapeKind::Span, 0, 1, 0, 0, PayloadData::None);
     let off_inline = b.push_leaf_with(
         TapeKind::Literal,
@@ -1194,7 +1194,7 @@ fn payload_data_variant_coverage() {
         0,
         PayloadData::Bytes(b"bonjour"),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     // None
     assert!(!tape.get(off_none).has_payload());
@@ -1228,7 +1228,7 @@ fn inline_scalar_u32_max_does_not_collide_with_none() {
     // inline values no longer collide with the `TapeOffset::NONE`
     // sentinel. Pre-AV this debug-asserted; post-AV it must round-
     // trip cleanly.
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off = b.push_leaf_with(
         TapeKind::Literal,
         0,
@@ -1237,7 +1237,7 @@ fn inline_scalar_u32_max_does_not_collide_with_none() {
         0,
         PayloadData::InlineScalar(u32::MAX),
     );
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     let rec = tape.get(off);
     assert!(rec.has_payload(), "u32::MAX inline does not collide with NONE sentinel");
     assert_eq!(tape.payload_u32(rec), Some(u32::MAX));
@@ -1249,7 +1249,7 @@ fn columns_direct_access_for_bulk_visitors() {
     // `tape.columns().pay_wide` as a dense `&[u64]` (reinterpretable
     // to `&[f64]` via bit pattern). Verify the typed column is in
     // push order.
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     for i in 0..8 {
         b.push_leaf_with(
             TapeKind::Span,
@@ -1260,7 +1260,7 @@ fn columns_direct_access_for_bulk_visitors() {
             PayloadData::WideScalar((i as f64 * 0.5).to_bits()),
         );
     }
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
     let cols = tape.columns();
     assert_eq!(cols.pay_wide.len(), 8);
     // Dense f64 view recovered via bit cast per element.
@@ -1285,9 +1285,9 @@ fn column_rank_default() {
 #[test]
 fn cursor_with_rank_preserves_rank() {
     use tape::ColumnRank;
-    let mut b = FusedBuilder::new();
+    let mut b = Tape::<()>::new();
     let off = b.push_leaf(TapeKind::Span, 0, 1, 0, 0);
-    let tape = b.finish().unwrap();
+    let tape = b.finish(0).unwrap();
 
     let rank = ColumnRank {
         pay_narrow: 5,

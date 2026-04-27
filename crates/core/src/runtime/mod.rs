@@ -8,7 +8,7 @@
 //! impl Grammar {
 //!     pub fn parse(
 //!         input: &str,
-//!     ) -> Result<::bbnf::runtime::Parsed<Self>, ParseErr> { ... }
+//!     ) -> Result<crate::runtime::Parsed<Self>, ParseErr> { ... }
 //! }
 //! ```
 //!
@@ -27,11 +27,13 @@ pub use handle::{CompoundHandle, StringHandle};
 pub use parsed::{Parsed, PathQuery, Root, ValueRoot};
 pub use path::{IntoPathSegment, Path, PathSegment};
 
-// AY-II.W0'.a — the fused builder substrate absorbs the standalone
-// pre-W0'.a `ValueBuilder<R>` allocator. Projection consumers read
-// value frames + payloads off the [`FusedOutput<R>`] the fused parse
-// entry hands back; the [`FusedBuilder`] is the sole write surface
-// the grammar-emitted parse entry threads through every shape fn.
+// B5.W1 — the unified [`tape::Tape<R>`] substrate is the sole write
+// + read + projection surface the grammar-emitted parse entry uses.
+// Pre-B5.W1 `FusedBuilder` / `FusedOutput<R>` / `ValueFramesOutput<R>`
+// triumvirate retired alongside the welded boundary; transitional
+// `pub use` aliases keep pre-regen generated code resolving until
+// `cargo xtask regen` rewrites every callsite.
+#[allow(deprecated)]
 pub use tape::{
     FusedBuilder, FusedOutput, PayloadTag, PayloadValue, ValueChildren, ValueFrame,
     ValueFramesOutput,
@@ -39,7 +41,7 @@ pub use tape::{
 
 /// Re-export the full `tape` public surface from `bbnf::runtime`.
 ///
-/// Generated parsers reference `::bbnf::runtime::tape::*` for tape
+/// Generated parsers reference `crate::runtime::tape::*` for tape
 /// types (`Tape`, `FusedBuilder`, `TapeOffset`, `TapeCursor`,
 /// `TapeKind`, `TapeBuildError`) so downstream consumers do not need
 /// a direct `tape` dependency — `bbnf` already carries it as
@@ -66,7 +68,7 @@ pub use simd_scan as scan;
 /// AW.0.5: typed view-layer projections the generated `.as_color()`
 /// shims reference. The Rust-side `Color` struct + `ColorSpace`
 /// enum live in the backend's `view/color.rs`; this re-export
-/// surfaces them at the stable `::bbnf::runtime::view::*` path so
+/// surfaces them at the stable `crate::runtime::view::*` path so
 /// generated `the proc-macro derive (retired B2)` output reaches the types without
 /// depending on crate-internal `backend::rust::view::*` paths.
 pub mod view {

@@ -70,6 +70,7 @@
 use crate::kind::TapeKind;
 use crate::packed::PackedRecord;
 use crate::tape::{TapeOffset, TapeRec};
+use crate::value::{ValueCheckpoint, ValueFrame};
 
 use std::sync::OnceLock;
 
@@ -160,6 +161,30 @@ pub struct Columns {
     /// transpose is near-identity: copy each [`TapeRec`] into a
     /// 32-byte aligned [`PackedRecord`] paired with its `sib_skip`.
     packed_cache: OnceLock<Vec<PackedRecord>>,
+
+    // ── B5.W1 — value-side substrate (promoted from FusedBuilder) ──
+    //
+    // Pre-B5.W1 these four fields lived on a separate `FusedBuilder`
+    // type that welded the structural tape to a parallel value arena.
+    // B5.W1 promotes them onto `Columns` directly so the substrate is
+    // one type and `rollback_to` is the sole rollback primitive
+    // covering both column families atomically.
+    /// Nested value-frame arena — one entry per compound open + one
+    /// per leaf push. Laid out in emitter push order; compounds
+    /// reference their children via
+    /// `(ValueFrame::first_child, ValueFrame::child_count)`.
+    pub(crate) value_frames: Vec<ValueFrame>,
+    /// Narrow-column scalar payloads (u32 / bool / u8). Indexed by
+    /// `PayloadTag::narrow` rank.
+    pub(crate) value_payloads_narrow: Vec<u32>,
+    /// Wide-column scalar payloads (f64 / u64 / u32-pair). Indexed
+    /// by `PayloadTag::wide` rank.
+    pub(crate) value_payloads_wide: Vec<u64>,
+    /// Open compound stack — one entry per `begin_compound` without
+    /// a matching `end_compound`. Each entry carries the
+    /// `ValueCheckpoint` recorded at open time so rollback truncates
+    /// every column family to the pre-open state atomically.
+    pub(crate) value_open_stack: Vec<ValueCheckpoint>,
 }
 
 impl Columns {
@@ -172,7 +197,10 @@ impl Columns {
     ///
     /// Only the structural columns + the AoS sidecar's underlying
     /// vectors pre-allocate; typed-payload columns are lazy, since
-    /// most grammars exercise only a subset.
+    /// most grammars exercise only a subset. Value-side columns
+    /// (B5.W1) pre-allocate proportionally so the hot push path never
+    /// trips a `Vec::push` realloc on corpus input: one frame per tape
+    /// record worst-case, narrow / wide payloads at `expected / 4`.
     pub fn with_capacity(expected: usize) -> Self {
         Self {
             records: Vec::with_capacity(expected),
@@ -184,6 +212,10 @@ impl Columns {
             pay_f64: Vec::new(),
             pay_agg: Vec::with_capacity(expected / 8 * 8),
             packed_cache: OnceLock::new(),
+            value_frames: Vec::with_capacity(expected),
+            value_payloads_narrow: Vec::with_capacity(expected / 4),
+            value_payloads_wide: Vec::with_capacity(expected / 4),
+            value_open_stack: Vec::with_capacity(16),
         }
     }
 
@@ -216,43 +248,30 @@ impl Columns {
         &mut self.records
     }
 
-    /// Truncate the structural columns to `new_len` records. Typed-
-    /// payload columns are NOT truncated here — they are written
-    /// independently and a backtracking caller must manage them
-    /// separately if it wants to discard partial payload writes.
+    /// Rewind every column family — structural tape, inline
+    /// `frame_depth`, and the value substrate — back to the state at
+    /// the matching `begin_compound` whose `open_offset` the caller
+    /// passes in.
     ///
-    /// Used by the DTA walker's `AltLinear` backtracking to discard
-    /// structural rows pushed by a failed branch before probing the
-    /// next one.
-    #[inline]
-    pub fn truncate(&mut self, new_len: usize) {
-        if new_len < self.frame_depth.len() {
-            // Mirror `rollback_to`: restore `current_depth` to the
-            // depth of the row at `new_len` before truncation, so
-            // subsequent pushes stamp at the right level.
-            self.current_depth = self.frame_depth[new_len];
-        }
-        self.records.truncate(new_len);
-        self.sib_skip.truncate(new_len);
-        self.frame_depth.truncate(new_len);
-        self.invalidate_packed();
-    }
-
-    /// Rewind the columnar substrate back to `open_offset` structural
-    /// slots.
+    /// B5.W1: the sole rollback primitive across both column families.
+    /// Pre-B5.W1 three rollback shapes coexisted (`FusedBuilder::rollback_to`,
+    /// `Columns::rollback_to`, `Columns::truncate`); each documented
+    /// itself as canonical. The substrate has one rollback semantic
+    /// and B5.W1 collapses it onto this method.
     ///
-    /// This is the canonical rollback primitive emitters call when an
-    /// emitter retry-IIFE discards everything pushed after a
-    /// [`FusedBuilder::begin_compound`](crate::FusedBuilder::begin_compound)
-    /// open point. AY-II.W0.a introduced it in place of the ad-hoc
-    /// `columns_mut().truncate(save)` incantation that every retry
-    /// site had evolved into — that primitive only touched `records`
-    /// + `sib_skip` and left the AoS sidecar stale; this one owns
-    /// rewinding every per-record column in lockstep.
+    /// Tape-side: rewinds `records`, `sib_skip`, `frame_depth`, and
+    /// restores `current_depth` to the depth recorded at `open_offset`
+    /// (B3.W0.δ). Idempotent: calling with `open_offset >= len()` is
+    /// a no-op.
     ///
-    /// Idempotent: calling with `open_offset >= len()` is a no-op
-    /// (nothing to rewind). Callers never pass a value that would
-    /// extend the columns.
+    /// Value-side: pops every open-stack entry whose paired tape row
+    /// lives at or above `open_offset`, truncating the value frame
+    /// arena + narrow/wide payload columns to the deepest surviving
+    /// checkpoint's pre-open state. The first survivor's
+    /// `direct_child_count` is decremented once — the failed branch's
+    /// outermost compound was a direct child of that survivor at the
+    /// instant `begin_compound` ran — so a subsequent successful retry
+    /// re-opens the same conceptual position without double-counting.
     ///
     /// Typed-payload columns (`pay_narrow`, `pay_wide`, `pay_f64`,
     /// `pay_agg`) are NOT rewound — the compound row itself never
@@ -264,6 +283,48 @@ impl Columns {
     /// pre-AY-II `columns_mut().truncate` convention accepted.
     #[inline]
     pub fn rollback_to(&mut self, open_offset: u32) {
+        // Value-side first: pop every open frame whose paired tape
+        // row landed at or above `open_offset`. The open-stack is a
+        // faithful LIFO of `begin_compound` calls, monotonically
+        // ordered by `tape_idx`, so the survivors form a strict
+        // prefix and a single pop loop unwinds the entire failed
+        // branch.
+        let mut popped_any = false;
+        let mut deepest_narrow = u32::MAX;
+        let mut deepest_wide = u32::MAX;
+        let mut deepest_frame = u32::MAX;
+        while let Some(checkpoint) = self.value_open_stack.last().copied() {
+            if checkpoint.tape_idx < open_offset {
+                break;
+            }
+            // Track the deepest (lowest-index) surviving truncation
+            // boundary across nested rolled-back compounds — the
+            // outermost rolled-back compound was opened FIRST, so
+            // ITS checkpoint carries the deepest pre-open state.
+            deepest_frame = checkpoint.frame_offset;
+            deepest_narrow = checkpoint.narrow_rank;
+            deepest_wide = checkpoint.wide_rank;
+            self.value_open_stack.pop();
+            popped_any = true;
+        }
+        if popped_any {
+            self.value_frames.truncate(deepest_frame as usize);
+            self.value_payloads_narrow
+                .truncate(deepest_narrow as usize);
+            self.value_payloads_wide
+                .truncate(deepest_wide as usize);
+            // Decrement the survivor's `direct_child_count` once —
+            // the outermost rolled-back compound was registered as a
+            // direct child of the survivor when it opened. A
+            // subsequent successful retry will re-open + close in the
+            // same parent and bump the counter symmetrically.
+            if let Some(parent) = self.value_open_stack.last_mut() {
+                parent.direct_child_count =
+                    parent.direct_child_count.saturating_sub(1);
+            }
+        }
+
+        // Tape-side: rewind structural / depth columns.
         let new_len = open_offset as usize;
         if new_len >= self.records.len() {
             return;

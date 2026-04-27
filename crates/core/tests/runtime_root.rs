@@ -30,9 +30,15 @@ struct TestRootView<'p> {
 }
 
 impl<'p> TestRootView<'p> {
-    fn new(tape: &'p Tape, input: &'p str, offset: TapeOffset) -> Self {
+    fn new<R>(tape: &'p Tape<R>, input: &'p str, offset: TapeOffset) -> Self {
+        // Cursor type-erases R via raw cast — this test fixture
+        // builds Tape<()>-bound cursors regardless of grammar.
+        // SAFETY: Tape<R> is layout-identical for all R.
+        let tape_unit: &'p Tape<()> = unsafe {
+            &*(tape as *const Tape<R> as *const Tape<()>)
+        };
         Self {
-            cursor: TapeCursor::new(tape, offset),
+            cursor: TapeCursor::new(tape_unit, offset),
             input,
         }
     }
@@ -58,7 +64,7 @@ impl<'p> TestRootView<'p> {
 impl Root for TestGrammar {
     type View<'p> = TestRootView<'p>;
 
-    fn make_view<'p>(tape: &'p Tape, input: &'p str, root: TapeOffset) -> Self::View<'p> {
+    fn make_view<'p>(tape: &'p Tape<()>, input: &'p str, root: TapeOffset) -> Self::View<'p> {
         TestRootView::new(tape, input, root)
     }
 }
@@ -67,9 +73,9 @@ impl Root for TestGrammar {
 /// input string is long enough to slice `[0..5]` for the leaf's
 /// own span.
 fn parsed_with_one_leaf() -> Parsed<'static, TestGrammar> {
-    let mut builder = FusedBuilder::new();
+    let mut builder: Tape<TestGrammar> = Tape::new();
     let leaf_off = builder.push_leaf(TapeKind::Span, 0, 5, 7, 0);
-    let tape = builder.finish().expect("tape finish");
+    let tape = builder.finish(leaf_off.0).expect("tape finish");
     Parsed::new(tape, "hello world", leaf_off)
 }
 
@@ -105,7 +111,7 @@ fn tape_accessor_borrows_underlying_tape() {
 #[test]
 fn into_tape_surrenders_ownership() {
     let parsed = parsed_with_one_leaf();
-    let tape: Tape = parsed.into_tape();
+    let tape: Tape<TestGrammar> = parsed.into_tape();
     assert!(!tape.is_empty());
 }
 

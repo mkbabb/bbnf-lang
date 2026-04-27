@@ -1,31 +1,52 @@
-//! `Tape`, `TapeRec`, `TapeOffset` — the record substrate the parser
-//! emits into.
+//! `Tape<R>`, `TapeRec`, `TapeOffset` — the unified parser substrate.
+//!
+//! # Architectural role (B5.W1 substrate boundary restoration)
+//!
+//! Pre-B5.W1 the substrate was two welded halves: a read-side `Tape`
+//! type and a separately-owned `FusedBuilder` (write-side) +
+//! `FusedOutput<R>` / `ValueFramesOutput<R>` (read-side wrappers).
+//! Every push paired a tape-side stamp with a value-side stamp
+//! mediated through the builder; rollback split into three primitives
+//! across the two halves. B5.W1 restores the gestalt: `Tape<R>` is the
+//! single substrate carrying both the structural tape columns and the
+//! value-side state ([`Columns`] absorbs the value frames + payload
+//! columns + open-stack), exposing the unified write API
+//! (`begin_compound`, `end_compound`, `push_leaf*`) AND the unified
+//! read API (`frame`, `payload_for`, `children`, etc.) on one type.
+//!
+//! `R` is the grammar-root marker the typed value projection binds
+//! against. The substrate is grammar-agnostic in storage; the phantom
+//! ties parsing and projection per grammar so multiple grammars can
+//! coexist without runtime confusion.
+//!
+//! # Storage shape (Tranche AV Phase 2 contract preserved)
 //!
 //! Tranche AV Phase 2 (AV.2.1 – AV.2.3) flipped the storage shape
 //! from row-major `Vec<TapeRec>` to column-major [`Columns`]. The
 //! 16-byte `TapeRec` survives as the materialised-view shape every
 //! reader consumes; it is reconstructed on demand from the
-//! structural columns, so the substrate pays no per-record pointer
-//! dereference cost during typed-payload visitor kernels (which is
-//! what unlocks the 4-lane reordered unrolling landing in V2.5).
+//! structural columns. B5.W1 augments [`Columns`] with the value-side
+//! state without disturbing this storage discipline.
 //!
 //! `TapeOffset` is unchanged on the wire: a `u32` index into the
 //! column set, with `u32::MAX` reserved as the `NONE` sentinel.
 
+use core::cell::Cell;
+use core::marker::PhantomData;
+
 use crate::columns::Columns;
 use crate::kind::TapeKind;
+use crate::value::{
+    PayloadTag, PayloadValue, ValueChildren, ValueCheckpoint, ValueFrame,
+};
 
 /// Stable index into a [`Tape`]'s record stream.
 ///
-/// Constructed by [`FusedBuilder::push_leaf`] /
-/// [`FusedBuilder::push_compound`] and consumed by view-layer accessors
-/// via [`Tape::get`]. Two offsets compare equal iff they point to the
-/// same record in the same tape; cross-tape comparison is a logic bug
-/// the view codegen prevents by tying every view type to a `'tape`
-/// lifetime parameter.
-///
-/// [`FusedBuilder::push_leaf`]: crate::builder::FusedBuilder::push_leaf
-/// [`FusedBuilder::push_compound`]: crate::builder::FusedBuilder::push_compound
+/// Constructed by [`Tape::push_leaf`] / [`Tape::begin_compound`] and
+/// consumed by view-layer accessors via [`Tape::get`]. Two offsets
+/// compare equal iff they point to the same record in the same tape;
+/// cross-tape comparison is a logic bug the view codegen prevents by
+/// tying every view type to a `'tape` lifetime parameter.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct TapeOffset(pub u32);
@@ -141,15 +162,6 @@ impl TapeRec {
     /// AW-III.W1 — bit in [`TapeRec::extra`] that marks a leaf whose
     /// `child_off` is an arena byte offset (`pay_agg`) rather than a
     /// column rank (`pay_narrow` / `pay_wide`).
-    ///
-    /// Set by the DTA walker for every typed-leaf payload (constant
-    /// from `Map { Literal, IntLit }`, decoded from `Map { Regex,
-    /// FnDescriptor }`). The scalar readers (`payload_u8` / etc.)
-    /// branch on this bit: when set, they slice `pay_agg` directly;
-    /// when clear, they read the legacy `pay_narrow` / `pay_wide`
-    /// column at the column-rank index. The dual path is kept so
-    /// pre-DTA `push_leaf_with(InlineScalar / WideScalar)` plumbing
-    /// (unit tests) survives unchanged.
     pub const PAYLOAD_IN_ARENA_BIT: u16 = 0x0002;
 
     /// AW-III.W1.A — bit in [`TapeRec::extra`] marking a compound
@@ -165,10 +177,9 @@ impl TapeRec {
 
     /// AY.W4.2 — bit in [`TapeRec::extra`] marking a numeric `f64`
     /// leaf whose payload was written directly into
-    /// [`crate::Columns::pay_f64`] by the Eisel-Lemire fast path
-    /// (`crate::FusedBuilder::push_leaf_with_f64_direct`). When set,
-    /// the record's `child_off` carries the column rank into
-    /// `pay_f64`; the reader projects `f64::from_bits(pay_f64[rank])`
+    /// [`crate::Columns::pay_f64`] by the Eisel-Lemire fast path.
+    /// When set, the record's `child_off` carries the column rank
+    /// into `pay_f64`; the reader projects `f64::from_bits(pay_f64[rank])`
     /// directly without the `pay_wide` / arena round-trip.
     ///
     /// Mutually exclusive with [`Self::PAYLOAD_IN_ARENA_BIT`] — the
@@ -176,19 +187,11 @@ impl TapeRec {
     /// this bit selects the dense `pay_f64` column.
     pub const PAYLOAD_F64_DIRECT_BIT: u16 = 0x0010;
 
-    // Bit `0x0020` reserved for future packed metadata. Vacated in
-    // AY-II.W0.a when write-time sibling-skip stamping retired and
-    // the finaliser became the sole writer of `sib_skip`.
-
     /// Pack a [`TapeKind`] and `meta_idx` into the `kind_meta` byte
     /// and an `extra` companion bit. Returns
     /// `(kind_meta, extra_meta_bit)` where `extra_meta_bit` is
     /// either `0` or [`Self::META_IDX_HI_BIT`] — the caller ORs it
     /// into the `extra` u16.
-    ///
-    /// AW-III.W1.A — the high bit of `meta_idx` migrated from
-    /// `flags[7]` to `extra[3]` to free the full `flags` byte for an
-    /// 8-bit `variant_idx`.
     #[inline]
     pub(crate) fn pack_kind_meta(kind: TapeKind, meta_idx: u8) -> (u8, u16) {
         debug_assert!(
@@ -226,17 +229,13 @@ impl TapeRec {
     }
 
     /// Extract the 8-bit variant index from `flags`.
-    ///
-    /// AW-III.W1.A widened from 6 to 8 bits — the prior `& 0x3F`
-    /// mask is gone. Distinct rules whose ids share low six bits
-    /// (CSS L4's `colorProps` and `namedColor`) no longer collide.
     #[inline]
     pub fn variant_idx(&self) -> u8 {
         self.flags
     }
 
     /// Does this record have children? Bit [`Self::HAS_CHILDREN_BIT`]
-    /// of `extra` (post-AW-III.W1.A; was `flags` bit 6).
+    /// of `extra`.
     #[inline]
     pub fn has_children(&self) -> bool {
         (self.extra & Self::HAS_CHILDREN_BIT) != 0
@@ -250,9 +249,6 @@ impl TapeRec {
 
     /// True iff this record is a leaf that carries a payload (a
     /// column rank or an arena byte offset in `child_off`).
-    ///
-    /// False for compounds (`has_children() == true`) and for pure-
-    /// span leaves (`child_off == NONE`).
     #[inline]
     pub fn has_payload(&self) -> bool {
         !self.has_children() && !self.child_off.is_none()
@@ -275,7 +271,7 @@ impl TapeRec {
 
     /// AY.W4.2 — true iff this leaf's `child_off` is a column rank
     /// into [`crate::Columns::pay_f64`] (the Eisel-Lemire direct-write
-    /// column). Set by [`crate::FusedBuilder::push_leaf_with_f64_direct`].
+    /// column).
     #[inline]
     pub fn payload_f64_direct(&self) -> bool {
         (self.extra & Self::PAYLOAD_F64_DIRECT_BIT) != 0
@@ -285,8 +281,6 @@ impl TapeRec {
 
     /// Extract the shape-dictionary index from a `ShapeRef` record's
     /// `flags` (low 5 bits).
-    ///
-    /// Only meaningful when `kind() == TapeKind::ShapeRef`.
     #[inline]
     pub fn shape_dict_idx(&self) -> u8 {
         self.flags & 0x1F
@@ -294,44 +288,151 @@ impl TapeRec {
 
     /// True iff this `ShapeRef` record carries a packed payload blob.
     /// Bit 5 of `flags`.
-    ///
-    /// Only meaningful when `kind() == TapeKind::ShapeRef`.
     #[inline]
     pub fn shape_ref_has_payload(&self) -> bool {
         (self.flags & 0x20) != 0
     }
 }
 
-/// The parser's output tape.
-///
-/// Owns a [`Columns`] substrate. The view layer reads records via
-/// [`Tape::get`] (which materialises a 16-byte [`TapeRec`] from the
-/// structural columns) and payload data through the `payload_*`
-/// accessors (which dispatch on the record's `child_off` semantics).
-///
-/// # Tranche AV Phase 2 (AV.2.1 – AV.2.3)
-///
-/// - Records are stored across six structural columns plus
-///   `child_off`; bulk typed visitors see dense 8-byte `pay_wide`
-///   and 4-byte `pay_narrow` columns.
-/// - Sibling traversal runs forward over a `sib_skip` column; the
-///   earlier backward-walk child enumeration is gone.
-/// - `InlineScalar` payloads now land in `pay_narrow` (never packed
-///   into `child_off`). The AU-era collision with
-///   `TapeOffset::NONE` for `u32::MAX` inline values is resolved:
-///   `child_off` carries the column rank, which is a push-ordered
-///   counter.
-#[derive(Debug, Default)]
-pub struct Tape {
-    pub(crate) columns: Columns,
+// ─── B5.W1 instrumentation: per-thread Tape::new call counter ──────
+//
+// Pre-B5.W1 this counter lived on `FusedBuilder::new` /
+// `FusedBuilder::with_capacity`; B5.W1 absorbs the same shape onto
+// `Tape::new` / `Tape::with_capacity` so the parse-count invariant
+// (`Parsed::to_value()` must not increment the counter) survives the
+// substrate transposition.
+thread_local! {
+    static NEW_CALL_COUNT: Cell<u64> = const { Cell::new(0) };
 }
 
-impl Tape {
-    /// Construct an empty tape.
-    pub fn new() -> Self {
+/// Return the count of [`Tape::new`] / [`Tape::with_capacity`]
+/// invocations on the current thread.
+///
+/// `Parsed::to_value()` must not increment this counter — that is
+/// the invariant the `value_api_apples_to_apples` parse-count test
+/// asserts.
+pub fn tape_new_call_count() -> u64 {
+    NEW_CALL_COUNT.with(|c| c.get())
+}
+
+/// Reset the [`Tape::new`] counter to `0`.
+pub fn reset_tape_new_call_count() {
+    NEW_CALL_COUNT.with(|c| c.set(0));
+}
+
+// ─── TapeBuildError ───────────────────────────────────────────────
+
+/// Error state surfaced through [`Tape::finish`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TapeBuildError {
+    /// The caller reported an unrecoverable parse failure. Constructed
+    /// by the generated parser when a non-recoverable branch fails.
+    ParseFailed {
+        /// Input byte offset where the failure was detected.
+        offset: u32,
+        /// Optional rule-name id / label for diagnostics.
+        rule_label: u32,
+    },
+}
+
+// ─── PayloadData — payload taxonomy for push_leaf_with ─────────────
+
+/// Payload data handed to [`Tape::push_leaf_with`] — the single entry
+/// point for payload-bearing leaves.
+#[derive(Debug, Clone, Copy)]
+pub enum PayloadData<'a> {
+    /// No payload.
+    None,
+    /// Scalar value ≤ 4 bytes stored in `Columns::pay_narrow`. The
+    /// `u32` carries the value's raw little-endian bytes.
+    InlineScalar(u32),
+    /// 8-byte scalar (`f64`, `u64`, `i64`, packed `Span`) stored in
+    /// `Columns::pay_wide` as raw bits. Callers convert at the push
+    /// site via `f64::to_bits()` / `to_le_bytes()` as needed.
+    WideScalar(u64),
+    /// Packed aggregate tuple bytes written verbatim into
+    /// `Columns::pay_agg`. Length up to 16 bytes.
+    Aggregate(&'a [u8]),
+    /// Aggregate bytes exceeding the 16-byte inline budget — arena-
+    /// backed, unframed.
+    LargeAggregate(&'a [u8]),
+    /// Byte string framed as `(len: u32 LE, bytes)` into
+    /// `Columns::pay_agg`.
+    Bytes(&'a [u8]),
+}
+
+// ─── B5.W1 transitional compat aliases (REMOVED post-regen) ────────
+//
+// The pre-B5.W1 `FusedBuilder` / `FusedOutput<R>` / `ValueFramesOutput<R>`
+// surface is collapsed into [`Tape<R>`]. These aliases let the
+// pre-regen generated grammars compile during the regen sweep; they
+// retire as part of the wave-close commit.
+/// Transitional alias for [`Tape<()>`] — pre-B5.W1 builder type.
+#[deprecated(note = "B5.W1 transitional alias; use Tape<R> directly")]
+pub type FusedBuilder = Tape<()>;
+/// Transitional alias for [`Tape<R>`] — pre-B5.W1 output type.
+#[deprecated(note = "B5.W1 transitional alias; use Tape<R> directly")]
+pub type FusedOutput<R> = Tape<R>;
+/// Transitional alias for [`Tape<R>`] — pre-B5.W1 value output type.
+#[deprecated(note = "B5.W1 transitional alias; use Tape<R> directly")]
+pub type ValueFramesOutput<R> = Tape<R>;
+
+// ─── Tape<R> ───────────────────────────────────────────────────────
+
+/// The unified parser substrate — write surface + read surface +
+/// value-side projection in one type.
+///
+/// # Roles
+///
+/// 1. **Write surface** during parse — generated parser code threads a
+///    `&mut Tape<Self>` through every rule call, invoking
+///    [`Self::begin_compound`] / [`Self::end_compound`] /
+///    [`Self::push_leaf*`] / [`Self::rollback_to`] to stamp records.
+/// 2. **Read surface** post-finalise — view-layer accessors call
+///    [`Self::get`] / [`Self::iter`] / payload accessors to materialise
+///    individual records.
+/// 3. **Value-side projection** — [`Self::frame`] / [`Self::children`]
+///    / [`Self::payload_for`] expose the value substrate the
+///    grammar-emitted projection logic consumes at `to_value()` time.
+///
+/// `R` is the grammar-root marker. The substrate is grammar-agnostic
+/// in storage; the phantom binds parse-time and projection-time so
+/// multiple grammars can coexist in one binary without runtime
+/// confusion.
+///
+/// # Substrate
+///
+/// All state lives in [`Columns`]: structural columns
+/// (`records`, `sib_skip`, `frame_depth`), typed payload columns
+/// (`pay_narrow`, `pay_wide`, `pay_f64`, `pay_agg`), value-side state
+/// (`value_frames`, `value_payloads_narrow`, `value_payloads_wide`,
+/// `value_open_stack`).
+#[derive(Debug)]
+pub struct Tape<R = ()> {
+    pub(crate) columns: Columns,
+    pub(crate) error: Option<TapeBuildError>,
+    pub(crate) root_offset: u32,
+    pub(crate) _root_marker: PhantomData<fn() -> R>,
+}
+
+impl<R> Default for Tape<R> {
+    #[inline]
+    fn default() -> Self {
         Self {
-            columns: Columns::new(),
+            columns: Columns::default(),
+            error: None,
+            root_offset: 0,
+            _root_marker: PhantomData,
         }
+    }
+}
+
+impl<R> Tape<R> {
+    /// Construct an empty tape.
+    #[inline]
+    pub fn new() -> Self {
+        NEW_CALL_COUNT.with(|c| c.set(c.get() + 1));
+        Self::default()
     }
 
     /// Construct an empty tape sized for `expected` records.
@@ -339,22 +440,21 @@ impl Tape {
     /// Callers presize via the per-grammar push fingerprint:
     /// `GRAMMAR_PROFILE.capacity_for(input.len())`. The reservation
     /// covers `records` (16 B AoS rows) + `sib_skip` (4 B parallel
-    /// column) in lockstep so the hot push path never trips a
-    /// `Vec::push` realloc on corpus input.
+    /// column) + value-side substrate columns in lockstep so the hot
+    /// push path never trips a `Vec::push` realloc on corpus input.
+    #[inline]
     pub fn with_capacity(expected: usize) -> Self {
+        NEW_CALL_COUNT.with(|c| c.set(c.get() + 1));
         Self {
             columns: Columns::with_capacity(expected),
+            error: None,
+            root_offset: 0,
+            _root_marker: PhantomData,
         }
     }
 
     /// Construct an empty tape sized from a [`crate::GrammarProfile`]
     /// + `input_len`.
-    ///
-    /// Convenience for the parser entry point — equivalent to
-    /// `Tape::with_capacity(profile.capacity_for(input_len))`. The
-    /// per-grammar density coefficients (`compounds_per_input_byte`
-    /// + `leaves_per_input_byte`, AU.6.2) drive the reservation,
-    /// with the AR-audit `input_len / 2 + 2` floor as backstop.
     #[inline]
     pub fn with_capacity_for(profile: &crate::GrammarProfile, input_len: usize) -> Self {
         Self::with_capacity(profile.capacity_for(input_len))
@@ -372,24 +472,37 @@ impl Tape {
         self.columns.is_empty()
     }
 
-    /// Borrow the underlying [`Columns`] substrate.
+    /// The current write position — the offset where the NEXT
+    /// `push_*` will land.
     ///
-    /// Exposed so the view codegen (wave V2.5) and walker migration
-    /// (wave V2.6) can emit column-indexed reads without going
-    /// through per-record materialisation.
+    /// B5.W1: replaces the pre-W1 `builder.columns_mut().len() as u32`
+    /// idiom every emitter retry-IIFE used to capture an open offset
+    /// before probing a branch. Generated parsers call
+    /// `tape.position()` before each rollback-eligible branch and pass
+    /// the returned `u32` to [`Self::rollback_to`] on failure.
+    #[inline(always)]
+    pub fn position(&self) -> u32 {
+        self.columns.records.len() as u32
+    }
+
+    /// Borrow the underlying [`Columns`] substrate.
     #[inline]
     pub fn columns(&self) -> &Columns {
         &self.columns
     }
 
-    /// Look up a record by offset. Panics on out-of-range offsets —
-    /// view codegen never produces out-of-range offsets because every
-    /// offset originates from a `FusedBuilder::push_*` call.
-    ///
-    /// Returns a 16-byte [`TapeRec`] by value, materialised from the
-    /// structural columns. Callers that used to bind `&TapeRec` now
-    /// bind owned `TapeRec`; all access is through `Copy` methods so
-    /// the ergonomic surface is unchanged.
+    /// Set `child_off` on row `i` directly. Used by the Pratt
+    /// reducer's walker-parity override after `end_compound` to
+    /// re-stamp the outer row's `child_off` to the final reducer's
+    /// root (B4.W2 substrate parity).
+    #[inline(always)]
+    pub fn set_child_off_at(&mut self, i: u32, value: TapeOffset) {
+        self.columns.set_child_off_at(i, value);
+    }
+
+    // ── Read accessors — column-indexed materialisation ──────────────
+
+    /// Look up a record by offset. Panics on out-of-range offsets.
     #[inline(always)]
     pub fn get(&self, offset: TapeOffset) -> TapeRec {
         debug_assert!(
@@ -405,12 +518,7 @@ impl Tape {
     ///
     /// The caller must guarantee that `offset` is not
     /// [`TapeOffset::NONE`] and that `offset.0 as usize` is less
-    /// than `self.len()`. Both invariants hold for every offset
-    /// produced by [`FusedBuilder::push_leaf`] /
-    /// [`FusedBuilder::push_compound`].
-    ///
-    /// [`FusedBuilder::push_leaf`]: crate::builder::FusedBuilder::push_leaf
-    /// [`FusedBuilder::push_compound`]: crate::builder::FusedBuilder::push_compound
+    /// than `self.len()`.
     #[inline(always)]
     pub unsafe fn get_unchecked(&self, offset: TapeOffset) -> TapeRec {
         debug_assert!(
@@ -442,38 +550,18 @@ impl Tape {
     }
 
     /// Iterate every record in insertion order.
-    ///
-    /// The iterator materialises a fresh [`TapeRec`] per yield; this
-    /// is free (16 bytes, `Copy`) but removes the `&TapeRec` borrow
-    /// the pre-AV API handed out.
-    pub fn iter(&self) -> TapeIter<'_> {
+    pub fn iter(&self) -> TapeIter<'_, R> {
         TapeIter {
             columns: &self.columns,
             idx: 0,
+            _marker: PhantomData,
         }
     }
 
     // ── Payload accessors ─────────────────────────────────────────
-    //
-    // AV.2.3: inline scalars land in `pay_narrow`, wide scalars in
-    // `pay_wide`, and aggregates / byte-frames in `pay_agg`. The
-    // record's `child_off` carries the appropriate pointer — column
-    // rank for scalars, arena byte offset for aggregates.
 
-    /// Read an inline-packed scalar payload (≤ 4 bytes) from the
-    /// `pay_narrow` column or — when [`TapeRec::payload_in_arena`]
-    /// is set — from the unified arena (`pay_agg`).
-    ///
-    /// `T` must be `Copy` and its size must be ≤ 4 bytes. Wider
-    /// scalars live in `pay_wide` and must be read via
-    /// [`Self::payload_wide`].
-    ///
-    /// AW-III.W1 dual path: pre-W1 `push_leaf_with(InlineScalar)`
-    /// plumbing wrote into `pay_narrow` and stamped `child_off` to
-    /// the column rank — those records keep `payload_in_arena() ==
-    /// false`. Post-W1 the DTA walker writes the constant byte into
-    /// `pay_agg` and sets the arena bit; the reader slices the arena
-    /// at `child_off`.
+    /// Read an inline-packed scalar payload (≤ 4 bytes) from
+    /// `pay_narrow` / `pay_agg`.
     #[inline]
     fn payload_inline<T: Copy>(&self, rec: TapeRec) -> Option<T> {
         debug_assert!(std::mem::size_of::<T>() <= 4);
@@ -511,10 +599,8 @@ impl Tape {
         }
     }
 
-    /// Read a wide (8-byte) scalar payload from the `pay_wide` column
-    /// or — when [`TapeRec::payload_in_arena`] is set — from the
-    /// unified arena, or — when [`TapeRec::payload_f64_direct`] is
-    /// set (AY.W4.2) — from the dedicated `pay_f64` direct-column.
+    /// Read a wide (8-byte) scalar payload from `pay_wide` / `pay_agg`
+    /// / `pay_f64`.
     #[inline]
     fn payload_wide<T: Copy>(&self, rec: TapeRec) -> Option<T> {
         debug_assert!(std::mem::size_of::<T>() == 8);
@@ -556,9 +642,6 @@ impl Tape {
     }
 
     /// Read an arbitrary scalar payload from the record.
-    ///
-    /// `T` must be `Copy` and ≤ 8 bytes. Sizes ≤ 4 bytes hit
-    /// `pay_narrow`; 8-byte sizes hit `pay_wide`.
     #[inline]
     pub fn payload_scalar<T: Copy>(&self, rec: TapeRec) -> Option<T> {
         debug_assert!(std::mem::size_of::<T>() <= 8);
@@ -640,12 +723,6 @@ impl Tape {
     }
 
     /// Read a variable-length decoded payload as `&str`.
-    ///
-    /// Returns the decoded UTF-8 slice for a record whose payload
-    /// was pushed via [`crate::FusedBuilder::push_leaf_with`] with a
-    /// [`crate::PayloadData::Bytes`] shape. The arena frame layout
-    /// is `(len: u32 LE, bytes: [u8; len])` at the byte offset
-    /// stored in `rec.child_off`.
     #[inline]
     pub fn payload_string(&self, rec: TapeRec) -> Option<&str> {
         let bytes = self.payload_string_bytes(rec)?;
@@ -661,9 +738,6 @@ impl Tape {
     }
 
     /// Read a variable-length decoded payload as raw bytes.
-    ///
-    /// Same slot semantics as [`Self::payload_string`] but without
-    /// the UTF-8 check.
     #[inline]
     pub fn payload_string_bytes(&self, rec: TapeRec) -> Option<&[u8]> {
         if rec.child_off.is_none() {
@@ -687,12 +761,6 @@ impl Tape {
     /// Source-aware string accessor — returns the decoded UTF-8 of
     /// a string leaf without touching the arena when the record is
     /// borrow-safe.
-    ///
-    /// Decode-kernel leaves push themselves either as borrowed (no
-    /// arena write — see
-    /// [`crate::FusedBuilder::push_leaf_borrowed_string`]) or owned
-    /// ([`Self::payload_string`] for the arena-frame path). This
-    /// accessor honours both.
     #[inline]
     pub fn payload_string_with_source<'s, 'a: 's, 't: 's>(
         &'t self,
@@ -722,42 +790,21 @@ impl Tape {
     }
 
     /// Borrow the tape's unified payload arena (read-only).
-    ///
-    /// Backed by [`Columns::pay_agg`]. Primarily used by view-layer
-    /// accessors that want to slice the arena directly (e.g. a
-    /// borrowed fast path that skipped copying the decoded bytes).
     #[inline]
     pub fn arena(&self) -> &[u8] {
         &self.columns.pay_agg
     }
 
     /// Read a slice of raw aggregate payload bytes for a record
-    /// whose payload was written via [`crate::PayloadData::Aggregate`].
-    ///
-    /// The caller knows the total byte width from the rule's
-    /// [`bbnf_ir::passes::PayloadLayout::total_bytes`]; pass it as
-    /// `byte_count`. Returns `None` when the record carries no
-    /// payload, when its `child_off` is [`TapeOffset::NONE`], or when
-    /// the arena is too short to satisfy the request.
+    /// whose payload was written via [`PayloadData::Aggregate`].
     ///
     /// # B5.W0 bonus — `PAYLOAD_IN_ARENA_BIT` precondition assert
     ///
-    /// Pre-B5.W0 the reader sliced the arena unconditionally — a
-    /// caller that handed in a record whose `child_off` named a
-    /// `pay_narrow` / `pay_wide` column rank could decode garbage on
-    /// any small-rank tape whose rank happened to fit within the
-    /// arena's byte length. Two arena conventions exist:
-    /// `push_leaf_with_arena_payload` sets
-    /// [`TapeRec::PAYLOAD_IN_ARENA_BIT`] on inline-scalar leaves
-    /// whose `child_off` is an arena byte offset; the aggregate /
-    /// large-aggregate / bytes path (`push_leaf_with` for
-    /// `PayloadData::{Aggregate, LargeAggregate, Bytes}`) leaves the
-    /// bit clear but still routes `child_off` at the arena. The
-    /// `debug_assert!` below validates that the leaf's record kind
-    /// belongs to the set those conventions admit — a record that
-    /// reaches this reader without falling into either convention
-    /// trips the assert in debug runs (release elides), enforcing
-    /// the audit-flagged invariant at zero release cost.
+    /// The `debug_assert!` below validates that the leaf's record
+    /// kind belongs to the set the arena conventions admit — a record
+    /// that reaches this reader without falling into either
+    /// convention trips the assert in debug runs (release elides),
+    /// enforcing the audit-flagged invariant at zero release cost.
     #[inline]
     pub fn payload_bytes(&self, rec: TapeRec, byte_count: usize) -> Option<&[u8]> {
         if rec.child_off.is_none() {
@@ -784,17 +831,825 @@ impl Tape {
         }
         Some(&arena[start..start + byte_count])
     }
+
+    // ── Write surface — pre-order compound emission API ──────────────
+
+    /// Begin a compound in pre-order.
+    ///
+    /// Emits a compound row with provisional `span_hi == span_lo`,
+    /// `child_off = TapeOffset::NONE`, and `HAS_CHILDREN_BIT` cleared
+    /// on the tape AND opens a matching value-arena frame + pushes
+    /// the value checkpoint onto the open-stack.
+    ///
+    /// Returns the tape row offset the caller passes back to
+    /// [`Self::end_compound`] (pre-order) or
+    /// [`Self::end_compound_post_order`] (post-order). Emitter retry
+    /// paths rewind via [`Self::rollback_to`] with the returned
+    /// offset; the next `begin_compound` reuses the same row.
+    #[inline(always)]
+    pub fn begin_compound(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        variant_idx: u8,
+        meta_idx: u8,
+        _frame_depth: u8,
+        extra_flags: u16,
+    ) -> u32 {
+        debug_assert!(
+            kind.is_compound(),
+            "begin_compound on leaf/annotation kind {:?}",
+            kind
+        );
+        let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
+        let idx = self.columns.push_structural(
+            kind_meta,
+            variant_idx,
+            extra_flags | extra_meta_bit,
+            span_lo,
+            span_lo,
+            TapeOffset::NONE,
+        );
+        // Bump after stamping so the children of this compound stamp
+        // at `current_depth + 1`. Saturate to `u8::MAX` — grammars
+        // that nest deeper than 255 compounds are diagnosed by the
+        // finaliser's depth-overflow path; saturation keeps the push
+        // path branchless.
+        self.columns.current_depth = self.columns.current_depth.saturating_add(1);
+        self.value_begin_compound(kind, span_lo, variant_idx, idx);
+        idx
+    }
+
+    /// Finalise a compound opened via [`Self::begin_compound`] in
+    /// pre-order — the caller emitted the compound row BEFORE its
+    /// children, so the first child's root sits at `open_offset + 1`.
+    #[inline(always)]
+    pub fn end_compound(&mut self, open_offset: u32, span_hi: u32) {
+        self.columns.set_span_hi_at(open_offset, span_hi);
+        // The compound was emitted at its outer frame's depth; its
+        // direct children are stamped at `open_depth + 1`. Pre-order
+        // layout normally puts the first child at `open_offset + 1`,
+        // BUT when an inner [`Self::end_compound_post_order`] retro-
+        // actively bumps `frame_depth` over its child range, records
+        // that landed between this compound's open and the nested
+        // post-order close move one level deeper. The true first
+        // child is then the first row at exactly `open_depth + 1`,
+        // bounded by the compound's structural scope.
+        let open_depth = self.columns.frame_depth[open_offset as usize];
+        let target_depth = open_depth.saturating_add(1);
+        let n = self.columns.len() as u32;
+        let mut first_child = open_offset + 1;
+        let mut found = false;
+        while first_child < n {
+            let d = self.columns.frame_depth[first_child as usize];
+            if d == target_depth {
+                found = true;
+                break;
+            }
+            if d <= open_depth {
+                break;
+            }
+            first_child += 1;
+        }
+        if found {
+            self.columns
+                .set_child_off_at(open_offset, TapeOffset(first_child));
+            self.columns
+                .or_extra_at(open_offset, TapeRec::HAS_CHILDREN_BIT);
+        }
+        self.columns.current_depth = self.columns.current_depth.saturating_sub(1);
+        self.value_end_compound(span_hi);
+    }
+
+    /// Finalise a compound opened via [`Self::begin_compound`] in
+    /// post-order — the compound row was allocated AFTER its
+    /// children, so `open_offset` is the LAST record and the first
+    /// child's root is `first_child` (captured at children-enter via
+    /// `tape.position()`).
+    #[inline(always)]
+    pub fn end_compound_post_order(
+        &mut self,
+        open_offset: u32,
+        span_hi: u32,
+        first_child: TapeOffset,
+    ) {
+        self.columns.set_span_hi_at(open_offset, span_hi);
+        if !first_child.is_none() && first_child.0 < open_offset {
+            self.columns.set_child_off_at(open_offset, first_child);
+            self.columns
+                .or_extra_at(open_offset, TapeRec::HAS_CHILDREN_BIT);
+            // B3.W0.ζ — bump the entire subtree's `frame_depth`, not
+            // just the offset range `[first_child, open_offset)`.
+            // Walking the leftmost-descendant chain finds the lowest
+            // offset of any record in our subtree; bumping
+            // `[leftmost, open_offset)` covers every descendant.
+            let lo = leftmost_descendant_offset(&self.columns, first_child.0) as usize;
+            let hi = open_offset as usize;
+            for slot in &mut self.columns.frame_depth[lo..hi] {
+                *slot = slot.saturating_add(1);
+            }
+        }
+        self.columns.current_depth = self.columns.current_depth.saturating_sub(1);
+        self.value_end_compound(span_hi);
+    }
+
+    // ── Write surface — leaf push API ────────────────────────────────
+
+    /// Append a leaf record with a concrete kind + span.
+    #[inline(always)]
+    pub fn push_leaf(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        meta_idx: u8,
+    ) -> TapeOffset {
+        debug_assert!(kind.is_leaf(), "push_leaf on compound kind {:?}", kind);
+        let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
+        let idx = self.columns.push_structural(
+            kind_meta,
+            variant_idx,
+            extra_meta_bit,
+            span_lo,
+            span_hi,
+            TapeOffset::NONE,
+        );
+        self.push_value_leaf(kind, span_lo, span_hi, variant_idx, PayloadTag::NONE);
+        TapeOffset(idx)
+    }
+
+    /// Append a leaf record carrying the supplied [`PayloadData`].
+    #[inline(always)]
+    pub fn push_leaf_with(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        meta_idx: u8,
+        payload: PayloadData<'_>,
+    ) -> TapeOffset {
+        debug_assert!(
+            kind.is_leaf(),
+            "push_leaf_with on compound kind {:?}",
+            kind
+        );
+        let (child_off, value_tag) = match payload {
+            PayloadData::None => (TapeOffset::NONE, PayloadTag::NONE),
+            PayloadData::InlineScalar(v) => {
+                // AV.2.3: inline scalars land in `pay_narrow`; the
+                // record's `child_off` carries the column rank.
+                let rank = self.columns.pay_narrow.len() as u32;
+                self.columns.pay_narrow.push(v);
+                let v_rank = self.columns.value_payloads_narrow.len() as u32;
+                self.columns.value_payloads_narrow.push(v);
+                (TapeOffset(rank), PayloadTag::narrow(v_rank))
+            }
+            PayloadData::WideScalar(v) => {
+                let rank = self.columns.pay_wide.len() as u32;
+                self.columns.pay_wide.push(v);
+                let v_rank = self.columns.value_payloads_wide.len() as u32;
+                self.columns.value_payloads_wide.push(v);
+                (TapeOffset(rank), PayloadTag::wide(v_rank))
+            }
+            PayloadData::Aggregate(bytes) => {
+                if bytes.is_empty() {
+                    (TapeOffset::NONE, PayloadTag::NONE)
+                } else {
+                    let offset = self.alloc_aggregate_slot(bytes);
+                    (TapeOffset(offset), PayloadTag::NONE)
+                }
+            }
+            PayloadData::LargeAggregate(bytes) => {
+                if bytes.is_empty() {
+                    (TapeOffset::NONE, PayloadTag::NONE)
+                } else {
+                    let offset = self.alloc_large_aggregate_slot(bytes);
+                    (TapeOffset(offset), PayloadTag::NONE)
+                }
+            }
+            PayloadData::Bytes(bytes) => {
+                let offset = self.alloc_bytes_frame(bytes);
+                (TapeOffset(offset), PayloadTag::NONE)
+            }
+        };
+        let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
+        let idx = self.columns.push_structural(
+            kind_meta,
+            variant_idx,
+            extra_meta_bit,
+            span_lo,
+            span_hi,
+            child_off,
+        );
+        self.push_value_leaf(kind, span_lo, span_hi, variant_idx, value_tag);
+        TapeOffset(idx)
+    }
+
+    /// Append aggregate bytes into a `pay_agg` slot rounded up to the
+    /// next 8-byte boundary and return the byte offset.
+    #[inline]
+    fn alloc_aggregate_slot(&mut self, bytes: &[u8]) -> u32 {
+        debug_assert!(bytes.len() <= 16, "aggregate payload exceeds 16 bytes");
+        let slot_count = bytes.len().div_ceil(8);
+        let slot_total = slot_count * 8;
+        let arena = &mut self.columns.pay_agg;
+        let start = arena.len();
+        arena.resize(start + slot_total, 0);
+        // SAFETY: the resize above guarantees `slot_total` bytes are
+        // available starting at `start`.
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                bytes.as_ptr(),
+                arena.as_mut_ptr().add(start),
+                bytes.len(),
+            );
+        }
+        start as u32
+    }
+
+    /// Append a large aggregate payload (> 16 bytes) into a `pay_agg`
+    /// slot.
+    #[inline]
+    fn alloc_large_aggregate_slot(&mut self, bytes: &[u8]) -> u32 {
+        debug_assert!(
+            bytes.len() > crate::MAX_INLINE_AGGREGATE_BYTES,
+            "LargeAggregate payload {} bytes fits inline (≤ {})",
+            bytes.len(),
+            crate::MAX_INLINE_AGGREGATE_BYTES,
+        );
+        let slot_count = bytes.len().div_ceil(8);
+        let slot_total = slot_count * 8;
+        let arena = &mut self.columns.pay_agg;
+        let start = arena.len();
+        arena.resize(start + slot_total, 0);
+        // SAFETY: the resize above guarantees `slot_total` bytes are
+        // available starting at `start`.
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                bytes.as_ptr(),
+                arena.as_mut_ptr().add(start),
+                bytes.len(),
+            );
+        }
+        start as u32
+    }
+
+    /// Append a `(len: u32 LE, bytes)` frame into `pay_agg` and
+    /// return the byte offset of the length prefix.
+    #[inline]
+    fn alloc_bytes_frame(&mut self, bytes: &[u8]) -> u32 {
+        let arena = &mut self.columns.pay_agg;
+        let start = arena.len();
+        let len = bytes.len() as u32;
+        arena.extend_from_slice(&len.to_le_bytes());
+        arena.extend_from_slice(bytes);
+        start as u32
+    }
+
+    /// Borrow the `pay_agg` arena for direct variable-length payload
+    /// writes.
+    #[inline(always)]
+    pub fn arena_mut(&mut self) -> &mut Vec<u8> {
+        &mut self.columns.pay_agg
+    }
+
+    /// The current length of the `pay_agg` arena — equivalently, the
+    /// byte offset where the next write will land.
+    #[inline(always)]
+    pub fn arena_len(&self) -> u32 {
+        self.columns.pay_agg.len() as u32
+    }
+
+    /// Append a leaf record whose payload bytes (with length prefix)
+    /// have already been written to `pay_agg` at `arena_offset`.
+    #[inline(always)]
+    pub fn push_leaf_with_arena_frame(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        meta_idx: u8,
+        arena_offset: u32,
+    ) -> TapeOffset {
+        debug_assert!(
+            kind.is_leaf(),
+            "push_leaf_with_arena_frame on compound kind {:?}",
+            kind
+        );
+        debug_assert!(
+            (arena_offset as usize) + 4 <= self.columns.pay_agg.len(),
+            "push_leaf_with_arena_frame: offset {} + 4 exceeds arena len {}",
+            arena_offset,
+            self.columns.pay_agg.len()
+        );
+        let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
+        let idx = self.columns.push_structural(
+            kind_meta,
+            variant_idx,
+            extra_meta_bit,
+            span_lo,
+            span_hi,
+            TapeOffset(arena_offset),
+        );
+        self.push_value_leaf(kind, span_lo, span_hi, variant_idx, PayloadTag::NONE);
+        TapeOffset(idx)
+    }
+
+    /// Append a leaf record whose payload is an in-arena scalar of
+    /// `payload_width` bytes already written at `arena_offset`.
+    #[inline(always)]
+    pub fn push_leaf_with_arena_payload(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        meta_idx: u8,
+        arena_offset: u32,
+        payload_width: u32,
+    ) -> TapeOffset {
+        debug_assert!(
+            kind.is_leaf(),
+            "push_leaf_with_arena_payload on compound kind {:?}",
+            kind
+        );
+        debug_assert!(
+            matches!(payload_width, 1 | 2 | 4 | 8),
+            "push_leaf_with_arena_payload: payload_width {} must be 1 / 2 / 4 / 8",
+            payload_width,
+        );
+        debug_assert!(
+            (arena_offset as usize) + (payload_width as usize)
+                <= self.columns.pay_agg.len(),
+            "push_leaf_with_arena_payload: offset {} + {} exceeds arena len {}",
+            arena_offset,
+            payload_width,
+            self.columns.pay_agg.len()
+        );
+        let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
+        let extra = extra_meta_bit | TapeRec::PAYLOAD_IN_ARENA_BIT;
+        let idx = self.columns.push_structural(
+            kind_meta,
+            variant_idx,
+            extra,
+            span_lo,
+            span_hi,
+            TapeOffset(arena_offset),
+        );
+        self.push_value_leaf(kind, span_lo, span_hi, variant_idx, PayloadTag::NONE);
+        TapeOffset(idx)
+    }
+
+    /// Append a borrow-safe string leaf — zero arena writes.
+    #[inline(always)]
+    pub fn push_leaf_borrowed_string(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        meta_idx: u8,
+    ) -> TapeOffset {
+        debug_assert!(
+            kind.is_leaf(),
+            "push_leaf_borrowed_string on compound kind {:?}",
+            kind
+        );
+        debug_assert!(
+            span_hi >= span_lo + 2,
+            "borrowed string span too short to carry quotes: [{}, {})",
+            span_lo,
+            span_hi,
+        );
+        let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, meta_idx);
+        let idx = self.columns.push_structural(
+            kind_meta,
+            variant_idx,
+            TapeRec::STRING_BORROW_BIT | extra_meta_bit,
+            span_lo,
+            span_hi,
+            TapeOffset::NONE,
+        );
+        self.push_value_leaf(kind, span_lo, span_hi, variant_idx, PayloadTag::NONE);
+        TapeOffset(idx)
+    }
+
+    /// AY.W4.2 — Eisel-Lemire direct-column f64 leaf push.
+    #[inline(always)]
+    pub fn push_leaf_with_f64_direct(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        f64_bits: u64,
+    ) -> TapeOffset {
+        debug_assert!(
+            kind.is_leaf(),
+            "push_leaf_with_f64_direct on compound kind {:?}",
+            kind
+        );
+        let rank = self.columns.pay_f64.len() as u32;
+        self.columns.pay_f64.push(f64_bits);
+        let (kind_meta, extra_meta_bit) = TapeRec::pack_kind_meta(kind, 0);
+        let extra = extra_meta_bit | TapeRec::PAYLOAD_F64_DIRECT_BIT;
+        let idx = self.columns.push_structural(
+            kind_meta,
+            variant_idx,
+            extra,
+            span_lo,
+            span_hi,
+            TapeOffset(rank),
+        );
+        let v_rank = self.columns.value_payloads_wide.len() as u32;
+        self.columns.value_payloads_wide.push(f64_bits);
+        self.push_value_leaf(
+            kind,
+            span_lo,
+            span_hi,
+            variant_idx,
+            PayloadTag::wide(v_rank),
+        );
+        TapeOffset(idx)
+    }
+
+    /// Write the 4-byte length prefix at the `pay_agg` slot reserved
+    /// by the decode kernel.
+    #[inline(always)]
+    pub fn stamp_arena_len_prefix(&mut self, arena_offset: u32, len: u32) {
+        let start = arena_offset as usize;
+        debug_assert!(
+            start + 4 <= self.columns.pay_agg.len(),
+            "stamp_arena_len_prefix: offset {} + 4 exceeds arena len {}",
+            start,
+            self.columns.pay_agg.len()
+        );
+        self.columns.pay_agg[start..start + 4].copy_from_slice(&len.to_le_bytes());
+    }
+
+    /// Mark the parse as failed with an offset and optional rule
+    /// label.
+    pub fn set_error(&mut self, offset: u32, rule_label: u32) {
+        if self.error.is_none() {
+            self.error = Some(TapeBuildError::ParseFailed {
+                offset,
+                rule_label,
+            });
+        }
+    }
+
+    // ── Rollback ──────────────────────────────────────────────────
+
+    /// Rewind every column family — structural tape, inline
+    /// `frame_depth`, and the value substrate — back to the state at
+    /// the matching `begin_compound` whose `open_offset` the caller
+    /// passes in.
+    ///
+    /// B5.W1: the sole rollback primitive across both column families.
+    /// Delegates to [`Columns::rollback_to`] which handles tape-side +
+    /// value-side substrates atomically in one call.
+    #[inline(always)]
+    pub fn rollback_to(&mut self, open_offset: u32) {
+        self.columns.rollback_to(open_offset);
+    }
+
+    // ── Finalisation — Stage-C sib_skip + close-compound back-patch ──
+
+    /// B5.W1 transitional: pre-W1 generated grammars call
+    /// `builder.finish_fused::<Self>(root_off.0)`. The substrate
+    /// transposition collapses this to `tape.finish(root_off)`; this
+    /// alias preserves source compatibility for the regen sweep
+    /// only, and retires alongside the other transitional aliases at
+    /// wave-close.
+    #[doc(hidden)]
+    #[inline(always)]
+    pub fn finish_fused<R2>(self, root_off: u32) -> Result<Tape<R2>, TapeBuildError>
+    where
+        R: 'static,
+        R2: 'static,
+    {
+        let finished = self.finish(root_off)?;
+        // R is a phantom — Tape<R> and Tape<R2> have identical
+        // memory layout (the marker is `PhantomData<fn() -> R>`).
+        // SAFETY: transmute is sound because R is `PhantomData`-only.
+        Ok(unsafe { core::mem::transmute::<Tape<R>, Tape<R2>>(finished) })
+    }
+
+    /// B5.W1 transitional: pre-W1 generated grammars call
+    /// `builder.columns_mut()` to get a `&mut Columns` for direct
+    /// rollback / position queries. Post-W1 the canonical accessors
+    /// are [`Self::position`] (read-only) and [`Self::rollback_to`].
+    #[doc(hidden)]
+    #[inline(always)]
+    pub fn columns_mut(&mut self) -> &mut Columns {
+        &mut self.columns
+    }
+
+    /// B5.W1 transitional: pre-W1 generated grammars call
+    /// `output.tape()` to access the tape from a `FusedOutput<R>`.
+    /// Post-W1 the substrate IS the tape.
+    #[doc(hidden)]
+    #[inline(always)]
+    pub fn tape(&self) -> &Self {
+        self
+    }
+
+    /// B5.W1 transitional alias for [`Self::frame`].
+    #[doc(hidden)]
+    #[inline]
+    pub fn value_frame_at(&self, offset: u32) -> Option<&ValueFrame> {
+        self.frame(offset)
+    }
+
+    /// B5.W1 transitional alias for [`Self::payload_for`].
+    #[doc(hidden)]
+    #[inline]
+    pub fn value_payload_for(&self, frame: &ValueFrame) -> Option<PayloadValue> {
+        self.payload_for(frame)
+    }
+
+    /// B5.W1 transitional alias for [`Self::children`].
+    #[doc(hidden)]
+    #[inline]
+    pub fn value_children(&self, offset: u32) -> ValueChildren<'_, R> {
+        self.children(offset)
+    }
+
+    /// B5.W1 transitional alias for [`Self::root_offset`].
+    #[doc(hidden)]
+    #[inline]
+    pub fn value_root_offset(&self) -> u32 {
+        self.root_offset
+    }
+
+    /// B5.W1 transitional alias for `Tape<R>` itself — the value
+    /// substrate is now part of the tape directly.
+    #[doc(hidden)]
+    #[inline]
+    pub fn as_value_output(&self) -> &Self {
+        self
+    }
+
+    /// B5.W1 transitional alias for [`Self::frame_count`].
+    #[doc(hidden)]
+    #[inline]
+    pub fn into_value(self) -> Self {
+        self
+    }
+
+    /// B5.W1 transitional alias — into the unified tape.
+    #[doc(hidden)]
+    #[inline]
+    pub fn into_tape(self) -> Self {
+        self
+    }
+
+    /// B5.W1 transitional alias — into the unified tape.
+    #[doc(hidden)]
+    #[inline]
+    pub fn into_parts(self) -> (Self, Self) where R: Default + Copy {
+        // Pre-W1 `FusedOutput<R>::into_parts() -> (Tape, ValueFramesOutput<R>)`.
+        // Post-W1 the substrate IS one tape; this alias is unused
+        // post-regen.
+        unreachable!("B5.W1: Tape::into_parts is a regen-time placeholder")
+    }
+
+    /// Consume the tape's write surface, run the Stage-C finaliser,
+    /// stamp the root offset, and return `Self` ready for read access.
+    ///
+    /// B5.W1: replaces the pre-W1 `FusedBuilder::finish_fused` /
+    /// `FusedBuilder::finish` pair with a single `finish` that
+    /// preserves both the structural tape and the value substrate
+    /// inside the same `Tape<R>`. The grammar-emitted parse entry
+    /// calls `tape.finish(root_off)` and the returned tape feeds
+    /// `Parsed::new`.
+    #[inline(always)]
+    pub fn finish(mut self, root_off: u32) -> Result<Self, TapeBuildError> {
+        if let Some(err) = self.error.take() {
+            return Err(err);
+        }
+        debug_assert!(
+            self.columns.value_open_stack.is_empty(),
+            "Tape::finish called with {} open value frames remaining",
+            self.columns.value_open_stack.len(),
+        );
+        debug_assert_eq!(
+            self.columns.frame_depth.len(),
+            self.columns.len(),
+            "frame_depth length {} != records length {} \
+             (every structural push must stamp frame_depth in lockstep)",
+            self.columns.frame_depth.len(),
+            self.columns.len(),
+        );
+        self.columns.run_finalise();
+        self.root_offset = root_off;
+        Ok(self)
+    }
+
+    // ── Value substrate read accessors (was FusedOutput<R>) ──────────
+
+    /// Total value-frame count.
+    #[inline]
+    pub fn frame_count(&self) -> usize {
+        self.columns.value_frames.len()
+    }
+
+    /// `true` iff the value substrate carries no frames.
+    #[inline]
+    pub fn frames_is_empty(&self) -> bool {
+        self.columns.value_frames.is_empty()
+    }
+
+    /// Borrow the value-frame arena directly.
+    #[inline]
+    pub fn frames(&self) -> &[ValueFrame] {
+        &self.columns.value_frames
+    }
+
+    /// The root frame's offset within the value-frame arena.
+    /// Projection consumers begin descent here.
+    #[inline]
+    pub fn root_offset(&self) -> u32 {
+        self.root_offset
+    }
+
+    /// Borrow a value frame by offset.
+    #[inline]
+    pub fn frame(&self, offset: u32) -> Option<&ValueFrame> {
+        self.columns.value_frames.get(offset as usize)
+    }
+
+    /// Borrow the root value frame directly. Returns `None` for
+    /// substrate-empty tapes.
+    #[inline]
+    pub fn root_frame(&self) -> Option<&ValueFrame> {
+        self.frame(self.root_offset)
+    }
+
+    /// Read a narrow-column value-substrate payload by rank.
+    #[inline]
+    pub fn value_payload_narrow(&self, rank: u32) -> Option<u32> {
+        self.columns.value_payloads_narrow.get(rank as usize).copied()
+    }
+
+    /// Read a wide-column value-substrate payload by rank.
+    #[inline]
+    pub fn value_payload_wide(&self, rank: u32) -> Option<u64> {
+        self.columns.value_payloads_wide.get(rank as usize).copied()
+    }
+
+    /// Look up the scalar payload for a leaf value-substrate frame.
+    #[inline]
+    pub fn payload_for(&self, frame: &ValueFrame) -> Option<PayloadValue> {
+        let tag = frame.payload_tag;
+        if tag.is_none() {
+            None
+        } else if tag.is_narrow() {
+            self.value_payload_narrow(tag.rank())
+                .map(PayloadValue::Narrow)
+        } else {
+            self.value_payload_wide(tag.rank()).map(PayloadValue::Wide)
+        }
+    }
+
+    /// Iterator over the direct children of the value-substrate
+    /// compound frame at `offset`. For leaf frames the iterator is
+    /// empty.
+    #[inline]
+    pub fn children(&self, offset: u32) -> ValueChildren<'_, R> {
+        let frame = match self.columns.value_frames.get(offset as usize) {
+            Some(f) => f,
+            None => {
+                return ValueChildren {
+                    tape: self,
+                    next: u32::MAX,
+                    remaining: 0,
+                };
+            }
+        };
+        ValueChildren {
+            tape: self,
+            next: frame.first_child,
+            remaining: frame.child_count,
+        }
+    }
+
+    // ── Value substrate write helpers (was FusedBuilder internals) ──
+
+    /// Open a value-arena frame in lockstep with the tape's
+    /// `begin_compound`. Pushes a compound frame + checkpoint onto
+    /// the open-stack and bumps the parent checkpoint's
+    /// `direct_child_count`.
+    #[inline(always)]
+    fn value_begin_compound(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        variant_idx: u8,
+        tape_idx: u32,
+    ) {
+        if let Some(parent) = self.columns.value_open_stack.last_mut() {
+            parent.direct_child_count += 1;
+        }
+        let frame_offset = self.columns.value_frames.len() as u32;
+        self.columns.value_frames.push(ValueFrame {
+            span_lo,
+            span_hi: span_lo,
+            first_child: frame_offset + 1,
+            child_count: 0,
+            variant_idx,
+            kind,
+            payload_tag: PayloadTag::NONE,
+        });
+        self.columns.value_open_stack.push(ValueCheckpoint {
+            frame_offset,
+            narrow_rank: self.columns.value_payloads_narrow.len() as u32,
+            wide_rank: self.columns.value_payloads_wide.len() as u32,
+            direct_child_count: 0,
+            tape_idx,
+        });
+    }
+
+    /// Close the most recently opened value frame.
+    #[inline(always)]
+    fn value_end_compound(&mut self, span_hi: u32) {
+        let checkpoint = self
+            .columns
+            .value_open_stack
+            .pop()
+            .expect("Tape::value_end_compound called with empty open_stack");
+        let frame =
+            &mut self.columns.value_frames[checkpoint.frame_offset as usize];
+        frame.span_hi = span_hi;
+        frame.child_count = checkpoint.direct_child_count;
+    }
+
+    /// Append a leaf value frame.
+    #[inline(always)]
+    fn push_value_leaf(
+        &mut self,
+        kind: TapeKind,
+        span_lo: u32,
+        span_hi: u32,
+        variant_idx: u8,
+        payload_tag: PayloadTag,
+    ) {
+        if let Some(parent) = self.columns.value_open_stack.last_mut() {
+            parent.direct_child_count += 1;
+        }
+        self.columns.value_frames.push(ValueFrame {
+            span_lo,
+            span_hi,
+            first_child: 0,
+            child_count: 0,
+            variant_idx,
+            kind,
+            payload_tag,
+        });
+    }
+}
+
+/// Walk the leftmost-descendant chain from `start` to find the lowest
+/// offset of any record in `start`'s subtree.
+///
+/// Used by `end_compound_post_order` to extend its `frame_depth` bump
+/// range to cover descendants whose offsets sit strictly below
+/// `first_child`. When `first_child` is itself a post-order compound,
+/// its body lives at offsets below `first_child` (post-order layout);
+/// those descendants belong to the closing compound's subtree and
+/// need the same `+1` adjustment.
+///
+/// The walk follows `child_off` while it points strictly backward
+/// (`co_child_off < co` — canonical post-order subtree root). For
+/// pre-order children (`child_off > co`) and leaves the walk stops:
+/// pre-order child ranges live at offsets ABOVE the parent, so the
+/// parent's offset is already the leftmost in that subtree's prefix.
+#[inline]
+fn leftmost_descendant_offset(columns: &Columns, start: u32) -> u32 {
+    let mut off = start;
+    while columns.has_children_at(off) {
+        let co = columns.child_off_at(off);
+        if co.is_none() || co.0 >= off {
+            break;
+        }
+        off = co.0;
+    }
+    off
 }
 
 /// Iterator over every record in a tape, materialising owned
 /// [`TapeRec`]s in column order.
 #[derive(Debug)]
-pub struct TapeIter<'t> {
+pub struct TapeIter<'t, R = ()> {
     columns: &'t Columns,
     idx: u32,
+    _marker: PhantomData<fn() -> R>,
 }
 
-impl<'t> Iterator for TapeIter<'t> {
+impl<'t, R> Iterator for TapeIter<'t, R> {
     type Item = TapeRec;
 
     #[inline]
@@ -814,4 +1669,4 @@ impl<'t> Iterator for TapeIter<'t> {
     }
 }
 
-impl ExactSizeIterator for TapeIter<'_> {}
+impl<R> ExactSizeIterator for TapeIter<'_, R> {}

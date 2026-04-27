@@ -117,35 +117,35 @@ fn push_invalidates_packed_cache() {
 }
 
 #[test]
-fn push_structural_via_builder_invalidates_packed_cache() {
-    // The legacy `push_structural` path (exercised by `FusedBuilder`'s
+fn push_structural_via_tape_invalidates_packed_cache() {
+    // The legacy `push_structural` path (exercised by `Tape`'s
     // `push_leaf` / `push_compound`) must also honour the contract.
-    // Reach it through the public builder API.
-    use tape::FusedBuilder;
+    // Reach it through the public substrate API.
+    use tape::Tape;
 
-    let mut builder = FusedBuilder::new();
-    builder.push_leaf(TapeKind::Span, 0, 5, 0, 0);
+    let mut tape = Tape::<()>::new();
+    tape.push_leaf(TapeKind::Span, 0, 5, 0, 0);
 
     // The finished tape's columns are fresh; populate the cache.
-    let tape = builder.finish().unwrap();
+    let tape = tape.finish(0).unwrap();
     let cols_ref = tape.columns();
     let _ = cols_ref.packed_cache();
     assert!(cols_ref.packed_cache_populated());
 
     // Build a second tape to show the push_structural path lands
-    // through the builder without double-populating. Each finished
+    // through the substrate without double-populating. Each finished
     // tape has its own cache state.
-    let mut builder2 = FusedBuilder::new();
-    builder2.push_leaf(TapeKind::Span, 0, 1, 0, 0);
-    builder2.push_leaf(TapeKind::Span, 1, 2, 0, 0);
-    let tape2 = builder2.finish().unwrap();
+    let mut tape2 = Tape::<()>::new();
+    tape2.push_leaf(TapeKind::Span, 0, 1, 0, 0);
+    tape2.push_leaf(TapeKind::Span, 1, 2, 0, 0);
+    let tape2 = tape2.finish(0).unwrap();
     assert!(!tape2.columns().packed_cache_populated());
     let view = tape2.columns().packed_cache();
     assert_eq!(view.len(), 2);
 }
 
 #[test]
-fn truncate_invalidates_packed_cache() {
+fn rollback_to_invalidates_packed_cache() {
     let mut cols = Columns::new();
     cols.push_compound_fused(TapeKind::Seq, 0);
     cols.push_leaf_fused(TapeKind::Literal, 0, 0, 1, 2, TapeOffset::NONE);
@@ -154,7 +154,7 @@ fn truncate_invalidates_packed_cache() {
     let _ = cols.packed_cache();
     assert!(cols.packed_cache_populated());
 
-    cols.truncate(1);
+    cols.rollback_to(1);
     assert!(!cols.packed_cache_populated());
 
     let view = cols.packed_cache();

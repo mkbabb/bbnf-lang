@@ -195,7 +195,7 @@ fn walk_tape<'a, S: GrammarSink<'a>>(parsed: &'a Parsed<'a, BbnfBootstrap>, sink
     // lifter (or mark them transparent) so consumers don't re-peel.
     // See the `iter_rep_children` helper in `crate::lower::tape_walk`
     // for the existing consumer-side mirror.
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     for item in root.children() {
         // An explicit `TapeKind::Repeat` wrapper — legacy fn-per-rule
         // emission retained this shape in a few places. Under the DTA
@@ -228,7 +228,7 @@ fn walk_tape<'a, S: GrammarSink<'a>>(parsed: &'a Parsed<'a, BbnfBootstrap>, sink
 /// user-written Seq compounds (an `identifier "=" rhs ";"`-style
 /// concatenation that reaches the walker directly) round-trip.
 fn peel_iter_wrapper<'a>(item: BbnfBootstrapNodeView<'a>) -> BbnfBootstrapNodeView<'a> {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     if item.kind() != TapeKind::Seq {
         return item;
     }

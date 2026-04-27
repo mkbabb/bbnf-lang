@@ -104,12 +104,12 @@ pub fn emit_parse_keyword(
             let push_stmt = if payload_width == 0 {
                 quote! {
                     let off = builder.push_leaf_with(
-                        ::bbnf::runtime::tape::TapeKind::Span,
+                        crate::runtime::tape::TapeKind::Span,
                         at as u32,
                         end as u32,
                         #variant_idx,
                         0,
-                        ::bbnf::runtime::tape::PayloadData::None,
+                        crate::runtime::tape::PayloadData::None,
                     );
                 }
             } else {
@@ -125,7 +125,7 @@ pub fn emit_parse_keyword(
                 // declared-leaf-reaches-the-tape contract.
                 quote! {
                     let off = builder.push_leaf_with_arena_payload(
-                        ::bbnf::runtime::tape::TapeKind::Span,
+                        crate::runtime::tape::TapeKind::Span,
                         at as u32,
                         end as u32,
                         #variant_idx,
@@ -150,18 +150,18 @@ pub fn emit_parse_keyword(
                     p: &mut usize,
                     _first_byte: u8,
                     _state: &mut #support_mod::ScanState,
-                    builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+                    builder: &mut crate::runtime::tape::Tape<()>,
                 ) -> ::core::result::Result<
-                    ::bbnf::runtime::tape::TapeOffset,
-                    ::bbnf::runtime::tape::DtaError,
+                    crate::runtime::tape::TapeOffset,
+                    crate::runtime::tape::DtaError,
                 > {
                     let at = *p;
                     let end = at + #len;
                     if input.len() < end || input[at..end] != [#(#byte_lits),*] {
-                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        return Err(crate::runtime::tape::DtaError::Syntax {
                             offset: at as u32,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                     *p = end;
@@ -289,12 +289,12 @@ pub fn emit_parse_keyword(
                                         grammar_suffix, *target_rid, ir,
                                     ).unwrap_or_else(|| quote! {
                                         ::core::result::Result::Err(
-                                            ::bbnf::runtime::tape::DtaError::Syntax {
+                                            crate::runtime::tape::DtaError::Syntax {
                                                 offset: *p as u32,
                                                 failing_state:
-                                                    ::bbnf::runtime::tape::DtaStateId::NONE,
+                                                    crate::runtime::tape::DtaStateId::NONE,
                                                 failing_rule:
-                                                    ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                                    crate::runtime::tape::DtaRuleId(u32::MAX),
                                             },
                                         )
                                     });
@@ -305,7 +305,7 @@ pub fn emit_parse_keyword(
                                         {
                                             let __ref_save_p = *p;
                                             let __ref_save_cols =
-                                                builder.columns_mut().len() as u32;
+                                                builder.position();
                                             match (#ref_call) {
                                                 ::core::result::Result::Ok(__off) => {
                                                     return ::core::result::Result::Ok(__off);
@@ -361,12 +361,12 @@ pub fn emit_parse_keyword(
                                                 let end = at + #len;
                                                 *p = end;
                                                 let off = builder.push_leaf_with(
-                                                    ::bbnf::runtime::tape::TapeKind::Span,
+                                                    crate::runtime::tape::TapeKind::Span,
                                                     at as u32,
                                                     end as u32,
                                                     #variant_idx,
                                                     0u8,
-                                                    ::bbnf::runtime::tape::PayloadData::None,
+                                                    crate::runtime::tape::PayloadData::None,
                                                 );
                                                 return Ok(off);
                                             }
@@ -398,7 +398,7 @@ pub fn emit_parse_keyword(
                                         {
                                             let span_lo = *p as u32;
                                             let seq_save_cols =
-                                                builder.columns_mut().len() as u32;
+                                                builder.position();
                                             let seq_attempt:
                                                 ::core::result::Result<(), ()> =
                                                 (|| {
@@ -409,12 +409,12 @@ pub fn emit_parse_keyword(
                                                 *p = span_lo as usize;
                                                 builder.rollback_to(seq_save_cols);
                                                 return Err(
-                                                    ::bbnf::runtime::tape::DtaError::Syntax {
+                                                    crate::runtime::tape::DtaError::Syntax {
                                                         offset: span_lo,
                                                         failing_state:
-                                                            ::bbnf::runtime::tape::DtaStateId::NONE,
+                                                            crate::runtime::tape::DtaStateId::NONE,
                                                         failing_rule:
-                                                            ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                                            crate::runtime::tape::DtaRuleId(u32::MAX),
                                                     },
                                                 );
                                             }
@@ -427,12 +427,12 @@ pub fn emit_parse_keyword(
                                             // literal.
                                             builder.rollback_to(seq_save_cols);
                                             let off = builder.push_leaf_with(
-                                                ::bbnf::runtime::tape::TapeKind::Span,
+                                                crate::runtime::tape::TapeKind::Span,
                                                 span_lo,
                                                 span_hi,
                                                 #variant_idx,
                                                 0u8,
-                                                ::bbnf::runtime::tape::PayloadData::None,
+                                                crate::runtime::tape::PayloadData::None,
                                             );
                                             return Ok(off);
                                         }
@@ -444,10 +444,10 @@ pub fn emit_parse_keyword(
                     quote! {
                         #first => {
                             #(#tries)*
-                            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            return Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             });
                         }
                     }
@@ -471,18 +471,18 @@ pub fn emit_parse_keyword(
                     p: &mut usize,
                     first_byte: u8,
                     state: &mut #support_mod::ScanState,
-                    builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+                    builder: &mut crate::runtime::tape::Tape<()>,
                 ) -> ::core::result::Result<
-                    ::bbnf::runtime::tape::TapeOffset,
-                    ::bbnf::runtime::tape::DtaError,
+                    crate::runtime::tape::TapeOffset,
+                    crate::runtime::tape::DtaError,
                 > {
                     let _ = state;
                     match first_byte {
                         #(#arms)*
-                        _ => Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        _ => Err(crate::runtime::tape::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         }),
                     }
                 }
@@ -579,8 +579,8 @@ fn rule_keyword_leaf_kind(rule: &IrRule, ir: &GrammarIR) -> TokenStream {
         }
     });
     match ty {
-        Some(TypeDesc::U8) => quote! { ::bbnf::runtime::tape::TapeKind::KvPair },
-        _ => quote! { ::bbnf::runtime::tape::TapeKind::Span },
+        Some(TypeDesc::U8) => quote! { crate::runtime::tape::TapeKind::KvPair },
+        _ => quote! { crate::runtime::tape::TapeKind::Span },
     }
 }
 
@@ -699,17 +699,17 @@ pub fn emit_parse_keyword_visitor(
             let literal_str = std::str::from_utf8(bytes).unwrap_or("");
             let emit = match literal_str {
                 "true" => quote! {
-                    visitor.bool(true).map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                    visitor.bool(true).map_err(|_| crate::runtime::ParseErr::Syntax {
                         offset: at as u32, rule: None,
                     })
                 },
                 "false" => quote! {
-                    visitor.bool(false).map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                    visitor.bool(false).map_err(|_| crate::runtime::ParseErr::Syntax {
                         offset: at as u32, rule: None,
                     })
                 },
                 _ => quote! {
-                    visitor.null().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                    visitor.null().map_err(|_| crate::runtime::ParseErr::Syntax {
                         offset: at as u32, rule: None,
                     })
                 },
@@ -728,18 +728,18 @@ pub fn emit_parse_keyword_visitor(
                     _first_byte: u8,
                     _state: &mut #support_mod::ScanState,
                     visitor: &mut V,
-                ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+                ) -> ::core::result::Result<(), crate::runtime::ParseErr>
                 where
-                    V: ::bbnf::runtime::tape::KeywordVisitor
-                       + ::bbnf::runtime::tape::ObjectVisitor
-                       + ::bbnf::runtime::tape::ArrayVisitor
-                       + ::bbnf::runtime::tape::StringVisitor
-                       + ::bbnf::runtime::tape::NumberVisitor,
+                    V: crate::runtime::tape::KeywordVisitor
+                       + crate::runtime::tape::ObjectVisitor
+                       + crate::runtime::tape::ArrayVisitor
+                       + crate::runtime::tape::StringVisitor
+                       + crate::runtime::tape::NumberVisitor,
                 {
                     let at = *p;
                     let end = at + #len;
                     if input.len() < end || input[at..end] != [#(#byte_lits),*] {
-                        return Err(::bbnf::runtime::ParseErr::Syntax {
+                        return Err(crate::runtime::ParseErr::Syntax {
                             offset: at as u32, rule: None,
                         });
                     }
@@ -802,7 +802,7 @@ pub fn emit_parse_keyword_visitor(
                                     emit_ref_call_visitor(grammar_suffix, *target_rid, ir)
                                         .unwrap_or_else(|| quote! {
                                             ::core::result::Result::Err(
-                                                ::bbnf::runtime::ParseErr::Syntax {
+                                                crate::runtime::ParseErr::Syntax {
                                                     offset: *p as u32, rule: None,
                                                 },
                                             )
@@ -820,19 +820,19 @@ pub fn emit_parse_keyword_visitor(
                                 let emit = match literal_str {
                                     "true" => quote! {
                                         visitor.bool(true).map_err(
-                                            |_| ::bbnf::runtime::ParseErr::Syntax {
+                                            |_| crate::runtime::ParseErr::Syntax {
                                                 offset: at as u32, rule: None,
                                             })
                                     },
                                     "false" => quote! {
                                         visitor.bool(false).map_err(
-                                            |_| ::bbnf::runtime::ParseErr::Syntax {
+                                            |_| crate::runtime::ParseErr::Syntax {
                                                 offset: at as u32, rule: None,
                                             })
                                     },
                                     _ => quote! {
                                         visitor.null().map_err(
-                                            |_| ::bbnf::runtime::ParseErr::Syntax {
+                                            |_| crate::runtime::ParseErr::Syntax {
                                                 offset: at as u32, rule: None,
                                             })
                                     },
@@ -853,7 +853,7 @@ pub fn emit_parse_keyword_visitor(
                     quote! {
                         #first => {
                             #(#tries)*
-                            return Err(::bbnf::runtime::ParseErr::Syntax {
+                            return Err(crate::runtime::ParseErr::Syntax {
                                 offset: *p as u32, rule: None,
                             });
                         }
@@ -874,18 +874,18 @@ pub fn emit_parse_keyword_visitor(
                     first_byte: u8,
                     state: &mut #support_mod::ScanState,
                     visitor: &mut V,
-                ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+                ) -> ::core::result::Result<(), crate::runtime::ParseErr>
                 where
-                    V: ::bbnf::runtime::tape::KeywordVisitor
-                       + ::bbnf::runtime::tape::ObjectVisitor
-                       + ::bbnf::runtime::tape::ArrayVisitor
-                       + ::bbnf::runtime::tape::StringVisitor
-                       + ::bbnf::runtime::tape::NumberVisitor,
+                    V: crate::runtime::tape::KeywordVisitor
+                       + crate::runtime::tape::ObjectVisitor
+                       + crate::runtime::tape::ArrayVisitor
+                       + crate::runtime::tape::StringVisitor
+                       + crate::runtime::tape::NumberVisitor,
                 {
                     let _ = state;
                     match first_byte {
                         #(#arms)*
-                        _ => Err(::bbnf::runtime::ParseErr::Syntax {
+                        _ => Err(crate::runtime::ParseErr::Syntax {
                             offset: *p as u32, rule: None,
                         }),
                     }

@@ -96,9 +96,9 @@ fn hregex_typed_payload_body(
         )
     );
     let leaf_kind = if kind_is_kv {
-        quote! { ::bbnf::runtime::tape::TapeKind::KvPair }
+        quote! { crate::runtime::tape::TapeKind::KvPair }
     } else {
-        quote! { ::bbnf::runtime::tape::TapeKind::Span }
+        quote! { crate::runtime::tape::TapeKind::Span }
     };
 
     match fd {
@@ -106,10 +106,10 @@ fn hregex_typed_payload_body(
             {
                 let span_lo = *p as u32;
                 let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                    return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    return Err(crate::runtime::tape::DtaError::Syntax {
                         offset: span_lo,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 };
                 *p += match_len as usize;
@@ -141,10 +141,10 @@ fn hregex_typed_payload_body(
                 {
                     let span_lo = *p as u32;
                     let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        return Err(crate::runtime::tape::DtaError::Syntax {
                             offset: span_lo,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -192,10 +192,10 @@ fn hregex_typed_payload_body(
                     {
                         let span_lo = *p as u32;
                         let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            return Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: span_lo,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             });
                         };
                         *p += match_len as usize;
@@ -224,10 +224,10 @@ fn hregex_typed_payload_body(
                     {
                         let span_lo = *p as u32;
                         let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            return Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: span_lo,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             });
                         };
                         *p += match_len as usize;
@@ -312,10 +312,10 @@ pub fn emit_parse_hregex(
                 input: &[u8],
                 p: &mut usize,
                 state: &mut #support_mod::ScanState,
-                builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+                builder: &mut crate::runtime::tape::Tape<()>,
             ) -> ::core::result::Result<
-                ::bbnf::runtime::tape::TapeOffset,
-                ::bbnf::runtime::tape::DtaError,
+                crate::runtime::tape::TapeOffset,
+                crate::runtime::tape::DtaError,
             > {
                 #body
             }
@@ -335,28 +335,28 @@ pub fn emit_parse_hregex(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+            builder: &mut crate::runtime::tape::Tape<()>,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::TapeOffset,
-            ::bbnf::runtime::tape::DtaError,
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
         > {
             let span_lo = *p as u32;
             let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: span_lo,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             };
             *p += match_len as usize;
             let span_hi = *p as u32;
             let leaf_off = builder.push_leaf_with(
-                ::bbnf::runtime::tape::TapeKind::Regex,
+                crate::runtime::tape::TapeKind::Regex,
                 span_lo,
                 span_hi,
                 #variant_idx,
                 0,
-                ::bbnf::runtime::tape::PayloadData::None,
+                crate::runtime::tape::PayloadData::None,
             );
             Ok(leaf_off)
         }
@@ -435,16 +435,16 @@ pub fn emit_parse_number_via_hregex(
                 input: &[u8],
                 p: &mut usize,
                 first_byte: u8,
-                builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+                builder: &mut crate::runtime::tape::Tape<()>,
             ) -> ::core::result::Result<
-                ::bbnf::runtime::tape::TapeOffset,
-                ::bbnf::runtime::tape::DtaError,
+                crate::runtime::tape::TapeOffset,
+                crate::runtime::tape::DtaError,
             > {
                 let _ = (input, p, first_byte, builder);
-                Err(::bbnf::runtime::tape::DtaError::Syntax {
+                Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 })
             }
         };
@@ -470,9 +470,9 @@ pub fn emit_parse_number_via_hregex(
         )
     );
     let leaf_kind = if kind_is_kv {
-        quote! { ::bbnf::runtime::tape::TapeKind::KvPair }
+        quote! { crate::runtime::tape::TapeKind::KvPair }
     } else {
-        quote! { ::bbnf::runtime::tape::TapeKind::Span }
+        quote! { crate::runtime::tape::TapeKind::Span }
     };
 
     quote! {
@@ -491,18 +491,18 @@ pub fn emit_parse_number_via_hregex(
             input: &[u8],
             p: &mut usize,
             first_byte: u8,
-            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+            builder: &mut crate::runtime::tape::Tape<()>,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::TapeOffset,
-            ::bbnf::runtime::tape::DtaError,
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
         > {
             let _ = first_byte;
             let span_lo = *p as u32;
             let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: span_lo,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             };
             *p += match_len as usize;
@@ -552,12 +552,12 @@ pub fn emit_parse_number_visitor_via_hregex(
                 p: &mut usize,
                 first_byte: u8,
                 visitor: &mut V,
-            ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+            ) -> ::core::result::Result<(), crate::runtime::ParseErr>
             where
-                V: ::bbnf::runtime::tape::NumberVisitor,
+                V: crate::runtime::tape::NumberVisitor,
             {
                 let _ = (input, p, first_byte, visitor);
-                Err(::bbnf::runtime::ParseErr::Syntax {
+                Err(crate::runtime::ParseErr::Syntax {
                     offset: *p as u32, rule: None,
                 })
             }
@@ -577,14 +577,14 @@ pub fn emit_parse_number_visitor_via_hregex(
             p: &mut usize,
             first_byte: u8,
             visitor: &mut V,
-        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: ::bbnf::runtime::tape::NumberVisitor,
+            V: crate::runtime::tape::NumberVisitor,
         {
             let _ = first_byte;
             let span_lo = *p;
             let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                return Err(::bbnf::runtime::ParseErr::Syntax {
+                return Err(crate::runtime::ParseErr::Syntax {
                     offset: span_lo as u32, rule: None,
                 });
             };
@@ -595,7 +595,7 @@ pub fn emit_parse_number_visitor_via_hregex(
                 .and_then(|s| s.parse::<f64>().ok())
                 .unwrap_or(0.0);
             visitor.number_f64(__f64).map_err(|_| {
-                ::bbnf::runtime::ParseErr::Syntax {
+                crate::runtime::ParseErr::Syntax {
                     offset: span_lo as u32, rule: None,
                 }
             })
@@ -619,21 +619,21 @@ fn emit_unsupported_stub(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+            builder: &mut crate::runtime::tape::Tape<()>,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::TapeOffset,
-            ::bbnf::runtime::tape::DtaError,
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
         > {
             let _ = state;
             let span_lo = *p as u32;
             let span_hi = *p as u32;
             let leaf_off = builder.push_leaf_with(
-                ::bbnf::runtime::tape::TapeKind::Regex,
+                crate::runtime::tape::TapeKind::Regex,
                 span_lo,
                 span_hi,
                 #variant_idx,
                 0,
-                ::bbnf::runtime::tape::PayloadData::None,
+                crate::runtime::tape::PayloadData::None,
             );
             Ok(leaf_off)
         }
@@ -677,9 +677,9 @@ pub fn emit_parse_hregex_visitor(
                 p: &mut usize,
                 state: &mut #support_mod::ScanState,
                 visitor: &mut V,
-            ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+            ) -> ::core::result::Result<(), crate::runtime::ParseErr>
             where
-                V: ::bbnf::runtime::tape::StringVisitor,
+                V: crate::runtime::tape::StringVisitor,
             {
                 let _ = (input, p, state, visitor);
                 Ok(())
@@ -704,20 +704,20 @@ pub fn emit_parse_hregex_visitor(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             visitor: &mut V,
-        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: ::bbnf::runtime::tape::StringVisitor,
+            V: crate::runtime::tape::StringVisitor,
         {
             let span_lo = *p;
             let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                return Err(::bbnf::runtime::ParseErr::Syntax {
+                return Err(crate::runtime::ParseErr::Syntax {
                     offset: span_lo as u32, rule: None,
                 });
             };
             let span_hi = *p + match_len as usize;
             *p = span_hi;
             visitor.string(&input[span_lo..span_hi]).map_err(|_| {
-                ::bbnf::runtime::ParseErr::Syntax {
+                crate::runtime::ParseErr::Syntax {
                     offset: span_lo as u32, rule: None,
                 }
             })

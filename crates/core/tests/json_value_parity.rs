@@ -256,8 +256,8 @@ fn oracle(input: &str) -> RefValue {
 /// whitespace when the grammar lifts cleanly. This makes the W6.4
 /// parity assertion precise: the view's root span text, re-parsed,
 /// matches the oracle.
-fn tape_to_value<'p>(
-    tape: &'p bbnf::runtime::tape::Tape,
+fn tape_to_value<'p, R>(
+    tape: &'p bbnf::runtime::tape::Tape<R>,
     input: &'p str,
     root: TapeOffset,
 ) -> RefValue {
@@ -402,7 +402,10 @@ fn json_view_walks_match_tape_records() {
     // record stream is a codegen regression.
     let input = r#"[1, "two", null, {"k": 3}]"#;
     let parsed = JsonParser::parse(input).expect("JSON parse");
-    let node = JsonParserNodeView::new(parsed.tape(), input, parsed.root_offset());
+    let tape_unit: &bbnf::runtime::tape::Tape<()> = unsafe {
+        &*(parsed.tape() as *const _ as *const bbnf::runtime::tape::Tape<()>)
+    };
+    let node = JsonParserNodeView::new(tape_unit, input, parsed.root_offset());
     let view_children_count = node.children().count();
 
     // The root walk yields at least one child for every non-empty

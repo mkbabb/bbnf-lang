@@ -30,14 +30,18 @@ fn count_reachable(cursor: TapeCursor<'_>) -> usize {
 }
 
 /// Collect all unique span texts from the tape.
-fn all_span_texts<'a>(tape: &bbnf::runtime::tape::Tape, input: &'a str) -> Vec<&'a str> {
+fn all_span_texts<'a, R>(tape: &bbnf::runtime::tape::Tape<R>, input: &'a str) -> Vec<&'a str> {
     tape.iter()
         .map(|rec| &input[rec.span_lo as usize..rec.span_hi as usize])
         .collect()
 }
 
 /// Check whether any span text in the tape contains `needle` as a substring.
-fn tape_contains_substr(tape: &bbnf::runtime::tape::Tape, input: &str, needle: &str) -> bool {
+fn tape_contains_substr<R>(
+    tape: &bbnf::runtime::tape::Tape<R>,
+    input: &str,
+    needle: &str,
+) -> bool {
     tape.iter()
         .any(|rec| input[rec.span_lo as usize..rec.span_hi as usize].contains(needle))
 }

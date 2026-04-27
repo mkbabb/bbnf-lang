@@ -222,8 +222,9 @@ fn json_roundtrip_data_xl() {
 // invocation; the invariant's hard gate requires `to_value()` calls
 // to not show up as additional `FusedBuilder::new` calls.
 
-use bbnf::runtime::tape::builder::{
-    fused_builder_new_call_count, reset_fused_builder_new_call_count,
+use bbnf::runtime::tape::{
+    reset_tape_new_call_count as reset_fused_builder_new_call_count,
+    tape_new_call_count as fused_builder_new_call_count,
 };
 
 #[test]

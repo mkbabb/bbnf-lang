@@ -122,8 +122,8 @@ pub fn emit_grammar_profile(profile: &GrammarProfile) -> TokenStream {
         /// profile emitted by Tranche AV Phase 1. Every downstream
         /// consumer (tape capacity, scanner dispatch) reads the
         /// matching field.
-        pub const GRAMMAR_PROFILE: ::bbnf::runtime::tape::GrammarProfile =
-            ::bbnf::runtime::tape::GrammarProfile {
+        pub const GRAMMAR_PROFILE: crate::runtime::tape::GrammarProfile =
+            crate::runtime::tape::GrammarProfile {
                 compounds_per_input_byte: #compounds_per_input_byte,
                 leaves_per_input_byte: #leaves_per_input_byte,
                 parallel_break_even_bytes: #parallel_break_even_bytes,

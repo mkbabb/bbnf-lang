@@ -1,8 +1,7 @@
-// Self-alias so generated code inside `grammar/generated.rs` can
-// reference `::bbnf::runtime::*` paths uniformly with downstream
-// consumers. Without this, the same code path resolves in
-// `bbnf-bootstrap` (external) but fails inside the `bbnf` crate
-// where the auto-generated bootstrap module lives.
+// B5.W1 — self-alias temporarily restored for the regen sweep.
+// Generated code references `::bbnf::runtime::*` paths so the post-
+// regen state can resolve those paths inside `bbnf` crate. After the
+// regen sweep emits `crate::runtime::*` paths, the alias retires.
 extern crate self as bbnf;
 
 pub mod types;

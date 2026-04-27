@@ -14,7 +14,7 @@
 //! body in `lib.rs` is monomorphised at each call site.
 
 use crate::value::{Document, NodeSpan, Number, StringSpan, Value};
-use tape::{PayloadData, Tape, FusedBuilder, TapeKind};
+use tape::{PayloadData, Tape, TapeKind};
 
 /// Visitor trait consumed by [`crate::parse_json`].
 ///
@@ -326,7 +326,7 @@ impl JsonVisitor for ValueVisitor {
 // ── TapeVisitor ─────────────────────────────────────────────────────
 
 /// Materialises JSON events into a `tape::Columns` substrate via
-/// a [`FusedBuilder`].
+/// a [`Tape`].
 ///
 /// Per AW-V.W2 B1 §6, the tape is pre-allocated at
 /// `input.len() / 2 + 2` (the AR-audit heuristic; every parse producing
@@ -349,7 +349,7 @@ impl JsonVisitor for ValueVisitor {
 ///   consumed. For honest AW-IV parity we use `Rule` as the
 ///   compound kind, matching the generated JSON parser's projection.
 pub struct TapeVisitor<'input> {
-    builder: FusedBuilder,
+    tape: Tape<()>,
     input: &'input [u8],
     /// Stack of (kind, span_lo, child_off) per in-progress compound.
     /// The `child_off` is the tape position marked at the compound's
@@ -373,21 +373,15 @@ impl<'input> TapeVisitor<'input> {
     pub fn new(input: &'input [u8]) -> Self {
         let capacity = input.len() / 2 + 2;
         Self {
-            builder: FusedBuilder::with_capacity(capacity),
+            tape: Tape::with_capacity(capacity),
             input,
             compounds: Vec::new(),
         }
     }
 
     /// Current cursor position into the input.
-    ///
-    /// Set by the parser immediately before each visitor call that
-    /// needs to stamp a span (via [`Self::stamp_span`]). The prototype
-    /// stamps spans by re-deriving from the visitor call-side info
-    /// (`&[u8]` bytes for strings, `f64` for numbers). Compound spans
-    /// are threaded through the compound frame stack.
-    pub fn finish(self) -> Result<Tape, tape::TapeBuildError> {
-        self.builder.finish()
+    pub fn finish(self) -> Result<Tape<()>, tape::TapeBuildError> {
+        self.tape.finish(0)
     }
 
     /// Byte length of the source input the visitor is parsing.
@@ -396,16 +390,10 @@ impl<'input> TapeVisitor<'input> {
         self.input.len()
     }
 
-    /// Current cursor position tracked on the parser side. The
-    /// visitor trait doesn't carry offsets; [`TapeVisitor`] accepts
-    /// the span info opportunistically via
-    /// [`TapeVisitor::with_span`] when the parser wants authoritative
-    /// spans. For the prototype's shape validation this is unused in
-    /// the default path — spans recorded in the tape are zero-width
-    /// for leaves and (0, input.len()) for the root compound.
+    /// Borrow the underlying tape mutably.
     #[inline]
-    pub fn builder_mut(&mut self) -> &mut FusedBuilder {
-        &mut self.builder
+    pub fn tape_mut(&mut self) -> &mut Tape<()> {
+        &mut self.tape
     }
 }
 
@@ -414,7 +402,7 @@ impl<'input> JsonVisitor for TapeVisitor<'input> {
 
     #[inline(always)]
     fn begin_object(&mut self) -> Result<(), Self::Error> {
-        let open_offset = self.builder.begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
+        let open_offset = self.tape.begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
         self.compounds.push(CompoundFrame {
             span_lo: 0,
             open_offset,
@@ -430,12 +418,12 @@ impl<'input> JsonVisitor for TapeVisitor<'input> {
         // apply — but the visitor trait does not distinguish. Use the
         // arena-frame path uniformly; the span is zero-width because
         // the visitor doesn't carry source offsets.
-        let arena_offset = self.builder.arena_len();
-        self.builder
+        let arena_offset = self.tape.arena_len();
+        self.tape
             .arena_mut()
             .extend_from_slice(&(bytes.len() as u32).to_le_bytes());
-        self.builder.arena_mut().extend_from_slice(bytes);
-        self.builder
+        self.tape.arena_mut().extend_from_slice(bytes);
+        self.tape
             .push_leaf_with_arena_frame(TapeKind::Span, 0, 0, 0, 0, arena_offset);
         Ok(())
     }
@@ -443,13 +431,13 @@ impl<'input> JsonVisitor for TapeVisitor<'input> {
     #[inline(always)]
     fn end_object(&mut self) -> Result<(), Self::Error> {
         let frame = self.compounds.pop().ok_or(TapeVisitorError)?;
-        self.builder.end_compound(frame.open_offset, frame.span_lo);
+        self.tape.end_compound(frame.open_offset, frame.span_lo);
         Ok(())
     }
 
     #[inline(always)]
     fn begin_array(&mut self) -> Result<(), Self::Error> {
-        let open_offset = self.builder.begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
+        let open_offset = self.tape.begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
         self.compounds.push(CompoundFrame {
             span_lo: 0,
             open_offset,
@@ -460,25 +448,25 @@ impl<'input> JsonVisitor for TapeVisitor<'input> {
     #[inline(always)]
     fn end_array(&mut self) -> Result<(), Self::Error> {
         let frame = self.compounds.pop().ok_or(TapeVisitorError)?;
-        self.builder.end_compound(frame.open_offset, frame.span_lo);
+        self.tape.end_compound(frame.open_offset, frame.span_lo);
         Ok(())
     }
 
     #[inline(always)]
     fn string(&mut self, bytes: &[u8]) -> Result<(), Self::Error> {
-        let arena_offset = self.builder.arena_len();
-        self.builder
+        let arena_offset = self.tape.arena_len();
+        self.tape
             .arena_mut()
             .extend_from_slice(&(bytes.len() as u32).to_le_bytes());
-        self.builder.arena_mut().extend_from_slice(bytes);
-        self.builder
+        self.tape.arena_mut().extend_from_slice(bytes);
+        self.tape
             .push_leaf_with_arena_frame(TapeKind::Span, 0, 0, 0, 0, arena_offset);
         Ok(())
     }
 
     #[inline(always)]
     fn number_f64(&mut self, value: f64) -> Result<(), Self::Error> {
-        self.builder.push_leaf_with(
+        self.tape.push_leaf_with(
             TapeKind::Regex,
             0,
             0,
@@ -491,7 +479,7 @@ impl<'input> JsonVisitor for TapeVisitor<'input> {
 
     #[inline(always)]
     fn bool(&mut self, value: bool) -> Result<(), Self::Error> {
-        self.builder.push_leaf_with(
+        self.tape.push_leaf_with(
             TapeKind::Literal,
             0,
             0,
@@ -504,7 +492,7 @@ impl<'input> JsonVisitor for TapeVisitor<'input> {
 
     #[inline(always)]
     fn null(&mut self) -> Result<(), Self::Error> {
-        self.builder.push_leaf_with(
+        self.tape.push_leaf_with(
             TapeKind::Literal,
             0,
             0,

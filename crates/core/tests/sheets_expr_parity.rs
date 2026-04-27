@@ -439,8 +439,8 @@ fn oracle(input: &str) -> RefExpr {
 // input exactly, which we verify by running the oracle over the
 // span text.
 
-fn tape_to_expr<'p>(
-    tape: &'p bbnf::runtime::tape::Tape,
+fn tape_to_expr<'p, R>(
+    tape: &'p bbnf::runtime::tape::Tape<R>,
     input: &'p str,
     root: TapeOffset,
 ) -> RefExpr {
@@ -581,7 +581,10 @@ fn sheets_tape_root_covers_formula() {
 fn sheets_view_children_non_empty_for_non_trivial_formula() {
     let input = "=1+2";
     let parsed = GoogleSheetsParser::parse(input).expect("parse");
-    let node = GoogleSheetsParserNodeView::new(parsed.tape(), input, parsed.root_offset());
+    let tape_unit: &bbnf::runtime::tape::Tape<()> = unsafe {
+        &*(parsed.tape() as *const _ as *const bbnf::runtime::tape::Tape<()>)
+    };
+    let node = GoogleSheetsParserNodeView::new(tape_unit, input, parsed.root_offset());
     let child_count = node.children().count();
     assert!(child_count >= 1, "root has children");
 }

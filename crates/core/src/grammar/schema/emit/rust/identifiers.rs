@@ -81,7 +81,7 @@ fn emit_find_helpers(identifier_variant_idx: u8) -> TokenStream {
         /// when no identifier is reachable.
         #[inline]
         pub(crate) fn cst_identifier_text<'p>(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> &'p str {
             match cst_find_identifier_cursor(cursor, #idx_lit) {
@@ -98,7 +98,7 @@ fn emit_find_helpers(identifier_variant_idx: u8) -> TokenStream {
         /// Returns `(0, 0)` when no identifier is reachable.
         #[inline]
         pub(crate) fn cst_identifier_span<'p>(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             _input: &'p str,
         ) -> (u32, u32) {
             cst_find_identifier_cursor(cursor, #idx_lit)
@@ -111,9 +111,9 @@ fn emit_find_helpers(identifier_variant_idx: u8) -> TokenStream {
         /// `start` whose `variant_idx` matches `target_idx`.
         #[inline]
         fn cst_find_identifier_cursor<'p>(
-            start: ::bbnf::runtime::tape::TapeCursor<'p>,
+            start: crate::runtime::tape::TapeCursor<'p>,
             target_idx: u8,
-        ) -> ::core::option::Option<::bbnf::runtime::tape::TapeCursor<'p>> {
+        ) -> ::core::option::Option<crate::runtime::tape::TapeCursor<'p>> {
             if start.variant_idx() == target_idx {
                 return ::core::option::Option::Some(start);
             }
@@ -137,7 +137,7 @@ fn emit_stub_helpers() -> TokenStream {
     quote! {
         #[inline]
         pub(crate) fn cst_identifier_text<'p>(
-            _cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            _cursor: crate::runtime::tape::TapeCursor<'p>,
             _input: &'p str,
         ) -> &'p str {
             ""
@@ -145,7 +145,7 @@ fn emit_stub_helpers() -> TokenStream {
 
         #[inline]
         pub(crate) fn cst_identifier_span<'p>(
-            _cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            _cursor: crate::runtime::tape::TapeCursor<'p>,
             _input: &'p str,
         ) -> (u32, u32) {
             (0, 0)

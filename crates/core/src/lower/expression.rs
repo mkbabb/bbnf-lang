@@ -110,7 +110,7 @@ fn dispatch_expression<'a>(
     //
     // After AE.4's clean regen these wrappers will have proper
     // enum entries and the peel becomes mostly unreachable.
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     let kind = node.rule_kind();
     let is_unknown_or_sentinel = matches!(
         kind,
@@ -334,7 +334,7 @@ fn lower_concatenation<'a>(
 fn iter_iteration_pairs<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> impl Iterator<Item = BbnfBootstrapNodeView<'a>> + 'a {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     iter_rep_children(node).filter_map(|pair| {
         // Peel an explicit Seq wrapper around `(content, optional_sep)` —
         // the legacy shape before structural-mode emission flattened it.
@@ -546,7 +546,7 @@ fn recognize_binary_operator<'a>(
 fn collect_binary_operands<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> Vec<BbnfBootstrapNodeView<'a>> {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
 
     // Pratt-shape branch: detect a reducer-chain outer and walk it
     // into the flat `[operand, op_leaf, operand, op_leaf, …]`
@@ -745,7 +745,7 @@ fn collect_pratt_reducer_chain<'a>(
 /// middle-child position carries an op-leaf before treating the
 /// surrounding wrapper as a virtual tail reducer.
 fn op_leaf_has_pratt_shape<'a>(view: BbnfBootstrapNodeView<'a>) -> bool {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     if view.kind() != TapeKind::Span {
         return false;
     }
@@ -766,7 +766,7 @@ fn op_leaf_has_pratt_shape<'a>(view: BbnfBootstrapNodeView<'a>) -> bool {
 /// variant_idx == 0 + span text in the fixed alphabet remains the
 /// authoritative discriminator).
 fn is_pratt_reducer<'a>(view: BbnfBootstrapNodeView<'a>) -> bool {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     if view.kind() != TapeKind::Rule {
         return false;
     }
@@ -820,7 +820,7 @@ fn is_pratt_reducer<'a>(view: BbnfBootstrapNodeView<'a>) -> bool {
 /// Returns `false` when no such op-leaf child exists — the caller
 /// falls through to the standard wrapper-substantive branch.
 fn looks_like_pratt_flat<'a>(view: BbnfBootstrapNodeView<'a>) -> bool {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     for child in view.children() {
         if child.kind() == TapeKind::Span
             && child.variant_idx() == 0
@@ -839,7 +839,7 @@ fn looks_like_pratt_flat<'a>(view: BbnfBootstrapNodeView<'a>) -> bool {
 /// pair emitted by the walker for each iteration of the
 /// `( binary_operators ?w , mapped_factor ) *` body.
 fn is_iteration_pair_wrapper<'a>(view: BbnfBootstrapNodeView<'a>) -> bool {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     if view.rule_kind() == BbnfBootstrapRuleKind::mapped_factor
         || view.rule_kind() == BbnfBootstrapRuleKind::binary_operators
     {
@@ -859,7 +859,7 @@ fn is_iteration_pair_wrapper<'a>(view: BbnfBootstrapNodeView<'a>) -> bool {
 fn iter_pair_children<'a>(
     view: BbnfBootstrapNodeView<'a>,
 ) -> Vec<BbnfBootstrapNodeView<'a>> {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     let mut out: Vec<BbnfBootstrapNodeView<'a>> = Vec::new();
     for child in view.children() {
         let span = child.span_text();
@@ -1129,7 +1129,7 @@ fn find_type_annotation_child<'a>(
 fn peel_mapped_factor_body<'a>(
     mut view: BbnfBootstrapNodeView<'a>,
 ) -> BbnfBootstrapNodeView<'a> {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     loop {
         let children: Vec<BbnfBootstrapNodeView<'a>> = view.children().collect();
         if children.len() != 1 {
@@ -1487,7 +1487,7 @@ fn lower_leaf_by_span_text<'a>(
     node: BbnfBootstrapNodeView<'a>,
     ctx: &mut LowerCtx<'a>,
 ) -> Option<IrNode> {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     // Classify by the node's span text regardless of kind — under
     // DTA a `/regex/` or `"string"` leaf may be wrapped in a Seq/Alt
     // compound whose span still encodes the full token. The

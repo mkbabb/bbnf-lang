@@ -196,7 +196,7 @@ fn extract_alias_target<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<&'a str> 
         // re-dispatch. When no Rule child exists but the span text
         // is a bare identifier, treat it as a direct reference.
         BbnfBootstrapRuleKind::int_lit | BbnfBootstrapRuleKind::Unknown => {
-            use ::bbnf::runtime::tape::TapeKind;
+            use crate::runtime::tape::TapeKind;
             let substantive: Vec<BbnfBootstrapNodeView<'a>> = node
                 .children()
                 .filter(|c| c.kind() == TapeKind::Rule)

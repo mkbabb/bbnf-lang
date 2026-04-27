@@ -198,7 +198,7 @@ fn generate_helper(
         /// assigned discriminator; `None` otherwise.
         #[inline]
         pub fn #try_ident<'p>(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> ::core::option::Option<#struct_ident<'p>> {
             if cursor.variant_idx() != #idx_lit {

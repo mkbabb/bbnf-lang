@@ -47,7 +47,7 @@ mod __googlesheetsparser_emit_impl {
     /// profile emitted by Tranche AV Phase 1. Every downstream
     /// consumer (tape capacity, scanner dispatch) reads the
     /// matching field.
-    pub const GRAMMAR_PROFILE: ::bbnf::runtime::tape::GrammarProfile = ::bbnf::runtime::tape::GrammarProfile {
+    pub const GRAMMAR_PROFILE: crate::runtime::tape::GrammarProfile = crate::runtime::tape::GrammarProfile {
         compounds_per_input_byte: 1f32,
         leaves_per_input_byte: 0f32,
         parallel_break_even_bytes: 1048576u32,
@@ -140,53 +140,53 @@ mod __googlesheetsparser_emit_impl {
     /// Consulted by the rule's emitted `parse_pratt_*`
     /// body when the LUT byte's bit-7 two-byte flag is
     /// set, to resolve the second byte + discriminant.
-    pub const PRECEDENCE_ENTRIES_concat_expr: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+    pub const PRECEDENCE_ENTRIES_concat_expr: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 38u8,
             second_byte: ::core::option::Option::None,
             precedence: 4u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(12u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(12u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 43u8,
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(13u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(13u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 45u8,
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(13u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(13u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 42u8,
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(15u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(15u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 47u8,
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(15u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(15u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 94u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Right,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(17u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Right,
+            op_rule: crate::runtime::tape::DtaRuleId(17u32),
             op_discriminant: 0u8,
         },
     ];
@@ -220,53 +220,53 @@ mod __googlesheetsparser_emit_impl {
     /// Consulted by the rule's emitted `parse_pratt_*`
     /// body when the LUT byte's bit-7 two-byte flag is
     /// set, to resolve the second byte + discriminant.
-    pub const PRECEDENCE_ENTRIES_add_expr: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+    pub const PRECEDENCE_ENTRIES_add_expr: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 38u8,
             second_byte: ::core::option::Option::None,
             precedence: 4u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(12u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(12u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 43u8,
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(13u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(13u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 45u8,
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(13u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(13u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 42u8,
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(15u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(15u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 47u8,
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(15u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(15u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 94u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Right,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(17u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Right,
+            op_rule: crate::runtime::tape::DtaRuleId(17u32),
             op_discriminant: 0u8,
         },
     ];
@@ -300,53 +300,53 @@ mod __googlesheetsparser_emit_impl {
     /// Consulted by the rule's emitted `parse_pratt_*`
     /// body when the LUT byte's bit-7 two-byte flag is
     /// set, to resolve the second byte + discriminant.
-    pub const PRECEDENCE_ENTRIES_mul_expr: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+    pub const PRECEDENCE_ENTRIES_mul_expr: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 38u8,
             second_byte: ::core::option::Option::None,
             precedence: 4u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(12u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(12u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 43u8,
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(13u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(13u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 45u8,
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(13u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(13u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 42u8,
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(15u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(15u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 47u8,
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(15u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(15u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 94u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Right,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(17u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Right,
+            op_rule: crate::runtime::tape::DtaRuleId(17u32),
             op_discriminant: 0u8,
         },
     ];
@@ -380,53 +380,53 @@ mod __googlesheetsparser_emit_impl {
     /// Consulted by the rule's emitted `parse_pratt_*`
     /// body when the LUT byte's bit-7 two-byte flag is
     /// set, to resolve the second byte + discriminant.
-    pub const PRECEDENCE_ENTRIES_exp_expr: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+    pub const PRECEDENCE_ENTRIES_exp_expr: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 38u8,
             second_byte: ::core::option::Option::None,
             precedence: 4u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(12u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(12u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 43u8,
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(13u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(13u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 45u8,
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(13u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(13u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 42u8,
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(15u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(15u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 47u8,
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(15u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(15u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 94u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Right,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(17u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Right,
+            op_rule: crate::runtime::tape::DtaRuleId(17u32),
             op_discriminant: 0u8,
         },
     ];
@@ -461,53 +461,53 @@ mod __googlesheetsparser_emit_impl {
     /// Consulted by the rule's emitted `parse_pratt_*`
     /// body when the LUT byte's bit-7 two-byte flag is
     /// set, to resolve the second byte + discriminant.
-    pub const PRECEDENCE_ENTRIES_comparison_expr: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+    pub const PRECEDENCE_ENTRIES_comparison_expr: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 60u8,
             second_byte: ::core::option::Option::Some(62u8),
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 60u8,
             second_byte: ::core::option::Option::Some(61u8),
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 62u8,
             second_byte: ::core::option::Option::Some(61u8),
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 2u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 60u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 3u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 62u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 4u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 61u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 5u8,
         },
     ];
@@ -541,13 +541,13 @@ mod __googlesheetsparser_emit_impl {
     /// Consulted by the rule's emitted `parse_pratt_*`
     /// body when the LUT byte's bit-7 two-byte flag is
     /// set, to resolve the second byte + discriminant.
-    pub const PRECEDENCE_ENTRIES_array_row: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+    pub const PRECEDENCE_ENTRIES_array_row: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 44u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(32u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(32u32),
             op_discriminant: 0u8,
         },
     ];
@@ -581,13 +581,13 @@ mod __googlesheetsparser_emit_impl {
     /// Consulted by the rule's emitted `parse_pratt_*`
     /// body when the LUT byte's bit-7 two-byte flag is
     /// set, to resolve the second byte + discriminant.
-    pub const PRECEDENCE_ENTRIES_array_rows: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+    pub const PRECEDENCE_ENTRIES_array_rows: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 59u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(33u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(33u32),
             op_discriminant: 0u8,
         },
     ];
@@ -620,261 +620,261 @@ mod __googlesheetsparser_emit_impl {
     ///
     /// Flat union of every rule's mined operator entries.
     /// Consulted by the walker cold-path until W0b retires it.
-    pub const PRECEDENCE_ENTRIES: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+    pub const PRECEDENCE_ENTRIES: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 38u8,
             second_byte: ::core::option::Option::None,
             precedence: 4u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(12u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(12u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 43u8,
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(13u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(13u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 45u8,
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(13u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(13u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 42u8,
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(15u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(15u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 47u8,
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(15u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(15u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 94u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Right,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(17u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Right,
+            op_rule: crate::runtime::tape::DtaRuleId(17u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 38u8,
             second_byte: ::core::option::Option::None,
             precedence: 4u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(12u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(12u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 43u8,
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(13u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(13u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 45u8,
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(13u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(13u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 42u8,
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(15u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(15u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 47u8,
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(15u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(15u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 94u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Right,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(17u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Right,
+            op_rule: crate::runtime::tape::DtaRuleId(17u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 38u8,
             second_byte: ::core::option::Option::None,
             precedence: 4u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(12u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(12u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 43u8,
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(13u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(13u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 45u8,
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(13u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(13u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 42u8,
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(15u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(15u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 47u8,
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(15u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(15u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 94u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Right,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(17u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Right,
+            op_rule: crate::runtime::tape::DtaRuleId(17u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 38u8,
             second_byte: ::core::option::Option::None,
             precedence: 4u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(12u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(12u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 43u8,
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(13u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(13u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 45u8,
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(13u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(13u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 42u8,
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(15u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(15u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 47u8,
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(15u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(15u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 94u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Right,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(17u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Right,
+            op_rule: crate::runtime::tape::DtaRuleId(17u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 60u8,
             second_byte: ::core::option::Option::Some(62u8),
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 60u8,
             second_byte: ::core::option::Option::Some(61u8),
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 1u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 62u8,
             second_byte: ::core::option::Option::Some(61u8),
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 2u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 60u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 3u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 62u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 4u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 61u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(10u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 5u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 44u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(32u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(32u32),
             op_discriminant: 0u8,
         },
-        ::bbnf::runtime::tape::DtaPrecedenceEntry {
+        crate::runtime::tape::DtaPrecedenceEntry {
             byte: 59u8,
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
-            associativity: ::bbnf::runtime::tape::DtaAssociativity::Left,
-            op_rule: ::bbnf::runtime::tape::DtaRuleId(33u32),
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(33u32),
             op_discriminant: 0u8,
         },
     ];
@@ -2244,11 +2244,11 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         open: usize,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
         variant_idx: u8,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let arena = builder.arena_mut();
         let frame_offset = arena.len() as u32;
@@ -2272,7 +2272,7 @@ mod __googlesheetsparser_emit_impl {
                 let hi = *p as u32;
                 let leaf = builder
                     .push_leaf_with_arena_frame(
-                        ::bbnf::runtime::tape::TapeKind::Span,
+                        crate::runtime::tape::TapeKind::Span,
                         lo,
                         hi,
                         variant_idx,
@@ -2289,7 +2289,7 @@ mod __googlesheetsparser_emit_impl {
                 *p = end_pos;
                 let leaf = builder
                     .push_leaf_borrowed_string(
-                        ::bbnf::runtime::tape::TapeKind::Span,
+                        crate::runtime::tape::TapeKind::Span,
                         open as u32,
                         *p as u32,
                         variant_idx,
@@ -2300,10 +2300,10 @@ mod __googlesheetsparser_emit_impl {
             None => {
                 let arena_final = builder.arena_mut();
                 arena_final.truncate(frame_offset as usize);
-                Err(::bbnf::runtime::tape::DtaError::Syntax {
+                Err(crate::runtime::tape::DtaError::Syntax {
                     offset: open as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 })
             }
         }
@@ -2324,9 +2324,9 @@ mod __googlesheetsparser_emit_impl {
         visitor: &mut V,
         is_key: bool,
         open: usize,
-    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
     where
-        V: ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::ObjectVisitor,
+        V: crate::runtime::tape::StringVisitor + crate::runtime::tape::ObjectVisitor,
     {
         let mut buf: Vec<u8> = Vec::with_capacity(
             input.len().saturating_sub(body_start),
@@ -2344,7 +2344,7 @@ mod __googlesheetsparser_emit_impl {
                     visitor
                         .key(&buf)
                         .map_err(|_| {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                            crate::runtime::ParseErr::Syntax {
                                 offset: open as u32,
                                 rule: None,
                             }
@@ -2353,7 +2353,7 @@ mod __googlesheetsparser_emit_impl {
                     visitor
                         .string(&buf)
                         .map_err(|_| {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                            crate::runtime::ParseErr::Syntax {
                                 offset: open as u32,
                                 rule: None,
                             }
@@ -2372,7 +2372,7 @@ mod __googlesheetsparser_emit_impl {
                     visitor
                         .key(body)
                         .map_err(|_| {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                            crate::runtime::ParseErr::Syntax {
                                 offset: open as u32,
                                 rule: None,
                             }
@@ -2381,7 +2381,7 @@ mod __googlesheetsparser_emit_impl {
                     visitor
                         .string(body)
                         .map_err(|_| {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                            crate::runtime::ParseErr::Syntax {
                                 offset: open as u32,
                                 rule: None,
                             }
@@ -2389,7 +2389,7 @@ mod __googlesheetsparser_emit_impl {
                 }
             }
             None => {
-                Err(::bbnf::runtime::ParseErr::Syntax {
+                Err(crate::runtime::ParseErr::Syntax {
                     offset: open as u32,
                     rule: None,
                 })
@@ -2427,7 +2427,7 @@ mod __googlesheetsparser_emit_impl {
             /// at parse-entry (AY.W1-fix demonstrated eager scans
             /// regress JSON twitter -64%).
             pub(crate) structural_index: ::core::cell::OnceCell<
-                ::bbnf::runtime::tape::StructuralIndex,
+                crate::runtime::tape::StructuralIndex,
             >,
         }
         impl ScanState {
@@ -2447,11 +2447,11 @@ mod __googlesheetsparser_emit_impl {
         pub(crate) fn ensure_structural_index<'a>(
             state: &'a mut ScanState,
             input: &[u8],
-        ) -> &'a ::bbnf::runtime::tape::StructuralIndex {
+        ) -> &'a crate::runtime::tape::StructuralIndex {
             state
                 .structural_index
                 .get_or_init(|| {
-                    ::bbnf::runtime::tape::scan_structural(
+                    crate::runtime::tape::scan_structural(
                         input,
                         super::GRAMMAR_PROFILE.structural_alphabet,
                     )
@@ -2484,7 +2484,7 @@ mod __googlesheetsparser_emit_impl {
             state: &mut ScanState,
         ) {
             let __ctns_idx = ensure_structural_index(state, input);
-            if let ::core::option::Option::Some(__next_struct) = ::bbnf::runtime::tape::next_structural_at_or_after(
+            if let ::core::option::Option::Some(__next_struct) = crate::runtime::tape::next_structural_at_or_after(
                 __ctns_idx,
                 *p as u32,
             ) {
@@ -2778,10 +2778,10 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         {
             let span_lo = *p as u32;
@@ -2790,10 +2790,10 @@ mod __googlesheetsparser_emit_impl {
                 input,
                 *p,
             ) else {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: span_lo,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             };
             *p += match_len as usize;
@@ -2808,7 +2808,7 @@ mod __googlesheetsparser_emit_impl {
             builder.arena_mut().extend_from_slice(&__f64.to_le_bytes());
             let leaf_off = builder
                 .push_leaf_with_arena_payload(
-                    ::bbnf::runtime::tape::TapeKind::Span,
+                    crate::runtime::tape::TapeKind::Span,
                     span_lo,
                     span_hi,
                     0u8,
@@ -2831,24 +2831,24 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         _state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let open = *p;
         if input.get(open).copied() != Some(b'"') {
-            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: open as u32,
-                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         let body_start = open + 1;
         let tail = match input.get(body_start..) {
             Some(t) => t,
             None => {
-                return Err(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                return Err(crate::runtime::tape::DtaError::UnexpectedEnd {
                     offset: open as u32,
                 });
             }
@@ -2861,7 +2861,7 @@ mod __googlesheetsparser_emit_impl {
                 let hi = *p as u32;
                 let leaf = builder
                     .push_leaf_borrowed_string(
-                        ::bbnf::runtime::tape::TapeKind::Span,
+                        crate::runtime::tape::TapeKind::Span,
                         lo,
                         hi,
                         1u8,
@@ -2872,7 +2872,7 @@ mod __googlesheetsparser_emit_impl {
             Some((_off, b'\\')) => parse_string_escaped(input, p, open, builder, 1u8),
             Some(_) => unreachable!(),
             None => {
-                Err(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                Err(crate::runtime::tape::DtaError::UnexpectedEnd {
                     offset: open as u32,
                 })
             }
@@ -2894,14 +2894,14 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let mut __wrap_chosen_meta: u8 = 0;
         let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
-            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
         'try_branches: loop {
@@ -2910,7 +2910,7 @@ mod __googlesheetsparser_emit_impl {
             }
             {
                 let attempt_p = *p;
-                let attempt_len = builder.columns_mut().len() as u32;
+                let attempt_len = builder.position();
                 match {
                     let span_lo = *p as u32;
                     match __regex_scan_GoogleSheetsParser(
@@ -2924,7 +2924,7 @@ mod __googlesheetsparser_emit_impl {
                             builder.arena_mut().push((1u32) as u8);
                             let _ = builder
                                 .push_leaf_with_arena_payload(
-                                    ::bbnf::runtime::tape::TapeKind::Span,
+                                    crate::runtime::tape::TapeKind::Span,
                                     span_lo,
                                     *p as u32,
                                     2u8,
@@ -2933,15 +2933,15 @@ mod __googlesheetsparser_emit_impl {
                                     1u32,
                                 );
                             ::core::result::Result::<
-                                ::bbnf::runtime::tape::TapeOffset,
-                                ::bbnf::runtime::tape::DtaError,
-                            >::Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+                                crate::runtime::tape::TapeOffset,
+                                crate::runtime::tape::DtaError,
+                            >::Ok(crate::runtime::tape::TapeOffset::NONE)
                         }
                         ::core::option::Option::None => {
-                            ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: span_lo,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             })
                         }
                     }
@@ -2958,7 +2958,7 @@ mod __googlesheetsparser_emit_impl {
             }
             {
                 let attempt_p = *p;
-                let attempt_len = builder.columns_mut().len() as u32;
+                let attempt_len = builder.position();
                 match {
                     let span_lo = *p as u32;
                     match __regex_scan_GoogleSheetsParser(
@@ -2972,7 +2972,7 @@ mod __googlesheetsparser_emit_impl {
                             builder.arena_mut().push((0u32) as u8);
                             let _ = builder
                                 .push_leaf_with_arena_payload(
-                                    ::bbnf::runtime::tape::TapeKind::Span,
+                                    crate::runtime::tape::TapeKind::Span,
                                     span_lo,
                                     *p as u32,
                                     2u8,
@@ -2981,15 +2981,15 @@ mod __googlesheetsparser_emit_impl {
                                     1u32,
                                 );
                             ::core::result::Result::<
-                                ::bbnf::runtime::tape::TapeOffset,
-                                ::bbnf::runtime::tape::DtaError,
-                            >::Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+                                crate::runtime::tape::TapeOffset,
+                                crate::runtime::tape::DtaError,
+                            >::Ok(crate::runtime::tape::TapeOffset::NONE)
                         }
                         ::core::option::Option::None => {
-                            ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: span_lo,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             })
                         }
                     }
@@ -3004,14 +3004,14 @@ mod __googlesheetsparser_emit_impl {
                     }
                 }
             }
-            return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         let _ = __wrap_chosen_meta;
-        Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+        Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -3036,32 +3036,32 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [35u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     3u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
         }
         {
@@ -3071,11 +3071,11 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     )
-                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                    .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                         offset: *p as u32,
                     })?;
                 let alt_lo = *p as u32;
-                let alt_child = builder.columns_mut().len() as u32;
+                let alt_child = builder.position();
                 'try_branches: loop {
                     match first {
                         68u8 => {
@@ -3090,7 +3090,7 @@ mod __googlesheetsparser_emit_impl {
                                 builder.arena_mut().push((3u32) as u8);
                                 let _ = builder
                                     .push_leaf_with_arena_payload(
-                                        ::bbnf::runtime::tape::TapeKind::Span,
+                                        crate::runtime::tape::TapeKind::Span,
                                         at as u32,
                                         end as u32,
                                         0u8,
@@ -3113,7 +3113,7 @@ mod __googlesheetsparser_emit_impl {
                                 builder.arena_mut().push((7u32) as u8);
                                 let _ = builder
                                     .push_leaf_with_arena_payload(
-                                        ::bbnf::runtime::tape::TapeKind::Span,
+                                        crate::runtime::tape::TapeKind::Span,
                                         at as u32,
                                         end as u32,
                                         0u8,
@@ -3135,7 +3135,7 @@ mod __googlesheetsparser_emit_impl {
                                 builder.arena_mut().push((4u32) as u8);
                                 let _ = builder
                                     .push_leaf_with_arena_payload(
-                                        ::bbnf::runtime::tape::TapeKind::Span,
+                                        crate::runtime::tape::TapeKind::Span,
                                         at as u32,
                                         end as u32,
                                         0u8,
@@ -3155,7 +3155,7 @@ mod __googlesheetsparser_emit_impl {
                                 builder.arena_mut().push((5u32) as u8);
                                 let _ = builder
                                     .push_leaf_with_arena_payload(
-                                        ::bbnf::runtime::tape::TapeKind::Span,
+                                        crate::runtime::tape::TapeKind::Span,
                                         at as u32,
                                         end as u32,
                                         0u8,
@@ -3175,7 +3175,7 @@ mod __googlesheetsparser_emit_impl {
                                 builder.arena_mut().push((6u32) as u8);
                                 let _ = builder
                                     .push_leaf_with_arena_payload(
-                                        ::bbnf::runtime::tape::TapeKind::Span,
+                                        crate::runtime::tape::TapeKind::Span,
                                         at as u32,
                                         end as u32,
                                         0u8,
@@ -3195,7 +3195,7 @@ mod __googlesheetsparser_emit_impl {
                                 builder.arena_mut().push((0u32) as u8);
                                 let _ = builder
                                     .push_leaf_with_arena_payload(
-                                        ::bbnf::runtime::tape::TapeKind::Span,
+                                        crate::runtime::tape::TapeKind::Span,
                                         at as u32,
                                         end as u32,
                                         0u8,
@@ -3217,7 +3217,7 @@ mod __googlesheetsparser_emit_impl {
                                 builder.arena_mut().push((2u32) as u8);
                                 let _ = builder
                                     .push_leaf_with_arena_payload(
-                                        ::bbnf::runtime::tape::TapeKind::Span,
+                                        crate::runtime::tape::TapeKind::Span,
                                         at as u32,
                                         end as u32,
                                         0u8,
@@ -3240,7 +3240,7 @@ mod __googlesheetsparser_emit_impl {
                                 builder.arena_mut().push((8u32) as u8);
                                 let _ = builder
                                     .push_leaf_with_arena_payload(
-                                        ::bbnf::runtime::tape::TapeKind::Span,
+                                        crate::runtime::tape::TapeKind::Span,
                                         at as u32,
                                         end as u32,
                                         0u8,
@@ -3263,7 +3263,7 @@ mod __googlesheetsparser_emit_impl {
                                 builder.arena_mut().push((1u32) as u8);
                                 let _ = builder
                                     .push_leaf_with_arena_payload(
-                                        ::bbnf::runtime::tape::TapeKind::Span,
+                                        crate::runtime::tape::TapeKind::Span,
                                         at as u32,
                                         end as u32,
                                         0u8,
@@ -3276,16 +3276,16 @@ mod __googlesheetsparser_emit_impl {
                         }
                         _ => {}
                     }
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 let alt_hi = *p as u32;
                 let __alt_off = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Alt,
+                        crate::runtime::tape::TapeKind::Alt,
                         alt_lo,
                         0u8,
                         0u8,
@@ -3296,14 +3296,14 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         __alt_off,
                         alt_hi,
-                        ::bbnf::runtime::tape::TapeOffset(alt_child),
+                        crate::runtime::tape::TapeOffset(alt_child),
                     );
             }
         }
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 3u8,
                 0u8,
@@ -3314,9 +3314,9 @@ mod __googlesheetsparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar Wrap-shape parse function.
     ///
@@ -3334,14 +3334,14 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let mut __wrap_chosen_meta: u8 = 0;
         let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
-            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
         'try_branches: loop {
@@ -3350,7 +3350,7 @@ mod __googlesheetsparser_emit_impl {
             }
             {
                 let attempt_p = *p;
-                let attempt_len = builder.columns_mut().len() as u32;
+                let attempt_len = builder.position();
                 match {
                     let span_lo = *p as u32;
                     match __regex_scan_GoogleSheetsParser("'(?:[^']|'')*'!", input, *p) {
@@ -3360,7 +3360,7 @@ mod __googlesheetsparser_emit_impl {
                             builder.arena_mut().push((0u32) as u8);
                             let _ = builder
                                 .push_leaf_with_arena_payload(
-                                    ::bbnf::runtime::tape::TapeKind::KvPair,
+                                    crate::runtime::tape::TapeKind::KvPair,
                                     span_lo,
                                     *p as u32,
                                     4u8,
@@ -3369,15 +3369,15 @@ mod __googlesheetsparser_emit_impl {
                                     1u32,
                                 );
                             ::core::result::Result::<
-                                ::bbnf::runtime::tape::TapeOffset,
-                                ::bbnf::runtime::tape::DtaError,
-                            >::Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+                                crate::runtime::tape::TapeOffset,
+                                crate::runtime::tape::DtaError,
+                            >::Ok(crate::runtime::tape::TapeOffset::NONE)
                         }
                         ::core::option::Option::None => {
-                            ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: span_lo,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             })
                         }
                     }
@@ -3394,7 +3394,7 @@ mod __googlesheetsparser_emit_impl {
             }
             {
                 let attempt_p = *p;
-                let attempt_len = builder.columns_mut().len() as u32;
+                let attempt_len = builder.position();
                 match {
                     let span_lo = *p as u32;
                     match __regex_scan_GoogleSheetsParser("[A-Za-z_]\\w*!", input, *p) {
@@ -3404,7 +3404,7 @@ mod __googlesheetsparser_emit_impl {
                             builder.arena_mut().push((1u32) as u8);
                             let _ = builder
                                 .push_leaf_with_arena_payload(
-                                    ::bbnf::runtime::tape::TapeKind::KvPair,
+                                    crate::runtime::tape::TapeKind::KvPair,
                                     span_lo,
                                     *p as u32,
                                     4u8,
@@ -3413,15 +3413,15 @@ mod __googlesheetsparser_emit_impl {
                                     1u32,
                                 );
                             ::core::result::Result::<
-                                ::bbnf::runtime::tape::TapeOffset,
-                                ::bbnf::runtime::tape::DtaError,
-                            >::Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+                                crate::runtime::tape::TapeOffset,
+                                crate::runtime::tape::DtaError,
+                            >::Ok(crate::runtime::tape::TapeOffset::NONE)
                         }
                         ::core::option::Option::None => {
-                            ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: span_lo,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             })
                         }
                     }
@@ -3436,14 +3436,14 @@ mod __googlesheetsparser_emit_impl {
                     }
                 }
             }
-            return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         let _ = __wrap_chosen_meta;
-        Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+        Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AW-V.W4-fix — per-grammar HRegex-shape parse function.
     ///
@@ -3457,10 +3457,10 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_GoogleSheetsParser(
@@ -3468,22 +3468,22 @@ mod __googlesheetsparser_emit_impl {
             input,
             *p,
         ) else {
-            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: span_lo,
-                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         };
         *p += match_len as usize;
         let span_hi = *p as u32;
         let leaf_off = builder
             .push_leaf_with(
-                ::bbnf::runtime::tape::TapeKind::Regex,
+                crate::runtime::tape::TapeKind::Regex,
                 span_lo,
                 span_hi,
                 5u8,
                 0,
-                ::bbnf::runtime::tape::PayloadData::None,
+                crate::runtime::tape::PayloadData::None,
             );
         Ok(leaf_off)
     }
@@ -3510,23 +3510,23 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.columns_mut().len() as u32;
+            let repeat_child = builder.position();
             let iter_save_p = *p;
-            let iter_save_cols = builder.columns_mut().len() as u32;
+            let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.columns_mut().len() as u32;
+            let iter_child = builder.position();
             let opt_attempt: ::core::result::Result<
                 (),
-                ::bbnf::runtime::tape::DtaError,
+                crate::runtime::tape::DtaError,
             > = (|| {
                 let _ = ({
                     let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -3546,7 +3546,7 @@ mod __googlesheetsparser_emit_impl {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
                         0u8,
@@ -3557,13 +3557,13 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         __iter_off,
                         iter_hi,
-                        ::bbnf::runtime::tape::TapeOffset(iter_child),
+                        crate::runtime::tape::TapeOffset(iter_child),
                     );
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
                 .begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                    crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
                     0u8,
@@ -3574,7 +3574,7 @@ mod __googlesheetsparser_emit_impl {
                 .end_compound_post_order(
                     __repeat_off,
                     repeat_hi,
-                    ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                    crate::runtime::tape::TapeOffset(repeat_child),
                 );
         }
         {
@@ -3586,7 +3586,7 @@ mod __googlesheetsparser_emit_impl {
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 6u8,
                 0u8,
@@ -3597,9 +3597,9 @@ mod __googlesheetsparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -3624,23 +3624,23 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.columns_mut().len() as u32;
+            let repeat_child = builder.position();
             let iter_save_p = *p;
-            let iter_save_cols = builder.columns_mut().len() as u32;
+            let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.columns_mut().len() as u32;
+            let iter_child = builder.position();
             let opt_attempt: ::core::result::Result<
                 (),
-                ::bbnf::runtime::tape::DtaError,
+                crate::runtime::tape::DtaError,
             > = (|| {
                 let _ = ({
                     let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -3660,7 +3660,7 @@ mod __googlesheetsparser_emit_impl {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
                         0u8,
@@ -3671,13 +3671,13 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         __iter_off,
                         iter_hi,
-                        ::bbnf::runtime::tape::TapeOffset(iter_child),
+                        crate::runtime::tape::TapeOffset(iter_child),
                     );
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
                 .begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                    crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
                     0u8,
@@ -3688,7 +3688,7 @@ mod __googlesheetsparser_emit_impl {
                 .end_compound_post_order(
                     __repeat_off,
                     repeat_hi,
-                    ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                    crate::runtime::tape::TapeOffset(repeat_child),
                 );
         }
         {
@@ -3698,18 +3698,18 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     )
-                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                    .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                         offset: *p as u32,
                     })?;
                 let alt_lo = *p as u32;
-                let alt_child = builder.columns_mut().len() as u32;
+                let alt_child = builder.position();
                 'try_branches: loop {
                     match first {
                         _ => {}
                     }
                     {
                         let attempt_p = *p;
-                        let attempt_len = builder.columns_mut().len() as u32;
+                        let attempt_len = builder.position();
                         match {
                             let _ = __shape_support_GoogleSheetsParser::skip_space(
                                 input,
@@ -3740,7 +3740,7 @@ mod __googlesheetsparser_emit_impl {
                             *p += match_len as usize;
                             let _ = builder
                                 .push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Span,
+                                    crate::runtime::tape::TapeKind::Span,
                                     span_lo,
                                     *p as u32,
                                     0,
@@ -3759,7 +3759,7 @@ mod __googlesheetsparser_emit_impl {
                             *p += match_len as usize;
                             let _ = builder
                                 .push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Span,
+                                    crate::runtime::tape::TapeKind::Span,
                                     span_lo,
                                     *p as u32,
                                     0,
@@ -3768,16 +3768,16 @@ mod __googlesheetsparser_emit_impl {
                             break 'try_branches;
                         }
                     }
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 let alt_hi = *p as u32;
                 let __alt_off = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Alt,
+                        crate::runtime::tape::TapeKind::Alt,
                         alt_lo,
                         7u8,
                         0u8,
@@ -3788,7 +3788,7 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         __alt_off,
                         alt_hi,
-                        ::bbnf::runtime::tape::TapeOffset(alt_child),
+                        crate::runtime::tape::TapeOffset(alt_child),
                     );
             }
         }
@@ -3796,21 +3796,21 @@ mod __googlesheetsparser_emit_impl {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [58u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     7u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
         }
         {
@@ -3820,18 +3820,18 @@ mod __googlesheetsparser_emit_impl {
                         p,
                         state,
                     )
-                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                    .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                         offset: *p as u32,
                     })?;
                 let alt_lo = *p as u32;
-                let alt_child = builder.columns_mut().len() as u32;
+                let alt_child = builder.position();
                 'try_branches: loop {
                     match first {
                         _ => {}
                     }
                     {
                         let attempt_p = *p;
-                        let attempt_len = builder.columns_mut().len() as u32;
+                        let attempt_len = builder.position();
                         match {
                             let _ = __shape_support_GoogleSheetsParser::skip_space(
                                 input,
@@ -3862,7 +3862,7 @@ mod __googlesheetsparser_emit_impl {
                             *p += match_len as usize;
                             let _ = builder
                                 .push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Span,
+                                    crate::runtime::tape::TapeKind::Span,
                                     span_lo,
                                     *p as u32,
                                     0,
@@ -3881,7 +3881,7 @@ mod __googlesheetsparser_emit_impl {
                             *p += match_len as usize;
                             let _ = builder
                                 .push_leaf(
-                                    ::bbnf::runtime::tape::TapeKind::Span,
+                                    crate::runtime::tape::TapeKind::Span,
                                     span_lo,
                                     *p as u32,
                                     0,
@@ -3890,16 +3890,16 @@ mod __googlesheetsparser_emit_impl {
                             break 'try_branches;
                         }
                     }
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 let alt_hi = *p as u32;
                 let __alt_off = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Alt,
+                        crate::runtime::tape::TapeKind::Alt,
                         alt_lo,
                         7u8,
                         0u8,
@@ -3910,14 +3910,14 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         __alt_off,
                         alt_hi,
-                        ::bbnf::runtime::tape::TapeOffset(alt_child),
+                        crate::runtime::tape::TapeOffset(alt_child),
                     );
             }
         }
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 7u8,
                 0u8,
@@ -3928,9 +3928,9 @@ mod __googlesheetsparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar Wrap-shape parse function.
     ///
@@ -3948,14 +3948,14 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let mut __wrap_chosen_meta: u8 = 0;
         let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
-            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
         'try_branches: loop {
@@ -3964,7 +3964,7 @@ mod __googlesheetsparser_emit_impl {
             }
             {
                 let attempt_p = *p;
-                let attempt_len = builder.columns_mut().len() as u32;
+                let attempt_len = builder.position();
                 match parse_flat_GoogleSheetsParser_range_ref(input, p, state, builder) {
                     Ok(_) => {
                         __wrap_chosen_meta = 0u8;
@@ -3978,7 +3978,7 @@ mod __googlesheetsparser_emit_impl {
             }
             {
                 let attempt_p = *p;
-                let attempt_len = builder.columns_mut().len() as u32;
+                let attempt_len = builder.position();
                 match parse_flat_GoogleSheetsParser_cell(input, p, state, builder) {
                     Ok(_) => {
                         __wrap_chosen_meta = 1u8;
@@ -3990,14 +3990,14 @@ mod __googlesheetsparser_emit_impl {
                     }
                 }
             }
-            return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         let _ = __wrap_chosen_meta;
-        Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+        Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AW-V.W4-fix — per-grammar HRegex-shape parse function.
     ///
@@ -4011,10 +4011,10 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_GoogleSheetsParser(
@@ -4022,22 +4022,22 @@ mod __googlesheetsparser_emit_impl {
             input,
             *p,
         ) else {
-            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: span_lo,
-                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         };
         *p += match_len as usize;
         let span_hi = *p as u32;
         let leaf_off = builder
             .push_leaf_with(
-                ::bbnf::runtime::tape::TapeKind::Regex,
+                crate::runtime::tape::TapeKind::Regex,
                 span_lo,
                 span_hi,
                 9u8,
                 0,
-                ::bbnf::runtime::tape::PayloadData::None,
+                crate::runtime::tape::PayloadData::None,
             );
         Ok(leaf_off)
     }
@@ -4058,17 +4058,17 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let _ = state;
         match first_byte {
             60u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [60u8] {
                     let span_lo = *p as u32;
-                    let seq_save_cols = builder.columns_mut().len() as u32;
+                    let seq_save_cols = builder.position();
                     let seq_attempt: ::core::result::Result<(), ()> = (|| {
                         let at = *p;
                         let end = at + 1usize;
@@ -4078,17 +4078,17 @@ mod __googlesheetsparser_emit_impl {
                         *p = end;
                         let _ = builder
                             .push_leaf_with(
-                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                crate::runtime::tape::TapeKind::Literal,
                                 at as u32,
                                 end as u32,
                                 0,
                                 0,
-                                ::bbnf::runtime::tape::PayloadData::None,
+                                crate::runtime::tape::PayloadData::None,
                             );
                         {
                             let __pos_attempt: ::core::result::Result<
                                 (),
-                                ::bbnf::runtime::tape::DtaError,
+                                crate::runtime::tape::DtaError,
                             > = (|| {
                                 {
                                     let first = __shape_support_GoogleSheetsParser::skip_space(
@@ -4096,7 +4096,7 @@ mod __googlesheetsparser_emit_impl {
                                             p,
                                             state,
                                         )
-                                        .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                        .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                                             offset: *p as u32,
                                         })?;
                                     'try_branches: loop {
@@ -4108,7 +4108,7 @@ mod __googlesheetsparser_emit_impl {
                                                     *p = end;
                                                     let _ = builder
                                                         .push_leaf(
-                                                            ::bbnf::runtime::tape::TapeKind::Literal,
+                                                            crate::runtime::tape::TapeKind::Literal,
                                                             at as u32,
                                                             end as u32,
                                                             0,
@@ -4124,7 +4124,7 @@ mod __googlesheetsparser_emit_impl {
                                                     *p = end;
                                                     let _ = builder
                                                         .push_leaf(
-                                                            ::bbnf::runtime::tape::TapeKind::Literal,
+                                                            crate::runtime::tape::TapeKind::Literal,
                                                             at as u32,
                                                             end as u32,
                                                             0,
@@ -4135,10 +4135,10 @@ mod __googlesheetsparser_emit_impl {
                                             }
                                             _ => {}
                                         }
-                                        return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                             offset: *p as u32,
-                                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                         });
                                     }
                                 }
@@ -4153,22 +4153,22 @@ mod __googlesheetsparser_emit_impl {
                     if seq_attempt.is_err() {
                         *p = span_lo as usize;
                         builder.rollback_to(seq_save_cols);
-                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        return Err(crate::runtime::tape::DtaError::Syntax {
                             offset: span_lo,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                     let span_hi = *p as u32;
                     builder.rollback_to(seq_save_cols);
                     let off = builder
                         .push_leaf_with(
-                            ::bbnf::runtime::tape::TapeKind::Span,
+                            crate::runtime::tape::TapeKind::Span,
                             span_lo,
                             span_hi,
                             10u8,
                             0u8,
-                            ::bbnf::runtime::tape::PayloadData::None,
+                            crate::runtime::tape::PayloadData::None,
                         );
                     return Ok(off);
                 }
@@ -4180,7 +4180,7 @@ mod __googlesheetsparser_emit_impl {
                     builder.arena_mut().push((4u32) as u8);
                     let off = builder
                         .push_leaf_with_arena_payload(
-                            ::bbnf::runtime::tape::TapeKind::KvPair,
+                            crate::runtime::tape::TapeKind::KvPair,
                             at as u32,
                             end as u32,
                             10u8,
@@ -4190,10 +4190,10 @@ mod __googlesheetsparser_emit_impl {
                         );
                     return Ok(off);
                 }
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             61u8 => {
@@ -4205,7 +4205,7 @@ mod __googlesheetsparser_emit_impl {
                     builder.arena_mut().push((3u32) as u8);
                     let off = builder
                         .push_leaf_with_arena_payload(
-                            ::bbnf::runtime::tape::TapeKind::KvPair,
+                            crate::runtime::tape::TapeKind::KvPair,
                             at as u32,
                             end as u32,
                             10u8,
@@ -4215,10 +4215,10 @@ mod __googlesheetsparser_emit_impl {
                         );
                     return Ok(off);
                 }
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             62u8 => {
@@ -4230,7 +4230,7 @@ mod __googlesheetsparser_emit_impl {
                     builder.arena_mut().push((2u32) as u8);
                     let off = builder
                         .push_leaf_with_arena_payload(
-                            ::bbnf::runtime::tape::TapeKind::KvPair,
+                            crate::runtime::tape::TapeKind::KvPair,
                             at as u32,
                             end as u32,
                             10u8,
@@ -4248,7 +4248,7 @@ mod __googlesheetsparser_emit_impl {
                     builder.arena_mut().push((5u32) as u8);
                     let off = builder
                         .push_leaf_with_arena_payload(
-                            ::bbnf::runtime::tape::TapeKind::KvPair,
+                            crate::runtime::tape::TapeKind::KvPair,
                             at as u32,
                             end as u32,
                             10u8,
@@ -4258,17 +4258,17 @@ mod __googlesheetsparser_emit_impl {
                         );
                     return Ok(off);
                 }
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                Err(::bbnf::runtime::tape::DtaError::Syntax {
+                Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 })
             }
         }
@@ -4284,7 +4284,7 @@ mod __googlesheetsparser_emit_impl {
     /// # Emitted algorithm
     ///
     /// 1. Reserve an outer Rule compound via
-    ///    [`::bbnf::runtime::tape::FusedBuilder::mark_children`] +
+    ///    [`crate::runtime::tape::Tape<()>::mark_children`] +
     ///    record the parse-open position.
     /// 2. Dispatch the leftmost operand through the grammar's
     ///    value-position dispatcher; the operand's records land
@@ -4294,7 +4294,7 @@ mod __googlesheetsparser_emit_impl {
     ///    a. Reduce every top-of-op-stack entry whose precedence
     ///       exceeds the new byte's (or ties + left-assoc); each
     ///       reduce emits a `TapeKind::Rule` reducer compound via
-    ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
+    ///       [`crate::runtime::tape::emit_reducer_compound`].
     ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
     ///       byte's u8 discriminant into `pay_narrow` directly via
     ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
@@ -4326,10 +4326,10 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         struct LocalOpEntry {
             op_discriminant: u8,
@@ -4342,7 +4342,7 @@ mod __googlesheetsparser_emit_impl {
         let outer_span_lo = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 outer_span_lo,
                 11u8,
                 0u8,
@@ -4399,7 +4399,7 @@ mod __googlesheetsparser_emit_impl {
                 let reducer_span_hi = *p as u32;
                 let compound_idx = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Rule,
+                        crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
                         0u8,
@@ -4410,7 +4410,7 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         compound_idx,
                         reducer_span_hi,
-                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
+                        crate::runtime::tape::TapeOffset(lhs_idx),
                     );
                 this_operand_root = compound_idx;
             }
@@ -4464,12 +4464,12 @@ mod __googlesheetsparser_emit_impl {
             let op_hi: u32 = *p as u32;
             let _op_rec = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
+                    crate::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
                     0,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::InlineScalar(
+                    crate::runtime::tape::PayloadData::InlineScalar(
                         op_discriminant as u32,
                     ),
                 );
@@ -4503,12 +4503,11 @@ mod __googlesheetsparser_emit_impl {
         let outer_span_hi = *p as u32;
         builder.end_compound(outer_off, outer_span_hi);
         builder
-            .columns_mut()
             .set_child_off_at(
                 outer_off,
-                ::bbnf::runtime::tape::TapeOffset(this_operand_root),
+                crate::runtime::tape::TapeOffset(this_operand_root),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
     ///
@@ -4521,7 +4520,7 @@ mod __googlesheetsparser_emit_impl {
     /// # Emitted algorithm
     ///
     /// 1. Reserve an outer Rule compound via
-    ///    [`::bbnf::runtime::tape::FusedBuilder::mark_children`] +
+    ///    [`crate::runtime::tape::Tape<()>::mark_children`] +
     ///    record the parse-open position.
     /// 2. Dispatch the leftmost operand through the grammar's
     ///    value-position dispatcher; the operand's records land
@@ -4531,7 +4530,7 @@ mod __googlesheetsparser_emit_impl {
     ///    a. Reduce every top-of-op-stack entry whose precedence
     ///       exceeds the new byte's (or ties + left-assoc); each
     ///       reduce emits a `TapeKind::Rule` reducer compound via
-    ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
+    ///       [`crate::runtime::tape::emit_reducer_compound`].
     ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
     ///       byte's u8 discriminant into `pay_narrow` directly via
     ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
@@ -4563,10 +4562,10 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         struct LocalOpEntry {
             op_discriminant: u8,
@@ -4579,7 +4578,7 @@ mod __googlesheetsparser_emit_impl {
         let outer_span_lo = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 outer_span_lo,
                 12u8,
                 0u8,
@@ -4636,7 +4635,7 @@ mod __googlesheetsparser_emit_impl {
                 let reducer_span_hi = *p as u32;
                 let compound_idx = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Rule,
+                        crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
                         0u8,
@@ -4647,7 +4646,7 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         compound_idx,
                         reducer_span_hi,
-                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
+                        crate::runtime::tape::TapeOffset(lhs_idx),
                     );
                 this_operand_root = compound_idx;
             }
@@ -4701,12 +4700,12 @@ mod __googlesheetsparser_emit_impl {
             let op_hi: u32 = *p as u32;
             let _op_rec = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
+                    crate::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
                     0,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::InlineScalar(
+                    crate::runtime::tape::PayloadData::InlineScalar(
                         op_discriminant as u32,
                     ),
                 );
@@ -4740,12 +4739,11 @@ mod __googlesheetsparser_emit_impl {
         let outer_span_hi = *p as u32;
         builder.end_compound(outer_off, outer_span_hi);
         builder
-            .columns_mut()
             .set_child_off_at(
                 outer_off,
-                ::bbnf::runtime::tape::TapeOffset(this_operand_root),
+                crate::runtime::tape::TapeOffset(this_operand_root),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W3.2 — per-grammar Keyword-shape parse function
     /// (Alt of literal-led or Ref-led branches).
@@ -4764,10 +4762,10 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let _ = state;
         match first_byte {
@@ -4780,7 +4778,7 @@ mod __googlesheetsparser_emit_impl {
                     builder.arena_mut().push((0u32) as u8);
                     let off = builder
                         .push_leaf_with_arena_payload(
-                            ::bbnf::runtime::tape::TapeKind::KvPair,
+                            crate::runtime::tape::TapeKind::KvPair,
                             at as u32,
                             end as u32,
                             13u8,
@@ -4790,10 +4788,10 @@ mod __googlesheetsparser_emit_impl {
                         );
                     return Ok(off);
                 }
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             45u8 => {
@@ -4805,7 +4803,7 @@ mod __googlesheetsparser_emit_impl {
                     builder.arena_mut().push((1u32) as u8);
                     let off = builder
                         .push_leaf_with_arena_payload(
-                            ::bbnf::runtime::tape::TapeKind::KvPair,
+                            crate::runtime::tape::TapeKind::KvPair,
                             at as u32,
                             end as u32,
                             13u8,
@@ -4815,17 +4813,17 @@ mod __googlesheetsparser_emit_impl {
                         );
                     return Ok(off);
                 }
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                Err(::bbnf::runtime::tape::DtaError::Syntax {
+                Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 })
             }
         }
@@ -4841,7 +4839,7 @@ mod __googlesheetsparser_emit_impl {
     /// # Emitted algorithm
     ///
     /// 1. Reserve an outer Rule compound via
-    ///    [`::bbnf::runtime::tape::FusedBuilder::mark_children`] +
+    ///    [`crate::runtime::tape::Tape<()>::mark_children`] +
     ///    record the parse-open position.
     /// 2. Dispatch the leftmost operand through the grammar's
     ///    value-position dispatcher; the operand's records land
@@ -4851,7 +4849,7 @@ mod __googlesheetsparser_emit_impl {
     ///    a. Reduce every top-of-op-stack entry whose precedence
     ///       exceeds the new byte's (or ties + left-assoc); each
     ///       reduce emits a `TapeKind::Rule` reducer compound via
-    ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
+    ///       [`crate::runtime::tape::emit_reducer_compound`].
     ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
     ///       byte's u8 discriminant into `pay_narrow` directly via
     ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
@@ -4883,10 +4881,10 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         struct LocalOpEntry {
             op_discriminant: u8,
@@ -4899,7 +4897,7 @@ mod __googlesheetsparser_emit_impl {
         let outer_span_lo = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 outer_span_lo,
                 14u8,
                 0u8,
@@ -4956,7 +4954,7 @@ mod __googlesheetsparser_emit_impl {
                 let reducer_span_hi = *p as u32;
                 let compound_idx = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Rule,
+                        crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
                         0u8,
@@ -4967,7 +4965,7 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         compound_idx,
                         reducer_span_hi,
-                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
+                        crate::runtime::tape::TapeOffset(lhs_idx),
                     );
                 this_operand_root = compound_idx;
             }
@@ -5021,12 +5019,12 @@ mod __googlesheetsparser_emit_impl {
             let op_hi: u32 = *p as u32;
             let _op_rec = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
+                    crate::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
                     0,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::InlineScalar(
+                    crate::runtime::tape::PayloadData::InlineScalar(
                         op_discriminant as u32,
                     ),
                 );
@@ -5060,12 +5058,11 @@ mod __googlesheetsparser_emit_impl {
         let outer_span_hi = *p as u32;
         builder.end_compound(outer_off, outer_span_hi);
         builder
-            .columns_mut()
             .set_child_off_at(
                 outer_off,
-                ::bbnf::runtime::tape::TapeOffset(this_operand_root),
+                crate::runtime::tape::TapeOffset(this_operand_root),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W3.2 — per-grammar Keyword-shape parse function
     /// (Alt of literal-led or Ref-led branches).
@@ -5084,10 +5081,10 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let _ = state;
         match first_byte {
@@ -5100,7 +5097,7 @@ mod __googlesheetsparser_emit_impl {
                     builder.arena_mut().push((0u32) as u8);
                     let off = builder
                         .push_leaf_with_arena_payload(
-                            ::bbnf::runtime::tape::TapeKind::KvPair,
+                            crate::runtime::tape::TapeKind::KvPair,
                             at as u32,
                             end as u32,
                             15u8,
@@ -5110,10 +5107,10 @@ mod __googlesheetsparser_emit_impl {
                         );
                     return Ok(off);
                 }
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             47u8 => {
@@ -5125,7 +5122,7 @@ mod __googlesheetsparser_emit_impl {
                     builder.arena_mut().push((1u32) as u8);
                     let off = builder
                         .push_leaf_with_arena_payload(
-                            ::bbnf::runtime::tape::TapeKind::KvPair,
+                            crate::runtime::tape::TapeKind::KvPair,
                             at as u32,
                             end as u32,
                             15u8,
@@ -5135,17 +5132,17 @@ mod __googlesheetsparser_emit_impl {
                         );
                     return Ok(off);
                 }
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                Err(::bbnf::runtime::tape::DtaError::Syntax {
+                Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 })
             }
         }
@@ -5161,7 +5158,7 @@ mod __googlesheetsparser_emit_impl {
     /// # Emitted algorithm
     ///
     /// 1. Reserve an outer Rule compound via
-    ///    [`::bbnf::runtime::tape::FusedBuilder::mark_children`] +
+    ///    [`crate::runtime::tape::Tape<()>::mark_children`] +
     ///    record the parse-open position.
     /// 2. Dispatch the leftmost operand through the grammar's
     ///    value-position dispatcher; the operand's records land
@@ -5171,7 +5168,7 @@ mod __googlesheetsparser_emit_impl {
     ///    a. Reduce every top-of-op-stack entry whose precedence
     ///       exceeds the new byte's (or ties + left-assoc); each
     ///       reduce emits a `TapeKind::Rule` reducer compound via
-    ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
+    ///       [`crate::runtime::tape::emit_reducer_compound`].
     ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
     ///       byte's u8 discriminant into `pay_narrow` directly via
     ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
@@ -5203,10 +5200,10 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         struct LocalOpEntry {
             op_discriminant: u8,
@@ -5219,7 +5216,7 @@ mod __googlesheetsparser_emit_impl {
         let outer_span_lo = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 outer_span_lo,
                 16u8,
                 0u8,
@@ -5276,7 +5273,7 @@ mod __googlesheetsparser_emit_impl {
                 let reducer_span_hi = *p as u32;
                 let compound_idx = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Rule,
+                        crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
                         0u8,
@@ -5287,7 +5284,7 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         compound_idx,
                         reducer_span_hi,
-                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
+                        crate::runtime::tape::TapeOffset(lhs_idx),
                     );
                 this_operand_root = compound_idx;
             }
@@ -5341,12 +5338,12 @@ mod __googlesheetsparser_emit_impl {
             let op_hi: u32 = *p as u32;
             let _op_rec = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
+                    crate::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
                     0,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::InlineScalar(
+                    crate::runtime::tape::PayloadData::InlineScalar(
                         op_discriminant as u32,
                     ),
                 );
@@ -5380,12 +5377,11 @@ mod __googlesheetsparser_emit_impl {
         let outer_span_hi = *p as u32;
         builder.end_compound(outer_off, outer_span_hi);
         builder
-            .columns_mut()
             .set_child_off_at(
                 outer_off,
-                ::bbnf::runtime::tape::TapeOffset(this_operand_root),
+                crate::runtime::tape::TapeOffset(this_operand_root),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
     ///
@@ -5398,7 +5394,7 @@ mod __googlesheetsparser_emit_impl {
     /// # Emitted algorithm
     ///
     /// 1. Reserve an outer Rule compound via
-    ///    [`::bbnf::runtime::tape::FusedBuilder::mark_children`] +
+    ///    [`crate::runtime::tape::Tape<()>::mark_children`] +
     ///    record the parse-open position.
     /// 2. Dispatch the leftmost operand through the grammar's
     ///    value-position dispatcher; the operand's records land
@@ -5408,7 +5404,7 @@ mod __googlesheetsparser_emit_impl {
     ///    a. Reduce every top-of-op-stack entry whose precedence
     ///       exceeds the new byte's (or ties + left-assoc); each
     ///       reduce emits a `TapeKind::Rule` reducer compound via
-    ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
+    ///       [`crate::runtime::tape::emit_reducer_compound`].
     ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
     ///       byte's u8 discriminant into `pay_narrow` directly via
     ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
@@ -5440,10 +5436,10 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         struct LocalOpEntry {
             op_discriminant: u8,
@@ -5456,7 +5452,7 @@ mod __googlesheetsparser_emit_impl {
         let outer_span_lo = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 outer_span_lo,
                 17u8,
                 0u8,
@@ -5513,7 +5509,7 @@ mod __googlesheetsparser_emit_impl {
                 let reducer_span_hi = *p as u32;
                 let compound_idx = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Rule,
+                        crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
                         0u8,
@@ -5524,7 +5520,7 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         compound_idx,
                         reducer_span_hi,
-                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
+                        crate::runtime::tape::TapeOffset(lhs_idx),
                     );
                 this_operand_root = compound_idx;
             }
@@ -5578,12 +5574,12 @@ mod __googlesheetsparser_emit_impl {
             let op_hi: u32 = *p as u32;
             let _op_rec = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
+                    crate::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
                     0,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::InlineScalar(
+                    crate::runtime::tape::PayloadData::InlineScalar(
                         op_discriminant as u32,
                     ),
                 );
@@ -5617,12 +5613,11 @@ mod __googlesheetsparser_emit_impl {
         let outer_span_hi = *p as u32;
         builder.end_compound(outer_off, outer_span_hi);
         builder
-            .columns_mut()
             .set_child_off_at(
                 outer_off,
-                ::bbnf::runtime::tape::TapeOffset(this_operand_root),
+                crate::runtime::tape::TapeOffset(this_operand_root),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W3.2 — per-grammar Keyword-shape parse function
     /// (Alt of literal-led or Ref-led branches).
@@ -5641,10 +5636,10 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let _ = state;
         match first_byte {
@@ -5657,7 +5652,7 @@ mod __googlesheetsparser_emit_impl {
                     builder.arena_mut().push((0u32) as u8);
                     let off = builder
                         .push_leaf_with_arena_payload(
-                            ::bbnf::runtime::tape::TapeKind::KvPair,
+                            crate::runtime::tape::TapeKind::KvPair,
                             at as u32,
                             end as u32,
                             18u8,
@@ -5667,10 +5662,10 @@ mod __googlesheetsparser_emit_impl {
                         );
                     return Ok(off);
                 }
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             45u8 => {
@@ -5682,7 +5677,7 @@ mod __googlesheetsparser_emit_impl {
                     builder.arena_mut().push((1u32) as u8);
                     let off = builder
                         .push_leaf_with_arena_payload(
-                            ::bbnf::runtime::tape::TapeKind::KvPair,
+                            crate::runtime::tape::TapeKind::KvPair,
                             at as u32,
                             end as u32,
                             18u8,
@@ -5692,17 +5687,17 @@ mod __googlesheetsparser_emit_impl {
                         );
                     return Ok(off);
                 }
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                Err(::bbnf::runtime::tape::DtaError::Syntax {
+                Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 })
             }
         }
@@ -5730,25 +5725,25 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.columns_mut().len() as u32;
+            let repeat_child = builder.position();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
-                let save_cols = builder.columns_mut().len() as u32;
+                let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.columns_mut().len() as u32;
+                let iter_child = builder.position();
                 let attempt = (|| -> ::core::result::Result<
                     (),
-                    ::bbnf::runtime::tape::DtaError,
+                    crate::runtime::tape::DtaError,
                 > {
                     let _ = ({
                         let __first = __shape_support_GoogleSheetsParser::skip_space(
@@ -5756,7 +5751,7 @@ mod __googlesheetsparser_emit_impl {
                                 p,
                                 state,
                             )
-                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                                 offset: *p as u32,
                             })?;
                         parse_keyword_GoogleSheetsParser_unary_prefix(
@@ -5781,7 +5776,7 @@ mod __googlesheetsparser_emit_impl {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
                         0u8,
@@ -5792,21 +5787,21 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         __iter_off,
                         iter_hi,
-                        ::bbnf::runtime::tape::TapeOffset(iter_child),
+                        crate::runtime::tape::TapeOffset(iter_child),
                     );
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
                 .begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                    crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
                     0u8,
@@ -5817,7 +5812,7 @@ mod __googlesheetsparser_emit_impl {
                 .end_compound_post_order(
                     __repeat_off,
                     repeat_hi,
-                    ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                    crate::runtime::tape::TapeOffset(repeat_child),
                 );
         }
         {
@@ -5829,7 +5824,7 @@ mod __googlesheetsparser_emit_impl {
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 19u8,
                 0u8,
@@ -5840,9 +5835,9 @@ mod __googlesheetsparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -5867,13 +5862,13 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
@@ -5882,35 +5877,35 @@ mod __googlesheetsparser_emit_impl {
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.columns_mut().len() as u32;
+            let repeat_child = builder.position();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
-                let save_cols = builder.columns_mut().len() as u32;
+                let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.columns_mut().len() as u32;
+                let iter_child = builder.position();
                 let attempt = (|| -> ::core::result::Result<
                     (),
-                    ::bbnf::runtime::tape::DtaError,
+                    crate::runtime::tape::DtaError,
                 > {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() < end || input[at..end] != [37u8] {
-                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        return Err(crate::runtime::tape::DtaError::Syntax {
                             offset: at as u32,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                     *p = end;
                     let _ = builder
                         .push_leaf_with(
-                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            crate::runtime::tape::TapeKind::Literal,
                             at as u32,
                             end as u32,
                             20u8,
                             0,
-                            ::bbnf::runtime::tape::PayloadData::None,
+                            crate::runtime::tape::PayloadData::None,
                         );
                     Ok(())
                 })();
@@ -5926,7 +5921,7 @@ mod __googlesheetsparser_emit_impl {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
                         0u8,
@@ -5937,21 +5932,21 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         __iter_off,
                         iter_hi,
-                        ::bbnf::runtime::tape::TapeOffset(iter_child),
+                        crate::runtime::tape::TapeOffset(iter_child),
                     );
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
                 .begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                    crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
                     0u8,
@@ -5962,13 +5957,13 @@ mod __googlesheetsparser_emit_impl {
                 .end_compound_post_order(
                     __repeat_off,
                     repeat_hi,
-                    ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                    crate::runtime::tape::TapeOffset(repeat_child),
                 );
         }
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 20u8,
                 0u8,
@@ -5979,9 +5974,9 @@ mod __googlesheetsparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar Wrap-shape parse function.
     ///
@@ -5999,21 +5994,21 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let mut __wrap_chosen_meta: u8 = 0;
         let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
-            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
         'try_branches: loop {
             match first {
                 34u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_string_GoogleSheetsParser_string(
                         input,
                         p,
@@ -6032,7 +6027,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 35u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_flat_GoogleSheetsParser_error_literal(
                         input,
                         p,
@@ -6051,7 +6046,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 40u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_flat_GoogleSheetsParser_paren_expr(
                         input,
                         p,
@@ -6070,7 +6065,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 46u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6089,7 +6084,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 48u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6108,7 +6103,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 49u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6127,7 +6122,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 50u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6146,7 +6141,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 51u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6165,7 +6160,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 52u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6184,7 +6179,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 53u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6203,7 +6198,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 54u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6222,7 +6217,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 55u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6241,7 +6236,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 56u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6260,7 +6255,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 57u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6279,7 +6274,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 70u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_wrap_GoogleSheetsParser_boolean(
                         input,
                         p,
@@ -6299,7 +6294,7 @@ mod __googlesheetsparser_emit_impl {
                 76u8 => {
                     {
                         let attempt_p = *p;
-                        let attempt_len = builder.columns_mut().len() as u32;
+                        let attempt_len = builder.position();
                         match parse_arglist_GoogleSheetsParser_let_call(
                             input,
                             p,
@@ -6318,7 +6313,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     {
                         let attempt_p = *p;
-                        let attempt_len = builder.columns_mut().len() as u32;
+                        let attempt_len = builder.position();
                         match parse_arglist_GoogleSheetsParser_lambda_call(
                             input,
                             p,
@@ -6338,7 +6333,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 84u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_wrap_GoogleSheetsParser_boolean(
                         input,
                         p,
@@ -6357,7 +6352,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 102u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_wrap_GoogleSheetsParser_boolean(
                         input,
                         p,
@@ -6377,7 +6372,7 @@ mod __googlesheetsparser_emit_impl {
                 108u8 => {
                     {
                         let attempt_p = *p;
-                        let attempt_len = builder.columns_mut().len() as u32;
+                        let attempt_len = builder.position();
                         match parse_arglist_GoogleSheetsParser_let_call(
                             input,
                             p,
@@ -6396,7 +6391,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     {
                         let attempt_p = *p;
-                        let attempt_len = builder.columns_mut().len() as u32;
+                        let attempt_len = builder.position();
                         match parse_arglist_GoogleSheetsParser_lambda_call(
                             input,
                             p,
@@ -6416,7 +6411,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 116u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_wrap_GoogleSheetsParser_boolean(
                         input,
                         p,
@@ -6435,7 +6430,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 123u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.columns_mut().len() as u32;
+                    let attempt_len = builder.position();
                     match parse_flat_GoogleSheetsParser_array_literal(
                         input,
                         p,
@@ -6456,7 +6451,7 @@ mod __googlesheetsparser_emit_impl {
             }
             {
                 let attempt_p = *p;
-                let attempt_len = builder.columns_mut().len() as u32;
+                let attempt_len = builder.position();
                 match parse_arglist_GoogleSheetsParser_func_call(
                     input,
                     p,
@@ -6475,7 +6470,7 @@ mod __googlesheetsparser_emit_impl {
             }
             {
                 let attempt_p = *p;
-                let attempt_len = builder.columns_mut().len() as u32;
+                let attempt_len = builder.position();
                 match parse_wrap_GoogleSheetsParser_cell_or_range(
                     input,
                     p,
@@ -6494,7 +6489,7 @@ mod __googlesheetsparser_emit_impl {
             }
             {
                 let attempt_p = *p;
-                let attempt_len = builder.columns_mut().len() as u32;
+                let attempt_len = builder.position();
                 match parse_hregex_GoogleSheetsParser_identifier(
                     input,
                     p,
@@ -6511,14 +6506,14 @@ mod __googlesheetsparser_emit_impl {
                     }
                 }
             }
-            return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         let _ = __wrap_chosen_meta;
-        Ok(::bbnf::runtime::tape::TapeOffset::NONE)
+        Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -6543,32 +6538,32 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     22u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
         }
         {
@@ -6583,27 +6578,27 @@ mod __googlesheetsparser_emit_impl {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [41u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     22u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
         }
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 22u8,
                 0u8,
@@ -6614,9 +6609,9 @@ mod __googlesheetsparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -6641,13 +6636,13 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
@@ -6658,27 +6653,27 @@ mod __googlesheetsparser_emit_impl {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     23u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
         }
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 23u8,
                 0u8,
@@ -6689,9 +6684,9 @@ mod __googlesheetsparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -6716,23 +6711,23 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.columns_mut().len() as u32;
+            let repeat_child = builder.position();
             let iter_save_p = *p;
-            let iter_save_cols = builder.columns_mut().len() as u32;
+            let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.columns_mut().len() as u32;
+            let iter_child = builder.position();
             let opt_attempt: ::core::result::Result<
                 (),
-                ::bbnf::runtime::tape::DtaError,
+                crate::runtime::tape::DtaError,
             > = (|| {
                 let _ = ({
                     let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -6757,7 +6752,7 @@ mod __googlesheetsparser_emit_impl {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
                         0u8,
@@ -6768,13 +6763,13 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         __iter_off,
                         iter_hi,
-                        ::bbnf::runtime::tape::TapeOffset(iter_child),
+                        crate::runtime::tape::TapeOffset(iter_child),
                     );
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
                 .begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                    crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
                     0u8,
@@ -6785,13 +6780,13 @@ mod __googlesheetsparser_emit_impl {
                 .end_compound_post_order(
                     __repeat_off,
                     repeat_hi,
-                    ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                    crate::runtime::tape::TapeOffset(repeat_child),
                 );
         }
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 24u8,
                 0u8,
@@ -6802,9 +6797,9 @@ mod __googlesheetsparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -6829,25 +6824,25 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.columns_mut().len() as u32;
+            let repeat_child = builder.position();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
-                let save_cols = builder.columns_mut().len() as u32;
+                let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.columns_mut().len() as u32;
+                let iter_child = builder.position();
                 let attempt = (|| -> ::core::result::Result<
                     (),
-                    ::bbnf::runtime::tape::DtaError,
+                    crate::runtime::tape::DtaError,
                 > {
                     let _ = ({
                         let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -6858,14 +6853,14 @@ mod __googlesheetsparser_emit_impl {
                         parse_flat_GoogleSheetsParser_arg(input, p, state, builder)
                     })?;
                     let repeat_lo = *p as u32;
-                    let repeat_child = builder.columns_mut().len() as u32;
+                    let repeat_child = builder.position();
                     let iter_save_p = *p;
-                    let iter_save_cols = builder.columns_mut().len() as u32;
+                    let iter_save_cols = builder.position();
                     let iter_lo = *p as u32;
-                    let iter_child = builder.columns_mut().len() as u32;
+                    let iter_child = builder.position();
                     let opt_attempt: ::core::result::Result<
                         (),
-                        ::bbnf::runtime::tape::DtaError,
+                        crate::runtime::tape::DtaError,
                     > = (|| {
                         let _ = __shape_support_GoogleSheetsParser::skip_space(
                             input,
@@ -6875,21 +6870,21 @@ mod __googlesheetsparser_emit_impl {
                         let at = *p;
                         let end = at + 1usize;
                         if input.len() < end || input[at..end] != [44u8] {
-                            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            return Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: at as u32,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             });
                         }
                         *p = end;
                         let _ = builder
                             .push_leaf_with(
-                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                crate::runtime::tape::TapeKind::Literal,
                                 at as u32,
                                 end as u32,
                                 25u8,
                                 0,
-                                ::bbnf::runtime::tape::PayloadData::None,
+                                crate::runtime::tape::PayloadData::None,
                             );
                         let _ = __shape_support_GoogleSheetsParser::skip_space(
                             input,
@@ -6906,7 +6901,7 @@ mod __googlesheetsparser_emit_impl {
                         let iter_hi = *p as u32;
                         let __iter_off = builder
                             .begin_compound(
-                                ::bbnf::runtime::tape::TapeKind::Seq,
+                                crate::runtime::tape::TapeKind::Seq,
                                 iter_lo,
                                 0u8,
                                 0u8,
@@ -6917,13 +6912,13 @@ mod __googlesheetsparser_emit_impl {
                             .end_compound_post_order(
                                 __iter_off,
                                 iter_hi,
-                                ::bbnf::runtime::tape::TapeOffset(iter_child),
+                                crate::runtime::tape::TapeOffset(iter_child),
                             );
                     }
                     let repeat_hi = *p as u32;
                     let __repeat_off = builder
                         .begin_compound(
-                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                            crate::runtime::tape::TapeKind::Repeat,
                             repeat_lo,
                             0u8,
                             0u8,
@@ -6934,7 +6929,7 @@ mod __googlesheetsparser_emit_impl {
                         .end_compound_post_order(
                             __repeat_off,
                             repeat_hi,
-                            ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                            crate::runtime::tape::TapeOffset(repeat_child),
                         );
                     Ok(())
                 })();
@@ -6950,7 +6945,7 @@ mod __googlesheetsparser_emit_impl {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
                         0u8,
@@ -6961,21 +6956,21 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         __iter_off,
                         iter_hi,
-                        ::bbnf::runtime::tape::TapeOffset(iter_child),
+                        crate::runtime::tape::TapeOffset(iter_child),
                     );
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (1usize as u32) {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
                 .begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                    crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
                     0u8,
@@ -6986,13 +6981,13 @@ mod __googlesheetsparser_emit_impl {
                 .end_compound_post_order(
                     __repeat_off,
                     repeat_hi,
-                    ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                    crate::runtime::tape::TapeOffset(repeat_child),
                 );
         }
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 25u8,
                 0u8,
@@ -7003,9 +6998,9 @@ mod __googlesheetsparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar ArgList-shape parse function.
     ///
@@ -7022,13 +7017,13 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
@@ -7038,12 +7033,12 @@ mod __googlesheetsparser_emit_impl {
         {
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let save_p = *p;
-            let iter_save_cols = builder.columns_mut().len() as u32;
+            let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.columns_mut().len() as u32;
+            let iter_child = builder.position();
             let attempt = (|| -> ::core::result::Result<
                 (),
-                ::bbnf::runtime::tape::DtaError,
+                crate::runtime::tape::DtaError,
             > {
                 let _ = ({
                     let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -7062,7 +7057,7 @@ mod __googlesheetsparser_emit_impl {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0,
                         0u8,
@@ -7073,7 +7068,7 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         __iter_off,
                         iter_hi,
-                        ::bbnf::runtime::tape::TapeOffset(iter_child),
+                        crate::runtime::tape::TapeOffset(iter_child),
                     );
             }
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
@@ -7082,27 +7077,27 @@ mod __googlesheetsparser_emit_impl {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [41u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     26u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
         }
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 26u8,
                 0u8,
@@ -7113,9 +7108,9 @@ mod __googlesheetsparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -7140,13 +7135,13 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
@@ -7158,21 +7153,21 @@ mod __googlesheetsparser_emit_impl {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [44u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     27u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         }
@@ -7185,7 +7180,7 @@ mod __googlesheetsparser_emit_impl {
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 27u8,
                 0u8,
@@ -7196,9 +7191,9 @@ mod __googlesheetsparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -7223,25 +7218,25 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.columns_mut().len() as u32;
+            let repeat_child = builder.position();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
-                let save_cols = builder.columns_mut().len() as u32;
+                let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.columns_mut().len() as u32;
+                let iter_child = builder.position();
                 let attempt = (|| -> ::core::result::Result<
                     (),
-                    ::bbnf::runtime::tape::DtaError,
+                    crate::runtime::tape::DtaError,
                 > {
                     let _ = ({
                         let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -7264,21 +7259,21 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() < end || input[at..end] != [44u8] {
-                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        return Err(crate::runtime::tape::DtaError::Syntax {
                             offset: at as u32,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                     *p = end;
                     let _ = builder
                         .push_leaf_with(
-                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            crate::runtime::tape::TapeKind::Literal,
                             at as u32,
                             end as u32,
                             28u8,
                             0,
-                            ::bbnf::runtime::tape::PayloadData::None,
+                            crate::runtime::tape::PayloadData::None,
                         );
                     let _ = __shape_support_GoogleSheetsParser::skip_space(
                         input,
@@ -7299,7 +7294,7 @@ mod __googlesheetsparser_emit_impl {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
                         0u8,
@@ -7310,21 +7305,21 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         __iter_off,
                         iter_hi,
-                        ::bbnf::runtime::tape::TapeOffset(iter_child),
+                        crate::runtime::tape::TapeOffset(iter_child),
                     );
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
                 .begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                    crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
                     0u8,
@@ -7335,7 +7330,7 @@ mod __googlesheetsparser_emit_impl {
                 .end_compound_post_order(
                     __repeat_off,
                     repeat_hi,
-                    ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                    crate::runtime::tape::TapeOffset(repeat_child),
                 );
         }
         {
@@ -7347,7 +7342,7 @@ mod __googlesheetsparser_emit_impl {
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 28u8,
                 0u8,
@@ -7358,9 +7353,9 @@ mod __googlesheetsparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar ArgList-shape parse function.
     ///
@@ -7377,13 +7372,13 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             {
                 let span_lo = *p as u32;
@@ -7392,22 +7387,22 @@ mod __googlesheetsparser_emit_impl {
                     input,
                     *p,
                 ) else {
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: span_lo,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 };
                 *p += match_len as usize;
                 let span_hi = *p as u32;
                 let _ = builder
                     .push_leaf_with(
-                        ::bbnf::runtime::tape::TapeKind::Span,
+                        crate::runtime::tape::TapeKind::Span,
                         span_lo,
                         span_hi,
                         29u8,
                         0,
-                        ::bbnf::runtime::tape::PayloadData::None,
+                        crate::runtime::tape::PayloadData::None,
                     );
             }
         }
@@ -7423,27 +7418,27 @@ mod __googlesheetsparser_emit_impl {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [41u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     29u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
         }
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 29u8,
                 0u8,
@@ -7454,9 +7449,9 @@ mod __googlesheetsparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -7481,25 +7476,25 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.columns_mut().len() as u32;
+            let repeat_child = builder.position();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
-                let save_cols = builder.columns_mut().len() as u32;
+                let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.columns_mut().len() as u32;
+                let iter_child = builder.position();
                 let attempt = (|| -> ::core::result::Result<
                     (),
-                    ::bbnf::runtime::tape::DtaError,
+                    crate::runtime::tape::DtaError,
                 > {
                     let _ = ({
                         let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -7515,14 +7510,14 @@ mod __googlesheetsparser_emit_impl {
                         )
                     })?;
                     let repeat_lo = *p as u32;
-                    let repeat_child = builder.columns_mut().len() as u32;
+                    let repeat_child = builder.position();
                     let iter_save_p = *p;
-                    let iter_save_cols = builder.columns_mut().len() as u32;
+                    let iter_save_cols = builder.position();
                     let iter_lo = *p as u32;
-                    let iter_child = builder.columns_mut().len() as u32;
+                    let iter_child = builder.position();
                     let opt_attempt: ::core::result::Result<
                         (),
-                        ::bbnf::runtime::tape::DtaError,
+                        crate::runtime::tape::DtaError,
                     > = (|| {
                         let _ = __shape_support_GoogleSheetsParser::skip_space(
                             input,
@@ -7532,21 +7527,21 @@ mod __googlesheetsparser_emit_impl {
                         let at = *p;
                         let end = at + 1usize;
                         if input.len() < end || input[at..end] != [44u8] {
-                            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            return Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: at as u32,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             });
                         }
                         *p = end;
                         let _ = builder
                             .push_leaf_with(
-                                ::bbnf::runtime::tape::TapeKind::Literal,
+                                crate::runtime::tape::TapeKind::Literal,
                                 at as u32,
                                 end as u32,
                                 30u8,
                                 0,
-                                ::bbnf::runtime::tape::PayloadData::None,
+                                crate::runtime::tape::PayloadData::None,
                             );
                         let _ = __shape_support_GoogleSheetsParser::skip_space(
                             input,
@@ -7563,7 +7558,7 @@ mod __googlesheetsparser_emit_impl {
                         let iter_hi = *p as u32;
                         let __iter_off = builder
                             .begin_compound(
-                                ::bbnf::runtime::tape::TapeKind::Seq,
+                                crate::runtime::tape::TapeKind::Seq,
                                 iter_lo,
                                 0u8,
                                 0u8,
@@ -7574,13 +7569,13 @@ mod __googlesheetsparser_emit_impl {
                             .end_compound_post_order(
                                 __iter_off,
                                 iter_hi,
-                                ::bbnf::runtime::tape::TapeOffset(iter_child),
+                                crate::runtime::tape::TapeOffset(iter_child),
                             );
                     }
                     let repeat_hi = *p as u32;
                     let __repeat_off = builder
                         .begin_compound(
-                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                            crate::runtime::tape::TapeKind::Repeat,
                             repeat_lo,
                             0u8,
                             0u8,
@@ -7591,7 +7586,7 @@ mod __googlesheetsparser_emit_impl {
                         .end_compound_post_order(
                             __repeat_off,
                             repeat_hi,
-                            ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                            crate::runtime::tape::TapeOffset(repeat_child),
                         );
                     Ok(())
                 })();
@@ -7607,7 +7602,7 @@ mod __googlesheetsparser_emit_impl {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
                         0u8,
@@ -7618,21 +7613,21 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         __iter_off,
                         iter_hi,
-                        ::bbnf::runtime::tape::TapeOffset(iter_child),
+                        crate::runtime::tape::TapeOffset(iter_child),
                     );
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (1usize as u32) {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
                 .begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                    crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
                     0u8,
@@ -7643,13 +7638,13 @@ mod __googlesheetsparser_emit_impl {
                 .end_compound_post_order(
                     __repeat_off,
                     repeat_hi,
-                    ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                    crate::runtime::tape::TapeOffset(repeat_child),
                 );
         }
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 30u8,
                 0u8,
@@ -7660,9 +7655,9 @@ mod __googlesheetsparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar ArgList-shape parse function.
     ///
@@ -7679,13 +7674,13 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             {
                 let span_lo = *p as u32;
@@ -7694,22 +7689,22 @@ mod __googlesheetsparser_emit_impl {
                     input,
                     *p,
                 ) else {
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: span_lo,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 };
                 *p += match_len as usize;
                 let span_hi = *p as u32;
                 let _ = builder
                     .push_leaf_with(
-                        ::bbnf::runtime::tape::TapeKind::Span,
+                        crate::runtime::tape::TapeKind::Span,
                         span_lo,
                         span_hi,
                         31u8,
                         0,
-                        ::bbnf::runtime::tape::PayloadData::None,
+                        crate::runtime::tape::PayloadData::None,
                     );
             }
         }
@@ -7725,27 +7720,27 @@ mod __googlesheetsparser_emit_impl {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [41u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     31u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
         }
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 31u8,
                 0u8,
@@ -7756,9 +7751,9 @@ mod __googlesheetsparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
     ///
@@ -7771,7 +7766,7 @@ mod __googlesheetsparser_emit_impl {
     /// # Emitted algorithm
     ///
     /// 1. Reserve an outer Rule compound via
-    ///    [`::bbnf::runtime::tape::FusedBuilder::mark_children`] +
+    ///    [`crate::runtime::tape::Tape<()>::mark_children`] +
     ///    record the parse-open position.
     /// 2. Dispatch the leftmost operand through the grammar's
     ///    value-position dispatcher; the operand's records land
@@ -7781,7 +7776,7 @@ mod __googlesheetsparser_emit_impl {
     ///    a. Reduce every top-of-op-stack entry whose precedence
     ///       exceeds the new byte's (or ties + left-assoc); each
     ///       reduce emits a `TapeKind::Rule` reducer compound via
-    ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
+    ///       [`crate::runtime::tape::emit_reducer_compound`].
     ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
     ///       byte's u8 discriminant into `pay_narrow` directly via
     ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
@@ -7813,10 +7808,10 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         struct LocalOpEntry {
             op_discriminant: u8,
@@ -7829,7 +7824,7 @@ mod __googlesheetsparser_emit_impl {
         let outer_span_lo = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 outer_span_lo,
                 32u8,
                 0u8,
@@ -7886,7 +7881,7 @@ mod __googlesheetsparser_emit_impl {
                 let reducer_span_hi = *p as u32;
                 let compound_idx = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Rule,
+                        crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
                         0u8,
@@ -7897,7 +7892,7 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         compound_idx,
                         reducer_span_hi,
-                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
+                        crate::runtime::tape::TapeOffset(lhs_idx),
                     );
                 this_operand_root = compound_idx;
             }
@@ -7951,12 +7946,12 @@ mod __googlesheetsparser_emit_impl {
             let op_hi: u32 = *p as u32;
             let _op_rec = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
+                    crate::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
                     0,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::InlineScalar(
+                    crate::runtime::tape::PayloadData::InlineScalar(
                         op_discriminant as u32,
                     ),
                 );
@@ -7990,12 +7985,11 @@ mod __googlesheetsparser_emit_impl {
         let outer_span_hi = *p as u32;
         builder.end_compound(outer_off, outer_span_hi);
         builder
-            .columns_mut()
             .set_child_off_at(
                 outer_off,
-                ::bbnf::runtime::tape::TapeOffset(this_operand_root),
+                crate::runtime::tape::TapeOffset(this_operand_root),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
     ///
@@ -8008,7 +8002,7 @@ mod __googlesheetsparser_emit_impl {
     /// # Emitted algorithm
     ///
     /// 1. Reserve an outer Rule compound via
-    ///    [`::bbnf::runtime::tape::FusedBuilder::mark_children`] +
+    ///    [`crate::runtime::tape::Tape<()>::mark_children`] +
     ///    record the parse-open position.
     /// 2. Dispatch the leftmost operand through the grammar's
     ///    value-position dispatcher; the operand's records land
@@ -8018,7 +8012,7 @@ mod __googlesheetsparser_emit_impl {
     ///    a. Reduce every top-of-op-stack entry whose precedence
     ///       exceeds the new byte's (or ties + left-assoc); each
     ///       reduce emits a `TapeKind::Rule` reducer compound via
-    ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
+    ///       [`crate::runtime::tape::emit_reducer_compound`].
     ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
     ///       byte's u8 discriminant into `pay_narrow` directly via
     ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
@@ -8050,10 +8044,10 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         struct LocalOpEntry {
             op_discriminant: u8,
@@ -8066,7 +8060,7 @@ mod __googlesheetsparser_emit_impl {
         let outer_span_lo = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 outer_span_lo,
                 33u8,
                 0u8,
@@ -8123,7 +8117,7 @@ mod __googlesheetsparser_emit_impl {
                 let reducer_span_hi = *p as u32;
                 let compound_idx = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Rule,
+                        crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
                         0u8,
@@ -8134,7 +8128,7 @@ mod __googlesheetsparser_emit_impl {
                     .end_compound_post_order(
                         compound_idx,
                         reducer_span_hi,
-                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
+                        crate::runtime::tape::TapeOffset(lhs_idx),
                     );
                 this_operand_root = compound_idx;
             }
@@ -8188,12 +8182,12 @@ mod __googlesheetsparser_emit_impl {
             let op_hi: u32 = *p as u32;
             let _op_rec = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
+                    crate::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
                     0,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::InlineScalar(
+                    crate::runtime::tape::PayloadData::InlineScalar(
                         op_discriminant as u32,
                     ),
                 );
@@ -8227,12 +8221,11 @@ mod __googlesheetsparser_emit_impl {
         let outer_span_hi = *p as u32;
         builder.end_compound(outer_off, outer_span_hi);
         builder
-            .columns_mut()
             .set_child_off_at(
                 outer_off,
-                ::bbnf::runtime::tape::TapeOffset(this_operand_root),
+                crate::runtime::tape::TapeOffset(this_operand_root),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -8257,32 +8250,32 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [123u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     34u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
         }
         {
@@ -8297,27 +8290,27 @@ mod __googlesheetsparser_emit_impl {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [125u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     34u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
         }
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 34u8,
                 0u8,
@@ -8328,9 +8321,9 @@ mod __googlesheetsparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -8355,34 +8348,34 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             {
                 let span_lo = *p as u32;
                 let Some(match_len) = __regex_scan_GoogleSheetsParser("=?", input, *p)
                 else {
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: span_lo,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 };
                 *p += match_len as usize;
                 let span_hi = *p as u32;
                 let _ = builder
                     .push_leaf_with(
-                        ::bbnf::runtime::tape::TapeKind::Span,
+                        crate::runtime::tape::TapeKind::Span,
                         span_lo,
                         span_hi,
                         35u8,
                         0,
-                        ::bbnf::runtime::tape::PayloadData::None,
+                        crate::runtime::tape::PayloadData::None,
                     );
             }
         }
@@ -8395,7 +8388,7 @@ mod __googlesheetsparser_emit_impl {
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 35u8,
                 0u8,
@@ -8406,9 +8399,9 @@ mod __googlesheetsparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AY-II.W0.e — Grammar-activated structural-scan policy table.
     ///
@@ -8419,9 +8412,9 @@ mod __googlesheetsparser_emit_impl {
     /// `backend::rust::view::value`, which inlines the matching
     /// cursor primitive in `__path_walk`'s per-`rule_kind()`
     /// dispatch:
-    /// [`::bbnf::runtime::tape::TapeCursor::object_key_seek`] /
-    /// [`::bbnf::runtime::tape::TapeCursor::bounded_lookahead`] /
-    /// [`::bbnf::runtime::tape::TapeCursor::scan_structural_bounded`]
+    /// [`crate::runtime::tape::TapeCursor::object_key_seek`] /
+    /// [`crate::runtime::tape::TapeCursor::bounded_lookahead`] /
+    /// [`crate::runtime::tape::TapeCursor::scan_structural_bounded`]
     /// per the entry's `activation` bitmap.
     ///
     /// No runtime flag; no hand-routed grammar specialisation.
@@ -8429,186 +8422,186 @@ mod __googlesheetsparser_emit_impl {
     /// previously guarded this surface — the emitted grammar now
     /// carries a same-translation-unit consumer through
     /// `__path_walk`'s dispatch.
-    pub const STRUCTURAL_SCAN_POLICY: &[::bbnf::runtime::tape::ScanPolicyEntry] = &[
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+    pub const STRUCTURAL_SCAN_POLICY: &[crate::runtime::tape::ScanPolicyEntry] = &[
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 0u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Empty,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(0),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Empty,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 1u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Empty,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(0),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Empty,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 2u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Empty,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(0),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Empty,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 3u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 4u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 5u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(0),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 6u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 7u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 8u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 9u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(0),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 10u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Digraph,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(14),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 11u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Digraph,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(14),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 12u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 13u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 14u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 15u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 16u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 17u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 18u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 19u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 20u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 21u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Dense,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(7),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 22u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 23u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 24u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Digraph,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(14),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 25u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Digraph,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(14),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 26u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 27u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Digraph,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(14),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 28u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Digraph,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(14),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 29u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Empty,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(0),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Empty,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 30u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Digraph,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(14),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 31u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Empty,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(0),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Empty,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 32u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Digraph,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(14),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 33u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Digraph,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(14),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 34u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 35u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
     ];
     /// AW-V.W3.2 — top-level shape dispatcher.
@@ -8629,10 +8622,10 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         parse_GoogleSheetsParser_formula__value(input, p, state, builder)
     }
@@ -8646,10 +8639,10 @@ mod __googlesheetsparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         parse_flat_GoogleSheetsParser_formula(input, p, state, builder)
@@ -8657,30 +8650,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct numberView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> numberView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -8688,7 +8681,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -8820,30 +8813,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct stringView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> stringView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -8851,7 +8844,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -8985,30 +8978,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct booleanView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> booleanView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -9016,7 +9009,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -9142,30 +9135,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct error_literalView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> error_literalView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -9173,7 +9166,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -9308,30 +9301,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct sheet_prefixView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> sheet_prefixView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -9339,7 +9332,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -9465,30 +9458,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct cell_refView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> cell_refView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -9496,7 +9489,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -9630,30 +9623,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct cellView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> cellView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -9661,7 +9654,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -9789,30 +9782,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct range_refView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> range_refView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -9820,7 +9813,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -9959,30 +9952,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct cell_or_rangeView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> cell_or_rangeView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -9990,7 +9983,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -10132,30 +10125,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct identifierView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> identifierView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -10163,7 +10156,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -10293,30 +10286,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct compare_opView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> compare_opView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -10324,7 +10317,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -10450,30 +10443,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct comparison_exprView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> comparison_exprView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -10481,7 +10474,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -10599,30 +10592,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct concat_exprView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> concat_exprView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -10630,7 +10623,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -10748,30 +10741,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct add_opView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> add_opView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -10779,7 +10772,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -10905,30 +10898,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct add_exprView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> add_exprView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -10936,7 +10929,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -11054,30 +11047,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct mul_opView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> mul_opView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -11085,7 +11078,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -11211,30 +11204,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct mul_exprView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> mul_exprView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -11242,7 +11235,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -11360,30 +11353,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct exp_exprView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> exp_exprView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -11391,7 +11384,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -11509,30 +11502,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct unary_prefixView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> unary_prefixView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -11540,7 +11533,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -11666,30 +11659,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct unary_exprView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> unary_exprView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -11697,7 +11690,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -11829,30 +11822,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct postfix_exprView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> postfix_exprView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -11860,7 +11853,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -11988,30 +11981,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct primaryView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> primaryView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -12019,7 +12012,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -12495,30 +12488,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct paren_exprView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> paren_exprView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -12526,7 +12519,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -12651,30 +12644,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct func_openView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> func_openView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -12682,7 +12675,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -12823,30 +12816,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct argView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> argView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -12854,7 +12847,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -12985,30 +12978,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct func_argsView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> func_argsView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -13016,7 +13009,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -13143,30 +13136,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct func_callView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> func_callView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -13174,7 +13167,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -13302,30 +13295,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct let_bindingView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> let_bindingView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -13333,7 +13326,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -13467,30 +13460,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct let_argsView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> let_argsView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -13498,7 +13491,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -13632,30 +13625,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct let_callView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> let_callView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -13663,7 +13656,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -13788,30 +13781,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct lambda_paramsView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> lambda_paramsView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -13819,7 +13812,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -13950,30 +13943,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct lambda_callView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> lambda_callView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -13981,7 +13974,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -14106,30 +14099,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct array_rowView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> array_rowView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -14137,7 +14130,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -14271,30 +14264,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct array_rowsView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> array_rowsView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -14302,7 +14295,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -14430,30 +14423,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct array_literalView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> array_literalView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -14461,7 +14454,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -14586,30 +14579,30 @@ mod __googlesheetsparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct formulaView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> formulaView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -14617,7 +14610,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -14751,7 +14744,7 @@ mod __googlesheetsparser_emit_impl {
     /// Generic node view over any tape record for this grammar.
     #[derive(Clone, Copy, Debug)]
     pub struct GoogleSheetsParserNodeView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     /// Rule-identity discriminator for `NodeView::rule_kind`
@@ -14813,24 +14806,24 @@ mod __googlesheetsparser_emit_impl {
     impl<'p> GoogleSheetsParserNodeView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -14838,7 +14831,7 @@ mod __googlesheetsparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -14939,13 +14932,13 @@ mod __googlesheetsparser_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    impl ::bbnf::runtime::Root for GoogleSheetsParser {
+    impl crate::runtime::Root for GoogleSheetsParser {
         type View<'p> = formulaView<'p>;
         #[inline]
         fn make_view<'p>(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape<()>,
             input: &'p str,
-            root: ::bbnf::runtime::tape::TapeOffset,
+            root: crate::runtime::tape::TapeOffset,
         ) -> Self::View<'p> {
             formulaView::new(tape, input, root)
         }
@@ -15618,7 +15611,7 @@ mod __googlesheetsparser_emit_impl {
     /// invariant — pre-B5.W0.6 the codegen ignored it.
     #[inline(always)]
     fn project_rule_kind_GoogleSheetsParser(
-        kind: ::bbnf::runtime::tape::TapeKind,
+        kind: crate::runtime::tape::TapeKind,
         variant_idx: u8,
     ) -> GoogleSheetsParserRuleKind {
         if variant_idx == 0 && kind.is_compound() {
@@ -15689,20 +15682,20 @@ mod __googlesheetsparser_emit_impl {
     /// payload reads on leaves with a payload tag.
     #[inline]
     fn project_push_children_GoogleSheetsParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<GoogleSheetsParser>,
+        output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
         input: &'p str,
         offset: u32,
         out: &mut ::std::vec::Vec<GoogleSheetsParserValue<'p>>,
     ) {
         let __tape = output.tape();
-        let __rec = match __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset)) {
+        let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(offset)) {
             ::core::option::Option::Some(r) => r,
             ::core::option::Option::None => return,
         };
         if __rec.variant_idx() == 0 && __rec.kind().is_compound() {
-            let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+            let __cur = crate::runtime::tape::TapeCursor::new(
                 __tape,
-                ::bbnf::runtime::tape::TapeOffset(offset),
+                crate::runtime::tape::TapeOffset(offset),
             );
             for __child in __cur.children() {
                 project_push_children_GoogleSheetsParser(
@@ -15717,7 +15710,7 @@ mod __googlesheetsparser_emit_impl {
         }
     }
     /// AY-II.W0'.b — per-frame projector. Reads one record from the
-    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
     /// tape and constructs the matching `<Grammar>Value` variant.
     /// Admitted rules tail-call their grammar-derived materializer;
     /// non-admitted rules construct the variant inline. Compound
@@ -15730,12 +15723,12 @@ mod __googlesheetsparser_emit_impl {
     /// payload — that path remains in the scalar arm.
     #[inline]
     fn project_frame_GoogleSheetsParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<GoogleSheetsParser>,
+        output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
         input: &'p str,
         offset: u32,
     ) -> GoogleSheetsParserValue<'p> {
         let __tape = output.tape();
-        let __rec = match __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset)) {
+        let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(offset)) {
             ::core::option::Option::Some(r) => r,
             ::core::option::Option::None => {
                 ::core::panic!(
@@ -15839,9 +15832,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::cell => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -15855,9 +15848,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::range_ref => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -15871,9 +15864,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::cell_or_range => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -15907,9 +15900,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::comparison_expr => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -15923,9 +15916,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::concat_expr => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -15955,9 +15948,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::add_expr => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -15987,9 +15980,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::mul_expr => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16003,9 +15996,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::exp_expr => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16035,9 +16028,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::unary_expr => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16051,9 +16044,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::postfix_expr => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16067,9 +16060,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::primary => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16083,9 +16076,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::paren_expr => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16115,9 +16108,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::arg => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16131,9 +16124,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::func_args => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16147,9 +16140,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::func_call => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16163,9 +16156,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::let_binding => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16179,9 +16172,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::let_args => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16195,9 +16188,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::let_call => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16211,9 +16204,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::lambda_params => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16227,9 +16220,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::lambda_call => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16243,9 +16236,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::array_row => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16259,9 +16252,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::array_rows => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16275,9 +16268,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::array_literal => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16291,9 +16284,9 @@ mod __googlesheetsparser_emit_impl {
             }
             GoogleSheetsParserRuleKind::formula => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_GoogleSheetsParser(
@@ -16319,17 +16312,17 @@ mod __googlesheetsparser_emit_impl {
     /// no visitor dispatch.
     #[inline]
     fn project_value_GoogleSheetsParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<GoogleSheetsParser>,
+        output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
         input: &'p str,
     ) -> GoogleSheetsParserValue<'p> {
         let root_off = output.value_root_offset();
         project_frame_GoogleSheetsParser(output, input, root_off)
     }
-    impl ::bbnf::runtime::ValueRoot for GoogleSheetsParser {
+    impl crate::runtime::ValueRoot for GoogleSheetsParser {
         type Value<'p> = GoogleSheetsParserValue<'p>;
         #[inline]
         fn project_value_output<'p>(
-            output: &::bbnf::runtime::FusedOutput<GoogleSheetsParser>,
+            output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
             input: &'p str,
         ) -> Self::Value<'p>
         where
@@ -16354,19 +16347,19 @@ mod __googlesheetsparser_emit_impl {
     /// through to a generic children iteration.
     ///
     /// [`STRUCTURAL_SCAN_POLICY`]: crate::STRUCTURAL_SCAN_POLICY
-    /// [`TapeCursor::bounded_lookahead`]: ::bbnf::runtime::tape::TapeCursor::bounded_lookahead
-    /// [`TapeCursor::object_key_seek`]: ::bbnf::runtime::tape::TapeCursor::object_key_seek
-    /// [`TapeCursor::scan_structural_bounded`]: ::bbnf::runtime::tape::TapeCursor::scan_structural_bounded
+    /// [`TapeCursor::bounded_lookahead`]: crate::runtime::tape::TapeCursor::bounded_lookahead
+    /// [`TapeCursor::object_key_seek`]: crate::runtime::tape::TapeCursor::object_key_seek
+    /// [`TapeCursor::scan_structural_bounded`]: crate::runtime::tape::TapeCursor::scan_structural_bounded
     #[inline]
     fn __path_walk<'p>(
         view: GoogleSheetsParserNodeView<'p>,
-        path: ::bbnf::runtime::Path<'_>,
+        path: crate::runtime::Path<'_>,
     ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
         let cur_input = view.input();
         let mut cur = view;
         for seg in path.iter() {
             match seg {
-                ::bbnf::runtime::PathSegment::Field(key) => {
+                crate::runtime::PathSegment::Field(key) => {
                     match cur.rule_kind() {
                         GoogleSheetsParserRuleKind::concat_expr
                         | GoogleSheetsParserRuleKind::add_expr
@@ -16513,7 +16506,7 @@ mod __googlesheetsparser_emit_impl {
                         }
                     }
                 }
-                ::bbnf::runtime::PathSegment::Index(i) => {
+                crate::runtime::PathSegment::Index(i) => {
                     match cur.rule_kind() {
                         GoogleSheetsParserRuleKind::compare_op
                         | GoogleSheetsParserRuleKind::comparison_expr
@@ -16552,11 +16545,11 @@ mod __googlesheetsparser_emit_impl {
         }
         ::core::option::Option::Some(cur)
     }
-    impl ::bbnf::runtime::PathQuery<&'static str> for GoogleSheetsParser {
+    impl crate::runtime::PathQuery<&'static str> for GoogleSheetsParser {
         #[inline]
         fn query<'p>(
             view: Self::View<'p>,
-            path: ::bbnf::runtime::Path<'_>,
+            path: crate::runtime::Path<'_>,
         ) -> ::core::option::Option<&'static str>
         where
             Self: 'p,
@@ -16569,11 +16562,11 @@ mod __googlesheetsparser_emit_impl {
             ::core::option::Option::None
         }
     }
-    impl ::bbnf::runtime::PathQuery<f64> for GoogleSheetsParser {
+    impl crate::runtime::PathQuery<f64> for GoogleSheetsParser {
         #[inline]
         fn query<'p>(
             view: Self::View<'p>,
-            path: ::bbnf::runtime::Path<'_>,
+            path: crate::runtime::Path<'_>,
         ) -> ::core::option::Option<f64>
         where
             Self: 'p,
@@ -16591,11 +16584,11 @@ mod __googlesheetsparser_emit_impl {
             hit.span_text().parse::<f64>().ok()
         }
     }
-    impl ::bbnf::runtime::PathQuery<bool> for GoogleSheetsParser {
+    impl crate::runtime::PathQuery<bool> for GoogleSheetsParser {
         #[inline]
         fn query<'p>(
             view: Self::View<'p>,
-            path: ::bbnf::runtime::Path<'_>,
+            path: crate::runtime::Path<'_>,
         ) -> ::core::option::Option<bool>
         where
             Self: 'p,
@@ -16619,7 +16612,7 @@ mod __googlesheetsparser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -16633,7 +16626,7 @@ mod __googlesheetsparser_emit_impl {
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_string_GoogleSheetsParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<GoogleSheetsParser>,
+        output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
         input: &'p str,
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserStringProjection> {
@@ -16648,7 +16641,7 @@ mod __googlesheetsparser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -16662,14 +16655,14 @@ mod __googlesheetsparser_emit_impl {
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_boolean_GoogleSheetsParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<GoogleSheetsParser>,
+        output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
         input: &'p str,
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserBooleanProjection> {
         let _ = input;
         let frame = output.value_frame_at(offset)?;
         let __tape = output.tape();
-        let __tape_rec = __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset))?;
+        let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: bool = {
             let __b = *__bytes.get(0)?;
@@ -16682,7 +16675,7 @@ mod __googlesheetsparser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -16696,14 +16689,14 @@ mod __googlesheetsparser_emit_impl {
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_error_literal_GoogleSheetsParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<GoogleSheetsParser>,
+        output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
         input: &'p str,
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserErrorLiteralProjection> {
         let _ = input;
         let frame = output.value_frame_at(offset)?;
         let __tape = output.tape();
-        let __tape_rec = __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset))?;
+        let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
             let __b = *__bytes.get(0)?;
@@ -16716,7 +16709,7 @@ mod __googlesheetsparser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -16730,14 +16723,14 @@ mod __googlesheetsparser_emit_impl {
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_sheet_prefix_GoogleSheetsParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<GoogleSheetsParser>,
+        output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
         input: &'p str,
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserSheetPrefixProjection> {
         let _ = input;
         let frame = output.value_frame_at(offset)?;
         let __tape = output.tape();
-        let __tape_rec = __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset))?;
+        let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
             let __b = *__bytes.get(0)?;
@@ -16750,7 +16743,7 @@ mod __googlesheetsparser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -16764,7 +16757,7 @@ mod __googlesheetsparser_emit_impl {
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_cell_ref_GoogleSheetsParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<GoogleSheetsParser>,
+        output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
         input: &'p str,
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserCellRefProjection> {
@@ -16779,7 +16772,7 @@ mod __googlesheetsparser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -16793,14 +16786,14 @@ mod __googlesheetsparser_emit_impl {
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_compare_op_GoogleSheetsParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<GoogleSheetsParser>,
+        output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
         input: &'p str,
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserCompareOpProjection> {
         let _ = input;
         let frame = output.value_frame_at(offset)?;
         let __tape = output.tape();
-        let __tape_rec = __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset))?;
+        let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
             let __b = *__bytes.get(0)?;
@@ -16813,7 +16806,7 @@ mod __googlesheetsparser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -16827,14 +16820,14 @@ mod __googlesheetsparser_emit_impl {
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_add_op_GoogleSheetsParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<GoogleSheetsParser>,
+        output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
         input: &'p str,
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserAddOpProjection> {
         let _ = input;
         let frame = output.value_frame_at(offset)?;
         let __tape = output.tape();
-        let __tape_rec = __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset))?;
+        let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
             let __b = *__bytes.get(0)?;
@@ -16847,7 +16840,7 @@ mod __googlesheetsparser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -16861,14 +16854,14 @@ mod __googlesheetsparser_emit_impl {
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_mul_op_GoogleSheetsParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<GoogleSheetsParser>,
+        output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
         input: &'p str,
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserMulOpProjection> {
         let _ = input;
         let frame = output.value_frame_at(offset)?;
         let __tape = output.tape();
-        let __tape_rec = __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset))?;
+        let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
             let __b = *__bytes.get(0)?;
@@ -16881,7 +16874,7 @@ mod __googlesheetsparser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -16895,14 +16888,14 @@ mod __googlesheetsparser_emit_impl {
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_unary_prefix_GoogleSheetsParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<GoogleSheetsParser>,
+        output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
         input: &'p str,
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserUnaryPrefixProjection> {
         let _ = input;
         let frame = output.value_frame_at(offset)?;
         let __tape = output.tape();
-        let __tape_rec = __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset))?;
+        let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
         let field_0: u8 = {
             let __b = *__bytes.get(0)?;
@@ -16915,7 +16908,7 @@ mod __googlesheetsparser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -16929,7 +16922,7 @@ mod __googlesheetsparser_emit_impl {
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_func_open_GoogleSheetsParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<GoogleSheetsParser>,
+        output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
         input: &'p str,
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserFuncOpenProjection> {
@@ -21531,7 +21524,7 @@ mod __googlesheetsparser_emit_impl {
         /// multiple grammars coexist in the same test file —
         /// the module-scope `pub use ...::*` would otherwise
         /// collide on the unqualified `GRAMMAR_PROFILE` name.
-        pub const GRAMMAR_PROFILE: ::bbnf::runtime::tape::GrammarProfile = GRAMMAR_PROFILE;
+        pub const GRAMMAR_PROFILE: crate::runtime::tape::GrammarProfile = GRAMMAR_PROFILE;
         /// AY.W6.2 — associated-constant accessor for the
         /// grammar's direct-to-struct projection admission
         /// list. Alias of the module-scope
@@ -21579,37 +21572,37 @@ mod __googlesheetsparser_emit_impl {
         pub fn parse(
             input: &str,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::Parsed<'_, Self>,
-            ::bbnf::runtime::ParseErr,
+            crate::runtime::Parsed<'_, Self>,
+            crate::runtime::ParseErr,
         > {
             let __input_bytes = input.as_bytes();
             let mut state = __shape_support_GoogleSheetsParser::ScanState::new();
-            let mut builder = ::bbnf::runtime::tape::FusedBuilder::with_capacity(
-                GRAMMAR_PROFILE.capacity_for(input.len()),
-            );
+            let mut tape = crate::runtime::tape::Tape::<
+                (),
+            >::with_capacity(GRAMMAR_PROFILE.capacity_for(input.len()));
             let root_off = {
                 let mut pos: usize = 0;
                 let off = parse_GoogleSheetsParser_formula(
                         __input_bytes,
                         &mut pos,
                         &mut state,
-                        &mut builder,
+                        &mut tape,
                     )
                     .map_err(|e| match e {
-                        ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                        crate::runtime::tape::DtaError::Syntax { offset, .. } => {
+                            crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset } => {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                        crate::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                            crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        ::bbnf::runtime::tape::DtaError::InvalidState { .. } => {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                        crate::runtime::tape::DtaError::InvalidState { .. } => {
+                            crate::runtime::ParseErr::Syntax {
                                 offset: 0,
                                 rule: None,
                             }
@@ -21621,18 +21614,18 @@ mod __googlesheetsparser_emit_impl {
                     &mut state,
                 );
                 if pos != input.len() {
-                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                    return Err(crate::runtime::ParseErr::Syntax {
                         offset: pos as u32,
                         rule: None,
                     });
                 }
                 off
             };
-            let output = builder
+            let tape = tape
                 .finish_fused::<Self>(root_off.0)
-                .map_err(::bbnf::runtime::ParseErr::Tape)?;
+                .map_err(crate::runtime::ParseErr::Tape)?;
             ::core::result::Result::Ok(
-                ::bbnf::runtime::Parsed::new_fused_output(output, input, root_off),
+                crate::runtime::Parsed::new(tape, input, root_off),
             )
         }
     }
@@ -21650,7 +21643,7 @@ mod __googlesheetsparser_emit_impl {
     /// when no identifier is reachable.
     #[inline]
     pub(crate) fn cst_identifier_text<'p>(
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     ) -> &'p str {
         match cst_find_identifier_cursor(cursor, 9u8) {
@@ -21666,7 +21659,7 @@ mod __googlesheetsparser_emit_impl {
     /// Returns `(0, 0)` when no identifier is reachable.
     #[inline]
     pub(crate) fn cst_identifier_span<'p>(
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         _input: &'p str,
     ) -> (u32, u32) {
         cst_find_identifier_cursor(cursor, 9u8).map(|c| c.span()).unwrap_or((0, 0))
@@ -21676,9 +21669,9 @@ mod __googlesheetsparser_emit_impl {
     /// `start` whose `variant_idx` matches `target_idx`.
     #[inline]
     fn cst_find_identifier_cursor<'p>(
-        start: ::bbnf::runtime::tape::TapeCursor<'p>,
+        start: crate::runtime::tape::TapeCursor<'p>,
         target_idx: u8,
-    ) -> ::core::option::Option<::bbnf::runtime::tape::TapeCursor<'p>> {
+    ) -> ::core::option::Option<crate::runtime::tape::TapeCursor<'p>> {
         if start.variant_idx() == target_idx {
             return ::core::option::Option::Some(start);
         }

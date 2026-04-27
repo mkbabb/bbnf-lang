@@ -1,18 +1,17 @@
-//! Value-side state the fused builder owns alongside the structural
-//! columns.
+//! Value-side substrate types — frames, payload tags, projection
+//! handles.
 //!
-//! # Role
+//! # Role (B5.W1 substrate boundary restoration)
 //!
-//! [`FusedBuilder`](super::FusedBuilder) carries the value substrate
-//! alongside the structural tape: every `begin_compound` /
-//! `end_compound` / `push_leaf_*` call stamps BOTH column families
-//! atomically. The types in this module own the write-side bookkeeping.
-//!
-//! The types in this module are the write-side bookkeeping the
-//! fused builder carries and the read-side surface it hands off at
-//! `finish` time. The grammar-emitted projection code reads
-//! [`ValueFrame`] / [`PayloadTag`] / [`ValueFramesOutput`] off a
-//! [`FusedOutput<R>`](super::FusedOutput) at `to_value()` time.
+//! Pre-B5.W1 the value substrate lived behind a `FusedBuilder` /
+//! `FusedOutput<R>` / `ValueFramesOutput<R>` triumvirate that welded
+//! the structural tape to a parallel value-frame arena across two
+//! crates. B5.W1 promotes the substrate's value-side state (frames,
+//! payload columns, open-stack checkpoints) onto [`Columns`](crate::Columns)
+//! and the read-side accessors onto [`Tape<R>`](crate::Tape) directly,
+//! retiring the wrapper triumvirate. The types in this module are the
+//! storage shapes [`Columns`](crate::Columns) holds and the projection
+//! consumers read.
 //!
 //! # Grammar-agnostic storage
 //!
@@ -20,20 +19,17 @@
 //! compound open/close discipline threads `(first_child, child_count)`
 //! so the projection layer can walk direct children without a second
 //! index. Scalar payloads live in two parallel typed columns
-//! ([`ValueFramesOutput::payloads_narrow`] /
-//! [`ValueFramesOutput::payloads_wide`]) and leaves carry a
-//! [`PayloadTag`] identifying the column + rank.
+//! ([`Columns::value_payloads_narrow`](crate::Columns) /
+//! [`Columns::value_payloads_wide`](crate::Columns)) and leaves carry
+//! a [`PayloadTag`] identifying the column + rank.
 //!
-//! The `R` phantom on [`FusedOutput`] is the grammar-root binding the
-//! emitted `project_value_output<'p>(output: &FusedOutput<R>, input)`
-//! reads — the storage is otherwise grammar-agnostic.
-
-use std::marker::PhantomData;
+//! The `R` phantom on [`crate::Tape`] is the grammar-root binding the
+//! emitted `project_value_output<'p>(tape: &Tape<R>, input)` reads —
+//! the storage is otherwise grammar-agnostic.
 
 use crate::kind::TapeKind;
 
-/// Grammar-agnostic structural frame inside the fused builder's value
-/// arena.
+/// Grammar-agnostic structural frame inside the value substrate.
 ///
 /// One frame per emitter `begin_compound` / `push_leaf_*` call.
 /// Compounds carry a contiguous child range (`first_child` +
@@ -52,8 +48,8 @@ pub struct ValueFrame {
     /// Source span upper bound (byte offset). For compounds this is
     /// the full compound span; stamped at `end_compound` time.
     pub span_hi: u32,
-    /// Index of the first child frame in the builder's arena; unused
-    /// for leaves (`child_count == 0`).
+    /// Index of the first child frame in the value arena; unused for
+    /// leaves (`child_count == 0`).
     pub first_child: u32,
     /// Number of direct child frames for compounds; `0` for leaves.
     pub child_count: u32,
@@ -68,7 +64,7 @@ pub struct ValueFrame {
     pub payload_tag: PayloadTag,
 }
 
-/// Handle into the fused builder's scalar payload columns.
+/// Handle into the value substrate's scalar payload columns.
 ///
 /// Payloads are appended in push order; leaves record the rank +
 /// column tag. Wide scalars (`f64`, `u64`) land in the `wide` column;
@@ -141,19 +137,17 @@ impl PayloadTag {
 /// counter, second-from-top after the new checkpoint pushes). At
 /// `value_end_compound` time the counter is read directly into
 /// `ValueFrame::child_count`, replacing the O(subtree_size) walk
-/// landed in W0'.a. See
-/// `docs/tranches/AY-II/audit/W0p-regen-root-cause.md` for the
-/// attribution.
+/// landed in W0'.a.
 #[derive(Clone, Copy, Debug)]
-pub(super) struct ValueCheckpoint {
+pub struct ValueCheckpoint {
     /// Arena frame offset at open time. `frames.len()` snaps back to
     /// this value on rollback; the frame itself is pushed at this
     /// index.
-    pub(super) frame_offset: u32,
+    pub frame_offset: u32,
     /// Narrow payload column rank at open time.
-    pub(super) narrow_rank: u32,
+    pub narrow_rank: u32,
     /// Wide payload column rank at open time.
-    pub(super) wide_rank: u32,
+    pub wide_rank: u32,
     /// Count of direct children pushed under this checkpoint since
     /// `value_begin_compound`. Incremented by every `push_value_leaf`
     /// whose parent is this checkpoint (top-of-stack) and by every
@@ -161,150 +155,19 @@ pub(super) struct ValueCheckpoint {
     /// second-from-top after the nested push). Consumed by
     /// `value_end_compound` into `ValueFrame::child_count` — O(1)
     /// replacement for the pre-W0'.d3 `subtree_size` walk.
-    pub(super) direct_child_count: u32,
+    pub direct_child_count: u32,
     /// Tape-side row offset for the compound row this checkpoint
-    /// pairs with. Stamped in [`super::FusedBuilder::begin_compound`]
-    /// at the same instant the matching tape row is pushed; consumed
-    /// by [`super::FusedBuilder::rollback_to`] to identify every
-    /// checkpoint whose paired compound row lives at or above the
-    /// rollback boundary, so a single `rollback_to(open_offset)` call
-    /// unwinds tape and value substrates atomically regardless of how
-    /// many compounds the failed branch opened.
-    pub(super) tape_idx: u32,
+    /// pairs with. Stamped at `begin_compound` time alongside the
+    /// matching tape row push; consumed by `Columns::rollback_to` to
+    /// identify every checkpoint whose paired compound row lives at
+    /// or above the rollback boundary, so a single
+    /// `rollback_to(open_offset)` call unwinds tape and value
+    /// substrates atomically regardless of how many compounds the
+    /// failed branch opened.
+    pub tape_idx: u32,
 }
 
-/// The finished value substrate handed off to
-/// [`Parsed`](crate::runtime::Parsed)-style consumers at
-/// [`FusedBuilder::finish`](super::FusedBuilder::finish) time.
-///
-/// Holds the frame arena + scalar payload columns + root-frame offset.
-/// Consumers project into `R::Value<'p>` via the grammar-emitted
-/// projection logic; the output is opaque from `tape` — it is a
-/// grammar-agnostic storage layout that the emitter binds against.
-///
-/// Carried by [`FusedOutput`] alongside the finalised [`Tape`] so the
-/// fused parse entry returns both substrates in one call.
-pub struct ValueFramesOutput<R> {
-    pub(super) frames: Vec<ValueFrame>,
-    pub(super) payloads_narrow: Vec<u32>,
-    pub(super) payloads_wide: Vec<u64>,
-    pub(super) root_offset: u32,
-    pub(super) _root_marker: PhantomData<R>,
-}
-
-impl<R> ValueFramesOutput<R> {
-    /// An empty value substrate — used by substrate-only
-    /// [`Parsed::new`](crate::runtime::Parsed::new) constructions that
-    /// never reach `to_value()`. Grammar-emitted fused parse entries
-    /// populate the full output via
-    /// [`FusedBuilder::finish`](super::FusedBuilder::finish); callers
-    /// reaching for `to_value()` through the fused entry see the
-    /// populated arena.
-    ///
-    /// Empty output is distinguishable via [`Self::is_empty`]; the
-    /// grammar's emitted projection treats an empty output as an IR
-    /// invariant violation and panics (no silent fallback to
-    /// tape-walking).
-    #[inline]
-    pub fn empty() -> Self {
-        Self {
-            frames: Vec::new(),
-            payloads_narrow: Vec::new(),
-            payloads_wide: Vec::new(),
-            root_offset: 0,
-            _root_marker: PhantomData,
-        }
-    }
-
-    /// Frame count — `0` iff the output is empty.
-    #[inline]
-    pub fn frame_count(&self) -> usize {
-        self.frames.len()
-    }
-
-    /// `true` iff the output carries no frames.
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.frames.is_empty()
-    }
-
-    /// Borrow the frame arena. Grammar-emitted projection logic reads
-    /// this to reconstruct the typed `<Grammar>Value`.
-    #[inline]
-    pub fn frames(&self) -> &[ValueFrame] {
-        &self.frames
-    }
-
-    /// The root frame's offset within the arena.
-    #[inline]
-    pub fn root_offset(&self) -> u32 {
-        self.root_offset
-    }
-
-    /// Read a narrow-column payload by rank.
-    #[inline]
-    pub fn payload_narrow(&self, rank: u32) -> Option<u32> {
-        self.payloads_narrow.get(rank as usize).copied()
-    }
-
-    /// Read a wide-column payload by rank.
-    #[inline]
-    pub fn payload_wide(&self, rank: u32) -> Option<u64> {
-        self.payloads_wide.get(rank as usize).copied()
-    }
-
-    /// Look up the scalar payload for a leaf frame, if any.
-    #[inline]
-    pub fn payload_for(&self, frame: &ValueFrame) -> Option<PayloadValue> {
-        let tag = frame.payload_tag;
-        if tag.is_none() {
-            None
-        } else if tag.is_narrow() {
-            self.payload_narrow(tag.rank()).map(PayloadValue::Narrow)
-        } else {
-            self.payload_wide(tag.rank()).map(PayloadValue::Wide)
-        }
-    }
-
-    /// Borrow a frame by offset.
-    #[inline]
-    pub fn frame(&self, offset: u32) -> Option<&ValueFrame> {
-        self.frames.get(offset as usize)
-    }
-
-    /// Borrow the root frame directly. Returns `None` for empty
-    /// outputs.
-    #[inline]
-    pub fn root_frame(&self) -> Option<&ValueFrame> {
-        self.frame(self.root_offset)
-    }
-
-    /// Iterator over the direct children of the compound frame at
-    /// `offset`. For leaf frames the iterator is empty.
-    ///
-    /// Walks the pre-order push arena, taking each direct child and
-    /// stepping past its subtree via frame-count accumulation.
-    #[inline]
-    pub fn children(&self, offset: u32) -> ValueChildren<'_, R> {
-        let frame = match self.frames.get(offset as usize) {
-            Some(f) => f,
-            None => {
-                return ValueChildren {
-                    output: self,
-                    next: u32::MAX,
-                    remaining: 0,
-                };
-            }
-        };
-        ValueChildren {
-            output: self,
-            next: frame.first_child,
-            remaining: frame.child_count,
-        }
-    }
-}
-
-/// Scalar payload decoded from a [`ValueFramesOutput`] leaf.
+/// Scalar payload decoded from a value-substrate leaf.
 #[derive(Clone, Copy, Debug)]
 pub enum PayloadValue {
     /// Narrow-column payload (u32 / bool-as-u32 / u8-as-u32).
@@ -351,17 +214,16 @@ impl PayloadValue {
     }
 }
 
-/// Iterator over the direct children of a compound frame inside a
-/// [`ValueFramesOutput`]. Yields `(offset, frame)` pairs in push
-/// order.
-pub struct ValueChildren<'o, R> {
-    output: &'o ValueFramesOutput<R>,
-    next: u32,
-    remaining: u32,
+/// Iterator over the direct children of a value-substrate compound
+/// frame. Yields `(offset, frame)` pairs in push order.
+pub struct ValueChildren<'t, R> {
+    pub(crate) tape: &'t crate::tape::Tape<R>,
+    pub(crate) next: u32,
+    pub(crate) remaining: u32,
 }
 
-impl<'o, R> Iterator for ValueChildren<'o, R> {
-    type Item = (u32, &'o ValueFrame);
+impl<'t, R> Iterator for ValueChildren<'t, R> {
+    type Item = (u32, &'t ValueFrame);
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -369,10 +231,10 @@ impl<'o, R> Iterator for ValueChildren<'o, R> {
             return None;
         }
         let offset = self.next;
-        let frame = self.output.frames.get(offset as usize)?;
+        let frame = self.tape.columns().value_frames.get(offset as usize)?;
         // Step past this child's full subtree to locate the next
         // direct sibling.
-        let size = subtree_size(&self.output.frames, offset as usize);
+        let size = subtree_size(&self.tape.columns().value_frames, offset as usize);
         self.next = offset + size as u32;
         self.remaining -= 1;
         Some((offset, frame))
@@ -385,7 +247,7 @@ impl<'o, R> Iterator for ValueChildren<'o, R> {
 /// subtree sizes`. The frames vector is laid out in pre-order push
 /// order, so the subtree is a contiguous range starting at `offset`.
 #[inline]
-pub(super) fn subtree_size(frames: &[ValueFrame], offset: usize) -> usize {
+pub(crate) fn subtree_size(frames: &[ValueFrame], offset: usize) -> usize {
     let frame = &frames[offset];
     if frame.child_count == 0 {
         1

@@ -38,7 +38,7 @@
 //! and shouldn't leak into `tape::TapeCursor` or the generated
 //! view types.
 
-use ::bbnf::runtime::tape::TapeKind;
+use crate::runtime::tape::TapeKind;
 
 use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
 
@@ -228,7 +228,7 @@ pub(crate) fn find_sibling_by_kind<'tape>(
 /// `Regex`, not a compound shape. Gate on both rule_kind AND tape
 /// kind so a real leaf doesn't get descended through.
 fn is_anonymous_wrapper(view: BbnfBootstrapNodeView<'_>) -> bool {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     if !matches!(
         view.kind(),
         TapeKind::Rule | TapeKind::Seq | TapeKind::Alt | TapeKind::Repeat,

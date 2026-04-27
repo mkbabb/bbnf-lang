@@ -1,6 +1,6 @@
 //! `tape` — leaf crate for the parser tape representation.
 //!
-//! # Architectural role
+//! # Architectural role (post-B5.W1)
 //!
 //! The tape is bbnf-lang's replacement for the eager AST. Instead
 //! of materialising a typed enum tree per parse (one `slab().alloc()`
@@ -12,16 +12,23 @@
 //! returns a view over its children.
 //!
 //! ```text
-//!   input bytes ─► parser ─► Tape (Columns SoA substrate) ─► View<'tape>
-//!                     │                                           │
-//!                     └─ FusedBuilder::push_compound(kind, start..end)
-//!                                                                 │
-//!                                                                 ▼
-//!                                                      accessor.key() / .value()
+//!   input bytes ─► parser ─► Tape<R> (Columns SoA substrate) ─► View<'tape>
+//!                     │                                              │
+//!                     └─ tape.begin_compound / push_leaf / end_compound
+//!                                                                    │
+//!                                                                    ▼
+//!                                                        accessor.key() / .value()
 //! ```
 //!
 //! # Design
 //!
+//! - **Single substrate** ([`Tape<R>`]): one type owns the structural
+//!   tape columns AND the value-side state ([`Columns`] absorbs the
+//!   value frames + payload columns + open-stack). The same surface
+//!   serves write paths (parse-time) AND read paths (view-layer +
+//!   value projection). Pre-B5.W1 the substrate was a `FusedBuilder`
+//!   / `FusedOutput<R>` / `ValueFramesOutput<R>` triumvirate; B5.W1
+//!   collapses the welded surface onto `Tape<R>` directly.
 //! - **Columnar substrate** (Tranche AV.2.1): [`Columns`] holds the
 //!   six structural columns (`kinds`, `flags`, `extra`, `span_lo`,
 //!   `span_hi`, `sib_skip`) plus `child_off` and the typed-payload
@@ -45,7 +52,6 @@
 
 #![warn(missing_docs)]
 
-pub mod builder;
 pub mod columns;
 pub mod cursor;
 pub mod decoders;
@@ -60,12 +66,9 @@ pub mod psi;
 pub mod stage1;
 pub mod structural_scan;
 pub mod tape;
+pub mod value;
 pub mod visitor;
 
-pub use builder::{
-    FusedBuilder, FusedOutput, PayloadData, PayloadTag, PayloadValue, TapeBuildError,
-    ValueChildren, ValueFrame, ValueFramesOutput,
-};
 pub use columns::{
     ColumnTag, Columns, Count, MaxF64, MinF64, PayAggU8, PayNarrowU32, PayWideF64, PayWideU64,
     Reducer, SumF64, SumU32, SumU64,
@@ -90,7 +93,12 @@ pub use profile::{
 pub use psi::{PayloadJob, PayloadKind, PayloadStream};
 pub use stage1::StructuralIndex;
 pub use structural_scan::{next_structural_at_or_after, scan_structural};
-pub use tape::{Tape, TapeIter, TapeOffset, TapeRec};
+#[allow(deprecated)]
+pub use tape::{
+    reset_tape_new_call_count, tape_new_call_count, FusedBuilder, FusedOutput, PayloadData,
+    Tape, TapeBuildError, TapeIter, TapeOffset, TapeRec, ValueFramesOutput,
+};
+pub use value::{PayloadTag, PayloadValue, ValueChildren, ValueCheckpoint, ValueFrame};
 pub use visitor::{
     ArrayVisitor, GrammarVisitor, KeywordVisitor, NumberVisitor, ObjectVisitor, PrattVisitor,
     StringVisitor, TapeVisitor, TapeVisitorError, Value, ValueVisitor, ValueVisitorError,

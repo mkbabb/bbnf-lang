@@ -57,24 +57,24 @@ pub fn emit_parse_string(
             input: &[u8],
             p: &mut usize,
             _state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+            builder: &mut crate::runtime::tape::Tape<()>,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::TapeOffset,
-            ::bbnf::runtime::tape::DtaError,
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
         > {
             let open = *p;
             if input.get(open).copied() != Some(b'"') {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: open as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             let body_start = open + 1;
             let tail = match input.get(body_start..) {
                 Some(t) => t,
                 None => {
-                    return Err(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                    return Err(crate::runtime::tape::DtaError::UnexpectedEnd {
                         offset: open as u32,
                     });
                 }
@@ -88,7 +88,7 @@ pub fn emit_parse_string(
                     // Borrow path: Span leaf with STRING_BORROW_BIT set;
                     // the reader slices input[lo+1..hi-1] directly.
                     let leaf = builder.push_leaf_borrowed_string(
-                        ::bbnf::runtime::tape::TapeKind::Span,
+                        crate::runtime::tape::TapeKind::Span,
                         lo,
                         hi,
                         #variant_idx,
@@ -105,7 +105,7 @@ pub fn emit_parse_string(
                     parse_string_escaped(input, p, open, builder, #variant_idx)
                 }
                 Some(_) => unreachable!(),
-                None => Err(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                None => Err(crate::runtime::tape::DtaError::UnexpectedEnd {
                     offset: open as u32,
                 }),
             }
@@ -160,11 +160,11 @@ pub fn emit_escape_helper(grammar_suffix: &str) -> TokenStream {
             input: &[u8],
             p: &mut usize,
             open: usize,
-            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+            builder: &mut crate::runtime::tape::Tape<()>,
             variant_idx: u8,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::TapeOffset,
-            ::bbnf::runtime::tape::DtaError,
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
         > {
             let arena = builder.arena_mut();
             let frame_offset = arena.len() as u32;
@@ -190,7 +190,7 @@ pub fn emit_escape_helper(grammar_suffix: &str) -> TokenStream {
                     let lo = open as u32;
                     let hi = *p as u32;
                     let leaf = builder.push_leaf_with_arena_frame(
-                        ::bbnf::runtime::tape::TapeKind::Span,
+                        crate::runtime::tape::TapeKind::Span,
                         lo,
                         hi,
                         variant_idx,
@@ -213,7 +213,7 @@ pub fn emit_escape_helper(grammar_suffix: &str) -> TokenStream {
                     arena_final.truncate(frame_offset as usize);
                     *p = end_pos;
                     let leaf = builder.push_leaf_borrowed_string(
-                        ::bbnf::runtime::tape::TapeKind::Span,
+                        crate::runtime::tape::TapeKind::Span,
                         open as u32,
                         *p as u32,
                         variant_idx,
@@ -227,12 +227,12 @@ pub fn emit_escape_helper(grammar_suffix: &str) -> TokenStream {
                     // prefix bytes the kernel may not have touched.
                     let arena_final = builder.arena_mut();
                     arena_final.truncate(frame_offset as usize);
-                    Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    Err(crate::runtime::tape::DtaError::Syntax {
                         offset: open as u32,
                         failing_state:
-                            ::bbnf::runtime::tape::DtaStateId::NONE,
+                            crate::runtime::tape::DtaStateId::NONE,
                         failing_rule:
-                            ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            crate::runtime::tape::DtaRuleId(u32::MAX),
                     })
                 }
             }
@@ -282,14 +282,14 @@ pub fn emit_parse_string_visitor(
             _state: &mut #support_mod::ScanState,
             visitor: &mut V,
             is_key: bool,
-        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: ::bbnf::runtime::tape::StringVisitor
-                + ::bbnf::runtime::tape::ObjectVisitor,
+            V: crate::runtime::tape::StringVisitor
+                + crate::runtime::tape::ObjectVisitor,
         {
             let open = *p;
             if input.get(open).copied() != Some(b'"') {
-                return Err(::bbnf::runtime::ParseErr::Syntax {
+                return Err(crate::runtime::ParseErr::Syntax {
                     offset: open as u32, rule: None,
                 });
             }
@@ -297,7 +297,7 @@ pub fn emit_parse_string_visitor(
             let tail = match input.get(body_start..) {
                 Some(t) => t,
                 None => {
-                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                    return Err(crate::runtime::ParseErr::Syntax {
                         offset: open as u32, rule: None,
                     });
                 }
@@ -309,12 +309,12 @@ pub fn emit_parse_string_visitor(
                     *p = end + 1;
                     if is_key {
                         visitor.key(body)
-                            .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                            .map_err(|_| crate::runtime::ParseErr::Syntax {
                                 offset: open as u32, rule: None,
                             })
                     } else {
                         visitor.string(body)
-                            .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                            .map_err(|_| crate::runtime::ParseErr::Syntax {
                                 offset: open as u32, rule: None,
                             })
                     }
@@ -324,7 +324,7 @@ pub fn emit_parse_string_visitor(
                     #escaped_fn(input, p, body_start, esc_start, visitor, is_key, open)
                 }
                 Some(_) => unreachable!(),
-                None => Err(::bbnf::runtime::ParseErr::Syntax {
+                None => Err(crate::runtime::ParseErr::Syntax {
                     offset: open as u32, rule: None,
                 }),
             }
@@ -360,10 +360,10 @@ pub fn emit_visitor_escape_helper(grammar_suffix: &str) -> TokenStream {
             visitor: &mut V,
             is_key: bool,
             open: usize,
-        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: ::bbnf::runtime::tape::StringVisitor
-                + ::bbnf::runtime::tape::ObjectVisitor,
+            V: crate::runtime::tape::StringVisitor
+                + crate::runtime::tape::ObjectVisitor,
         {
             let mut buf: Vec<u8> = Vec::with_capacity(
                 input.len().saturating_sub(body_start),
@@ -378,14 +378,14 @@ pub fn emit_visitor_escape_helper(grammar_suffix: &str) -> TokenStream {
                     *p = end_pos;
                     if is_key {
                         visitor.key(&buf).map_err(|_| {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                            crate::runtime::ParseErr::Syntax {
                                 offset: open as u32,
                                 rule: None,
                             }
                         })
                     } else {
                         visitor.string(&buf).map_err(|_| {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                            crate::runtime::ParseErr::Syntax {
                                 offset: open as u32,
                                 rule: None,
                             }
@@ -405,21 +405,21 @@ pub fn emit_visitor_escape_helper(grammar_suffix: &str) -> TokenStream {
                     let body = &input[start as usize..end as usize];
                     if is_key {
                         visitor.key(body).map_err(|_| {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                            crate::runtime::ParseErr::Syntax {
                                 offset: open as u32,
                                 rule: None,
                             }
                         })
                     } else {
                         visitor.string(body).map_err(|_| {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                            crate::runtime::ParseErr::Syntax {
                                 offset: open as u32,
                                 rule: None,
                             }
                         })
                     }
                 }
-                None => Err(::bbnf::runtime::ParseErr::Syntax {
+                None => Err(crate::runtime::ParseErr::Syntax {
                     offset: open as u32,
                     rule: None,
                 }),

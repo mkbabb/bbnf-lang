@@ -140,7 +140,7 @@ pub fn emit_parse_pratt(
         /// # Emitted algorithm
         ///
         /// 1. Reserve an outer Rule compound via
-        ///    [`::bbnf::runtime::tape::FusedBuilder::mark_children`] +
+        ///    [`crate::runtime::tape::Tape<()>::mark_children`] +
         ///    record the parse-open position.
         /// 2. Dispatch the leftmost operand through the grammar's
         ///    value-position dispatcher; the operand's records land
@@ -150,7 +150,7 @@ pub fn emit_parse_pratt(
         ///    a. Reduce every top-of-op-stack entry whose precedence
         ///       exceeds the new byte's (or ties + left-assoc); each
         ///       reduce emits a `TapeKind::Rule` reducer compound via
-        ///       [`::bbnf::runtime::tape::emit_reducer_compound`].
+        ///       [`crate::runtime::tape::emit_reducer_compound`].
         ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
         ///       byte's u8 discriminant into `pay_narrow` directly via
         ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
@@ -176,13 +176,13 @@ pub fn emit_parse_pratt(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+            builder: &mut crate::runtime::tape::Tape<()>,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::TapeOffset,
-            ::bbnf::runtime::tape::DtaError,
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
         > {
             // Local op-stack entry — mirrors
-            // `::bbnf::runtime::tape::OpStackEntry` but lives on the
+            // `crate::runtime::tape::OpStackEntry` but lives on the
             // CPU stack inside this fn so the reducer's LLVM loop fuses
             // the push / pop without a cross-crate call boundary.
             //
@@ -228,7 +228,7 @@ pub fn emit_parse_pratt(
             // outer_span_lo; matching end_compound at span_hi
             // back-patches span_hi + child_off + HAS_CHILDREN.
             let outer_off = builder.begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 outer_span_lo,
                 #variant_idx,
                 0u8,
@@ -362,7 +362,7 @@ pub fn emit_parse_pratt(
                     // projection distinguishes per-op.
                     let reducer_span_hi = *p as u32;
                     let compound_idx = builder.begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Rule,
+                        crate::runtime::tape::TapeKind::Rule,
                         lhs_span_lo,
                         op_discriminant,
                         0u8,
@@ -372,7 +372,7 @@ pub fn emit_parse_pratt(
                     builder.end_compound_post_order(
                         compound_idx,
                         reducer_span_hi,
-                        ::bbnf::runtime::tape::TapeOffset(lhs_idx),
+                        crate::runtime::tape::TapeOffset(lhs_idx),
                     );
                     this_operand_root = compound_idx;
                 }
@@ -469,12 +469,12 @@ pub fn emit_parse_pratt(
                 *p = (*p).saturating_add(op_width as usize);
                 let op_hi: u32 = *p as u32;
                 let _op_rec = builder.push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Span,
+                    crate::runtime::tape::TapeKind::Span,
                     op_lo,
                     op_hi,
                     0,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::InlineScalar(
+                    crate::runtime::tape::PayloadData::InlineScalar(
                         op_discriminant as u32,
                     ),
                 );
@@ -545,11 +545,11 @@ pub fn emit_parse_pratt(
             // When no reduction fired (single-operand Pratt), the
             // final reducer is the first operand's root, which
             // `this_operand_root` already tracks.
-            builder.columns_mut().set_child_off_at(
+            builder.set_child_off_at(
                 outer_off,
-                ::bbnf::runtime::tape::TapeOffset(this_operand_root),
+                crate::runtime::tape::TapeOffset(this_operand_root),
             );
-            Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+            Ok(crate::runtime::tape::TapeOffset(outer_off))
         }
     }
 }
@@ -637,14 +637,14 @@ pub fn emit_parse_pratt_visitor(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             visitor: &mut V,
-        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: ::bbnf::runtime::tape::PrattVisitor
-                + ::bbnf::runtime::tape::ObjectVisitor
-                + ::bbnf::runtime::tape::ArrayVisitor
-                + ::bbnf::runtime::tape::StringVisitor
-                + ::bbnf::runtime::tape::NumberVisitor
-                + ::bbnf::runtime::tape::KeywordVisitor,
+            V: crate::runtime::tape::PrattVisitor
+                + crate::runtime::tape::ObjectVisitor
+                + crate::runtime::tape::ArrayVisitor
+                + crate::runtime::tape::StringVisitor
+                + crate::runtime::tape::NumberVisitor
+                + crate::runtime::tape::KeywordVisitor,
         {
             // Local op stack — same layout as the tape-path emitter's
             // `LocalOpEntry` but carries only the data the visitor
@@ -663,13 +663,13 @@ pub fn emit_parse_pratt_visitor(
             }
 
             let _ = #support_mod::skip_space(input, p, state);
-            visitor.begin_pratt().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+            visitor.begin_pratt().map_err(|_| crate::runtime::ParseErr::Syntax {
                 offset: *p as u32, rule: None,
             })?;
 
             // Leftmost operand — AW-V.W5.2 per-Ref direct call.
             #operand_call
-            visitor.operand_end().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+            visitor.operand_end().map_err(|_| crate::runtime::ParseErr::Syntax {
                 offset: *p as u32, rule: None,
             })?;
 
@@ -731,7 +731,7 @@ pub fn emit_parse_pratt_visitor(
                     op_stack_len -= 1;
                     visitor
                         .operator(op_disc, op_prec)
-                        .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                        .map_err(|_| crate::runtime::ParseErr::Syntax {
                             offset: *p as u32, rule: None,
                         })?;
                 }
@@ -805,12 +805,12 @@ pub fn emit_parse_pratt_visitor(
                 let _ = #support_mod::skip_space(input, p, state);
                 // AW-V.W5.2 — per-Ref RHS operand call.
                 #rhs_call
-                visitor.operand_end().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                visitor.operand_end().map_err(|_| crate::runtime::ParseErr::Syntax {
                     offset: *p as u32, rule: None,
                 })?;
             }
 
-            visitor.end_pratt().map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+            visitor.end_pratt().map_err(|_| crate::runtime::ParseErr::Syntax {
                 offset: *p as u32, rule: None,
             })?;
             Ok(())

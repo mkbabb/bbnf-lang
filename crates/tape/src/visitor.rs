@@ -18,7 +18,7 @@
 //! Two concrete visitor consumers ship alongside the trait hierarchy:
 //!
 //! - [`TapeVisitor`] — emits into a [`tape::Columns`] substrate via
-//!   a [`FusedBuilder`]. Records the structural + payload bytes the
+//!   a [`Tape`]. Records the structural + payload bytes the
 //!   `dispatch_one` cold-path replay would produce; parity is the
 //!   sanity gate for the shape-emitter lift in W3.
 //! - [`ValueVisitor`] — placeholder for the per-grammar type resolver
@@ -29,21 +29,10 @@
 //! Both visitors are monomorphic: the parser body that drives them
 //! through `parse_json::<V>` inlines each method body at the call site.
 //! No `Box<dyn Visitor>`, no `&dyn Visitor`.
-//!
-//! # Design template
-//!
-//! The trait hierarchy lifts the shape established by
-//! `json-prototype`'s `JsonVisitor` (crates/json-prototype/
-//! src/visitor.rs:31) into the per-shape sub-trait composition B4 §5
-//! prescribes. The prototype trait was JSON-fixed by necessity (single
-//! grammar); lifting it to `tape` generalises the method set
-//! across grammars by splitting per-shape concerns into sub-traits a
-//! consumer opts into.
 
-use crate::builder::{PayloadData, FusedBuilder};
 use crate::columns::Columns;
 use crate::kind::TapeKind;
-use crate::tape::Tape;
+use crate::tape::{PayloadData, Tape};
 use crate::TapeBuildError;
 
 // ─────────────────────────────────────────────────────────────────────
@@ -213,14 +202,14 @@ pub trait PrattVisitor: GrammarVisitor {
 
 /// The `tape` substrate visitor — emits events into a
 /// [`tape::Columns`] + [`tape::PayloadStream`] backing store
-/// via a [`FusedBuilder`].
+/// via a [`Tape`].
 ///
 /// # Layout per shape
 ///
 /// - **Objects / Arrays** — compound records (`TapeKind::Rule`)
 ///   bracketing the children run. `begin_*` opens a pre-order
-///   compound via [`FusedBuilder::begin_compound`]; `end_*` closes
-///   with [`FusedBuilder::end_compound`] and the accumulated span.
+///   compound via [`Tape::begin_compound`]; `end_*` closes with
+///   [`Tape::end_compound`] and the accumulated span.
 /// - **Keys** — span leaves (`TapeKind::Span`) carrying the decoded
 ///   bytes as an arena-framed `(len: u32 LE, bytes)` payload.
 /// - **Strings** — span leaves (`TapeKind::Span`) carrying arena-
@@ -235,31 +224,20 @@ pub trait PrattVisitor: GrammarVisitor {
 ///
 /// Every `impl GrammarVisitor for TapeVisitor` method is
 /// `#[inline(always)]` so the emitter's arm calls collapse to direct
-/// `Columns` / `FusedBuilder` mutations without a function-call
-/// boundary. The visitor carries no state the emitter can't reach —
-/// compound nesting lives on the builder's children-mark stack +
-/// a sidecar `Vec<CompoundFrame>` kept on the visitor.
+/// `Columns` / `Tape` mutations without a function-call boundary.
+/// The visitor carries no state the emitter can't reach — compound
+/// nesting lives on the tape's open-stack + a sidecar
+/// `Vec<CompoundFrame>` kept on the visitor.
 pub struct TapeVisitor<'input> {
-    builder: FusedBuilder,
+    tape: Tape<()>,
     input: &'input [u8],
     /// In-progress compound frames. Each frame records the
-    /// [`mark_children`](FusedBuilder::mark_children) offset, the span
-    /// start, and the compound kind so the matching `end_*` closes
-    /// with the right metadata.
+    /// `open_offset` the matching `Tape::begin_compound` returned so
+    /// the matching `end_*` closes with the right metadata.
     compounds: Vec<CompoundFrame>,
 }
 
-/// In-progress compound frame — private to [`TapeVisitor`]; kept on
-/// the visitor rather than threaded through the parse function's
-/// generic bounds.
-///
-/// Tracks the tape-side `open_offset` the builder's
-/// [`FusedBuilder::begin_compound`] returned so the matching
-/// `end_*` can back-patch via
-/// [`FusedBuilder::end_compound_post_order`]. Post-W0'.a the visitor
-/// emits pre-order via begin/end rather than the retired
-/// `push_compound` post-order shim, keeping the tape in lockstep
-/// with the fused value substrate.
+/// In-progress compound frame — private to [`TapeVisitor`].
 struct CompoundFrame {
     span_lo: u32,
     open_offset: u32,
@@ -285,7 +263,7 @@ impl<'input> TapeVisitor<'input> {
     pub fn new(input: &'input [u8]) -> Self {
         let capacity = input.len() / 2 + 2;
         Self {
-            builder: FusedBuilder::with_capacity(capacity),
+            tape: Tape::with_capacity(capacity),
             input,
             compounds: Vec::new(),
         }
@@ -293,29 +271,24 @@ impl<'input> TapeVisitor<'input> {
 
     /// Consume the visitor and finalise the tape.
     ///
-    /// Runs the builder's finalisation pipeline (derives `sib_skip`
-    /// + `span_hi` / `child_off` inline for the legacy fn-per-rule
-    /// path, or consumes the parallel `frame_depth` stream when the
-    /// DTA driver is in inline-finalisation mode).
-    ///
-    /// AY-II.W0'.a — the visitor discards the fused value substrate
-    /// via [`FusedBuilder::finish`] (tape-only). The visitor's trait
-    /// surface is structural-only, so the paired value frames the
-    /// fused builder accumulated are not exposed through the
-    /// visitor's API. Grammar-emitted parse entries go through the
-    /// richer `FusedBuilder::finish_fused<R>(root_off)` path.
+    /// Runs the substrate's finalisation pipeline (derives `sib_skip`
+    /// + `span_hi` / `child_off` inline) and returns the finished
+    /// `Tape<()>`. The visitor's trait surface is structural-only,
+    /// so the paired value frames the substrate accumulated are not
+    /// exposed through the visitor's API; grammar-emitted parse
+    /// entries call `tape.finish(root_off)` directly with a non-unit
+    /// `R` to retain the value substrate for projection.
     #[inline]
-    pub fn finish(self) -> Result<Tape, TapeBuildError> {
-        self.builder.finish()
+    pub fn finish(self) -> Result<Tape<()>, TapeBuildError> {
+        self.tape.finish(0)
     }
 
-    /// Borrow the underlying builder mutably. Used by parser shims
-    /// that need direct arena-write access (the JSON decode kernel
-    /// streams decoded bytes directly into `pay_agg` via
-    /// [`FusedBuilder::arena_mut`]).
+    /// Borrow the underlying tape mutably. Used by parser shims that
+    /// need direct arena-write access (the JSON decode kernel streams
+    /// decoded bytes directly into `pay_agg` via [`Tape::arena_mut`]).
     #[inline]
-    pub fn builder_mut(&mut self) -> &mut FusedBuilder {
-        &mut self.builder
+    pub fn tape_mut(&mut self) -> &mut Tape<()> {
+        &mut self.tape
     }
 
     /// Borrow the underlying columns immutably. Test-fixture surface
@@ -323,7 +296,7 @@ impl<'input> TapeVisitor<'input> {
     /// `dispatch_one` path.
     #[inline]
     pub fn columns(&self) -> &Columns {
-        self.builder.columns()
+        self.tape.columns()
     }
 
     /// Byte length of the source input this visitor is parsing.
@@ -337,7 +310,7 @@ impl<'input> TapeVisitor<'input> {
     /// the byte offset of the length prefix.
     #[inline(always)]
     fn push_arena_frame(&mut self, bytes: &[u8]) -> u32 {
-        let arena = self.builder.arena_mut();
+        let arena = self.tape.arena_mut();
         let offset = arena.len() as u32;
         arena.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
         arena.extend_from_slice(bytes);
@@ -360,7 +333,7 @@ impl<'input> ObjectVisitor for TapeVisitor<'input> {
         // replaced by this atomic begin/end pair which also stamps
         // the paired value frame in lockstep.
         let open_offset = self
-            .builder
+            .tape
             .begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
         self.compounds.push(CompoundFrame {
             span_lo: 0,
@@ -372,7 +345,7 @@ impl<'input> ObjectVisitor for TapeVisitor<'input> {
     #[inline(always)]
     fn key(&mut self, bytes: &[u8]) -> Result<(), Self::Error> {
         let arena_offset = self.push_arena_frame(bytes);
-        self.builder
+        self.tape
             .push_leaf_with_arena_frame(TapeKind::Span, 0, 0, 0, 0, arena_offset);
         Ok(())
     }
@@ -383,7 +356,7 @@ impl<'input> ObjectVisitor for TapeVisitor<'input> {
             .compounds
             .pop()
             .ok_or(TapeVisitorError::UnbalancedCompound)?;
-        self.builder.end_compound(frame.open_offset, frame.span_lo);
+        self.tape.end_compound(frame.open_offset, frame.span_lo);
         Ok(())
     }
 }
@@ -392,7 +365,7 @@ impl<'input> ArrayVisitor for TapeVisitor<'input> {
     #[inline(always)]
     fn begin_array(&mut self) -> Result<(), Self::Error> {
         let open_offset = self
-            .builder
+            .tape
             .begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
         self.compounds.push(CompoundFrame {
             span_lo: 0,
@@ -407,7 +380,7 @@ impl<'input> ArrayVisitor for TapeVisitor<'input> {
             .compounds
             .pop()
             .ok_or(TapeVisitorError::UnbalancedCompound)?;
-        self.builder.end_compound(frame.open_offset, frame.span_lo);
+        self.tape.end_compound(frame.open_offset, frame.span_lo);
         Ok(())
     }
 }
@@ -416,7 +389,7 @@ impl<'input> StringVisitor for TapeVisitor<'input> {
     #[inline(always)]
     fn string(&mut self, bytes: &[u8]) -> Result<(), Self::Error> {
         let arena_offset = self.push_arena_frame(bytes);
-        self.builder
+        self.tape
             .push_leaf_with_arena_frame(TapeKind::Span, 0, 0, 0, 0, arena_offset);
         Ok(())
     }
@@ -425,7 +398,7 @@ impl<'input> StringVisitor for TapeVisitor<'input> {
 impl<'input> NumberVisitor for TapeVisitor<'input> {
     #[inline(always)]
     fn number_f64(&mut self, value: f64) -> Result<(), Self::Error> {
-        self.builder.push_leaf_with(
+        self.tape.push_leaf_with(
             TapeKind::Regex,
             0,
             0,
@@ -440,7 +413,7 @@ impl<'input> NumberVisitor for TapeVisitor<'input> {
 impl<'input> KeywordVisitor for TapeVisitor<'input> {
     #[inline(always)]
     fn bool(&mut self, value: bool) -> Result<(), Self::Error> {
-        self.builder.push_leaf_with(
+        self.tape.push_leaf_with(
             TapeKind::Literal,
             0,
             0,
@@ -453,7 +426,7 @@ impl<'input> KeywordVisitor for TapeVisitor<'input> {
 
     #[inline(always)]
     fn null(&mut self) -> Result<(), Self::Error> {
-        self.builder.push_leaf_with(
+        self.tape.push_leaf_with(
             TapeKind::Literal,
             0,
             0,
@@ -474,7 +447,7 @@ impl<'input> PrattVisitor for TapeVisitor<'input> {
         // `mark_children` + post-order `push_compound`; both
         // retired under the fused builder collapse.
         let open_offset = self
-            .builder
+            .tape
             .begin_compound(TapeKind::Rule, 0, 0, 0, 0, 0);
         self.compounds.push(CompoundFrame {
             span_lo: 0,
@@ -513,10 +486,10 @@ impl<'input> PrattVisitor for TapeVisitor<'input> {
         // column rank. `push_leaf_with_arena_frame` assumed a 4-byte
         // length-prefix convention (JSON-string decode kernel) that
         // doesn't fit the Pratt op-discriminant shape.
-        let arena = self.builder.arena_mut();
+        let arena = self.tape.arena_mut();
         let arena_off = arena.len() as u32;
         arena.push(op);
-        self.builder.push_leaf_with_arena_payload(
+        self.tape.push_leaf_with_arena_payload(
             TapeKind::Span,
             0,
             0,
@@ -534,7 +507,7 @@ impl<'input> PrattVisitor for TapeVisitor<'input> {
             .compounds
             .pop()
             .ok_or(TapeVisitorError::UnbalancedCompound)?;
-        self.builder.end_compound(frame.open_offset, frame.span_lo);
+        self.tape.end_compound(frame.open_offset, frame.span_lo);
         Ok(())
     }
 }

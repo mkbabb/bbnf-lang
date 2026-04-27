@@ -54,14 +54,14 @@ enum Leaf {
 /// `tape.payload_u8(rec)` stays the inline path and returns the raw
 /// `child_off` byte, so the Aggregate payload needs the bytes-slice
 /// reader.
-fn agg_u8(tape: &Tape, rec: bbnf::runtime::tape::TapeRec) -> Option<u8> {
+fn agg_u8<R>(tape: &Tape<R>, rec: bbnf::runtime::tape::TapeRec) -> Option<u8> {
     tape.payload_bytes(rec, 1).map(|b| b[0])
 }
 
 /// Read an 8-byte f64 payload. Post-W6.D single-scalar f64 rules
 /// route through `PayloadData::WideScalar(u64)` — an 8-aligned arena
 /// slot. `payload_f64(rec)` is the typed wide reader.
-fn agg_f64(tape: &Tape, rec: bbnf::runtime::tape::TapeRec) -> Option<f64> {
+fn agg_f64<R>(tape: &Tape<R>, rec: bbnf::runtime::tape::TapeRec) -> Option<f64> {
     tape.payload_f64(rec)
 }
 
@@ -87,7 +87,7 @@ fn leaf_ids() -> &'static LeafIds {
     })
 }
 
-fn walk<'t>(tape: &'t Tape, cursor: TapeCursor<'t>, source: &[u8], out: &mut Vec<Leaf>) {
+fn walk<'t, R>(tape: &'t Tape<R>, cursor: TapeCursor<'t, R>, source: &[u8], out: &mut Vec<Leaf>) {
     let rec = cursor.record();
     if !rec.has_children() {
         let (lo, hi) = cursor.span();

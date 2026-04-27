@@ -40,7 +40,7 @@ mod __bnfparser_emit_impl {
     /// profile emitted by Tranche AV Phase 1. Every downstream
     /// consumer (tape capacity, scanner dispatch) reads the
     /// matching field.
-    pub const GRAMMAR_PROFILE: ::bbnf::runtime::tape::GrammarProfile = ::bbnf::runtime::tape::GrammarProfile {
+    pub const GRAMMAR_PROFILE: crate::runtime::tape::GrammarProfile = crate::runtime::tape::GrammarProfile {
         compounds_per_input_byte: 0.5f32,
         leaves_per_input_byte: 0f32,
         parallel_break_even_bytes: 1048576u32,
@@ -78,7 +78,7 @@ mod __bnfparser_emit_impl {
     ///
     /// Flat union of every rule's mined operator entries.
     /// Consulted by the walker cold-path until W0b retires it.
-    pub const PRECEDENCE_ENTRIES: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[];
+    pub const PRECEDENCE_ENTRIES: &[crate::runtime::tape::DtaPrecedenceEntry] = &[];
     /// AW-III.W6.5 — total mined operator count for this
     /// grammar. Non-zero iff the lift admitted ≥ 1 chain OR the
     /// shape classifier admitted ≥ 1 single-rung Pratt rule.
@@ -453,7 +453,7 @@ mod __bnfparser_emit_impl {
             /// at parse-entry (AY.W1-fix demonstrated eager scans
             /// regress JSON twitter -64%).
             pub(crate) structural_index: ::core::cell::OnceCell<
-                ::bbnf::runtime::tape::StructuralIndex,
+                crate::runtime::tape::StructuralIndex,
             >,
         }
         impl ScanState {
@@ -473,11 +473,11 @@ mod __bnfparser_emit_impl {
         pub(crate) fn ensure_structural_index<'a>(
             state: &'a mut ScanState,
             input: &[u8],
-        ) -> &'a ::bbnf::runtime::tape::StructuralIndex {
+        ) -> &'a crate::runtime::tape::StructuralIndex {
             state
                 .structural_index
                 .get_or_init(|| {
-                    ::bbnf::runtime::tape::scan_structural(
+                    crate::runtime::tape::scan_structural(
                         input,
                         super::GRAMMAR_PROFILE.structural_alphabet,
                     )
@@ -791,32 +791,32 @@ mod __bnfparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [34u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     0u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
         }
         {
@@ -827,22 +827,22 @@ mod __bnfparser_emit_impl {
                     input,
                     *p,
                 ) else {
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: span_lo,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 };
                 *p += match_len as usize;
                 let span_hi = *p as u32;
                 let _ = builder
                     .push_leaf_with(
-                        ::bbnf::runtime::tape::TapeKind::Span,
+                        crate::runtime::tape::TapeKind::Span,
                         span_lo,
                         span_hi,
                         0u8,
                         0,
-                        ::bbnf::runtime::tape::PayloadData::None,
+                        crate::runtime::tape::PayloadData::None,
                     );
             }
         }
@@ -850,27 +850,27 @@ mod __bnfparser_emit_impl {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [34u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     0u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
         }
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 0u8,
                 0u8,
@@ -881,9 +881,9 @@ mod __bnfparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -908,32 +908,32 @@ mod __bnfparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [60u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     1u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
         }
         {
@@ -944,22 +944,22 @@ mod __bnfparser_emit_impl {
                     input,
                     *p,
                 ) else {
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: span_lo,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 };
                 *p += match_len as usize;
                 let span_hi = *p as u32;
                 let _ = builder
                     .push_leaf_with(
-                        ::bbnf::runtime::tape::TapeKind::Span,
+                        crate::runtime::tape::TapeKind::Span,
                         span_lo,
                         span_hi,
                         1u8,
                         0,
-                        ::bbnf::runtime::tape::PayloadData::None,
+                        crate::runtime::tape::PayloadData::None,
                     );
             }
         }
@@ -967,27 +967,27 @@ mod __bnfparser_emit_impl {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [62u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     1u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
         }
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 1u8,
                 0u8,
@@ -998,9 +998,9 @@ mod __bnfparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -1025,25 +1025,25 @@ mod __bnfparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.columns_mut().len() as u32;
+            let repeat_child = builder.position();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
-                let save_cols = builder.columns_mut().len() as u32;
+                let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.columns_mut().len() as u32;
+                let iter_child = builder.position();
                 let attempt = (|| -> ::core::result::Result<
                     (),
-                    ::bbnf::runtime::tape::DtaError,
+                    crate::runtime::tape::DtaError,
                 > {
                     {
                         let first = __shape_support_BnfParser::skip_space(
@@ -1051,14 +1051,14 @@ mod __bnfparser_emit_impl {
                                 p,
                                 state,
                             )
-                            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                                 offset: *p as u32,
                             })?;
                         'try_branches: loop {
                             match first {
                                 34u8 => {
                                     let attempt_p = *p;
-                                    let attempt_len = builder.columns_mut().len() as u32;
+                                    let attempt_len = builder.position();
                                     match {
                                         let _ = __shape_support_BnfParser::skip_space(
                                             input,
@@ -1076,7 +1076,7 @@ mod __bnfparser_emit_impl {
                                 }
                                 60u8 => {
                                     let attempt_p = *p;
-                                    let attempt_len = builder.columns_mut().len() as u32;
+                                    let attempt_len = builder.position();
                                     match {
                                         let _ = __shape_support_BnfParser::skip_space(
                                             input,
@@ -1094,10 +1094,10 @@ mod __bnfparser_emit_impl {
                                 }
                                 _ => {}
                             }
-                            return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             });
                         }
                     }
@@ -1108,22 +1108,22 @@ mod __bnfparser_emit_impl {
                             input,
                             *p,
                         ) else {
-                            return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: span_lo,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             });
                         };
                         *p += match_len as usize;
                         let span_hi = *p as u32;
                         let _ = builder
                             .push_leaf_with(
-                                ::bbnf::runtime::tape::TapeKind::Span,
+                                crate::runtime::tape::TapeKind::Span,
                                 span_lo,
                                 span_hi,
                                 2u8,
                                 0,
-                                ::bbnf::runtime::tape::PayloadData::None,
+                                crate::runtime::tape::PayloadData::None,
                             );
                     }
                     Ok(())
@@ -1140,7 +1140,7 @@ mod __bnfparser_emit_impl {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
                         0u8,
@@ -1151,21 +1151,21 @@ mod __bnfparser_emit_impl {
                     .end_compound_post_order(
                         __iter_off,
                         iter_hi,
-                        ::bbnf::runtime::tape::TapeOffset(iter_child),
+                        crate::runtime::tape::TapeOffset(iter_child),
                     );
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (1usize as u32) {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
                 .begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                    crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
                     0u8,
@@ -1176,21 +1176,21 @@ mod __bnfparser_emit_impl {
                 .end_compound_post_order(
                     __repeat_off,
                     repeat_hi,
-                    ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                    crate::runtime::tape::TapeOffset(repeat_child),
                 );
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.columns_mut().len() as u32;
+            let repeat_child = builder.position();
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
-                let save_cols = builder.columns_mut().len() as u32;
+                let save_cols = builder.position();
                 let iter_lo = *p as u32;
-                let iter_child = builder.columns_mut().len() as u32;
+                let iter_child = builder.position();
                 let attempt = (|| -> ::core::result::Result<
                     (),
-                    ::bbnf::runtime::tape::DtaError,
+                    crate::runtime::tape::DtaError,
                 > {
                     {
                         let span_lo = *p as u32;
@@ -1199,42 +1199,42 @@ mod __bnfparser_emit_impl {
                             input,
                             *p,
                         ) else {
-                            return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: span_lo,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             });
                         };
                         *p += match_len as usize;
                         let span_hi = *p as u32;
                         let _ = builder
                             .push_leaf_with(
-                                ::bbnf::runtime::tape::TapeKind::Span,
+                                crate::runtime::tape::TapeKind::Span,
                                 span_lo,
                                 span_hi,
                                 2u8,
                                 0,
-                                ::bbnf::runtime::tape::PayloadData::None,
+                                crate::runtime::tape::PayloadData::None,
                             );
                     }
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() < end || input[at..end] != [124u8] {
-                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        return Err(crate::runtime::tape::DtaError::Syntax {
                             offset: at as u32,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                     *p = end;
                     let _ = builder
                         .push_leaf_with(
-                            ::bbnf::runtime::tape::TapeKind::Literal,
+                            crate::runtime::tape::TapeKind::Literal,
                             at as u32,
                             end as u32,
                             2u8,
                             0,
-                            ::bbnf::runtime::tape::PayloadData::None,
+                            crate::runtime::tape::PayloadData::None,
                         );
                     {
                         let span_lo = *p as u32;
@@ -1243,35 +1243,35 @@ mod __bnfparser_emit_impl {
                             input,
                             *p,
                         ) else {
-                            return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                 offset: span_lo,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             });
                         };
                         *p += match_len as usize;
                         let span_hi = *p as u32;
                         let _ = builder
                             .push_leaf_with(
-                                ::bbnf::runtime::tape::TapeKind::Span,
+                                crate::runtime::tape::TapeKind::Span,
                                 span_lo,
                                 span_hi,
                                 2u8,
                                 0,
-                                ::bbnf::runtime::tape::PayloadData::None,
+                                crate::runtime::tape::PayloadData::None,
                             );
                     }
                     let repeat_lo = *p as u32;
-                    let repeat_child = builder.columns_mut().len() as u32;
+                    let repeat_child = builder.position();
                     let mut iter_count: u32 = 0;
                     loop {
                         let save_p = *p;
-                        let save_cols = builder.columns_mut().len() as u32;
+                        let save_cols = builder.position();
                         let iter_lo = *p as u32;
-                        let iter_child = builder.columns_mut().len() as u32;
+                        let iter_child = builder.position();
                         let attempt = (|| -> ::core::result::Result<
                             (),
-                            ::bbnf::runtime::tape::DtaError,
+                            crate::runtime::tape::DtaError,
                         > {
                             {
                                 let first = __shape_support_BnfParser::skip_space(
@@ -1279,14 +1279,14 @@ mod __bnfparser_emit_impl {
                                         p,
                                         state,
                                     )
-                                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                                    .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                                         offset: *p as u32,
                                     })?;
                                 'try_branches: loop {
                                     match first {
                                         34u8 => {
                                             let attempt_p = *p;
-                                            let attempt_len = builder.columns_mut().len() as u32;
+                                            let attempt_len = builder.position();
                                             match {
                                                 let _ = __shape_support_BnfParser::skip_space(
                                                     input,
@@ -1304,7 +1304,7 @@ mod __bnfparser_emit_impl {
                                         }
                                         60u8 => {
                                             let attempt_p = *p;
-                                            let attempt_len = builder.columns_mut().len() as u32;
+                                            let attempt_len = builder.position();
                                             match {
                                                 let _ = __shape_support_BnfParser::skip_space(
                                                     input,
@@ -1322,10 +1322,10 @@ mod __bnfparser_emit_impl {
                                         }
                                         _ => {}
                                     }
-                                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                         offset: *p as u32,
-                                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 }
                             }
@@ -1336,22 +1336,22 @@ mod __bnfparser_emit_impl {
                                     input,
                                     *p,
                                 ) else {
-                                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                         offset: span_lo,
-                                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
                                 let span_hi = *p as u32;
                                 let _ = builder
                                     .push_leaf_with(
-                                        ::bbnf::runtime::tape::TapeKind::Span,
+                                        crate::runtime::tape::TapeKind::Span,
                                         span_lo,
                                         span_hi,
                                         2u8,
                                         0,
-                                        ::bbnf::runtime::tape::PayloadData::None,
+                                        crate::runtime::tape::PayloadData::None,
                                     );
                             }
                             Ok(())
@@ -1368,7 +1368,7 @@ mod __bnfparser_emit_impl {
                         let iter_hi = *p as u32;
                         let __iter_off = builder
                             .begin_compound(
-                                ::bbnf::runtime::tape::TapeKind::Seq,
+                                crate::runtime::tape::TapeKind::Seq,
                                 iter_lo,
                                 0u8,
                                 0u8,
@@ -1379,21 +1379,21 @@ mod __bnfparser_emit_impl {
                             .end_compound_post_order(
                                 __iter_off,
                                 iter_hi,
-                                ::bbnf::runtime::tape::TapeOffset(iter_child),
+                                crate::runtime::tape::TapeOffset(iter_child),
                             );
                         iter_count = iter_count.saturating_add(1);
                     }
                     if iter_count < (1usize as u32) {
-                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        return Err(crate::runtime::tape::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                     let repeat_hi = *p as u32;
                     let __repeat_off = builder
                         .begin_compound(
-                            ::bbnf::runtime::tape::TapeKind::Repeat,
+                            crate::runtime::tape::TapeKind::Repeat,
                             repeat_lo,
                             0u8,
                             0u8,
@@ -1404,7 +1404,7 @@ mod __bnfparser_emit_impl {
                         .end_compound_post_order(
                             __repeat_off,
                             repeat_hi,
-                            ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                            crate::runtime::tape::TapeOffset(repeat_child),
                         );
                     Ok(())
                 })();
@@ -1420,7 +1420,7 @@ mod __bnfparser_emit_impl {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
                         0u8,
@@ -1431,21 +1431,21 @@ mod __bnfparser_emit_impl {
                     .end_compound_post_order(
                         __iter_off,
                         iter_hi,
-                        ::bbnf::runtime::tape::TapeOffset(iter_child),
+                        crate::runtime::tape::TapeOffset(iter_child),
                     );
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
                 .begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                    crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
                     0u8,
@@ -1456,13 +1456,13 @@ mod __bnfparser_emit_impl {
                 .end_compound_post_order(
                     __repeat_off,
                     repeat_hi,
-                    ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                    crate::runtime::tape::TapeOffset(repeat_child),
                 );
         }
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 2u8,
                 0u8,
@@ -1473,9 +1473,9 @@ mod __bnfparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -1500,13 +1500,13 @@ mod __bnfparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
-        let outer_child = builder.columns_mut().len() as u32;
+        let outer_child = builder.position();
         {
             let _ = ({
                 let _ = __shape_support_BnfParser::skip_space(input, p, state);
@@ -1517,22 +1517,22 @@ mod __bnfparser_emit_impl {
             {
                 let span_lo = *p as u32;
                 let Some(match_len) = __regex_scan_BnfParser("[ \\t]*", input, *p) else {
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: span_lo,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 };
                 *p += match_len as usize;
                 let span_hi = *p as u32;
                 let _ = builder
                     .push_leaf_with(
-                        ::bbnf::runtime::tape::TapeKind::Span,
+                        crate::runtime::tape::TapeKind::Span,
                         span_lo,
                         span_hi,
                         3u8,
                         0,
-                        ::bbnf::runtime::tape::PayloadData::None,
+                        crate::runtime::tape::PayloadData::None,
                     );
             }
         }
@@ -1540,43 +1540,43 @@ mod __bnfparser_emit_impl {
             let at = *p;
             let end = at + 3usize;
             if input.len() < end || input[at..end] != [58u8, 58u8, 61u8] {
-                return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                    failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     3u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
         }
         {
             {
                 let span_lo = *p as u32;
                 let Some(match_len) = __regex_scan_BnfParser("[ \\t]*", input, *p) else {
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: span_lo,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 };
                 *p += match_len as usize;
                 let span_hi = *p as u32;
                 let _ = builder
                     .push_leaf_with(
-                        ::bbnf::runtime::tape::TapeKind::Span,
+                        crate::runtime::tape::TapeKind::Span,
                         span_lo,
                         span_hi,
                         3u8,
                         0,
-                        ::bbnf::runtime::tape::PayloadData::None,
+                        crate::runtime::tape::PayloadData::None,
                     );
             }
         }
@@ -1590,55 +1590,55 @@ mod __bnfparser_emit_impl {
             {
                 let span_lo = *p as u32;
                 let Some(match_len) = __regex_scan_BnfParser("[ \\t]*", input, *p) else {
-                    return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: span_lo,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 };
                 *p += match_len as usize;
                 let span_hi = *p as u32;
                 let _ = builder
                     .push_leaf_with(
-                        ::bbnf::runtime::tape::TapeKind::Span,
+                        crate::runtime::tape::TapeKind::Span,
                         span_lo,
                         span_hi,
                         3u8,
                         0,
-                        ::bbnf::runtime::tape::PayloadData::None,
+                        crate::runtime::tape::PayloadData::None,
                     );
             }
         }
         {
             let repeat_lo = *p as u32;
-            let repeat_child = builder.columns_mut().len() as u32;
+            let repeat_child = builder.position();
             let iter_save_p = *p;
-            let iter_save_cols = builder.columns_mut().len() as u32;
+            let iter_save_cols = builder.position();
             let iter_lo = *p as u32;
-            let iter_child = builder.columns_mut().len() as u32;
+            let iter_child = builder.position();
             let opt_attempt: ::core::result::Result<
                 (),
-                ::bbnf::runtime::tape::DtaError,
+                crate::runtime::tape::DtaError,
             > = (|| {
                 {
                     let span_lo = *p as u32;
                     let Some(match_len) = __regex_scan_BnfParser("\\n", input, *p) else {
-                        return ::core::result::Result::Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                             offset: span_lo,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
                     let span_hi = *p as u32;
                     let _ = builder
                         .push_leaf_with(
-                            ::bbnf::runtime::tape::TapeKind::Span,
+                            crate::runtime::tape::TapeKind::Span,
                             span_lo,
                             span_hi,
                             3u8,
                             0,
-                            ::bbnf::runtime::tape::PayloadData::None,
+                            crate::runtime::tape::PayloadData::None,
                         );
                 }
                 Ok(())
@@ -1651,7 +1651,7 @@ mod __bnfparser_emit_impl {
                 let iter_hi = *p as u32;
                 let __iter_off = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        crate::runtime::tape::TapeKind::Seq,
                         iter_lo,
                         0u8,
                         0u8,
@@ -1662,13 +1662,13 @@ mod __bnfparser_emit_impl {
                     .end_compound_post_order(
                         __iter_off,
                         iter_hi,
-                        ::bbnf::runtime::tape::TapeOffset(iter_child),
+                        crate::runtime::tape::TapeOffset(iter_child),
                     );
             }
             let repeat_hi = *p as u32;
             let __repeat_off = builder
                 .begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Repeat,
+                    crate::runtime::tape::TapeKind::Repeat,
                     repeat_lo,
                     0u8,
                     0u8,
@@ -1679,13 +1679,13 @@ mod __bnfparser_emit_impl {
                 .end_compound_post_order(
                     __repeat_off,
                     repeat_hi,
-                    ::bbnf::runtime::tape::TapeOffset(repeat_child),
+                    crate::runtime::tape::TapeOffset(repeat_child),
                 );
         }
         let span_hi = *p as u32;
         let outer_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 span_lo,
                 3u8,
                 0u8,
@@ -1696,9 +1696,9 @@ mod __bnfparser_emit_impl {
             .end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-        Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AX.W0a.2.a — per-grammar Array-shape parse function
     /// (Shape 2 — direct-Repeat entry-rule list,
@@ -1717,15 +1717,15 @@ mod __bnfparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let repeat_open = *p as u32;
         let repeat_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 repeat_open,
                 0u8,
                 0u8,
@@ -1734,18 +1734,18 @@ mod __bnfparser_emit_impl {
             );
         loop {
             let iter_save_p = *p;
-            let __iter_save_cols = builder.columns_mut().len() as u32;
+            let __iter_save_cols = builder.position();
             if input.get(*p).is_none() {
                 break;
             }
             let iter_result: ::core::result::Result<
                 (),
-                ::bbnf::runtime::tape::DtaError,
+                crate::runtime::tape::DtaError,
             > = (|| {
                 let iter_open = *p as u32;
                 let iter_off = builder
                     .begin_compound(
-                        ::bbnf::runtime::tape::TapeKind::Seq,
+                        crate::runtime::tape::TapeKind::Seq,
                         iter_open,
                         0,
                         0u8,
@@ -1777,7 +1777,7 @@ mod __bnfparser_emit_impl {
         }
         let repeat_close = *p as u32;
         builder.end_compound(repeat_off, repeat_close);
-        Ok(::bbnf::runtime::tape::TapeOffset(repeat_off))
+        Ok(crate::runtime::tape::TapeOffset(repeat_off))
     }
     /// AW-V.W4-fix — visitor-path Flat-shape parse function.
     ///
@@ -1794,17 +1794,17 @@ mod __bnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         visitor: &mut V,
-    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
     where
-        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
-            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
-            + ::bbnf::runtime::tape::KeywordVisitor,
+        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
+            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
+            + crate::runtime::tape::KeywordVisitor,
     {
         {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [34u8] {
-                return Err(::bbnf::runtime::ParseErr::Syntax {
+                return Err(crate::runtime::ParseErr::Syntax {
                     offset: at as u32,
                     rule: None,
                 });
@@ -1819,7 +1819,7 @@ mod __bnfparser_emit_impl {
                     input,
                     *p,
                 ) else {
-                    return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
                         offset: span_lo as u32,
                         rule: None,
                     });
@@ -1831,7 +1831,7 @@ mod __bnfparser_emit_impl {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [34u8] {
-                return Err(::bbnf::runtime::ParseErr::Syntax {
+                return Err(crate::runtime::ParseErr::Syntax {
                     offset: at as u32,
                     rule: None,
                 });
@@ -1855,17 +1855,17 @@ mod __bnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         visitor: &mut V,
-    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
     where
-        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
-            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
-            + ::bbnf::runtime::tape::KeywordVisitor,
+        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
+            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
+            + crate::runtime::tape::KeywordVisitor,
     {
         {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [60u8] {
-                return Err(::bbnf::runtime::ParseErr::Syntax {
+                return Err(crate::runtime::ParseErr::Syntax {
                     offset: at as u32,
                     rule: None,
                 });
@@ -1880,7 +1880,7 @@ mod __bnfparser_emit_impl {
                     input,
                     *p,
                 ) else {
-                    return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
                         offset: span_lo as u32,
                         rule: None,
                     });
@@ -1892,7 +1892,7 @@ mod __bnfparser_emit_impl {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [62u8] {
-                return Err(::bbnf::runtime::ParseErr::Syntax {
+                return Err(crate::runtime::ParseErr::Syntax {
                     offset: at as u32,
                     rule: None,
                 });
@@ -1916,24 +1916,24 @@ mod __bnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         visitor: &mut V,
-    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
     where
-        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
-            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
-            + ::bbnf::runtime::tape::KeywordVisitor,
+        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
+            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
+            + crate::runtime::tape::KeywordVisitor,
     {
         {
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
-                let res = (|| -> ::core::result::Result<(), ::bbnf::runtime::ParseErr> {
+                let res = (|| -> ::core::result::Result<(), crate::runtime::ParseErr> {
                     {
                         let first = __shape_support_BnfParser::skip_space(
                                 input,
                                 p,
                                 state,
                             )
-                            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                            .ok_or(crate::runtime::ParseErr::Syntax {
                                 offset: *p as u32,
                                 rule: None,
                             })?;
@@ -1983,7 +1983,7 @@ mod __bnfparser_emit_impl {
                                 }
                                 _ => {}
                             }
-                            return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                            return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
                                 offset: *p as u32,
                                 rule: None,
                             });
@@ -1996,7 +1996,7 @@ mod __bnfparser_emit_impl {
                             input,
                             *p,
                         ) else {
-                            return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                            return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
                                 offset: span_lo as u32,
                                 rule: None,
                             });
@@ -2015,7 +2015,7 @@ mod __bnfparser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (1usize as u32) {
-                return Err(::bbnf::runtime::ParseErr::Syntax {
+                return Err(crate::runtime::ParseErr::Syntax {
                     offset: *p as u32,
                     rule: None,
                 });
@@ -2025,7 +2025,7 @@ mod __bnfparser_emit_impl {
             let mut iter_count: u32 = 0;
             loop {
                 let save_p = *p;
-                let res = (|| -> ::core::result::Result<(), ::bbnf::runtime::ParseErr> {
+                let res = (|| -> ::core::result::Result<(), crate::runtime::ParseErr> {
                     {
                         let span_lo = *p;
                         let Some(match_len) = __regex_scan_BnfParser(
@@ -2033,7 +2033,7 @@ mod __bnfparser_emit_impl {
                             input,
                             *p,
                         ) else {
-                            return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                            return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
                                 offset: span_lo as u32,
                                 rule: None,
                             });
@@ -2043,7 +2043,7 @@ mod __bnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() < end || input[at..end] != [124u8] {
-                        return Err(::bbnf::runtime::ParseErr::Syntax {
+                        return Err(crate::runtime::ParseErr::Syntax {
                             offset: at as u32,
                             rule: None,
                         });
@@ -2056,7 +2056,7 @@ mod __bnfparser_emit_impl {
                             input,
                             *p,
                         ) else {
-                            return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                            return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
                                 offset: span_lo as u32,
                                 rule: None,
                             });
@@ -2068,7 +2068,7 @@ mod __bnfparser_emit_impl {
                         let save_p = *p;
                         let res = (|| -> ::core::result::Result<
                             (),
-                            ::bbnf::runtime::ParseErr,
+                            crate::runtime::ParseErr,
                         > {
                             {
                                 let first = __shape_support_BnfParser::skip_space(
@@ -2076,7 +2076,7 @@ mod __bnfparser_emit_impl {
                                         p,
                                         state,
                                     )
-                                    .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                                    .ok_or(crate::runtime::ParseErr::Syntax {
                                         offset: *p as u32,
                                         rule: None,
                                     })?;
@@ -2126,7 +2126,7 @@ mod __bnfparser_emit_impl {
                                         }
                                         _ => {}
                                     }
-                                    return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
                                         offset: *p as u32,
                                         rule: None,
                                     });
@@ -2139,7 +2139,7 @@ mod __bnfparser_emit_impl {
                                     input,
                                     *p,
                                 ) else {
-                                    return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
                                         offset: span_lo as u32,
                                         rule: None,
                                     });
@@ -2158,7 +2158,7 @@ mod __bnfparser_emit_impl {
                         iter_count = iter_count.saturating_add(1);
                     }
                     if iter_count < (1usize as u32) {
-                        return Err(::bbnf::runtime::ParseErr::Syntax {
+                        return Err(crate::runtime::ParseErr::Syntax {
                             offset: *p as u32,
                             rule: None,
                         });
@@ -2175,7 +2175,7 @@ mod __bnfparser_emit_impl {
                 iter_count = iter_count.saturating_add(1);
             }
             if iter_count < (0usize as u32) {
-                return Err(::bbnf::runtime::ParseErr::Syntax {
+                return Err(crate::runtime::ParseErr::Syntax {
                     offset: *p as u32,
                     rule: None,
                 });
@@ -2198,11 +2198,11 @@ mod __bnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         visitor: &mut V,
-    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
     where
-        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
-            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
-            + ::bbnf::runtime::tape::KeywordVisitor,
+        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
+            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
+            + crate::runtime::tape::KeywordVisitor,
     {
         {
             ({
@@ -2214,7 +2214,7 @@ mod __bnfparser_emit_impl {
             {
                 let span_lo = *p;
                 let Some(match_len) = __regex_scan_BnfParser("[ \\t]*", input, *p) else {
-                    return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
                         offset: span_lo as u32,
                         rule: None,
                     });
@@ -2226,7 +2226,7 @@ mod __bnfparser_emit_impl {
             let at = *p;
             let end = at + 3usize;
             if input.len() < end || input[at..end] != [58u8, 58u8, 61u8] {
-                return Err(::bbnf::runtime::ParseErr::Syntax {
+                return Err(crate::runtime::ParseErr::Syntax {
                     offset: at as u32,
                     rule: None,
                 });
@@ -2237,7 +2237,7 @@ mod __bnfparser_emit_impl {
             {
                 let span_lo = *p;
                 let Some(match_len) = __regex_scan_BnfParser("[ \\t]*", input, *p) else {
-                    return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
                         offset: span_lo as u32,
                         rule: None,
                     });
@@ -2255,7 +2255,7 @@ mod __bnfparser_emit_impl {
             {
                 let span_lo = *p;
                 let Some(match_len) = __regex_scan_BnfParser("[ \\t]*", input, *p) else {
-                    return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
                         offset: span_lo as u32,
                         rule: None,
                     });
@@ -2265,11 +2265,11 @@ mod __bnfparser_emit_impl {
         }
         {
             let save_p = *p;
-            let res = (|| -> ::core::result::Result<(), ::bbnf::runtime::ParseErr> {
+            let res = (|| -> ::core::result::Result<(), crate::runtime::ParseErr> {
                 {
                     let span_lo = *p;
                     let Some(match_len) = __regex_scan_BnfParser("\\n", input, *p) else {
-                        return ::core::result::Result::Err(::bbnf::runtime::ParseErr::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
                             offset: span_lo as u32,
                             rule: None,
                         });
@@ -2297,15 +2297,15 @@ mod __bnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         visitor: &mut V,
-    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
     where
-        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
-            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
-            + ::bbnf::runtime::tape::KeywordVisitor,
+        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
+            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
+            + crate::runtime::tape::KeywordVisitor,
     {
         let begin_at = *p;
         if input.get(*p).copied() != Some(b'[') {
-            return Err(::bbnf::runtime::ParseErr::Syntax {
+            return Err(crate::runtime::ParseErr::Syntax {
                 offset: begin_at as u32,
                 rule: None,
             });
@@ -2313,7 +2313,7 @@ mod __bnfparser_emit_impl {
         *p += 1;
         visitor
             .begin_array()
-            .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+            .map_err(|_| crate::runtime::ParseErr::Syntax {
                 offset: begin_at as u32,
                 rule: None,
             })?;
@@ -2322,13 +2322,13 @@ mod __bnfparser_emit_impl {
                 *p += 1;
                 return visitor
                     .end_array()
-                    .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                    .map_err(|_| crate::runtime::ParseErr::Syntax {
                         offset: *p as u32,
                         rule: None,
                     });
             }
         } else {
-            return Err(::bbnf::runtime::ParseErr::Syntax {
+            return Err(crate::runtime::ParseErr::Syntax {
                 offset: *p as u32,
                 rule: None,
             });
@@ -2343,7 +2343,7 @@ mod __bnfparser_emit_impl {
                     *p += 1;
                     return visitor
                         .end_array()
-                        .map_err(|_| ::bbnf::runtime::ParseErr::Syntax {
+                        .map_err(|_| crate::runtime::ParseErr::Syntax {
                             offset: *p as u32,
                             rule: None,
                         });
@@ -2353,7 +2353,7 @@ mod __bnfparser_emit_impl {
                     let _ = __shape_support_BnfParser::skip_space(input, p, state);
                 }
                 _ => {
-                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                    return Err(crate::runtime::ParseErr::Syntax {
                         offset: *p as u32,
                         rule: None,
                     });
@@ -2370,9 +2370,9 @@ mod __bnfparser_emit_impl {
     /// `backend::rust::view::value`, which inlines the matching
     /// cursor primitive in `__path_walk`'s per-`rule_kind()`
     /// dispatch:
-    /// [`::bbnf::runtime::tape::TapeCursor::object_key_seek`] /
-    /// [`::bbnf::runtime::tape::TapeCursor::bounded_lookahead`] /
-    /// [`::bbnf::runtime::tape::TapeCursor::scan_structural_bounded`]
+    /// [`crate::runtime::tape::TapeCursor::object_key_seek`] /
+    /// [`crate::runtime::tape::TapeCursor::bounded_lookahead`] /
+    /// [`crate::runtime::tape::TapeCursor::scan_structural_bounded`]
     /// per the entry's `activation` bitmap.
     ///
     /// No runtime flag; no hand-routed grammar specialisation.
@@ -2380,31 +2380,31 @@ mod __bnfparser_emit_impl {
     /// previously guarded this surface — the emitted grammar now
     /// carries a same-translation-unit consumer through
     /// `__path_walk`'s dispatch.
-    pub const STRUCTURAL_SCAN_POLICY: &[::bbnf::runtime::tape::ScanPolicyEntry] = &[
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+    pub const STRUCTURAL_SCAN_POLICY: &[crate::runtime::tape::ScanPolicyEntry] = &[
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 0u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 1u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(0),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 2u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 3u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 4u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
     ];
     /// AW-V.W3.2 — top-level shape dispatcher.
@@ -2425,10 +2425,10 @@ mod __bnfparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         parse_BnfParser_grammar__value(input, p, state, builder)
     }
@@ -2442,10 +2442,10 @@ mod __bnfparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let _ = __shape_support_BnfParser::skip_space(input, p, state);
         parse_array_BnfParser_grammar(input, p, state, builder)
@@ -2478,11 +2478,11 @@ mod __bnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         visitor: &mut V,
-    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
     where
-        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
-            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
-            + ::bbnf::runtime::tape::KeywordVisitor,
+        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
+            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
+            + crate::runtime::tape::KeywordVisitor,
     {
         parse_BnfParser_grammar_visitor__value(input, p, state, visitor)
     }
@@ -2498,11 +2498,11 @@ mod __bnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         visitor: &mut V,
-    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
     where
-        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
-            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
-            + ::bbnf::runtime::tape::KeywordVisitor,
+        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
+            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
+            + crate::runtime::tape::KeywordVisitor,
     {
         let _ = __shape_support_BnfParser::skip_space(input, p, state);
         parse_array_visitor_BnfParser_grammar(input, p, state, visitor)
@@ -2510,30 +2510,30 @@ mod __bnfparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct terminalView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> terminalView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -2541,7 +2541,7 @@ mod __bnfparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -2628,30 +2628,30 @@ mod __bnfparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct nonterminalView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> nonterminalView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -2659,7 +2659,7 @@ mod __bnfparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -2751,30 +2751,30 @@ mod __bnfparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct alternationView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> alternationView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -2782,7 +2782,7 @@ mod __bnfparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -2884,30 +2884,30 @@ mod __bnfparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct ruleView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> ruleView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -2915,7 +2915,7 @@ mod __bnfparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -3044,30 +3044,30 @@ mod __bnfparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct grammarView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> grammarView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -3075,7 +3075,7 @@ mod __bnfparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -3157,7 +3157,7 @@ mod __bnfparser_emit_impl {
     /// Generic node view over any tape record for this grammar.
     #[derive(Clone, Copy, Debug)]
     pub struct BnfParserNodeView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     /// Rule-identity discriminator for `NodeView::rule_kind`
@@ -3181,24 +3181,24 @@ mod __bnfparser_emit_impl {
     impl<'p> BnfParserNodeView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -3206,7 +3206,7 @@ mod __bnfparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -3262,13 +3262,13 @@ mod __bnfparser_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    impl ::bbnf::runtime::Root for BnfParser {
+    impl crate::runtime::Root for BnfParser {
         type View<'p> = grammarView<'p>;
         #[inline]
         fn make_view<'p>(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape<()>,
             input: &'p str,
-            root: ::bbnf::runtime::tape::TapeOffset,
+            root: crate::runtime::tape::TapeOffset,
         ) -> Self::View<'p> {
             grammarView::new(tape, input, root)
         }
@@ -3402,7 +3402,7 @@ mod __bnfparser_emit_impl {
     /// invariant — pre-B5.W0.6 the codegen ignored it.
     #[inline(always)]
     fn project_rule_kind_BnfParser(
-        kind: ::bbnf::runtime::tape::TapeKind,
+        kind: crate::runtime::tape::TapeKind,
         variant_idx: u8,
     ) -> BnfParserRuleKind {
         if variant_idx == 0 && kind.is_compound() {
@@ -3442,20 +3442,20 @@ mod __bnfparser_emit_impl {
     /// payload reads on leaves with a payload tag.
     #[inline]
     fn project_push_children_BnfParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<BnfParser>,
+        output: &crate::runtime::tape::Tape<BnfParser>,
         input: &'p str,
         offset: u32,
         out: &mut ::std::vec::Vec<BnfParserValue<'p>>,
     ) {
         let __tape = output.tape();
-        let __rec = match __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset)) {
+        let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(offset)) {
             ::core::option::Option::Some(r) => r,
             ::core::option::Option::None => return,
         };
         if __rec.variant_idx() == 0 && __rec.kind().is_compound() {
-            let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+            let __cur = crate::runtime::tape::TapeCursor::new(
                 __tape,
-                ::bbnf::runtime::tape::TapeOffset(offset),
+                crate::runtime::tape::TapeOffset(offset),
             );
             for __child in __cur.children() {
                 project_push_children_BnfParser(output, input, __child.offset().0, out);
@@ -3465,7 +3465,7 @@ mod __bnfparser_emit_impl {
         }
     }
     /// AY-II.W0'.b — per-frame projector. Reads one record from the
-    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
     /// tape and constructs the matching `<Grammar>Value` variant.
     /// Admitted rules tail-call their grammar-derived materializer;
     /// non-admitted rules construct the variant inline. Compound
@@ -3478,12 +3478,12 @@ mod __bnfparser_emit_impl {
     /// payload — that path remains in the scalar arm.
     #[inline]
     fn project_frame_BnfParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<BnfParser>,
+        output: &crate::runtime::tape::Tape<BnfParser>,
         input: &'p str,
         offset: u32,
     ) -> BnfParserValue<'p> {
         let __tape = output.tape();
-        let __rec = match __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset)) {
+        let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(offset)) {
             ::core::option::Option::Some(r) => r,
             ::core::option::Option::None => {
                 ::core::panic!(
@@ -3519,9 +3519,9 @@ mod __bnfparser_emit_impl {
             }
             BnfParserRuleKind::rule => {
                 let mut children: ::std::vec::Vec<BnfParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_BnfParser(
@@ -3535,9 +3535,9 @@ mod __bnfparser_emit_impl {
             }
             BnfParserRuleKind::grammar => {
                 let mut children: ::std::vec::Vec<BnfParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     project_push_children_BnfParser(
@@ -3563,17 +3563,17 @@ mod __bnfparser_emit_impl {
     /// no visitor dispatch.
     #[inline]
     fn project_value_BnfParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<BnfParser>,
+        output: &crate::runtime::tape::Tape<BnfParser>,
         input: &'p str,
     ) -> BnfParserValue<'p> {
         let root_off = output.value_root_offset();
         project_frame_BnfParser(output, input, root_off)
     }
-    impl ::bbnf::runtime::ValueRoot for BnfParser {
+    impl crate::runtime::ValueRoot for BnfParser {
         type Value<'p> = BnfParserValue<'p>;
         #[inline]
         fn project_value_output<'p>(
-            output: &::bbnf::runtime::FusedOutput<BnfParser>,
+            output: &crate::runtime::tape::Tape<BnfParser>,
             input: &'p str,
         ) -> Self::Value<'p>
         where
@@ -3598,19 +3598,19 @@ mod __bnfparser_emit_impl {
     /// through to a generic children iteration.
     ///
     /// [`STRUCTURAL_SCAN_POLICY`]: crate::STRUCTURAL_SCAN_POLICY
-    /// [`TapeCursor::bounded_lookahead`]: ::bbnf::runtime::tape::TapeCursor::bounded_lookahead
-    /// [`TapeCursor::object_key_seek`]: ::bbnf::runtime::tape::TapeCursor::object_key_seek
-    /// [`TapeCursor::scan_structural_bounded`]: ::bbnf::runtime::tape::TapeCursor::scan_structural_bounded
+    /// [`TapeCursor::bounded_lookahead`]: crate::runtime::tape::TapeCursor::bounded_lookahead
+    /// [`TapeCursor::object_key_seek`]: crate::runtime::tape::TapeCursor::object_key_seek
+    /// [`TapeCursor::scan_structural_bounded`]: crate::runtime::tape::TapeCursor::scan_structural_bounded
     #[inline]
     fn __path_walk<'p>(
         view: BnfParserNodeView<'p>,
-        path: ::bbnf::runtime::Path<'_>,
+        path: crate::runtime::Path<'_>,
     ) -> ::core::option::Option<BnfParserNodeView<'p>> {
         let cur_input = view.input();
         let mut cur = view;
         for seg in path.iter() {
             match seg {
-                ::bbnf::runtime::PathSegment::Field(key) => {
+                crate::runtime::PathSegment::Field(key) => {
                     match cur.rule_kind() {
                         BnfParserRuleKind::terminal
                         | BnfParserRuleKind::alternation
@@ -3690,7 +3690,7 @@ mod __bnfparser_emit_impl {
                         }
                     }
                 }
-                ::bbnf::runtime::PathSegment::Index(i) => {
+                crate::runtime::PathSegment::Index(i) => {
                     match cur.rule_kind() {
                         _ => {
                             cur = cur.child(*i)?;
@@ -3701,11 +3701,11 @@ mod __bnfparser_emit_impl {
         }
         ::core::option::Option::Some(cur)
     }
-    impl ::bbnf::runtime::PathQuery<&'static str> for BnfParser {
+    impl crate::runtime::PathQuery<&'static str> for BnfParser {
         #[inline]
         fn query<'p>(
             view: Self::View<'p>,
-            path: ::bbnf::runtime::Path<'_>,
+            path: crate::runtime::Path<'_>,
         ) -> ::core::option::Option<&'static str>
         where
             Self: 'p,
@@ -3715,11 +3715,11 @@ mod __bnfparser_emit_impl {
             ::core::option::Option::None
         }
     }
-    impl ::bbnf::runtime::PathQuery<f64> for BnfParser {
+    impl crate::runtime::PathQuery<f64> for BnfParser {
         #[inline]
         fn query<'p>(
             view: Self::View<'p>,
-            path: ::bbnf::runtime::Path<'_>,
+            path: crate::runtime::Path<'_>,
         ) -> ::core::option::Option<f64>
         where
             Self: 'p,
@@ -3734,11 +3734,11 @@ mod __bnfparser_emit_impl {
             hit.span_text().parse::<f64>().ok()
         }
     }
-    impl ::bbnf::runtime::PathQuery<bool> for BnfParser {
+    impl crate::runtime::PathQuery<bool> for BnfParser {
         #[inline]
         fn query<'p>(
             view: Self::View<'p>,
-            path: ::bbnf::runtime::Path<'_>,
+            path: crate::runtime::Path<'_>,
         ) -> ::core::option::Option<bool>
         where
             Self: 'p,
@@ -3759,7 +3759,7 @@ mod __bnfparser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -3773,7 +3773,7 @@ mod __bnfparser_emit_impl {
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_alternation_BnfParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<BnfParser>,
+        output: &crate::runtime::tape::Tape<BnfParser>,
         input: &'p str,
         offset: u32,
     ) -> ::core::option::Option<BnfParserAlternationProjection> {
@@ -4651,7 +4651,7 @@ mod __bnfparser_emit_impl {
         /// multiple grammars coexist in the same test file —
         /// the module-scope `pub use ...::*` would otherwise
         /// collide on the unqualified `GRAMMAR_PROFILE` name.
-        pub const GRAMMAR_PROFILE: ::bbnf::runtime::tape::GrammarProfile = GRAMMAR_PROFILE;
+        pub const GRAMMAR_PROFILE: crate::runtime::tape::GrammarProfile = GRAMMAR_PROFILE;
         /// AY.W6.2 — associated-constant accessor for the
         /// grammar's direct-to-struct projection admission
         /// list. Alias of the module-scope
@@ -4699,37 +4699,37 @@ mod __bnfparser_emit_impl {
         pub fn parse(
             input: &str,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::Parsed<'_, Self>,
-            ::bbnf::runtime::ParseErr,
+            crate::runtime::Parsed<'_, Self>,
+            crate::runtime::ParseErr,
         > {
             let __input_bytes = input.as_bytes();
             let mut state = __shape_support_BnfParser::ScanState::new();
-            let mut builder = ::bbnf::runtime::tape::FusedBuilder::with_capacity(
-                GRAMMAR_PROFILE.capacity_for(input.len()),
-            );
+            let mut tape = crate::runtime::tape::Tape::<
+                (),
+            >::with_capacity(GRAMMAR_PROFILE.capacity_for(input.len()));
             let root_off = {
                 let mut pos: usize = 0;
                 let off = parse_BnfParser_grammar(
                         __input_bytes,
                         &mut pos,
                         &mut state,
-                        &mut builder,
+                        &mut tape,
                     )
                     .map_err(|e| match e {
-                        ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                        crate::runtime::tape::DtaError::Syntax { offset, .. } => {
+                            crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset } => {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                        crate::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                            crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        ::bbnf::runtime::tape::DtaError::InvalidState { .. } => {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                        crate::runtime::tape::DtaError::InvalidState { .. } => {
+                            crate::runtime::ParseErr::Syntax {
                                 offset: 0,
                                 rule: None,
                             }
@@ -4741,31 +4741,31 @@ mod __bnfparser_emit_impl {
                     &mut state,
                 );
                 if pos != input.len() {
-                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                    return Err(crate::runtime::ParseErr::Syntax {
                         offset: pos as u32,
                         rule: None,
                     });
                 }
                 off
             };
-            let output = builder
+            let tape = tape
                 .finish_fused::<Self>(root_off.0)
-                .map_err(::bbnf::runtime::ParseErr::Tape)?;
+                .map_err(crate::runtime::ParseErr::Tape)?;
             ::core::result::Result::Ok(
-                ::bbnf::runtime::Parsed::new_fused_output(output, input, root_off),
+                crate::runtime::Parsed::new(tape, input, root_off),
             )
         }
     }
     #[inline]
     pub(crate) fn cst_identifier_text<'p>(
-        _cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        _cursor: crate::runtime::tape::TapeCursor<'p>,
         _input: &'p str,
     ) -> &'p str {
         ""
     }
     #[inline]
     pub(crate) fn cst_identifier_span<'p>(
-        _cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        _cursor: crate::runtime::tape::TapeCursor<'p>,
         _input: &'p str,
     ) -> (u32, u32) {
         (0, 0)

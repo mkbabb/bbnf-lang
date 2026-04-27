@@ -4,7 +4,7 @@
 //! rule entry/exit for the tape-first monolithic codegen path.
 //!
 //! Under Tranche AC.2 the rule function return type is
-//! `Option<::bbnf::runtime::tape::TapeOffset>`; the trace exit
+//! `Option<crate::runtime::tape::TapeOffset>`; the trace exit
 //! probe inspects the result via `is_some()` — identical to the
 //! pre-AC path, since both return shapes expose `Option`.
 
@@ -39,7 +39,7 @@ pub fn emit_trace_entry(rule_name: &str) -> TokenStream {
 /// Emit trace instrumentation at rule function exit.
 ///
 /// `result_expr` is the identifier holding
-/// `Option<::bbnf::runtime::tape::TapeOffset>`.
+/// `Option<crate::runtime::tape::TapeOffset>`.
 pub fn emit_trace_exit(rule_name: &str, result_expr: &syn::Ident) -> TokenStream {
     quote! {
         #[cfg(feature = "parser-trace")]

@@ -41,7 +41,7 @@ mod __mathparser_emit_impl {
     /// profile emitted by Tranche AV Phase 1. Every downstream
     /// consumer (tape capacity, scanner dispatch) reads the
     /// matching field.
-    pub const GRAMMAR_PROFILE: ::bbnf::runtime::tape::GrammarProfile = ::bbnf::runtime::tape::GrammarProfile {
+    pub const GRAMMAR_PROFILE: crate::runtime::tape::GrammarProfile = crate::runtime::tape::GrammarProfile {
         compounds_per_input_byte: 0.5f32,
         leaves_per_input_byte: 0f32,
         parallel_break_even_bytes: 1048576u32,
@@ -79,7 +79,7 @@ mod __mathparser_emit_impl {
     ///
     /// Flat union of every rule's mined operator entries.
     /// Consulted by the walker cold-path until W0b retires it.
-    pub const PRECEDENCE_ENTRIES: &[::bbnf::runtime::tape::DtaPrecedenceEntry] = &[];
+    pub const PRECEDENCE_ENTRIES: &[crate::runtime::tape::DtaPrecedenceEntry] = &[];
     /// AW-III.W6.5 — total mined operator count for this
     /// grammar. Non-zero iff the lift admitted ≥ 1 chain OR the
     /// shape classifier admitted ≥ 1 single-rung Pratt rule.
@@ -507,10 +507,10 @@ mod __mathparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_MathParser(
@@ -518,22 +518,22 @@ mod __mathparser_emit_impl {
             input,
             *p,
         ) else {
-            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: span_lo,
-                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         };
         *p += match_len as usize;
         let span_hi = *p as u32;
         let leaf_off = builder
             .push_leaf_with(
-                ::bbnf::runtime::tape::TapeKind::Regex,
+                crate::runtime::tape::TapeKind::Regex,
                 span_lo,
                 span_hi,
                 0u8,
                 0,
-                ::bbnf::runtime::tape::PayloadData::None,
+                crate::runtime::tape::PayloadData::None,
             );
         Ok(leaf_off)
     }
@@ -550,9 +550,9 @@ mod __mathparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
         visitor: &mut V,
-    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
     where
-        V: ::bbnf::runtime::tape::StringVisitor,
+        V: crate::runtime::tape::StringVisitor,
     {
         let span_lo = *p;
         let Some(match_len) = __regex_scan_MathParser(
@@ -560,7 +560,7 @@ mod __mathparser_emit_impl {
             input,
             *p,
         ) else {
-            return Err(::bbnf::runtime::ParseErr::Syntax {
+            return Err(crate::runtime::ParseErr::Syntax {
                 offset: span_lo as u32,
                 rule: None,
             });
@@ -570,7 +570,7 @@ mod __mathparser_emit_impl {
         visitor
             .string(&input[span_lo..span_hi])
             .map_err(|_| {
-                ::bbnf::runtime::ParseErr::Syntax {
+                crate::runtime::ParseErr::Syntax {
                     offset: span_lo as u32,
                     rule: None,
                 }
@@ -585,9 +585,9 @@ mod __mathparser_emit_impl {
     /// `backend::rust::view::value`, which inlines the matching
     /// cursor primitive in `__path_walk`'s per-`rule_kind()`
     /// dispatch:
-    /// [`::bbnf::runtime::tape::TapeCursor::object_key_seek`] /
-    /// [`::bbnf::runtime::tape::TapeCursor::bounded_lookahead`] /
-    /// [`::bbnf::runtime::tape::TapeCursor::scan_structural_bounded`]
+    /// [`crate::runtime::tape::TapeCursor::object_key_seek`] /
+    /// [`crate::runtime::tape::TapeCursor::bounded_lookahead`] /
+    /// [`crate::runtime::tape::TapeCursor::scan_structural_bounded`]
     /// per the entry's `activation` bitmap.
     ///
     /// No runtime flag; no hand-routed grammar specialisation.
@@ -595,11 +595,11 @@ mod __mathparser_emit_impl {
     /// previously guarded this surface — the emitted grammar now
     /// carries a same-translation-unit consumer through
     /// `__path_walk`'s dispatch.
-    pub const STRUCTURAL_SCAN_POLICY: &[::bbnf::runtime::tape::ScanPolicyEntry] = &[
-        ::bbnf::runtime::tape::ScanPolicyEntry {
+    pub const STRUCTURAL_SCAN_POLICY: &[crate::runtime::tape::ScanPolicyEntry] = &[
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 0u32,
-            alphabet_class: ::bbnf::runtime::tape::ScanAlphabetClass::Empty,
-            activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(0),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Empty,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
         },
     ];
     /// AW-V.W3.2 — top-level shape dispatcher.
@@ -620,10 +620,10 @@ mod __mathparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         parse_MathParser_number__value(input, p, state, builder)
     }
@@ -637,10 +637,10 @@ mod __mathparser_emit_impl {
         input: &[u8],
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
-        builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+        builder: &mut crate::runtime::tape::Tape<()>,
     ) -> ::core::result::Result<
-        ::bbnf::runtime::tape::TapeOffset,
-        ::bbnf::runtime::tape::DtaError,
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
     > {
         let _ = __shape_support_MathParser::skip_space(input, p, state);
         parse_hregex_MathParser_number(input, p, state, builder)
@@ -673,11 +673,11 @@ mod __mathparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
         visitor: &mut V,
-    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
     where
-        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
-            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
-            + ::bbnf::runtime::tape::KeywordVisitor,
+        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
+            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
+            + crate::runtime::tape::KeywordVisitor,
     {
         parse_MathParser_number_visitor__value(input, p, state, visitor)
     }
@@ -693,11 +693,11 @@ mod __mathparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
         visitor: &mut V,
-    ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
     where
-        V: ::bbnf::runtime::tape::ObjectVisitor + ::bbnf::runtime::tape::ArrayVisitor
-            + ::bbnf::runtime::tape::StringVisitor + ::bbnf::runtime::tape::NumberVisitor
-            + ::bbnf::runtime::tape::KeywordVisitor,
+        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
+            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
+            + crate::runtime::tape::KeywordVisitor,
     {
         let _ = __shape_support_MathParser::skip_space(input, p, state);
         parse_hregex_visitor_MathParser_number(input, p, state, visitor)
@@ -705,30 +705,30 @@ mod __mathparser_emit_impl {
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
     pub struct numberView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     impl<'p> numberView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -736,7 +736,7 @@ mod __mathparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -830,7 +830,7 @@ mod __mathparser_emit_impl {
     /// Generic node view over any tape record for this grammar.
     #[derive(Clone, Copy, Debug)]
     pub struct MathParserNodeView<'p> {
-        cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     }
     /// Rule-identity discriminator for `NodeView::rule_kind`
@@ -850,24 +850,24 @@ mod __mathparser_emit_impl {
     impl<'p> MathParserNodeView<'p> {
         #[inline]
         pub fn new(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape,
             input: &'p str,
-            offset: ::bbnf::runtime::tape::TapeOffset,
+            offset: crate::runtime::tape::TapeOffset,
         ) -> Self {
             Self {
-                cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                 input,
             }
         }
         #[inline]
         pub fn from_cursor(
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         ) -> Self {
             Self { cursor, input }
         }
         #[inline]
-        pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
             self.cursor
         }
         #[inline]
@@ -875,7 +875,7 @@ mod __mathparser_emit_impl {
             self.input
         }
         #[inline]
-        pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
             self.cursor.kind()
         }
         #[inline]
@@ -929,13 +929,13 @@ mod __mathparser_emit_impl {
             ::parse_that::Span::new(lo as usize, hi as usize, self.input)
         }
     }
-    impl ::bbnf::runtime::Root for MathParser {
+    impl crate::runtime::Root for MathParser {
         type View<'p> = numberView<'p>;
         #[inline]
         fn make_view<'p>(
-            tape: &'p ::bbnf::runtime::tape::Tape,
+            tape: &'p crate::runtime::tape::Tape<()>,
             input: &'p str,
-            root: ::bbnf::runtime::tape::TapeOffset,
+            root: crate::runtime::tape::TapeOffset,
         ) -> Self::View<'p> {
             numberView::new(tape, input, root)
         }
@@ -1065,7 +1065,7 @@ mod __mathparser_emit_impl {
     /// invariant — pre-B5.W0.6 the codegen ignored it.
     #[inline(always)]
     fn project_rule_kind_MathParser(
-        kind: ::bbnf::runtime::tape::TapeKind,
+        kind: crate::runtime::tape::TapeKind,
         variant_idx: u8,
     ) -> MathParserRuleKind {
         if variant_idx == 0 && kind.is_compound() {
@@ -1101,20 +1101,20 @@ mod __mathparser_emit_impl {
     /// payload reads on leaves with a payload tag.
     #[inline]
     fn project_push_children_MathParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<MathParser>,
+        output: &crate::runtime::tape::Tape<MathParser>,
         input: &'p str,
         offset: u32,
         out: &mut ::std::vec::Vec<MathParserValue<'p>>,
     ) {
         let __tape = output.tape();
-        let __rec = match __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset)) {
+        let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(offset)) {
             ::core::option::Option::Some(r) => r,
             ::core::option::Option::None => return,
         };
         if __rec.variant_idx() == 0 && __rec.kind().is_compound() {
-            let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+            let __cur = crate::runtime::tape::TapeCursor::new(
                 __tape,
-                ::bbnf::runtime::tape::TapeOffset(offset),
+                crate::runtime::tape::TapeOffset(offset),
             );
             for __child in __cur.children() {
                 project_push_children_MathParser(output, input, __child.offset().0, out);
@@ -1124,7 +1124,7 @@ mod __mathparser_emit_impl {
         }
     }
     /// AY-II.W0'.b — per-frame projector. Reads one record from the
-    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
     /// tape and constructs the matching `<Grammar>Value` variant.
     /// Admitted rules tail-call their grammar-derived materializer;
     /// non-admitted rules construct the variant inline. Compound
@@ -1137,12 +1137,12 @@ mod __mathparser_emit_impl {
     /// payload — that path remains in the scalar arm.
     #[inline]
     fn project_frame_MathParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<MathParser>,
+        output: &crate::runtime::tape::Tape<MathParser>,
         input: &'p str,
         offset: u32,
     ) -> MathParserValue<'p> {
         let __tape = output.tape();
-        let __rec = match __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset)) {
+        let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(offset)) {
             ::core::option::Option::Some(r) => r,
             ::core::option::Option::None => {
                 ::core::panic!(
@@ -1182,17 +1182,17 @@ mod __mathparser_emit_impl {
     /// no visitor dispatch.
     #[inline]
     fn project_value_MathParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<MathParser>,
+        output: &crate::runtime::tape::Tape<MathParser>,
         input: &'p str,
     ) -> MathParserValue<'p> {
         let root_off = output.value_root_offset();
         project_frame_MathParser(output, input, root_off)
     }
-    impl ::bbnf::runtime::ValueRoot for MathParser {
+    impl crate::runtime::ValueRoot for MathParser {
         type Value<'p> = MathParserValue<'p>;
         #[inline]
         fn project_value_output<'p>(
-            output: &::bbnf::runtime::FusedOutput<MathParser>,
+            output: &crate::runtime::tape::Tape<MathParser>,
             input: &'p str,
         ) -> Self::Value<'p>
         where
@@ -1217,19 +1217,19 @@ mod __mathparser_emit_impl {
     /// through to a generic children iteration.
     ///
     /// [`STRUCTURAL_SCAN_POLICY`]: crate::STRUCTURAL_SCAN_POLICY
-    /// [`TapeCursor::bounded_lookahead`]: ::bbnf::runtime::tape::TapeCursor::bounded_lookahead
-    /// [`TapeCursor::object_key_seek`]: ::bbnf::runtime::tape::TapeCursor::object_key_seek
-    /// [`TapeCursor::scan_structural_bounded`]: ::bbnf::runtime::tape::TapeCursor::scan_structural_bounded
+    /// [`TapeCursor::bounded_lookahead`]: crate::runtime::tape::TapeCursor::bounded_lookahead
+    /// [`TapeCursor::object_key_seek`]: crate::runtime::tape::TapeCursor::object_key_seek
+    /// [`TapeCursor::scan_structural_bounded`]: crate::runtime::tape::TapeCursor::scan_structural_bounded
     #[inline]
     fn __path_walk<'p>(
         view: MathParserNodeView<'p>,
-        path: ::bbnf::runtime::Path<'_>,
+        path: crate::runtime::Path<'_>,
     ) -> ::core::option::Option<MathParserNodeView<'p>> {
         let cur_input = view.input();
         let mut cur = view;
         for seg in path.iter() {
             match seg {
-                ::bbnf::runtime::PathSegment::Field(key) => {
+                crate::runtime::PathSegment::Field(key) => {
                     match cur.rule_kind() {
                         _ => {
                             let mut it = cur.children();
@@ -1267,7 +1267,7 @@ mod __mathparser_emit_impl {
                         }
                     }
                 }
-                ::bbnf::runtime::PathSegment::Index(i) => {
+                crate::runtime::PathSegment::Index(i) => {
                     match cur.rule_kind() {
                         _ => {
                             cur = cur.child(*i)?;
@@ -1278,11 +1278,11 @@ mod __mathparser_emit_impl {
         }
         ::core::option::Option::Some(cur)
     }
-    impl ::bbnf::runtime::PathQuery<&'static str> for MathParser {
+    impl crate::runtime::PathQuery<&'static str> for MathParser {
         #[inline]
         fn query<'p>(
             view: Self::View<'p>,
-            path: ::bbnf::runtime::Path<'_>,
+            path: crate::runtime::Path<'_>,
         ) -> ::core::option::Option<&'static str>
         where
             Self: 'p,
@@ -1292,11 +1292,11 @@ mod __mathparser_emit_impl {
             ::core::option::Option::None
         }
     }
-    impl ::bbnf::runtime::PathQuery<f64> for MathParser {
+    impl crate::runtime::PathQuery<f64> for MathParser {
         #[inline]
         fn query<'p>(
             view: Self::View<'p>,
-            path: ::bbnf::runtime::Path<'_>,
+            path: crate::runtime::Path<'_>,
         ) -> ::core::option::Option<f64>
         where
             Self: 'p,
@@ -1311,11 +1311,11 @@ mod __mathparser_emit_impl {
             hit.span_text().parse::<f64>().ok()
         }
     }
-    impl ::bbnf::runtime::PathQuery<bool> for MathParser {
+    impl crate::runtime::PathQuery<bool> for MathParser {
         #[inline]
         fn query<'p>(
             view: Self::View<'p>,
-            path: ::bbnf::runtime::Path<'_>,
+            path: crate::runtime::Path<'_>,
         ) -> ::core::option::Option<bool>
         where
             Self: 'p,
@@ -1336,7 +1336,7 @@ mod __mathparser_emit_impl {
     }
     /// AY-II.W0'.b — grammar-derived direct-to-struct projection
     /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+    /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
     /// slab and constructs the matching projection struct;
     /// returns `None` when the slab's frame is absent or the
     /// tape's aggregate buffer is too short.
@@ -1350,7 +1350,7 @@ mod __mathparser_emit_impl {
     #[inline]
     #[doc(hidden)]
     pub fn materialize_projection_number_MathParser<'p>(
-        output: &::bbnf::runtime::FusedOutput<MathParser>,
+        output: &crate::runtime::tape::Tape<MathParser>,
         input: &'p str,
         offset: u32,
     ) -> ::core::option::Option<MathParserNumberProjection> {
@@ -1404,7 +1404,7 @@ mod __mathparser_emit_impl {
         /// multiple grammars coexist in the same test file —
         /// the module-scope `pub use ...::*` would otherwise
         /// collide on the unqualified `GRAMMAR_PROFILE` name.
-        pub const GRAMMAR_PROFILE: ::bbnf::runtime::tape::GrammarProfile = GRAMMAR_PROFILE;
+        pub const GRAMMAR_PROFILE: crate::runtime::tape::GrammarProfile = GRAMMAR_PROFILE;
         /// AY.W6.2 — associated-constant accessor for the
         /// grammar's direct-to-struct projection admission
         /// list. Alias of the module-scope
@@ -1452,37 +1452,37 @@ mod __mathparser_emit_impl {
         pub fn parse(
             input: &str,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::Parsed<'_, Self>,
-            ::bbnf::runtime::ParseErr,
+            crate::runtime::Parsed<'_, Self>,
+            crate::runtime::ParseErr,
         > {
             let __input_bytes = input.as_bytes();
             let mut state = __shape_support_MathParser::ScanState::new();
-            let mut builder = ::bbnf::runtime::tape::FusedBuilder::with_capacity(
-                GRAMMAR_PROFILE.capacity_for(input.len()),
-            );
+            let mut tape = crate::runtime::tape::Tape::<
+                (),
+            >::with_capacity(GRAMMAR_PROFILE.capacity_for(input.len()));
             let root_off = {
                 let mut pos: usize = 0;
                 let off = parse_MathParser_number(
                         __input_bytes,
                         &mut pos,
                         &mut state,
-                        &mut builder,
+                        &mut tape,
                     )
                     .map_err(|e| match e {
-                        ::bbnf::runtime::tape::DtaError::Syntax { offset, .. } => {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                        crate::runtime::tape::DtaError::Syntax { offset, .. } => {
+                            crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        ::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset } => {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                        crate::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                            crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        ::bbnf::runtime::tape::DtaError::InvalidState { .. } => {
-                            ::bbnf::runtime::ParseErr::Syntax {
+                        crate::runtime::tape::DtaError::InvalidState { .. } => {
+                            crate::runtime::ParseErr::Syntax {
                                 offset: 0,
                                 rule: None,
                             }
@@ -1494,31 +1494,31 @@ mod __mathparser_emit_impl {
                     &mut state,
                 );
                 if pos != input.len() {
-                    return Err(::bbnf::runtime::ParseErr::Syntax {
+                    return Err(crate::runtime::ParseErr::Syntax {
                         offset: pos as u32,
                         rule: None,
                     });
                 }
                 off
             };
-            let output = builder
+            let tape = tape
                 .finish_fused::<Self>(root_off.0)
-                .map_err(::bbnf::runtime::ParseErr::Tape)?;
+                .map_err(crate::runtime::ParseErr::Tape)?;
             ::core::result::Result::Ok(
-                ::bbnf::runtime::Parsed::new_fused_output(output, input, root_off),
+                crate::runtime::Parsed::new(tape, input, root_off),
             )
         }
     }
     #[inline]
     pub(crate) fn cst_identifier_text<'p>(
-        _cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        _cursor: crate::runtime::tape::TapeCursor<'p>,
         _input: &'p str,
     ) -> &'p str {
         ""
     }
     #[inline]
     pub(crate) fn cst_identifier_span<'p>(
-        _cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+        _cursor: crate::runtime::tape::TapeCursor<'p>,
         _input: &'p str,
     ) -> (u32, u32) {
         (0, 0)

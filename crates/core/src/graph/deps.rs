@@ -54,7 +54,7 @@ pub fn collect_nonterminal_refs<'a>(
     node: BbnfBootstrapNodeView<'a>,
     refs: &mut IndexSet<&'a str>,
 ) {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
 
     match node.rule_kind() {
         // Leaf: an explicit identifier rule compound.
@@ -189,7 +189,7 @@ fn collect_refs_from_compound<'a>(
     node: BbnfBootstrapNodeView<'a>,
     refs: &mut IndexSet<&'a str>,
 ) {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
 
     // First pass: recurse into Rule children.
     let initial_count = refs.len();
@@ -266,7 +266,7 @@ fn extract_ident_from_range<'a>(
 pub(crate) fn iter_tape_iteration_views<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> Vec<BbnfBootstrapNodeView<'a>> {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
 
     let raw_children: Vec<_> = {
         let mut children = node.children();
@@ -304,7 +304,7 @@ pub(crate) fn iter_tape_iteration_views<'a>(
 pub(crate) fn collect_tape_binary_operand_views<'a>(
     node: BbnfBootstrapNodeView<'a>,
 ) -> Vec<BbnfBootstrapNodeView<'a>> {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     let mut children = node.children();
     let first = match children.next() {
         Some(f) => f,
@@ -322,7 +322,7 @@ pub(crate) fn collect_tape_binary_operand_views<'a>(
 
 /// Peel anonymous wrapper compounds to reach the substantive Rule child.
 fn peel_wrapper<'a>(node: BbnfBootstrapNodeView<'a>) -> BbnfBootstrapNodeView<'a> {
-    use ::bbnf::runtime::tape::TapeKind;
+    use crate::runtime::tape::TapeKind;
     let kind = node.rule_kind();
     if !matches!(kind, BbnfBootstrapRuleKind::Unknown | BbnfBootstrapRuleKind::int_lit) {
         return node;

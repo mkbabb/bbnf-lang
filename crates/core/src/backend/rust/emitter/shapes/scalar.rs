@@ -62,23 +62,23 @@ pub fn emit_parse_scalar(
                     input: &[u8],
                     p: &mut usize,
                     _state: &mut #support_mod::ScanState,
-                    builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+                    builder: &mut crate::runtime::tape::Tape<()>,
                 ) -> ::core::result::Result<
-                    ::bbnf::runtime::tape::TapeOffset,
-                    ::bbnf::runtime::tape::DtaError,
+                    crate::runtime::tape::TapeOffset,
+                    crate::runtime::tape::DtaError,
                 > {
                     let at = *p;
                     let end = at + #len;
                     if input.len() < end || input[at..end] != [#(#byte_lits),*] {
-                        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+                        return Err(crate::runtime::tape::DtaError::Syntax {
                             offset: at as u32,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                     *p = end;
                     let off = builder.push_leaf(
-                        ::bbnf::runtime::tape::TapeKind::Literal,
+                        crate::runtime::tape::TapeKind::Literal,
                         at as u32,
                         end as u32,
                         #variant_idx,
@@ -112,10 +112,10 @@ pub fn emit_parse_scalar(
                     input: &[u8],
                     p: &mut usize,
                     state: &mut #support_mod::ScanState,
-                    builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+                    builder: &mut crate::runtime::tape::Tape<()>,
                 ) -> ::core::result::Result<
-                    ::bbnf::runtime::tape::TapeOffset,
-                    ::bbnf::runtime::tape::DtaError,
+                    crate::runtime::tape::TapeOffset,
+                    crate::runtime::tape::DtaError,
                 > {
                     #call
                 }
@@ -182,18 +182,18 @@ pub fn emit_parse_scalar_visitor(
                     p: &mut usize,
                     _state: &mut #support_mod::ScanState,
                     _visitor: &mut V,
-                ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+                ) -> ::core::result::Result<(), crate::runtime::ParseErr>
                 where
-                    V: ::bbnf::runtime::tape::ObjectVisitor
-                        + ::bbnf::runtime::tape::ArrayVisitor
-                        + ::bbnf::runtime::tape::StringVisitor
-                        + ::bbnf::runtime::tape::NumberVisitor
-                        + ::bbnf::runtime::tape::KeywordVisitor,
+                    V: crate::runtime::tape::ObjectVisitor
+                        + crate::runtime::tape::ArrayVisitor
+                        + crate::runtime::tape::StringVisitor
+                        + crate::runtime::tape::NumberVisitor
+                        + crate::runtime::tape::KeywordVisitor,
                 {
                     let at = *p;
                     let end = at + #len;
                     if input.len() < end || input[at..end] != [#(#byte_lits),*] {
-                        return Err(::bbnf::runtime::ParseErr::Syntax {
+                        return Err(crate::runtime::ParseErr::Syntax {
                             offset: at as u32, rule: None,
                         });
                     }
@@ -219,13 +219,13 @@ pub fn emit_parse_scalar_visitor(
                     p: &mut usize,
                     state: &mut #support_mod::ScanState,
                     visitor: &mut V,
-                ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+                ) -> ::core::result::Result<(), crate::runtime::ParseErr>
                 where
-                    V: ::bbnf::runtime::tape::ObjectVisitor
-                        + ::bbnf::runtime::tape::ArrayVisitor
-                        + ::bbnf::runtime::tape::StringVisitor
-                        + ::bbnf::runtime::tape::NumberVisitor
-                        + ::bbnf::runtime::tape::KeywordVisitor,
+                    V: crate::runtime::tape::ObjectVisitor
+                        + crate::runtime::tape::ArrayVisitor
+                        + crate::runtime::tape::StringVisitor
+                        + crate::runtime::tape::NumberVisitor
+                        + crate::runtime::tape::KeywordVisitor,
                 {
                     #call.map(|_| ())
                 }

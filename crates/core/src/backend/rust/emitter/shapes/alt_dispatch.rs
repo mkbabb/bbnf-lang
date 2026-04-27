@@ -67,10 +67,10 @@ fn alt_dispatch_rule_payload_spec(
         }
     })?;
     match ty {
-        TypeDesc::U8 => Some((quote! { ::bbnf::runtime::tape::TapeKind::KvPair }, 1)),
-        TypeDesc::U32 => Some((quote! { ::bbnf::runtime::tape::TapeKind::Span }, 4)),
-        TypeDesc::F64 => Some((quote! { ::bbnf::runtime::tape::TapeKind::Span }, 8)),
-        TypeDesc::Bool => Some((quote! { ::bbnf::runtime::tape::TapeKind::Span }, 1)),
+        TypeDesc::U8 => Some((quote! { crate::runtime::tape::TapeKind::KvPair }, 1)),
+        TypeDesc::U32 => Some((quote! { crate::runtime::tape::TapeKind::Span }, 4)),
+        TypeDesc::F64 => Some((quote! { crate::runtime::tape::TapeKind::Span }, 8)),
+        TypeDesc::Bool => Some((quote! { crate::runtime::tape::TapeKind::Span }, 1)),
         _ => None,
     }
 }
@@ -296,13 +296,13 @@ pub fn emit_parse_alt_dispatch(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+            builder: &mut crate::runtime::tape::Tape<()>,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::TapeOffset,
-            ::bbnf::runtime::tape::DtaError,
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
         > {
             let first = #support_mod::skip_space(input, p, state)
-                .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
             let alt_lo = *p as u32;
@@ -312,12 +312,12 @@ pub fn emit_parse_alt_dispatch(
             // emission; allocate the compound row at post-branch
             // position via begin_compound; close immediately; override
             // child_off to name the first branch record.
-            let alt_child = builder.columns_mut().len() as u32;
+            let alt_child = builder.position();
             let _ = alt_child;
             #dispatch_arms
             let alt_hi = *p as u32;
             let off = builder.begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 alt_lo,
                 #variant_idx,
                 0u8,
@@ -327,9 +327,9 @@ pub fn emit_parse_alt_dispatch(
             builder.end_compound_post_order(
                 off,
                 alt_hi,
-                ::bbnf::runtime::tape::TapeOffset(alt_child),
+                crate::runtime::tape::TapeOffset(alt_child),
             );
-            Ok(::bbnf::runtime::tape::TapeOffset(off))
+            Ok(crate::runtime::tape::TapeOffset(off))
         }
     }
 }
@@ -426,7 +426,7 @@ fn emit_dispatch_arms(
         // window; kept as a read-only columns.len() snapshot (not a
         // checkpoint for rollback — the outer's own begin_compound
         // will back-patch child_off once branch records land).
-        let save_child = builder.columns_mut().len() as u32;
+        let save_child = builder.position();
         let _ = save_p;
         let _ = save_child;
         'try_branches: loop {
@@ -435,10 +435,10 @@ fn emit_dispatch_arms(
                 _ => {}
             }
             #(#fallback_arms)*
-            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
     }
@@ -595,7 +595,7 @@ fn emit_branch_body(
                 quote! {
                     {
                         let attempt_p = *p;
-                        let attempt_len = builder.columns_mut().len() as u32;
+                        let attempt_len = builder.position();
                         let attempt: ::core::result::Result<(), ()> = (|| {
                             #body
                             Ok(())
@@ -647,7 +647,7 @@ fn emit_literal_attempt(sid: u32, ir: &GrammarIR) -> TokenStream {
             if input.len() >= end && input[at..end] == [#(#byte_lits),*] {
                 *p = end;
                 let _ = builder.push_leaf(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     0,
@@ -683,7 +683,7 @@ fn emit_regex_pattern_attempt(
             {
                 *p += match_len as usize;
                 let _ = builder.push_leaf(
-                    ::bbnf::runtime::tape::TapeKind::Span,
+                    crate::runtime::tape::TapeKind::Span,
                     span_lo,
                     *p as u32,
                     0,
@@ -716,7 +716,7 @@ fn emit_seq_attempt(seq: &IrNode, ir: &GrammarIR) -> TokenStream {
                     let seq_lo = save_p as u32;
                     let seq_hi = *p as u32;
                     let _ = builder.push_leaf(
-                        ::bbnf::runtime::tape::TapeKind::Literal,
+                        crate::runtime::tape::TapeKind::Literal,
                         seq_lo,
                         seq_hi,
                         0,
@@ -904,16 +904,16 @@ pub fn emit_parse_alt_dispatch_visitor(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             visitor: &mut V,
-        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: ::bbnf::runtime::tape::ObjectVisitor
-                + ::bbnf::runtime::tape::ArrayVisitor
-                + ::bbnf::runtime::tape::StringVisitor
-                + ::bbnf::runtime::tape::NumberVisitor
-                + ::bbnf::runtime::tape::KeywordVisitor,
+            V: crate::runtime::tape::ObjectVisitor
+                + crate::runtime::tape::ArrayVisitor
+                + crate::runtime::tape::StringVisitor
+                + crate::runtime::tape::NumberVisitor
+                + crate::runtime::tape::KeywordVisitor,
         {
             let first = #support_mod::skip_space(input, p, state)
-                .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                .ok_or(crate::runtime::ParseErr::Syntax {
                     offset: *p as u32, rule: None,
                 })?;
             #dispatch_arms
@@ -967,7 +967,7 @@ fn emit_dispatch_arms_visitor(
                 _ => {}
             }
             #(#fallback_arms)*
-            return Err(::bbnf::runtime::ParseErr::Syntax {
+            return Err(crate::runtime::ParseErr::Syntax {
                 offset: *p as u32, rule: None,
             });
         }

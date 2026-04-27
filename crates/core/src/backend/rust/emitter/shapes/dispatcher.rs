@@ -148,7 +148,7 @@ fn ctns_probe_tokens() -> TokenStream {
         // per-call cost is O(log N) binary search + a bounds test.
         let __ctns_idx = ensure_structural_index(state, input);
         if let ::core::option::Option::Some(__next_struct) =
-            ::bbnf::runtime::tape::next_structural_at_or_after(
+            crate::runtime::tape::next_structural_at_or_after(
                 __ctns_idx, *p as u32,
             )
         {
@@ -500,7 +500,7 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
             /// at parse-entry (AY.W1-fix demonstrated eager scans
             /// regress JSON twitter -64%).
             pub(crate) structural_index: ::core::cell::OnceCell<
-                ::bbnf::runtime::tape::StructuralIndex,
+                crate::runtime::tape::StructuralIndex,
             >,
         }
     } else {
@@ -520,9 +520,9 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
             pub(crate) fn ensure_structural_index<'a>(
                 state: &'a mut ScanState,
                 input: &[u8],
-            ) -> &'a ::bbnf::runtime::tape::StructuralIndex {
+            ) -> &'a crate::runtime::tape::StructuralIndex {
                 state.structural_index.get_or_init(|| {
-                    ::bbnf::runtime::tape::scan_structural(
+                    crate::runtime::tape::scan_structural(
                         input,
                         super::GRAMMAR_PROFILE.structural_alphabet,
                     )
@@ -859,12 +859,12 @@ pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
             // mirrors the Ref-call emitter's per-shape switch.
             ShapeTag::Number => quote! {
                 let first = #support_mod::skip_space(input, p, state)
-                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
+                    .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
                 #target_ident(input, p, first, builder)
             },
             ShapeTag::Keyword => quote! {
                 let first = #support_mod::skip_space(input, p, state)
-                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
+                    .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
                 #target_ident(input, p, first, state, builder)
             },
             _ => quote! {
@@ -881,8 +881,8 @@ pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
         // No shape coverage — shouldn't reach here (caller gates
         // dispatcher emission); emit a stub for safety.
         quote! {
-            Err(::bbnf::runtime::tape::DtaError::InvalidState {
-                state: ::bbnf::runtime::tape::DtaStateId::NONE,
+            Err(crate::runtime::tape::DtaError::InvalidState {
+                state: crate::runtime::tape::DtaStateId::NONE,
             })
         }
     };
@@ -935,10 +935,10 @@ pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+            builder: &mut crate::runtime::tape::Tape<()>,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::TapeOffset,
-            ::bbnf::runtime::tape::DtaError,
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
         > {
             #nonroot_ident(input, p, state, builder)
         }
@@ -953,10 +953,10 @@ pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+            builder: &mut crate::runtime::tape::Tape<()>,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::TapeOffset,
-            ::bbnf::runtime::tape::DtaError,
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
         > {
             #dispatch_body
         }
@@ -1005,8 +1005,8 @@ fn emit_alt_dispatch_body(
         _ => {
             // Single body — unreachable via root_tag guard above.
             return quote! {
-                Err(::bbnf::runtime::tape::DtaError::InvalidState {
-                state: ::bbnf::runtime::tape::DtaStateId::NONE,
+                Err(crate::runtime::tape::DtaError::InvalidState {
+                state: crate::runtime::tape::DtaStateId::NONE,
             })
             };
         }
@@ -1088,7 +1088,7 @@ fn emit_alt_dispatch_body(
 
     quote! {
         let first = #support_mod::skip_space(input, p, state)
-            .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
+            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
         let __result = match first {
             #object_arm
             #array_arm
@@ -1098,10 +1098,10 @@ fn emit_alt_dispatch_body(
             #null_arm
             c => {
                 return ::core::result::Result::Err(
-                    ::bbnf::runtime::tape::DtaError::Syntax {
+                    crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                        failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     }
                 );
             }
@@ -1175,14 +1175,14 @@ pub fn emit_visitor_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStr
             // `state` for Ref-branch delegation (see tape-path).
             ShapeTag::Number => quote! {
                 let first = #support_mod::skip_space(input, p, state)
-                    .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                    .ok_or(crate::runtime::ParseErr::Syntax {
                         offset: *p as u32, rule: None,
                     })?;
                 #target_ident(input, p, first, visitor)
             },
             ShapeTag::Keyword => quote! {
                 let first = #support_mod::skip_space(input, p, state)
-                    .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                    .ok_or(crate::runtime::ParseErr::Syntax {
                         offset: *p as u32, rule: None,
                     })?;
                 #target_ident(input, p, first, state, visitor)
@@ -1196,7 +1196,7 @@ pub fn emit_visitor_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStr
         emit_visitor_alt_dispatch_body(grammar_suffix, entry_rule, ir)
     } else {
         quote! {
-            Err(::bbnf::runtime::ParseErr::Syntax {
+            Err(crate::runtime::ParseErr::Syntax {
                 offset: *p as u32, rule: None,
             })
         }
@@ -1232,13 +1232,13 @@ pub fn emit_visitor_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStr
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             visitor: &mut V,
-        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: ::bbnf::runtime::tape::ObjectVisitor
-                + ::bbnf::runtime::tape::ArrayVisitor
-                + ::bbnf::runtime::tape::StringVisitor
-                + ::bbnf::runtime::tape::NumberVisitor
-                + ::bbnf::runtime::tape::KeywordVisitor,
+            V: crate::runtime::tape::ObjectVisitor
+                + crate::runtime::tape::ArrayVisitor
+                + crate::runtime::tape::StringVisitor
+                + crate::runtime::tape::NumberVisitor
+                + crate::runtime::tape::KeywordVisitor,
         {
             #nonroot_ident(input, p, state, visitor)
         }
@@ -1255,13 +1255,13 @@ pub fn emit_visitor_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStr
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             visitor: &mut V,
-        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: ::bbnf::runtime::tape::ObjectVisitor
-                + ::bbnf::runtime::tape::ArrayVisitor
-                + ::bbnf::runtime::tape::StringVisitor
-                + ::bbnf::runtime::tape::NumberVisitor
-                + ::bbnf::runtime::tape::KeywordVisitor,
+            V: crate::runtime::tape::ObjectVisitor
+                + crate::runtime::tape::ArrayVisitor
+                + crate::runtime::tape::StringVisitor
+                + crate::runtime::tape::NumberVisitor
+                + crate::runtime::tape::KeywordVisitor,
         {
             #dispatch_body
         }
@@ -1371,7 +1371,7 @@ pub fn emit_ref_call_tape(
         ShapeTag::Number => quote! {
             {
                 let __first = #support_mod::skip_space(input, p, state)
-                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                    .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                         offset: *p as u32,
                     })?;
                 #target_fn(input, p, __first, builder)
@@ -1380,7 +1380,7 @@ pub fn emit_ref_call_tape(
         ShapeTag::Keyword => quote! {
             {
                 let __first = #support_mod::skip_space(input, p, state)
-                    .ok_or(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                    .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                         offset: *p as u32,
                     })?;
                 #target_fn(input, p, __first, state, builder)
@@ -1509,7 +1509,7 @@ pub fn emit_ref_call_visitor(
         ShapeTag::Number => quote! {
             {
                 let __first = #support_mod::skip_space(input, p, state)
-                    .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                    .ok_or(crate::runtime::ParseErr::Syntax {
                         offset: *p as u32, rule: None,
                     })?;
                 #target_fn(input, p, __first, visitor)
@@ -1518,7 +1518,7 @@ pub fn emit_ref_call_visitor(
         ShapeTag::Keyword => quote! {
             {
                 let __first = #support_mod::skip_space(input, p, state)
-                    .ok_or(::bbnf::runtime::ParseErr::Syntax {
+                    .ok_or(crate::runtime::ParseErr::Syntax {
                         offset: *p as u32, rule: None,
                     })?;
                 #target_fn(input, p, __first, state, visitor)
@@ -1604,7 +1604,7 @@ fn emit_visitor_alt_dispatch_body(
         IrNode::Alt(bs, _) => bs.as_slice(),
         _ => {
             return quote! {
-                Err(::bbnf::runtime::ParseErr::Syntax {
+                Err(crate::runtime::ParseErr::Syntax {
                     offset: *p as u32, rule: None,
                 })
             };
@@ -1681,7 +1681,7 @@ fn emit_visitor_alt_dispatch_body(
 
     quote! {
         let first = #support_mod::skip_space(input, p, state)
-            .ok_or(::bbnf::runtime::ParseErr::Syntax {
+            .ok_or(crate::runtime::ParseErr::Syntax {
                 offset: *p as u32, rule: None,
             })?;
         match first {
@@ -1691,7 +1691,7 @@ fn emit_visitor_alt_dispatch_body(
             #number_arm
             #true_arm
             #null_arm
-            _ => Err(::bbnf::runtime::ParseErr::Syntax {
+            _ => Err(crate::runtime::ParseErr::Syntax {
                 offset: *p as u32, rule: None,
             }),
         }
@@ -1714,7 +1714,7 @@ fn emit_visitor_alt_dispatch_body(
 // is no runtime flag and no hand-routed grammar specialisation —
 // every decision resolves at codegen against grammar-derived facts.
 //
-// Schema (mirroring `::bbnf::runtime::tape::ScanPolicyEntry`):
+// Schema (mirroring `crate::runtime::tape::ScanPolicyEntry`):
 //
 //   ScanPolicyEntry {
 //       rule_id: u32,                       // IR RuleId
@@ -1736,7 +1736,7 @@ fn emit_visitor_alt_dispatch_body(
 //   BOUNDED_LOOKAHEAD | DIGRAPH_ADMIT.
 
 /// Emit the per-grammar `STRUCTURAL_SCAN_POLICY` const table — one
-/// [`::bbnf::runtime::tape::ScanPolicyEntry`] per non-transparent
+/// [`crate::runtime::tape::ScanPolicyEntry`] per non-transparent
 /// rule, derived from FIRST-set facts + the grammar's mined
 /// `structural_alphabet` + `structural_digraph_mask`.
 ///
@@ -1836,26 +1836,26 @@ pub fn emit_structural_scan_policy(
 
         let class_tokens = match class {
             ScanAlphabetClass::Empty => {
-                quote! { ::bbnf::runtime::tape::ScanAlphabetClass::Empty }
+                quote! { crate::runtime::tape::ScanAlphabetClass::Empty }
             }
             ScanAlphabetClass::Sparse => {
-                quote! { ::bbnf::runtime::tape::ScanAlphabetClass::Sparse }
+                quote! { crate::runtime::tape::ScanAlphabetClass::Sparse }
             }
             ScanAlphabetClass::Dense => {
-                quote! { ::bbnf::runtime::tape::ScanAlphabetClass::Dense }
+                quote! { crate::runtime::tape::ScanAlphabetClass::Dense }
             }
             ScanAlphabetClass::Digraph => {
-                quote! { ::bbnf::runtime::tape::ScanAlphabetClass::Digraph }
+                quote! { crate::runtime::tape::ScanAlphabetClass::Digraph }
             }
         };
 
         let rule_id = rule.id;
         let flags_lit = proc_macro2::Literal::u8_unsuffixed(flags);
         entries.push(quote! {
-            ::bbnf::runtime::tape::ScanPolicyEntry {
+            crate::runtime::tape::ScanPolicyEntry {
                 rule_id: #rule_id,
                 alphabet_class: #class_tokens,
-                activation: ::bbnf::runtime::tape::ScanActivationFlags::from_bits(#flags_lit),
+                activation: crate::runtime::tape::ScanActivationFlags::from_bits(#flags_lit),
             }
         });
     }
@@ -1877,9 +1877,9 @@ pub fn emit_structural_scan_policy(
         /// `backend::rust::view::value`, which inlines the matching
         /// cursor primitive in `__path_walk`'s per-`rule_kind()`
         /// dispatch:
-        /// [`::bbnf::runtime::tape::TapeCursor::object_key_seek`] /
-        /// [`::bbnf::runtime::tape::TapeCursor::bounded_lookahead`] /
-        /// [`::bbnf::runtime::tape::TapeCursor::scan_structural_bounded`]
+        /// [`crate::runtime::tape::TapeCursor::object_key_seek`] /
+        /// [`crate::runtime::tape::TapeCursor::bounded_lookahead`] /
+        /// [`crate::runtime::tape::TapeCursor::scan_structural_bounded`]
         /// per the entry's `activation` bitmap.
         ///
         /// No runtime flag; no hand-routed grammar specialisation.
@@ -1887,13 +1887,13 @@ pub fn emit_structural_scan_policy(
         /// previously guarded this surface — the emitted grammar now
         /// carries a same-translation-unit consumer through
         /// `__path_walk`'s dispatch.
-        pub const #policy_ident: &[::bbnf::runtime::tape::ScanPolicyEntry] = &[
+        pub const #policy_ident: &[crate::runtime::tape::ScanPolicyEntry] = &[
             #(#entries),*
         ];
     }
 }
 
-/// Look up a [`::bbnf::runtime::tape::ScanPolicyEntry`] for a rule by
+/// Look up a [`crate::runtime::tape::ScanPolicyEntry`] for a rule by
 /// id within the `STRUCTURAL_SCAN_POLICY` slice — emission-time
 /// helper that resolves during codegen so the generated call site
 /// inlines the matching entry's class + activation bitmap without

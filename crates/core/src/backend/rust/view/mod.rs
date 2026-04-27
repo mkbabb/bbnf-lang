@@ -2,7 +2,7 @@
 //!
 //! Tranche AC.2 landing surface. For every rule in the IR, this
 //! module emits a `<Rule>View<'p>` wrapper struct that holds a
-//! [`::bbnf::runtime::tape::TapeCursor`] plus a borrow of the
+//! [`crate::runtime::tape::TapeCursor`] plus a borrow of the
 //! original input string. The `input` borrow lets view accessors
 //! lazily materialize scalar projections (numeric conversion, hex
 //! conversion, constant lookups, etc.) from the source bytes —
@@ -54,7 +54,7 @@
 //!   grammar marker struct.
 //!
 //! The top-level grammar-view binding ties the grammar marker
-//! struct's [`::bbnf::runtime::Root`] GAT `type View<'p>` to the
+//! struct's [`crate::runtime::Root`] GAT `type View<'p>` to the
 //! root rule's view type. Generated `Parsed<Grammar>::view(&self)`
 //! calls the `Root::make_view` constructor to lend the root view
 //! with a `&self` lifetime.
@@ -99,7 +99,7 @@ pub use value::{emit_value_surface, variant_entries_for, VariantInfo, VariantInf
 /// - One `<Rule>View<'p>` struct per non-transparent rule,
 ///   wrapping a `TapeCursor<'p>` + `input: &'p str` with
 ///   universal accessors.
-/// - One `impl ::bbnf::runtime::Root for <Grammar>` binding that
+/// - One `impl crate::runtime::Root for <Grammar>` binding that
 ///   ties the grammar marker struct's `type View<'p>` GAT to the
 ///   root rule's view type.
 ///
@@ -199,26 +199,26 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
             impl<'p> #view_ident<'p> {
                 #[inline]
                 pub fn new(
-                    tape: &'p ::bbnf::runtime::tape::Tape,
+                    tape: &'p crate::runtime::tape::Tape,
                     input: &'p str,
-                    offset: ::bbnf::runtime::tape::TapeOffset,
+                    offset: crate::runtime::tape::TapeOffset,
                 ) -> Self {
                     Self {
-                        cursor: ::bbnf::runtime::tape::TapeCursor::new(tape, offset),
+                        cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
                         input,
                     }
                 }
 
                 #[inline]
                 pub fn from_cursor(
-                    cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+                    cursor: crate::runtime::tape::TapeCursor<'p>,
                     input: &'p str,
                 ) -> Self {
                     Self { cursor, input }
                 }
 
                 #[inline]
-                pub fn cursor(&self) -> ::bbnf::runtime::tape::TapeCursor<'p> {
+                pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
                     self.cursor
                 }
 
@@ -226,7 +226,7 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
                 pub fn input(&self) -> &'p str { self.input }
 
                 #[inline]
-                pub fn kind(&self) -> ::bbnf::runtime::tape::TapeKind {
+                pub fn kind(&self) -> crate::runtime::tape::TapeKind {
                     self.cursor.kind()
                 }
 
@@ -299,7 +299,7 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
             /// Generated view over a tape record produced by this rule.
             #[derive(Clone, Copy, Debug)]
             pub struct #view_ident<'p> {
-                cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+                cursor: crate::runtime::tape::TapeCursor<'p>,
                 input: &'p str,
             }
 
@@ -317,7 +317,7 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
         /// Generic node view over any tape record for this grammar.
         #[derive(Clone, Copy, Debug)]
         pub struct #node_view_ident<'p> {
-            cursor: ::bbnf::runtime::tape::TapeCursor<'p>,
+            cursor: crate::runtime::tape::TapeCursor<'p>,
             input: &'p str,
         }
 
@@ -362,14 +362,14 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
     let root_binding = if let Some(root_name) = root_rule_name {
         let root_view_ident = format_ident!("{}View", root_name);
         quote! {
-            impl ::bbnf::runtime::Root for #grammar_ident {
+            impl crate::runtime::Root for #grammar_ident {
                 type View<'p> = #root_view_ident<'p>;
 
                 #[inline]
                 fn make_view<'p>(
-                    tape: &'p ::bbnf::runtime::tape::Tape,
+                    tape: &'p crate::runtime::tape::Tape<()>,
                     input: &'p str,
-                    root: ::bbnf::runtime::tape::TapeOffset,
+                    root: crate::runtime::tape::TapeOffset,
                 ) -> Self::View<'p> {
                     #root_view_ident::new(tape, input, root)
                 }

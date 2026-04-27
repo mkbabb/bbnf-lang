@@ -319,17 +319,17 @@ pub fn emit_parse_unordered(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+            builder: &mut crate::runtime::tape::Tape<()>,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::TapeOffset,
-            ::bbnf::runtime::tape::DtaError,
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
         > {
             let span_lo = *p as u32;
             // AY-II.W0.b — walker-parity post-order Repeat Rule
             // compound via begin_compound/end_compound. Capture first-
             // child index; iterate; allocate compound row post-children;
             // override child_off to first-child.
-            let outer_child = builder.columns_mut().len() as u32;
+            let outer_child = builder.position();
             // The walker's Repeat entry doesn't skip leading ws on
             // its own — the Alt's ByteDispatch does. Mirror that: the
             // per-grammar value-position dispatcher does its own
@@ -346,20 +346,20 @@ pub fn emit_parse_unordered(
             if iters < #iters_lo_lit {
                 return ::core::result::Result::Err(
                     match input.get(*p).copied() {
-                        None => ::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                        None => crate::runtime::tape::DtaError::UnexpectedEnd {
                             offset: *p as u32,
                         },
-                        _ => ::bbnf::runtime::tape::DtaError::Syntax {
+                        _ => crate::runtime::tape::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         },
                     },
                 );
             }
             let span_hi = *p as u32;
             let outer_off = builder.begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 #variant_idx,
                 0u8,
@@ -369,9 +369,9 @@ pub fn emit_parse_unordered(
             builder.end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-            ::core::result::Result::Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+            ::core::result::Result::Ok(crate::runtime::tape::TapeOffset(outer_off))
         }
     }
 }
@@ -411,19 +411,19 @@ fn emit_parse_unordered_fallback(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+            builder: &mut crate::runtime::tape::Tape<()>,
         ) -> ::core::result::Result<
-            ::bbnf::runtime::tape::TapeOffset,
-            ::bbnf::runtime::tape::DtaError,
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
         > {
             let _ = state;
             let span_lo = *p as u32;
             // AY-II.W0.b — empty-compound fallback via begin/end.
-            let outer_child = builder.columns_mut().len() as u32;
+            let outer_child = builder.position();
             let span_hi = *p as u32;
             let _ = input;
             let outer_off = builder.begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 span_lo,
                 #variant_idx,
                 0u8,
@@ -433,9 +433,9 @@ fn emit_parse_unordered_fallback(
             builder.end_compound_post_order(
                 outer_off,
                 span_hi,
-                ::bbnf::runtime::tape::TapeOffset(outer_child),
+                crate::runtime::tape::TapeOffset(outer_child),
             );
-            ::core::result::Result::Ok(::bbnf::runtime::tape::TapeOffset(outer_off))
+            ::core::result::Result::Ok(crate::runtime::tape::TapeOffset(outer_off))
         }
     }
 }
@@ -506,13 +506,13 @@ pub fn emit_parse_unordered_visitor(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             visitor: &mut V,
-        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: ::bbnf::runtime::tape::ObjectVisitor
-                + ::bbnf::runtime::tape::ArrayVisitor
-                + ::bbnf::runtime::tape::StringVisitor
-                + ::bbnf::runtime::tape::NumberVisitor
-                + ::bbnf::runtime::tape::KeywordVisitor,
+            V: crate::runtime::tape::ObjectVisitor
+                + crate::runtime::tape::ArrayVisitor
+                + crate::runtime::tape::StringVisitor
+                + crate::runtime::tape::NumberVisitor
+                + crate::runtime::tape::KeywordVisitor,
         {
             let mut iters: u32 = 0;
             loop {
@@ -524,7 +524,7 @@ pub fn emit_parse_unordered_visitor(
             }
             if iters < #iters_lo_lit {
                 return ::core::result::Result::Err(
-                    ::bbnf::runtime::ParseErr::Syntax {
+                    crate::runtime::ParseErr::Syntax {
                         offset: *p as u32, rule: None,
                     },
                 );
@@ -556,13 +556,13 @@ fn emit_parse_unordered_visitor_fallback(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             visitor: &mut V,
-        ) -> ::core::result::Result<(), ::bbnf::runtime::ParseErr>
+        ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: ::bbnf::runtime::tape::ObjectVisitor
-                + ::bbnf::runtime::tape::ArrayVisitor
-                + ::bbnf::runtime::tape::StringVisitor
-                + ::bbnf::runtime::tape::NumberVisitor
-                + ::bbnf::runtime::tape::KeywordVisitor,
+            V: crate::runtime::tape::ObjectVisitor
+                + crate::runtime::tape::ArrayVisitor
+                + crate::runtime::tape::StringVisitor
+                + crate::runtime::tape::NumberVisitor
+                + crate::runtime::tape::KeywordVisitor,
         {
             let _ = (input, p, state, visitor);
             ::core::result::Result::Ok(())

@@ -13,16 +13,16 @@
 //!    generic `<Grammar>NodeView<'p>` for unclassified / recovery
 //!    records whose `variant_idx` does not map to a known rule.
 //!
-//! 2. `impl ::bbnf::runtime::ValueRoot for <Grammar>` — the GAT
+//! 2. `impl crate::runtime::ValueRoot for <Grammar>` — the GAT
 //!    binding with `type Value<'p> = <Grammar>Value<'p>` + the
 //!    `project_value_output` entry-point that consumes the
-//!    W0'.a-published [`FusedOutput`](::bbnf::runtime::FusedOutput)
+//!    W0'.a-published [`FusedOutput`](crate::runtime::tape::Tape)
 //!    slab and drives the grammar's per-admission
 //!    `materialize_projection_<rule>_<Grammar>(output, input, offset)`
 //!    helpers. Non-admitted rules fall through to the existing
 //!    shape-based projection.
 //!
-//! 3. `impl ::bbnf::runtime::PathQuery<T> for <Grammar>` for
+//! 3. `impl crate::runtime::PathQuery<T> for <Grammar>` for
 //!    `T ∈ { &str, f64, bool }` — linear-walk path queries against
 //!    the tape. The emitted walker is a zero-copy cursor descent.
 //!
@@ -342,7 +342,7 @@ fn emit_enum_decl(
     }
 }
 
-/// Emit `impl ::bbnf::runtime::ValueRoot for <Grammar>` + the
+/// Emit `impl crate::runtime::ValueRoot for <Grammar>` + the
 /// `project_value_<grammar>` fn + its supporting dispatch. The emitted
 /// fn routes every admitted rule through its grammar-derived
 /// materializer and falls through to shape-based arms for every other
@@ -402,7 +402,7 @@ fn emit_value_root_impl(
         /// invariant — pre-B5.W0.6 the codegen ignored it.
         #[inline(always)]
         fn #dispatch_fn(
-            kind: ::bbnf::runtime::tape::TapeKind,
+            kind: crate::runtime::tape::TapeKind,
             variant_idx: u8,
         ) -> #rule_kind_ident {
             // Intermediate compound — non-rule structural frame stamped
@@ -444,13 +444,13 @@ fn emit_value_root_impl(
         /// payload reads on leaves with a payload tag.
         #[inline]
         fn #push_children_fn<'p>(
-            output: &::bbnf::runtime::FusedOutput<#grammar_ident>,
+            output: &crate::runtime::tape::Tape<#grammar_ident>,
             input: &'p str,
             offset: u32,
             out: &mut ::std::vec::Vec<#value_ident<'p>>,
         ) {
             let __tape = output.tape();
-            let __rec = match __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset)) {
+            let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(offset)) {
                 ::core::option::Option::Some(r) => r,
                 ::core::option::Option::None => return,
             };
@@ -458,9 +458,9 @@ fn emit_value_root_impl(
             // children without surfacing a wrapper variant. Leaves and
             // rule-bound compounds project as a single value.
             if __rec.variant_idx() == 0 && __rec.kind().is_compound() {
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     #push_children_fn(output, input, __child.offset().0, out);
@@ -471,7 +471,7 @@ fn emit_value_root_impl(
         }
 
         /// AY-II.W0'.b — per-frame projector. Reads one record from the
-        /// fused-pipeline [`FusedOutput`](::bbnf::runtime::FusedOutput)
+        /// fused-pipeline [`FusedOutput`](crate::runtime::tape::Tape)
         /// tape and constructs the matching `<Grammar>Value` variant.
         /// Admitted rules tail-call their grammar-derived materializer;
         /// non-admitted rules construct the variant inline. Compound
@@ -484,12 +484,12 @@ fn emit_value_root_impl(
         /// payload — that path remains in the scalar arm.
         #[inline]
         fn #frame_fn<'p>(
-            output: &::bbnf::runtime::FusedOutput<#grammar_ident>,
+            output: &crate::runtime::tape::Tape<#grammar_ident>,
             input: &'p str,
             offset: u32,
         ) -> #value_ident<'p> {
             let __tape = output.tape();
-            let __rec = match __tape.try_get(::bbnf::runtime::tape::TapeOffset(offset)) {
+            let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(offset)) {
                 ::core::option::Option::Some(r) => r,
                 ::core::option::Option::None => {
                     ::core::panic!(
@@ -518,19 +518,19 @@ fn emit_value_root_impl(
         /// no visitor dispatch.
         #[inline]
         fn #root_fn<'p>(
-            output: &::bbnf::runtime::FusedOutput<#grammar_ident>,
+            output: &crate::runtime::tape::Tape<#grammar_ident>,
             input: &'p str,
         ) -> #value_ident<'p> {
             let root_off = output.value_root_offset();
             #frame_fn(output, input, root_off)
         }
 
-        impl ::bbnf::runtime::ValueRoot for #grammar_ident {
+        impl crate::runtime::ValueRoot for #grammar_ident {
             type Value<'p> = #value_ident<'p>;
 
             #[inline]
             fn project_value_output<'p>(
-                output: &::bbnf::runtime::FusedOutput<#grammar_ident>,
+                output: &crate::runtime::tape::Tape<#grammar_ident>,
                 input: &'p str,
             ) -> Self::Value<'p>
             where
@@ -620,9 +620,9 @@ fn emit_project_arm(
                 // reading `kind` / `variant_idx` from the tape record.
                 let mut children: ::std::vec::Vec<#value_ident<'p>> =
                     ::std::vec::Vec::new();
-                let __cur = ::bbnf::runtime::tape::TapeCursor::new(
+                let __cur = crate::runtime::tape::TapeCursor::new(
                     __tape,
-                    ::bbnf::runtime::tape::TapeOffset(offset),
+                    crate::runtime::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     #push_children_fn(output, input, __child.offset().0, &mut children);
@@ -981,19 +981,19 @@ fn emit_path_query_impls(
         /// through to a generic children iteration.
         ///
         /// [`STRUCTURAL_SCAN_POLICY`]: crate::STRUCTURAL_SCAN_POLICY
-        /// [`TapeCursor::bounded_lookahead`]: ::bbnf::runtime::tape::TapeCursor::bounded_lookahead
-        /// [`TapeCursor::object_key_seek`]: ::bbnf::runtime::tape::TapeCursor::object_key_seek
-        /// [`TapeCursor::scan_structural_bounded`]: ::bbnf::runtime::tape::TapeCursor::scan_structural_bounded
+        /// [`TapeCursor::bounded_lookahead`]: crate::runtime::tape::TapeCursor::bounded_lookahead
+        /// [`TapeCursor::object_key_seek`]: crate::runtime::tape::TapeCursor::object_key_seek
+        /// [`TapeCursor::scan_structural_bounded`]: crate::runtime::tape::TapeCursor::scan_structural_bounded
         #[inline]
         fn __path_walk<'p>(
             view: #node_view_ident<'p>,
-            path: ::bbnf::runtime::Path<'_>,
+            path: crate::runtime::Path<'_>,
         ) -> ::core::option::Option<#node_view_ident<'p>> {
             let cur_input = view.input();
             let mut cur = view;
             for seg in path.iter() {
                 match seg {
-                    ::bbnf::runtime::PathSegment::Field(key) => {
+                    crate::runtime::PathSegment::Field(key) => {
                         match cur.rule_kind() {
                             #field_fast_key_seek
                             #field_fast_bounded
@@ -1036,7 +1036,7 @@ fn emit_path_query_impls(
                             }
                         }
                     }
-                    ::bbnf::runtime::PathSegment::Index(i) => {
+                    crate::runtime::PathSegment::Index(i) => {
                         match cur.rule_kind() {
                             #index_fast_scan
                             _ => {
@@ -1053,11 +1053,11 @@ fn emit_path_query_impls(
     // Per-T impl. Each finishes the walk with a T-specialised
     // leaf extractor.
     let impl_str = quote! {
-        impl ::bbnf::runtime::PathQuery<&'static str> for #grammar_ident {
+        impl crate::runtime::PathQuery<&'static str> for #grammar_ident {
             #[inline]
             fn query<'p>(
                 view: Self::View<'p>,
-                path: ::bbnf::runtime::Path<'_>,
+                path: crate::runtime::Path<'_>,
             ) -> ::core::option::Option<&'static str>
             where
                 Self: 'p,
@@ -1074,11 +1074,11 @@ fn emit_path_query_impls(
             }
         }
 
-        impl ::bbnf::runtime::PathQuery<f64> for #grammar_ident {
+        impl crate::runtime::PathQuery<f64> for #grammar_ident {
             #[inline]
             fn query<'p>(
                 view: Self::View<'p>,
-                path: ::bbnf::runtime::Path<'_>,
+                path: crate::runtime::Path<'_>,
             ) -> ::core::option::Option<f64>
             where
                 Self: 'p,
@@ -1095,11 +1095,11 @@ fn emit_path_query_impls(
             }
         }
 
-        impl ::bbnf::runtime::PathQuery<bool> for #grammar_ident {
+        impl crate::runtime::PathQuery<bool> for #grammar_ident {
             #[inline]
             fn query<'p>(
                 view: Self::View<'p>,
-                path: ::bbnf::runtime::Path<'_>,
+                path: crate::runtime::Path<'_>,
             ) -> ::core::option::Option<bool>
             where
                 Self: 'p,

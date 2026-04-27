@@ -368,7 +368,7 @@ disposition:
 
 - Direct-to-struct activation for JSON / Sheets / CSS L4 →
   AZ-I.W1 + W2 + W3.
-- `crates/tape/` deletion → AZ-II.W3.
+- `crates/tape/` deletion → AZ-II.W2 (FINAL; post-A9 W1+W2 atomic merge).
 - Lazy typed pointer-path queries → BA.
 - E-graph rule inference + VM oracle → BB.
 

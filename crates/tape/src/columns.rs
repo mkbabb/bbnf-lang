@@ -364,30 +364,6 @@ impl Columns {
         crate::finaliser::finalise(self, depth_slice);
     }
 
-    /// Split-borrow accessor: hand back `(&mut Columns, &mut Vec<u8>)`
-    /// where the first borrow ranges over the `Columns` fields the
-    /// per-grammar specialised walker mutates (records, sib_skip,
-    /// payload columns) and the second projects into the depth
-    /// column. Mirrors the pre-W0.δ shape `FusedBuilder` exposed
-    /// when `frame_depth` lived on the builder directly.
-    ///
-    /// SAFETY: callers must not mutate `frame_depth` through the
-    /// returned `&mut Columns` for the lifetime of the returned
-    /// `&mut Vec<u8>`. Every emitted walker this call services
-    /// pushes structural rows into `records` and depth bytes into the
-    /// `Vec<u8>`; neither path reaches `frame_depth` through the
-    /// `Columns` handle.
-    #[inline]
-    pub(crate) fn split_off_frame_depth_mut(
-        &mut self,
-    ) -> (&mut Columns, &mut Vec<u8>) {
-        let cols_ptr: *mut Columns = self;
-        unsafe {
-            let depth: &mut Vec<u8> = &mut (*cols_ptr).frame_depth;
-            (&mut *cols_ptr, depth)
-        }
-    }
-
     // ── AX.W1.D — AoS sidecar (`packed_cache`) readers/invalidators ──
 
     /// Get (populating on first call) the AoS sidecar view.

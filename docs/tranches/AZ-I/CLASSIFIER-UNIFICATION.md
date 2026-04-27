@@ -26,14 +26,14 @@ unification without missing AZ-I close.
 
 ### 1. Regex-HIR classifier
 
-- **Entry:** `crates/regex/src/classify.rs:180`
+- **Entry:** `../parse-that/rust/regex/src/classify.rs:180`
   `pub fn classify_regex_from_hir(hir: &Hir) -> RegexClass`.
   Wrapper at `:157` `pub fn classify_regex(pattern: &str) -> RegexClass`
   parses pattern → HIR first, then dispatches.
 - **Input:** a parsed `parse_that::regex::hir::Hir` tree (byte-class
   ranges, `CharClass`, `Repetition`, `Group`, `Alternation`).
 - **Output:** `RegexClass` enum
-  (`crates/regex/src/classify.rs:55`) — `Numeric { allows_sign,
+  (`../parse-that/rust/regex/src/classify.rs:55`) — `Numeric { allows_sign,
   allows_fraction, allows_exponent, reject_leading_zero,
   allow_leading_dot }`, `QuotedString { quote_char, allows_escapes,
   allows_u_escapes }`, `HexDigits`, `Identifier { allows_leading_dash,
@@ -66,7 +66,7 @@ unification without missing AZ-I close.
   (`\d` vs `[0-9]`, group nesting, ordering) collapse to the same
   variant with identical field bindings. There is no nominal fast
   path; consumers never need to maintain a dialect dictionary.
-  (Stated in module docstring `crates/regex/src/classify.rs:8-14`.)
+  (Stated in module docstring `../parse-that/rust/regex/src/classify.rs:8-14`.)
 
 ### 2. Structural-alphabet classifier
 
@@ -222,7 +222,7 @@ demand already exist in their natural homes:
   (`crates/ir/src/passes/payload/named_types.rs:59`) — backend-
   specific name resolution for `TypeDesc::Named`.
 - `RegexClass::canonical_pattern()`
-  (`crates/regex/src/classify.rs:132-150`) — the producer-side
+  (`../parse-that/rust/regex/src/classify.rs:132-150`) — the producer-side
   canonical-form accessor that lets consumers avoid hard-coded
   pattern strings.
 - `RegexInfo` cache
@@ -260,7 +260,7 @@ following holds:
    e-class fact axis, the merger has a substrate to land on. As of
    AZ-I open this is hypothetical.
 2. The `RegexClass`-as-canonical-pattern pathway
-   (`canonical_pattern()` at `crates/regex/src/classify.rs:132`)
+   (`canonical_pattern()` at `../parse-that/rust/regex/src/classify.rs:132`)
    becomes load-bearing across more than the two variants it
    currently covers (`Identifier`, `QuotedString`). A wider
    canonical-pattern surface signals the regex classifier's outputs

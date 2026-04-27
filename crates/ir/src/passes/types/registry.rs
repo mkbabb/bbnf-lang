@@ -44,7 +44,7 @@ use rustc_hash::FxHashMap;
 
 use crate::dag::GrammarDag;
 use crate::registry::{FieldSource, LayoutKind, StructField, StructLayout, StructRegistry};
-use crate::types::{GrammarIR, IrNode, IrRule, RuleId, SubVariant, TypeDesc};
+use crate::types::{FnDescriptor, GrammarIR, IrNode, IrRule, RuleId, SubVariant, TypeDesc};
 
 use super::type_map::TypeMap;
 
@@ -61,7 +61,7 @@ use super::type_map::TypeMap;
 /// upstream solver to convergence first, so a single populate pass
 /// suffices. Idempotent: a second invocation against the same
 /// projected types produces an identical registry.
-pub(super) fn populate_struct_registry(
+pub fn populate_struct_registry(
     ir: &mut GrammarIR,
     rule_types: &FxHashMap<RuleId, TypeDesc>,
     type_map: &TypeMap,
@@ -86,9 +86,11 @@ pub(super) fn populate_struct_registry(
     // not change layout-shape correctness; it only loses per-node
     // type refinement (which the rule-type fallback restores).
     let dag = ir.dag.as_ref();
+    let fns = ir.fns.as_slice();
 
     for rule in &ir.rules {
-        let layout = build_layout_for_rule(rule, rule_types, type_map, &rule_names, dag);
+        let layout =
+            build_layout_for_rule(rule, rule_types, type_map, &rule_names, dag, fns);
         registry.insert(layout);
     }
 
@@ -104,6 +106,7 @@ fn build_layout_for_rule(
     type_map: &TypeMap,
     rule_names: &FxHashMap<RuleId, String>,
     dag: Option<&GrammarDag>,
+    fns: &[FnDescriptor],
 ) -> StructLayout {
     let rule_name = rule_names
         .get(&rule.id)
@@ -121,6 +124,8 @@ fn build_layout_for_rule(
         type_map,
         rule_names,
         dag,
+        fns,
+        rule_types,
     );
 
     StructLayout {
@@ -143,6 +148,8 @@ fn classify_body(
     type_map: &TypeMap,
     rule_names: &FxHashMap<RuleId, String>,
     dag: Option<&GrammarDag>,
+    fns: &[FnDescriptor],
+    rule_types: &FxHashMap<RuleId, TypeDesc>,
 ) -> (LayoutKind, Vec<StructField>) {
     match body {
         // ── Alternation → tagged enum (or untagged when all branches share type) ──
@@ -150,8 +157,14 @@ fn classify_body(
             let mut fields = Vec::with_capacity(branches.len());
             for (idx, branch) in branches.iter().enumerate() {
                 let branch_idx = idx as u32;
-                let branch_type = node_projected_type(&branch.node, type_map, dag)
-                    .unwrap_or_else(|| rule_type.clone());
+                let branch_type = branch_projected_type(
+                    &branch.node,
+                    type_map,
+                    dag,
+                    fns,
+                    rule_types,
+                )
+                .unwrap_or_else(|| rule_type.clone());
                 let name = sub_variant_name_for_branch(sub_variants, branch_idx)
                     .unwrap_or_else(|| format!("branch_{}", branch_idx));
                 fields.push(StructField {
@@ -179,7 +192,7 @@ fn classify_body(
                 .enumerate()
                 .map(|(pos, child)| {
                     let position = pos as u32;
-                    let ty = node_projected_type(child, type_map, dag)
+                    let ty = branch_projected_type(child, type_map, dag, fns, rule_types)
                         .unwrap_or(TypeDesc::Span);
                     let name = field_name_for_seq_child(child, position, rule_names);
                     StructField {
@@ -212,7 +225,16 @@ fn classify_body(
                 // Composite body: classify the inner and lift its
                 // discriminator. The single typed annotation flows
                 // through to the inner's outermost field.
-                classify_body(inner, rule_type, sub_variants, type_map, rule_names, dag)
+                classify_body(
+                    inner,
+                    rule_type,
+                    sub_variants,
+                    type_map,
+                    rule_names,
+                    dag,
+                    fns,
+                    rule_types,
+                )
             }
         }
 
@@ -228,10 +250,12 @@ fn classify_body(
                     type_map,
                     rule_names,
                     dag,
+                    fns,
+                    rule_types,
                 );
             }
-            let elem_type =
-                node_projected_type(inner, type_map, dag).unwrap_or(TypeDesc::Span);
+            let elem_type = branch_projected_type(inner, type_map, dag, fns, rule_types)
+                .unwrap_or(TypeDesc::Span);
             let field = StructField {
                 name: "element".to_string(),
                 type_desc: elem_type,
@@ -257,22 +281,50 @@ fn classify_body(
         }
 
         // ── Skip / Next: keep the kept side, project as a single field ──
-        IrNode::Skip(kept, _discard) => {
-            classify_body(kept, rule_type, sub_variants, type_map, rule_names, dag)
-        }
-        IrNode::Next(_discard, kept) => {
-            classify_body(kept, rule_type, sub_variants, type_map, rule_names, dag)
-        }
+        IrNode::Skip(kept, _discard) => classify_body(
+            kept,
+            rule_type,
+            sub_variants,
+            type_map,
+            rule_names,
+            dag,
+            fns,
+            rule_types,
+        ),
+        IrNode::Next(_discard, kept) => classify_body(
+            kept,
+            rule_type,
+            sub_variants,
+            type_map,
+            rule_names,
+            dag,
+            fns,
+            rule_types,
+        ),
 
         // ── Minus: dominant side is the lhs (the matched operand) ──
-        IrNode::Minus(lhs, _rhs) => {
-            classify_body(lhs, rule_type, sub_variants, type_map, rule_names, dag)
-        }
+        IrNode::Minus(lhs, _rhs) => classify_body(
+            lhs,
+            rule_type,
+            sub_variants,
+            type_map,
+            rule_names,
+            dag,
+            fns,
+            rule_types,
+        ),
 
         // ── Negate / OptionalWhitespace unwrap to inner ──
-        IrNode::Negate(inner) | IrNode::OptionalWhitespace(inner) => {
-            classify_body(inner, rule_type, sub_variants, type_map, rule_names, dag)
-        }
+        IrNode::Negate(inner) | IrNode::OptionalWhitespace(inner) => classify_body(
+            inner,
+            rule_type,
+            sub_variants,
+            type_map,
+            rule_names,
+            dag,
+            fns,
+            rule_types,
+        ),
 
         // ── TokenDispatch: token + arm continuations + fallback flatten to struct ──
         IrNode::TokenDispatch {
@@ -285,8 +337,8 @@ fn classify_body(
             // - per-arm continuation
             // - fallback continuation
             let mut fields: Vec<StructField> = Vec::with_capacity(arms.len() + 2);
-            let token_ty =
-                node_projected_type(token, type_map, dag).unwrap_or(TypeDesc::Span);
+            let token_ty = branch_projected_type(token, type_map, dag, fns, rule_types)
+                .unwrap_or(TypeDesc::Span);
             fields.push(StructField {
                 name: "token".to_string(),
                 type_desc: token_ty,
@@ -294,8 +346,9 @@ fn classify_body(
             });
             for (idx, arm) in arms.iter().enumerate() {
                 let position = (idx + 1) as u32;
-                let ty = node_projected_type(&arm.continuation, type_map, dag)
-                    .unwrap_or(TypeDesc::Span);
+                let ty =
+                    branch_projected_type(&arm.continuation, type_map, dag, fns, rule_types)
+                        .unwrap_or(TypeDesc::Span);
                 fields.push(StructField {
                     name: format!("arm_{}", idx),
                     type_desc: ty,
@@ -304,7 +357,8 @@ fn classify_body(
             }
             let fallback_position = (arms.len() + 1) as u32;
             let fallback_ty =
-                node_projected_type(fallback, type_map, dag).unwrap_or(TypeDesc::Span);
+                branch_projected_type(fallback, type_map, dag, fns, rule_types)
+                    .unwrap_or(TypeDesc::Span);
             fields.push(StructField {
                 name: "fallback".to_string(),
                 type_desc: fallback_ty,
@@ -336,26 +390,99 @@ fn classify_body(
     }
 }
 
-/// Resolve a child node's projected type via the upstream
-/// [`TypeMap`].
+/// Resolve a child node's projected type.
 ///
-/// When the DAG is populated (the `project_types` standard path), the
-/// node's id resolves through `dag.node_for(node)` and the per-node
-/// type slot returns the precise projection. When the DAG is absent —
-/// the case in unit-test contexts that build a synthetic IR without
-/// running `bbnf_ir::dag::ensure_dag` — the lookup falls through to
-/// `None` and the caller defaults to the rule's outermost projected
-/// `TypeDesc`. The fallback preserves layout shape (kind + field count
-/// + provenance) at the cost of leaving per-node type refinement to
-/// downstream emitter wiring.
-fn node_projected_type(
+/// Resolution order:
+///
+/// 1. DAG-keyed [`TypeMap`] lookup — the precise per-node type slot
+///    populated by the upstream type-projection CSP. This is the
+///    standard path inside `project_types`.
+/// 2. Function-descriptor fallback — when the node is `Map(_, fn_id)`
+///    and the descriptor carries an explicit return type, use that.
+///    Covers typed-`->` annotations the grammar author wrote
+///    explicitly, even before the DAG is wired.
+/// 3. Reference fallback — when the node is `Ref(rule_id)` and the
+///    referenced rule has a projected `TypeDesc` in `rule_types`,
+///    use that.
+/// 4. Recursive descent through structural wrappers
+///    (`Skip` / `Next` / `Minus` / `Negate` / `OptionalWhitespace`)
+///    until a typed leaf or terminal is found.
+///
+/// Returns `None` when no resolution succeeds; the caller defaults to
+/// `TypeDesc::Span` per the existing sub-variant collector policy.
+fn branch_projected_type(
     node: &IrNode,
     type_map: &TypeMap,
     dag: Option<&GrammarDag>,
+    fns: &[FnDescriptor],
+    rule_types: &FxHashMap<RuleId, TypeDesc>,
 ) -> Option<TypeDesc> {
-    let dag = dag?;
-    let id = dag.node_for(node)?;
-    type_map.node_type(id).cloned()
+    // 1. DAG-keyed precise per-node type.
+    if let Some(dag) = dag {
+        if let Some(id) = dag.node_for(node) {
+            if let Some(ty) = type_map.node_type(id) {
+                return Some(ty.clone());
+            }
+        }
+    }
+
+    // 2. & 3. & 4. — structure-driven fallbacks.
+    match node {
+        IrNode::Map { fn_id, inner } => {
+            if let Some(fd) = fns.get(*fn_id as usize) {
+                if let Some(ty) = fn_descriptor_return_type(fd) {
+                    return Some(ty);
+                }
+            }
+            // Map with no explicit return type — descend into inner.
+            branch_projected_type(inner, type_map, dag, fns, rule_types)
+        }
+        IrNode::Ref(target) => rule_types.get(target).cloned(),
+        IrNode::Skip(kept, _) | IrNode::Minus(kept, _) => {
+            branch_projected_type(kept, type_map, dag, fns, rule_types)
+        }
+        IrNode::Next(_, kept) => {
+            branch_projected_type(kept, type_map, dag, fns, rule_types)
+        }
+        IrNode::Negate(inner) | IrNode::OptionalWhitespace(inner) => {
+            branch_projected_type(inner, type_map, dag, fns, rule_types)
+        }
+        // Leaves with no inherent typed projection default to None;
+        // the caller falls back to `Span`.
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => None,
+        // Composite shapes have no single representative type at this
+        // boundary; the caller's per-shape default applies.
+        IrNode::Seq(_)
+        | IrNode::Alt(_, _)
+        | IrNode::Repeat { .. }
+        | IrNode::TokenDispatch { .. } => None,
+    }
+}
+
+/// Project a [`FnDescriptor`] to the typed return its grammar
+/// annotation produces, when one is available.
+///
+/// The compiler-internal specialisations (`NumberConvert`,
+/// `HexConvert`, `SpanCapture`) carry a known fixed return type;
+/// `Expr { return_type: Some(_), .. }` carries the grammar-author's
+/// explicit annotation; `Expr { return_type: None, .. }`,
+/// `EnumWrap`, and `BoxWrap` carry no fixed projection here and the
+/// caller falls through.
+fn fn_descriptor_return_type(fd: &FnDescriptor) -> Option<TypeDesc> {
+    match fd {
+        FnDescriptor::Expr {
+            return_type: Some(t),
+            ..
+        } => Some(t.clone()),
+        FnDescriptor::NumberConvert { .. } => Some(TypeDesc::F64),
+        FnDescriptor::HexConvert { .. } => Some(TypeDesc::U32),
+        FnDescriptor::SpanCapture => Some(TypeDesc::Span),
+        FnDescriptor::Expr {
+            return_type: None, ..
+        }
+        | FnDescriptor::EnumWrap { .. }
+        | FnDescriptor::BoxWrap => None,
+    }
 }
 
 /// True iff `body` is `Literal` / `Regex` / `Epsilon` — the leaf

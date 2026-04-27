@@ -11,7 +11,7 @@
 
 pub mod constraint;
 pub mod generate;
-mod registry;
+pub mod registry;
 mod subvariants;
 mod type_map;
 

@@ -65,6 +65,7 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
     bbnf_ir::dag::ensure_dag(&mut ir);
     classify_materialization(&mut ir);

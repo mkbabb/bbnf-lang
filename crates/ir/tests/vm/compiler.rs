@@ -48,6 +48,7 @@ fn make_simple_ir(body: IrNode) -> GrammarIR {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     }
 }
 
@@ -188,6 +189,7 @@ fn compile_memo_rule() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
     let program = compile(&ir);
 
@@ -261,6 +263,7 @@ fn compile_direct_left_recursive_rule_keeps_memo() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
     let program = compile(&ir);
 
@@ -428,6 +431,7 @@ fn compile_token_dispatch_emits_dispatch_token() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
     let program = compile(&ir);
 
@@ -520,6 +524,7 @@ fn compile_call() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
     let program = compile(&ir);
 

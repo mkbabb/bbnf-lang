@@ -59,6 +59,7 @@ fn resolve_direct_alias() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
 
     canonicalize_aliases(&mut ir);
@@ -120,6 +121,7 @@ fn resolve_chain_alias() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
 
     canonicalize_aliases(&mut ir);

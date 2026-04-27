@@ -52,6 +52,7 @@ fn literal_is_span_eligible() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -103,6 +104,7 @@ fn map_not_span_eligible() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -153,6 +155,7 @@ fn transitive_span_eligibility() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -208,6 +211,7 @@ fn cyclic_not_span_eligible() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
 
     refine_span_eligibility(&mut ir);
@@ -256,6 +260,7 @@ fn seq_of_literals_span_eligible() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
 
     refine_span_eligibility(&mut ir);

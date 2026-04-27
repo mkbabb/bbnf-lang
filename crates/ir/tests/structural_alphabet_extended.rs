@@ -110,6 +110,7 @@ fn empty_ir() -> GrammarIR {
         disjoint_first_tables: HashMap::new(),
         pattern_alphabets: HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     }
 }
 

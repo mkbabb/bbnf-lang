@@ -58,6 +58,7 @@ fn make_ir(rules: Vec<IrRule>, fns: Vec<FnDescriptor>, strings: Vec<String>) -> 
         disjoint_first_tables: HashMap::new(),
         pattern_alphabets: HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     }
 }
 

@@ -72,6 +72,7 @@ fn follow_set_basic_seq() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
 
     let follow = compute_follow_sets(&ir);
@@ -170,6 +171,7 @@ fn follow_set_propagates_through_nullable() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
 
     let follow = compute_follow_sets(&ir);

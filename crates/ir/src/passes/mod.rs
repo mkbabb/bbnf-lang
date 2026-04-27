@@ -76,4 +76,5 @@ pub use recognizers::operator_chain::{
 pub use recognizers::visitor::{mine_visitors, VisitorColumn, VisitorDescriptor, VisitorReduce};
 pub use regex_info::compute_regex_info;
 pub use types::project_types;
+pub use types::registry::populate_struct_registry;
 pub use types::{TypeMap, try_flatten_pair};

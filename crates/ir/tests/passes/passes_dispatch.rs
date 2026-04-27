@@ -71,6 +71,7 @@ fn dispatch_for_disjoint_branches() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -149,6 +150,7 @@ fn no_dispatch_for_overlapping_branches() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -225,6 +227,7 @@ fn dispatch_for_nested_alt() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -309,6 +312,7 @@ fn dispatch_with_nullable_branch_via_follow() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -395,6 +399,7 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -491,6 +496,7 @@ fn fallback_dispatch_typed_plus_catchall() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -579,6 +585,7 @@ fn fallback_dispatch_not_superset() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);
@@ -655,6 +662,7 @@ fn fallback_dispatch_too_few_branches() {
         disjoint_first_tables: std::collections::HashMap::new(),
         pattern_alphabets: std::collections::HashMap::new(),
         ctns_lifts: std::collections::HashSet::new(),
+        struct_registry: bbnf_ir::StructRegistry::default(),
     };
 
     bbnf_ir::dag::ensure_dag(&mut ir);

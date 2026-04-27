@@ -45,8 +45,8 @@ impl<R> Tape<R> {
     /// `frame_depth` is now written exactly once per record — by
     /// `Columns::push_structural` at push time, reading the live
     /// `current_depth` the bracket has already advanced. The retroactive
-    /// cascade and the auxiliary `leftmost_descendant_offset` walk both
-    /// retire under this single-writer invariant.
+    /// cascade and its auxiliary leftmost-descendant walk both retire
+    /// under this single-writer invariant.
     #[inline(always)]
     pub fn enter_post_order_children(&mut self) -> u32 {
         let pos = self.columns.records.len() as u32;

@@ -50,7 +50,7 @@
 //! variant added without a matching arm fails the build at
 //! compile time.
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
@@ -169,7 +169,10 @@ impl GrammarCoverage {
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 pub struct AuditCoverageReport {
     /// Per-grammar coverage rows, keyed by `GrammarAuditTag::key()`.
-    pub grammars: HashMap<String, GrammarCoverage>,
+    /// `BTreeMap` so the JSON output's key order is stable across
+    /// runs — the build gate's diff against a recorded artefact
+    /// must be deterministic.
+    pub grammars: BTreeMap<String, GrammarCoverage>,
     /// Sum of `total_markers` across every grammar.
     pub total_markers: usize,
     /// Sum of `mapped_markers` across every grammar.

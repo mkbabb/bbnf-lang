@@ -297,8 +297,42 @@ fn regen_grammar(
     }
 
     let bytes = output.len();
-    std::fs::write(target_path, &output)
-        .with_context(|| format!("write `{}`", target_path.display()))?;
+
+    // Tranche B6.W0 — content-equality skip.
+    //
+    // `cargo xtask regen` runs the IR pipeline against the on-disk
+    // grammar and writes the formatted Rust source. The dominant
+    // cold-wall cost on the post-B5 substrate is not the IR pipeline
+    // (~3 ms) nor `BbnfBootstrap::parse` itself but cargo's release-
+    // mode rebuild of `bbnf` core, which `include!()`s this file.
+    //
+    // Pre-B6 the write was unconditional: every successful regen
+    // advanced the file's mtime regardless of byte equality. Cargo's
+    // fingerprint check observed the mtime delta and recompiled
+    // `bbnf` (1.6 MB generated source, ~85 s release build) on every
+    // subsequent `cargo xtask regen`, even when the regen output was
+    // structurally identical to the prior one — a self-invalidation
+    // cycle where the act of regen guaranteed the next regen pays the
+    // full rebuild cost.
+    //
+    // Reading the existing file once and comparing bytes before
+    // writing breaks the cycle: regen invocations whose IR-pipeline
+    // output is byte-identical to the on-disk file leave mtime
+    // unchanged, and the next `cargo xtask` invocation reuses the
+    // cached `bbnf` rmeta. Regen invocations that produce different
+    // output write as before; cargo's rebuild of `bbnf` against the
+    // genuinely-new generated source is unavoidable and correct.
+    //
+    // The check is content-equality on the full output buffer; mtime
+    // is preserved by skipping the write entirely. `std::fs::read`
+    // returns the on-disk bytes; `Vec<u8> == &[u8]` is element-wise
+    // comparison short-circuiting at first mismatch.
+    let on_disk = std::fs::read(target_path).ok();
+    let unchanged = matches!(&on_disk, Some(existing) if existing.as_slice() == output.as_bytes());
+    if !unchanged {
+        std::fs::write(target_path, &output)
+            .with_context(|| format!("write `{}`", target_path.display()))?;
+    }
 
     Ok(bytes)
 }

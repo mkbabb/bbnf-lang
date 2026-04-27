@@ -152,7 +152,7 @@ same-commit samply capture.
 
 | Wave | Headline | Opens after | Status |
 |---|---|---|---|
-| **W0** | Research + classifier-unification study + audit baseline | AZ-I open | planned |
+| **W0** | Research + classifier-unification study + audit baseline | AZ-I open | in progress |
 | **W1** | `StructRegistry` + `project_types` closure — JSON + CSS L4 + Sheets | W0 | planned |
 | **W2** | Direct-to-struct emission — JSON + Sheets (scalar payloads) | W1 | planned |
 | **W3** | Direct-to-struct emission — CSS L4 aggregate / Named (lightningcss parity) | W2 | planned |

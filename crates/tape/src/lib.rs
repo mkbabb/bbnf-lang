@@ -62,6 +62,7 @@ pub mod finaliser;
 pub mod kind;
 pub mod profile;
 pub mod psi;
+pub mod simd;
 pub mod stage1;
 pub mod structural_scan;
 pub mod tape;

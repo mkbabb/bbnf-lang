@@ -3,6 +3,7 @@
 //! Each pass is an independent function `GrammarIR → GrammarIR` (or `&mut GrammarIR`).
 //! Passes can be composed in any order (though some orderings are more efficient).
 
+pub mod audit;
 pub mod context;
 pub mod csp_domains;
 pub mod csp_strategy;
@@ -28,6 +29,11 @@ pub mod types;
 // FuseAltRegexBranches in crate::egraph::rules::regex) plus the HIR
 // e-graph saturation in bbnf-regex. See commit message for details.
 
+pub use audit::{
+    AbsentRegistryProbe, AuditCoverageReport, GrammarAuditTag, GrammarCoverage, MarkerStatus,
+    MissingMarker, PayloadLayoutsProbe, PendingMarker, StructRegistryProbe,
+    audit_payload_coverage, is_typed_arrow_fn, write_coverage_report,
+};
 pub use lr::{eliminate_direct_lr, eliminate_indirect_lr};
 pub use materialization::{
     MaterializationClass, classify_materialization, mat_join,

@@ -24708,8 +24708,8 @@ mod __bbnfbootstrap_emit_impl {
         bool_lit(BbnfBootstrapBoolLitProjection),
         string_lit(BbnfBootstrapStringLitProjection),
         value_ident(BbnfBootstrapValueIdentProjection),
-        value_path(&'p str),
-        value_input(&'p str),
+        value_path(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        value_input(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         value_fn_call(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         value_atom(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         mul_op(BbnfBootstrapMulOpProjection),
@@ -24723,7 +24723,7 @@ mod __bbnfbootstrap_emit_impl {
         value_or(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         value_closure(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         value_expr(::std::vec::Vec<BbnfBootstrapValue<'p>>),
-        type_annotation(&'p str),
+        type_annotation(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         type_name(BbnfBootstrapTypeNameProjection),
         identifier(BbnfBootstrapIdentifierProjection),
         literal(BbnfBootstrapLiteralProjection),
@@ -24744,15 +24744,15 @@ mod __bbnfbootstrap_emit_impl {
         rhs(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         rule(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         import_path(BbnfBootstrapImportPathProjection),
-        import_items(&'p str),
-        import_directive(&'p str),
+        import_items(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        import_directive(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         recover_directive(::std::vec::Vec<BbnfBootstrapValue<'p>>),
-        pretty_hint(&'p str),
+        pretty_hint(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         pretty_directive(::std::vec::Vec<BbnfBootstrapValue<'p>>),
-        ws_directive(&'p str),
-        token_directive(&'p str),
-        debug_directive(&'p str),
-        host_directive(&'p str),
+        ws_directive(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        token_directive(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        debug_directive(::std::vec::Vec<BbnfBootstrapValue<'p>>),
+        host_directive(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         directive(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         grammar_item(::std::vec::Vec<BbnfBootstrapValue<'p>>),
         grammar(::std::vec::Vec<BbnfBootstrapValue<'p>>),
@@ -24928,8 +24928,8 @@ mod __bbnfbootstrap_emit_impl {
         match project_rule_kind_BbnfBootstrap(__rec.kind(), __rec.variant_idx()) {
             BbnfBootstrapRuleKind::int_lit => {
                 let v: i64 = output
-                    .value_frame_at(offset)
-                    .and_then(|f| output.value_payload_for(f))
+                    .frame(offset)
+                    .and_then(|f| output.payload_for(f))
                     .and_then(|p| p.as_u32())
                     .map(|v| v as i64)
                     .unwrap_or_else(|| {
@@ -24941,8 +24941,8 @@ mod __bbnfbootstrap_emit_impl {
             }
             BbnfBootstrapRuleKind::float_lit => {
                 let v: f64 = output
-                    .value_frame_at(offset)
-                    .and_then(|f| output.value_payload_for(f))
+                    .frame(offset)
+                    .and_then(|f| output.payload_for(f))
                     .and_then(|p| p.as_f64())
                     .unwrap_or_else(|| {
                         (&input[__rec.span_lo as usize..__rec.span_hi as usize])
@@ -25000,12 +25000,36 @@ mod __bbnfbootstrap_emit_impl {
                 BbnfBootstrapValue::value_ident(proj)
             }
             BbnfBootstrapRuleKind::value_path => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                BbnfBootstrapValue::value_path(span)
+                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_BbnfBootstrap(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                BbnfBootstrapValue::value_path(children)
             }
             BbnfBootstrapRuleKind::value_input => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                BbnfBootstrapValue::value_input(span)
+                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_BbnfBootstrap(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                BbnfBootstrapValue::value_input(children)
             }
             BbnfBootstrapRuleKind::value_fn_call => {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::new();
@@ -25216,8 +25240,20 @@ mod __bbnfbootstrap_emit_impl {
                 BbnfBootstrapValue::value_expr(children)
             }
             BbnfBootstrapRuleKind::type_annotation => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                BbnfBootstrapValue::type_annotation(span)
+                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_BbnfBootstrap(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                BbnfBootstrapValue::type_annotation(children)
             }
             BbnfBootstrapRuleKind::type_name => {
                 let proj = materialize_projection_type_name_BbnfBootstrap(
@@ -25528,12 +25564,36 @@ mod __bbnfbootstrap_emit_impl {
                 BbnfBootstrapValue::import_path(proj)
             }
             BbnfBootstrapRuleKind::import_items => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                BbnfBootstrapValue::import_items(span)
+                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_BbnfBootstrap(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                BbnfBootstrapValue::import_items(children)
             }
             BbnfBootstrapRuleKind::import_directive => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                BbnfBootstrapValue::import_directive(span)
+                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_BbnfBootstrap(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                BbnfBootstrapValue::import_directive(children)
             }
             BbnfBootstrapRuleKind::recover_directive => {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::new();
@@ -25552,8 +25612,20 @@ mod __bbnfbootstrap_emit_impl {
                 BbnfBootstrapValue::recover_directive(children)
             }
             BbnfBootstrapRuleKind::pretty_hint => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                BbnfBootstrapValue::pretty_hint(span)
+                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_BbnfBootstrap(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                BbnfBootstrapValue::pretty_hint(children)
             }
             BbnfBootstrapRuleKind::pretty_directive => {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::new();
@@ -25572,20 +25644,68 @@ mod __bbnfbootstrap_emit_impl {
                 BbnfBootstrapValue::pretty_directive(children)
             }
             BbnfBootstrapRuleKind::ws_directive => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                BbnfBootstrapValue::ws_directive(span)
+                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_BbnfBootstrap(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                BbnfBootstrapValue::ws_directive(children)
             }
             BbnfBootstrapRuleKind::token_directive => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                BbnfBootstrapValue::token_directive(span)
+                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_BbnfBootstrap(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                BbnfBootstrapValue::token_directive(children)
             }
             BbnfBootstrapRuleKind::debug_directive => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                BbnfBootstrapValue::debug_directive(span)
+                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_BbnfBootstrap(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                BbnfBootstrapValue::debug_directive(children)
             }
             BbnfBootstrapRuleKind::host_directive => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                BbnfBootstrapValue::host_directive(span)
+                let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_BbnfBootstrap(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                BbnfBootstrapValue::host_directive(children)
             }
             BbnfBootstrapRuleKind::directive => {
                 let mut children: ::std::vec::Vec<BbnfBootstrapValue<'p>> = ::std::vec::Vec::new();
@@ -25647,13 +25767,46 @@ mod __bbnfbootstrap_emit_impl {
     /// record from the tape and constructs the grammar's
     /// `<Grammar>Value<'p>` in one pass. No tape walk, no reparse,
     /// no visitor dispatch.
+    ///
+    /// B5.W1 — when the root tape record is a structural
+    /// intermediate compound (variant_idx=0, kind compound — the
+    /// shape emitters' Repeat / Seq scaffolding lands here), the
+    /// projector descends into the first rule-bound child rather
+    /// than panicking on `Unknown`. This mirrors
+    /// `project_push_children_<Grammar>`'s transparent-recursion
+    /// invariant.
     #[inline]
     fn project_value_BbnfBootstrap<'p>(
         output: &crate::runtime::tape::Tape<BbnfBootstrap>,
         input: &'p str,
     ) -> BbnfBootstrapValue<'p> {
-        let root_off = output.value_root_offset();
-        project_frame_BbnfBootstrap(output, input, root_off)
+        let root_off = output.root_offset();
+        let __tape = output.tape();
+        let mut __cur_off = root_off;
+        loop {
+            let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(__cur_off))
+            {
+                ::core::option::Option::Some(r) => r,
+                ::core::option::Option::None => break,
+            };
+            if __rec.variant_idx() == 0 && __rec.kind().is_compound() {
+                if __rec.has_children() {
+                    if let ::core::option::Option::Some(__child) = __rec
+                        .child_off
+                        .as_u32()
+                        .checked_sub(0)
+                    {
+                        if __child != ::core::u32::MAX {
+                            __cur_off = __child;
+                            continue;
+                        }
+                    }
+                }
+                break;
+            }
+            break;
+        }
+        project_frame_BbnfBootstrap(output, input, __cur_off)
     }
     impl crate::runtime::ValueRoot for BbnfBootstrap {
         type Value<'p> = BbnfBootstrapValue<'p>;
@@ -25955,7 +26108,7 @@ mod __bbnfbootstrap_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapBoolLitProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -25984,7 +26137,7 @@ mod __bbnfbootstrap_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapStringLitProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -26013,7 +26166,7 @@ mod __bbnfbootstrap_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapValueIdentProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -26042,7 +26195,7 @@ mod __bbnfbootstrap_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapMulOpProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -26071,7 +26224,7 @@ mod __bbnfbootstrap_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapAddOpProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -26100,7 +26253,7 @@ mod __bbnfbootstrap_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapCmpOpProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -26129,7 +26282,7 @@ mod __bbnfbootstrap_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapTypeNameProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -26158,7 +26311,7 @@ mod __bbnfbootstrap_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapIdentifierProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -26187,7 +26340,7 @@ mod __bbnfbootstrap_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapLiteralProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -26216,7 +26369,7 @@ mod __bbnfbootstrap_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapRegexProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -26245,7 +26398,7 @@ mod __bbnfbootstrap_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapBigCommentProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -26274,7 +26427,7 @@ mod __bbnfbootstrap_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapCommentProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -26303,7 +26456,7 @@ mod __bbnfbootstrap_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapModifierProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -26332,7 +26485,7 @@ mod __bbnfbootstrap_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapBinaryOperatorsProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -26361,7 +26514,7 @@ mod __bbnfbootstrap_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<BbnfBootstrapImportPathProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);

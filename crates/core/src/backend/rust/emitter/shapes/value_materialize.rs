@@ -24,11 +24,11 @@
 //! The helper reads from the fused slab (W0'.a-published
 //! [`FusedOutput`](crate::runtime::tape::Tape)) via:
 //!
-//! - `output.value_frame_at(offset)` — the admission's own frame,
+//! - `output.frame(offset)` — the admission's own frame,
 //!   carrying its `span_lo`/`span_hi` + `variant_idx`.
-//! - `output.value_payload_for(frame)` — scalar payloads stamped at
+//! - `output.payload_for(frame)` — scalar payloads stamped at
 //!   parse time (`f64`, `bool`, `u32`).
-//! - `output.value_children(offset)` — direct child frames for rich
+//! - `output.children(offset)` — direct child frames for rich
 //!   admissions with cursor-child fields.
 //! - `output.tape().payload_bytes(rec, N)` — the tape's aggregate
 //!   payload buffer for multi-field packed admissions (the grammar-
@@ -196,7 +196,7 @@ fn emit_projection_fn(
             // value slab's direct-child iterator so per-field reads
             // can index into the collected slice by `child_idx`.
             let __children: ::std::vec::Vec<(u32, &crate::runtime::ValueFrame)> =
-                output.value_children(offset).collect();
+                output.children(offset).collect();
         }
     } else {
         quote! {}
@@ -205,7 +205,7 @@ fn emit_projection_fn(
     // Frame binding — every admission needs the compound's own frame
     // for Span field decoding + variant_idx sanity.
     let frame_read: TokenStream = quote! {
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
     };
 
     quote! {

@@ -226,8 +226,28 @@ fn classify_shape(
         .iter()
         .find_map(|(id, ty)| (*id == rule.id).then_some(ty));
 
+    // B5.W1 absorb 7b — IR `TypeDesc::Span` is a hint, not an oracle.
+    // Pre-W1 the classify routed every Span-typed rule to
+    // `VariantShape::Span`, which renders as `name(text)` without
+    // descending into children. Rules like CSS L4 `ruleBlock` and
+    // `typeSelector` carry compound bodies (Seq with admitted child
+    // rules) but inherit `TypeDesc::Span` from the IR's narrowest
+    // common projection. Routing them as Span makes the admitted
+    // children invisible at projection time. The fix peeks at the
+    // body shape FIRST: if the rule's body has structural compound
+    // shape (Seq / Alt / Repeat with admitted children), we route
+    // it as `VariantShape::Compound` regardless of the IR's `Span`
+    // declaration. Pure-Span leaves (Literal / Regex bodies) still
+    // go through the Span arm. Per `feedback_pluggable_components`
+    // — IR classification is a hint, not an oracle; codegen looks
+    // at structure when both diverge.
+    let body_compound = matches!(
+        peel::unwrap_structural_wrappers(&rule.body),
+        IrNode::Seq(_) | IrNode::Alt(_, _) | IrNode::Repeat { .. }
+    );
+
     match type_desc {
-        Some(TypeDesc::Span) => VariantShape::Span,
+        Some(TypeDesc::Span) if !body_compound => VariantShape::Span,
         Some(td) if td.is_scalar_payload() && !matches!(td, TypeDesc::Span) => {
             VariantShape::Scalar(td.clone())
         }
@@ -516,13 +536,48 @@ fn emit_value_root_impl(
         /// record from the tape and constructs the grammar's
         /// `<Grammar>Value<'p>` in one pass. No tape walk, no reparse,
         /// no visitor dispatch.
+        ///
+        /// B5.W1 — when the root tape record is a structural
+        /// intermediate compound (variant_idx=0, kind compound — the
+        /// shape emitters' Repeat / Seq scaffolding lands here), the
+        /// projector descends into the first rule-bound child rather
+        /// than panicking on `Unknown`. This mirrors
+        /// `project_push_children_<Grammar>`'s transparent-recursion
+        /// invariant.
         #[inline]
         fn #root_fn<'p>(
             output: &crate::runtime::tape::Tape<#grammar_ident>,
             input: &'p str,
         ) -> #value_ident<'p> {
-            let root_off = output.value_root_offset();
-            #frame_fn(output, input, root_off)
+            let root_off = output.root_offset();
+            let __tape = output.tape();
+            // Skip every structural-intermediate (variant_idx=0 and
+            // compound) wrapper at the root, descending through
+            // `child_off` until a rule-bound record surfaces. The
+            // typed projection layer expects the first rule-bound
+            // record to project; structural intermediates are an
+            // implementation detail of the tape emission shape, not
+            // of the value tree.
+            let mut __cur_off = root_off;
+            loop {
+                let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(__cur_off)) {
+                    ::core::option::Option::Some(r) => r,
+                    ::core::option::Option::None => break,
+                };
+                if __rec.variant_idx() == 0 && __rec.kind().is_compound() {
+                    if __rec.has_children() {
+                        if let ::core::option::Option::Some(__child) = __rec.child_off.as_u32().checked_sub(0) {
+                            if __child != ::core::u32::MAX {
+                                __cur_off = __child;
+                                continue;
+                            }
+                        }
+                    }
+                    break;
+                }
+                break;
+            }
+            #frame_fn(output, input, __cur_off)
         }
 
         impl crate::runtime::ValueRoot for #grammar_ident {
@@ -668,8 +723,8 @@ fn emit_scalar_project_arm(
     let fallback = scalar_fallback_from_span(td);
     let payload_lookup = quote! {
         output
-            .value_frame_at(offset)
-            .and_then(|f| output.value_payload_for(f))
+            .frame(offset)
+            .and_then(|f| output.payload_for(f))
     };
     match td {
         TypeDesc::F64 => quote! {

@@ -9,22 +9,22 @@ pub fn parse_object_JsonFixture_object(
     input: &[u8],
     p: &mut usize,
     state: &mut __shape_support_JsonFixture::ScanState,
-    builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+    builder: &mut crate::runtime::tape::Tape<()>,
 ) -> ::core::result::Result<
-    ::bbnf::runtime::tape::TapeOffset,
-    ::bbnf::runtime::tape::DtaError,
+    crate::runtime::tape::TapeOffset,
+    crate::runtime::tape::DtaError,
 > {
     let span_lo = *p as u32;
     if input.get(*p).copied() != Some(b'{') {
-        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+        return Err(crate::runtime::tape::DtaError::Syntax {
             offset: *p as u32,
-            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            failing_state: crate::runtime::tape::DtaStateId::NONE,
+            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
         });
     }
     let outer_off = builder
         .begin_compound(
-            ::bbnf::runtime::tape::TapeKind::Seq,
+            crate::runtime::tape::TapeKind::Seq,
             span_lo,
             9u8,
             0u8,
@@ -34,7 +34,7 @@ pub fn parse_object_JsonFixture_object(
     let lbrace_open = *p as u32;
     let next_off = builder
         .begin_compound(
-            ::bbnf::runtime::tape::TapeKind::Seq,
+            crate::runtime::tape::TapeKind::Seq,
             lbrace_open,
             0,
             0u8,
@@ -45,17 +45,17 @@ pub fn parse_object_JsonFixture_object(
     let brace_close = *p as u32;
     let _ = builder
         .push_leaf_with(
-            ::bbnf::runtime::tape::TapeKind::Literal,
+            crate::runtime::tape::TapeKind::Literal,
             lbrace_open,
             brace_close,
             9u8,
             0,
-            ::bbnf::runtime::tape::PayloadData::None,
+            crate::runtime::tape::PayloadData::None,
         );
     let opt_ws_open = *p as u32;
     let opt_ws_off = builder
         .begin_compound(
-            ::bbnf::runtime::tape::TapeKind::Seq,
+            crate::runtime::tape::TapeKind::Seq,
             opt_ws_open,
             0,
             0u8,
@@ -66,7 +66,7 @@ pub fn parse_object_JsonFixture_object(
     let repeat_open = *p as u32;
     let repeat_off = builder
         .begin_compound(
-            ::bbnf::runtime::tape::TapeKind::Rule,
+            crate::runtime::tape::TapeKind::Rule,
             repeat_open,
             0,
             0u8,
@@ -82,24 +82,24 @@ pub fn parse_object_JsonFixture_object(
         let rbrace_hi = *p as u32;
         let _ = builder
             .push_leaf_with(
-                ::bbnf::runtime::tape::TapeKind::Literal,
+                crate::runtime::tape::TapeKind::Literal,
                 opt_ws_close,
                 rbrace_hi,
                 9u8,
                 0,
-                ::bbnf::runtime::tape::PayloadData::None,
+                crate::runtime::tape::PayloadData::None,
             );
         let next_close = rbrace_hi;
         builder.end_compound(next_off, next_close);
         let outer_close = *p as u32;
         builder.end_compound(outer_off, outer_close);
-        return Ok(::bbnf::runtime::tape::TapeOffset(outer_off));
+        return Ok(crate::runtime::tape::TapeOffset(outer_off));
     }
     loop {
         let iter_open = *p as u32;
         let iter_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 iter_open,
                 0,
                 0u8,
@@ -109,7 +109,7 @@ pub fn parse_object_JsonFixture_object(
         let pair_open = *p as u32;
         let pair_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 pair_open,
                 7u8,
                 0u8,
@@ -117,17 +117,17 @@ pub fn parse_object_JsonFixture_object(
                 0u16,
             );
         if input.get(*p).copied() != Some(b'"') {
-            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         let _key_off = parse_string_JsonFixture_string(input, p, state, builder)?;
         let colon_next_open = *p as u32;
         let colon_next_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 colon_next_open,
                 0,
                 0u8,
@@ -137,7 +137,7 @@ pub fn parse_object_JsonFixture_object(
         let opt_colon_open = *p as u32;
         let opt_colon_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Seq,
+                crate::runtime::tape::TapeKind::Seq,
                 opt_colon_open,
                 0,
                 0u8,
@@ -146,10 +146,10 @@ pub fn parse_object_JsonFixture_object(
             );
         let _ = __shape_support_JsonFixture::skip_space(input, p, state);
         if input.get(*p).copied() != Some(b':') {
-            return Err(::bbnf::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         let colon_lo = *p as u32;
@@ -157,12 +157,12 @@ pub fn parse_object_JsonFixture_object(
         let colon_hi = *p as u32;
         let _ = builder
             .push_leaf_with(
-                ::bbnf::runtime::tape::TapeKind::Literal,
+                crate::runtime::tape::TapeKind::Literal,
                 colon_lo,
                 colon_hi,
                 7u8,
                 0,
-                ::bbnf::runtime::tape::PayloadData::None,
+                crate::runtime::tape::PayloadData::None,
             );
         let _ = __shape_support_JsonFixture::skip_space(input, p, state);
         let opt_colon_close = *p as u32;
@@ -178,7 +178,7 @@ pub fn parse_object_JsonFixture_object(
         let comma_repeat_open = *p as u32;
         let comma_repeat_off = builder
             .begin_compound(
-                ::bbnf::runtime::tape::TapeKind::Rule,
+                crate::runtime::tape::TapeKind::Rule,
                 comma_repeat_open,
                 0,
                 0u8,
@@ -192,7 +192,7 @@ pub fn parse_object_JsonFixture_object(
             let comma_iter_open = comma_iter_save_p as u32;
             let comma_iter_off = builder
                 .begin_compound(
-                    ::bbnf::runtime::tape::TapeKind::Seq,
+                    crate::runtime::tape::TapeKind::Seq,
                     comma_iter_open,
                     0,
                     0u8,
@@ -204,12 +204,12 @@ pub fn parse_object_JsonFixture_object(
             let comma_hi = *p as u32;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     comma_lo,
                     comma_hi,
                     9u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
             let _ = __shape_support_JsonFixture::skip_space(input, p, state);
             let comma_iter_close = *p as u32;
@@ -232,15 +232,15 @@ pub fn parse_object_JsonFixture_object(
                 return Err(
                     match input.get(*p).copied() {
                         None => {
-                            ::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+                            crate::runtime::tape::DtaError::UnexpectedEnd {
                                 offset: *p as u32,
                             }
                         }
                         _ => {
-                            ::bbnf::runtime::tape::DtaError::Syntax {
+                            crate::runtime::tape::DtaError::Syntax {
                                 offset: *p as u32,
-                                failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-                                failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             }
                         }
                     },
@@ -250,19 +250,19 @@ pub fn parse_object_JsonFixture_object(
             let rbrace_hi = *p as u32;
             let _ = builder
                 .push_leaf_with(
-                    ::bbnf::runtime::tape::TapeKind::Literal,
+                    crate::runtime::tape::TapeKind::Literal,
                     opt_ws_close,
                     rbrace_hi,
                     9u8,
                     0,
-                    ::bbnf::runtime::tape::PayloadData::None,
+                    crate::runtime::tape::PayloadData::None,
                 );
             let next_close = rbrace_hi;
             builder.end_compound(next_off, next_close);
             let outer_close = *p as u32;
             builder.end_compound(outer_off, outer_close);
             let _ = 5u8;
-            return Ok(::bbnf::runtime::tape::TapeOffset(outer_off));
+            return Ok(crate::runtime::tape::TapeOffset(outer_off));
         }
     }
 }

@@ -15740,8 +15740,8 @@ mod __googlesheetsparser_emit_impl {
         match project_rule_kind_GoogleSheetsParser(__rec.kind(), __rec.variant_idx()) {
             GoogleSheetsParserRuleKind::number => {
                 let v: f64 = output
-                    .value_frame_at(offset)
-                    .and_then(|f| output.value_payload_for(f))
+                    .frame(offset)
+                    .and_then(|f| output.payload_for(f))
                     .and_then(|p| p.as_f64())
                     .unwrap_or_else(|| {
                         (&input[__rec.span_lo as usize..__rec.span_hi as usize])
@@ -16310,13 +16310,46 @@ mod __googlesheetsparser_emit_impl {
     /// record from the tape and constructs the grammar's
     /// `<Grammar>Value<'p>` in one pass. No tape walk, no reparse,
     /// no visitor dispatch.
+    ///
+    /// B5.W1 — when the root tape record is a structural
+    /// intermediate compound (variant_idx=0, kind compound — the
+    /// shape emitters' Repeat / Seq scaffolding lands here), the
+    /// projector descends into the first rule-bound child rather
+    /// than panicking on `Unknown`. This mirrors
+    /// `project_push_children_<Grammar>`'s transparent-recursion
+    /// invariant.
     #[inline]
     fn project_value_GoogleSheetsParser<'p>(
         output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
         input: &'p str,
     ) -> GoogleSheetsParserValue<'p> {
-        let root_off = output.value_root_offset();
-        project_frame_GoogleSheetsParser(output, input, root_off)
+        let root_off = output.root_offset();
+        let __tape = output.tape();
+        let mut __cur_off = root_off;
+        loop {
+            let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(__cur_off))
+            {
+                ::core::option::Option::Some(r) => r,
+                ::core::option::Option::None => break,
+            };
+            if __rec.variant_idx() == 0 && __rec.kind().is_compound() {
+                if __rec.has_children() {
+                    if let ::core::option::Option::Some(__child) = __rec
+                        .child_off
+                        .as_u32()
+                        .checked_sub(0)
+                    {
+                        if __child != ::core::u32::MAX {
+                            __cur_off = __child;
+                            continue;
+                        }
+                    }
+                }
+                break;
+            }
+            break;
+        }
+        project_frame_GoogleSheetsParser(output, input, __cur_off)
     }
     impl crate::runtime::ValueRoot for GoogleSheetsParser {
         type Value<'p> = GoogleSheetsParserValue<'p>;
@@ -16631,7 +16664,7 @@ mod __googlesheetsparser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserStringProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -16660,7 +16693,7 @@ mod __googlesheetsparser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserBooleanProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -16694,7 +16727,7 @@ mod __googlesheetsparser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserErrorLiteralProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -16728,7 +16761,7 @@ mod __googlesheetsparser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserSheetPrefixProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -16762,7 +16795,7 @@ mod __googlesheetsparser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserCellRefProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -16791,7 +16824,7 @@ mod __googlesheetsparser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserCompareOpProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -16825,7 +16858,7 @@ mod __googlesheetsparser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserAddOpProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -16859,7 +16892,7 @@ mod __googlesheetsparser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserMulOpProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -16893,7 +16926,7 @@ mod __googlesheetsparser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserUnaryPrefixProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -16927,7 +16960,7 @@ mod __googlesheetsparser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<GoogleSheetsParserFuncOpenProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);

@@ -1378,7 +1378,11 @@ impl<R> Tape<R> {
         self.children(offset)
     }
 
-    /// B5.W1 transitional alias for [`Self::root_offset`].
+    /// B5.W1 transitional alias — returns the tape root offset.
+    /// Pre-W1 `FusedOutput<R>::value_root_offset()` returned the
+    /// value-frame arena's root index; post-W1 the value frames
+    /// are pushed in lockstep with the tape, so the root value
+    /// frame's index equals the root tape offset.
     #[doc(hidden)]
     #[inline]
     pub fn value_root_offset(&self) -> u32 {

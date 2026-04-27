@@ -2582,13 +2582,46 @@ mod __csvparser_emit_impl {
     /// record from the tape and constructs the grammar's
     /// `<Grammar>Value<'p>` in one pass. No tape walk, no reparse,
     /// no visitor dispatch.
+    ///
+    /// B5.W1 — when the root tape record is a structural
+    /// intermediate compound (variant_idx=0, kind compound — the
+    /// shape emitters' Repeat / Seq scaffolding lands here), the
+    /// projector descends into the first rule-bound child rather
+    /// than panicking on `Unknown`. This mirrors
+    /// `project_push_children_<Grammar>`'s transparent-recursion
+    /// invariant.
     #[inline]
     fn project_value_CsvParser<'p>(
         output: &crate::runtime::tape::Tape<CsvParser>,
         input: &'p str,
     ) -> CsvParserValue<'p> {
-        let root_off = output.value_root_offset();
-        project_frame_CsvParser(output, input, root_off)
+        let root_off = output.root_offset();
+        let __tape = output.tape();
+        let mut __cur_off = root_off;
+        loop {
+            let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(__cur_off))
+            {
+                ::core::option::Option::Some(r) => r,
+                ::core::option::Option::None => break,
+            };
+            if __rec.variant_idx() == 0 && __rec.kind().is_compound() {
+                if __rec.has_children() {
+                    if let ::core::option::Option::Some(__child) = __rec
+                        .child_off
+                        .as_u32()
+                        .checked_sub(0)
+                    {
+                        if __child != ::core::u32::MAX {
+                            __cur_off = __child;
+                            continue;
+                        }
+                    }
+                }
+                break;
+            }
+            break;
+        }
+        project_frame_CsvParser(output, input, __cur_off)
     }
     impl crate::runtime::ValueRoot for CsvParser {
         type Value<'p> = CsvParserValue<'p>;
@@ -2796,7 +2829,7 @@ mod __csvparser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CsvParserEscapedProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -2825,7 +2858,7 @@ mod __csvparser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CsvParserTextdataProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);

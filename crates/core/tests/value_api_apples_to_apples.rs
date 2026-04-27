@@ -25,7 +25,7 @@
 //! emitted `PathQuery<T>` impls for the lookup surface. The fused
 //! pipeline redirection lives on the eager lane: `Parsed::to_value()`
 //! no longer walks the tape; it projects the already-populated
-//! [`FusedOutput`](bbnf::runtime::FusedOutput) the fused parse
+//! [`Tape<R>`](bbnf::runtime::tape::Tape) the parse
 //! substrate built in lockstep with the tape. The parse-count
 //! invariant below asserts the thin-projection contract —
 //! `to_value()` does not trigger a second parse.
@@ -214,13 +214,13 @@ fn json_roundtrip_data_xl() {
 // AY-II.W0.c retires `navigate_tape` (DEAD per AUDIT-B §7) and
 // asserts the fused-pipeline contract via a parse-count invariant:
 // `Parsed::to_value()` MUST NOT trigger a second parse. The
-// `FusedBuilder::new` counter is the observable — every parse
+// `Tape::new` counter is the observable — every parse
 // increments it exactly once (via the fused parse entry), and
 // `to_value()` must leave it unchanged.
 //
 // The counter lives in `tape::builder` and is reset before each test
 // invocation; the invariant's hard gate requires `to_value()` calls
-// to not show up as additional `FusedBuilder::new` calls.
+// to not show up as additional `Tape::new` calls.
 
 use bbnf::runtime::tape::{
     reset_tape_new_call_count as reset_fused_builder_new_call_count,
@@ -236,7 +236,7 @@ fn parse_count_invariant_to_value_is_thin_projection() {
     let baseline = fused_builder_new_call_count();
     assert_eq!(
         baseline, 1,
-        "parse should construct exactly one FusedBuilder; got {}",
+        "parse should construct exactly one Tape; got {}",
         baseline,
     );
 
@@ -247,7 +247,7 @@ fn parse_count_invariant_to_value_is_thin_projection() {
     assert_eq!(
         after, baseline,
         "Parsed::to_value() must be a thin projection; \
-         FusedBuilder::new calls jumped {} → {}",
+         Tape::new calls jumped {} → {}",
         baseline, after,
     );
 

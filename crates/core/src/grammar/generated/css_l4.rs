@@ -163115,7 +163115,7 @@ mod __cssl4parser_emit_impl {
         clampFunction(::std::vec::Vec<CssL4ParserValue<'p>>),
         varFunction(::std::vec::Vec<CssL4ParserValue<'p>>),
         envFunction(::std::vec::Vec<CssL4ParserValue<'p>>),
-        urlFunction(&'p str),
+        urlFunction(::std::vec::Vec<CssL4ParserValue<'p>>),
         genericFunction(::std::vec::Vec<CssL4ParserValue<'p>>),
         displayKeyword(CssL4ParserDisplayKeywordProjection),
         positionKeyword(CssL4ParserPositionKeywordProjection),
@@ -163133,7 +163133,7 @@ mod __cssl4parser_emit_impl {
         globalKeyword(CssL4ParserGlobalKeywordProjection),
         mediaType(CssL4ParserMediaTypeProjection),
         mediaQualifier(CssL4ParserMediaQualifierProjection),
-        mediaFeature(&'p str),
+        mediaFeature(::std::vec::Vec<CssL4ParserValue<'p>>),
         mediaNot(::std::vec::Vec<CssL4ParserValue<'p>>),
         mediaAnd(::std::vec::Vec<CssL4ParserValue<'p>>),
         mediaOr(::std::vec::Vec<CssL4ParserValue<'p>>),
@@ -163180,14 +163180,14 @@ mod __cssl4parser_emit_impl {
         textAlignDecl(::std::vec::Vec<CssL4ParserValue<'p>>),
         boxSizingDecl(::std::vec::Vec<CssL4ParserValue<'p>>),
         cursorDecl(::std::vec::Vec<CssL4ParserValue<'p>>),
-        customPropertyDecl(&'p str),
-        genericDecl(&'p str),
+        customPropertyDecl(::std::vec::Vec<CssL4ParserValue<'p>>),
+        genericDecl(::std::vec::Vec<CssL4ParserValue<'p>>),
         declaration(::std::vec::Vec<CssL4ParserValue<'p>>),
         hash(CssL4ParserHashProjection),
-        nsPrefix(&'p str),
-        wqName(&'p str),
-        typeSelector(&'p str),
-        classSelector(&'p str),
+        nsPrefix(::std::vec::Vec<CssL4ParserValue<'p>>),
+        wqName(::std::vec::Vec<CssL4ParserValue<'p>>),
+        typeSelector(::std::vec::Vec<CssL4ParserValue<'p>>),
+        classSelector(::std::vec::Vec<CssL4ParserValue<'p>>),
         attrMatcher(CssL4ParserAttrMatcherProjection),
         attrSelector(::std::vec::Vec<CssL4ParserValue<'p>>),
         anPlusB(::std::vec::Vec<CssL4ParserValue<'p>>),
@@ -163200,12 +163200,12 @@ mod __cssl4parser_emit_impl {
         langPseudo(::std::vec::Vec<CssL4ParserValue<'p>>),
         dirKeyword(u8),
         dirPseudo(CssL4ParserDirPseudoProjection),
-        simplePseudoClass(&'p str),
+        simplePseudoClass(::std::vec::Vec<CssL4ParserValue<'p>>),
         pseudoClass(::std::vec::Vec<CssL4ParserValue<'p>>),
         partPseudo(::std::vec::Vec<CssL4ParserValue<'p>>),
         slottedPseudo(::std::vec::Vec<CssL4ParserValue<'p>>),
-        highlightPseudo(&'p str),
-        simplePseudoElement(&'p str),
+        highlightPseudo(::std::vec::Vec<CssL4ParserValue<'p>>),
+        simplePseudoElement(::std::vec::Vec<CssL4ParserValue<'p>>),
         pseudoElement(::std::vec::Vec<CssL4ParserValue<'p>>),
         colonSelector(::std::vec::Vec<CssL4ParserValue<'p>>),
         compoundSelector(::std::vec::Vec<CssL4ParserValue<'p>>),
@@ -163858,8 +163858,20 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::envFunction(children)
             }
             CssL4ParserRuleKind::urlFunction => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                CssL4ParserValue::urlFunction(span)
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                CssL4ParserValue::urlFunction(children)
             }
             CssL4ParserRuleKind::genericFunction => {
                 let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
@@ -164134,8 +164146,20 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::mediaQualifier(proj)
             }
             CssL4ParserRuleKind::mediaFeature => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                CssL4ParserValue::mediaFeature(span)
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                CssL4ParserValue::mediaFeature(children)
             }
             CssL4ParserRuleKind::mediaNot => {
                 let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
@@ -164874,12 +164898,36 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::cursorDecl(children)
             }
             CssL4ParserRuleKind::customPropertyDecl => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                CssL4ParserValue::customPropertyDecl(span)
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                CssL4ParserValue::customPropertyDecl(children)
             }
             CssL4ParserRuleKind::genericDecl => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                CssL4ParserValue::genericDecl(span)
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                CssL4ParserValue::genericDecl(children)
             }
             CssL4ParserRuleKind::declaration => {
                 let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
@@ -164910,20 +164958,68 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::hash(proj)
             }
             CssL4ParserRuleKind::nsPrefix => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                CssL4ParserValue::nsPrefix(span)
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                CssL4ParserValue::nsPrefix(children)
             }
             CssL4ParserRuleKind::wqName => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                CssL4ParserValue::wqName(span)
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                CssL4ParserValue::wqName(children)
             }
             CssL4ParserRuleKind::typeSelector => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                CssL4ParserValue::typeSelector(span)
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                CssL4ParserValue::typeSelector(children)
             }
             CssL4ParserRuleKind::classSelector => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                CssL4ParserValue::classSelector(span)
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                CssL4ParserValue::classSelector(children)
             }
             CssL4ParserRuleKind::attrMatcher => {
                 let proj = materialize_projection_attrmatcher_CssL4Parser(
@@ -165087,8 +165183,8 @@ mod __cssl4parser_emit_impl {
             }
             CssL4ParserRuleKind::dirKeyword => {
                 let v: u8 = output
-                    .value_frame_at(offset)
-                    .and_then(|f| output.value_payload_for(f))
+                    .frame(offset)
+                    .and_then(|f| output.payload_for(f))
                     .and_then(|p| p.as_u32())
                     .map(|v| v as u8)
                     .unwrap_or_else(|| {
@@ -165115,8 +165211,20 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::dirPseudo(proj)
             }
             CssL4ParserRuleKind::simplePseudoClass => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                CssL4ParserValue::simplePseudoClass(span)
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                CssL4ParserValue::simplePseudoClass(children)
             }
             CssL4ParserRuleKind::pseudoClass => {
                 let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
@@ -165167,12 +165275,36 @@ mod __cssl4parser_emit_impl {
                 CssL4ParserValue::slottedPseudo(children)
             }
             CssL4ParserRuleKind::highlightPseudo => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                CssL4ParserValue::highlightPseudo(span)
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                CssL4ParserValue::highlightPseudo(children)
             }
             CssL4ParserRuleKind::simplePseudoElement => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                CssL4ParserValue::simplePseudoElement(span)
+                let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_CssL4Parser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                CssL4ParserValue::simplePseudoElement(children)
             }
             CssL4ParserRuleKind::pseudoElement => {
                 let mut children: ::std::vec::Vec<CssL4ParserValue<'p>> = ::std::vec::Vec::new();
@@ -165320,8 +165452,8 @@ mod __cssl4parser_emit_impl {
             }
             CssL4ParserRuleKind::number => {
                 let v: f64 = output
-                    .value_frame_at(offset)
-                    .and_then(|f| output.value_payload_for(f))
+                    .frame(offset)
+                    .and_then(|f| output.payload_for(f))
                     .and_then(|p| p.as_f64())
                     .unwrap_or_else(|| {
                         (&input[__rec.span_lo as usize..__rec.span_hi as usize])
@@ -165412,8 +165544,8 @@ mod __cssl4parser_emit_impl {
             }
             CssL4ParserRuleKind::angleUnit => {
                 let v: u8 = output
-                    .value_frame_at(offset)
-                    .and_then(|f| output.value_payload_for(f))
+                    .frame(offset)
+                    .and_then(|f| output.payload_for(f))
                     .and_then(|p| p.as_u32())
                     .map(|v| v as u8)
                     .unwrap_or_else(|| {
@@ -165425,8 +165557,8 @@ mod __cssl4parser_emit_impl {
             }
             CssL4ParserRuleKind::timeUnit => {
                 let v: u8 = output
-                    .value_frame_at(offset)
-                    .and_then(|f| output.value_payload_for(f))
+                    .frame(offset)
+                    .and_then(|f| output.payload_for(f))
                     .and_then(|p| p.as_u32())
                     .map(|v| v as u8)
                     .unwrap_or_else(|| {
@@ -165438,8 +165570,8 @@ mod __cssl4parser_emit_impl {
             }
             CssL4ParserRuleKind::frequencyUnit => {
                 let v: u8 = output
-                    .value_frame_at(offset)
-                    .and_then(|f| output.value_payload_for(f))
+                    .frame(offset)
+                    .and_then(|f| output.payload_for(f))
                     .and_then(|p| p.as_u32())
                     .map(|v| v as u8)
                     .unwrap_or_else(|| {
@@ -165451,8 +165583,8 @@ mod __cssl4parser_emit_impl {
             }
             CssL4ParserRuleKind::resolutionUnit => {
                 let v: u8 = output
-                    .value_frame_at(offset)
-                    .and_then(|f| output.value_payload_for(f))
+                    .frame(offset)
+                    .and_then(|f| output.payload_for(f))
                     .and_then(|p| p.as_u32())
                     .map(|v| v as u8)
                     .unwrap_or_else(|| {
@@ -165464,8 +165596,8 @@ mod __cssl4parser_emit_impl {
             }
             CssL4ParserRuleKind::flexUnit => {
                 let v: u8 = output
-                    .value_frame_at(offset)
-                    .and_then(|f| output.value_payload_for(f))
+                    .frame(offset)
+                    .and_then(|f| output.payload_for(f))
                     .and_then(|p| p.as_u32())
                     .map(|v| v as u8)
                     .unwrap_or_else(|| {
@@ -165477,8 +165609,8 @@ mod __cssl4parser_emit_impl {
             }
             CssL4ParserRuleKind::percentageUnit => {
                 let v: u8 = output
-                    .value_frame_at(offset)
-                    .and_then(|f| output.value_payload_for(f))
+                    .frame(offset)
+                    .and_then(|f| output.payload_for(f))
                     .and_then(|p| p.as_u32())
                     .map(|v| v as u8)
                     .unwrap_or_else(|| {
@@ -166339,13 +166471,46 @@ mod __cssl4parser_emit_impl {
     /// record from the tape and constructs the grammar's
     /// `<Grammar>Value<'p>` in one pass. No tape walk, no reparse,
     /// no visitor dispatch.
+    ///
+    /// B5.W1 — when the root tape record is a structural
+    /// intermediate compound (variant_idx=0, kind compound — the
+    /// shape emitters' Repeat / Seq scaffolding lands here), the
+    /// projector descends into the first rule-bound child rather
+    /// than panicking on `Unknown`. This mirrors
+    /// `project_push_children_<Grammar>`'s transparent-recursion
+    /// invariant.
     #[inline]
     fn project_value_CssL4Parser<'p>(
         output: &crate::runtime::tape::Tape<CssL4Parser>,
         input: &'p str,
     ) -> CssL4ParserValue<'p> {
-        let root_off = output.value_root_offset();
-        project_frame_CssL4Parser(output, input, root_off)
+        let root_off = output.root_offset();
+        let __tape = output.tape();
+        let mut __cur_off = root_off;
+        loop {
+            let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(__cur_off))
+            {
+                ::core::option::Option::Some(r) => r,
+                ::core::option::Option::None => break,
+            };
+            if __rec.variant_idx() == 0 && __rec.kind().is_compound() {
+                if __rec.has_children() {
+                    if let ::core::option::Option::Some(__child) = __rec
+                        .child_off
+                        .as_u32()
+                        .checked_sub(0)
+                    {
+                        if __child != ::core::u32::MAX {
+                            __cur_off = __child;
+                            continue;
+                        }
+                    }
+                }
+                break;
+            }
+            break;
+        }
+        project_frame_CssL4Parser(output, input, __cur_off)
     }
     impl crate::runtime::ValueRoot for CssL4Parser {
         type Value<'p> = CssL4ParserValue<'p>;
@@ -166877,7 +167042,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserNamedColorProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 4)?;
@@ -166910,7 +167075,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserHexProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 4)?;
@@ -166943,7 +167108,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserColorSpaceProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -166977,11 +167142,11 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserColorFnProjection<'p>> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let __children: ::std::vec::Vec<(u32, &crate::runtime::ValueFrame)> = output
-            .value_children(offset)
+            .children(offset)
             .collect();
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         let field_1: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -167031,7 +167196,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserStringProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -167060,7 +167225,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserMathProductOpProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167094,7 +167259,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserMathSumOpProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167128,7 +167293,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserDisplayKeywordProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167162,7 +167327,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserPositionKeywordProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167196,7 +167361,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserOverflowKeywordProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167230,7 +167395,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserVisibilityKeywordProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167264,7 +167429,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserFlexDirKeywordProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167298,7 +167463,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserFlexWrapKeywordProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167332,7 +167497,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserAlignKeywordProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167366,7 +167531,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserBorderStyleKeywordProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167400,7 +167565,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserBorderWidthKeywordProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167434,7 +167599,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserFontWeightKeywordProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167468,7 +167633,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserTextAlignKeywordProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167502,7 +167667,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserBoxSizingKeywordProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167536,7 +167701,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserCursorKeywordProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167570,7 +167735,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserGlobalKeywordProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167604,7 +167769,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserMediaTypeProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167638,7 +167803,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserMediaQualifierProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167672,7 +167837,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserIdentProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -167701,7 +167866,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserImportantSuffixProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -167730,7 +167895,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserCssStringProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -167759,7 +167924,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserDashIdentProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -167788,7 +167953,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserColorPropsProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167822,7 +167987,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserSizePropsProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167856,7 +168021,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserSpacingPropsProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167890,7 +168055,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserFontPropsProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167924,7 +168089,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserTransformPropsProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167958,7 +168123,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserTransitionPropsProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -167992,7 +168157,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserListTablePropsProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -168026,7 +168191,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserHashProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -168055,7 +168220,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserAttrMatcherProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -168089,7 +168254,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserDirPseudoProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -168123,7 +168288,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserCombinatorProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -168157,7 +168322,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserSelectorIdentProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -168186,7 +168351,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserAbsoluteLengthUnitProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -168220,7 +168385,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserViewportLengthUnitProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -168254,7 +168419,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserFontLengthUnitProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
@@ -168288,7 +168453,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserAngleProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 9)?;
@@ -168327,7 +168492,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserTimeProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 9)?;
@@ -168366,7 +168531,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserFrequencyProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 9)?;
@@ -168405,7 +168570,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserResolutionProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 9)?;
@@ -168444,7 +168609,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserFlexProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 9)?;
@@ -168483,7 +168648,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserPercentageProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 9)?;
@@ -168522,7 +168687,7 @@ mod __cssl4parser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<CssL4ParserKeyframeStopProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __tape = output.tape();
         let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
         let __bytes = __tape.payload_bytes(__tape_rec, 1)?;

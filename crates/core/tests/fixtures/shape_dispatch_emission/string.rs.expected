@@ -10,24 +10,24 @@ pub fn parse_string_JsonFixture_string(
     input: &[u8],
     p: &mut usize,
     _state: &mut __shape_support_JsonFixture::ScanState,
-    builder: &mut ::bbnf::runtime::tape::FusedBuilder,
+    builder: &mut crate::runtime::tape::Tape<()>,
 ) -> ::core::result::Result<
-    ::bbnf::runtime::tape::TapeOffset,
-    ::bbnf::runtime::tape::DtaError,
+    crate::runtime::tape::TapeOffset,
+    crate::runtime::tape::DtaError,
 > {
     let open = *p;
     if input.get(open).copied() != Some(b'"') {
-        return Err(::bbnf::runtime::tape::DtaError::Syntax {
+        return Err(crate::runtime::tape::DtaError::Syntax {
             offset: open as u32,
-            failing_state: ::bbnf::runtime::tape::DtaStateId::NONE,
-            failing_rule: ::bbnf::runtime::tape::DtaRuleId(u32::MAX),
+            failing_state: crate::runtime::tape::DtaStateId::NONE,
+            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
         });
     }
     let body_start = open + 1;
     let tail = match input.get(body_start..) {
         Some(t) => t,
         None => {
-            return Err(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+            return Err(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: open as u32,
             });
         }
@@ -40,7 +40,7 @@ pub fn parse_string_JsonFixture_string(
             let hi = *p as u32;
             let leaf = builder
                 .push_leaf_borrowed_string(
-                    ::bbnf::runtime::tape::TapeKind::Span,
+                    crate::runtime::tape::TapeKind::Span,
                     lo,
                     hi,
                     5u8,
@@ -51,7 +51,7 @@ pub fn parse_string_JsonFixture_string(
         Some((_off, b'\\')) => parse_string_escaped(input, p, open, builder, 5u8),
         Some(_) => unreachable!(),
         None => {
-            Err(::bbnf::runtime::tape::DtaError::UnexpectedEnd {
+            Err(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: open as u32,
             })
         }

@@ -402,9 +402,10 @@ fn projection_totality_runtime_call_count() {
     }
 
     // BBNF — a minimal rule definition exercises the identifier +
-    // rule-body admissions.
+    // rule-body admissions. BBNF uses `=` for rule definition (the
+    // `::=` BNF-syntax variant is a different grammar).
     {
-        let parsed = BbnfBootstrap::parse("r ::= 'x' ;")
+        let parsed = BbnfBootstrap::parse("r = 'x' ;")
             .unwrap_or_else(|e| panic!("BbnfBootstrap: parse failed: {e:?}"));
         let value = parsed.to_value();
         assert_runtime_materializer_fires(

@@ -15,7 +15,7 @@
 //! exercise the API in isolation using a hand-written `Root` impl.
 
 use bbnf::runtime::{Parsed, Root};
-use tape::{Tape, FusedBuilder, TapeCursor, TapeKind, TapeOffset};
+use tape::{Tape, TapeCursor, TapeKind, TapeOffset};
 
 /// Stand-in grammar marker for the tests — no parser, just a type
 /// used to carry the `Root` trait impl.

@@ -9741,8 +9741,8 @@ mod __ebnfparser_emit_impl {
         letter(EbnfParserLetterProjection),
         digit(EbnfParserDigitProjection),
         symbol(EbnfParserSymbolProjection),
-        character(&'p str),
-        identifier(&'p str),
+        character(::std::vec::Vec<EbnfParserValue<'p>>),
+        identifier(::std::vec::Vec<EbnfParserValue<'p>>),
         terminal(::std::vec::Vec<EbnfParserValue<'p>>),
         term(::std::vec::Vec<EbnfParserValue<'p>>),
         factor(::std::vec::Vec<EbnfParserValue<'p>>),
@@ -9919,12 +9919,36 @@ mod __ebnfparser_emit_impl {
                 EbnfParserValue::symbol(proj)
             }
             EbnfParserRuleKind::character => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                EbnfParserValue::character(span)
+                let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_EbnfParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                EbnfParserValue::character(children)
             }
             EbnfParserRuleKind::identifier => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                EbnfParserValue::identifier(span)
+                let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_EbnfParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                EbnfParserValue::identifier(children)
             }
             EbnfParserRuleKind::terminal => {
                 let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::new();
@@ -10050,13 +10074,46 @@ mod __ebnfparser_emit_impl {
     /// record from the tape and constructs the grammar's
     /// `<Grammar>Value<'p>` in one pass. No tape walk, no reparse,
     /// no visitor dispatch.
+    ///
+    /// B5.W1 — when the root tape record is a structural
+    /// intermediate compound (variant_idx=0, kind compound — the
+    /// shape emitters' Repeat / Seq scaffolding lands here), the
+    /// projector descends into the first rule-bound child rather
+    /// than panicking on `Unknown`. This mirrors
+    /// `project_push_children_<Grammar>`'s transparent-recursion
+    /// invariant.
     #[inline]
     fn project_value_EbnfParser<'p>(
         output: &crate::runtime::tape::Tape<EbnfParser>,
         input: &'p str,
     ) -> EbnfParserValue<'p> {
-        let root_off = output.value_root_offset();
-        project_frame_EbnfParser(output, input, root_off)
+        let root_off = output.root_offset();
+        let __tape = output.tape();
+        let mut __cur_off = root_off;
+        loop {
+            let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(__cur_off))
+            {
+                ::core::option::Option::Some(r) => r,
+                ::core::option::Option::None => break,
+            };
+            if __rec.variant_idx() == 0 && __rec.kind().is_compound() {
+                if __rec.has_children() {
+                    if let ::core::option::Option::Some(__child) = __rec
+                        .child_off
+                        .as_u32()
+                        .checked_sub(0)
+                    {
+                        if __child != ::core::u32::MAX {
+                            __cur_off = __child;
+                            continue;
+                        }
+                    }
+                }
+                break;
+            }
+            break;
+        }
+        project_frame_EbnfParser(output, input, __cur_off)
     }
     impl crate::runtime::ValueRoot for EbnfParser {
         type Value<'p> = EbnfParserValue<'p>;
@@ -10337,7 +10394,7 @@ mod __ebnfparser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<EbnfParserLetterProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -10366,7 +10423,7 @@ mod __ebnfparser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<EbnfParserDigitProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
@@ -10395,7 +10452,7 @@ mod __ebnfparser_emit_impl {
         offset: u32,
     ) -> ::core::option::Option<EbnfParserSymbolProjection> {
         let _ = input;
-        let frame = output.value_frame_at(offset)?;
+        let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);

@@ -16,12 +16,15 @@ dispatches.
 
 | Wave | Headline | Spec | Status | Date opened | Date closed |
 |------|----------|------|--------|-------------|-------------|
-| W0 | Test-debt closure (4 β clusters + bonus) | [waves/W0.md](waves/W0.md) | planned | — | — |
-| W1 | Substrate boundary restoration (the gestalt move) | [waves/W1.md](waves/W1.md) | planned | — | — |
-| W2 | Bookkeeping consolidation + redundant-column cleanup | [waves/W2.md](waves/W2.md) | planned | — | — |
-| W3 | Module decomposition + simd extraction | [waves/W3.md](waves/W3.md) | planned | — | — |
-| W4 | Cousin-leak migration + Pratt `child_off` cleanup | [waves/W4.md](waves/W4.md) | planned | — | — |
-| W5 | FINAL + cross-tranche updates | [waves/W5.md](waves/W5.md) | planned | — | — |
+| W0 | Test-debt closure (4 β clusters + bonus) | [waves/W0.md](waves/W0.md) | complete | 2026-04-26 | 2026-04-26 |
+| W1 | Substrate boundary restoration (the gestalt move) | [waves/W1.md](waves/W1.md) | complete | 2026-04-26 | 2026-04-26 |
+| W2 | Bookkeeping consolidation + redundant-column cleanup (parts 3+4 only; parts 1+2 routed via W2b audit to W6) | [waves/W2.md](waves/W2.md) | complete (partial; balance routes to W6) | 2026-04-26 | 2026-04-26 |
+| W3 | Module decomposition + simd extraction | [waves/W3.md](waves/W3.md) | complete | 2026-04-26 | 2026-04-26 |
+| W3b | Extended decomposition (7 additional file splits) | (no spec; emergent from W3 surface) | complete | 2026-04-26 | 2026-04-26 |
+| W4 | Cousin-leak migration + Pratt `child_off` cleanup | [waves/W4.md](waves/W4.md) | complete | 2026-04-26 | 2026-04-26 |
+| W6 | Depth-stamp invariant inversion (substrate transposition) — phase A | (W2b audit-driven; replaces W2 parts 1+2) | complete | 2026-04-26 | 2026-04-26 |
+| W6b | Bracket discipline activation + IIFE `?`-leak isolation — phase B | (W6 phase B; activates bracket discipline) | complete | 2026-04-26 | 2026-04-26 |
+| W5 | FINAL + cross-tranche updates | [waves/W5.md](waves/W5.md) | complete | 2026-04-26 | 2026-04-26 |
 
 ## Pre-tranche audit (2026-04-26)
 
@@ -96,16 +99,138 @@ land via `cargo xtask regen` at wave close, orchestrator-owned.
 
 ## What landed
 
-(populated as waves close)
+### W0 — closed 2026-04-26
 
-### W0 — pending
+Ten pre-tranche workspace failures close at root cause across
+four β clusters plus the latent `payload_bytes` precondition
+bonus. Cluster A (six failures) collapses `peel_body` and
+`unwrap_structural_wrappers` into `view/peel.rs`; the panic
+stub at `VariantShape::Cursor` retires. Cluster B (one
+failure) introduces `MaterializerKind::SpanFromFrame`, removes
+`TypeDesc::Span` from `is_scalar_payload()`, and stops `[U32, U32]`
+synthesis for non-`Tuple` kernel admissions. Cluster C (two
+failures) replaces the runtime lock-step assert with
+`ParserAttributes::with_paths(paths)` constructor invariant.
+Cluster D (one failure) converts the recursive `walk()` helper
+in `sheets_parity.rs` to an iterative `Vec<TapeCursor>`
+worklist. Bonus: `payload_bytes` gates arena reads on
+`PAYLOAD_IN_ARENA_BIT`. All ten named tests close green.
 
-### W1 — pending
+### W1 — closed 2026-04-26
 
-### W2 — pending
+The substrate transposition. Value-side fields promote into
+`Columns`; `FusedBuilder` (~1258 LOC across three files)
+deletes outright; `Parsed<'p, R>` returns to a 3-field record;
+`extern crate self as bbnf;` retires; rollback triplication
+collapses to one `Columns::rollback_to(open)`; `columns_mut()`
+escape hatch retires in favour of `Tape::position() -> u32`.
+Regen sweep updates the 1061+ CSS L4 callsites plus the cohort
+across the other eight grammars in one pass. Bench gate:
+`compile_bbnf` median holds within 5 % of B4 baseline 2.831 ms.
 
-### W3 — pending
+### W2 — closed 2026-04-26 (parts 3+4)
 
-### W4 — pending
+`packed_cache: OnceLock<Vec<PackedRecord>>` deletes outright
+along with `invalidate_packed()` and every callsite. `pay_f64`
+deletes; `f64` writes route through `pay_wide` via
+`to_bits() as u64`; readers do `from_bits(self.pay_wide[idx])`.
+W2 close commit at `0daf6f01`. Parts 1+2 (first-child capture
+at `begin_compound`, depth-stamp deferral) route via the W2b
+architectural diagnosis to W6.
 
-### W5 — pending
+### W2b — audit captured 2026-04-26 at `12f4265c`
+
+Architectural diagnosis routes Parts 1+2 from W2's prescribed
+`ValueCheckpoint::first_child_off` mechanism (which composes
+badly with rollback's `direct_child_count` accounting) to a
+substrate-level depth-stamp invariant inversion, captured at
+`docs/tranches/B5/audit/W2b-architecture-diagnosis.md`. Opens
+W6.
+
+### W3 — closed 2026-04-26
+
+Six god modules split along natural concern boundaries:
+`expression.rs` (2140) → `expression/{alt,repeat,pratt,wrap,closures,mod}`;
+`dispatcher.rs` (1969) → `dispatcher/{cross_shape,symbol_composition,support,mod}`;
+`inline.rs` (1687) and `flat.rs` (1342) per IR-node concern;
+`columns.rs` (1287) splits into directory form with SIMD
+extracted to `tape/src/simd/`. Three kitchen-sink files
+(`helpers.rs` / `utils.rs` / `common.rs`) retire by fold or
+rename. Wave commits `357a0e43` → `c8a6b3e3`. Pure refactor
+contract honoured.
+
+### W3b — closed 2026-04-26
+
+Seven additional files exceeding the 800-LOC budget, revealed
+once W3's import surface cleared, split into directory modules:
+`tape.rs`, `psi.rs`, `value_expr.rs`, `array.rs`,
+`alt_dispatch.rs`, `wrap.rs`, `keyword.rs`, `pratt.rs`. Wave
+commits `c4a53978` → `8e2da16e`. After W3+W3b combined,
+`find ... -name '*.rs' -exec wc -l {} + | awk '$1 > 800'`
+returns empty across the four target directories.
+
+### W4 — closed 2026-04-26
+
+Two bookkeeping patterns wrapping the substrate from outside
+move to architecturally-correct sites. Cousin-leak guard
+duplicated across `lower/expression/...` and
+`lower/value_expr.rs` migrates into `cursor.rs::ChildIter`;
+the iterator computes the do-not-cross boundary natively
+(`b2cee7d7`). Pratt outer's post-call `set_child_off_at`
+surgery retires in favour of `end_compound_with_child_off`
+that rides the override through the substrate natively
+(`4292550d`). Pratt grammar regen at `6f95f39a`.
+
+### W6 — closed 2026-04-26 (phase A)
+
+Depth-stamp invariant inversion. `Tape::enter_post_order_children() -> u32`
+saves and bumps `current_depth` *before* the body emits;
+`begin_compound_post` stamps the compound row at the saved
+outer depth without bumping; `end_compound_post_order`
+decrements once at close. Phase A lands the new primitives
+as no-op transitions — the cascade still runs alongside the
+bracket discipline. Wave commit `eeee1a5d`.
+
+### W6b — closed 2026-04-26 (phase B)
+
+Bracket discipline activation + IIFE `?`-leak isolation. W6b.1
+IIFE-wraps post-order shape bodies so the `?` operator is
+isolated from the surrounding push-state — a failed retry
+inside an IIFE cleanly cannot leak the in-flight depth bump
+past the matching `exit_post_order_children` (`614a516d`).
+W6b.2 activates the bracket discipline: every post-order
+shape emits an `enter_post_order_children` /
+`exit_post_order_children` pair around its body; the cascade
+in `end_compound_post_order` retires; the
+`leftmost_descendant_offset` helper retires (`db92a576`).
+Doc polish at `877736b6`. Single-writer invariant on
+`frame_depth` holds post-W6b.
+
+### W5 — closed 2026-04-26
+
+`docs/tranches/B5/FINAL.md` authored; `docs/benchmarks/post-B5.json`
+captured (compile_pipeline divan close-matrix; full peer-bench
+deferred to AY-II.W1+); `REMAINING-TRAJECTORY.md` and
+`RISK-PERF-MATRIX.md` refreshed; cross-tranche cross-reference
+scrubs land across AY-II / AZ-I / AZ-II / BA / BB.
+
+## Close gate verification
+
+- Workspace nextest at W6b: 1477 passed, 0 failed, 27 skipped
+  via `cargo nextest run --workspace --profile ax-iter
+  --no-fail-fast`. Captured at `/tmp/b5w5-nextest.txt`.
+- `compile_bbnf` median 2.806 ms via
+  `cargo bench -p bbnf --bench compile_pipeline`; 0.9 % under
+  B4 baseline 2.831 ms. Within the 5 % gate. Captured at
+  `/tmp/b5w5-bench-compile-bbnf.txt`.
+- `find crates/core/src/lower crates/core/src/backend/rust/emitter/shapes
+  crates/tape/src -name '*.rs' -exec wc -l {} + | awk '$1 > 800'`
+  returns empty.
+- `rg -nF 'FusedBuilder|FusedOutput|ValueFramesOutput|columns_mut|frame_depth_mut|extern crate self as bbnf'
+  crates/` returns only doc-comment archaeology references in
+  the tape crate (no live source dependencies).
+- `Parsed<'p, R>` is a 3-field record at
+  `crates/core/src/runtime/parsed.rs`.
+- `Tape::position(&self) -> u32` exists at
+  `crates/tape/src/tape/construct.rs:70`.
+- `crates/tape/src/builder/` directory does not exist.

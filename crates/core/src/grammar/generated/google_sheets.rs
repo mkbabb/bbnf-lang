@@ -4489,10 +4489,10 @@ mod __googlesheetsparser_emit_impl {
             this_operand_root = _rhs_off.0;
         }
         let outer_span_hi = *p as u32;
-        builder.end_compound(outer_off, outer_span_hi);
         builder
-            .set_child_off_at(
+            .end_compound_with_child_off(
                 outer_off,
+                outer_span_hi,
                 crate::runtime::tape::TapeOffset(this_operand_root),
             );
         Ok(crate::runtime::tape::TapeOffset(outer_off))
@@ -4723,10 +4723,10 @@ mod __googlesheetsparser_emit_impl {
             this_operand_root = _rhs_off.0;
         }
         let outer_span_hi = *p as u32;
-        builder.end_compound(outer_off, outer_span_hi);
         builder
-            .set_child_off_at(
+            .end_compound_with_child_off(
                 outer_off,
+                outer_span_hi,
                 crate::runtime::tape::TapeOffset(this_operand_root),
             );
         Ok(crate::runtime::tape::TapeOffset(outer_off))
@@ -5040,10 +5040,10 @@ mod __googlesheetsparser_emit_impl {
             this_operand_root = _rhs_off.0;
         }
         let outer_span_hi = *p as u32;
-        builder.end_compound(outer_off, outer_span_hi);
         builder
-            .set_child_off_at(
+            .end_compound_with_child_off(
                 outer_off,
+                outer_span_hi,
                 crate::runtime::tape::TapeOffset(this_operand_root),
             );
         Ok(crate::runtime::tape::TapeOffset(outer_off))
@@ -5357,10 +5357,10 @@ mod __googlesheetsparser_emit_impl {
             this_operand_root = _rhs_off.0;
         }
         let outer_span_hi = *p as u32;
-        builder.end_compound(outer_off, outer_span_hi);
         builder
-            .set_child_off_at(
+            .end_compound_with_child_off(
                 outer_off,
+                outer_span_hi,
                 crate::runtime::tape::TapeOffset(this_operand_root),
             );
         Ok(crate::runtime::tape::TapeOffset(outer_off))
@@ -5591,10 +5591,10 @@ mod __googlesheetsparser_emit_impl {
             this_operand_root = _rhs_off.0;
         }
         let outer_span_hi = *p as u32;
-        builder.end_compound(outer_off, outer_span_hi);
         builder
-            .set_child_off_at(
+            .end_compound_with_child_off(
                 outer_off,
+                outer_span_hi,
                 crate::runtime::tape::TapeOffset(this_operand_root),
             );
         Ok(crate::runtime::tape::TapeOffset(outer_off))
@@ -7932,10 +7932,10 @@ mod __googlesheetsparser_emit_impl {
             this_operand_root = _rhs_off.0;
         }
         let outer_span_hi = *p as u32;
-        builder.end_compound(outer_off, outer_span_hi);
         builder
-            .set_child_off_at(
+            .end_compound_with_child_off(
                 outer_off,
+                outer_span_hi,
                 crate::runtime::tape::TapeOffset(this_operand_root),
             );
         Ok(crate::runtime::tape::TapeOffset(outer_off))
@@ -8166,10 +8166,10 @@ mod __googlesheetsparser_emit_impl {
             this_operand_root = _rhs_off.0;
         }
         let outer_span_hi = *p as u32;
-        builder.end_compound(outer_off, outer_span_hi);
         builder
-            .set_child_off_at(
+            .end_compound_with_child_off(
                 outer_off,
+                outer_span_hi,
                 crate::runtime::tape::TapeOffset(this_operand_root),
             );
         Ok(crate::runtime::tape::TapeOffset(outer_off))

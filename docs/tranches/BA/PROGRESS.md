@@ -14,6 +14,9 @@ over grammar-derived struct trees).
 - `Rename provenance`: these files were tranche BB until
   2026-04-23; renamed to BA under the tape-abrogation pivot. The
   old BA content (tape activation + backward container pointer)
-  was absorbed into AZ — see `docs/tranches/AZ/OLD-BA-absorbed.md`
-  and `docs/tranches/AZ/old-BA-artifacts/` for provenance.
-- `Date`: 2026-04-23
+  was absorbed into AZ-I (post-AZ-split); see git history at or
+  before commit `aeed9e41` for the legacy `OLD-BA-absorbed.md`
+  + `old-BA-artifacts/waves-old/` provenance docs that lived
+  under `docs/tranches/AZ-I/` until B7 close-cleanup retired them.
+- `Date`: 2026-04-23 (last refreshed post-B7 close-cleanup,
+  2026-04-27)

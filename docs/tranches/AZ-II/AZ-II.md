@@ -140,8 +140,7 @@ grammar-read step; it is measured but lightly weighted — regression
   (`::bbnf::runtime::tape|bbnf::runtime::tape|use tape::|\btape::|\bTape(Rec|Builder|Cursor|Offset|Kind)\b|\bColumns\b|\bFinaliser\b|\bDTA\b|\bPSI\b|Fused(Build|Output)`)
   returns zero matches outside historical docs.
 - `rg '\bTapeRec\b|\bTapeBuilder\b|\bTapeCursor\b|\bColumns\b|\bFinaliser\b|\bDTA\b|\bPSI\b' crates/ --type rust`
-  returns zero matches outside historical artefacts under
-  `docs/tranches/AZ-I/old-BA-artifacts/`.
+  returns zero matches.
 - `cargo build -p bbnf --no-default-features` succeeds without
   `crates/tape/` existing.
 

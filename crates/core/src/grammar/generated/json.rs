@@ -1611,41 +1611,51 @@ mod __jsonparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let span_lo = *p as u32;
+        let __save_cols = builder.position();
         let outer_child = builder.enter_post_order_children();
+        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
-            let _ = ({
-                let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                parse_string_JsonParser_string(input, p, state, builder)
-            })?;
-        }
-        {
-            let _ = __shape_support_JsonParser::skip_space(input, p, state);
-            let at = *p;
-            let end = at + 1usize;
-            if input.len() < end || input[at..end] != [58u8] {
-                return Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: at as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                });
+            {
+                let _ = ({
+                    let _ = __shape_support_JsonParser::skip_space(input, p, state);
+                    parse_string_JsonParser_string(input, p, state, builder)
+                })?;
             }
-            *p = end;
-            let _ = builder
-                .push_leaf_with(
-                    crate::runtime::tape::TapeKind::Literal,
-                    at as u32,
-                    end as u32,
-                    5u8,
-                    0,
-                    crate::runtime::tape::PayloadData::None,
-                );
-            let _ = __shape_support_JsonParser::skip_space(input, p, state);
-        }
-        {
-            let _ = ({
+            {
                 let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                parse_wrap_JsonParser_value(input, p, state, builder)
-            })?;
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [58u8] {
+                    return Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let _ = builder
+                    .push_leaf_with(
+                        crate::runtime::tape::TapeKind::Literal,
+                        at as u32,
+                        end as u32,
+                        5u8,
+                        0,
+                        crate::runtime::tape::PayloadData::None,
+                    );
+                let _ = __shape_support_JsonParser::skip_space(input, p, state);
+            }
+            {
+                let _ = ({
+                    let _ = __shape_support_JsonParser::skip_space(input, p, state);
+                    parse_wrap_JsonParser_value(input, p, state, builder)
+                })?;
+            }
+            Ok(())
+        })();
+        if let ::core::result::Result::Err(__err) = __post_body {
+            builder.rollback_to(__save_cols);
+            builder.exit_post_order_children();
+            return ::core::result::Result::Err(__err);
         }
         let span_hi = *p as u32;
         let outer_off = builder

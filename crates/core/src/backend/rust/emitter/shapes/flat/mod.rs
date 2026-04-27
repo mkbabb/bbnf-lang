@@ -147,9 +147,31 @@ pub fn emit_parse_flat(
             // depth at push time. The matching `end_compound_post_order`
             // absorbs the bracket bump; `begin_compound_post` stamps the
             // outer row at the outer-frame depth without bumping.
+            //
+            // B5.W6b — IIFE-wrap the body so `?`-propagation from inner
+            // shape calls (refs, regex scans, dispatcher routes) cannot
+            // leak past `end_compound_post_order` and leave
+            // `current_depth` permanently bumped. The Err-arm rolls
+            // back partial pushes FIRST (which may clobber
+            // `current_depth` to the bracket-bumped depth via
+            // `frame_depth[__save_cols]`), then `exit_post_order_children`
+            // decrements once to the outer frame. The order is critical:
+            // rollback before exit, so the rolled-back row's
+            // bracket-bumped depth is corrected to the outer depth.
+            let __save_cols = builder.position();
             let outer_child = builder.enter_post_order_children();
-
-            #body_emission
+            let __post_body: ::core::result::Result<
+                (),
+                crate::runtime::tape::DtaError,
+            > = (|| {
+                #body_emission
+                Ok(())
+            })();
+            if let ::core::result::Result::Err(__err) = __post_body {
+                builder.rollback_to(__save_cols);
+                builder.exit_post_order_children();
+                return ::core::result::Result::Err(__err);
+            }
 
             let span_hi = *p as u32;
             let outer_off = builder.begin_compound_post(

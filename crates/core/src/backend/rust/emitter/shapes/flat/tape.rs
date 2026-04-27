@@ -151,8 +151,29 @@ pub(super) fn emit_tape_position_core(
                 // child records stamp `frame_depth` at the correct
                 // (parent + 1) depth at push time. The matching
                 // `end_compound_post_order` absorbs the bracket bump.
+                //
+                // B5.W6b — IIFE-wrap so `?`-propagation from nested
+                // ref / regex / dispatcher calls cannot bypass
+                // `end_compound_post_order`. The Err-arm rolls back
+                // partial pushes BEFORE exit (Order B): the rollback
+                // restores `current_depth` to the bracket-bumped depth
+                // (via `frame_depth[__seq_save]`), then
+                // `exit_post_order_children` decrements once to the
+                // outer frame.
+                let __seq_save = builder.position();
                 let seq_child = builder.enter_post_order_children();
-                #inner
+                let __seq_body: ::core::result::Result<
+                    (),
+                    crate::runtime::tape::DtaError,
+                > = (|| {
+                    #inner
+                    Ok(())
+                })();
+                if let ::core::result::Result::Err(__err) = __seq_body {
+                    builder.rollback_to(__seq_save);
+                    builder.exit_post_order_children();
+                    return ::core::result::Result::Err(__err);
+                }
                 let seq_hi = *p as u32;
                 let __seq_off = builder.begin_compound_post(
                     crate::runtime::tape::TapeKind::Seq,

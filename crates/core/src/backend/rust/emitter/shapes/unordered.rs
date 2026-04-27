@@ -331,6 +331,15 @@ pub fn emit_parse_unordered(
             // B5.W6 — bracket the post-order children scope so child
             // records stamp `frame_depth` at the correct (parent + 1)
             // depth at push time.
+            //
+            // B5.W6b — IIFE-wrap the loop body so `?`-propagation from
+            // per-arm ref / dispatcher calls cannot bypass the
+            // `end_compound_post_order` close. The Err-arm rolls back
+            // partial pushes BEFORE exit (Order B): the rollback
+            // restores `current_depth` to the bracket-bumped depth (via
+            // `frame_depth[__save_cols]`), then `exit_post_order_children`
+            // decrements once to the outer frame.
+            let __save_cols = builder.position();
             let outer_child = builder.enter_post_order_children();
             // The walker's Repeat entry doesn't skip leading ws on
             // its own — the Alt's ByteDispatch does. Mirror that: the
@@ -338,12 +347,23 @@ pub fn emit_parse_unordered(
             // `skip_space`, so we do NOT pre-skip here. Any leading
             // trim is applied by the first dispatch arm's skip.
             let mut iters: u32 = 0;
-            loop {
-                let Some(b) = input.get(*p).copied() else { break; };
-                match b {
-                    #(#branch_arms)*
-                    _ => break,
+            let __post_body: ::core::result::Result<
+                (),
+                crate::runtime::tape::DtaError,
+            > = (|| {
+                loop {
+                    let Some(b) = input.get(*p).copied() else { break; };
+                    match b {
+                        #(#branch_arms)*
+                        _ => break,
+                    }
                 }
+                Ok(())
+            })();
+            if let ::core::result::Result::Err(__err) = __post_body {
+                builder.rollback_to(__save_cols);
+                builder.exit_post_order_children();
+                return ::core::result::Result::Err(__err);
             }
             if iters < #iters_lo_lit {
                 // B5.W6 — close the bracket before returning the error.

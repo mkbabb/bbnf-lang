@@ -91,14 +91,35 @@ pub(super) fn emit_token_dispatch_tape(
             // B5.W6 — bracket the post-order children scope so child
             // records stamp `frame_depth` at the correct
             // (parent + 1) depth at push time.
+            //
+            // B5.W6b — IIFE-wrap the token + per-arm + fallback
+            // emissions so `?`-propagation from primary-tape sub-emitters
+            // (regex `?`, ref calls) cannot bypass
+            // `end_compound_post_order`. The Err-arm rolls back partial
+            // pushes BEFORE exit (Order B): the rollback restores
+            // `current_depth` to the bracket-bumped depth (via
+            // `frame_depth[__td_save]`), then `exit_post_order_children`
+            // decrements once to the outer frame.
+            let __td_save = builder.position();
             let td_child = builder.enter_post_order_children();
-            let token_lo = *p;
-            #token_emit
-            let token_span: &[u8] = &input[token_lo..*p];
-            let mut td_match = false;
-            #(#per_arm)*
-            if !td_match {
-                #fallback_emit
+            let __post_body: ::core::result::Result<
+                (),
+                crate::runtime::tape::DtaError,
+            > = (|| {
+                let token_lo = *p;
+                #token_emit
+                let token_span: &[u8] = &input[token_lo..*p];
+                let mut td_match = false;
+                #(#per_arm)*
+                if !td_match {
+                    #fallback_emit
+                }
+                Ok(())
+            })();
+            if let ::core::result::Result::Err(__err) = __post_body {
+                builder.rollback_to(__td_save);
+                builder.exit_post_order_children();
+                return ::core::result::Result::Err(__err);
             }
             let td_hi = *p as u32;
             let __td_off = builder.begin_compound_post(

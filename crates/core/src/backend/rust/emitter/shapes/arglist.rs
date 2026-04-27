@@ -112,9 +112,28 @@ pub fn emit_parse_arglist(
             let span_lo = *p as u32;
             // AY-II.W0.b — walker-parity post-order outer Rule compound.
             // B5.W6 — bracket the post-order children scope.
+            //
+            // B5.W6b — IIFE-wrap the body so `?`-propagation from inner
+            // ref / dispatcher calls cannot leak past
+            // `end_compound_post_order`. The Err-arm rolls back partial
+            // pushes BEFORE exit (Order B): the rollback restores
+            // `current_depth` to the bracket-bumped depth (via
+            // `frame_depth[__save_cols]`), then `exit_post_order_children`
+            // decrements once to the outer frame.
+            let __save_cols = builder.position();
             let outer_child = builder.enter_post_order_children();
-
-            #body_emission
+            let __post_body: ::core::result::Result<
+                (),
+                crate::runtime::tape::DtaError,
+            > = (|| {
+                #body_emission
+                Ok(())
+            })();
+            if let ::core::result::Result::Err(__err) = __post_body {
+                builder.rollback_to(__save_cols);
+                builder.exit_post_order_children();
+                return ::core::result::Result::Err(__err);
+            }
 
             let span_hi = *p as u32;
             let outer_off = builder.begin_compound_post(
@@ -415,8 +434,29 @@ fn emit_tape_position_core(
             quote! {
                 let seq_lo = *p as u32;
                 // B5.W6 — bracket the post-order Seq's children.
+                //
+                // B5.W6b — IIFE-wrap so `?`-propagation from inner ref /
+                // regex / dispatcher calls cannot bypass
+                // `end_compound_post_order`. The Err-arm rolls back
+                // partial pushes BEFORE exit (Order B): the rollback
+                // restores `current_depth` to the bracket-bumped depth
+                // (via `frame_depth[__seq_save]`), then
+                // `exit_post_order_children` decrements once to the
+                // outer frame.
+                let __seq_save = builder.position();
                 let seq_child = builder.enter_post_order_children();
-                #(#out)*
+                let __seq_body: ::core::result::Result<
+                    (),
+                    crate::runtime::tape::DtaError,
+                > = (|| {
+                    #(#out)*
+                    Ok(())
+                })();
+                if let ::core::result::Result::Err(__err) = __seq_body {
+                    builder.rollback_to(__seq_save);
+                    builder.exit_post_order_children();
+                    return ::core::result::Result::Err(__err);
+                }
                 let seq_hi = *p as u32;
                 let __seq_off = builder.begin_compound_post(
                     crate::runtime::tape::TapeKind::Seq,

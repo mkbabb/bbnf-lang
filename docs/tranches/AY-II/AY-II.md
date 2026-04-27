@@ -150,7 +150,7 @@ AY-II.W1-W5 sequential.
 | Wave | Spec | Headline | Opens after | Status |
 |---|---|---|---|---|
 | **W0** | [waves/W0.md](waves/W0.md) | Fused substrate + emitter unification + runtime consolidation + projection totality + structural-scan integration (5 parallel sub-agents) | tranche open | superseded — partial landing retained; W0' owns close |
-| **W0'** | [waves/W0p.md](waves/W0p.md) | FusedBuilder collapse + projection-consumer wiring + scan-policy splice + legacy-cruft deletion (3 parallel sub-agents + d-lineage dev-infra follow-ons) | W0 partial landing | complete — close ceremony folded into B4.W1 (2026-04-25); unified `builder.rollback_to(...)` atomic-tape+value path lands the contract the W0'.a substrate shipped without; transitional aliases retire entirely; 327-failure runtime-parser regression resolves; `cargo xtask regen --check` clean. See `docs/tranches/B4/audit/W1-close.md` |
+| **W0'** | [waves/W0p.md](waves/W0p.md) | Fused builder collapse + projection-consumer wiring + scan-policy splice + legacy-cruft deletion (3 parallel sub-agents + d-lineage dev-infra follow-ons) | W0 partial landing | complete — close ceremony folded into B4.W1 (2026-04-25); unified atomic-rollback path lands the contract the W0'.a substrate shipped without; transitional aliases retire entirely; 327-failure runtime-parser regression resolves; `cargo xtask regen --check` clean. The post-B5 substrate further restores the surface: the welded fused-builder type dissolves into `Tape<R>` over `Columns`, `Parsed<'p, R>` returns to a 3-field record, and the parser-substrate boundary collapses to `Tape::position()` + `Tape::rollback_to(open)`. See `docs/tranches/B4/audit/W1-close.md` and `docs/tranches/B5/FINAL.md`. |
 | **W1** | [waves/W1.md](waves/W1.md) | JSON — semantic parity + peer-referenced perf (sonic + simd-json); grammar-derived typed admission totality; samply-proven hot path | W0' close | planned |
 | **W2** | [waves/W2.md](waves/W2.md) | CSS L4 — lightningcss total typed-semantic parity (Rule, Declaration, Value, Selector, MediaRule, Keyframes families); canonical-output byte parity; zero hardcoded bindings | W1 | planned |
 | **W3** | [waves/W3.md](waves/W3.md) | Google Sheets — grammar-derived typed formula/cell/range families; self-parity + formula_expr parity; samply-proven hot paths | W2 | planned |
@@ -168,10 +168,11 @@ belongs in this tranche, not downstream. The findings:
 1. **`parse_with_visitor` opt-in bench entry** — W1/W4/W5 plans
    permit it as a bench-only alternative entry point with the
    constraint that it does not appear in `Parsed::to_value()`'s
-   call graph. Under W0' FusedBuilder, the fused parse IS the
-   visitor lane; the separate `parse_with_visitor_<Grammar>`
-   emission is redundant scaffolding. **Action**: W0'.a retires
-   the entry point + its `emit_parse_with_visitor` emitter path at
+   call graph. Under the unified post-B5 substrate, the fused
+   parse IS the visitor lane; the separate
+   `parse_with_visitor_<Grammar>` emission is redundant
+   scaffolding. **Action**: W0'.a retires the entry point +
+   its `emit_parse_with_visitor` emitter path at
    `crates/core/src/backend/rust/emitter/grammar.rs:1163-1334`.
    Update W1 §6 + W4.e + W5 §15 accordingly at the same commit.
 2. **`<Grammar>Value::Unknown` fallback** — W1 §scope reference,
@@ -185,13 +186,13 @@ belongs in this tranche, not downstream. The findings:
    authored the harness as "iff the fused-pipeline value-lane
    diverges semantically from combinator-side prettify at W0
    close". W0' resolves the precondition. **Action**: the
-   decision is made at W4 open based on observed FusedBuilder
+   decision is made at W4 open based on observed substrate
    behaviour; W4.d text updates at W0' close to remove the
    conditional.
-4. **W4.e samply expectations** — currently reference
-   `ValueBuilder::push` or "W0.c's landed name". **Action**:
-   W4.e updates at W0' close to reference the concrete fused
-   symbol name (`FusedBuilder::push_leaf_*` / `begin_compound`).
+4. **W4.e samply expectations** — currently reference push-leaf
+   stamping symbols on the unified substrate. **Action**:
+   W4.e updates at W0' close to reference the concrete substrate
+   symbol names (post-B5: `Tape::push_leaf_*` / `begin_compound`).
    **Status**: landed preemptively at `waves/W4.md:20,136,161`
    during the AY-II/B1 redress pass.
 

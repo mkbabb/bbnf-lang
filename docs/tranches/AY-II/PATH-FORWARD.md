@@ -132,23 +132,30 @@ Dispatch only after W0' closes:
 No annex, no sidecar wave, and no infra detour runs in parallel with
 these waves.
 
-## Immediate cleanup targets already identified
+## Immediate cleanup targets — all retired
 
-These are not optional polish items; they are W0' close work.
-Canonical list; if in doubt against `audit/W0p-PAUSE-SNAPSHOT.md`
-§Transient compose-escape aliases, the SNAPSHOT is the
-source of truth for alias-kind enumeration.
+The alias surface enumerated below retired entirely at B4.W1 (the
+W0' close-ceremony fold) and B5.W1 (substrate restoration). The
+list survives as archaeology; every entry below carries `closed`
+in the post-B5 substrate. Per `audit/W0p-PAUSE-SNAPSHOT.md`
+§Transient compose-escape aliases, the SNAPSHOT carries the full
+alias-kind enumeration; the post-B5 substrate exposes none of
+those aliases. The surface today is `Tape<R>` over `Columns`
+plus `Parsed<'p, R>` 3-field record, with `Tape::position()` and
+`Tape::rollback_to(open)` as the parser-substrate boundary.
 
-- `crates/tape/src/builder/mod.rs` — retire `pub type TapeBuilder = FusedBuilder;`
-- `crates/core/src/runtime/mod.rs` — retire `ValueBuilderOutput` alias
-  and the `value_builder` shim module
-- `crates/core/src/runtime/mod.rs` — retire `_ValueBuilderShim` /
-  `ValueBuilder<R>` ZST once the counter imports in
-  `value_api_apples_to_apples.rs` migrate to the fused surface
-- `crates/core/src/runtime/parsed.rs` — retire the 4-arg `new_fused`
-  bridge once regen no longer emits it
-- `crates/core/tests/value_api_apples_to_apples.rs` — move the builder
-  counter imports onto the fused builder surface
+- `crates/tape/src/builder/` — directory deleted at B5.W1; no
+  builder module remains in the tape crate.
+- `crates/core/src/runtime/mod.rs` — every value-builder alias
+  and shim module retired by B4.W1 alias retirement; the
+  `value_builder` shim module ceases to exist.
+- `crates/core/src/runtime/parsed.rs` — `Parsed<'p, R>` returns
+  to a 3-field record (`tape`, `input`, `root_offset`) at
+  B5.W1; multi-arg `new_fused` bridges retire.
+- `crates/core/tests/value_api_apples_to_apples.rs` — counter
+  imports route off the substrate's canonical accessor surface
+  (`Tape::frame`, `Tape::payload_for`, etc., un-prefixed
+  per B5.W1).
 
 ## Discipline
 

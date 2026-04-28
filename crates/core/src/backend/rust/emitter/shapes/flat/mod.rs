@@ -67,6 +67,7 @@ use super::dispatcher::{
 use super::root_rule_name;
 
 mod map_regex_host;
+mod struct_direct;
 mod tape;
 mod typed_payload;
 mod visitor;
@@ -74,30 +75,37 @@ mod visitor;
 /// Emit `pub fn parse_flat_<grammar>_<rule>(input, p, state,
 /// builder) -> Result<TapeOffset, DtaError>`.
 ///
-/// # AZ-I.W2.RE — strategy gate
+/// # AZ-I.W2.RF — strategy dispatch
 ///
 /// `strategy` is the codegen-time substrate selector resolved by
-/// [`EmitStrategy::for_grammar`] in `shapes/mod.rs`. Flat-shape rules
-/// are tape-only in W2; JSON does not exercise this shape. On
-/// [`EmitStrategy::StructDirect`] this emitter panics at codegen time
-/// (unreachable assertion preventing silent codegen drift; W3 / W2.B
-/// extend the per-shape struct-direct path before activating
-/// StructDirect for any grammar that exercises this shape).
+/// [`EmitStrategy::for_grammar`] in `shapes/mod.rs`. Two disjoint
+/// emission templates:
+///
+/// - [`EmitStrategy::TapeDirect`] — the legacy fused-tape body emitted
+///   by [`tape::emit_tape_positions`] under the post-order Seq compound
+///   bracket pattern.
+/// - [`EmitStrategy::StructDirect`] — the AZ-I.W2 struct-direct body
+///   that resolves the rule's layout via
+///   `ir.struct_registry.layout(rule.id)`, opens a Flat frame on the
+///   builder via `begin_compound(&__layout)`, walks each position
+///   through [`struct_direct::emit_parse_flat_struct_direct`], and
+///   closes via `end_compound(handle)`. Per the W2-EMITTER-REWIRE
+///   §3 redress F dispatch this restores JSON activation for the
+///   `pair` Flat-classified rule (W2.RE asserted Flat as JSON-orthogonal
+///   under contact; the assertion missed `pair`'s Flat classification).
 pub fn emit_parse_flat(
     strategy: &EmitStrategy,
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    match strategy {
-        EmitStrategy::TapeDirect => {}
-        EmitStrategy::StructDirect { .. } => {
-            panic!(
-                "AZ-I.W2.RE: Flat shape does not support StructDirect; \
-                 W3 / W2.B expected to extend before activating this \
-                 strategy for the calling grammar"
-            );
-        }
+    if strategy.is_struct_direct() {
+        return struct_direct::emit_parse_flat_struct_direct(
+            grammar_suffix,
+            rule,
+            ir,
+            strategy,
+        );
     }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("flat", grammar_suffix, rule_name);
@@ -216,26 +224,22 @@ pub fn emit_parse_flat(
 /// Emit `pub fn parse_flat_visitor_<grammar>_<rule><V>(input, p,
 /// state, visitor) -> Result<(), ParseErr>`.
 ///
-/// # AZ-I.W2.RE — strategy gate
+/// # AZ-I.W2.RF — strategy-agnostic emission
 ///
-/// Mirrors [`emit_parse_flat`]. Flat-shape rules are tape-only in W2;
-/// codegen-time panic on [`EmitStrategy::StructDirect`].
+/// The visitor path operates against an external `&mut V: ObjectVisitor
+/// + ArrayVisitor + …` argument that is substrate-orthogonal to the
+/// tape-vs-struct-builder distinction the StructDirect / TapeDirect
+/// strategies select. Visitor emission is therefore strategy-agnostic;
+/// the parameter is retained on the API surface for symmetry with
+/// [`emit_parse_flat`] (and to keep the call-site in `shapes/mod.rs`
+/// uniform across shape emitters that DO require the discriminator),
+/// but the emitted body is identical between the two strategies.
 pub fn emit_parse_flat_visitor(
-    strategy: &EmitStrategy,
+    _strategy: &EmitStrategy,
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    match strategy {
-        EmitStrategy::TapeDirect => {}
-        EmitStrategy::StructDirect { .. } => {
-            panic!(
-                "AZ-I.W2.RE: Flat shape does not support StructDirect; \
-                 W3 / W2.B expected to extend before activating this \
-                 strategy for the calling grammar"
-            );
-        }
-    }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("flat", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);

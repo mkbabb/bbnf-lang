@@ -42,6 +42,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::super::dfa_codegen::regex_scan_adapter_ident;
+use super::super::strategy::EmitStrategy;
 use super::dispatcher::{shape_fn_ident, visitor_shape_fn_ident};
 use super::sanitise_grammar;
 
@@ -263,11 +264,32 @@ fn hregex_typed_payload_body(
 
 /// Emit `pub fn parse_hregex_<grammar>_<rule>(input, p, state,
 /// builder) -> Result<TapeOffset, DtaError>`.
+///
+/// # AZ-I.W2.RE — strategy gate
+///
+/// `strategy` is the codegen-time substrate selector resolved by
+/// [`EmitStrategy::for_grammar`] in `shapes/mod.rs`. HRegex-shape
+/// rules are tape-only in W2; JSON does not exercise this shape. On
+/// [`EmitStrategy::StructDirect`] this emitter panics at codegen time
+/// (unreachable assertion preventing silent codegen drift; W3 / W2.B
+/// extend the per-shape struct-direct path before activating
+/// StructDirect for any grammar that exercises this shape).
 pub fn emit_parse_hregex(
+    strategy: &EmitStrategy,
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
+    match strategy {
+        EmitStrategy::TapeDirect => {}
+        EmitStrategy::StructDirect { .. } => {
+            panic!(
+                "AZ-I.W2.RE: HRegex shape does not support StructDirect; \
+                 W3 / W2.B expected to extend before activating this \
+                 strategy for the calling grammar"
+            );
+        }
+    }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("hregex", grammar_suffix, rule_name);
     let variant_idx = (rule.id & 0xFF) as u8;
@@ -414,10 +436,21 @@ pub fn number_rule_allows_leading_dot(rule: &IrRule, ir: &GrammarIR) -> bool {
 /// need the pre-read byte); retained so the caller's emission stays
 /// identical.
 pub fn emit_parse_number_via_hregex(
+    strategy: &EmitStrategy,
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
+    match strategy {
+        EmitStrategy::TapeDirect => {}
+        EmitStrategy::StructDirect { .. } => {
+            panic!(
+                "AZ-I.W2.RE: HRegex (Number-via-HRegex) shape does not \
+                 support StructDirect; W3 / W2.B expected to extend \
+                 before activating this strategy for the calling grammar"
+            );
+        }
+    }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("number", grammar_suffix, rule_name);
     let variant_idx = (rule.id & 0xFF) as u8;
@@ -536,10 +569,21 @@ pub fn emit_parse_number_via_hregex(
 /// continues to route via the Number-shape naming convention. Fires
 /// `visitor.number_f64(value)` with the decoded f64.
 pub fn emit_parse_number_visitor_via_hregex(
+    strategy: &EmitStrategy,
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
+    match strategy {
+        EmitStrategy::TapeDirect => {}
+        EmitStrategy::StructDirect { .. } => {
+            panic!(
+                "AZ-I.W2.RE: HRegex (Number-visitor-via-HRegex) shape does \
+                 not support StructDirect; W3 / W2.B expected to extend \
+                 before activating this strategy for the calling grammar"
+            );
+        }
+    }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("number", grammar_suffix, rule_name);
 
@@ -658,11 +702,27 @@ fn extract_regex_pattern(node: &IrNode) -> Option<u32> {
 
 /// Emit `pub fn parse_hregex_visitor_<grammar>_<rule><V>(input, p,
 /// state, visitor) -> Result<(), ParseErr>`.
+///
+/// # AZ-I.W2.RE — strategy gate
+///
+/// Mirrors [`emit_parse_hregex`]. HRegex-shape rules are tape-only in
+/// W2; codegen-time panic on [`EmitStrategy::StructDirect`].
 pub fn emit_parse_hregex_visitor(
+    strategy: &EmitStrategy,
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
+    match strategy {
+        EmitStrategy::TapeDirect => {}
+        EmitStrategy::StructDirect { .. } => {
+            panic!(
+                "AZ-I.W2.RE: HRegex shape does not support StructDirect; \
+                 W3 / W2.B expected to extend before activating this \
+                 strategy for the calling grammar"
+            );
+        }
+    }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("hregex", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);

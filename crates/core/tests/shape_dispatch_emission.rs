@@ -337,41 +337,48 @@ fn w4_hregex_no_hits_on_json_fixture() {
 
 #[test]
 fn w4_pratt_emitter_produces_parsable_tokens() {
+    // AZ-I.W2.RE — strategy gate. JSON does not exercise Pratt; the
+    // tape-direct strategy keeps the existing emitter body intact for
+    // this parsable-tokens check.
+    let strategy = EmitStrategy::TapeDirect;
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.number as usize];
-    let ts = pratt::emit_parse_pratt("JsonFixture", rule, &ir);
+    let ts = pratt::emit_parse_pratt(&strategy, "JsonFixture", rule, &ir);
     let _ = format_tokens(&ts);
-    let ts_v = pratt::emit_parse_pratt_visitor("JsonFixture", rule, &ir);
+    let ts_v = pratt::emit_parse_pratt_visitor(&strategy, "JsonFixture", rule, &ir);
     let _ = format_tokens(&ts_v);
 }
 
 #[test]
 fn w4_unordered_emitter_produces_parsable_tokens() {
+    let strategy = EmitStrategy::TapeDirect;
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.array as usize];
-    let ts = unordered::emit_parse_unordered("JsonFixture", rule, &ir);
+    let ts = unordered::emit_parse_unordered(&strategy, "JsonFixture", rule, &ir);
     let _ = format_tokens(&ts);
-    let ts_v = unordered::emit_parse_unordered_visitor("JsonFixture", rule, &ir);
+    let ts_v = unordered::emit_parse_unordered_visitor(&strategy, "JsonFixture", rule, &ir);
     let _ = format_tokens(&ts_v);
 }
 
 #[test]
 fn w4_arglist_emitter_produces_parsable_tokens() {
+    let strategy = EmitStrategy::TapeDirect;
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.object as usize];
-    let ts = arglist::emit_parse_arglist("JsonFixture", rule, &ir);
+    let ts = arglist::emit_parse_arglist(&strategy, "JsonFixture", rule, &ir);
     let _ = format_tokens(&ts);
-    let ts_v = arglist::emit_parse_arglist_visitor("JsonFixture", rule, &ir);
+    let ts_v = arglist::emit_parse_arglist_visitor(&strategy, "JsonFixture", rule, &ir);
     let _ = format_tokens(&ts_v);
 }
 
 #[test]
 fn w4_flat_emitter_produces_parsable_tokens() {
+    let strategy = EmitStrategy::TapeDirect;
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.pair as usize];
-    let ts = flat::emit_parse_flat("JsonFixture", rule, &ir);
+    let ts = flat::emit_parse_flat(&strategy, "JsonFixture", rule, &ir);
     let _ = format_tokens(&ts);
-    let ts_v = flat::emit_parse_flat_visitor("JsonFixture", rule, &ir);
+    let ts_v = flat::emit_parse_flat_visitor(&strategy, "JsonFixture", rule, &ir);
     let _ = format_tokens(&ts_v);
 }
 
@@ -388,11 +395,12 @@ fn w4_wrap_emitter_produces_parsable_tokens() {
 
 #[test]
 fn w4_hregex_emitter_produces_parsable_tokens() {
+    let strategy = EmitStrategy::TapeDirect;
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.string as usize];
-    let ts = hregex::emit_parse_hregex("JsonFixture", rule, &ir);
+    let ts = hregex::emit_parse_hregex(&strategy, "JsonFixture", rule, &ir);
     let _ = format_tokens(&ts);
-    let ts_v = hregex::emit_parse_hregex_visitor("JsonFixture", rule, &ir);
+    let ts_v = hregex::emit_parse_hregex_visitor(&strategy, "JsonFixture", rule, &ir);
     let _ = format_tokens(&ts_v);
 }
 

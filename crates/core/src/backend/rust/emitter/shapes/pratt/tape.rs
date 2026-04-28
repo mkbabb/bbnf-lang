@@ -10,6 +10,7 @@ use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::super::super::strategy::EmitStrategy;
 use super::super::dispatcher::{
     dispatcher_fn_ident, emit_ref_call_tape, shape_fn_ident,
 };
@@ -28,11 +29,32 @@ use super::extract_first_ref;
 /// the outer Pratt compound is patched to point at the final
 /// reduced operand on close, matching the walker's byte-for-byte
 /// tape layout.
+///
+/// # AZ-I.W2.RE — strategy gate
+///
+/// `strategy` is the codegen-time substrate selector resolved by
+/// [`EmitStrategy::for_grammar`] in `shapes/mod.rs`. Pratt-shape rules
+/// are tape-only in W2; JSON does not exercise this shape. On
+/// [`EmitStrategy::StructDirect`] this emitter panics at codegen time
+/// (unreachable assertion preventing silent codegen drift; W3 / W2.B
+/// extend the per-shape struct-direct path before activating
+/// StructDirect for any grammar that exercises this shape).
 pub fn emit_parse_pratt(
+    strategy: &EmitStrategy,
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
+    match strategy {
+        EmitStrategy::TapeDirect => {}
+        EmitStrategy::StructDirect { .. } => {
+            panic!(
+                "AZ-I.W2.RE: Pratt shape does not support StructDirect; \
+                 W3 / W2.B expected to extend before activating this \
+                 strategy for the calling grammar"
+            );
+        }
+    }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("pratt", grammar_suffix, rule_name);
     let variant_idx = (rule.id & 0xFF) as u8;

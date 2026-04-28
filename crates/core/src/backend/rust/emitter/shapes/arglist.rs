@@ -51,6 +51,7 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::super::strategy::EmitStrategy;
 use super::dispatcher::{
     dispatcher_fn_ident, emit_ref_call_tape, emit_ref_call_visitor, shape_fn_ident,
     visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
@@ -59,11 +60,32 @@ use super::root_rule_name;
 
 /// Emit `pub fn parse_arglist_<grammar>_<rule>(input, p, state,
 /// builder) -> Result<TapeOffset, DtaError>`.
+///
+/// # AZ-I.W2.RE — strategy gate
+///
+/// `strategy` is the codegen-time substrate selector resolved by
+/// [`EmitStrategy::for_grammar`] in `shapes/mod.rs`. ArgList-shape
+/// rules are tape-only in W2; JSON does not exercise this shape. On
+/// [`EmitStrategy::StructDirect`] this emitter panics at codegen time
+/// (unreachable assertion preventing silent codegen drift; W3 / W2.B
+/// extend the per-shape struct-direct path before activating
+/// StructDirect for any grammar that exercises this shape).
 pub fn emit_parse_arglist(
+    strategy: &EmitStrategy,
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
+    match strategy {
+        EmitStrategy::TapeDirect => {}
+        EmitStrategy::StructDirect { .. } => {
+            panic!(
+                "AZ-I.W2.RE: ArgList shape does not support StructDirect; \
+                 W3 / W2.B expected to extend before activating this \
+                 strategy for the calling grammar"
+            );
+        }
+    }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("arglist", grammar_suffix, rule_name);
     let variant_idx = (rule.id & 0xFF) as u8;
@@ -520,11 +542,27 @@ fn emit_tape_position_core(
 
 /// Emit `pub fn parse_arglist_visitor_<grammar>_<rule><V>(input, p,
 /// state, visitor) -> Result<(), ParseErr>`.
+///
+/// # AZ-I.W2.RE — strategy gate
+///
+/// Mirrors [`emit_parse_arglist`]. ArgList-shape rules are tape-only
+/// in W2; codegen-time panic on [`EmitStrategy::StructDirect`].
 pub fn emit_parse_arglist_visitor(
+    strategy: &EmitStrategy,
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
+    match strategy {
+        EmitStrategy::TapeDirect => {}
+        EmitStrategy::StructDirect { .. } => {
+            panic!(
+                "AZ-I.W2.RE: ArgList shape does not support StructDirect; \
+                 W3 / W2.B expected to extend before activating this \
+                 strategy for the calling grammar"
+            );
+        }
+    }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("arglist", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);

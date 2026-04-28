@@ -107,6 +107,18 @@ pub(super) use structural_branch::emit_seq_branch_structural_tape;
 /// `variant_idx` is inherited from the owning rule; every compound
 /// push stamps it onto the outer record so downstream view accessors
 /// see the owning rule's discriminant.
+///
+/// # AZ-I.W2.RE — strategy contract
+///
+/// Inline emission is shape-agnostic structural infrastructure: each
+/// inline node emits Refs / scans / byte-matches via the dispatcher's
+/// `emit_ref_call_tape` (which resolves to the strategy-aware
+/// generated `parse_<shape>_<grammar>_<rule>` symbol at codegen time)
+/// or via inline byte/regex emission. Strategy is therefore
+/// committed at the per-shape entry boundary upstream of this fn —
+/// reaching here implies the caller's per-shape entry resolved the
+/// strategy and emitted its TapeDirect body. No strategy parameter
+/// is needed in the inline interface.
 pub(super) fn emit_inline_position_tape(
     node: &IrNode,
     variant_idx: u8,
@@ -160,6 +172,12 @@ pub(super) fn emit_inline_position_tape(
 /// pushes. Negate / Minus produce guard-only emission; Alt / Regex /
 /// TokenDispatch emit matching dispatch that calls through to
 /// visitor-path Ref calls.
+///
+/// # AZ-I.W2.RE — strategy contract
+///
+/// Mirrors [`emit_inline_position_tape`]: strategy is committed at
+/// the per-shape entry boundary upstream of this fn; inline emission
+/// itself is shape-agnostic structural infrastructure.
 pub(super) fn emit_inline_position_visitor(
     node: &IrNode,
     support_mod: &proc_macro2::Ident,

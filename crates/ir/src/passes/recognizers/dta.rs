@@ -1612,14 +1612,3 @@ impl DtaProfile {
     }
 }
 
-// Unused-but-reserved for AV.4 bridging: the stage-B PSI driver will
-// call into the lifter to pick scanner kernels per leaf state. Imports
-// kept so the IR + tape crates link against a single source of truth.
-#[allow(dead_code)]
-fn _push_fp_sentinel(_fp: &PushFingerprint) {}
-
-#[allow(dead_code)]
-fn _type_desc_sentinel(_td: &TypeDesc) {}
-
-#[allow(dead_code)]
-fn _string_id_sentinel(_sid: StringId) {}

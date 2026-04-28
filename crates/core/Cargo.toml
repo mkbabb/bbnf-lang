@@ -35,6 +35,13 @@ dhat-heap = ["dep:dhat"]
 # further down in this file). `.github/workflows/bench-iai.yml` invokes
 # `cargo bench --bench json_callgrind --features iai` on Linux CI only.
 iai = []
+# AZ-I.W2-act.W0 hygiene cut H5: WASM/TS competitor benches (json_ts,
+# json_wasm, css_ts, css_wasm) are gated behind `wasm-bench` so routine
+# nextest discovery + `cargo bench-json` / `cargo bench-css` skip the
+# wasmtime + tree-sitter + WASM payload compile. Activate with
+# `cargo bench --features wasm-bench --bench <name>` for the cross-runtime
+# competitor sweep.
+wasm-bench = []
 
 [dev-dependencies]
 quote = "1"
@@ -133,21 +140,25 @@ harness = false
 name = "json_ts"
 path = "benches/json/ts.rs"
 harness = false
+required-features = ["wasm-bench"]
 
 [[bench]]
 name = "json_wasm"
 path = "benches/json/wasm.rs"
 harness = false
+required-features = ["wasm-bench"]
 
 [[bench]]
 name = "css_ts"
 path = "benches/css/ts.rs"
 harness = false
+required-features = ["wasm-bench"]
 
 [[bench]]
 name = "css_wasm"
 path = "benches/css/wasm.rs"
 harness = false
+required-features = ["wasm-bench"]
 
 [[bench]]
 name = "compile_pipeline"

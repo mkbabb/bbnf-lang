@@ -365,15 +365,6 @@ fn full_bitmap() -> [u64; 4] {
     [u64::MAX; 4]
 }
 
-#[inline]
-#[allow(dead_code)]
-fn bitmaps_disjoint(a: &StructuralBitmap, b: &StructuralBitmap) -> bool {
-    (a[0] & b[0]) == 0
-        && (a[1] & b[1]) == 0
-        && (a[2] & b[2]) == 0
-        && (a[3] & b[3]) == 0
-}
-
 /// Helper construction — used by tests and by the walker-side
 /// runtime guard when consuming the mined alphabets.
 ///

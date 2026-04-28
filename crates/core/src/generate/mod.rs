@@ -17,10 +17,9 @@
 
 pub mod serialize;
 pub mod regex;
-pub use crate::backend::rust as codegen;
-pub use codegen::ir_enums;
-pub use codegen::ir_types;
-pub use codegen::ir_types::ParserAttributes;
+pub use crate::backend::rust::ir_enums;
+pub use crate::backend::rust::ir_types;
+pub use crate::backend::rust::ir_types::ParserAttributes;
 
 use quote::quote;
 

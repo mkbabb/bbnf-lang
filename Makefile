@@ -21,7 +21,7 @@
         bench bench-json bench-css bench-bbnf bench-sheets bench-compile \
         profile profile-json profile-css \
         expand expand-bootstrap expand-derive asm \
-        regen regen-check \
+        regen regen-check iter-grammar \
         ay-expand-json ay-expand-named-type ay-asm-close-compound \
         ay-test-value-api ay-test-wire-contract ay-test-named-type \
         ay-samply-json-twitter ay-samply-json-twitter-lookup \
@@ -208,6 +208,23 @@ regen:
 ## `scripts/check-bootstrap-clean.sh`.
 regen-check:
 	cargo xtask regen --check
+
+## AZ-I.W2-act.W0 hygiene cut H4 — single-grammar regen + check + test
+## chain. Compresses the iter-loop for emitter-touching changes:
+##   make iter-grammar GRAMMAR=json
+##   make iter-grammar GRAMMAR=css_l4
+##   make iter-grammar GRAMMAR=google_sheets
+## Runs in sequence:
+##   1. cargo xtask regen --grammar <ident>     (per-grammar regen)
+##   2. cargo iter-check                         (workspace compile-gate)
+##   3. cargo nextest -E 'test(/<ident>/)'       (filter-set on grammar name)
+## Reclaim ≈ 10 s + 2 cmd-roundtrips per grammar iter under fan-out.
+GRAMMAR ?=
+iter-grammar:
+	@if [ -z "$(GRAMMAR)" ]; then echo "usage: make iter-grammar GRAMMAR=<ident>" >&2; exit 2; fi
+	cargo xtask regen --grammar $(GRAMMAR)
+	cargo iter-check
+	cargo nextest run --cargo-profile ax-iter -p bbnf -E 'test(/$(GRAMMAR)/)'
 
 # ─── Deploy / Watch ──────────────────────────────────────────────────────────
 

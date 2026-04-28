@@ -82,9 +82,8 @@
 //! branching.
 //!
 //! The public entry point is [`solve_grammar_components`], replacing
-//! the pre-AF.3 `solve_strategy_and_materialization` name. The old
-//! name is kept as a `#[deprecated]` alias for one migration
-//! window; internal callers already consume the new name.
+//! the pre-AF.3 `solve_strategy_and_materialization` name; the
+//! migration window has closed and the old name is gone.
 //!
 //! # Cross-rule constraint installation
 //!

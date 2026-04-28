@@ -190,29 +190,10 @@ fn walk_tape<'a, S: GrammarSink<'a>>(parsed: &'a Parsed<'a, BbnfBootstrap>, sink
     // (no `?w`) the Seq wrapper is absent and iteration children
     // are grammar_items directly — `peel_iter_wrapper` handles both
     // shapes uniformly.
-    //
-    // TODO-postAW: collapse these structural-invisible Seqs at the
-    // lifter (or mark them transparent) so consumers don't re-peel.
-    // See the `iter_rep_children` helper in `crate::lower::tape_walk`
-    // for the existing consumer-side mirror.
-    use crate::runtime::tape::TapeKind;
     for item in root.children() {
-        // An explicit `TapeKind::Repeat` wrapper — legacy fn-per-rule
-        // emission retained this shape in a few places. Under the DTA
-        // `frame_to_tape_kind(Repeat) == Rule`, so this branch is
-        // effectively dead, but we keep it so the walker tolerates
-        // shape shifts after regen.
-        if item.kind() == TapeKind::Repeat {
-            for grandchild in item.children() {
-                let peeled = peel_iter_wrapper(grandchild);
-                let inner = peel_wrappers(peeled);
-                absorb_item(inner, sink);
-            }
-        } else {
-            let peeled = peel_iter_wrapper(item);
-            let inner = peel_wrappers(peeled);
-            absorb_item(inner, sink);
-        }
+        let peeled = peel_iter_wrapper(item);
+        let inner = peel_wrappers(peeled);
+        absorb_item(inner, sink);
     }
 }
 

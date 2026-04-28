@@ -1,13 +1,24 @@
 # AZ-I — Progress Log
 
-**Status**: in progress — W0 dispatched 2026-04-27
+**Status**: in progress — W2-act.close prelude landed 2026-04-28
 
-**Dates**: 2026-04-23 (planned), 2026-04-27 (opened)
+**Dates**: 2026-04-23 (planned), 2026-04-27 (opened), 2026-04-28
+(W2-act.recovery + hygiene-prelude landed)
 
 Dated execution log for tranche AZ-I. AZ-I opens against the
 post-B7 substrate (master HEAD `aed24de0`); AY-II superseded by
 AY-III, AY-III deferred (durable gates absorbed into AZ-I.W4 +
 AZ-II.W2 per `REMAINING-TRAJECTORY.md`).
+
+The post-W2-act.recovery refined trajectory at
+`~/.claude/plans/cozy-forging-chipmunk.md` (synthesised from 6
+audit + 2 plan agents) collapses the remaining 17 declared waves
+to 5: Wave 0 (Hygiene, orchestrator-direct) → Wave 1 (W2-act.close
+A.fix → B1/B2/B3 → C) → Wave 2a (AZ-II.cutover) // Wave 2b
+(BB.scaffold) → Wave 3 (BA) → Wave 4 (BB.close). Critical-path
+wall ≈ 17-18 h under fan-out (vs 50-70 h declared). Each wave's
+hard gate is runtime-verifiable; no successor letter follows
+W2-act.
 
 ## 2026-04-27 — W0 dispatch
 
@@ -1012,3 +1023,42 @@ the recovery synthesis flagged):
 
 These migrations are outside W2-act.recovery scope per the file
 allow-list. The W2-act.C close ceremony picks them up.
+
+## 2026-04-28 — W2-act.close prelude: hygiene cuts H1-H6
+
+Per the refined trajectory at `~/.claude/plans/cozy-forging-chipmunk.md`,
+Wave 0 hygiene lands as the orchestrator-direct prelude to W2-act.close.
+Six build/bench/test expedition cuts pay back across every subsequent
+wave; per `feedback_build-infra-first` they cannot be deferred without
+compounding agent-spin-up wall.
+
+| H | Mechanism | Reclaim |
+|---|---|---|
+| H1 | `[build] rustc-wrapper = "sccache"` in `.cargo/config.toml`; sccache 0.14.0 installed via Homebrew; default cache dir picks up `~/.cache/sccache` | 3-5 min cold per fan-out worktree |
+| H2 | `scripts/seed-worktree.sh` migrated from `ln -s target` to `cp -al target` (hardlink-clone) — each worktree owns its incremental cache; parallel cargo invocations no longer contend on the target-dir lock per `feedback_single-cargo-per-target` | 3-5 min cold + 15-20 GB disk per worktree |
+| H3 | `xtask` cargo alias compiles xtask under `--profile ax-iter` (CI passes `--release` explicitly via `cargo run -p xtask --release`) | 30-60 s per emitter change |
+| H4 | `make iter-grammar GRAMMAR=<ident>` chains `cargo xtask regen --grammar <ident>` + `cargo iter-check` + `cargo nextest run -E 'test(/<ident>/)'` | 10 s + 2 cmd-roundtrips per grammar iter |
+| H5 | `wasm-bench` feature gates the WASM/TS competitor benches (`json_ts`, `json_wasm`, `css_ts`, `css_wasm`) via `required-features` — routine nextest discovery skips wasmtime + tree-sitter compile | 1-2 s per workspace nextest |
+| H6 | Retired pre-existing dead surfaces (~70 LOC): `pub use simd_scan as scan` alias, `pub use codegen` re-export, sentinel hooks `_push_fp_sentinel` / `_type_desc_sentinel` / `_string_id_sentinel`, `bitmaps_disjoint`, rayon cfg-block consolidation in `psi/stream.rs`, host.rs dead Repeat branch, csp_strategy phantom `#[deprecated]` doc claim | architectural-clarity |
+
+**Files touched** (11):
+`.cargo/config.toml`, `Makefile`, `scripts/seed-worktree.sh`,
+`crates/core/Cargo.toml`, `crates/core/src/runtime/mod.rs`,
+`crates/core/src/generate/mod.rs`,
+`crates/ir/src/passes/recognizers/dta.rs`,
+`crates/ir/src/passes/recognizers/pattern_alphabet.rs`,
+`crates/tape/src/psi/stream.rs`,
+`crates/core/src/grammar/host.rs`,
+`crates/ir/src/passes/csp_strategy/mod.rs`.
+
+**Verification**:
+1. `cargo iter-check` — clean in 12.91 s with 8 pre-existing warnings
+   (avx2_scan codegen, unrelated to Wave 0 changes).
+2. `cargo xtask regen --check` — clean (9 grammars matched).
+3. `cargo nextest run --workspace --profile ax-iter --no-fail-fast` —
+   blocks on pre-existing `sheets_self_parity.rs` compile failure
+   (Gap 3 from W2-act.recovery scope-reveal, NOT introduced by Wave 0;
+   migration lands in Wave 1 B2). No new test-compile failures
+   attributable to Wave 0.
+
+**Wave 0 closes; Wave 1 (W2-act.close) opens.**

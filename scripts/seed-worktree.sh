@@ -46,23 +46,37 @@ if [[ -d "$ROOT/data" ]]; then
     done
 fi
 
-# `target/` symlink — share compiled artefacts across worktrees so
-# parallel waves don't each rebuild the full workspace from scratch.
-# AX.W0a.2.d exposed the failure mode: the orchestrator started adding
-# `target/` symlinks manually per-wave because forgetting cost an hour
-# per agent spin-up. Own it here instead of each sub-agent reinventing
-# it. Caller can pass --no-target to opt out when an isolated target
-# is explicitly desired (e.g. investigating rebuild-cache bugs).
+# `target/` hardlink-clone — share compiled artefacts across worktrees
+# while giving each worktree its own incremental-cache so parallel
+# `cargo` invocations across worktrees do not contend on the
+# target-directory lock (feedback: single-cargo-per-target).
+#
+# AZ-I.W2-act.W0 hygiene cut H2: `cp -al` hardlinks every regular
+# file in `$ROOT/target` into `$WORKTREE_PATH/target`. Hardlinks are
+# inode references — disk-zero cost; new writes (incremental builds)
+# get COW semantics so worktree-local edits do not propagate back to
+# the main checkout. Reclaim ≈ 3-5 min cold + 15-20 GB disk per
+# fan-out worktree vs full rebuild from scratch.
+#
+# Pre-AZ-I.W2-act.W0: a single symlink shared the entire `target/`
+# tree across worktrees, which silently serialised parallel cargo
+# invocations through the target-dir lock. Migrated under the
+# no-backward-compat / no-workarounds discipline.
+#
+# Caller passes --no-target to opt out (e.g. investigating
+# rebuild-cache bugs). Idempotent: a pre-existing `target/` is left
+# alone; legacy symlinks block re-seed and require manual removal.
 if [[ "$LINK_TARGET" == "1" ]]; then
     if [[ ! -e "$WORKTREE_PATH/target" ]]; then
-        ln -s "$ROOT/target" "$WORKTREE_PATH/target"
-    elif [[ -L "$WORKTREE_PATH/target" ]]; then
-        existing="$(readlink "$WORKTREE_PATH/target")"
-        if [[ "$existing" != "$ROOT/target" ]]; then
-            echo "warn: $WORKTREE_PATH/target points at $existing, not $ROOT/target" >&2
+        if [[ -d "$ROOT/target" ]]; then
+            cp -al "$ROOT/target" "$WORKTREE_PATH/target"
+            echo "hardlink-cloned $ROOT/target → $WORKTREE_PATH/target" >&2
         fi
+    elif [[ -L "$WORKTREE_PATH/target" ]]; then
+        echo "error: $WORKTREE_PATH/target is a legacy symlink; remove it then re-run seed" >&2
+        exit 1
     else
-        echo "warn: $WORKTREE_PATH/target exists as a real directory; skipping symlink" >&2
+        echo "info: $WORKTREE_PATH/target already exists; skipping (idempotent)" >&2
     fi
 fi
 

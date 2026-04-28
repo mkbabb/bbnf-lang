@@ -8,9 +8,7 @@ use crate::columns::Columns;
 use crate::profile::GrammarProfile;
 
 #[cfg(feature = "rayon")]
-use rayon::iter::ParallelIterator;
-#[cfg(feature = "rayon")]
-use rayon::slice::ParallelSlice;
+use rayon::{iter::ParallelIterator, slice::ParallelSlice};
 
 use super::column_cells::{write_decoded, ColumnCapacities, ColumnCells};
 use super::job::{PayloadJob, PayloadKind};

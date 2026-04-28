@@ -26,6 +26,21 @@
 #     invocations.
 # ─────────────────────────────────────────────────────────────────────────────
 
+# ── Build wrapper (sccache) ──────────────────────────────────────────────────
+# AZ-I.W2-act.W0 hygiene cut H1: sccache is the workspace-wide rustc wrapper.
+# Hardlinked cache at ~/.cache/sccache (sccache default) is shared across
+# worktrees — cold compile reclaim ≈ 3-5 min per fan-out worktree under the
+# parallel-agent dispatch model.
+#
+# Required: `brew install sccache` (macOS) / `cargo install sccache` (any
+# host). The workspace mandates the wrapper — there is no fallback path
+# (feedback: no-workarounds). If sccache is missing on a dev host, install
+# it before any cargo invocation. Cache directory autodetection picks up
+# `$XDG_CACHE_HOME/sccache` or `~/.cache/sccache` without further config.
+
+[build]
+rustc-wrapper = "sccache"
+
 # ── Path patches ─────────────────────────────────────────────────────────────
 # Sibling-repo path resolution for bbnf-lang. Mirror these in any repo that
 # depends on path-patched members (parse-that, pprint).
@@ -100,7 +115,14 @@ codegen-units   = 1
 # Workspace tools. Keeps `cargo xtask <subcommand>` as the canonical
 # checked-in entrypoint rather than depending on a host-local cargo-xtask
 # binary.
-xtask                 = "run -p xtask --release --"
+#
+# AZ-I.W2-act.W0 hygiene cut H3: default `xtask` alias compiles xtask under
+# `--profile ax-iter`, not `--release`. Cold-compile reclaim ≈ 30-60 s per
+# emitter change under the regen-iterate-test loop. CI invocations that
+# need release-grade xtask binaries pass `--release` explicitly via
+# `cargo run -p xtask --release -- <subcommand>`; no separate alias —
+# routine iteration is the canonical surface.
+xtask                 = "run -p xtask --profile ax-iter --"
 
 # Iteration: cargo check surfaces (ax-iter profile). Each covers one bounded
 # working-set; fleet orchestrators use `iter-check-full` when they need the

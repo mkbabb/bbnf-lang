@@ -11,8 +11,6 @@ use std::collections::HashMap;
 
 use bbnf_ir::IrNode;
 
-#[allow(unused_imports)]
-use crate::runtime::RuntimeView;
 use crate::runtime::bbnf::BbnfView;
 
 use super::super::LowerCtx;

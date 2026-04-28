@@ -44,7 +44,7 @@ pub(crate) fn build_rule_meta(
     let recover = ctx.recovers.and_then(|r| r.get(name)).map(|sync_expr| {
         debug_assert!(!ctx.recovery_mode, "nested recovery_mode is a bug");
         ctx.recovery_mode = true;
-        // `sync_expr` is a borrowed `&NodeView`; NodeView is `Copy`,
+        // `sync_expr` is a borrowed `&BbnfView`; BbnfView is `Copy`,
         // so deref to pass by value.
         let node = lower_rhs(*sync_expr, ctx);
         ctx.recovery_mode = false;

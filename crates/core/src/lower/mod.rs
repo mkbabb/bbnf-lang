@@ -1,13 +1,15 @@
-//! Lowering pass: BbnfBootstrapNodeView → GrammarIR.
+//! Lowering pass: BbnfView → GrammarIR.
 //!
-//! Converts the tape-first bootstrap parse tree directly into the
-//! canonical `GrammarIR` consumed by all backends. No intermediate
-//! Expression AST.
+//! Converts the struct-direct BBNF parse tree (rooted at a
+//! [`BbnfDocument`]) directly into the canonical `GrammarIR`
+//! consumed by all backends. No intermediate Expression AST.
 //!
-//! Tranche AC.2: replaced `&'a BbnfBootstrapEnum<'a>` pattern
-//! matching with cursor-backed view walking. Every CST descent goes
-//! through `BbnfBootstrapNodeView::rule_kind()` + typed `as_*`
-//! accessors; text extraction goes through `node.span_text()` etc.
+//! AZ-II.cutover.D1 — every CST descent goes through
+//! [`BbnfView::compound_kind`] / [`BbnfView::span_text`] /
+//! [`BbnfView::children`] / [`BbnfView::child`]. Pre-cutover Tape
+//! cursor APIs (`rule_kind()`, positional `child(i)`,
+//! `variant_idx()`) are gone — every reference re-targets at the
+//! struct-direct accessor surface.
 
 mod expression;
 mod fn_table;
@@ -20,8 +22,9 @@ use std::collections::{HashMap, HashSet};
 
 use bbnf_ir::{GrammarIR, IrRule, RuleId};
 
-use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
 use crate::graph::SccResult;
+use crate::runtime::RuntimeView;
+use crate::runtime::bbnf::{BbnfCompoundKind, BbnfView};
 use crate::types::AST;
 
 use expression::lower_rhs;
@@ -37,7 +40,7 @@ use string_interner::StringInterner;
 /// Closures never reach the IR.
 pub(crate) struct ClosureDef<'a> {
     pub(crate) params: Vec<&'a str>,
-    pub(crate) body: BbnfBootstrapNodeView<'a>,
+    pub(crate) body: BbnfView<'a, 'a>,
 }
 
 /// Context for the lowering pass.
@@ -57,7 +60,7 @@ pub(crate) struct LowerCtx<'a> {
     /// this is what makes grammar function applications work without a
     /// parallel substitution walker. Pushed by `lower_term_dispatch` when it
     /// expands a grammar call, popped after the body is lowered.
-    pub(crate) env: Vec<HashMap<&'a str, BbnfBootstrapNodeView<'a>>>,
+    pub(crate) env: Vec<HashMap<&'a str, BbnfView<'a, 'a>>>,
 
     /// Value-expression beta-reduction environment stack. Mirrors `env` but
     /// for the value-expression sub-language: each frame maps a value-closure
@@ -73,7 +76,7 @@ pub(crate) struct LowerCtx<'a> {
     pub(crate) cyclic_rules: &'a HashSet<&'a str>,
 
     /// Directives.
-    pub(crate) recovers: Option<&'a HashMap<String, BbnfBootstrapNodeView<'a>>>,
+    pub(crate) recovers: Option<&'a HashMap<String, BbnfView<'a, 'a>>>,
     pub(crate) pretties: Option<&'a HashMap<String, Vec<String>>>,
     pub(crate) token_rules: Option<&'a HashSet<String>>,
     pub(crate) debug_rules: Option<&'a HashSet<String>>,
@@ -87,7 +90,7 @@ pub(crate) struct LowerCtx<'a> {
 
 /// All directive data extracted from a parsed grammar.
 pub struct DirectiveSet<'a> {
-    pub recovers: Option<&'a HashMap<String, BbnfBootstrapNodeView<'a>>>,
+    pub recovers: Option<&'a HashMap<String, BbnfView<'a, 'a>>>,
     pub pretties: Option<&'a HashMap<String, Vec<String>>>,
     pub ws_pattern: Option<&'a str>,
     pub token_rules: Option<&'a HashSet<String>>,
@@ -115,7 +118,7 @@ pub fn lower_to_ir<'a>(
     ast: &'a AST<'a>,
     scc_result: &'a SccResult<'a>,
     directives: &'a DirectiveSet<'a>,
-    closure_defs: &'a [(&'a str, BbnfBootstrapNodeView<'a>)],
+    closure_defs: &'a [(&'a str, BbnfView<'a, 'a>)],
 ) -> GrammarIR {
     // Pre-register closure definitions.
     let mut closures = HashMap::new();
@@ -244,10 +247,23 @@ pub fn lower_to_ir<'a>(
     }
 }
 
-/// Extract a ClosureDef from a bootstrap node if it's a closure.
-fn extract_closure_def<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<ClosureDef<'a>> {
-    match node.rule_kind() {
-        BbnfBootstrapRuleKind::closure => {
+/// Whether a view's byte-span has zero length — the sentinel for an
+/// absent-optional slot in a positional compound layout.
+#[inline]
+fn is_empty_span(view: BbnfView<'_, '_>) -> bool {
+    match view.byte_span() {
+        Some((lo, hi)) => lo == hi,
+        // Numeric / boolean / unit leaves carry no source span; they
+        // are always semantically present (the parse value IS the
+        // signal), so they're never "empty placeholders".
+        None => false,
+    }
+}
+
+/// Extract a ClosureDef from a node if it's a closure.
+fn extract_closure_def<'a>(node: BbnfView<'a, 'a>) -> Option<ClosureDef<'a>> {
+    match node.compound_kind()? {
+        BbnfCompoundKind::Closure => {
             // closure = "|", first_param, (",", param)*, "|", body
             // child layout: (0: "|", 1: first_param, 2: rest_list, 3: "|", 4: body)
             let first_param = node.child(1)?;
@@ -275,7 +291,7 @@ fn extract_closure_def<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<ClosureDef
             })
         }
         // Unwrap alternation/concatenation wrappers that might wrap a closure.
-        BbnfBootstrapRuleKind::alternation | BbnfBootstrapRuleKind::call_arg => {
+        BbnfCompoundKind::Alternation | BbnfCompoundKind::CallArg => {
             let mut iter = node.children();
             let first = iter.next()?;
             if iter.next().is_none() {
@@ -287,7 +303,7 @@ fn extract_closure_def<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<ClosureDef
                 None
             }
         }
-        BbnfBootstrapRuleKind::concatenation => {
+        BbnfCompoundKind::Concatenation => {
             let mut iter = node.children();
             let first = iter.next()?;
             if iter.next().is_none() {
@@ -297,7 +313,7 @@ fn extract_closure_def<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<ClosureDef
                 None
             }
         }
-        BbnfBootstrapRuleKind::binary_factor => {
+        BbnfCompoundKind::BinaryFactor => {
             // binary_factor = (first, (op, operand)*) — unwrap when
             // the rest list is empty.
             let first = node.child(0)?;
@@ -309,27 +325,27 @@ fn extract_closure_def<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<ClosureDef
                 None
             }
         }
-        BbnfBootstrapRuleKind::mapped_factor => {
+        BbnfCompoundKind::MappedFactor => {
             // mapped_factor = (inner, mapping?) — unwrap when the
             // mapping slot is absent.
             let inner = node.child(0)?;
             let mapping = node.child(1);
-            if mapping.is_none() || mapping.map(|m| m.span().1 == m.span().0).unwrap_or(false) {
+            if mapping.is_none() || mapping.map(|m| is_empty_span(m)).unwrap_or(false) {
                 extract_closure_def(inner)
             } else {
                 None
             }
         }
-        BbnfBootstrapRuleKind::factor => {
+        BbnfCompoundKind::Factor => {
             // factor = (comment_before?, term, modifier?, comment_after?)
             // — unwrap when all three optional slots are absent.
             let term = node.child(1)?;
             let modifier = node.child(2);
             let comment_before = node.child(0);
             let comment_after = node.child(3);
-            let all_bare = comment_before.map(|c| c.span().1 == c.span().0).unwrap_or(true)
-                && modifier.map(|m| m.span().1 == m.span().0).unwrap_or(true)
-                && comment_after.map(|c| c.span().1 == c.span().0).unwrap_or(true);
+            let all_bare = comment_before.map(|c| is_empty_span(c)).unwrap_or(true)
+                && modifier.map(|c| is_empty_span(c)).unwrap_or(true)
+                && comment_after.map(|c| is_empty_span(c)).unwrap_or(true);
             if all_bare {
                 extract_closure_def(term)
             } else {

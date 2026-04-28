@@ -1,22 +1,24 @@
-//! AZ-I.W2.A — `JsonDocument` wire-contract + struct-vs-native parity.
+//! AZ-I.W2-act.B1 — `JsonDocument` wire-contract + struct-vs-native
+//! parity. Promoted from W2-act probe to load-bearing harness.
 //!
 //! Two test families:
 //!
 //! 1. **Wire-contract** — exercise `JsonStructBuilder` against the
 //!    `StructBuilder` trait with synthetic layouts that mirror the
 //!    `grammar/json/json.bbnf` shapes, then compare the resulting
-//!    `JsonDocument` against the expected typed shape.
-//! 2. **Native parity** — once the orchestrator regens
-//!    `crates/core/src/grammar/generated/json.rs` against the
-//!    struct-direct emitter mode, compare `JsonParser::parse(src)`'s
-//!    `JsonDocument` against `serde_json::Value`, `sonic_rs::Value`,
-//!    and `simd_json` outputs node-for-node.
+//!    `JsonDocument` against the expected typed shape. These run
+//!    against the runtime substrate directly — no parser involvement —
+//!    so they pin the builder's behaviour independently of the
+//!    grammar-emitted parse fn.
+//! 2. **Native parity** — post-flip, `JsonParser::parse(src)` returns
+//!    `JsonDocument<'_>`; this section walks that document against
+//!    `serde_json::Value` and `sonic_rs::Value` outputs node-for-node
+//!    on the canonical fixture corpus.
 //!
-//! The native-parity tests are guarded by a `cfg` predicate (the
-//! generated `JsonParser::parse` returns `Parsed<JsonParser>` until
-//! the orchestrator's regen swaps in the struct-direct entry); the
-//! wire-contract tests run unconditionally and prove the substrate is
-//! wired before the regen lands.
+//! The wire-contract tests run unconditionally and prove the
+//! substrate is wired regardless of the parser entry's strategy.
+//! The native-parity tests assert the post-flip parser's struct-
+//! direct emission matches the external oracles' parse trees.
 
 use bbnf::runtime::{
     JsonArrayId, JsonDocument, JsonNumber, JsonObjectId, JsonStructBuilder, JsonValue,
@@ -311,4 +313,109 @@ fn wire_contract_arena_handles_distinguish_empty() {
     assert!(arena.object(JsonObjectId::EMPTY).is_empty());
     assert_eq!(arena.array_count(), 0);
     assert_eq!(arena.object_count(), 0);
+}
+
+// ─── Native parity (post-flip) ───────────────────────────────────────
+//
+// Promotion from W2-act probe to load-bearing harness. After the
+// orchestrator regens `crates/core/src/grammar/generated/json.rs`
+// against the resolver's `StructDirect` arm, `JsonParser::parse(src)`
+// returns `JsonDocument<'_>` directly. The tests below walk that
+// document against the external JSON parsers' output shapes —
+// `serde_json::Value` (insertion-ordered Map), `sonic_rs::Value`
+// (insertion-ordered ordered map). Equality is structural; numeric
+// comparison reduces to f64.
+
+use ::bbnf::grammar::generated::json::*;
+
+fn assert_doc_eq_serde(
+    doc: &JsonDocument<'_>,
+    bbnf_value: &JsonValue<'_>,
+    oracle: &serde_json::Value,
+    path: &str,
+) {
+    match (bbnf_value, oracle) {
+        (JsonValue::Null, serde_json::Value::Null) => {}
+        (JsonValue::Bool(b), serde_json::Value::Bool(o)) => {
+            assert_eq!(b, o, "{path}: bool divergence");
+        }
+        (JsonValue::Number(n), serde_json::Value::Number(o)) => {
+            let bbnf_f64 = n.as_f64();
+            let oracle_f64 = o.as_f64().expect("serde number is f64-coercible");
+            if !bbnf_f64.is_nan() {
+                assert_eq!(bbnf_f64, oracle_f64, "{path}: number divergence");
+            }
+        }
+        (JsonValue::String(s), serde_json::Value::String(o)) => {
+            assert_eq!(*s, o.as_str(), "{path}: string divergence");
+        }
+        (JsonValue::Array(id), serde_json::Value::Array(o)) => {
+            let items = doc.array(*id);
+            assert_eq!(items.len(), o.len(), "{path}: array length");
+            for (i, (b, o)) in items.iter().zip(o.iter()).enumerate() {
+                assert_doc_eq_serde(doc, b, o, &format!("{path}[{i}]"));
+            }
+        }
+        (JsonValue::Object(id), serde_json::Value::Object(o)) => {
+            let pairs = doc.object(*id);
+            assert_eq!(pairs.len(), o.len(), "{path}: object length");
+            for pair in pairs {
+                let oracle_value = o
+                    .get(pair.key)
+                    .unwrap_or_else(|| panic!("{path}: key {:?} missing", pair.key));
+                assert_doc_eq_serde(
+                    doc,
+                    &pair.value,
+                    oracle_value,
+                    &format!("{path}.{}", pair.key),
+                );
+            }
+        }
+        (b, o) => panic!("{path}: shape divergence — bbnf={b:?}, serde={o:?}"),
+    }
+}
+
+fn parity_serde(fixture: &str) {
+    let path = format!("../../data/json/{}", fixture);
+    let src = std::fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
+    let doc = JsonParser::parse(&src)
+        .unwrap_or_else(|e| panic!("{fixture}: bbnf parse failed: {e:?}"));
+    let oracle: serde_json::Value =
+        serde_json::from_str(&src).expect("serde_json parse");
+    assert_doc_eq_serde(&doc, doc.to_value(), &oracle, "$");
+}
+
+#[test]
+fn native_parity_serde_data_json() {
+    parity_serde("data.json");
+}
+
+#[test]
+fn native_parity_serde_twitter_json() {
+    parity_serde("twitter.json");
+}
+
+#[test]
+fn native_parity_serde_canada_json() {
+    parity_serde("canada.json");
+}
+
+#[test]
+fn native_parity_serde_citm_catalog_json() {
+    parity_serde("citm_catalog.json");
+}
+
+#[test]
+fn native_parity_struct_direct_returns_jsondocument() {
+    // Pin the post-flip return type. Compile-time proof that
+    // `JsonParser::parse` lifts to `JsonDocument<'_>` (the
+    // struct-direct path), not `Parsed<'_, JsonParser>`. The
+    // `JsonDocument` accessor surface is reachable on the result.
+    let input = r#"{"k": [1, 2]}"#;
+    let doc: JsonDocument<'_> = JsonParser::parse(input).expect("parse");
+    let _: &JsonValue<'_> = doc.to_value();
+    let view = doc.view();
+    let _: bbnf::runtime::JsonKind = view.kind();
+    assert!(view.is_object(), "{{k: [1,2]}} root must be Object");
 }

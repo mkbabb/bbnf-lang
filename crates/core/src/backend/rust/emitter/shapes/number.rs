@@ -70,8 +70,7 @@ fn emit_parse_number_tape(
     variant_idx: u8,
 ) -> TokenStream {
     quote! {
-        /// AW-V.W3.2 — per-grammar Number-shape parse function
-        /// (tape substrate).
+        /// AW-V.W3.2 — per-grammar Number-shape parse function.
         ///
         /// Mirrors `json_prototype::number::parse_number_body`.
         /// `first_byte` is the byte the dispatcher already matched;

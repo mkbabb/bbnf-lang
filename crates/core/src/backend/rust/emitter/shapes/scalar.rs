@@ -70,7 +70,7 @@ pub fn emit_parse_scalar(
             match strategy {
                 EmitStrategy::TapeDirect => quote! {
                     /// AW-V.W3.2 — per-grammar Scalar-shape parse function
-                    /// (single-literal body, tape substrate).
+                    /// (single-literal body).
                     #[inline(always)]
                     #[allow(non_snake_case, clippy::too_many_arguments)]
                     pub fn #fn_ident(

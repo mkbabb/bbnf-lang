@@ -61,8 +61,7 @@ pub fn emit_parse_string(
 
     match strategy {
         EmitStrategy::TapeDirect => quote! {
-            /// AW-V.W3.2 — per-grammar String-shape parse function
-            /// (tape substrate).
+            /// AW-V.W3.2 — per-grammar String-shape parse function.
             ///
             /// Mirrors `json_prototype::string::parse_string_body`.
             /// `"` must NOT be consumed by the caller — this function

@@ -357,10 +357,64 @@ Research: `docs/tranches/AZ-I/RESEARCH.md`.
 | Wave | Status | Headline |
 |---|---|---|
 | W0 | closed (2026-04-27) | Research + classifier-unification + audit baseline |
-| W1 | in progress (2026-04-27) | `StructRegistry` + `project_types` closure |
-| W2 | planned | Direct-to-struct — JSON + Sheets |
-| W3 | planned | Direct-to-struct — CSS L4 aggregate |
-| W4 | planned | FINAL — three-grammar slice at AU parity |
+| W1 | closed (2026-04-27) | `StructRegistry` + `project_types` closure |
+| W2 | closed substrate-only (2026-04-28) | 9 per-shape struct-direct emitters + EmitStrategy + JSON runtime substrate |
+| W2-act | in progress (2026-04-28) | GESTALT-ACTIVATE — JSON + Sheets + CSS L4 + close ceremony |
+
+## W2-act sub-wave log
+
+### W2-act.A — substrate hoist + JsonDocument accessor + dead-substrate sweep (2026-04-28, in progress)
+
+Sequential prelude blocking B1/B2/B3. Cap 90 min.
+
+- `EmitStrategy` hoisted from `crates/core/src/backend/rust/emitter/strategy.rs` to `crates/ir/src/registry/strategy.rs`
+  per `audit/AUDIT-6-ARCHITECTURE.md` §4 + §8.1. Variant payload generalised to `SubstrateBinding { rust, ts, wasm }`;
+  the `rust` field is populated for active struct-direct grammars, `ts` / `wasm` reserved for BA host bindings.
+  The resolver's catch-all `_ => TapeDirect` stays intact — W2-act.B1 owns the JsonParser arm flip.
+- 22 emitter consumer sites re-targeted to `bbnf_ir::registry::EmitStrategy`. Match arms that bound
+  `builder_path` directly now bind `rust` and reach `rust.builder_path` / `rust.document_path`.
+  `crates/core/src/backend/rust/emitter/mod.rs` re-exports the IR-level enum so existing
+  `bbnf::backend::rust::emitter::EmitStrategy` consumer paths continue to resolve.
+- `JsonDocument` moved to `crates/core/src/runtime/json/document.rs` per directory-module discipline.
+  W2-act.A accessor surface lands: `view() -> JsonView<'a, 'p>`, `to_value() -> &JsonValue<'p>`,
+  `get<T: JsonPathQuery>(path) -> Option<T>` — mirrors pre-W2-act `Parsed::view()` /
+  `Parsed::to_value()` / `Parsed::get::<T>(path)`. `JsonView` carries two lifetime parameters because
+  `JsonDocument<'p>` is invariant in `'p` (arena owns `Vec<JsonValue<'p>>`); collapsing to one
+  lifetime would force `'p = 'a` and break view composition. `JsonPathQuery` impls land for
+  `&str`, `f64`, `bool`, `JsonValue`. `JsonKind` enumerates the typed JSON shapes.
+- Dead-substrate sweep:
+  - `crates/core/src/backend/rust/emitter/shapes/registry_observer.rs` deleted (84 LOC).
+    The module's docstring self-documented as removable at AZ-I close; `record` had no production
+    reader, `drain` / `clear` / `RegistryReadEvent` were test-only consumers in
+    `tests/emitter_registry_read.rs` (also retired, 202 LOC).
+  - `audit_payload_coverage` decision: **path a** (wire into pipeline) per `audit/AUDIT-2` §6.B
+    recommendation, given the surface has 5 test consumers across two crates rather than the spec's
+    presumed 1; path-b inlining would duplicate ~600 LOC across 5 test files. Path a wires
+    `pipeline::compile::write_audit_coverage_artefact` into all four CompileTarget arms; every
+    pipeline-compile run emits `target/audit/<grammar>.json`. The W4 close ceremony's
+    coverage-gate input becomes a runtime-produced artefact.
+
+Hard gates verified:
+1. `bbnf_ir::registry::EmitStrategy` resolves; `rg 'pub.*enum EmitStrategy' crates/` returns one
+   hit at `crates/ir/src/registry/strategy.rs`.
+2. `JsonDocument::view()` / `to_value()` / `get::<T>(path)` exist; `rg 'fn view|fn to_value|fn get'
+   crates/core/src/runtime/json/` shows the new accessors in `document.rs`.
+3. `crates/core/src/backend/rust/emitter/shapes/registry_observer.rs` and
+   `crates/core/tests/emitter_registry_read.rs` do not exist.
+4. `cargo nextest run -p bbnf-ir --test payload_coverage_audit --profile ax-iter` 9/9 green.
+5. `cargo iter-check` 0 errors (8 pre-existing labeled-break warnings only, all in
+   `crates/core/src/grammar/generated/bbnf.rs`).
+6. `cargo nextest run --workspace --profile ax-iter --no-fail-fast` 1544 passed / 27 skipped /
+   0 failed (baseline 1546 minus 2 deleted observer-test counts; matches the spec's
+   "minus the deleted emitter_registry_read.rs test count" allowance).
+7. `cargo xtask regen --check` clean (9 grammars matched).
+8. `git status --short` empty (target/ symlink only).
+
+Commits:
+- `659e1cc5` refactor(ir,core): hoist EmitStrategy from rust backend to bbnf-ir::registry::strategy
+- `cc7d3a26` feat(runtime/json): JsonDocument accessor API mirroring Parsed surface
+- `78370c87` chore(emitter,tests): retire registry_observer + emitter_registry_read
+- `2d7b2e4e` feat(pipeline): wire audit_payload_coverage to write target/audit/<grammar>.json
 
 ## Handoff
 

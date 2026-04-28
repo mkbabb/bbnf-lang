@@ -7,10 +7,12 @@
 //! - [`Rule`] / [`RuleSet`] — owned rule data + ordered storage.
 //! - [`RuleClass`] — Class-1 / Class-2 / Class-3 tier (defined in
 //!   [`tiering`]).
-//! - [`RuleId`] — a u32 newtype distinct from
+//! - [`RewriteRuleId`] — a u32 newtype distinct from
 //!   [`crate::types::RuleId`] (grammar-rule index): a rewrite-rule id.
 //! - RON load/save via [`RuleSet::load_from_ron`] /
 //!   [`RuleSet::save_to_ron`] (delegates to the [`schema`] layer).
+//! - Bulk directory load via [`RuleSet::load_from_dir`] (consumed by
+//!   `cargo xtask regen` per BB.scaffold.C wiring).
 //!
 //! BB.scaffold.B authors this substrate ahead of the e-graph `ruler`
 //! consumer; module loading is independent. BB.close wires the two
@@ -116,6 +118,15 @@ impl RuleSet {
         }
     }
 
+    /// Empty ruleset — the no-op ground for `Option<RuleSet>::None`
+    /// equivalence. Used by the xtask regen integration when a
+    /// grammar's `rewrites/` directory is absent or empty. The
+    /// `grammar` field stays empty until [`Self::push`] or a
+    /// directory load assigns it.
+    pub fn empty() -> Self {
+        Self::default()
+    }
+
     /// Add a rule, assigning a fresh id (one past the current max).
     pub fn push(&mut self, mut rule: Rule) -> RewriteRuleId {
         let id = RewriteRuleId(self.rules.len() as u32);
@@ -151,6 +162,45 @@ impl RuleSet {
         let s = std::str::from_utf8(&bytes).map_err(|e| SchemaError::Decode(e.to_string()))?;
         let file: RuleFile = ron::from_str(s).map_err(|e| SchemaError::Decode(e.to_string()))?;
         Self::from_file(file)
+    }
+
+    /// Discover every `*.ron` file directly under `dir` and merge them
+    /// into a single ruleset. Used by `cargo xtask regen` per
+    /// BB.scaffold.C wiring (`xtask/src/regen.rs`).
+    ///
+    /// Errors:
+    /// - `Err` if `dir` exists but cannot be read (permission /
+    ///   I/O fault).
+    /// - `Err` if any contained `.ron` file fails schema validation.
+    /// - `Ok(RuleSet::empty())` if `dir` does not exist; the caller
+    ///   treats absence as "no rules" not "fault".
+    pub fn load_from_dir(dir: &Path) -> std::io::Result<Self> {
+        if !dir.exists() {
+            return Ok(Self::empty());
+        }
+        let mut acc = Self::empty();
+        for entry in std::fs::read_dir(dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.extension().and_then(|s| s.to_str()) != Some("ron") {
+                continue;
+            }
+            let loaded = Self::load_from_ron(&path).map_err(|e| {
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("{}: {}", path.display(), e),
+                )
+            })?;
+            if acc.grammar.is_empty() {
+                acc.grammar = loaded.grammar;
+                acc.schema_version = loaded.schema_version;
+            }
+            for mut rule in loaded.rules {
+                rule.id = RewriteRuleId(acc.rules.len() as u32);
+                acc.rules.push(rule);
+            }
+        }
+        Ok(acc)
     }
 
     /// Save this rule set to a RON file at `path`.
@@ -192,4 +242,3 @@ impl RuleSet {
         })
     }
 }
-

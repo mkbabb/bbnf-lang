@@ -544,6 +544,25 @@ fn compile_ast_common<'a>(
 ) -> Result<GrammarIR, CompileError> {
     let mut timer = PipelineTimer::new();
 
+    // Tranche BB.scaffold.C — per-grammar rewrite-rule wiring. The
+    // xtask regen entry passes loaded rules through
+    // `PipelineOptions.rewrites`; the cost-config substrate that
+    // consumes them lands in BB.scaffold.B. Today the wiring is a
+    // diagnostic eprint when `BBNF_PIPELINE_REPORT=1` so the rule
+    // count is visible at compile time without forcing a noisy
+    // default. Empty rulesets are treated identically to `None`.
+    if std::env::var("BBNF_PIPELINE_REPORT").is_ok() {
+        match &options.rewrites {
+            Some(rs) if !rs.is_empty() => {
+                eprintln!(
+                    "[pipeline] rewrites: {} rule(s) loaded for cost-config",
+                    rs.len()
+                );
+            }
+            _ => {}
+        }
+    }
+
     // Determine the entry rule name: use override if provided, otherwise last rule in source order.
     let entry_rule_name: Option<String> = options
         .entry_rule

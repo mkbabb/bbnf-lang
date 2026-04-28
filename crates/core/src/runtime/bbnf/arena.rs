@@ -78,6 +78,46 @@ pub enum BbnfCompoundKind {
     GrammarItem,
     /// `grammar = ( grammar_item ?w ) *` — the document root.
     Grammar,
+    // ─── value expression sub-grammar (grammar/bbnf/expressions.bbnf) ───────
+    /// `value_expr = value_closure | value_or` — top-level value
+    /// expression on the right side of a `->` map arrow.
+    ValueExpr,
+    /// `value_closure = "|" , value_ident , ( "," ?w , value_ident ) * ,
+    /// "|" , value_expr` — first-class value-level closure.
+    ValueClosure,
+    /// `value_or = value_and , ( "||" ?w , value_and ) *` — logical
+    /// disjunction precedence layer.
+    ValueOr,
+    /// `value_and = value_cmp , ( "&&" ?w , value_cmp ) *` — logical
+    /// conjunction precedence layer.
+    ValueAnd,
+    /// `value_cmp = value_add , ( cmp_op ?w , value_add ) *` —
+    /// comparison precedence layer.
+    ValueCmp,
+    /// `value_add = value_mul , ( add_op ?w , value_mul ) *` —
+    /// additive precedence layer.
+    ValueAdd,
+    /// `value_mul = value_unary , ( mul_op ?w , value_unary ) *` —
+    /// multiplicative precedence layer.
+    ValueMul,
+    /// `value_unary = ( "!" | "-" ) , value_atom | value_atom` — unary
+    /// prefix layer.
+    ValueUnary,
+    /// `value_atom = int_lit | float_lit | bool_lit | string_lit |
+    /// value_fn_call | value_input | value_path | "(" , value_expr , ")"`
+    /// — the atom alt; under struct-direct projection most atom branches
+    /// collapse to their typed leaf payload, so the compound surfaces
+    /// only when the atom resolved to a parenthesised sub-expression
+    /// or a multi-segment path / fn-call structural body.
+    ValueAtom,
+    /// `value_path = value_ident , ( "::" , value_ident ) *` —
+    /// `::`-separated identifier chain.
+    ValuePath,
+    /// `value_input = "input" , ( "." , value_ident ) *` — input chain.
+    ValueInput,
+    /// `value_fn_call = value_path , "(" , ( value_expr , ( "," ,
+    /// value_expr ) * ) ? , ")"` — function-call syntax.
+    ValueFnCall,
     /// Catch-all for compound rules not recognised by the
     /// [`BbnfCompoundKind`] alphabet — the layout-resolver consults
     /// the rule name when [`BbnfStructBuilder::begin_compound`]
@@ -116,6 +156,19 @@ impl BbnfCompoundKind {
             "directive" => Self::Directive,
             "grammar_item" => Self::GrammarItem,
             "grammar" => Self::Grammar,
+            // value-expression sub-grammar.
+            "value_expr" => Self::ValueExpr,
+            "value_closure" => Self::ValueClosure,
+            "value_or" => Self::ValueOr,
+            "value_and" => Self::ValueAnd,
+            "value_cmp" => Self::ValueCmp,
+            "value_add" => Self::ValueAdd,
+            "value_mul" => Self::ValueMul,
+            "value_unary" => Self::ValueUnary,
+            "value_atom" => Self::ValueAtom,
+            "value_path" => Self::ValuePath,
+            "value_input" => Self::ValueInput,
+            "value_fn_call" => Self::ValueFnCall,
             _ => Self::Other,
         }
     }

@@ -200,6 +200,7 @@ impl<'a, 'p: 'a> BbnfView<'a, 'p> {
         matches!(self.focus, BbnfValue::Unit)
     }
 
+<<<<<<< HEAD
     /// Borrow the document's input slice. Inherent re-export of
     /// [`crate::runtime::RuntimeView::input`] so consumers can read
     /// the input without importing the trait at every call site.

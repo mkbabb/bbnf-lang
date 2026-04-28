@@ -171,17 +171,18 @@ primary grammars on the struct substrate.
 
 ## Wave structure
 
-Three waves total: a research preflight, a single cutover wave that
-lands Stage A and Stage B atomically, and a FINAL that deletes the
-tape and recodes downstream consumers. Each wave has a same-commit
-runtime call site, a same-commit bench delta, and a same-commit
-samply capture.
+**Wave plan refined 2026-04-28** per six-agent audit synthesis at
+`docs/tranches/AZ-I/audit/W2-CLOSE-AUDIT.md` §9. The original W0 / W1 /
+W2 three-wave plan collapses into a single **AZ-II.cutover** wave —
+the W2-act activation pattern is reusable for BBNF without further
+substrate work; Stage A / Stage B is two regen invocations; tape
+deletion is mechanical post-byte-equal-green. The W0 / W1 / W2 wave
+docs at `waves/{W0,W1,W2}.md` carry supersede notices and remain on
+disk as historical record.
 
 | Wave | Headline | Opens after | Status |
 |---|---|---|---|
-| **W0** | BBNF bootstrap research + cutover design + classifier extension | AZ-II open | planned |
-| **W1** | Stage A + Stage B atomic byte-equal cutover | W0 | planned |
-| **W2** | FINAL — `crates/tape/` deletion + parity recode + BA handoff | W1 | planned |
+| **cutover** | BBNF self-host + tape deletion ([waves/cutover.md](waves/cutover.md)) — three sequential sub-stages: cutover.A (substrate hoist + BBNF runtime + resolver-arm + decay sweep) → cutover.B (Stage A + Stage B byte-equal cycle) → cutover.C (`crates/tape/` deletion + recode + FINAL) | AZ-I.W2-act close (AZ-I FINAL.md committed; seven-point handoff verified) | planned |
 
 ### W0 — Research + cutover design + classifier extension
 

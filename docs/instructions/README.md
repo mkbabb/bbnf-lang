@@ -342,36 +342,22 @@ per-grammar test binaries (AX commit `61053374` template) and export
 `CARGO_BUILD_JOBS=4` in sub-agent dispatches to cap parallel rustc
 processes. Per-grammar binaries compile in ~11-14 s at ~3 GB RSS.
 
-## Cache clearing
-
-Clear **all** `.bbnf-cache` directories before any bench, regen, or
-proc-macro expansion. The derive macro caches expansions; `cargo
-clean` does NOT clear them.
-
-```bash
-find . -name .bbnf-cache -exec rm -rf {} + 2>/dev/null
-```
-
-Also clear `crates/target/.bbnf-cache/` explicitly if present. If
-`bbnf-analysis` ICEs (recurring nightly issue): `cargo clean -p
-bbnf-analysis`.
-
 ## Testing
 
+`cargo iter-check` / `cargo iter-test-{leaf,grammar,ws}` are the
+routine-iteration surface (see `.cargo/config.toml`). For one-shot
+diagnostic runs, redirect output to file then grep — never re-run an
+expensive command to slice output differently.
+
 ```bash
-find . -name .bbnf-cache -exec rm -rf {} + 2>/dev/null
+cargo nextest run -p bbnf-ir -p egraph -p csp-solver --profile ax-iter > /tmp/leaf-tests.txt 2>&1
+grep 'Summary' /tmp/leaf-tests.txt
 
-cargo test -p bbnf-tape -p bbnf-ir -p egraph > /tmp/leaf-tests.txt 2>&1
-grep 'test result' /tmp/leaf-tests.txt
+cargo nextest run -p bbnf --test grammar_roundtrip --profile ax-iter > /tmp/roundtrip.txt 2>&1
+grep -E '^test|Summary' /tmp/roundtrip.txt
 
-cargo test -p bbnf --test grammar_roundtrip > /tmp/roundtrip.txt 2>&1
-grep '^test\|test result' /tmp/roundtrip.txt
-
-cargo test -p bbnf --test payload_layouts > /tmp/payload.txt 2>&1
-grep 'test result' /tmp/payload.txt
-
-cargo test --workspace > /tmp/workspace-tests.txt 2>&1
-grep 'test result' /tmp/workspace-tests.txt
+cargo nextest run --workspace --profile ax-iter > /tmp/workspace-tests.txt 2>&1
+grep 'Summary' /tmp/workspace-tests.txt
 ```
 
 Grammar roundtrip is the primary correctness gate.
@@ -384,8 +370,6 @@ per-parse only; warm/cached benchmarks are disingenuous. Bench
 binaries use `#[global_allocator] mimalloc`.
 
 ```bash
-find . -name .bbnf-cache -exec rm -rf {} + 2>/dev/null
-
 cargo bench -p bbnf --bench compile_pipeline > /tmp/bench-compile.txt 2>&1
 cargo bench -p bbnf --bench json_monolithic > /tmp/bench-json.txt 2>&1
 cargo bench -p bbnf --bench css_l4 > /tmp/bench-css.txt 2>&1
@@ -400,20 +384,18 @@ Primary datasets: `data/json/`, `data/css/`, `data/sheets/`,
 
 ## Bootstrap regen
 
+`cargo xtask regen` is the canonical regen entrypoint (B2 retired the
+proc-macro IR-pipeline; per-grammar source lives at
+`crates/core/src/grammar/generated/<ident>.rs`).
+
 ```bash
-rm -rf target/.bbnf-cache/ crates/target/.bbnf-cache/
-find . -name .bbnf-cache -exec rm -rf {} + 2>/dev/null
+cargo xtask regen
+cargo nextest run -p bbnf --test grammar_roundtrip --profile ax-iter > /tmp/roundtrip.txt 2>&1
+grep -E '^test|Summary' /tmp/roundtrip.txt
 
-bash scripts/bootstrap-bbnf.sh
-
-find . -name .bbnf-cache -exec rm -rf {} + 2>/dev/null
-cargo test -p bbnf --test grammar_roundtrip > /tmp/roundtrip.txt 2>&1
-grep '^test\|test result' /tmp/roundtrip.txt
-
-cp crates/core/src/grammar/generated.rs /tmp/gen1.rs
-rm -rf target/.bbnf-cache/ crates/target/.bbnf-cache/
-bash scripts/bootstrap-bbnf.sh
-diff /tmp/gen1.rs crates/core/src/grammar/generated.rs  # must be empty
+cp crates/core/src/grammar/generated/json.rs /tmp/gen1.rs
+cargo xtask regen --grammar json
+diff /tmp/gen1.rs crates/core/src/grammar/generated/json.rs  # must be empty
 ```
 
 ### Self-host circular-dependency escape

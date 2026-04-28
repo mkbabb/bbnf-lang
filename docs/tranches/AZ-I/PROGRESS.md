@@ -181,6 +181,32 @@ preserved per `feedback_pluggable-components`.
 
 **W2 dispatch follows.**
 
+## 2026-04-28 — W2-act dispatch (post-W2-CLOSE-AUDIT refined trajectory)
+
+W2-act opens against master `6f78c1ef` per the audit synthesis at
+`docs/tranches/AZ-I/audit/W2-CLOSE-AUDIT.md`. The wave doc lands at
+`docs/tranches/AZ-I/waves/W2-act.md`; the activation pass runs in
+three sub-stages:
+
+- **W2-act.A** (sequential, 90 min cap) — EmitStrategy hoist to
+  `bbnf-ir::registry::strategy` per `audit/AUDIT-6` §8.1; JsonDocument
+  view / to_value / get accessor API; dead-substrate sweep
+  (`registry_observer` deleted; `audit_payload_coverage` wired or
+  surface deleted). Blocks B1 / B2 / B3.
+- **W2-act.B1 / B2 / B3** (parallel, 60 / 90 / 120 min caps
+  respectively) — JSON / Sheets / CSS L4 activation. Each: resolver-
+  arm flip + per-grammar runtime + parity harness recoding + bench
+  gate. Disjoint file bounds.
+- **W2-act.C** (sequential, 90 min cap) — close ceremony absorbing
+  W4: 17-entry matrix re-run + samply capture + AZ-II handoff
+  verification + AZ-I FINAL.md + `post-AZ-I.json` archive + workspace
+  nextest.
+
+AZ-II.cutover (BBNF cutover + tape deletion) opens after W2-act
+close per `docs/tranches/AZ-II/waves/cutover.md`. BB.W0 may open in
+parallel with cutover per audit synthesis Proposal E (substrate
+independence on `IrNode`).
+
 ## 2026-04-27 — W2 close ceremony (substrate-only; activation reverted per W2.md §Reversal)
 
 W2 closed substrate-only. The wave landed:

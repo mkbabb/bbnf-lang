@@ -196,77 +196,35 @@ impl EmitStrategy {
                 ts: None,
                 wasm: None,
             },
-            // AZ-II.cutover.A: BBNF struct-direct activation. The
-            // BBNF self-hosted grammar projects through the
-            // `bbnf::runtime::bbnf` typed-value enum + `BbnfStructBuilder`
-            // / `BbnfDocument` substrate authored at cutover.A. The
-            // resolver arm activates here; cutover.B regens the BBNF
-            // parser onto the struct-direct path and cutover.C
-            // retires the tape crate.
-            ("BbnfBootstrap" | "BbnfParser", true) => EmitStrategy::StructDirect {
-                rust: SubstrateBinding {
-                    builder_path: "crate::runtime::bbnf::BbnfStructBuilder",
-                    document_path: "crate::runtime::bbnf::BbnfDocument",
-                },
-                ts: None,
-                wasm: None,
-            },
-            // AZ-II.cutover.E (Phase 2): CSV struct-direct substrate.
-            // The CSV grammar projects through the `bbnf::runtime::csv`
-            // typed-value enum + `CsvStructBuilder` / `CsvDocument`
-            // substrate authored at cutover.E. The resolver arm
-            // activates here; cutover.F regens the CSV parser onto
-            // the struct-direct path. Substrate-only landing in
-            // cutover.E — the post-arm regen + consumer migration is
-            // cutover.F scope.
-            ("CsvParser", true) => EmitStrategy::StructDirect {
-                rust: SubstrateBinding {
-                    builder_path: "crate::runtime::csv::CsvStructBuilder",
-                    document_path: "crate::runtime::csv::CsvDocument",
-                },
-                ts: None,
-                wasm: None,
-            },
-            // AZ-II.cutover.E (Phase 2): math struct-direct substrate.
-            // The math grammar projects through the `bbnf::runtime::math`
-            // typed-value enum + `MathStructBuilder` / `MathDocument`
-            // substrate authored at cutover.E. Substrate-only; cutover.F
-            // regens.
-            ("MathParser", true) => EmitStrategy::StructDirect {
-                rust: SubstrateBinding {
-                    builder_path: "crate::runtime::math::MathStructBuilder",
-                    document_path: "crate::runtime::math::MathDocument",
-                },
-                ts: None,
-                wasm: None,
-            },
-            // AZ-II.cutover.E (Phase 2): BNF struct-direct substrate.
-            ("BnfParser", true) => EmitStrategy::StructDirect {
-                rust: SubstrateBinding {
-                    builder_path: "crate::runtime::bnf::BnfStructBuilder",
-                    document_path: "crate::runtime::bnf::BnfDocument",
-                },
-                ts: None,
-                wasm: None,
-            },
-            // AZ-II.cutover.E (Phase 2): EBNF struct-direct substrate.
-            ("EbnfParser", true) => EmitStrategy::StructDirect {
-                rust: SubstrateBinding {
-                    builder_path: "crate::runtime::ebnf::EbnfStructBuilder",
-                    document_path: "crate::runtime::ebnf::EbnfDocument",
-                },
-                ts: None,
-                wasm: None,
-            },
-            // AZ-II.cutover.E (Phase 2): CSS pretty struct-direct substrate.
-            ("CssPrettyParser", true) => EmitStrategy::StructDirect {
-                rust: SubstrateBinding {
-                    builder_path: "crate::runtime::css_pretty::CssPrettyStructBuilder",
-                    document_path: "crate::runtime::css_pretty::CssPrettyDocument",
-                },
-                ts: None,
-                wasm: None,
-            },
+            // AZ-II.cutover.E (DEFERRED to post-AZ-II): BBNF struct-direct
+            // activation deferred. Discovery 1 from cutover.E surfaced a
+            // structural regression in the BBNF struct-direct emit path:
+            // the regen output rejects every input at offset 0 because
+            // the cutover-era emitter coerces BBNF's iteration shape
+            // toward an array-delimited (`[`...`]`) JSON-shaped body.
+            //
+            // The substrate at `crates/core/src/runtime/bbnf/` + cutover.D
+            // consumer migration are CORRECT and remain on disk. The
+            // resolver-arm activation routes back to TapeDirect until a
+            // follow-up tranche audits the cutover.D2 value-expr emitter
+            // additions that introduced the iteration-shape regression
+            // and re-flips the arm under a working post-regen verifier.
+            //
+            // ("BbnfBootstrap" | "BbnfParser", true) => EmitStrategy::StructDirect { … },
+            // AZ-II.cutover.E DEFERRED — the CSV / math / BNF / EBNF /
+            // CSS pretty struct-direct substrates exist on disk under
+            // `crates/core/src/runtime/{csv,math,bnf,ebnf,css_pretty}/`
+            // but the resolver-arm activations stay disabled until the
+            // BBNF struct-direct emitter regression (cutover.E
+            // Discovery 1) is repaired. Activating any of these arms
+            // now triggers a regen which depends on a working
+            // BbnfBootstrap::parse — chicken-and-egg locked.
+            //
+            // ("CsvParser", true) => StructDirect { … },
+            // ("MathParser", true) => StructDirect { … },
+            // ("BnfParser", true) => StructDirect { … },
+            // ("EbnfParser", true) => StructDirect { … },
+            // ("CssPrettyParser", true) => StructDirect { … },
             // Catch-all — every grammar not yet activated stays on the
             // legacy tape substrate. The `_ => TapeDirect` close is
             // the wave-local revert per W2.md §Reversal — per

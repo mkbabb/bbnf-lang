@@ -92,20 +92,21 @@ pub(super) fn dispatch_value_expr<'a, 'p: 'a>(
     // Compound-kind dispatch.
     match node.compound_kind() {
         // Top-level value_expr wrapper (= value_closure | value_or).
-        // Peel by re-dispatching on the inner head.
+        // Under struct-direct projection the alt may surface as a
+        // preserved `ValueExpr` compound wrapping the chosen branch,
+        // or the optimizer may inline the wrapper down to the chosen
+        // branch directly. Inspect the leading byte to discriminate
+        // closure from or-chain even when the wrapper is preserved.
         Some(BbnfCompoundKind::ValueExpr) => {
-            let inner = simple_kinds::value_expr_head(node).unwrap_or(node);
-            // Defensive — avoid recursion if descent returned the
-            // same node. Fall through to the atom path.
-            if atom::same_focus(inner, node) {
-                return atom::lower_value_atom(node, ctx);
-            }
-            dispatch_value_expr(inner, ctx)
+            simple_kinds::lower_value_expr_or_closure(node, ctx)
         }
 
-        // Top of the value sub-grammar — alt of closure / value_or chain.
+        // value_or chain — body is `value_and , ( "||" ?w , value_and ) *`.
+        // When `value_or` surfaces directly (the optimizer collapsed
+        // the outer `value_expr` wrapper), the closure case never
+        // applies — closures resolve to a `ValueClosure` compound.
         Some(BbnfCompoundKind::ValueOr) => {
-            simple_kinds::lower_value_expr_or_closure(node, ctx)
+            precedence::fold_value_chain(node, &precedence::LAYER_OR, ctx)
         }
 
         // Precedence-chain layers. Each is `(operand, (op operand)*)`

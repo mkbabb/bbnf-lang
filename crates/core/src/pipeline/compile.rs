@@ -3,7 +3,6 @@ use std::time::{Duration, Instant};
 
 use bbnf_ir::GrammarIR;
 
-use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
 use crate::graph::{tarjan_scc, topological_sort_scc};
 use crate::backend::prepare_grammar;
 use crate::lower::{DirectiveSet, lower_to_ir};
@@ -12,6 +11,7 @@ use crate::pipeline::validate::{validate_ast, validate_pretty_directives};
 use crate::pipeline::{
     CompileError, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
 };
+use crate::runtime::bbnf::{BbnfCompoundKind, BbnfView};
 use crate::types::AST;
 
 /// Tranche AA.0 — per-pass timing accumulator.
@@ -445,8 +445,8 @@ pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrate
 /// Separate closure rules from the AST. Returns (closures, non-closure rules).
 fn partition_closures<'a>(
     ast: AST<'a>,
-) -> (Vec<(&'a str, BbnfBootstrapNodeView<'a>)>, AST<'a>) {
-    let mut closures: Vec<(&'a str, BbnfBootstrapNodeView<'a>)> = Vec::new();
+) -> (Vec<(&'a str, BbnfView<'a, 'a>)>, AST<'a>) {
+    let mut closures: Vec<(&'a str, BbnfView<'a, 'a>)> = Vec::new();
     let mut rules: AST<'a> = indexmap::IndexMap::new();
 
     for (&name, entry) in &ast {
@@ -460,78 +460,74 @@ fn partition_closures<'a>(
     (closures, rules)
 }
 
-/// Check if a bootstrap RHS view is a closure, unwrapping structural wrappers.
-fn is_closure_rhs(node: BbnfBootstrapNodeView<'_>) -> bool {
-    match node.rule_kind() {
-        BbnfBootstrapRuleKind::closure => true,
-        // Unwrap single-branch alternation/concatenation wrappers.
-        BbnfBootstrapRuleKind::alternation | BbnfBootstrapRuleKind::call_arg => {
-            let mut iter = node.children();
+/// Check if a struct-direct RHS view is a closure, unwrapping
+/// single-branch structural wrappers.
+fn is_closure_rhs(view: BbnfView<'_, '_>) -> bool {
+    match view.compound_kind() {
+        Some(BbnfCompoundKind::Closure) => true,
+        // Unwrap single-branch alternation / call_arg wrappers.
+        Some(BbnfCompoundKind::Alternation) | Some(BbnfCompoundKind::CallArg) => {
+            let mut iter = view.children_iter();
             let Some(first) = iter.next() else {
                 return false;
             };
             if iter.next().is_some() {
                 return false;
             }
-            let branch = first.child(0).unwrap_or(first);
-            is_closure_rhs(branch)
+            // The struct-direct alternation child is the chosen branch
+            // value directly (no extra Seq wrapper); recurse.
+            is_closure_rhs(first)
         }
-        BbnfBootstrapRuleKind::concatenation => {
-            let mut iter = node.children();
+        Some(BbnfCompoundKind::Concatenation) => {
+            let mut iter = view.children_iter();
             let Some(first) = iter.next() else {
                 return false;
             };
             if iter.next().is_some() {
                 return false;
             }
-            let part = first.child(0).unwrap_or(first);
-            is_closure_rhs(part)
+            is_closure_rhs(first)
         }
-        BbnfBootstrapRuleKind::binary_factor => {
-            let Some(first) = node.child(0) else {
+        Some(BbnfCompoundKind::BinaryFactor) => {
+            // `binary_factor = mapped_factor , ( binary_operators ?w
+            //   mapped_factor ?w ) *`. A bare binary_factor with no
+            // operators is a single-operand wrapper — recurse into
+            // child(0). When operator children are present (compound
+            // count > 1) the chain is operator-typed, not a closure.
+            if view.num_children() != 1 {
                 return false;
-            };
-            let rest = node.child(1);
-            let rest_empty = rest.map(|r| r.children().next().is_none()).unwrap_or(true);
-            if rest_empty {
-                is_closure_rhs(first)
-            } else {
-                false
             }
+            view.child(0).map(is_closure_rhs).unwrap_or(false)
         }
-        BbnfBootstrapRuleKind::mapped_factor => {
-            let Some(inner) = node.child(0) else {
+        Some(BbnfCompoundKind::MappedFactor) => {
+            // `mapped_factor = factor , ( "->" ?w , value_expr ,
+            //   type_annotation ? ) ?`. The mapping slot manifests in
+            // the source span as a `->` substring; absent when the
+            // compound's text doesn't contain `->`.
+            if view.span_text().contains("->") {
                 return false;
-            };
-            let mapping = node.child(1);
-            let no_mapping = mapping
-                .map(|m| m.span().1 == m.span().0)
-                .unwrap_or(true);
-            if no_mapping {
-                is_closure_rhs(inner)
-            } else {
-                false
             }
+            view.child(0).map(is_closure_rhs).unwrap_or(false)
         }
-        BbnfBootstrapRuleKind::factor => {
-            let Some(inner) = node.child(1) else {
+        Some(BbnfCompoundKind::Factor) => {
+            // `factor = big_comment ? , term ?w , modifier ? ,
+            //   big_comment ?`. The modifier slot manifests as a
+            // trailing `?` / `*` / `+` byte on the compound's text.
+            // Comments embed `/*` markers; recurse only when neither
+            // is present.
+            let text = view.span_text().trim();
+            if matches!(text.as_bytes().last(), Some(b'?') | Some(b'*') | Some(b'+')) {
                 return false;
-            };
-            let comment_before = node.child(0);
-            let modifier = node.child(2);
-            let comment_after = node.child(3);
-            let all_bare = comment_before
-                .map(|c| c.span().1 == c.span().0)
-                .unwrap_or(true)
-                && modifier.map(|m| m.span().1 == m.span().0).unwrap_or(true)
-                && comment_after
-                    .map(|c| c.span().1 == c.span().0)
-                    .unwrap_or(true);
-            if all_bare {
-                is_closure_rhs(inner)
-            } else {
-                false
             }
+            if text.contains("/*") {
+                return false;
+            }
+            // Locate the inner `term` and recurse on it; if absent,
+            // dispatch on whatever the factor's first child is.
+            let inner = view
+                .find_descendant_by_kind(BbnfCompoundKind::Term)
+                .or_else(|| view.child(0));
+            inner.map(is_closure_rhs).unwrap_or(false)
         }
         _ => false,
     }
@@ -916,90 +912,107 @@ fn compile_ast_common<'a>(
     Ok(ir)
 }
 
-/// Collect closure parameter names from a bootstrap view node.
+/// Collect closure parameter names from a struct-direct view node.
+///
+/// `closure = "|" , identifier , ( "," ?w , identifier ) * , "|" ?w , rhs`
+/// — the leading Span children of a `Closure` compound are the
+/// parameter names; the trailing compound child is the body. Walking
+/// the closure's children and grabbing every Span-typed leaf yields
+/// every param without depending on positional indices.
 fn collect_closure_param_names<'a>(
-    node: BbnfBootstrapNodeView<'a>,
+    view: BbnfView<'a, 'a>,
     params: &mut std::collections::HashSet<&'a str>,
 ) {
-    match node.rule_kind() {
-        BbnfBootstrapRuleKind::closure => {
-            // closure = "|", first_param, rest_params, "|", body
-            if let Some(first_param) = node.child(1) {
-                let first = first_param.span_text();
-                if !first.is_empty() {
-                    params.insert(first);
-                }
-            }
-            if let Some(rest) = node.child(2) {
-                for pair in rest.children() {
-                    if let Some(p) = pair.child(1) {
-                        let name = p.span_text();
-                        if !name.is_empty() {
-                            params.insert(name);
+    match view.compound_kind() {
+        Some(BbnfCompoundKind::Closure) => {
+            for child in view.children_iter() {
+                if !child.is_compound() {
+                    if child.is_span() {
+                        // The Span text comes from the document's input
+                        // slice; re-borrow against `view.input()` so
+                        // the lifetime matches the param-set's `'a`.
+                        let text = child.span_text();
+                        if !text.is_empty() {
+                            params.insert(slice_in_input(view.input(), text));
                         }
                     }
                 }
+                // Compound children (the rhs body) don't contribute
+                // closure params for the OUTER closure's signature —
+                // nested closures inside the body are handled via
+                // their own collect_closure_param_names call when the
+                // outer rule list is iterated.
             }
         }
-        // Unwrap structural wrappers.
-        BbnfBootstrapRuleKind::alternation | BbnfBootstrapRuleKind::call_arg => {
-            let mut iter = node.children();
+        // Unwrap single-branch structural wrappers.
+        Some(BbnfCompoundKind::Alternation) | Some(BbnfCompoundKind::CallArg) => {
+            let mut iter = view.children_iter();
             if let Some(first) = iter.next() {
                 if iter.next().is_none() {
-                    let branch = first.child(0).unwrap_or(first);
-                    collect_closure_param_names(branch, params);
+                    collect_closure_param_names(first, params);
                 }
             }
         }
-        BbnfBootstrapRuleKind::concatenation => {
-            let mut iter = node.children();
+        Some(BbnfCompoundKind::Concatenation) => {
+            let mut iter = view.children_iter();
             if let Some(first) = iter.next() {
                 if iter.next().is_none() {
-                    let part = first.child(0).unwrap_or(first);
-                    collect_closure_param_names(part, params);
+                    collect_closure_param_names(first, params);
                 }
             }
         }
-        BbnfBootstrapRuleKind::binary_factor => {
-            let Some(first) = node.child(0) else {
+        Some(BbnfCompoundKind::BinaryFactor) => {
+            if view.num_children() != 1 {
                 return;
-            };
-            let rest = node.child(1);
-            let rest_empty = rest.map(|r| r.children().next().is_none()).unwrap_or(true);
-            if rest_empty {
-                collect_closure_param_names(first, params);
             }
-        }
-        BbnfBootstrapRuleKind::mapped_factor => {
-            let Some(inner) = node.child(0) else {
-                return;
-            };
-            let mapping = node.child(1);
-            let no_mapping = mapping
-                .map(|m| m.span().1 == m.span().0)
-                .unwrap_or(true);
-            if no_mapping {
+            if let Some(inner) = view.child(0) {
                 collect_closure_param_names(inner, params);
             }
         }
-        BbnfBootstrapRuleKind::factor => {
-            let Some(inner) = node.child(1) else {
+        Some(BbnfCompoundKind::MappedFactor) => {
+            if view.span_text().contains("->") {
                 return;
-            };
-            let comment_before = node.child(0);
-            let modifier = node.child(2);
-            let comment_after = node.child(3);
-            let all_bare = comment_before
-                .map(|c| c.span().1 == c.span().0)
-                .unwrap_or(true)
-                && modifier.map(|m| m.span().1 == m.span().0).unwrap_or(true)
-                && comment_after
-                    .map(|c| c.span().1 == c.span().0)
-                    .unwrap_or(true);
-            if all_bare {
+            }
+            if let Some(inner) = view.child(0) {
+                collect_closure_param_names(inner, params);
+            }
+        }
+        Some(BbnfCompoundKind::Factor) => {
+            let text = view.span_text().trim();
+            if matches!(text.as_bytes().last(), Some(b'?') | Some(b'*') | Some(b'+')) {
+                return;
+            }
+            if text.contains("/*") {
+                return;
+            }
+            let inner = view
+                .find_descendant_by_kind(BbnfCompoundKind::Term)
+                .or_else(|| view.child(0));
+            if let Some(inner) = inner {
                 collect_closure_param_names(inner, params);
             }
         }
         _ => {}
     }
+}
+
+/// Re-borrow `text` against `input` so the returned slice has the
+/// `'a` lifetime of the input. The struct-direct `BbnfValue::Span`
+/// payload is already a sub-slice of the document's input; the
+/// pointer-arithmetic recover keeps the lifetime tight without
+/// allocation.
+fn slice_in_input<'a>(input: &'a str, text: &str) -> &'a str {
+    let input_start = input.as_ptr() as usize;
+    let input_end = input_start + input.len();
+    let s_start = text.as_ptr() as usize;
+    let s_end = s_start + text.len();
+    if s_start < input_start || s_end > input_end {
+        if let Some(pos) = input.find(text) {
+            return &input[pos..pos + text.len()];
+        }
+        return &input[..0];
+    }
+    let lo = s_start - input_start;
+    let hi = lo + text.len();
+    &input[lo..hi]
 }

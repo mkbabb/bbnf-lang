@@ -1,28 +1,31 @@
 //! Pipeline-internal directive aggregation.
 //!
 //! `DirectiveMaps` is the compile-pipeline-facing container populated
-//! directly from the bootstrap tape (see
-//! [`crate::grammar::host::extract_for_pipeline`]). Tranche AU.4.1
-//! deleted the historical `ParsedGrammar` intermediate: the tape walker
-//! now lands directive rows straight in this struct instead of
-//! round-tripping through `Vec<ImportDirective>` / `Vec<RecoverDirective>`
-//! / … aggregates.
+//! directly from the BBNF struct-direct parse (see
+//! [`crate::grammar::host::extract_for_pipeline`]). The walker lands
+//! directive rows straight in this struct instead of round-tripping
+//! through `Vec<ImportDirective>` / `Vec<RecoverDirective>` / …
+//! aggregates.
+//!
+//! AZ-II.cutover.D — every directive whose payload is a body
+//! expression (the recover-directive's sync expression) carries a
+//! [`BbnfView`] focused on the body inside the owning
+//! [`BbnfDocument`].
 
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 use indexmap::IndexMap;
 
-use crate::grammar::generated::BbnfBootstrapNodeView;
 use crate::imports::load_module_graph;
 use crate::lower::DirectiveSet;
 use crate::pipeline::CompileError;
-use crate::runtime::Parsed;
+use crate::runtime::bbnf::{BbnfDocument, BbnfView};
 use crate::types::{AST, ImportDirective, RuleEntry};
 
 #[derive(Default)]
 pub(crate) struct DirectiveMaps<'a> {
-    recover_map: HashMap<String, BbnfBootstrapNodeView<'a>>,
+    recover_map: HashMap<String, BbnfView<'a, 'a>>,
     pretty_map: HashMap<String, Vec<String>>,
     ws_pattern: Option<String>,
     token_set: HashSet<String>,
@@ -32,11 +35,11 @@ pub(crate) struct DirectiveMaps<'a> {
 }
 
 impl<'a> DirectiveMaps<'a> {
-    // ---- mutators used by the tape-walker sink in `grammar::host` ----
+    // ---- mutators used by the host-side walker sink in `grammar::host` ----
 
     pub(crate) fn recover_map_mut(
         &mut self,
-    ) -> &mut HashMap<String, BbnfBootstrapNodeView<'a>> {
+    ) -> &mut HashMap<String, BbnfView<'a, 'a>> {
         &mut self.recover_map
     }
     pub(crate) fn pretty_map_mut(&mut self) -> &mut HashMap<String, Vec<String>> {
@@ -73,7 +76,7 @@ impl<'a> DirectiveMaps<'a> {
 
 /// Parse a grammar source string and immediately project it into
 /// pipeline-shaped containers — AST, DirectiveMaps, imports — by
-/// walking the bootstrap tape exactly once.
+/// walking the BBNF struct-direct document exactly once.
 ///
 /// Leaks the source so the returned containers can borrow `'static`
 /// slices, matching the ownership contract the rest of the compile
@@ -88,10 +91,9 @@ pub(crate) fn parse_to_pipeline_inputs(
     use crate::grammar::{self, host};
 
     let input: &'static str = Box::leak(source.to_owned().into_boxed_str());
-    let parsed = grammar::generated::BbnfBootstrap::parse(input).ok()?;
-    let parsed: &'static Parsed<'static, grammar::generated::BbnfBootstrap> =
-        Box::leak(Box::new(parsed));
-    Some(host::extract_for_pipeline(parsed))
+    let document = grammar::generated::BbnfBootstrap::parse(input).ok()?;
+    let document: &'static BbnfDocument<'static> = Box::leak(Box::new(document));
+    Some(host::extract_for_pipeline(document))
 }
 
 /// Per-module data retained by the import graph loader. Replaces the

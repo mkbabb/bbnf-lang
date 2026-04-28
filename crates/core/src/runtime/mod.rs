@@ -20,6 +20,7 @@
 pub mod bbnf;
 pub mod builder;
 pub mod css_l4;
+pub mod csv;
 pub mod error;
 pub mod google_sheets;
 pub mod handle;
@@ -33,6 +34,10 @@ pub use bbnf::{
     BbnfPathQuery, BbnfStructBuilder, BbnfValue, BbnfView,
 };
 pub use builder::StructBuilder;
+pub use csv::{
+    CsvArena, CsvCompound, CsvCompoundId, CsvCompoundKind, CsvDocument, CsvKind,
+    CsvPathQuery, CsvStructBuilder, CsvValue, CsvView,
+};
 pub use css_l4::{
     CssAngle, CssAngleUnit, CssArena, CssColor, CssColorFunction, CssColorMix,
     CssColorPredefined, CssColorSpace, CssColorType, CssDeclListId, CssDimension,

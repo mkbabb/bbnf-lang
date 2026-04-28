@@ -211,6 +211,22 @@ impl EmitStrategy {
                 ts: None,
                 wasm: None,
             },
+            // AZ-II.cutover.E (Phase 2): CSV struct-direct substrate.
+            // The CSV grammar projects through the `bbnf::runtime::csv`
+            // typed-value enum + `CsvStructBuilder` / `CsvDocument`
+            // substrate authored at cutover.E. The resolver arm
+            // activates here; cutover.F regens the CSV parser onto
+            // the struct-direct path. Substrate-only landing in
+            // cutover.E — the post-arm regen + consumer migration is
+            // cutover.F scope.
+            ("CsvParser", true) => EmitStrategy::StructDirect {
+                rust: SubstrateBinding {
+                    builder_path: "crate::runtime::csv::CsvStructBuilder",
+                    document_path: "crate::runtime::csv::CsvDocument",
+                },
+                ts: None,
+                wasm: None,
+            },
             // Catch-all — every grammar not yet activated stays on the
             // legacy tape substrate. The `_ => TapeDirect` close is
             // the wave-local revert per W2.md §Reversal — per

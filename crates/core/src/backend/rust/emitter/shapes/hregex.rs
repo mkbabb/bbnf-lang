@@ -265,31 +265,29 @@ fn hregex_typed_payload_body(
 /// Emit `pub fn parse_hregex_<grammar>_<rule>(input, p, state,
 /// builder) -> Result<TapeOffset, DtaError>`.
 ///
-/// # AZ-I.W2.RE — strategy gate
+/// # AZ-I.W2-act.B2 — strategy gate
 ///
 /// `strategy` is the codegen-time substrate selector resolved by
-/// [`EmitStrategy::for_grammar`] in `shapes/mod.rs`. HRegex-shape
-/// rules are tape-only in W2; JSON does not exercise this shape. On
-/// [`EmitStrategy::StructDirect`] this emitter panics at codegen time
-/// (unreachable assertion preventing silent codegen drift; W3 / W2.B
-/// extend the per-shape struct-direct path before activating
-/// StructDirect for any grammar that exercises this shape).
+/// [`EmitStrategy::for_grammar`] in `shapes/mod.rs`. The function emits
+/// one of two parse-fn bodies per the resolved strategy:
+///
+/// - [`EmitStrategy::TapeDirect`] — body takes `&mut Tape<()>` and
+///   pushes `tape.push_leaf_with(TapeKind::Regex, …)`.
+/// - [`EmitStrategy::StructDirect`] — body takes the resolved struct
+///   builder type (e.g. `&mut SheetsStructBuilder<'p>`) and pushes the
+///   matched span via `builder.push_leaf_with_str(slice)` for
+///   `-> Span` projections, or the typed payload for `-> f64` / `-> u32`
+///   /  `-> Nu8` projections via the matching trait method.
+///
+/// W2-act.B2 retires the W2.RE panic that previously gated this arm —
+/// Sheets (`cell_ref`, `identifier`) lights up HRegex rules under
+/// StructDirect, so the body becomes the activation surface.
 pub fn emit_parse_hregex(
     strategy: &EmitStrategy,
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    match strategy {
-        EmitStrategy::TapeDirect => {}
-        EmitStrategy::StructDirect { .. } => {
-            panic!(
-                "AZ-I.W2.RE: HRegex shape does not support StructDirect; \
-                 W3 / W2.B expected to extend before activating this \
-                 strategy for the calling grammar"
-            );
-        }
-    }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("hregex", grammar_suffix, rule_name);
     let variant_idx = (rule.id & 0xFF) as u8;
@@ -301,33 +299,64 @@ pub fn emit_parse_hregex(
     // error — the detector gate is upstream.
     let pattern_sid = extract_regex_pattern(&rule.body);
     let Some(sid) = pattern_sid else {
-        return emit_unsupported_stub(&fn_ident, &support_mod, variant_idx);
+        return emit_unsupported_stub(&fn_ident, &support_mod, variant_idx, strategy);
     };
     let pattern = ir.get_string(sid);
     let pattern_lit = pattern.to_string();
 
     let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
 
+    match strategy {
+        EmitStrategy::TapeDirect => {
+            emit_parse_hregex_tape_direct(
+                &fn_ident,
+                &support_mod,
+                &regex_scan_ident,
+                &pattern_lit,
+                variant_idx,
+                rule,
+                ir,
+            )
+        }
+        EmitStrategy::StructDirect { rust, .. } => {
+            emit_parse_hregex_struct_direct(
+                &fn_ident,
+                &support_mod,
+                &regex_scan_ident,
+                &pattern_lit,
+                variant_idx,
+                rust.builder_path,
+            )
+        }
+    }
+}
+
+/// Emit the TapeDirect HRegex body. Pre-W2-act.B2 the sole body shape;
+/// retains the existing Span-leaf emission path with optional typed
+/// host-fn decode for `Map { Regex, NumberConvert }` /
+/// `Map { Regex, HexConvert }` rules.
+fn emit_parse_hregex_tape_direct(
+    fn_ident: &proc_macro2::Ident,
+    support_mod: &proc_macro2::Ident,
+    regex_scan_ident: &proc_macro2::Ident,
+    pattern_lit: &str,
+    variant_idx: u8,
+    rule: &IrRule,
+    ir: &GrammarIR,
+) -> TokenStream {
     // AX.W0a.2.q — typed-payload body. When the HRegex rule body is
     // `Map { Regex, NumberConvert }` / `Map { Regex, HexConvert }`,
     // emit the scan + decode + arena-payload push so downstream
-    // typed-payload readers (`typed_f64_payloads`,
-    // `payload_scalar::<u32>`) observe the decoded value. Rules with
+    // typed-payload readers observe the decoded value. Rules with
     // `Map { Regex, Expr(Input) }` annotations (`-> input : Span`)
     // fall through to the raw Span emission — no typed payload
     // expected.
     if let Some(body) =
-        hregex_typed_payload_body(rule, variant_idx, &pattern_lit, &regex_scan_ident, ir)
+        hregex_typed_payload_body(rule, variant_idx, pattern_lit, regex_scan_ident, ir)
     {
         return quote! {
             /// AX.W0a.2.q — HRegex-shape parse function with typed
             /// host-fn decode (`NumberConvert` → f64, `HexConvert` → u32).
-            ///
-            /// Runs the per-grammar regex scan, invokes the decoder,
-            /// writes the decoded bytes into the tape arena, pushes a
-            /// payload-carrying leaf (KvPair when the rule projects as
-            /// `Tuple([Span, scalar])`; Span otherwise) so the walker-
-            /// parity reader (`payload_bytes(rec, N)`) finds the value.
             #[inline(always)]
             #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
             pub fn #fn_ident(
@@ -348,9 +377,7 @@ pub fn emit_parse_hregex(
         /// AW-V.W4-fix — per-grammar HRegex-shape parse function.
         ///
         /// Regex scan via the per-grammar adapter; emits a
-        /// `TapeKind::Regex` leaf carrying the matched span. Decoder
-        /// hooks (host_fn payloads) are wired at the dispatcher level
-        /// post-scan; the raw Span-leaf path is the default.
+        /// `TapeKind::Regex` leaf carrying the matched span.
         #[inline(always)]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
         pub fn #fn_ident(
@@ -381,6 +408,83 @@ pub fn emit_parse_hregex(
                 crate::runtime::tape::PayloadData::None,
             );
             Ok(leaf_off)
+        }
+    }
+}
+
+/// AZ-I.W2-act.B2 — Emit the StructDirect HRegex body. Targets the
+/// resolved struct builder (e.g. `SheetsStructBuilder<'p>`) and pushes
+/// the matched span via `push_leaf_with_str` per the
+/// `feedback_typed-materialization-invariant`: every `->` in the rule
+/// reaches a builder method.
+///
+/// HRegex rules in Sheets (`cell_ref`, `identifier`) project to
+/// `-> input : Span` and emit through `push_leaf_with_str(slice)`. The
+/// trait method is the generic surface; concrete builders (e.g.
+/// `SheetsStructBuilder`) deposit the slice into the typed
+/// `String` / `CellRef` / `Identifier` arm — the runtime side
+/// disambiguates the role-tag at the receiving compound, not at the
+/// trait surface.
+///
+/// Returns `TapeOffset::NONE` for compositional uniformity with sibling
+/// shape fns under struct-direct mode; the offset is unused by
+/// struct-direct callers.
+fn emit_parse_hregex_struct_direct(
+    fn_ident: &proc_macro2::Ident,
+    support_mod: &proc_macro2::Ident,
+    regex_scan_ident: &proc_macro2::Ident,
+    pattern_lit: &str,
+    variant_idx: u8,
+    builder_path: &str,
+) -> TokenStream {
+    let builder_ty: syn::Path = syn::parse_str(builder_path).expect(
+        "EmitStrategy::StructDirect.rust.builder_path must parse as a Rust path",
+    );
+    let _ = variant_idx; // The builder's typed deposit doesn't consume
+                         // the variant index; the receiving compound's
+                         // structural-kind tag carries the role
+                         // discrimination.
+    quote! {
+        /// AZ-I.W2-act.B2 — per-grammar HRegex-shape parse function
+        /// (struct-direct substrate).
+        ///
+        /// Runs the per-grammar regex scan and pushes the matched
+        /// span as a `&'p str` leaf via `builder.push_leaf_with_str`.
+        /// The `'p` lifetime threads through the parse-fn signature so
+        /// the slice's lifetime matches the builder's arena.
+        #[inline(always)]
+        #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+        pub fn #fn_ident<'p>(
+            input: &'p [u8],
+            p: &mut usize,
+            state: &mut #support_mod::ScanState,
+            builder: &mut #builder_ty<'p>,
+        ) -> ::core::result::Result<
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
+        > {
+            use crate::runtime::builder::StructBuilder as _;
+            let span_lo = *p;
+            let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: span_lo as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            };
+            *p += match_len as usize;
+            let span_hi = *p;
+            // SAFETY: `regex_scan_ident` returns the byte length the
+            // pattern matched; the matched bytes are by construction a
+            // valid UTF-8 prefix of the input slice (the regex
+            // alphabet admits ASCII only for the canonical Sheets
+            // patterns; broader patterns rely on the regex compiler's
+            // UTF-8 guarantee).
+            let body: &'p str = unsafe {
+                ::core::str::from_utf8_unchecked(&input[span_lo..span_hi])
+            };
+            builder.push_leaf_with_str(body);
+            Ok(crate::runtime::tape::TapeOffset::NONE)
         }
     }
 }
@@ -441,123 +545,193 @@ pub fn emit_parse_number_via_hregex(
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    match strategy {
-        EmitStrategy::TapeDirect => {}
-        EmitStrategy::StructDirect { .. } => {
-            panic!(
-                "AZ-I.W2.RE: HRegex (Number-via-HRegex) shape does not \
-                 support StructDirect; W3 / W2.B expected to extend \
-                 before activating this strategy for the calling grammar"
-            );
-        }
-    }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("number", grammar_suffix, rule_name);
     let variant_idx = (rule.id & 0xFF) as u8;
-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
-    let _ = support_mod; // `state` parameter is absent on Number sigs.
+    let _ = variant_idx;
 
     let Some(sid) = extract_regex_pattern(&rule.body) else {
         // Shouldn't reach here — the routing gate above checks the
         // regex classification, which implies the body resolves to a
         // Regex. Emit a minimal scaffold for safety.
-        return quote! {
-            #[inline(always)]
-            #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-            pub fn #fn_ident(
-                input: &[u8],
-                p: &mut usize,
-                first_byte: u8,
-                builder: &mut crate::runtime::tape::Tape<()>,
-            ) -> ::core::result::Result<
-                crate::runtime::tape::TapeOffset,
-                crate::runtime::tape::DtaError,
-            > {
-                let _ = (input, p, first_byte, builder);
-                Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                })
+        return match strategy {
+            EmitStrategy::TapeDirect => quote! {
+                #[inline(always)]
+                #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+                pub fn #fn_ident(
+                    input: &[u8],
+                    p: &mut usize,
+                    first_byte: u8,
+                    builder: &mut crate::runtime::tape::Tape<()>,
+                ) -> ::core::result::Result<
+                    crate::runtime::tape::TapeOffset,
+                    crate::runtime::tape::DtaError,
+                > {
+                    let _ = (input, p, first_byte, builder);
+                    Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    })
+                }
+            },
+            EmitStrategy::StructDirect { rust, .. } => {
+                let builder_ty: syn::Path = syn::parse_str(rust.builder_path).expect(
+                    "EmitStrategy::StructDirect.rust.builder_path must parse as a Rust path",
+                );
+                quote! {
+                    #[inline(always)]
+                    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+                    pub fn #fn_ident<'p>(
+                        input: &'p [u8],
+                        p: &mut usize,
+                        first_byte: u8,
+                        builder: &mut #builder_ty<'p>,
+                    ) -> ::core::result::Result<
+                        crate::runtime::tape::TapeOffset,
+                        crate::runtime::tape::DtaError,
+                    > {
+                        let _ = (input, p, first_byte, builder);
+                        Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        })
+                    }
+                }
             }
         };
     };
     let pattern_lit = ir.get_string(sid).to_string();
     let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
 
-    // Leaf-kind policy: owner-rule `F64` ⇒ Span (walker-parity for
-    // JSON-style numbers); `Tuple([Span, scalar])` ⇒ KvPair; every
-    // other typed form ⇒ Span.
-    use bbnf_ir::TypeDesc;
-    let kind_is_kv = matches!(
-        ir.types.iter().find_map(|(rid, t)| {
-            if *rid == rule.id {
-                Some(t)
-            } else {
-                None
-            }
-        }),
-        Some(TypeDesc::Tuple(fields)) if matches!(
-            fields.as_slice(),
-            [TypeDesc::Span, value] if value.is_scalar_payload()
-        )
-    );
-    let leaf_kind = if kind_is_kv {
-        quote! { crate::runtime::tape::TapeKind::KvPair }
-    } else {
-        quote! { crate::runtime::tape::TapeKind::Span }
-    };
-
-    quote! {
-        /// AX.W0a.2.q — Number-shape parse function routed through the
-        /// per-grammar regex-scan adapter so leading-dot literals
-        /// (`.5`) admitted by the rule's regex classification parse
-        /// without the JSON-strict "digit before dot" rejection the
-        /// default Number emitter enforces.
-        ///
-        /// Writes 8 LE f64 bytes into the tape arena; the leaf kind
-        /// mirrors `emit_map_regex_host_fn`'s policy (KvPair when the
-        /// rule projects as `Tuple([Span, scalar])`; Span otherwise).
-        #[inline(always)]
-        #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-        pub fn #fn_ident(
-            input: &[u8],
-            p: &mut usize,
-            first_byte: u8,
-            builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
-            let _ = first_byte;
-            let span_lo = *p as u32;
-            let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                return Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: span_lo,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                });
-            };
-            *p += match_len as usize;
-            let span_hi = *p as u32;
-            let __f64: f64 = core::str::from_utf8(
-                &input[span_lo as usize..span_hi as usize]
-            )
-            .ok()
-            .and_then(|s| s.parse::<f64>().ok())
-            .unwrap_or(0.0);
-            let __arena_off: u32 = builder.arena_mut().len() as u32;
-            builder.arena_mut().extend_from_slice(&__f64.to_le_bytes());
-            let leaf_off = builder.push_leaf_with_arena_payload(
-                #leaf_kind,
-                span_lo,
-                span_hi,
-                #variant_idx,
-                0u8,
-                __arena_off,
-                8u32,
+    match strategy {
+        EmitStrategy::TapeDirect => {
+            // Leaf-kind policy: owner-rule `F64` ⇒ Span (walker-parity
+            // for JSON-style numbers); `Tuple([Span, scalar])` ⇒
+            // KvPair; every other typed form ⇒ Span.
+            use bbnf_ir::TypeDesc;
+            let kind_is_kv = matches!(
+                ir.types.iter().find_map(|(rid, t)| {
+                    if *rid == rule.id {
+                        Some(t)
+                    } else {
+                        None
+                    }
+                }),
+                Some(TypeDesc::Tuple(fields)) if matches!(
+                    fields.as_slice(),
+                    [TypeDesc::Span, value] if value.is_scalar_payload()
+                )
             );
-            Ok(leaf_off)
+            let leaf_kind = if kind_is_kv {
+                quote! { crate::runtime::tape::TapeKind::KvPair }
+            } else {
+                quote! { crate::runtime::tape::TapeKind::Span }
+            };
+            let variant_idx_lit = variant_idx;
+
+            quote! {
+                /// AX.W0a.2.q — Number-shape parse function routed
+                /// through the per-grammar regex-scan adapter so
+                /// leading-dot literals (`.5`) admitted by the rule's
+                /// regex classification parse without the JSON-strict
+                /// "digit before dot" rejection the default Number
+                /// emitter enforces.
+                #[inline(always)]
+                #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+                pub fn #fn_ident(
+                    input: &[u8],
+                    p: &mut usize,
+                    first_byte: u8,
+                    builder: &mut crate::runtime::tape::Tape<()>,
+                ) -> ::core::result::Result<
+                    crate::runtime::tape::TapeOffset,
+                    crate::runtime::tape::DtaError,
+                > {
+                    let _ = first_byte;
+                    let span_lo = *p as u32;
+                    let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
+                        return Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: span_lo,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    };
+                    *p += match_len as usize;
+                    let span_hi = *p as u32;
+                    let __f64: f64 = core::str::from_utf8(
+                        &input[span_lo as usize..span_hi as usize]
+                    )
+                    .ok()
+                    .and_then(|s| s.parse::<f64>().ok())
+                    .unwrap_or(0.0);
+                    let __arena_off: u32 = builder.arena_mut().len() as u32;
+                    builder.arena_mut().extend_from_slice(&__f64.to_le_bytes());
+                    let leaf_off = builder.push_leaf_with_arena_payload(
+                        #leaf_kind,
+                        span_lo,
+                        span_hi,
+                        #variant_idx_lit,
+                        0u8,
+                        __arena_off,
+                        8u32,
+                    );
+                    Ok(leaf_off)
+                }
+            }
+        }
+        EmitStrategy::StructDirect { rust, .. } => {
+            // AZ-I.W2-act.B2 — leading-dot Number-via-HRegex routes
+            // through the regex scanner and pushes the decoded f64 via
+            // the builder's typed leaf surface. Sheets's `number` rule
+            // (`/(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/ -> f64`) is the
+            // canonical activation; the regex admits `.5`-style
+            // leading-dot literals where the strict Number scanner
+            // would reject. Decoding via `str::parse::<f64>()` matches
+            // the TapeDirect body's `parse::<f64>` decode for parity.
+            let builder_ty: syn::Path = syn::parse_str(rust.builder_path).expect(
+                "EmitStrategy::StructDirect.rust.builder_path must parse as a Rust path",
+            );
+            quote! {
+                /// AZ-I.W2-act.B2 — Number-shape parse function routed
+                /// through the regex-scan adapter, struct-direct
+                /// substrate. Decodes the matched span to f64 via
+                /// `str::parse` and pushes the value through
+                /// `builder.push_leaf_with_f64`.
+                #[inline(always)]
+                #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+                pub fn #fn_ident<'p>(
+                    input: &'p [u8],
+                    p: &mut usize,
+                    first_byte: u8,
+                    builder: &mut #builder_ty<'p>,
+                ) -> ::core::result::Result<
+                    crate::runtime::tape::TapeOffset,
+                    crate::runtime::tape::DtaError,
+                > {
+                    use crate::runtime::builder::StructBuilder as _;
+                    let _ = first_byte;
+                    let span_lo = *p;
+                    let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
+                        return Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: span_lo as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    };
+                    *p += match_len as usize;
+                    let span_hi = *p;
+                    let __f64: f64 = ::core::str::from_utf8(
+                        &input[span_lo..span_hi]
+                    )
+                    .ok()
+                    .and_then(|s| s.parse::<f64>().ok())
+                    .unwrap_or(0.0);
+                    builder.push_leaf_with_f64(__f64);
+                    Ok(crate::runtime::tape::TapeOffset::NONE)
+                }
+            }
         }
     }
 }
@@ -574,16 +748,13 @@ pub fn emit_parse_number_visitor_via_hregex(
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    match strategy {
-        EmitStrategy::TapeDirect => {}
-        EmitStrategy::StructDirect { .. } => {
-            panic!(
-                "AZ-I.W2.RE: HRegex (Number-visitor-via-HRegex) shape does \
-                 not support StructDirect; W3 / W2.B expected to extend \
-                 before activating this strategy for the calling grammar"
-            );
-        }
-    }
+    // AZ-I.W2-act.B2 — visitor-path bodies are substrate-independent
+    // (they take `&mut V` where V is generic, not the tape). Both
+    // strategies emit the same body; the strategy parameter is
+    // accepted for signature symmetry with the tape-path emitter and
+    // future expansion (e.g. visitor sub-traits gated behind
+    // StructDirect).
+    let _ = strategy;
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("number", grammar_suffix, rule_name);
 
@@ -651,35 +822,65 @@ pub fn emit_parse_number_visitor_via_hregex(
 /// leaf. The HRegex detector should gate admission upstream; this
 /// branch exists only to keep the emitter output compilable when the
 /// emitter is invoked over a misclassified rule.
+///
+/// AZ-I.W2-act.B2 — strategy-aware: under StructDirect the stub takes
+/// the resolved struct builder as its `builder` parameter so the
+/// emitted token stream type-checks against the same builder type the
+/// non-stub branch uses.
 fn emit_unsupported_stub(
     fn_ident: &proc_macro2::Ident,
     support_mod: &proc_macro2::Ident,
     variant_idx: u8,
+    strategy: &EmitStrategy,
 ) -> TokenStream {
-    quote! {
-        #[inline(always)]
-        #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-        pub fn #fn_ident(
-            input: &[u8],
-            p: &mut usize,
-            state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
-            let _ = state;
-            let span_lo = *p as u32;
-            let span_hi = *p as u32;
-            let leaf_off = builder.push_leaf_with(
-                crate::runtime::tape::TapeKind::Regex,
-                span_lo,
-                span_hi,
-                #variant_idx,
-                0,
-                crate::runtime::tape::PayloadData::None,
+    match strategy {
+        EmitStrategy::TapeDirect => quote! {
+            #[inline(always)]
+            #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+            pub fn #fn_ident(
+                input: &[u8],
+                p: &mut usize,
+                state: &mut #support_mod::ScanState,
+                builder: &mut crate::runtime::tape::Tape<()>,
+            ) -> ::core::result::Result<
+                crate::runtime::tape::TapeOffset,
+                crate::runtime::tape::DtaError,
+            > {
+                let _ = state;
+                let span_lo = *p as u32;
+                let span_hi = *p as u32;
+                let leaf_off = builder.push_leaf_with(
+                    crate::runtime::tape::TapeKind::Regex,
+                    span_lo,
+                    span_hi,
+                    #variant_idx,
+                    0,
+                    crate::runtime::tape::PayloadData::None,
+                );
+                Ok(leaf_off)
+            }
+        },
+        EmitStrategy::StructDirect { rust, .. } => {
+            let builder_ty: syn::Path = syn::parse_str(rust.builder_path).expect(
+                "EmitStrategy::StructDirect.rust.builder_path must parse as a Rust path",
             );
-            Ok(leaf_off)
+            let _ = variant_idx;
+            quote! {
+                #[inline(always)]
+                #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+                pub fn #fn_ident<'p>(
+                    input: &'p [u8],
+                    p: &mut usize,
+                    state: &mut #support_mod::ScanState,
+                    builder: &mut #builder_ty<'p>,
+                ) -> ::core::result::Result<
+                    crate::runtime::tape::TapeOffset,
+                    crate::runtime::tape::DtaError,
+                > {
+                    let _ = (input, p, state, builder);
+                    Ok(crate::runtime::tape::TapeOffset::NONE)
+                }
+            }
         }
     }
 }
@@ -713,16 +914,11 @@ pub fn emit_parse_hregex_visitor(
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    match strategy {
-        EmitStrategy::TapeDirect => {}
-        EmitStrategy::StructDirect { .. } => {
-            panic!(
-                "AZ-I.W2.RE: HRegex shape does not support StructDirect; \
-                 W3 / W2.B expected to extend before activating this \
-                 strategy for the calling grammar"
-            );
-        }
-    }
+    // AZ-I.W2-act.B2 — visitor-path bodies are substrate-independent
+    // (they take `&mut V` where V is generic, not the tape). Both
+    // strategies emit the same body; the strategy parameter is
+    // accepted for signature symmetry with the tape-path emitter.
+    let _ = strategy;
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("hregex", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);

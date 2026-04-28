@@ -172,20 +172,35 @@ fn json_parser_with_empty_registry_routes_tape_direct() {
 }
 
 #[test]
-fn unknown_grammar_with_populated_registry_routes_tape_direct() {
-    // Default fallthrough: any grammar the resolver does not
-    // explicitly admit (CssL4Parser pre-W2-act.B3, CsvParser,
-    // EbnfParser, MathParser, BnfParser) routes TapeDirect regardless
-    // of registry shape. W2-act.B3 extends the resolver by adding the
-    // CssL4Parser positive arm; this test pins the negative default
-    // so an accidental wildcard match-all in a future refactor fails
-    // here.
+fn css_l4_parser_with_populated_registry_routes_struct_direct() {
+    // AZ-I.W2-act.B3 — the CssL4Parser arm flips StructDirect when
+    // the registry is populated. The SubstrateBinding payload carries
+    // the canonical crate::runtime::css_l4 paths the emitter splices
+    // into the generated parse fn body.
     let registry = populated_registry();
+    let strategy = EmitStrategy::for_grammar("CssL4Parser", &registry);
+    assert!(
+        matches!(strategy, EmitStrategy::StructDirect { .. }),
+        "CssL4Parser + populated registry must route StructDirect (W2-act.B3 activation)"
+    );
+    if let EmitStrategy::StructDirect { rust, .. } = strategy {
+        assert_eq!(rust.builder_path, "crate::runtime::css_l4::CssStructBuilder");
+        assert_eq!(rust.document_path, "crate::runtime::css_l4::CssDocument");
+    }
+}
+
+#[test]
+fn css_l4_parser_with_empty_registry_routes_tape_direct() {
+    // The struct-direct path requires a populated registry — an empty
+    // registry on a nominally struct-direct grammar resolves to
+    // TapeDirect rather than emitting a body that calls
+    // begin_compound against a missing layout.
+    let registry = bbnf_ir::registry::StructRegistry::default();
     let strategy = EmitStrategy::for_grammar("CssL4Parser", &registry);
     assert_eq!(
         strategy,
         EmitStrategy::TapeDirect,
-        "CssL4Parser must route TapeDirect in W2 (W2-act.B3 activates struct-direct)",
+        "CssL4Parser + empty registry must downgrade to TapeDirect (activation guard)",
     );
 }
 
@@ -194,9 +209,7 @@ fn google_sheets_parser_with_populated_registry_routes_struct_direct() {
     // AZ-I.W2-act.B2 — Sheets struct-direct activation. The resolver
     // returns `EmitStrategy::StructDirect` carrying the
     // `SheetsStructBuilder` / `SheetsDocument` paths the emitter
-    // splices into the generated `parse()` body. The orchestrator's
-    // regen pass consumes this arm; pre-regen the existing
-    // tape-backed parser persists alongside the new strategy choice.
+    // splices into the generated `parse()` body.
     let registry = populated_registry();
     let strategy = EmitStrategy::for_grammar("GoogleSheetsParser", &registry);
     let EmitStrategy::StructDirect { rust, ts, wasm } = strategy else {
@@ -215,8 +228,6 @@ fn google_sheets_parser_with_populated_registry_routes_struct_direct() {
         "crate::runtime::google_sheets::SheetsDocument",
         "Sheets rust document path must address SheetsDocument",
     );
-    // BA host bindings populate `ts` / `wasm` later; AZ-I leaves
-    // them as None.
     assert!(ts.is_none(), "Sheets ts binding reserved for BA");
     assert!(wasm.is_none(), "Sheets wasm binding reserved for BA");
 }
@@ -238,14 +249,29 @@ fn google_sheets_grammar_alias_routes_struct_direct() {
 #[test]
 fn google_sheets_parser_with_empty_registry_routes_tape_direct() {
     // The activation guard downgrades a nominally-struct-direct
-    // grammar to TapeDirect when the registry is empty. Mirrors the
-    // JSON empty-registry guard.
+    // grammar to TapeDirect when the registry is empty.
     let registry = empty_registry();
     let strategy = EmitStrategy::for_grammar("GoogleSheetsParser", &registry);
     assert_eq!(
         strategy,
         EmitStrategy::TapeDirect,
         "GoogleSheetsParser + empty registry must downgrade to TapeDirect (activation guard)",
+    );
+}
+
+#[test]
+fn unknown_grammar_with_populated_registry_routes_tape_direct() {
+    // Default fallthrough: any grammar the resolver does not explicitly
+    // admit (CsvParser, EbnfParser, MathParser, BnfParser, BbnfBootstrap)
+    // routes TapeDirect regardless of registry shape. This pins the
+    // negative default so an accidental wildcard match-all in a future
+    // refactor fails here.
+    let registry = populated_registry();
+    let strategy = EmitStrategy::for_grammar("CsvParser", &registry);
+    assert_eq!(
+        strategy,
+        EmitStrategy::TapeDirect,
+        "CsvParser must route TapeDirect (no struct-direct migration in AZ-I)",
     );
 }
 

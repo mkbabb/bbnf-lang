@@ -1,0 +1,49 @@
+// AZ-I.W2.RC — struct-direct Scalar-shape emission snapshot.
+//
+// Captures the StructDirect-arm emission of the per-shape Scalar
+// emitter (`crates/core/src/backend/rust/emitter/shapes/scalar.rs`).
+// The snapshot locks in: (a) at least one `builder.push_leaf_with_*`
+// call materialises the literal value when the literal is one of
+// JSON's value-position keywords (`null` / `true` / `false`);
+// (b) no legacy tape-substrate leaf pushes leak into the
+// struct-direct arm. The driver in `struct_direct_snapshots.rs`
+// asserts both invariants.
+//
+// Codegen-time literal dispatch:
+// - `null`  → `builder.push_leaf_with_unit()`.
+// - `true`  → `builder.push_leaf_with_bool(true)`.
+// - `false` → `builder.push_leaf_with_bool(false)`.
+// - structural separators (JSON `,` / `:`) emit no builder call;
+//   the literal advances `*p` and the enclosing compound's frame
+//   bookkeeping subsumes the leaf.
+
+#[inline(always)]
+#[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+pub fn parse_scalar_JsonParser_null<'p>(
+    input: &'p [u8],
+    p: &mut usize,
+    _state: &mut __shape_support_JsonParser::ScanState,
+    builder: &mut ::bbnf::runtime::JsonStructBuilder<'p>,
+) -> ::core::result::Result<
+    crate::runtime::tape::TapeOffset,
+    crate::runtime::tape::DtaError,
+> {
+    let at = *p;
+    let end = at + 4usize;
+    if input.len() < end || input[at..end] != [b'n', b'u', b'l', b'l'] {
+        return Err(crate::runtime::tape::DtaError::Syntax {
+            offset: at as u32,
+            failing_state: crate::runtime::tape::DtaStateId::NONE,
+            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+        });
+    }
+    *p = end;
+    builder.push_leaf_with_unit();
+    Ok(crate::runtime::tape::TapeOffset::NONE)
+}
+
+// Companion shape variants for the same JSON grammar:
+// - `parse_scalar_JsonParser_true`   → `builder.push_leaf_with_bool(true);`
+// - `parse_scalar_JsonParser_false`  → `builder.push_leaf_with_bool(false);`
+// - `parse_scalar_JsonParser_comma`  → no builder call (structural separator).
+// - `parse_scalar_JsonParser_colon`  → no builder call (structural separator).

@@ -31,83 +31,220 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::dispatcher::{shape_fn_ident, visitor_shape_fn_ident};
+use super::super::strategy::EmitStrategy;
 
 /// Emit `pub fn parse_string_<grammar>_<rule>(input, p, state, builder)
 /// -> Result<TapeOffset, DtaError>`.
+///
+/// AZ-I.W2.RC — `strategy` selects the substrate at codegen time:
+///
+/// - [`EmitStrategy::TapeDirect`] — body takes `&mut Tape<()>` and
+///   pushes via `tape.push_leaf_borrowed_string` (fast borrow path)
+///   or, on the cold escape path, `tape.push_leaf_with_arena_frame`.
+/// - [`EmitStrategy::StructDirect`] — body takes the concrete
+///   builder type (e.g. `&mut JsonStructBuilder<'_>`) and pushes via
+///   `builder.push_leaf_with_str(slice)`. The borrow path slices
+///   `input[body_start..end]` (lifetime-bound to the parse-fn's
+///   `'p` input lifetime); the cold escape path decodes into the
+///   builder's arena via `builder.arena_mut()` and emits the decoded
+///   bytes via the same `push_leaf_with_str` surface.
 pub fn emit_parse_string(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
+    strategy: &EmitStrategy,
 ) -> TokenStream {
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("string", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let variant_idx = (rule.id & 0xFF) as u8;
 
-    quote! {
-        /// AW-V.W3.2 — per-grammar String-shape parse function.
-        ///
-        /// Mirrors `json_prototype::string::parse_string_body`.
-        /// `"` must NOT be consumed by the caller — this function
-        /// reads it, scans for the closing quote, and pushes a Span
-        /// leaf with appropriate borrow / arena-decode metadata.
-        #[inline(always)]
-        #[allow(non_snake_case, clippy::too_many_arguments)]
-        pub fn #fn_ident(
-            input: &[u8],
-            p: &mut usize,
-            _state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
-            let open = *p;
-            if input.get(open).copied() != Some(b'"') {
-                return Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: open as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                });
-            }
-            let body_start = open + 1;
-            let tail = match input.get(body_start..) {
-                Some(t) => t,
-                None => {
-                    return Err(crate::runtime::tape::DtaError::UnexpectedEnd {
+    match strategy {
+        EmitStrategy::TapeDirect => quote! {
+            /// AW-V.W3.2 — per-grammar String-shape parse function
+            /// (tape substrate).
+            ///
+            /// Mirrors `json_prototype::string::parse_string_body`.
+            /// `"` must NOT be consumed by the caller — this function
+            /// reads it, scans for the closing quote, and pushes a Span
+            /// leaf with appropriate borrow / arena-decode metadata.
+            #[inline(always)]
+            #[allow(non_snake_case, clippy::too_many_arguments)]
+            pub fn #fn_ident(
+                input: &[u8],
+                p: &mut usize,
+                _state: &mut #support_mod::ScanState,
+                builder: &mut crate::runtime::tape::Tape<()>,
+            ) -> ::core::result::Result<
+                crate::runtime::tape::TapeOffset,
+                crate::runtime::tape::DtaError,
+            > {
+                let open = *p;
+                if input.get(open).copied() != Some(b'"') {
+                    return Err(crate::runtime::tape::DtaError::Syntax {
                         offset: open as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
-            };
-            match #support_mod::first_quote_or_backslash(tail) {
-                Some((off, b'"')) => {
-                    let end = body_start + off;
-                    *p = end + 1;
-                    let lo = open as u32;
-                    let hi = *p as u32;
-                    // Borrow path: Span leaf with STRING_BORROW_BIT set;
-                    // the reader slices input[lo+1..hi-1] directly.
-                    let leaf = builder.push_leaf_borrowed_string(
-                        crate::runtime::tape::TapeKind::Span,
-                        lo,
-                        hi,
-                        #variant_idx,
-                        0,
-                    );
-                    Ok(leaf)
+                let body_start = open + 1;
+                let tail = match input.get(body_start..) {
+                    Some(t) => t,
+                    None => {
+                        return Err(crate::runtime::tape::DtaError::UnexpectedEnd {
+                            offset: open as u32,
+                        });
+                    }
+                };
+                match #support_mod::first_quote_or_backslash(tail) {
+                    Some((off, b'"')) => {
+                        let end = body_start + off;
+                        *p = end + 1;
+                        let lo = open as u32;
+                        let hi = *p as u32;
+                        // Borrow path: Span leaf with STRING_BORROW_BIT set;
+                        // the reader slices input[lo+1..hi-1] directly.
+                        let leaf = builder.push_leaf_borrowed_string(
+                            crate::runtime::tape::TapeKind::Span,
+                            lo,
+                            hi,
+                            #variant_idx,
+                            0,
+                        );
+                        Ok(leaf)
+                    }
+                    Some((_off, b'\\')) => {
+                        // Escape path — scan forward to the closing quote,
+                        // accounting for escape sequences. The decode
+                        // into the arena matches the AW-IV walker's
+                        // JSON-string decode kernel contract so
+                        // `tape.payload_string(rec)` resolves on reads.
+                        parse_string_escaped(input, p, open, builder, #variant_idx)
+                    }
+                    Some(_) => unreachable!(),
+                    None => Err(crate::runtime::tape::DtaError::UnexpectedEnd {
+                        offset: open as u32,
+                    }),
                 }
-                Some((_off, b'\\')) => {
-                    // Escape path — scan forward to the closing quote,
-                    // accounting for escape sequences. The decode
-                    // into the arena matches the AW-IV walker's
-                    // JSON-string decode kernel contract so
-                    // `tape.payload_string(rec)` resolves on reads.
-                    parse_string_escaped(input, p, open, builder, #variant_idx)
+            }
+        },
+        EmitStrategy::StructDirect { builder_path, .. } => {
+            let builder_ty: syn::Path = syn::parse_str(builder_path).expect(
+                "EmitStrategy::StructDirect.builder_path must parse as a Rust path",
+            );
+            quote! {
+                /// AZ-I.W2.RC — per-grammar String-shape parse function
+                /// (struct-direct substrate).
+                ///
+                /// `"` must NOT be consumed by the caller — this
+                /// function reads it, scans for the closing quote, and
+                /// pushes a `&'p str` leaf via the builder. The borrow
+                /// path slices the input directly; the cold escape
+                /// path decodes into the builder's arena and emits
+                /// the decoded bytes via the same `push_leaf_with_str`
+                /// surface.
+                #[inline(always)]
+                #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+                pub fn #fn_ident<'p>(
+                    input: &'p [u8],
+                    p: &mut usize,
+                    _state: &mut #support_mod::ScanState,
+                    builder: &mut #builder_ty<'p>,
+                ) -> ::core::result::Result<
+                    crate::runtime::tape::TapeOffset,
+                    crate::runtime::tape::DtaError,
+                > {
+                    let open = *p;
+                    if input.get(open).copied() != Some(b'"') {
+                        return Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: open as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                    let body_start = open + 1;
+                    let tail = match input.get(body_start..) {
+                        Some(t) => t,
+                        None => {
+                            return Err(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: open as u32,
+                            });
+                        }
+                    };
+                    match #support_mod::first_quote_or_backslash(tail) {
+                        Some((off, b'"')) => {
+                            let end = body_start + off;
+                            *p = end + 1;
+                            // Borrow path: slice directly from the
+                            // input. The `'p` lifetime threads through
+                            // the parse-fn signature so the slice's
+                            // lifetime matches the builder's arena.
+                            let body: &'p str = unsafe {
+                                ::core::str::from_utf8_unchecked(
+                                    &input[body_start..end],
+                                )
+                            };
+                            builder.push_leaf_with_str(body);
+                            Ok(crate::runtime::tape::TapeOffset::NONE)
+                        }
+                        Some((_off, b'\\')) => {
+                            // AZ-I.W2.RC — cold escape path. Routes
+                            // through `decode_json_string_to_arena`
+                            // against a per-call `Vec<u8>`; the decoded
+                            // bytes leak to `&'static str` to satisfy
+                            // the `push_leaf_with_str` lifetime
+                            // contract pending W2.A byte-arena
+                            // substrate extension. Borrow-path fast
+                            // case (escape-free strings, ≥95% of
+                            // real-world JSON inputs) is sound and
+                            // allocation-free.
+                            let mut buf: Vec<u8> = Vec::with_capacity(
+                                input.len().saturating_sub(open + 1),
+                            );
+                            match ::parse_that::parsers::scan::decode_json_string_to_arena(
+                                input, open, &mut buf,
+                            ) {
+                                Some((
+                                    ::parse_that::parsers::scan::StringPayload::Owned { .. },
+                                    end_pos,
+                                )) => {
+                                    *p = end_pos;
+                                    let bytes: Box<[u8]> = buf.into_boxed_slice();
+                                    let leaked: &'static [u8] = Box::leak(bytes);
+                                    let leaked_str: &'static str = unsafe {
+                                        ::core::str::from_utf8_unchecked(leaked)
+                                    };
+                                    builder.push_leaf_with_str(leaked_str);
+                                    Ok(crate::runtime::tape::TapeOffset::NONE)
+                                }
+                                Some((
+                                    ::parse_that::parsers::scan::StringPayload::Borrowed {
+                                        start, end,
+                                    },
+                                    end_pos,
+                                )) => {
+                                    *p = end_pos;
+                                    let body: &'p str = unsafe {
+                                        ::core::str::from_utf8_unchecked(
+                                            &input[start as usize..end as usize],
+                                        )
+                                    };
+                                    builder.push_leaf_with_str(body);
+                                    Ok(crate::runtime::tape::TapeOffset::NONE)
+                                }
+                                None => Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: open as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                }),
+                            }
+                        }
+                        Some(_) => unreachable!(),
+                        None => Err(crate::runtime::tape::DtaError::UnexpectedEnd {
+                            offset: open as u32,
+                        }),
+                    }
                 }
-                Some(_) => unreachable!(),
-                None => Err(crate::runtime::tape::DtaError::UnexpectedEnd {
-                    offset: open as u32,
-                }),
             }
         }
     }

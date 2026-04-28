@@ -28,13 +28,27 @@ use quote::quote;
 use super::dispatcher::{
     emit_ref_call_tape, emit_ref_call_visitor, shape_fn_ident, visitor_shape_fn_ident,
 };
+use super::super::strategy::EmitStrategy;
 
 /// Emit `pub fn parse_scalar_<grammar>_<rule>(input, p, state, builder)
 /// -> Result<TapeOffset, DtaError>`.
+///
+/// AZ-I.W2.RC — `strategy` selects the substrate at codegen time:
+///
+/// - [`EmitStrategy::TapeDirect`] — body takes `&mut Tape<()>` and
+///   pushes `tape.push_leaf(TapeKind::Literal, …)`.
+/// - [`EmitStrategy::StructDirect`] — body takes the resolved
+///   builder type (e.g. `&mut JsonStructBuilder<'_>`) and dispatches
+///   on the literal's bytes: `null` → `builder.push_leaf_with_unit()`,
+///   `true` / `false` → `builder.push_leaf_with_bool(value)`. Other
+///   structural literals (`,` / `:` etc.) advance `*p` without a
+///   builder leaf — they are inline structural separators consumed
+///   by the enclosing Object / Array body, never the value position.
 pub fn emit_parse_scalar(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
+    strategy: &EmitStrategy,
 ) -> TokenStream {
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("scalar", grammar_suffix, rule_name);
@@ -53,45 +67,103 @@ pub fn emit_parse_scalar(
                     quote! { #lit }
                 })
                 .collect();
-            quote! {
-                /// AW-V.W3.2 — per-grammar Scalar-shape parse function
-                /// (single-literal body).
-                #[inline(always)]
-                #[allow(non_snake_case, clippy::too_many_arguments)]
-                pub fn #fn_ident(
-                    input: &[u8],
-                    p: &mut usize,
-                    _state: &mut #support_mod::ScanState,
-                    builder: &mut crate::runtime::tape::Tape<()>,
-                ) -> ::core::result::Result<
-                    crate::runtime::tape::TapeOffset,
-                    crate::runtime::tape::DtaError,
-                > {
-                    let at = *p;
-                    let end = at + #len;
-                    if input.len() < end || input[at..end] != [#(#byte_lits),*] {
-                        return Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: at as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                        });
+            match strategy {
+                EmitStrategy::TapeDirect => quote! {
+                    /// AW-V.W3.2 — per-grammar Scalar-shape parse function
+                    /// (single-literal body, tape substrate).
+                    #[inline(always)]
+                    #[allow(non_snake_case, clippy::too_many_arguments)]
+                    pub fn #fn_ident(
+                        input: &[u8],
+                        p: &mut usize,
+                        _state: &mut #support_mod::ScanState,
+                        builder: &mut crate::runtime::tape::Tape<()>,
+                    ) -> ::core::result::Result<
+                        crate::runtime::tape::TapeOffset,
+                        crate::runtime::tape::DtaError,
+                    > {
+                        let at = *p;
+                        let end = at + #len;
+                        if input.len() < end || input[at..end] != [#(#byte_lits),*] {
+                            return Err(crate::runtime::tape::DtaError::Syntax {
+                                offset: at as u32,
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                            });
+                        }
+                        *p = end;
+                        let off = builder.push_leaf(
+                            crate::runtime::tape::TapeKind::Literal,
+                            at as u32,
+                            end as u32,
+                            #variant_idx,
+                            0,
+                        );
+                        Ok(off)
                     }
-                    *p = end;
-                    let off = builder.push_leaf(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        #variant_idx,
-                        0,
-                    );
-                    Ok(off)
+                },
+                EmitStrategy::StructDirect { builder_path, .. } => {
+                    let builder_ty: syn::Path = syn::parse_str(builder_path)
+                        .expect(
+                            "EmitStrategy::StructDirect.builder_path must parse as a Rust path",
+                        );
+                    // AZ-I.W2.RC — codegen-time literal dispatch. The
+                    // emitter inspects the literal's bytes once and
+                    // splices the matching `builder.push_leaf_with_*`
+                    // call (or none, for structural separators). No
+                    // runtime branch on the literal payload.
+                    let builder_emit: TokenStream = match bytes {
+                        b"null" => quote! { builder.push_leaf_with_unit(); },
+                        b"true" => quote! { builder.push_leaf_with_bool(true); },
+                        b"false" => quote! { builder.push_leaf_with_bool(false); },
+                        // Structural separators (JSON `,` / `:`) — no
+                        // value emission; the literal advances `*p`
+                        // and the enclosing compound's frame
+                        // bookkeeping suffices.
+                        _ => quote! {},
+                    };
+                    quote! {
+                        /// AZ-I.W2.RC — per-grammar Scalar-shape parse
+                        /// function (single-literal body, struct-direct
+                        /// substrate). The literal's bytes select the
+                        /// matching `builder.push_leaf_with_*` call at
+                        /// codegen time; structural separators emit no
+                        /// builder call.
+                        #[inline(always)]
+                        #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+                        pub fn #fn_ident<'p>(
+                            input: &'p [u8],
+                            p: &mut usize,
+                            _state: &mut #support_mod::ScanState,
+                            builder: &mut #builder_ty<'p>,
+                        ) -> ::core::result::Result<
+                            crate::runtime::tape::TapeOffset,
+                            crate::runtime::tape::DtaError,
+                        > {
+                            let at = *p;
+                            let end = at + #len;
+                            if input.len() < end || input[at..end] != [#(#byte_lits),*] {
+                                return Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            #builder_emit
+                            Ok(crate::runtime::tape::TapeOffset::NONE)
+                        }
+                    }
                 }
             }
         }
         IrNode::Ref(rid) => {
             // AX.W0a.2.b — transparent-alias Scalar. Delegate to
             // the target rule's shape fn; no compound push — the
-            // alias shares the target's offset.
+            // alias shares the target's offset. The delegate call
+            // expression names `builder` as its target — the same
+            // local name on both substrates — so the same call
+            // splice composes in either parse-fn signature.
             let call = match emit_ref_call_tape(grammar_suffix, *rid, ir) {
                 Some(c) => c,
                 None => {
@@ -99,25 +171,54 @@ pub fn emit_parse_scalar(
                     return quote! {};
                 }
             };
-            quote! {
-                /// AX.W0a.2.b — per-grammar Scalar-shape parse function
-                /// (transparent-Ref body). Delegates to the target's
-                /// shape fn.
-                ///
-                /// AX.W0a.2.f — compound (delegates via
-                /// `emit_ref_call_tape`); plain `#[inline]`.
-                #[inline]
-                #[allow(non_snake_case, clippy::too_many_arguments)]
-                pub fn #fn_ident(
-                    input: &[u8],
-                    p: &mut usize,
-                    state: &mut #support_mod::ScanState,
-                    builder: &mut crate::runtime::tape::Tape<()>,
-                ) -> ::core::result::Result<
-                    crate::runtime::tape::TapeOffset,
-                    crate::runtime::tape::DtaError,
-                > {
-                    #call
+            match strategy {
+                EmitStrategy::TapeDirect => quote! {
+                    /// AX.W0a.2.b — per-grammar Scalar-shape parse function
+                    /// (transparent-Ref body, tape substrate). Delegates
+                    /// to the target's shape fn.
+                    ///
+                    /// AX.W0a.2.f — compound (delegates via
+                    /// `emit_ref_call_tape`); plain `#[inline]`.
+                    #[inline]
+                    #[allow(non_snake_case, clippy::too_many_arguments)]
+                    pub fn #fn_ident(
+                        input: &[u8],
+                        p: &mut usize,
+                        state: &mut #support_mod::ScanState,
+                        builder: &mut crate::runtime::tape::Tape<()>,
+                    ) -> ::core::result::Result<
+                        crate::runtime::tape::TapeOffset,
+                        crate::runtime::tape::DtaError,
+                    > {
+                        #call
+                    }
+                },
+                EmitStrategy::StructDirect { builder_path, .. } => {
+                    let builder_ty: syn::Path = syn::parse_str(builder_path)
+                        .expect(
+                            "EmitStrategy::StructDirect.builder_path must parse as a Rust path",
+                        );
+                    quote! {
+                        /// AZ-I.W2.RC — per-grammar Scalar-shape parse
+                        /// function (transparent-Ref body, struct-direct
+                        /// substrate). Delegates to the target's
+                        /// strategy-resolved shape fn; the inner call
+                        /// expression names `builder` against the
+                        /// concrete struct-builder.
+                        #[inline]
+                        #[allow(non_snake_case, clippy::too_many_arguments)]
+                        pub fn #fn_ident<'p>(
+                            input: &'p [u8],
+                            p: &mut usize,
+                            state: &mut #support_mod::ScanState,
+                            builder: &mut #builder_ty<'p>,
+                        ) -> ::core::result::Result<
+                            crate::runtime::tape::TapeOffset,
+                            crate::runtime::tape::DtaError,
+                        > {
+                            #call
+                        }
+                    }
                 }
             }
         }

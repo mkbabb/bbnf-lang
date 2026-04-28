@@ -240,7 +240,7 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
         let fragment = match tag {
             ShapeTag::Object => object::emit_parse_object(&grammar_suffix, rule, ir, &strategy),
             ShapeTag::Array => array::emit_parse_array(&grammar_suffix, rule, ir, &strategy),
-            ShapeTag::String => string::emit_parse_string(&grammar_suffix, rule, ir),
+            ShapeTag::String => string::emit_parse_string(&grammar_suffix, rule, ir, &strategy),
             ShapeTag::Number => {
                 // AX.W0a.2.q — lenient-number routing: when the rule's
                 // regex classification admits leading-dot literals
@@ -255,11 +255,11 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
                 if hregex::number_rule_allows_leading_dot(rule, ir) {
                     hregex::emit_parse_number_via_hregex(&grammar_suffix, rule, ir)
                 } else {
-                    number::emit_parse_number(&grammar_suffix, rule, ir)
+                    number::emit_parse_number(&grammar_suffix, rule, ir, &strategy)
                 }
             }
             ShapeTag::Keyword => keyword::emit_parse_keyword(&grammar_suffix, rule, ir),
-            ShapeTag::Scalar => scalar::emit_parse_scalar(&grammar_suffix, rule, ir),
+            ShapeTag::Scalar => scalar::emit_parse_scalar(&grammar_suffix, rule, ir, &strategy),
             ShapeTag::Pratt => pratt::emit_parse_pratt(&grammar_suffix, rule, ir),
             ShapeTag::Unordered => unordered::emit_parse_unordered(&grammar_suffix, rule, ir),
             ShapeTag::ArgList => arglist::emit_parse_arglist(&grammar_suffix, rule, ir),

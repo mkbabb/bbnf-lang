@@ -145,11 +145,14 @@ impl EmitStrategy {
     ///
     /// # AZ-I.W2-act admission rules
     ///
-    /// - The W2-act.A resolver leaves the catch-all `_ => TapeDirect`
-    ///   intact; W2-act.B1 owns the JSON arm flip + JSON regen.
+    /// - W2-act.A landed the substrate hoist with the catch-all
+    ///   `_ => TapeDirect` intact.
+    /// - W2-act.B1 (this revision) flips `JsonParser` / `JsonGrammar`
+    ///   to `StructDirect` once the struct registry is populated; the
+    ///   negative default holds for every other grammar.
     /// - W2-act.B2 (Sheets) and W2-act.B3 (CSS L4) extend the resolver
-    ///   with their own arms in the same wave; each adds a positive
-    ///   arm that the negative default falls through.
+    ///   with their own positive arms in the same wave; each new arm
+    ///   precedes the catch-all.
     pub fn for_grammar(grammar_ident: &str, registry: &StructRegistry) -> Self {
         // The struct-direct path requires the registry to carry at
         // least one layout — projection ran and produced something.
@@ -159,16 +162,30 @@ impl EmitStrategy {
         let registry_populated = !registry.is_empty();
 
         match (grammar_ident, registry_populated) {
-            // AZ-I.W2-act.A: the substrate hoist preserves the
-            // pre-hoist all-TapeDirect close from W2.md §Reversal.
-            // W2-act.B1 owns the JsonParser / JsonGrammar arm flip
-            // (per W2-act.md §AZ-I.W2-act.B1); W2-act.B2 and
-            // W2-act.B3 add the GoogleSheetsParser and CssL4Parser
-            // arms respectively. Per `feedback_no-orthogonal-codepaths`
-            // there is no co-emission; per `feedback_no-backward-compat`
-            // there is no Parsed-shim; the resolver's all-TapeDirect
-            // close at W2-act.A is the wave-local revert that
-            // W2.md §Reversal calls for, NOT a fallback path.
+            // AZ-I.W2-act.B1: JSON activates onto the struct-direct
+            // path. The grammar-emitted `JsonParser::parse` returns
+            // `Result<JsonDocument<'_>, ParseErr>` after the
+            // orchestrator's post-flip regen consumes this strategy.
+            // The `JsonGrammar` alias mirrors the same admission so
+            // hand-written test fixtures resolving via the plan-
+            // nominal name route to the same substrate (per
+            // W2-EMITTER-REWIRE plan §1).
+            ("JsonParser" | "JsonGrammar", true) => EmitStrategy::StructDirect {
+                rust: SubstrateBinding {
+                    builder_path: "::bbnf::runtime::json::JsonStructBuilder",
+                    document_path: "::bbnf::runtime::json::JsonDocument",
+                },
+                ts: None,
+                wasm: None,
+            },
+            // AZ-I.W2-act.B2 / B3 extend with their own positive
+            // arms; until they land, every other grammar (BBNF,
+            // BNF, EBNF, CSV, math, Sheets pre-B2, CSS L4 pre-B3)
+            // routes onto the legacy fused tape path. Per
+            // `feedback_no-orthogonal-codepaths` there is no
+            // co-emission; per `feedback_no-backward-compat` there
+            // is no Parsed-shim — the catch-all is the single
+            // negative default, not a fallback path.
             _ => EmitStrategy::TapeDirect,
         }
     }

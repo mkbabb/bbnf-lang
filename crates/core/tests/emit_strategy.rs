@@ -1,19 +1,19 @@
-//! AZ-I.W2.RA — leaf test for the `EmitStrategy::for_grammar`
+//! AZ-I.W2-act.B1 — leaf test for the `EmitStrategy::for_grammar`
 //! resolver.
 //!
-//! Exercises the resolver's three load-bearing dispatch axes:
+//! Exercises the resolver's load-bearing dispatch axes:
 //!
 //! 1. JSON's parser ident (`"JsonParser"`) + populated registry
 //!    routes to `EmitStrategy::StructDirect` with the stable
 //!    builder/document path strings the emitter splices into
-//!    `parse()`'s body.
+//!    `parse()`'s body — the W2-act.B1 arm flip.
 //! 2. JSON's plan-nominal alias (`"JsonGrammar"`) + populated
 //!    registry routes the same way (forward-compat with hand-
 //!    written test fixtures per the W2-EMITTER-REWIRE plan §1).
 //! 3. BBNF (`"BbnfBootstrap"`) + populated registry routes to
 //!    `EmitStrategy::TapeDirect` — only JSON gets struct-direct
-//!    in W2; the resolver explicitly filters by grammar identity,
-//!    not just by registry-emptiness.
+//!    in W2-act.B1; the resolver explicitly filters by grammar
+//!    identity, not just by registry-emptiness.
 //! 4. BBNF + empty registry routes to `EmitStrategy::TapeDirect`
 //!    (registry-emptiness can never escalate a grammar to
 //!    struct-direct).
@@ -24,8 +24,9 @@
 //!
 //! Per `feedback_no-orthogonal-codepaths` the resolver is the single
 //! decision surface; per `feedback_pluggable-components` adding a
-//! new struct-direct grammar (Sheets W2.B, CSS L4 W3) extends the
-//! resolver with a new arm and lands a sibling test here.
+//! new struct-direct grammar (Sheets W2-act.B2, CSS L4 W2-act.B3)
+//! extends the resolver with a new arm and lands a sibling test
+//! here.
 
 // AZ-I.W2-act.A — `EmitStrategy` lives in `bbnf_ir::registry::strategy`
 // per `audit/AUDIT-6-ARCHITECTURE.md` §4 + §8.1. The Rust emitter
@@ -61,36 +62,64 @@ fn empty_registry() -> StructRegistry {
 }
 
 #[test]
-fn json_parser_with_populated_registry_routes_tape_direct_post_w2_close() {
-    // AZ-I.W2 close ceremony: substrate landed but activation
-    // reverted to TapeDirect per W2.md §Reversal. JsonParser +
-    // populated registry resolves to TapeDirect until the W2-act
-    // follow-on wave migrates `parsed.view()` / `parsed.to_value()`
-    // callers, recodes the parity harnesses, and runs the cargo
-    // bench gate. The substrate (StructBuilder + JsonDocument +
-    // 9 per-shape struct-direct paths) exists; only the resolver
-    // arm activating it is gated.
+fn json_parser_with_populated_registry_routes_struct_direct() {
+    // AZ-I.W2-act.B1 — the resolver's positive JSON arm. Once the
+    // struct registry carries at least one layout, `JsonParser`
+    // resolves onto the struct-direct path with the canonical
+    // `JsonStructBuilder` / `JsonDocument` substrate bindings. The
+    // post-flip orchestrator regen consumes these paths to emit a
+    // `parse()` body that returns `Result<JsonDocument<'_>, ParseErr>`.
     let registry = populated_registry();
     let strategy = EmitStrategy::for_grammar("JsonParser", &registry);
-    assert!(
-        matches!(strategy, EmitStrategy::TapeDirect),
-        "Post-W2-close: JsonParser + populated registry routes TapeDirect (activation gated on W2-act); got {:?}",
-        strategy,
-    );
+    match strategy {
+        EmitStrategy::StructDirect { rust, ts, wasm } => {
+            assert_eq!(
+                rust.builder_path, "::bbnf::runtime::json::JsonStructBuilder",
+                "JsonParser StructDirect must wire the canonical builder path",
+            );
+            assert_eq!(
+                rust.document_path, "::bbnf::runtime::json::JsonDocument",
+                "JsonParser StructDirect must wire the canonical document path",
+            );
+            assert!(
+                ts.is_none(),
+                "TS binding stays None until BA host-bindings populate it",
+            );
+            assert!(
+                wasm.is_none(),
+                "WASM binding stays None until BA host-bindings populate it",
+            );
+        }
+        other => panic!(
+            "AZ-I.W2-act.B1: JsonParser + populated registry must route StructDirect; got {:?}",
+            other,
+        ),
+    }
 }
 
 #[test]
-fn json_grammar_alias_routes_tape_direct_post_w2_close() {
-    // Forward-compat alias resolves identically to JsonParser; the
-    // post-W2-close-ceremony resolver collapses both onto TapeDirect
-    // until W2-act activates struct-direct.
+fn json_grammar_alias_routes_struct_direct() {
+    // Forward-compat alias resolves identically to `JsonParser`;
+    // hand-written test fixtures naming the grammar `JsonGrammar`
+    // reach the same struct-direct binding pair.
     let registry = populated_registry();
     let strategy = EmitStrategy::for_grammar("JsonGrammar", &registry);
-    assert!(
-        matches!(strategy, EmitStrategy::TapeDirect),
-        "Post-W2-close: JsonGrammar (alias) + populated registry routes TapeDirect; got {:?}",
-        strategy,
-    );
+    match strategy {
+        EmitStrategy::StructDirect { rust, .. } => {
+            assert_eq!(
+                rust.builder_path, "::bbnf::runtime::json::JsonStructBuilder",
+                "JsonGrammar alias must wire the same builder path as JsonParser",
+            );
+            assert_eq!(
+                rust.document_path, "::bbnf::runtime::json::JsonDocument",
+                "JsonGrammar alias must wire the same document path as JsonParser",
+            );
+        }
+        other => panic!(
+            "AZ-I.W2-act.B1: JsonGrammar (alias) + populated registry must route StructDirect; got {:?}",
+            other,
+        ),
+    }
 }
 
 #[test]

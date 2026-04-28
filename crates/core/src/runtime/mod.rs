@@ -25,6 +25,7 @@ pub mod handle;
 pub mod json;
 pub mod parsed;
 pub mod path;
+pub mod view;
 
 pub use builder::StructBuilder;
 pub use css_l4::{
@@ -73,12 +74,6 @@ pub use tape::{PayloadTag, PayloadValue, ValueChildren, ValueFrame};
 /// [`TapeBuildError`]: tape::TapeBuildError
 pub use tape;
 
-/// AW.0.5: typed view-layer projections the generated `.as_color()`
-/// shims reference. The Rust-side `Color` struct + `ColorSpace`
-/// enum live in the backend's `view/color.rs`; this re-export
-/// surfaces them at the stable `crate::runtime::view::*` path so
-/// generated `the proc-macro derive (retired B2)` output reaches the types without
-/// depending on crate-internal `backend::rust::view::*` paths.
-pub mod view {
-    pub use crate::backend::rust::view::color::{Color, ColorSpace, COLOR_PAYLOAD_BYTES};
-}
+/// AZ-I.W2-act.close A.fix — re-export the grammar-agnostic
+/// [`view::RuntimeView`] trait at the stable `crate::runtime` path.
+pub use view::RuntimeView;

@@ -44,6 +44,7 @@ pub mod arena;
 pub mod builder;
 pub mod document;
 pub mod value;
+pub mod view;
 
 pub use arena::{JsonArena, JsonArrayId, JsonObjectId};
 pub use builder::JsonStructBuilder;

@@ -5388,7 +5388,7 @@ mod __jsonparser_emit_impl {
                     });
                 }
             }
-            ::core::result::Result::Ok(builder.finalise())
+            ::core::result::Result::Ok(builder.finalise(input))
         }
     }
     #[inline]

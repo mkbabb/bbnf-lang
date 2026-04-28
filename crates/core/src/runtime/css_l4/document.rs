@@ -39,16 +39,21 @@ pub struct CssDocument<'p> {
     /// The root stylesheet — the typed top-level entry the grammar's
     /// `stylesheet` rule projects.
     pub root: StyleSheet,
+    /// AZ-I.W2-act.close A.fix — the input slice the parse consumed.
+    /// Threaded through `finalise(input)` so [`CssView`] can satisfy
+    /// the `RuntimeView::input()` surface without re-acquiring the
+    /// source from the call site.
+    pub input: &'p str,
 }
 
 impl<'p> CssDocument<'p> {
-    /// Construct a document from a populated arena and a root
-    /// stylesheet. The typical caller is the generated parse function;
-    /// consumers outside the emitter rarely build a `CssDocument`
-    /// directly.
+    /// Construct a document from a populated arena, root stylesheet,
+    /// and the input slice the parse consumed. The typical caller is
+    /// the generated parse function; consumers outside the emitter
+    /// rarely build a `CssDocument` directly.
     #[inline]
-    pub fn new(arena: CssArena<'p>, root: StyleSheet) -> Self {
-        Self { arena, root }
+    pub fn new(arena: CssArena<'p>, root: StyleSheet, input: &'p str) -> Self {
+        Self { arena, root, input }
     }
 
     /// Borrow the root [`StyleSheet`].
@@ -65,6 +70,13 @@ impl<'p> CssDocument<'p> {
     #[inline]
     pub fn arena(&self) -> &CssArena<'p> {
         &self.arena
+    }
+
+    /// AZ-I.W2-act.close A.fix — borrow the input slice the parse
+    /// consumed.
+    #[inline]
+    pub fn input(&self) -> &'p str {
+        self.input
     }
 
     /// Resolve a rule list handle.
@@ -100,7 +112,7 @@ impl<'p> CssDocument<'p> {
     /// AZ-I.W2-act.B3 — root view, mirroring `Parsed::view()` semantics.
     #[inline]
     pub fn view<'a>(&'a self) -> CssView<'a, 'p> {
-        CssView { doc: self }
+        CssView { doc: self, focus: CssFocus::Stylesheet(&self.root) }
     }
 
     /// AZ-I.W2-act.B3 — borrowed root stylesheet, mirroring
@@ -133,14 +145,56 @@ impl<'p> CssDocument<'p> {
 /// lifetime discipline.
 #[derive(Debug, Clone, Copy)]
 pub struct CssView<'a, 'p: 'a> {
-    doc: &'a CssDocument<'p>,
+    pub(crate) doc: &'a CssDocument<'p>,
+    /// AZ-I.W2-act.close A.fix — the focused node this view observes.
+    /// Defaults to [`CssFocus::Stylesheet`] for `CssDocument::view()`;
+    /// `RuntimeView::children()` projects sub-views onto rules /
+    /// declarations / values discovered structurally.
+    pub(crate) focus: CssFocus<'a, 'p>,
+}
+
+/// AZ-I.W2-act.close A.fix — focusable node within a [`CssDocument`].
+///
+/// CSS L4's typed graph has multiple compound shapes (stylesheet,
+/// rules, declarations, values), so the view's focus is a sum of
+/// pointers rather than a single typed value. The variant determines
+/// the structural-children iteration strategy in
+/// [`RuntimeView::children`].
+#[derive(Debug, Clone, Copy)]
+pub enum CssFocus<'a, 'p: 'a> {
+    /// Top-level stylesheet — children are the rules in `root.rules`.
+    Stylesheet(&'a StyleSheet),
+    /// A rule (style / media / keyframes / generic). Children are
+    /// declarations (style) / inner rules (media) / keyframe blocks
+    /// (keyframes).
+    Rule(&'a CssRule<'p>),
+    /// A declaration — children are the value list bound to
+    /// `decl.value`.
+    Decl(&'a Declaration<'p>),
+    /// A typed value — leaf (no further structural descent).
+    Value(&'a CssTypedValue<'p>),
+    /// A keyframe block — children are the declarations in the block.
+    KeyframeBlock(&'a KeyframeBlock<'p>),
 }
 
 impl<'a, 'p: 'a> CssView<'a, 'p> {
+    /// Construct a view focused on a specific node within the
+    /// document.
+    #[inline]
+    pub fn focused(doc: &'a CssDocument<'p>, focus: CssFocus<'a, 'p>) -> Self {
+        Self { doc, focus }
+    }
+
     /// Borrow the underlying document.
     #[inline]
     pub fn document(&self) -> &'a CssDocument<'p> {
         self.doc
+    }
+
+    /// AZ-I.W2-act.close A.fix — the focused node this view observes.
+    #[inline]
+    pub fn focus(&self) -> CssFocus<'a, 'p> {
+        self.focus
     }
 
     /// Borrow the root [`StyleSheet`].
@@ -185,28 +239,53 @@ impl<'a, 'p: 'a> CssView<'a, 'p> {
         self.doc.keyframes(id)
     }
 
-    /// Discriminator over the document's root shape.
+    /// Discriminator over the focused node's shape.
+    ///
+    /// AZ-I.W2-act.close A.fix — when the focus is the stylesheet
+    /// (the default for `doc.view()`), reports `Empty` /
+    /// `StyleSheet` per rule-list emptiness. Sub-tree focuses
+    /// produced by `RuntimeView::children` report `Rule` /
+    /// `Declaration` / `Value` / `KeyframeBlock`.
     #[inline]
     pub fn kind(&self) -> CssDocumentKind {
-        if self.doc.root.rules.is_empty() {
-            CssDocumentKind::Empty
-        } else {
-            CssDocumentKind::StyleSheet
+        match self.focus {
+            CssFocus::Stylesheet(sheet) => {
+                if sheet.rules.is_empty() {
+                    CssDocumentKind::Empty
+                } else {
+                    CssDocumentKind::StyleSheet
+                }
+            }
+            CssFocus::Rule(_) => CssDocumentKind::Rule,
+            CssFocus::Decl(_) => CssDocumentKind::Declaration,
+            CssFocus::Value(_) => CssDocumentKind::Value,
+            CssFocus::KeyframeBlock(_) => CssDocumentKind::KeyframeBlock,
         }
     }
 }
 
-/// Discriminator over the typed shapes a [`CssDocument`] root takes.
+/// Discriminator over the typed shapes a [`CssView`]'s focus takes.
 ///
 /// The `stylesheet` rule always projects to a [`StyleSheet`]; the
 /// discriminator distinguishes empty-document from non-empty for view
-/// callers branching on `view.kind()`.
+/// callers branching on `view.kind()`. The non-stylesheet variants
+/// (`Rule`, `Declaration`, `Value`, `KeyframeBlock`) appear when a
+/// [`CssView`] is focused on a sub-tree produced by
+/// [`crate::runtime::RuntimeView::children`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CssDocumentKind {
     /// `stylesheet = ruleList ?w` with an empty rule list.
     Empty,
     /// `stylesheet = ruleList ?w` with at least one rule.
     StyleSheet,
+    /// A rule (style / media / keyframes / generic).
+    Rule,
+    /// A declaration `property: value` pair.
+    Declaration,
+    /// A typed value leaf.
+    Value,
+    /// A keyframe block (selector list + declaration list).
+    KeyframeBlock,
 }
 
 /// AZ-I.W2-act.B3 — typed path-query trait, mirroring

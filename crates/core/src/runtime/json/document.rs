@@ -51,15 +51,21 @@ pub struct JsonDocument<'p> {
     pub arena: JsonArena<'p>,
     /// The root value of the document.
     pub root: JsonValue<'p>,
+    /// AZ-I.W2-act.close A.fix — the input slice the parse consumed.
+    /// Threaded through `finalise(input)` so [`JsonView`] can satisfy
+    /// the `RuntimeView::input()` surface without re-acquiring the
+    /// source from the call site. Lifetime-tied to `'p`.
+    pub input: &'p str,
 }
 
 impl<'p> JsonDocument<'p> {
-    /// Construct a document from a populated arena and a root value.
-    /// The typical caller is the generated parse function; consumers
-    /// outside the emitter rarely build a `JsonDocument` directly.
+    /// Construct a document from a populated arena, root value, and
+    /// the input slice the parse consumed. The typical caller is the
+    /// generated parse function; consumers outside the emitter rarely
+    /// build a `JsonDocument` directly.
     #[inline]
-    pub fn new(arena: JsonArena<'p>, root: JsonValue<'p>) -> Self {
-        Self { arena, root }
+    pub fn new(arena: JsonArena<'p>, root: JsonValue<'p>, input: &'p str) -> Self {
+        Self { arena, root, input }
     }
 
     /// Borrow the root [`JsonValue`].
@@ -82,6 +88,13 @@ impl<'p> JsonDocument<'p> {
     #[inline]
     pub fn arena(&self) -> &JsonArena<'p> {
         &self.arena
+    }
+
+    /// AZ-I.W2-act.close A.fix — borrow the input slice the parse
+    /// consumed.
+    #[inline]
+    pub fn input(&self) -> &'p str {
+        self.input
     }
 
     /// Resolve a [`JsonArrayId`] handle to the underlying element
@@ -110,7 +123,7 @@ impl<'p> JsonDocument<'p> {
     /// kind discriminator).
     #[inline]
     pub fn view<'a>(&'a self) -> JsonView<'a, 'p> {
-        JsonView { doc: self }
+        JsonView { doc: self, focus: self.root }
     }
 
     /// AZ-I.W2-act.A — borrowed root value, mirroring
@@ -183,20 +196,44 @@ impl<'p> JsonDocument<'p> {
 /// rather than the document's; the document's surface stays narrow.
 #[derive(Debug, Clone, Copy)]
 pub struct JsonView<'a, 'p: 'a> {
-    doc: &'a JsonDocument<'p>,
+    pub(crate) doc: &'a JsonDocument<'p>,
+    /// AZ-I.W2-act.close A.fix — the focused [`JsonValue`] this view
+    /// observes. Defaults to `doc.root` for `JsonDocument::view()`;
+    /// `RuntimeView::children()` yields views with the same `doc` but
+    /// a different focus (one per structural child).
+    pub(crate) focus: JsonValue<'p>,
 }
 
 impl<'a, 'p: 'a> JsonView<'a, 'p> {
+    /// Construct a view focused on a specific [`JsonValue`] within the
+    /// document. Used by [`RuntimeView::children`] to project sub-views
+    /// without re-allocating the underlying document.
+    #[inline]
+    pub fn focused(doc: &'a JsonDocument<'p>, focus: JsonValue<'p>) -> Self {
+        Self { doc, focus }
+    }
+
     /// Borrow the underlying document.
     #[inline]
     pub fn document(&self) -> &'a JsonDocument<'p> {
         self.doc
     }
 
+    /// AZ-I.W2-act.close A.fix — the focused [`JsonValue`] this view
+    /// observes (root for top-level views; sub-tree for descendants
+    /// produced by `children()`).
+    #[inline]
+    pub fn focus(&self) -> JsonValue<'p> {
+        self.focus
+    }
+
     /// Borrow the root [`JsonValue`].
     ///
     /// Equivalent to [`JsonDocument::root`] — exposed here so view-
-    /// site call patterns mirror `parsed.view().<accessor>()`.
+    /// site call patterns mirror `parsed.view().<accessor>()`. Note
+    /// that this returns the *document* root regardless of which sub-
+    /// tree the view is focused on; use [`Self::focus`] for the
+    /// currently-observed value.
     #[inline]
     pub fn root(&self) -> &'a JsonValue<'p> {
         &self.doc.root
@@ -228,7 +265,7 @@ impl<'a, 'p: 'a> JsonView<'a, 'p> {
     /// against either surface match on `view.kind()`.
     #[inline]
     pub fn kind(&self) -> JsonKind {
-        match &self.doc.root {
+        match &self.focus {
             JsonValue::Null => JsonKind::Null,
             JsonValue::Bool(_) => JsonKind::Bool,
             JsonValue::Number(_) => JsonKind::Number,
@@ -241,37 +278,37 @@ impl<'a, 'p: 'a> JsonView<'a, 'p> {
     /// `true` iff the root is an object compound.
     #[inline]
     pub fn is_object(&self) -> bool {
-        matches!(self.doc.root, JsonValue::Object(_))
+        matches!(self.focus, JsonValue::Object(_))
     }
 
     /// `true` iff the root is an array compound.
     #[inline]
     pub fn is_array(&self) -> bool {
-        matches!(self.doc.root, JsonValue::Array(_))
+        matches!(self.focus, JsonValue::Array(_))
     }
 
     /// `true` iff the root is a string scalar.
     #[inline]
     pub fn is_string(&self) -> bool {
-        matches!(self.doc.root, JsonValue::String(_))
+        matches!(self.focus, JsonValue::String(_))
     }
 
     /// `true` iff the root is a number scalar.
     #[inline]
     pub fn is_number(&self) -> bool {
-        matches!(self.doc.root, JsonValue::Number(_))
+        matches!(self.focus, JsonValue::Number(_))
     }
 
     /// `true` iff the root is a boolean scalar.
     #[inline]
     pub fn is_bool(&self) -> bool {
-        matches!(self.doc.root, JsonValue::Bool(_))
+        matches!(self.focus, JsonValue::Bool(_))
     }
 
     /// `true` iff the root is `null`.
     #[inline]
     pub fn is_null(&self) -> bool {
-        matches!(self.doc.root, JsonValue::Null)
+        matches!(self.focus, JsonValue::Null)
     }
 }
 

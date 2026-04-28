@@ -28,15 +28,21 @@ pub struct SheetsDocument<'p> {
     pub arena: SheetsArena<'p>,
     /// The root value of the document.
     pub root: SheetsValue<'p>,
+    /// AZ-I.W2-act.close A.fix — the input slice the parse consumed.
+    /// Threaded through `finalise(input)` so [`SheetsView`] can satisfy
+    /// the `RuntimeView::input()` surface without re-acquiring the
+    /// source from the call site.
+    pub input: &'p str,
 }
 
 impl<'p> SheetsDocument<'p> {
-    /// Construct a document from a populated arena and a root value.
-    /// The typical caller is the generated parse function; consumers
-    /// outside the emitter rarely build a `SheetsDocument` directly.
+    /// Construct a document from a populated arena, root value, and
+    /// the input slice the parse consumed. The typical caller is the
+    /// generated parse function; consumers outside the emitter rarely
+    /// build a `SheetsDocument` directly.
     #[inline]
-    pub fn new(arena: SheetsArena<'p>, root: SheetsValue<'p>) -> Self {
-        Self { arena, root }
+    pub fn new(arena: SheetsArena<'p>, root: SheetsValue<'p>, input: &'p str) -> Self {
+        Self { arena, root, input }
     }
 
     /// Borrow the root [`SheetsValue`].
@@ -51,6 +57,13 @@ impl<'p> SheetsDocument<'p> {
         &self.arena
     }
 
+    /// AZ-I.W2-act.close A.fix — borrow the input slice the parse
+    /// consumed.
+    #[inline]
+    pub fn input(&self) -> &'p str {
+        self.input
+    }
+
     /// Resolve a [`SheetsCompoundId`] handle to the compound entry
     /// (kind + child slice).
     #[inline]
@@ -62,7 +75,7 @@ impl<'p> SheetsDocument<'p> {
     /// `JsonDocument::view()` surface.
     #[inline]
     pub fn view<'a>(&'a self) -> SheetsView<'a, 'p> {
-        SheetsView { doc: self }
+        SheetsView { doc: self, focus: self.root }
     }
 
     /// Borrowed root value, mirroring `JsonDocument::to_value()`
@@ -97,14 +110,34 @@ impl<'p> SheetsDocument<'p> {
 /// owner.
 #[derive(Debug, Clone, Copy)]
 pub struct SheetsView<'a, 'p: 'a> {
-    doc: &'a SheetsDocument<'p>,
+    pub(crate) doc: &'a SheetsDocument<'p>,
+    /// AZ-I.W2-act.close A.fix — the focused [`SheetsValue`] this view
+    /// observes. Defaults to `doc.root` for `SheetsDocument::view()`;
+    /// `RuntimeView::children()` yields views with the same `doc` but
+    /// a different focus.
+    pub(crate) focus: SheetsValue<'p>,
 }
 
 impl<'a, 'p: 'a> SheetsView<'a, 'p> {
+    /// Construct a view focused on a specific [`SheetsValue`] within
+    /// the document.
+    #[inline]
+    pub fn focused(doc: &'a SheetsDocument<'p>, focus: SheetsValue<'p>) -> Self {
+        Self { doc, focus }
+    }
+
     /// Borrow the underlying document.
     #[inline]
     pub fn document(&self) -> &'a SheetsDocument<'p> {
         self.doc
+    }
+
+    /// AZ-I.W2-act.close A.fix — the focused [`SheetsValue`] this view
+    /// observes (root for top-level views; sub-tree for descendants
+    /// produced by `children()`).
+    #[inline]
+    pub fn focus(&self) -> SheetsValue<'p> {
+        self.focus
     }
 
     /// Borrow the root [`SheetsValue`].
@@ -125,10 +158,10 @@ impl<'a, 'p: 'a> SheetsView<'a, 'p> {
         self.doc.compound(id)
     }
 
-    /// Discriminator over the root value's typed shape.
+    /// Discriminator over the focused value's typed shape.
     #[inline]
     pub fn kind(&self) -> SheetsKind {
-        match &self.doc.root {
+        match &self.focus {
             SheetsValue::Number(_) => SheetsKind::Number,
             SheetsValue::String(_) => SheetsKind::String,
             SheetsValue::Bool(_) => SheetsKind::Bool,
@@ -141,24 +174,24 @@ impl<'a, 'p: 'a> SheetsView<'a, 'p> {
         }
     }
 
-    /// `true` iff the root is a compound (any non-leaf rule).
+    /// `true` iff the focused value is a compound (any non-leaf rule).
     #[inline]
     pub fn is_compound(&self) -> bool {
-        matches!(self.doc.root, SheetsValue::Compound(_))
+        matches!(self.focus, SheetsValue::Compound(_))
     }
 
-    /// `true` iff the root is a number.
+    /// `true` iff the focused value is a number.
     #[inline]
     pub fn is_number(&self) -> bool {
-        matches!(self.doc.root, SheetsValue::Number(_))
+        matches!(self.focus, SheetsValue::Number(_))
     }
 
-    /// `true` iff the root is a string-shaped leaf (string / cell_ref /
-    /// identifier / sheet_prefix text).
+    /// `true` iff the focused value is a string-shaped leaf (string /
+    /// cell_ref / identifier / sheet_prefix text).
     #[inline]
     pub fn is_string(&self) -> bool {
         matches!(
-            self.doc.root,
+            self.focus,
             SheetsValue::String(_)
                 | SheetsValue::CellRef(_)
                 | SheetsValue::Identifier(_)

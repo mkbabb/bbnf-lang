@@ -130,8 +130,12 @@ impl<'p> SheetsStructBuilder<'p> {
     /// root value was emitted (the generated parse fn guarantees one
     /// scalar / compound emission against an empty stack), or if any
     /// open frame remains.
+    ///
+    /// `input` is the slice the parse consumed, threaded through to
+    /// the produced [`SheetsDocument::input`] so view callers can
+    /// retrieve the source without re-acquiring it.
     #[inline]
-    pub fn finalise(mut self) -> SheetsDocument<'p> {
+    pub fn finalise(mut self, input: &'p str) -> SheetsDocument<'p> {
         debug_assert!(
             self.stack.is_empty(),
             "SheetsStructBuilder::finalise called with {} open frame(s)",
@@ -141,7 +145,7 @@ impl<'p> SheetsStructBuilder<'p> {
             .root
             .take()
             .expect("SheetsStructBuilder::finalise called before any value emission");
-        SheetsDocument::new(self.arena, root)
+        SheetsDocument::new(self.arena, root, input)
     }
 
     /// Land a finalised [`SheetsValue`] on the topmost open frame, or

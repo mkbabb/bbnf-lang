@@ -60,13 +60,14 @@ pub mod arena;
 pub mod builder;
 pub mod document;
 pub mod value;
+pub mod view;
 
 pub use arena::{
     CssArena, CssDeclListId, CssKeyframeListId, CssRuleListId, CssSelectorListId,
     CssValueListId,
 };
 pub use builder::CssStructBuilder;
-pub use document::{CssDocument, CssDocumentKind, CssPathQuery, CssView};
+pub use document::{CssDocument, CssDocumentKind, CssFocus, CssPathQuery, CssView};
 pub use value::{
     CssAngle, CssAngleUnit, CssColor, CssColorFunction, CssColorMix, CssColorPredefined,
     CssColorSpace, CssColorType, CssDimension, CssFlex, CssFrequency, CssFrequencyUnit,

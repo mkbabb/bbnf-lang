@@ -19154,7 +19154,7 @@ mod __googlesheetsparser_emit_impl {
                     });
                 }
             }
-            ::core::result::Result::Ok(builder.finalise())
+            ::core::result::Result::Ok(builder.finalise(input))
         }
     }
     impl<'p> identifierView<'p> {

@@ -192,8 +192,12 @@ impl<'p> CssStructBuilder<'p> {
 
     /// Finalise the builder into a [`CssDocument`]. Panics if no
     /// stylesheet root was emitted or if any open frame remains.
+    ///
+    /// `input` is the slice the parse consumed, threaded through to
+    /// the produced [`CssDocument::input`] so view callers can
+    /// retrieve the source without re-acquiring it.
     #[inline]
-    pub fn finalise(mut self) -> CssDocument<'p> {
+    pub fn finalise(mut self, input: &'p str) -> CssDocument<'p> {
         debug_assert!(
             self.stack.is_empty(),
             "CssStructBuilder::finalise called with {} open frame(s)",
@@ -202,7 +206,7 @@ impl<'p> CssStructBuilder<'p> {
         let root = self.root.take().unwrap_or(StyleSheet {
             rules: crate::runtime::css_l4::arena::CssRuleListId::EMPTY,
         });
-        CssDocument::new(self.arena, root)
+        CssDocument::new(self.arena, root, input)
     }
 
     /// Land a finalised typed value on the topmost open frame, or

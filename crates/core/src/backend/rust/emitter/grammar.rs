@@ -1429,6 +1429,6 @@ fn emit_parse_body_struct_direct(
                 });
             }
         }
-        ::core::result::Result::Ok(builder.finalise())
+        ::core::result::Result::Ok(builder.finalise(input))
     }
 }

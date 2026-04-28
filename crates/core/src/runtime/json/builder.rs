@@ -146,8 +146,12 @@ impl<'p> JsonStructBuilder<'p> {
     /// root value was emitted (the generated parse fn guarantees one
     /// scalar / compound emission against an empty stack), or if
     /// any open frame remains.
+    ///
+    /// `input` is the slice the parse consumed, threaded through to
+    /// the produced [`JsonDocument::input`] so view callers can
+    /// retrieve the source without re-acquiring it.
     #[inline]
-    pub fn finalise(mut self) -> JsonDocument<'p> {
+    pub fn finalise(mut self, input: &'p str) -> JsonDocument<'p> {
         debug_assert!(
             self.stack.is_empty(),
             "JsonStructBuilder::finalise called with {} open frame(s)",
@@ -157,7 +161,7 @@ impl<'p> JsonStructBuilder<'p> {
             .root
             .take()
             .expect("JsonStructBuilder::finalise called before any value emission");
-        JsonDocument::new(self.arena, root)
+        JsonDocument::new(self.arena, root, input)
     }
 
     /// Land a finalised [`JsonValue`] on the topmost open frame, or

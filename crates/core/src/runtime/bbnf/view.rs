@@ -148,18 +148,19 @@ impl<'a, 'p: 'a> BbnfView<'a, 'p> {
         self.compound_kind() == Some(kind)
     }
 
-    /// Identity probe for views: the children-slice pointer address
-    /// of the focused compound, or `None` for leaves. Used by
-    /// traversal helpers to detect self-cycles when walking malformed
-    /// compounds (a compound can never have itself in its child list
-    /// at the same address). Pointer-stable across the document
-    /// lifetime since [`BbnfArena`] never relocates its compounds.
+    /// Identity probe for views: the address of the focused
+    /// compound's arena entry, or `None` for leaves. Used by
+    /// traversal helpers to detect self-cycles when walking
+    /// malformed compounds (a compound can never have itself in
+    /// its child list at the same address). The arena's compound
+    /// entries don't relocate post-parse, so the address is stable
+    /// across the document lifetime.
     #[inline]
     pub fn compound_identity(&self) -> Option<usize> {
         match self.focus {
             BbnfValue::Compound(id) => {
                 let entry = self.doc.compound(id);
-                Some(entry.children.as_ptr() as usize)
+                Some(entry as *const _ as usize)
             }
             _ => None,
         }

@@ -11,7 +11,9 @@ use std::collections::HashMap;
 
 use bbnf_ir::IrNode;
 
-use crate::grammar::generated::BbnfBootstrapNodeView;
+#[allow(unused_imports)]
+use crate::runtime::RuntimeView;
+use crate::runtime::bbnf::BbnfView;
 
 use super::super::LowerCtx;
 use super::lower_rhs;
@@ -47,7 +49,7 @@ pub(crate) fn resolve_name<'a>(name: &'a str, ctx: &mut LowerCtx<'a>) -> IrNode 
 /// nonterminal reference.
 pub(super) fn lower_grammar_call<'a>(
     name: &'a str,
-    args: &[BbnfBootstrapNodeView<'a>],
+    args: &[BbnfView<'a, 'a>],
     ctx: &mut LowerCtx<'a>,
 ) -> IrNode {
     let Some(closure) = ctx.closures.get(name) else {
@@ -55,7 +57,7 @@ pub(super) fn lower_grammar_call<'a>(
     };
     // Snapshot params + body so we can take `&mut ctx` for env push/pop.
     let params: Vec<&'a str> = closure.params.clone();
-    let body: BbnfBootstrapNodeView<'a> = closure.body;
+    let body: BbnfView<'a, 'a> = closure.body;
 
     assert_eq!(
         args.len(),
@@ -66,7 +68,7 @@ pub(super) fn lower_grammar_call<'a>(
         args.len(),
     );
 
-    let mut frame: HashMap<&'a str, BbnfBootstrapNodeView<'a>> =
+    let mut frame: HashMap<&'a str, BbnfView<'a, 'a>> =
         HashMap::with_capacity(args.len());
     for (param, arg) in params.iter().zip(args.iter()) {
         frame.insert(*param, *arg);
@@ -81,8 +83,8 @@ pub(super) fn lower_grammar_call<'a>(
 /// binding for `name` (if any).
 fn lookup_env<'a>(
     name: &str,
-    env: &[HashMap<&'a str, BbnfBootstrapNodeView<'a>>],
-) -> Option<BbnfBootstrapNodeView<'a>> {
+    env: &[HashMap<&'a str, BbnfView<'a, 'a>>],
+) -> Option<BbnfView<'a, 'a>> {
     for frame in env.iter().rev() {
         if let Some(&bound) = frame.get(name) {
             return Some(bound);

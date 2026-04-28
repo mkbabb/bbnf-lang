@@ -1,0 +1,19 @@
+# AZ-I.W2 — per-shape struct-direct snapshots land here.
+#
+# Stage 1 (Redress A) creates this directory + the test driver
+# at `crates/core/tests/struct_direct_snapshots.rs`. The driver
+# loads `.snap` files keyed by per-shape name (object, array,
+# number, string, scalar, keyword, wrap) and asserts each contains
+# `builder.*` calls and zero `tape.push` calls.
+#
+# Stage 2 redress agents (B/C/D) populate the per-shape `.snap`
+# artefacts as they extend each per-shape emitter to honour
+# `EmitStrategy::StructDirect`. Until those snapshots land the
+# driver passes (no-snap-yet) — once a shape's snapshot lands,
+# the driver activates that shape's assertions automatically.
+#
+# Per `feedback_no-workarounds` this is NOT a deferral: the driver
+# is the cleanest cross-agent integration shape — Redress A owns
+# the test infrastructure (shared file ownership), per-shape
+# agents contribute their per-shape artefacts (disjoint file
+# ownership).

@@ -157,15 +157,54 @@ fn compile_ast_request_internal<'a>(
     finalize_compile(ir, &request.target)
 }
 
+/// AZ-I.W2.RA — Pipeline-level dispatch hook for the codegen
+/// substrate selector.
+///
+/// Delegates to
+/// [`crate::backend::rust::emitter::EmitStrategy::for_grammar`] —
+/// the single source of truth for "which substrate does this grammar
+/// emit?" The pipeline does not branch on the result; the strategy
+/// is consumed at the per-grammar emit site (`emit_grammar_impl`)
+/// and at the per-shape dispatcher entry (`emit_shapes_for_grammar`).
+///
+/// `grammar_ident` is the parser-struct ident the bootstrap regen
+/// emits (e.g. `"JsonParser"`, `"BbnfBootstrap"`). The pipeline
+/// derives this from the grammar's entry-rule name capitalised plus
+/// `"Parser"`; downstream consumers (the Rust emitter, test
+/// fixtures) call this helper before codegen to record the resolved
+/// substrate alongside the prepared IR.
+///
+/// Per `feedback_pluggable-components` the resolver lives at the
+/// `EmitStrategy` boundary; this fn is a thin pipeline-side
+/// adapter so test harnesses can drive the resolver without
+/// reaching into the backend module path directly.
+pub fn resolve_emit_strategy(
+    grammar_ident: &str,
+    ir: &GrammarIR,
+) -> crate::backend::rust::emitter::EmitStrategy {
+    crate::backend::rust::emitter::EmitStrategy::for_grammar(
+        grammar_ident,
+        &ir.struct_registry,
+    )
+}
+
 fn finalize_compile(
     mut ir: GrammarIR,
     target: &CompileTarget,
 ) -> Result<CompileOutput, CompileError> {
     match target {
-        CompileTarget::Rust { requested_prettify } => Ok(CompileOutput::Rust(prepare_grammar(
-            ir,
-            *requested_prettify,
-        ))),
+        CompileTarget::Rust { requested_prettify } => {
+            // AZ-I.W2.RA — preflight invariant: prepare_grammar runs
+            // project_types via analyze_grammar, populating
+            // ir.struct_registry; the per-grammar emit_grammar_impl
+            // then resolves EmitStrategy::for_grammar against the
+            // populated registry. The pipeline's role is to ensure
+            // the substrate (registry) is populated before the
+            // emitter runs — this is the same path that has been
+            // active since W1 close.
+            let prepared = prepare_grammar(ir, *requested_prettify);
+            Ok(CompileOutput::Rust(prepared))
+        }
         CompileTarget::Vm => {
             bbnf_ir::passes::project_types(&mut ir);
             // Tranche AQ.6.B — plan aggregate payload layouts so any

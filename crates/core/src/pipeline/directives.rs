@@ -88,10 +88,14 @@ pub(crate) fn parse_to_pipeline_inputs(
     DirectiveMaps<'static>,
     Vec<ImportDirective<'static>>,
 )> {
-    use crate::grammar::{self, host};
+    use crate::grammar::{self, bootstrap_parser, host};
+    let _ = grammar::generated::BbnfBootstrap; // referenced for compile-time visibility
 
     let input: &'static str = Box::leak(source.to_owned().into_boxed_str());
-    let document = grammar::generated::BbnfBootstrap::parse(input).ok()?;
+    // AZ-II.cutover.G — route through the hand-written bootstrap
+    // parser to break the chicken-and-egg between regen and the
+    // broken on-disk `generated::BbnfBootstrap::parse`.
+    let document = bootstrap_parser::parse(input).ok()?;
     let document: &'static BbnfDocument<'static> = Box::leak(Box::new(document));
     Some(host::extract_for_pipeline(document))
 }

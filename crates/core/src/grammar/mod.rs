@@ -25,8 +25,8 @@
 pub mod generated;
 pub mod host;
 pub mod schema;
+pub mod bootstrap_parser;
 
-use crate::runtime::Parsed;
 use crate::types::GrammarExtract;
 
 /// Parse a BBNF grammar source into a [`GrammarExtract`].
@@ -52,7 +52,10 @@ pub fn parse(source: &str) -> Option<GrammarExtract<'_>> {
     // resolver-arm flip. The leak preserves the same observational
     // ownership model (LSP analysis, gorgeous JIT, debug_parse).
     let input: &'static str = Box::leak(source.to_owned().into_boxed_str());
-    let document = generated::BbnfBootstrap::parse(input).ok()?;
+    // AZ-II.cutover.G — route through the hand-written bootstrap
+    // parser to break the chicken-and-egg between regen and the
+    // broken on-disk `generated::BbnfBootstrap::parse`.
+    let document = bootstrap_parser::parse(input).ok()?;
     let document: &'static crate::runtime::bbnf::BbnfDocument<'static> =
         Box::leak(Box::new(document));
     Some(host::extract_observational(document))

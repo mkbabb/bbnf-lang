@@ -620,3 +620,193 @@ the resolver flip can produce executable code.
   durable gates absorbed into AZ-I.W4 + AZ-II.W2).
 - Closes into: AZ-II (BBNF self-hosting + tape deletion).
 - BA opens on AZ-II close, not AZ-I close.
+
+## 2026-04-28 — AZ-I.W2-act.B3 close (CSS L4 activation)
+
+Authored the CSS L4 struct-direct runtime substrate, generalised every
+per-shape struct-direct emitter via `SubstrateBinding` splicing, retired
+the W2.RE codegen-time panic quartet by writing real HRegex / ArgList /
+Unordered struct-direct bodies, and extended the resolver with the
+`CssL4Parser` arm. Bench gate verification deferred to orchestrator
+post-regen.
+
+### Landed
+
+- `crates/core/src/runtime/css_l4/` directory module: typed-value enum
+  family per `feedback_preserve-rich-ast` — every alternation in the
+  CSS L4 grammar becomes a typed enum, no flattening for parse speed.
+  - `value.rs` — `CssLength` / `CssAngle` / `CssTime` / `CssFrequency`
+    / `CssResolution` / `CssFlex` / `CssPercentage` numeric primitives;
+    `CssLengthUnit` / `CssAngleUnit` / `CssTimeUnit` / `CssFrequencyUnit`
+    / `CssResolutionUnit` u8-discriminant enums matching the grammar's
+    `-> Nu8` projections; `CssDimension` alternation closure;
+    `CssColor` / `CssColorSpace` / `CssColorMix` / `CssColorType` /
+    `CssHueMethod` / `CssColorFunction` / `CssColorPredefined` colour
+    family preserving lightningcss-equivalent fidelity (recursive DAG
+    via `&'p CssColor<'p>` arena handles); `CssFunction` for calc /
+    var / url / gradient / transform / etc.; `Selector`, `Declaration`,
+    `StyleRule`, `MediaRule`, `KeyframesRule`, `KeyframeBlock`,
+    `GenericAtRule`, `CssRule`, `StyleSheet` aggregate types;
+    `CssTypedValue` alternation closure for the `value` rule;
+    `CssMathOperator` / `CssGlobalKeyword` u8 enums.
+  - `arena.rs` — slab-of-Vec model identical to `JsonArena` pattern.
+    Per-compound handles: `CssRuleListId` / `CssDeclListId` /
+    `CssSelectorListId` / `CssValueListId` / `CssKeyframeListId`,
+    each with an `EMPTY` constant. Recursive `colors` slab owns
+    boxed colour records for the `CssColorMix` DAG.
+  - `builder.rs` — `CssStructBuilder<'p>` implementing `StructBuilder`.
+    Twelve open-frame variants (StyleSheet, StyleRule, MediaRule,
+    KeyframesRule, KeyframeBlock, GenericAtRule, Declaration,
+    SelectorList, Wrap, Numeric, ColorFunction, ColorMix, Function);
+    `begin_compound` dispatches on `(LayoutKind, rule_name)` to pick
+    the matching frame; `end_compound` finalises onto parent.
+    Per-leaf `push_leaf_with_*` lands typed scalars on the open
+    frame's pending slot per the grammar's `->` projection.
+  - `document.rs` — `CssDocument<'p>` with `root()` / `arena()` /
+    `view()` / `to_value()` / `get::<T>(path)` mirroring the
+    `JsonDocument` accessor API. `CssView<'a, 'p>` newtype +
+    `CssDocumentKind` discriminator + `CssPathQuery` trait
+    (impls for `&str`, `f64`).
+  - `mod.rs` — `pub use` re-exports.
+
+- `crates/ir/src/registry/strategy.rs` — extend resolver with CSS L4 arm
+  binding `::bbnf::runtime::css_l4::CssStructBuilder` /
+  `::bbnf::runtime::css_l4::CssDocument` paths.
+
+- `crates/core/src/backend/rust/emitter/shapes/substrate.rs` (new) —
+  central helper module converting a `SubstrateBinding`'s `&'static
+  str` `builder_path` / `document_path` into `proc_macro2::TokenStream`
+  paths via `syn::Path`. Per `feedback_no-orthogonal-codepaths`, the
+  resolution lives in one helper module; per-shape emitters consume
+  the resulting tokens directly. Surface: `builder_path` /
+  `document_path` / `builder_ty_with_lifetime` / `builder_ty_elided`.
+
+- Per-shape struct-direct emitter generalisation. Pre-W2-act.B3 the
+  bodies hardcoded `crate::runtime::JsonStructBuilder`; activating
+  CSS L4 requires the body to splice the per-grammar builder type
+  the resolver hands the emitter. Generalised via the substrate helper:
+  `object.rs::emit_parse_object_struct_direct`,
+  `array/mod.rs::emit_parse_array_struct_direct`,
+  `flat/struct_direct.rs::emit_parse_flat_struct_direct`,
+  `wrap/struct_direct.rs::emit_parse_wrap_struct_direct`,
+  `keyword/struct_direct.rs::emit_parse_keyword_struct_direct`,
+  `alt_dispatch/mod.rs::emit_parse_alt_dispatch_struct_direct`. Each
+  now takes `&EmitStrategy` and splices the SubstrateBinding's
+  builder type via `super::substrate::builder_ty_with_lifetime`.
+
+- W2.RE panic quartet retired with real struct-direct bodies:
+  - `hregex.rs::emit_parse_hregex_struct_direct` (new) — routes per
+    `FnDescriptor`: HexConvert → host fn + `push_leaf_with_u64`;
+    NumberConvert / Expr {Input, F64} → str::parse + `push_leaf_with_f64`;
+    Expr {Input, U32} → `push_leaf_with_u64`; Expr {Input, I64} →
+    `push_leaf_with_i64`; SpanCapture → `push_leaf_with_str`.
+  - `hregex.rs::emit_parse_number_via_hregex_struct_direct` (new) —
+    Number-shape parse function via HRegex for lenient-number dialects.
+  - `arglist.rs::emit_parse_arglist_struct_direct` (new) — opens a
+    Function compound; walks head + parens + arg positions through
+    `emit_struct_direct_position_core` (handles every `IrNode` variant
+    grammar-general); closes via `end_compound`.
+  - `unordered.rs::emit_parse_unordered_struct_direct` (new) — opens
+    a compound; runs the byte-dispatch sub-loop iterating the Repeat
+    with `lo: N` admission; closes via `end_compound`. CSS L4
+    `compoundSelector` (Repeat over Alt) is the canonical case.
+  - Visitor-path strategies are substrate-orthogonal per the
+    contract documented at `flat/mod.rs:227-236`; the four visitor
+    panic arms retire by falling through to the existing visitor-
+    path emission.
+
+- `crates/core/tests/emit_strategy.rs` — extend with
+  `css_l4_parser_with_populated_registry_routes_struct_direct` and
+  `css_l4_parser_with_empty_registry_routes_tape_direct` assertions.
+  Drop the `CssL4Parser` pin from the negative-default test; replace
+  with `CsvParser` sentinel.
+
+- `crates/core/tests/css_l4_substrate.rs` (new) — 13 substrate-level
+  smoke tests exercising the runtime types directly without consuming
+  the generated parser. Verifies typed-value enum round-trips,
+  StructBuilder dispatch through open-frame stack, document accessor
+  surface, recursive colour DAG via `CssColorMix`.
+
+### Hard gates verified
+
+| Gate | Status | Evidence |
+|---|---|---|
+| 1. `crates/core/src/runtime/css_l4/` directory exists with all five files | green | `ls crates/core/src/runtime/css_l4/` shows arena.rs, builder.rs, document.rs, mod.rs, value.rs |
+| 2. `CssStructBuilder` implements `StructBuilder` | green | `impl<'p> StructBuilder for CssStructBuilder<'p>` at `runtime/css_l4/builder.rs` |
+| 3. `CssTypedValue<'p>` carries Length/Color/Dimension/Time/Resolution/Percentage/Angle + aggregates | green | `runtime/css_l4/value.rs` enum surface matches lightningcss fidelity |
+| 4. Resolver flip: `for_grammar("CssL4Parser", &populated)` returns StructDirect | green | `cargo nextest run -p bbnf --test emit_strategy --profile ax-iter` → 9/9 passed |
+| 5. W2.RE `panic!` quartet retired across hregex/flat/arglist/unordered | green | `rg 'panic!\(.*StructDirect' crates/core/src/backend/rust/emitter/shapes/{hregex,flat,arglist,unordered}.rs` → zero hits |
+| 6. CSS L4 parity harnesses compile + pass | green pre-regen | 89/89 pass on TapeDirect path; post-regen migration is orchestrator-gated |
+| 7. `cargo iter-check` returns 0 errors | green | 9 pre-existing warnings only (8 generated/bbnf labeled-break + 1 css_l4/document Value field) |
+| 8. workspace nextest no regression | green | `cargo nextest run --workspace --profile ax-iter --no-fail-fast` → 1549 passed / 27 skipped / 0 failed (baseline 1544; ↑5 from B3 substrate tests) |
+| 9. `git status --short` empty | green | `git status --short` shows only `target.local/` (the gitignored per-worktree target) |
+
+### Per-shape struct-direct emission bodies
+
+- **HRegex** — body opens at `*p`, runs the per-grammar regex-scan
+  adapter (`__regex_scan_<grammar>`) with the rule's pattern, advances
+  by `match_len`, decodes per the rule's `Map { fn_id, Regex }`
+  descriptor, and pushes via the grammar's StructBuilder trait. Five
+  decode paths cover the FnDescriptor surface (HexConvert,
+  NumberConvert, Expr{F64}, Expr{U32}, SpanCapture). The CSS L4
+  `hex` rule routes through HexConvert → `push_leaf_with_u64`;
+  `ident` / `dashed` rules through SpanCapture → `push_leaf_with_str`.
+
+- **Flat** — body opens a compound on the StructBuilder via
+  `begin_compound(&__layout)`, walks each flattened position through
+  `emit_position_struct_direct` (Literal byte-match, Ref direct
+  call, OptionalWhitespace ws-skip wrap, Next/Skip/Seq recursion,
+  Map transparent unwrap, Repeat / Alt / Regex / Negate / Minus /
+  TokenDispatch dispatcher fallback), and closes via
+  `end_compound(handle)`. Generalised from the JSON-only pre-B3
+  body via the SubstrateBinding helper.
+
+- **ArgList** — opens a Function compound on the StructBuilder
+  (CssStructBuilder routes "calcFunction" / "varFunction" /
+  "urlFunction" / etc. to the OpenFrame::Function variant), walks
+  the head + parens + arg positions through
+  `emit_struct_direct_position_core`, closes via `end_compound`.
+  Per-position emission is grammar-general — every `IrNode` variant
+  routes through a structural arm or falls through to the
+  dispatcher.
+
+- **Unordered** — opens a compound (CssStructBuilder routes
+  "compoundSelector" / "selectorList" / "complexSelector" to its
+  SelectorList variant), runs the byte-dispatch sub-loop iterating
+  the Repeat (per-branch first-byte sets pre-projected from the
+  IR), enforces `iters >= lo` admission, closes via `end_compound`.
+  CSS L4 `compoundSelector = (classSelector | idSelector | …) +`
+  is the canonical case — five branches with disjoint FIRST bytes.
+
+### Lightningcss + cssparser parity coverage
+
+The existing `css_l4_parity.rs` / `css_l4.rs` /
+`css_l4_color_view.rs` / `css_l4_dimensions.rs` /
+`css_l4_named_color_parity.rs` / `css_l4_canonical_parity.rs` /
+`css_color_parity.rs` harnesses pass 89/89 on the current TapeDirect
+path. Their migration to `CssDocument`-based comparison is gated
+by the orchestrator's `cargo xtask regen --grammar css_l4` —
+post-regen, `CssL4Parser::parse` returns `CssDocument<'_>` instead
+of `Parsed<CssL4Parser>`, and the parity harnesses transition to
+walking the typed graph node-for-node. The new
+`css_l4_substrate.rs` (13 tests) covers the runtime types
+directly without consuming the generated parser, so the parity
+surface holds at the substrate level pre-regen.
+
+### Commits
+
+- `52e7a4be` feat(runtime/css_l4): typed-value enum family + arena + builder + document (AZ-I.W2-act.B3)
+- `375e51e9` feat(emitter,ir): generalise struct-direct emitters via SubstrateBinding + add CssL4Parser arm (AZ-I.W2-act.B3)
+- `c40c78f5` feat(emitter/shapes): retire W2.RE panic quartet — author HRegex/ArgList/Unordered struct-direct bodies (AZ-I.W2-act.B3)
+- `3cc23ab7` test(emit_strategy): add CSS L4 struct-direct activation assertion (AZ-I.W2-act.B3)
+- `34b7eec5` test(css_l4): substrate smoke tests for typed-value enum + builder + document (AZ-I.W2-act.B3)
+- `be6fbce5` chore(css_l4,emitter): clean up unused imports + dead-code marker (AZ-I.W2-act.B3)
+
+### Deferred to orchestrator post-regen
+
+- `cargo xtask regen --grammar css_l4` — orchestrator-owned per the
+  W2-act.B3 spec.
+- Parity harness migration to `CssDocument` — depends on regen output.
+- Bench gate verification (normalize ≥ 735 / bootstrap ≥ 600 /
+  tailwind ≥ 500) — depends on regen producing the StructDirect
+  parse path through the bench binary.

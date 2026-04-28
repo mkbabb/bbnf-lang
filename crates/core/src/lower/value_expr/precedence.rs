@@ -142,7 +142,7 @@ fn fold_via_parent_span_split<'a, 'p: 'a>(
     layer: &PrecedenceLayer,
     ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
-    let parent_span = node.span_text().unwrap_or_else(|| {
+    let parent_span = node.span_text_opt().unwrap_or_else(|| {
         panic!(
             "fold_value_chain: chain compound has no recoverable parent \
              span — every value-expression compound's source extent must \

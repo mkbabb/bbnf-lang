@@ -23,7 +23,7 @@ pub(super) fn lower_value_unary<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
     ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
-    let text = node.span_text().unwrap_or("");
+    let text = node.span_text_opt().unwrap_or("");
     let first_byte = text.as_bytes().first().copied();
     match first_byte {
         Some(b'!') | Some(b'-') => {
@@ -130,7 +130,7 @@ pub(super) fn lower_value_atom<'a, 'p: 'a>(
     }
 
     // Compound atom — classify by span text.
-    let text = node.span_text().unwrap_or_else(|| {
+    let text = node.span_text_opt().unwrap_or_else(|| {
         panic!(
             "lower/value_expr/atom.rs: lower_value_atom on compound focus \
              with no recoverable span (kind = {:?})",
@@ -490,7 +490,7 @@ pub(super) fn lower_string_lit<'a, 'p: 'a>(
 ) -> MapExpr {
     let text = match node.focus() {
         BbnfValue::Span(s) => s,
-        _ => node.span_text().unwrap_or(""),
+        _ => node.span_text_opt().unwrap_or(""),
     };
     MapExpr::StringLit(intern_string_lit_inner(text, ctx))
 }

@@ -42,15 +42,20 @@ use crate::types::GrammarExtract;
 /// [`crate::pipeline`]; the pipeline avoids this allocation by landing
 /// results straight in its internal containers.
 pub fn parse(source: &str) -> Option<GrammarExtract<'_>> {
-    // Leak the input string so the borrowed Parsed<'static, _> and
+    // Leak the input string so the borrowed BbnfDocument<'static> and
     // the resulting GrammarExtract<'_> live for the rest of the
     // compile. Library-internal scratch: the bootstrap flow runs
     // once per compile; observational callers assume 'static lifetimes.
+    //
+    // AZ-II.cutover.D — BbnfBootstrap::parse now returns
+    // crate::runtime::bbnf::BbnfDocument<'_> per the StructDirect
+    // resolver-arm flip. The leak preserves the same observational
+    // ownership model (LSP analysis, gorgeous JIT, debug_parse).
     let input: &'static str = Box::leak(source.to_owned().into_boxed_str());
-    let parsed = generated::BbnfBootstrap::parse(input).ok()?;
-    let parsed: &'static Parsed<'static, generated::BbnfBootstrap> =
-        Box::leak(Box::new(parsed));
-    Some(host::extract_observational(parsed))
+    let document = generated::BbnfBootstrap::parse(input).ok()?;
+    let document: &'static crate::runtime::bbnf::BbnfDocument<'static> =
+        Box::leak(Box::new(document));
+    Some(host::extract_observational(document))
 }
 
 /// Parse a BBNF grammar file.

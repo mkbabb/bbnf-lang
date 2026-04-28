@@ -49,7 +49,7 @@ pub(crate) fn unwrap_value_ident_str<'a, 'p: 'a>(
             // value_path is identifier-shaped iff it's a single
             // segment (no `::`).
             Some(BbnfCompoundKind::ValuePath) => {
-                let text = cur.span_text()?.trim();
+                let text = cur.span_text_opt()?.trim();
                 return if text.contains("::") { None } else { Some(text) };
             }
             // Top-level value_expr wrapper — peel into the inner
@@ -73,7 +73,7 @@ pub(crate) fn unwrap_value_ident_str<'a, 'p: 'a>(
             }
             Some(BbnfCompoundKind::ValueUnary) => {
                 // Bare unary (no `!`/`-`) — descend into the atom.
-                let text = cur.span_text()?;
+                let text = cur.span_text_opt()?;
                 let first = text.as_bytes().first().copied();
                 if first == Some(b'!') || first == Some(b'-') {
                     return None;
@@ -86,7 +86,7 @@ pub(crate) fn unwrap_value_ident_str<'a, 'p: 'a>(
                 // Atom is identifier-shaped iff its leading non-ws
                 // byte is `_`/alpha and the contiguous identifier
                 // run equals the trimmed text length.
-                let text = cur.span_text()?;
+                let text = cur.span_text_opt()?;
                 let trimmed = text.trim();
                 let first = trimmed.as_bytes().first().copied()?;
                 if first != b'_' && !(first as char).is_ascii_alphabetic() {
@@ -104,7 +104,7 @@ pub(crate) fn unwrap_value_ident_str<'a, 'p: 'a>(
             // the atom's span IS the identifier-shaped text. Try
             // the same atom-style classification.
             Some(BbnfCompoundKind::Other) => {
-                let text = cur.span_text()?;
+                let text = cur.span_text_opt()?;
                 let trimmed = text.trim();
                 let first = trimmed.as_bytes().first().copied()?;
                 if first.is_ascii_digit() || first == b'.' {
@@ -165,7 +165,7 @@ pub(crate) fn deep_unwrap_value<'a, 'p: 'a>(
                 cur = operands.into_iter().next().unwrap();
             }
             Some(BbnfCompoundKind::ValueUnary) => {
-                let text = cur.span_text().unwrap_or("");
+                let text = cur.span_text_opt().unwrap_or("");
                 let first = text.as_bytes().first().copied();
                 if first == Some(b'!') || first == Some(b'-') {
                     return cur;
@@ -211,13 +211,13 @@ pub(crate) fn extract_value_func_name<'a, 'p: 'a>(
     }
     match node.compound_kind() {
         Some(BbnfCompoundKind::ValuePath) => {
-            Some(recover_call_path(node.span_text()?.trim_start()))
+            Some(recover_call_path(node.span_text_opt()?.trim_start()))
         }
         Some(BbnfCompoundKind::ValueFnCall) => {
-            Some(recover_call_path(node.span_text()?.trim_start()))
+            Some(recover_call_path(node.span_text_opt()?.trim_start()))
         }
         Some(BbnfCompoundKind::ValueAtom) => {
-            let trimmed = node.span_text()?.trim_start();
+            let trimmed = node.span_text_opt()?.trim_start();
             let first = *trimmed.as_bytes().first()?;
             if !(first.is_ascii_alphabetic() || first == b'_') {
                 return None;

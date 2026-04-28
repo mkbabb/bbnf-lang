@@ -77,7 +77,7 @@ pub(super) fn lower_value_expr_or_closure<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
     ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
-    let text = node.span_text().unwrap_or("");
+    let text = node.span_text_opt().unwrap_or("");
     if text.as_bytes().first() == Some(&b'|') {
         // Closure — find the actual ValueClosure compound (it may
         // be `node` itself, or it may sit one wrapper deeper inside
@@ -111,7 +111,7 @@ pub(super) fn lower_value_input<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
     ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
-    let span = node.span_text().unwrap_or("").trim_start();
+    let span = node.span_text_opt().unwrap_or("").trim_start();
     lower_input_chain(node, span, ctx)
 }
 
@@ -121,7 +121,7 @@ pub(super) fn lower_value_path<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
     ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
-    let span = node.span_text().unwrap_or("").trim_start();
+    let span = node.span_text_opt().unwrap_or("").trim_start();
     lower_path_atom(node, span, ctx)
 }
 
@@ -130,7 +130,7 @@ pub(super) fn lower_value_fn_call<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
     ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
-    let span = node.span_text().unwrap_or("").trim_start();
+    let span = node.span_text_opt().unwrap_or("").trim_start();
     lower_fn_call_atom(node, span, ctx)
 }
 
@@ -148,7 +148,7 @@ pub(super) fn lower_value_closure<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
     ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
-    let text: &'p str = node.span_text().unwrap_or_else(|| {
+    let text: &'p str = node.span_text_opt().unwrap_or_else(|| {
         panic!(
             "lower_value_closure: value_closure compound has no recoverable \
              source span — typed-projection invariants imply at least the \

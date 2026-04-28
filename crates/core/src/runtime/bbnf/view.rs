@@ -108,6 +108,24 @@ impl<'a, 'p: 'a> BbnfView<'a, 'p> {
         }
     }
 
+    /// Optional flavor of [`Self::span_text`]: `None` instead of `""`
+    /// when the focus has no contiguous span. Used by D2's value_expr
+    /// chain-folder and lifetime-extending callers.
+    #[inline]
+    pub fn span_text_opt(&self) -> Option<&'p str> {
+        match self.byte_span() {
+            Some((lo, hi)) if hi >= lo => Some(&self.doc.input[lo as usize..hi as usize]),
+            _ => None,
+        }
+    }
+
+    /// Alias of [`Self::byte_span`] — recovers the byte-offset bounds
+    /// `(span_lo, span_hi)` for the focus.
+    #[inline]
+    pub fn span_bounds(&self) -> Option<(u32, u32)> {
+        self.byte_span()
+    }
+
     /// Positional child access. Leaves yield `None`; compounds yield
     /// the `i`th child's view, or `None` when `i` is out of range.
     pub fn child(&self, i: usize) -> Option<BbnfView<'a, 'p>> {

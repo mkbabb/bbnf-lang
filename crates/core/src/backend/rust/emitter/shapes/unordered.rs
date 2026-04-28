@@ -47,6 +47,7 @@ use super::dispatcher::{
     visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
 };
 use super::root_rule_name;
+use super::substrate::builder_ty_with_lifetime;
 
 // ─── Unordered body introspection ───────────────────────────────────
 
@@ -264,15 +265,12 @@ pub fn emit_parse_unordered(
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    match strategy {
-        EmitStrategy::TapeDirect => {}
-        EmitStrategy::StructDirect { .. } => {
-            panic!(
-                "AZ-I.W2.RE: Unordered shape does not support StructDirect; \
-                 W3 / W2.B expected to extend before activating this \
-                 strategy for the calling grammar"
-            );
-        }
+    if let EmitStrategy::StructDirect { .. } = strategy {
+        // AZ-I.W2-act.B3 — Unordered struct-direct body. The W2.RE panic
+        // retires by surfacing a real body that opens a SelectorList /
+        // value-list compound on the StructBuilder, runs the byte-
+        // dispatch sub-loop, and closes. The body is grammar-general.
+        return emit_parse_unordered_struct_direct(strategy, grammar_suffix, rule, ir);
     }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("unordered", grammar_suffix, rule_name);
@@ -500,15 +498,8 @@ pub fn emit_parse_unordered_visitor(
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    match strategy {
-        EmitStrategy::TapeDirect => {}
-        EmitStrategy::StructDirect { .. } => {
-            panic!(
-                "AZ-I.W2.RE: Unordered shape does not support StructDirect; \
-                 W3 / W2.B expected to extend before activating this \
-                 strategy for the calling grammar"
-            );
-        }
+    if let EmitStrategy::StructDirect { .. } = strategy {
+        // AZ-I.W2-act.B3 — visitor path is substrate-orthogonal.
     }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("unordered", grammar_suffix, rule_name);
@@ -627,6 +618,146 @@ fn emit_parse_unordered_visitor_fallback(
         {
             let _ = (input, p, state, visitor);
             ::core::result::Result::Ok(())
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// AZ-I.W2-act.B3 — Unordered struct-direct body.
+// ─────────────────────────────────────────────────────────────────────
+
+/// Emit the struct-direct Unordered body. Mirrors the tape-path
+/// dispatch (byte-match sub-loop iterating the Repeat) but routes the
+/// outer compound through `begin_compound(&__layout)` /
+/// `end_compound(handle)`. Each branch's per-Ref call passes the
+/// `&mut <builder_ty>` argument.
+fn emit_parse_unordered_struct_direct(
+    strategy: &EmitStrategy,
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let rule_name = ir.get_string(rule.name);
+    let fn_ident = shape_fn_ident("unordered", grammar_suffix, rule_name);
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+    let rule_id_lit = rule.id;
+    let rule_name_lit = rule_name.to_string();
+
+    let p_lt = format_ident!("p");
+    let builder_ty = builder_ty_with_lifetime(strategy, &p_lt);
+
+    let dispatcher_ident = match root_rule_name(ir) {
+        Some(root) => {
+            let root_disp = dispatcher_fn_ident(grammar_suffix, &root);
+            format_ident!("{}__value", root_disp)
+        }
+        None => return quote! {},
+    };
+
+    let Some(body_info) = introspect_unordered(rule, ir) else {
+        // Defensive fallback: a malformed Unordered rule under
+        // StructDirect emits a stub that delegates to the dispatcher.
+        return quote! {
+            #[inline]
+            #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+            pub fn #fn_ident<'p>(
+                input: &'p [u8],
+                p: &mut usize,
+                state: &mut #support_mod::ScanState,
+                builder: &mut #builder_ty,
+            ) -> ::core::result::Result<
+                crate::runtime::tape::TapeOffset,
+                crate::runtime::tape::DtaError,
+            > {
+                let _ = #dispatcher_ident(input, p, state, builder)?;
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+        };
+    };
+
+    let mut branch_arms = Vec::with_capacity(body_info.first_sets.len());
+    for (first_set, branch_ref) in body_info
+        .first_sets
+        .iter()
+        .zip(body_info.branch_refs.iter())
+    {
+        let pattern = emit_byte_match_arm(first_set);
+        let call = branch_ref
+            .and_then(|rid| emit_ref_call_tape(grammar_suffix, rid, ir))
+            .map(|call| quote! { let _ = (#call)?; })
+            .unwrap_or_else(|| {
+                quote! { let _ = #dispatcher_ident(input, p, state, builder)?; }
+            });
+        branch_arms.push(quote! {
+            #pattern => {
+                #call
+                __iters += 1;
+            }
+        });
+    }
+    let iters_lo_lit = proc_macro2::Literal::u32_unsuffixed(body_info.iters_lo);
+
+    quote! {
+        /// AZ-I.W2-act.B3 — per-grammar Unordered-shape parse function,
+        /// **struct-direct body**.
+        ///
+        /// Opens a compound on the StructBuilder, runs the byte-
+        /// dispatch sub-loop iterating the Repeat with `lo: N`
+        /// admission, closes via `end_compound`. CSS L4
+        /// `compoundSelector` (selector list under a Repeat) is the
+        /// canonical case.
+        #[inline]
+        #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+        pub fn #fn_ident<'p>(
+            input: &'p [u8],
+            p: &mut usize,
+            state: &mut #support_mod::ScanState,
+            builder: &mut #builder_ty,
+        ) -> ::core::result::Result<
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
+        > {
+            let __layout: ::bbnf_ir::registry::StructLayout =
+                ::bbnf_ir::registry::StructLayout {
+                    rule_id: #rule_id_lit as ::bbnf_ir::RuleId,
+                    rule_name: ::std::string::String::from(#rule_name_lit),
+                    kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                    rule_type: ::bbnf_ir::TypeDesc::Span,
+                    fields: ::std::vec::Vec::new(),
+                };
+            let __handle = <
+                #builder_ty as crate::runtime::StructBuilder
+            >::begin_compound(builder, &__layout);
+            let _ = #support_mod::skip_space(input, p, state);
+
+            let mut __iters: u32 = 0;
+            'unordered: loop {
+                let __byte = match input.get(*p).copied() {
+                    Some(b) => b,
+                    None => break 'unordered,
+                };
+                match __byte {
+                    #(#branch_arms)*
+                    _ => break 'unordered,
+                }
+                let _ = #support_mod::skip_space(input, p, state);
+            }
+
+            if __iters < #iters_lo_lit {
+                <
+                    #builder_ty as crate::runtime::StructBuilder
+                >::end_compound(builder, __handle);
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+
+            <
+                #builder_ty as crate::runtime::StructBuilder
+            >::end_compound(builder, __handle);
+            Ok(crate::runtime::tape::TapeOffset::NONE)
         }
     }
 }

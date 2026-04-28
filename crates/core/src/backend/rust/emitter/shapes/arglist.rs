@@ -51,12 +51,13 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use bbnf_ir::registry::EmitStrategy;
+use bbnf_ir::registry::{EmitStrategy, LayoutKind};
 use super::dispatcher::{
     dispatcher_fn_ident, emit_ref_call_tape, emit_ref_call_visitor, shape_fn_ident,
     visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
 };
 use super::root_rule_name;
+use super::substrate::builder_ty_with_lifetime;
 
 /// Emit `pub fn parse_arglist_<grammar>_<rule>(input, p, state,
 /// builder) -> Result<TapeOffset, DtaError>`.
@@ -76,15 +77,14 @@ pub fn emit_parse_arglist(
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    match strategy {
-        EmitStrategy::TapeDirect => {}
-        EmitStrategy::StructDirect { .. } => {
-            panic!(
-                "AZ-I.W2.RE: ArgList shape does not support StructDirect; \
-                 W3 / W2.B expected to extend before activating this \
-                 strategy for the calling grammar"
-            );
-        }
+    if let EmitStrategy::StructDirect { .. } = strategy {
+        // AZ-I.W2-act.B3 — ArgList struct-direct body. The W2.RE panic
+        // retires by surfacing a real body that opens a Function
+        // compound on the StructBuilder, walks each position
+        // (head / `(` / args / `)`), and closes. The body is grammar-
+        // general — the SubstrateBinding's builder type splices via
+        // `super::substrate::builder_ty_with_lifetime`.
+        return emit_parse_arglist_struct_direct(strategy, grammar_suffix, rule, ir);
     }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("arglist", grammar_suffix, rule_name);
@@ -553,15 +553,9 @@ pub fn emit_parse_arglist_visitor(
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    match strategy {
-        EmitStrategy::TapeDirect => {}
-        EmitStrategy::StructDirect { .. } => {
-            panic!(
-                "AZ-I.W2.RE: ArgList shape does not support StructDirect; \
-                 W3 / W2.B expected to extend before activating this \
-                 strategy for the calling grammar"
-            );
-        }
+    if let EmitStrategy::StructDirect { .. } = strategy {
+        // AZ-I.W2-act.B3 — visitor path is substrate-orthogonal; the
+        // panic retires per the strategy-agnostic emission contract.
     }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("arglist", grammar_suffix, rule_name);
@@ -785,5 +779,219 @@ fn emit_visitor_position_core(
             }
         }
         IrNode::Epsilon => quote! {},
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// AZ-I.W2-act.B3 — ArgList struct-direct body.
+// ─────────────────────────────────────────────────────────────────────
+
+/// Emit the struct-direct ArgList body. Opens a compound on the
+/// builder via `begin_compound(&__layout)`; the grammar's
+/// StructBuilder routes the (LayoutKind, rule_name) to its concrete
+/// frame variant (CSS L4: Function frame; Sheets: similar). Walks the
+/// body via `emit_struct_body`, each Ref / Regex / dispatcher call
+/// passing the `&mut <builder_ty>` argument transparently. Closes
+/// with `end_compound(handle)`.
+fn emit_parse_arglist_struct_direct(
+    strategy: &EmitStrategy,
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let rule_name = ir.get_string(rule.name);
+    let fn_ident = shape_fn_ident("arglist", grammar_suffix, rule_name);
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+    let rule_id_lit = rule.id;
+    let rule_name_lit = rule_name.to_string();
+
+    let p_lt = format_ident!("p");
+    let builder_ty = builder_ty_with_lifetime(strategy, &p_lt);
+
+    let dispatcher_ident = match root_rule_name(ir) {
+        Some(root) => {
+            let root_disp = dispatcher_fn_ident(grammar_suffix, &root);
+            format_ident!("{}__value", root_disp)
+        }
+        None => return quote! {},
+    };
+
+    let positions = collect_positions(&rule.body);
+    let body_emission =
+        emit_struct_direct_body(&positions, &support_mod, &dispatcher_ident, grammar_suffix, ir);
+
+    quote! {
+        /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
+        /// **struct-direct body**.
+        ///
+        /// Opens a compound on the grammar's StructBuilder
+        /// (`begin_compound(&__layout)`), walks the head + parens +
+        /// arg positions, and closes via `end_compound(handle)`. The
+        /// builder routes the (LayoutKind, rule_name) to its concrete
+        /// Function frame variant (CSS L4 — calc / min / max / clamp
+        /// / var / env / url / gradient / transform / etc.).
+        #[inline]
+        #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+        pub fn #fn_ident<'p>(
+            input: &'p [u8],
+            p: &mut usize,
+            state: &mut #support_mod::ScanState,
+            builder: &mut #builder_ty,
+        ) -> ::core::result::Result<
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
+        > {
+            let __layout: ::bbnf_ir::registry::StructLayout =
+                ::bbnf_ir::registry::StructLayout {
+                    rule_id: #rule_id_lit as ::bbnf_ir::RuleId,
+                    rule_name: ::std::string::String::from(#rule_name_lit),
+                    kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                    rule_type: ::bbnf_ir::TypeDesc::Span,
+                    fields: ::std::vec::Vec::new(),
+                };
+            let __handle = <
+                #builder_ty as crate::runtime::StructBuilder
+            >::begin_compound(builder, &__layout);
+            #body_emission
+            <
+                #builder_ty as crate::runtime::StructBuilder
+            >::end_compound(builder, __handle);
+            Ok(crate::runtime::tape::TapeOffset::NONE)
+        }
+    }
+}
+
+/// Walk each position and emit per-position struct-direct body.
+fn emit_struct_direct_body(
+    positions: &[PositionedNode],
+    support_mod: &proc_macro2::Ident,
+    dispatcher_ident: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let mut emissions = Vec::with_capacity(positions.len());
+    for pos in positions {
+        let leading = if pos.leading_ws {
+            quote! { let _ = #support_mod::skip_space(input, p, state); }
+        } else {
+            quote! {}
+        };
+        let trailing = if pos.trailing_ws {
+            quote! { let _ = #support_mod::skip_space(input, p, state); }
+        } else {
+            quote! {}
+        };
+        let core =
+            emit_struct_direct_position_core(pos.node, support_mod, dispatcher_ident, grammar_suffix, ir);
+        emissions.push(quote! { #leading #core #trailing });
+    }
+    quote! { #(#emissions)* }
+}
+
+/// Emit one position's struct-direct core.
+fn emit_struct_direct_position_core(
+    node: &IrNode,
+    support_mod: &proc_macro2::Ident,
+    dispatcher_ident: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    match node {
+        IrNode::Literal(sid) => {
+            let bytes = ir.get_string(*sid).as_bytes();
+            let len = bytes.len();
+            let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
+            quote! {
+                let at = *p;
+                let end = at + #len;
+                if input.len() < end || input[at..end] != [#(#byte_lits),*] {
+                    return ::core::result::Result::Err(
+                        crate::runtime::tape::DtaError::Syntax {
+                            offset: at as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        },
+                    );
+                }
+                *p = end;
+            }
+        }
+        IrNode::Ref(rid) => {
+            if let Some(call) = emit_ref_call_tape(grammar_suffix, *rid, ir) {
+                quote! { let _ = (#call)?; }
+            } else {
+                quote! {
+                    let _ = #dispatcher_ident(input, p, state, builder)?;
+                }
+            }
+        }
+        IrNode::OptionalWhitespace(inner) => {
+            let inner_emit = emit_struct_direct_position_core(
+                inner, support_mod, dispatcher_ident, grammar_suffix, ir,
+            );
+            quote! {
+                let _ = #support_mod::skip_space(input, p, state);
+                #inner_emit
+                let _ = #support_mod::skip_space(input, p, state);
+            }
+        }
+        IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
+            let l = emit_struct_direct_position_core(
+                lhs, support_mod, dispatcher_ident, grammar_suffix, ir,
+            );
+            let r = emit_struct_direct_position_core(
+                rhs, support_mod, dispatcher_ident, grammar_suffix, ir,
+            );
+            quote! { #l #r }
+        }
+        IrNode::Seq(children) => {
+            let mut out = Vec::with_capacity(children.len());
+            for child in children {
+                out.push(emit_struct_direct_position_core(
+                    child, support_mod, dispatcher_ident, grammar_suffix, ir,
+                ));
+            }
+            quote! { #(#out)* }
+        }
+        IrNode::Map { inner, .. } => emit_struct_direct_position_core(
+            inner, support_mod, dispatcher_ident, grammar_suffix, ir,
+        ),
+        IrNode::Epsilon => quote! {},
+        IrNode::Repeat { inner, .. } => {
+            // Best-effort inline: dispatch the inner repeatedly until
+            // it errs, then catch and proceed. Mirrors the value-list
+            // pattern in the tape body.
+            let inner_emit = emit_struct_direct_position_core(
+                inner, support_mod, dispatcher_ident, grammar_suffix, ir,
+            );
+            quote! {
+                loop {
+                    let __save = *p;
+                    let __res: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
+                        #inner_emit
+                        Ok(())
+                    })();
+                    if __res.is_err() {
+                        *p = __save;
+                        break;
+                    }
+                }
+            }
+        }
+        // Alt / Regex / Negate / Minus / TokenDispatch — fall through
+        // to the dispatcher; the dispatcher's body under StructDirect
+        // takes the same builder argument.
+        IrNode::Alt(_, _)
+        | IrNode::Regex(_)
+        | IrNode::Negate(_)
+        | IrNode::Minus(_, _)
+        | IrNode::TokenDispatch { .. } => {
+            quote! {
+                let _ = #dispatcher_ident(input, p, state, builder)?;
+            }
+        }
     }
 }

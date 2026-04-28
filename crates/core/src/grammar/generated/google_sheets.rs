@@ -2764,78 +2764,71 @@ mod __googlesheetsparser_emit_impl {
             true
         }
     }
-    /// AX.W0a.2.q — HRegex-shape parse function with typed
-    /// host-fn decode (`NumberConvert` → f64, `HexConvert` → u32).
+    /// AZ-I.W2-act.B3 — per-grammar HRegex-shape parse function,
+    /// **struct-direct body**.
     ///
-    /// Runs the per-grammar regex scan, invokes the decoder,
-    /// writes the decoded bytes into the tape arena, pushes a
-    /// payload-carrying leaf (KvPair when the rule projects as
-    /// `Tuple([Span, scalar])`; Span otherwise) so the walker-
-    /// parity reader (`payload_bytes(rec, N)`) finds the value.
-    #[inline(always)]
+    /// Runs the per-grammar regex scan, decodes the matched bytes
+    /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
+    /// or Expr { Input, return_type }), and routes the decoded
+    /// value through the StructBuilder trait. Returns
+    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// shape fns under struct-direct mode.
+    #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_GoogleSheetsParser_number(
-        input: &[u8],
+    pub fn parse_hregex_GoogleSheetsParser_number<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        {
-            let span_lo = *p as u32;
-            let Some(match_len) = __regex_scan_GoogleSheetsParser(
-                "(\\d+\\.?\\d*|\\.\\d+)([eE][+-]?\\d+)?",
-                input,
-                *p,
-            ) else {
-                return Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: span_lo,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                });
-            };
-            *p += match_len as usize;
-            let span_hi = *p as u32;
-            let __f64: f64 = core::str::from_utf8(
-                    &input[span_lo as usize..span_hi as usize],
-                )
-                .ok()
-                .and_then(|s| s.parse::<f64>().ok())
-                .unwrap_or(0.0);
-            let __arena_off: u32 = builder.arena_mut().len() as u32;
-            builder.arena_mut().extend_from_slice(&__f64.to_le_bytes());
-            let leaf_off = builder
-                .push_leaf_with_arena_payload(
-                    crate::runtime::tape::TapeKind::Span,
-                    span_lo,
-                    span_hi,
-                    0u8,
-                    0u8,
-                    __arena_off,
-                    8u32,
-                );
-            Ok(leaf_off)
-        }
+        let span_lo = *p as u32;
+        let Some(match_len) = __regex_scan_GoogleSheetsParser(
+            "(\\d+\\.?\\d*|\\.\\d+)([eE][+-]?\\d+)?",
+            input,
+            *p,
+        ) else {
+            return Err(crate::runtime::tape::DtaError::Syntax {
+                offset: span_lo,
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+            });
+        };
+        *p += match_len as usize;
+        let span_hi = *p as u32;
+        let __f64: f64 = core::str::from_utf8(&input[span_lo as usize..span_hi as usize])
+            .ok()
+            .and_then(|s| s.parse::<f64>().ok())
+            .unwrap_or(0.0);
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::push_leaf_with_f64(builder, __f64);
+        Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W3.2 — per-grammar String-shape parse function.
+    /// AZ-I.W2.RC — per-grammar String-shape parse function
+    /// (struct-direct substrate).
     ///
-    /// Mirrors `json_prototype::string::parse_string_body`.
-    /// `"` must NOT be consumed by the caller — this function
-    /// reads it, scans for the closing quote, and pushes a Span
-    /// leaf with appropriate borrow / arena-decode metadata.
+    /// `"` must NOT be consumed by the caller — this
+    /// function reads it, scans for the closing quote, and
+    /// pushes a `&'p str` leaf via the builder. The borrow
+    /// path slices the input directly; the cold escape
+    /// path decodes into the builder's arena and emits
+    /// the decoded bytes via the same `push_leaf_with_str`
+    /// surface.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_string_GoogleSheetsParser_string(
-        input: &[u8],
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_string_GoogleSheetsParser_string<'p>(
+        input: &'p [u8],
         p: &mut usize,
         _state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let open = *p;
         if input.get(open).copied() != Some(b'"') {
             return Err(crate::runtime::tape::DtaError::Syntax {
@@ -2857,19 +2850,63 @@ mod __googlesheetsparser_emit_impl {
             Some((off, b'"')) => {
                 let end = body_start + off;
                 *p = end + 1;
-                let lo = open as u32;
-                let hi = *p as u32;
-                let leaf = builder
-                    .push_leaf_borrowed_string(
-                        crate::runtime::tape::TapeKind::Span,
-                        lo,
-                        hi,
-                        1u8,
-                        0,
-                    );
-                Ok(leaf)
+                let body: &'p str = unsafe {
+                    ::core::str::from_utf8_unchecked(&input[body_start..end])
+                };
+                builder.push_leaf_with_str(body);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
             }
-            Some((_off, b'\\')) => parse_string_escaped(input, p, open, builder, 1u8),
+            Some((_off, b'\\')) => {
+                let mut buf: Vec<u8> = Vec::with_capacity(
+                    input.len().saturating_sub(open + 1),
+                );
+                match ::parse_that::parsers::scan::decode_json_string_to_arena(
+                    input,
+                    open,
+                    &mut buf,
+                ) {
+                    Some(
+                        (
+                            ::parse_that::parsers::scan::StringPayload::Owned { .. },
+                            end_pos,
+                        ),
+                    ) => {
+                        *p = end_pos;
+                        let bytes: Box<[u8]> = buf.into_boxed_slice();
+                        let leaked: &'static [u8] = Box::leak(bytes);
+                        let leaked_str: &'static str = unsafe {
+                            ::core::str::from_utf8_unchecked(leaked)
+                        };
+                        builder.push_leaf_with_str(leaked_str);
+                        Ok(crate::runtime::tape::TapeOffset::NONE)
+                    }
+                    Some(
+                        (
+                            ::parse_that::parsers::scan::StringPayload::Borrowed {
+                                start,
+                                end,
+                            },
+                            end_pos,
+                        ),
+                    ) => {
+                        *p = end_pos;
+                        let body: &'p str = unsafe {
+                            ::core::str::from_utf8_unchecked(
+                                &input[start as usize..end as usize],
+                            )
+                        };
+                        builder.push_leaf_with_str(body);
+                        Ok(crate::runtime::tape::TapeOffset::NONE)
+                    }
+                    None => {
+                        Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: open as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        })
+                    }
+                }
+            }
             Some(_) => unreachable!(),
             None => {
                 Err(crate::runtime::tape::DtaError::UnexpectedEnd {
@@ -2878,28 +2915,41 @@ mod __googlesheetsparser_emit_impl {
             }
         }
     }
-    /// AW-V.W4-fix — per-grammar Wrap-shape parse function.
+    /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
-    /// Transparent dispatcher — skip leading ws, byte-dispatch
-    /// to the chosen branch's shape fn, return that shape fn's
-    /// offset unchanged. No outer compound emission; the
-    /// branch's own shape fn owns the tape record.
+    /// Opens a Wrap frame on the builder, dispatches to the matched
+    /// branch's shape fn (which carries its own
+    /// begin_compound/end_compound for compound branches and the
+    /// matching push_leaf_with_* for scalar branches), stamps the
+    /// chosen branch index via push_branch_tag, then closes the
+    /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
+    /// forward-the-single-child semantics.
     ///
-    /// AX.W0a.2.f — compound; see `flat.rs` emission for the
-    /// `#[inline]` downgrade rationale (LLVM inline-cycle
-    /// collapse vs hard-requirement inliner abort).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_GoogleSheetsParser_boolean(
-        input: &[u8],
+    pub fn parse_wrap_GoogleSheetsParser_boolean<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let mut __wrap_chosen_meta: u8 = 0;
+        let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 2u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("boolean"),
+            kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __wrap_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
+        let mut __wrap_branch_idx: u32 = 0;
         let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -2908,447 +2958,125 @@ mod __googlesheetsparser_emit_impl {
             match first {
                 _ => {}
             }
-            {
-                let attempt_p = *p;
-                let attempt_len = builder.position();
-                match {
-                    let span_lo = *p as u32;
-                    match __regex_scan_GoogleSheetsParser(
-                        "[tT][rR][uU][eE]",
-                        input,
-                        *p,
-                    ) {
-                        ::core::option::Option::Some(len) => {
-                            *p += len as usize;
-                            let __arena_off: u32 = builder.arena_mut().len() as u32;
-                            builder.arena_mut().push((1u32) as u8);
-                            let _ = builder
-                                .push_leaf_with_arena_payload(
-                                    crate::runtime::tape::TapeKind::Span,
-                                    span_lo,
-                                    *p as u32,
-                                    2u8,
-                                    0u8,
-                                    __arena_off,
-                                    1u32,
-                                );
-                            ::core::result::Result::<
-                                crate::runtime::tape::TapeOffset,
-                                crate::runtime::tape::DtaError,
-                            >::Ok(crate::runtime::tape::TapeOffset::NONE)
-                        }
-                        ::core::option::Option::None => {
-                            ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                offset: span_lo,
-                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                            })
-                        }
-                    }
-                } {
-                    Ok(_) => {
-                        __wrap_chosen_meta = 0u8;
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                        builder.rollback_to(attempt_len);
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                let attempt_len = builder.position();
-                match {
-                    let span_lo = *p as u32;
-                    match __regex_scan_GoogleSheetsParser(
-                        "[fF][aA][lL][sS][eE]",
-                        input,
-                        *p,
-                    ) {
-                        ::core::option::Option::Some(len) => {
-                            *p += len as usize;
-                            let __arena_off: u32 = builder.arena_mut().len() as u32;
-                            builder.arena_mut().push((0u32) as u8);
-                            let _ = builder
-                                .push_leaf_with_arena_payload(
-                                    crate::runtime::tape::TapeKind::Span,
-                                    span_lo,
-                                    *p as u32,
-                                    2u8,
-                                    0u8,
-                                    __arena_off,
-                                    1u32,
-                                );
-                            ::core::result::Result::<
-                                crate::runtime::tape::TapeOffset,
-                                crate::runtime::tape::DtaError,
-                            >::Ok(crate::runtime::tape::TapeOffset::NONE)
-                        }
-                        ::core::option::Option::None => {
-                            ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                offset: span_lo,
-                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                            })
-                        }
-                    }
-                } {
-                    Ok(_) => {
-                        __wrap_chosen_meta = 1u8;
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                        builder.rollback_to(attempt_len);
-                    }
-                }
-            }
+            <crate::runtime::google_sheets::SheetsStructBuilder<
+                '_,
+            > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        let _ = __wrap_chosen_meta;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::push_branch_tag(builder, __wrap_branch_idx);
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_error_literal(
-        input: &[u8],
+    pub fn parse_flat_GoogleSheetsParser_error_literal<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __error_literal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 3u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("error_literal"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __error_literal_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__error_literal_layout,
+        );
         {
-            {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [35u8] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        3u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [35u8] {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            {
-                {
-                    let first = __shape_support_GoogleSheetsParser::skip_space(
-                            input,
-                            p,
-                            state,
-                        )
-                        .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    let alt_lo = *p as u32;
-                    let alt_child = builder.enter_post_order_children();
-                    'try_branches: loop {
-                        match first {
-                            68u8 => {
-                                if input.len() >= *p + 6usize
-                                    && input[*p..*p + 6usize]
-                                        == [68u8, 73u8, 86u8, 47u8, 48u8, 33u8]
-                                {
-                                    let at = *p;
-                                    let end = at + 6usize;
-                                    *p = end;
-                                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                                    builder.arena_mut().push((3u32) as u8);
-                                    let _ = builder
-                                        .push_leaf_with_arena_payload(
-                                            crate::runtime::tape::TapeKind::Span,
-                                            at as u32,
-                                            end as u32,
-                                            0u8,
-                                            0u8,
-                                            __arena_off,
-                                            1u32,
-                                        );
-                                    break 'try_branches;
-                                }
-                            }
-                            69u8 => {
-                                if input.len() >= *p + 6usize
-                                    && input[*p..*p + 6usize]
-                                        == [69u8, 82u8, 82u8, 79u8, 82u8, 33u8]
-                                {
-                                    let at = *p;
-                                    let end = at + 6usize;
-                                    *p = end;
-                                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                                    builder.arena_mut().push((7u32) as u8);
-                                    let _ = builder
-                                        .push_leaf_with_arena_payload(
-                                            crate::runtime::tape::TapeKind::Span,
-                                            at as u32,
-                                            end as u32,
-                                            0u8,
-                                            0u8,
-                                            __arena_off,
-                                            1u32,
-                                        );
-                                    break 'try_branches;
-                                }
-                            }
-                            78u8 => {
-                                if input.len() >= *p + 5usize
-                                    && input[*p..*p + 5usize] == [78u8, 85u8, 76u8, 76u8, 33u8]
-                                {
-                                    let at = *p;
-                                    let end = at + 5usize;
-                                    *p = end;
-                                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                                    builder.arena_mut().push((4u32) as u8);
-                                    let _ = builder
-                                        .push_leaf_with_arena_payload(
-                                            crate::runtime::tape::TapeKind::Span,
-                                            at as u32,
-                                            end as u32,
-                                            0u8,
-                                            0u8,
-                                            __arena_off,
-                                            1u32,
-                                        );
-                                    break 'try_branches;
-                                }
-                                if input.len() >= *p + 5usize
-                                    && input[*p..*p + 5usize] == [78u8, 65u8, 77u8, 69u8, 63u8]
-                                {
-                                    let at = *p;
-                                    let end = at + 5usize;
-                                    *p = end;
-                                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                                    builder.arena_mut().push((5u32) as u8);
-                                    let _ = builder
-                                        .push_leaf_with_arena_payload(
-                                            crate::runtime::tape::TapeKind::Span,
-                                            at as u32,
-                                            end as u32,
-                                            0u8,
-                                            0u8,
-                                            __arena_off,
-                                            1u32,
-                                        );
-                                    break 'try_branches;
-                                }
-                                if input.len() >= *p + 4usize
-                                    && input[*p..*p + 4usize] == [78u8, 85u8, 77u8, 33u8]
-                                {
-                                    let at = *p;
-                                    let end = at + 4usize;
-                                    *p = end;
-                                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                                    builder.arena_mut().push((6u32) as u8);
-                                    let _ = builder
-                                        .push_leaf_with_arena_payload(
-                                            crate::runtime::tape::TapeKind::Span,
-                                            at as u32,
-                                            end as u32,
-                                            0u8,
-                                            0u8,
-                                            __arena_off,
-                                            1u32,
-                                        );
-                                    break 'try_branches;
-                                }
-                                if input.len() >= *p + 3usize
-                                    && input[*p..*p + 3usize] == [78u8, 47u8, 65u8]
-                                {
-                                    let at = *p;
-                                    let end = at + 3usize;
-                                    *p = end;
-                                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                                    builder.arena_mut().push((0u32) as u8);
-                                    let _ = builder
-                                        .push_leaf_with_arena_payload(
-                                            crate::runtime::tape::TapeKind::Span,
-                                            at as u32,
-                                            end as u32,
-                                            0u8,
-                                            0u8,
-                                            __arena_off,
-                                            1u32,
-                                        );
-                                    break 'try_branches;
-                                }
-                            }
-                            82u8 => {
-                                if input.len() >= *p + 4usize
-                                    && input[*p..*p + 4usize] == [82u8, 69u8, 70u8, 33u8]
-                                {
-                                    let at = *p;
-                                    let end = at + 4usize;
-                                    *p = end;
-                                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                                    builder.arena_mut().push((2u32) as u8);
-                                    let _ = builder
-                                        .push_leaf_with_arena_payload(
-                                            crate::runtime::tape::TapeKind::Span,
-                                            at as u32,
-                                            end as u32,
-                                            0u8,
-                                            0u8,
-                                            __arena_off,
-                                            1u32,
-                                        );
-                                    break 'try_branches;
-                                }
-                            }
-                            83u8 => {
-                                if input.len() >= *p + 6usize
-                                    && input[*p..*p + 6usize]
-                                        == [83u8, 80u8, 73u8, 76u8, 76u8, 33u8]
-                                {
-                                    let at = *p;
-                                    let end = at + 6usize;
-                                    *p = end;
-                                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                                    builder.arena_mut().push((8u32) as u8);
-                                    let _ = builder
-                                        .push_leaf_with_arena_payload(
-                                            crate::runtime::tape::TapeKind::Span,
-                                            at as u32,
-                                            end as u32,
-                                            0u8,
-                                            0u8,
-                                            __arena_off,
-                                            1u32,
-                                        );
-                                    break 'try_branches;
-                                }
-                            }
-                            86u8 => {
-                                if input.len() >= *p + 6usize
-                                    && input[*p..*p + 6usize]
-                                        == [86u8, 65u8, 76u8, 85u8, 69u8, 33u8]
-                                {
-                                    let at = *p;
-                                    let end = at + 6usize;
-                                    *p = end;
-                                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                                    builder.arena_mut().push((1u32) as u8);
-                                    let _ = builder
-                                        .push_leaf_with_arena_payload(
-                                            crate::runtime::tape::TapeKind::Span,
-                                            at as u32,
-                                            end as u32,
-                                            0u8,
-                                            0u8,
-                                            __arena_off,
-                                            1u32,
-                                        );
-                                    break 'try_branches;
-                                }
-                            }
-                            _ => {}
-                        }
-                        builder.exit_post_order_children();
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                        });
-                    }
-                    let alt_hi = *p as u32;
-                    let __alt_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Alt,
-                            alt_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __alt_off,
-                            alt_hi,
-                            crate::runtime::tape::TapeOffset(alt_child),
-                        );
-                }
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
+            *p = end;
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                3u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        {
+            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
+        }
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(
+            builder,
+            __error_literal_handle,
+        );
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Wrap-shape parse function.
+    /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
-    /// Transparent dispatcher — skip leading ws, byte-dispatch
-    /// to the chosen branch's shape fn, return that shape fn's
-    /// offset unchanged. No outer compound emission; the
-    /// branch's own shape fn owns the tape record.
+    /// Opens a Wrap frame on the builder, dispatches to the matched
+    /// branch's shape fn (which carries its own
+    /// begin_compound/end_compound for compound branches and the
+    /// matching push_leaf_with_* for scalar branches), stamps the
+    /// chosen branch index via push_branch_tag, then closes the
+    /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
+    /// forward-the-single-child semantics.
     ///
-    /// AX.W0a.2.f — compound; see `flat.rs` emission for the
-    /// `#[inline]` downgrade rationale (LLVM inline-cycle
-    /// collapse vs hard-requirement inliner abort).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_GoogleSheetsParser_sheet_prefix(
-        input: &[u8],
+    pub fn parse_wrap_GoogleSheetsParser_sheet_prefix<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let mut __wrap_chosen_meta: u8 = 0;
+        let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 4u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("sheet_prefix"),
+            kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __wrap_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
+        let mut __wrap_branch_idx: u32 = 0;
         let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -3357,116 +3085,39 @@ mod __googlesheetsparser_emit_impl {
             match first {
                 _ => {}
             }
-            {
-                let attempt_p = *p;
-                let attempt_len = builder.position();
-                match {
-                    let span_lo = *p as u32;
-                    match __regex_scan_GoogleSheetsParser("'(?:[^']|'')*'!", input, *p) {
-                        ::core::option::Option::Some(len) => {
-                            *p += len as usize;
-                            let __arena_off: u32 = builder.arena_mut().len() as u32;
-                            builder.arena_mut().push((0u32) as u8);
-                            let _ = builder
-                                .push_leaf_with_arena_payload(
-                                    crate::runtime::tape::TapeKind::KvPair,
-                                    span_lo,
-                                    *p as u32,
-                                    4u8,
-                                    0u8,
-                                    __arena_off,
-                                    1u32,
-                                );
-                            ::core::result::Result::<
-                                crate::runtime::tape::TapeOffset,
-                                crate::runtime::tape::DtaError,
-                            >::Ok(crate::runtime::tape::TapeOffset::NONE)
-                        }
-                        ::core::option::Option::None => {
-                            ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                offset: span_lo,
-                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                            })
-                        }
-                    }
-                } {
-                    Ok(_) => {
-                        __wrap_chosen_meta = 0u8;
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                        builder.rollback_to(attempt_len);
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                let attempt_len = builder.position();
-                match {
-                    let span_lo = *p as u32;
-                    match __regex_scan_GoogleSheetsParser("[A-Za-z_]\\w*!", input, *p) {
-                        ::core::option::Option::Some(len) => {
-                            *p += len as usize;
-                            let __arena_off: u32 = builder.arena_mut().len() as u32;
-                            builder.arena_mut().push((1u32) as u8);
-                            let _ = builder
-                                .push_leaf_with_arena_payload(
-                                    crate::runtime::tape::TapeKind::KvPair,
-                                    span_lo,
-                                    *p as u32,
-                                    4u8,
-                                    0u8,
-                                    __arena_off,
-                                    1u32,
-                                );
-                            ::core::result::Result::<
-                                crate::runtime::tape::TapeOffset,
-                                crate::runtime::tape::DtaError,
-                            >::Ok(crate::runtime::tape::TapeOffset::NONE)
-                        }
-                        ::core::option::Option::None => {
-                            ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                offset: span_lo,
-                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                            })
-                        }
-                    }
-                } {
-                    Ok(_) => {
-                        __wrap_chosen_meta = 1u8;
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                        builder.rollback_to(attempt_len);
-                    }
-                }
-            }
+            <crate::runtime::google_sheets::SheetsStructBuilder<
+                '_,
+            > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        let _ = __wrap_chosen_meta;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::push_branch_tag(builder, __wrap_branch_idx);
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar HRegex-shape parse function.
+    /// AZ-I.W2-act.B3 — per-grammar HRegex-shape parse function,
+    /// **struct-direct body**.
     ///
-    /// Regex scan via the per-grammar adapter; emits a
-    /// `TapeKind::Regex` leaf carrying the matched span. Decoder
-    /// hooks (host_fn payloads) are wired at the dispatcher level
-    /// post-scan; the raw Span-leaf path is the default.
-    #[inline(always)]
+    /// Runs the per-grammar regex scan, decodes the matched bytes
+    /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
+    /// or Expr { Input, return_type }), and routes the decoded
+    /// value through the StructBuilder trait. Returns
+    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// shape fns under struct-direct mode.
+    #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_GoogleSheetsParser_cell_ref(
-        input: &[u8],
+    pub fn parse_hregex_GoogleSheetsParser_cell_ref<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -3485,514 +3136,175 @@ mod __googlesheetsparser_emit_impl {
         };
         *p += match_len as usize;
         let span_hi = *p as u32;
-        let leaf_off = builder
-            .push_leaf_with(
-                crate::runtime::tape::TapeKind::Regex,
-                span_lo,
-                span_hi,
-                5u8,
-                0,
-                crate::runtime::tape::PayloadData::None,
-            );
-        Ok(leaf_off)
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::push_leaf_with_str(
+            builder,
+            core::str::from_utf8(&input[span_lo as usize..span_hi as usize])
+                .unwrap_or(""),
+        );
+        Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_cell(
-        input: &[u8],
+    pub fn parse_flat_GoogleSheetsParser_cell<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __cell_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 6u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("cell"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __cell_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__cell_layout);
         {
-            {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let iter_save_p = *p;
-                let iter_save_cols = builder.position();
-                let iter_lo = *p as u32;
-                let iter_child = builder.enter_post_order_children();
-                let opt_attempt: ::core::result::Result<
-                    (),
-                    crate::runtime::tape::DtaError,
-                > = (|| {
-                    let _ = ({
-                        let _ = __shape_support_GoogleSheetsParser::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
-                        parse_wrap_GoogleSheetsParser_sheet_prefix(
-                            input,
-                            p,
-                            state,
-                            builder,
-                        )
-                    })?;
-                    Ok(())
-                })();
-                let matched = opt_attempt.is_ok();
-                if !matched {
-                    *p = iter_save_p;
-                    builder.rollback_to(iter_save_cols);
-                    builder.exit_post_order_children();
-                } else {
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
-                }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
-            }
-            {
-                let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
-                    parse_hregex_GoogleSheetsParser_cell_ref(input, p, state, builder)
-                })?;
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
+            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                6u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        {
+            let _ = ({
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                parse_hregex_GoogleSheetsParser_cell_ref(input, p, state, builder)
+            })?;
+        }
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __cell_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_range_ref(
-        input: &[u8],
+    pub fn parse_flat_GoogleSheetsParser_range_ref<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __range_ref_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 7u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("range_ref"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __range_ref_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__range_ref_layout,
+        );
         {
-            {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let iter_save_p = *p;
-                let iter_save_cols = builder.position();
-                let iter_lo = *p as u32;
-                let iter_child = builder.enter_post_order_children();
-                let opt_attempt: ::core::result::Result<
-                    (),
-                    crate::runtime::tape::DtaError,
-                > = (|| {
-                    let _ = ({
-                        let _ = __shape_support_GoogleSheetsParser::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
-                        parse_wrap_GoogleSheetsParser_sheet_prefix(
-                            input,
-                            p,
-                            state,
-                            builder,
-                        )
-                    })?;
-                    Ok(())
-                })();
-                let matched = opt_attempt.is_ok();
-                if !matched {
-                    *p = iter_save_p;
-                    builder.rollback_to(iter_save_cols);
-                    builder.exit_post_order_children();
-                } else {
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
-                }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
-            }
-            {
-                {
-                    let first = __shape_support_GoogleSheetsParser::skip_space(
-                            input,
-                            p,
-                            state,
-                        )
-                        .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    let alt_lo = *p as u32;
-                    let alt_child = builder.enter_post_order_children();
-                    'try_branches: loop {
-                        match first {
-                            _ => {}
-                        }
-                        {
-                            let attempt_p = *p;
-                            let attempt_len = builder.position();
-                            match {
-                                let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
-                                parse_hregex_GoogleSheetsParser_cell_ref(
-                                    input,
-                                    p,
-                                    state,
-                                    builder,
-                                )
-                            } {
-                                Ok(_) => break 'try_branches,
-                                Err(_) => {
-                                    *p = attempt_p;
-                                    builder.rollback_to(attempt_len);
-                                }
-                            }
-                        }
-                        {
-                            let span_lo = *p as u32;
-                            if let ::core::option::Option::Some(match_len) = __regex_scan_GoogleSheetsParser(
-                                "\\$?[A-Za-z]{1,3}",
-                                input,
-                                *p,
-                            ) {
-                                *p += match_len as usize;
-                                let _ = builder
-                                    .push_leaf(
-                                        crate::runtime::tape::TapeKind::Span,
-                                        span_lo,
-                                        *p as u32,
-                                        0,
-                                        0,
-                                    );
-                                break 'try_branches;
-                            }
-                        }
-                        {
-                            let span_lo = *p as u32;
-                            if let ::core::option::Option::Some(match_len) = __regex_scan_GoogleSheetsParser(
-                                "\\$?\\d+",
-                                input,
-                                *p,
-                            ) {
-                                *p += match_len as usize;
-                                let _ = builder
-                                    .push_leaf(
-                                        crate::runtime::tape::TapeKind::Span,
-                                        span_lo,
-                                        *p as u32,
-                                        0,
-                                        0,
-                                    );
-                                break 'try_branches;
-                            }
-                        }
-                        builder.exit_post_order_children();
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                        });
-                    }
-                    let alt_hi = *p as u32;
-                    let __alt_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Alt,
-                            alt_lo,
-                            7u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __alt_off,
-                            alt_hi,
-                            crate::runtime::tape::TapeOffset(alt_child),
-                        );
-                }
-            }
-            {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [58u8] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        7u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-            }
-            {
-                {
-                    let first = __shape_support_GoogleSheetsParser::skip_space(
-                            input,
-                            p,
-                            state,
-                        )
-                        .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    let alt_lo = *p as u32;
-                    let alt_child = builder.enter_post_order_children();
-                    'try_branches: loop {
-                        match first {
-                            _ => {}
-                        }
-                        {
-                            let attempt_p = *p;
-                            let attempt_len = builder.position();
-                            match {
-                                let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
-                                parse_hregex_GoogleSheetsParser_cell_ref(
-                                    input,
-                                    p,
-                                    state,
-                                    builder,
-                                )
-                            } {
-                                Ok(_) => break 'try_branches,
-                                Err(_) => {
-                                    *p = attempt_p;
-                                    builder.rollback_to(attempt_len);
-                                }
-                            }
-                        }
-                        {
-                            let span_lo = *p as u32;
-                            if let ::core::option::Option::Some(match_len) = __regex_scan_GoogleSheetsParser(
-                                "\\$?[A-Za-z]{1,3}",
-                                input,
-                                *p,
-                            ) {
-                                *p += match_len as usize;
-                                let _ = builder
-                                    .push_leaf(
-                                        crate::runtime::tape::TapeKind::Span,
-                                        span_lo,
-                                        *p as u32,
-                                        0,
-                                        0,
-                                    );
-                                break 'try_branches;
-                            }
-                        }
-                        {
-                            let span_lo = *p as u32;
-                            if let ::core::option::Option::Some(match_len) = __regex_scan_GoogleSheetsParser(
-                                "\\$?\\d+",
-                                input,
-                                *p,
-                            ) {
-                                *p += match_len as usize;
-                                let _ = builder
-                                    .push_leaf(
-                                        crate::runtime::tape::TapeKind::Span,
-                                        span_lo,
-                                        *p as u32,
-                                        0,
-                                        0,
-                                    );
-                                break 'try_branches;
-                            }
-                        }
-                        builder.exit_post_order_children();
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                        });
-                    }
-                    let alt_hi = *p as u32;
-                    let __alt_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Alt,
-                            alt_lo,
-                            7u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __alt_off,
-                            alt_hi,
-                            crate::runtime::tape::TapeOffset(alt_child),
-                        );
-                }
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
+            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                7u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        {
+            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
+        }
+        {
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [58u8] {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+        }
+        {
+            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
+        }
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __range_ref_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Wrap-shape parse function.
+    /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
-    /// Transparent dispatcher — skip leading ws, byte-dispatch
-    /// to the chosen branch's shape fn, return that shape fn's
-    /// offset unchanged. No outer compound emission; the
-    /// branch's own shape fn owns the tape record.
+    /// Opens a Wrap frame on the builder, dispatches to the matched
+    /// branch's shape fn (which carries its own
+    /// begin_compound/end_compound for compound branches and the
+    /// matching push_leaf_with_* for scalar branches), stamps the
+    /// chosen branch index via push_branch_tag, then closes the
+    /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
+    /// forward-the-single-child semantics.
     ///
-    /// AX.W0a.2.f — compound; see `flat.rs` emission for the
-    /// `#[inline]` downgrade rationale (LLVM inline-cycle
-    /// collapse vs hard-requirement inliner abort).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_GoogleSheetsParser_cell_or_range(
-        input: &[u8],
+    pub fn parse_wrap_GoogleSheetsParser_cell_or_range<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let mut __wrap_chosen_meta: u8 = 0;
+        let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 8u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("cell_or_range"),
+            kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __wrap_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
+        let mut __wrap_branch_idx: u32 = 0;
         let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -4003,54 +3315,61 @@ mod __googlesheetsparser_emit_impl {
             }
             {
                 let attempt_p = *p;
-                let attempt_len = builder.position();
                 match parse_flat_GoogleSheetsParser_range_ref(input, p, state, builder) {
-                    Ok(_) => {
-                        __wrap_chosen_meta = 0u8;
+                    ::core::result::Result::Ok(_) => {
+                        __wrap_branch_idx = 0u32;
                         break 'try_branches;
                     }
-                    Err(_) => {
+                    ::core::result::Result::Err(_) => {
                         *p = attempt_p;
-                        builder.rollback_to(attempt_len);
                     }
                 }
             }
             {
                 let attempt_p = *p;
-                let attempt_len = builder.position();
                 match parse_flat_GoogleSheetsParser_cell(input, p, state, builder) {
-                    Ok(_) => {
-                        __wrap_chosen_meta = 1u8;
+                    ::core::result::Result::Ok(_) => {
+                        __wrap_branch_idx = 1u32;
                         break 'try_branches;
                     }
-                    Err(_) => {
+                    ::core::result::Result::Err(_) => {
                         *p = attempt_p;
-                        builder.rollback_to(attempt_len);
                     }
                 }
             }
+            <crate::runtime::google_sheets::SheetsStructBuilder<
+                '_,
+            > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        let _ = __wrap_chosen_meta;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::push_branch_tag(builder, __wrap_branch_idx);
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar HRegex-shape parse function.
+    /// AZ-I.W2-act.B3 — per-grammar HRegex-shape parse function,
+    /// **struct-direct body**.
     ///
-    /// Regex scan via the per-grammar adapter; emits a
-    /// `TapeKind::Regex` leaf carrying the matched span. Decoder
-    /// hooks (host_fn payloads) are wired at the dispatcher level
-    /// post-scan; the raw Span-leaf path is the default.
-    #[inline(always)]
+    /// Runs the per-grammar regex scan, decodes the matched bytes
+    /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
+    /// or Expr { Input, return_type }), and routes the decoded
+    /// value through the StructBuilder trait. Returns
+    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// shape fns under struct-direct mode.
+    #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_GoogleSheetsParser_identifier(
-        input: &[u8],
+    pub fn parse_hregex_GoogleSheetsParser_identifier<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -4069,27 +3388,23 @@ mod __googlesheetsparser_emit_impl {
         };
         *p += match_len as usize;
         let span_hi = *p as u32;
-        let leaf_off = builder
-            .push_leaf_with(
-                crate::runtime::tape::TapeKind::Regex,
-                span_lo,
-                span_hi,
-                9u8,
-                0,
-                crate::runtime::tape::PayloadData::None,
-            );
-        Ok(leaf_off)
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::push_leaf_with_str(
+            builder,
+            core::str::from_utf8(&input[span_lo as usize..span_hi as usize])
+                .unwrap_or(""),
+        );
+        Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
-    /// (Alt of literal-led or Ref-led branches).
+    /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
+    /// (Alt of literal-led branches).
     ///
-    /// AX.W0a.2.g — admits Ref-led branches whose target
-    /// resolves to a literal-prefix body (per `leading_
-    /// literal_bytes`). For each first-byte group, each
-    /// candidate's full prefix is checked before committing:
-    /// Literal branches emit the legacy leaf push;
-    /// Ref branches delegate to the target's shape fn via
-    /// [`emit_ref_call_tape`], threading `state` through.
+    /// Each branch's typed payload routes through
+    /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
+    /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
+    /// untyped). Returns `TapeOffset::NONE` for
+    /// compositional uniformity.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_GoogleSheetsParser_compare_op(
@@ -4097,139 +3412,34 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'_>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
             60u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [60u8] {
-                    let span_lo = *p as u32;
-                    let seq_save_cols = builder.position();
-                    let seq_attempt: ::core::result::Result<(), ()> = (|| {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [60u8] {
-                            return Err(());
-                        }
-                        *p = end;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        {
-                            let __pos_attempt: ::core::result::Result<
-                                (),
-                                crate::runtime::tape::DtaError,
-                            > = (|| {
-                                {
-                                    let first = __shape_support_GoogleSheetsParser::skip_space(
-                                            input,
-                                            p,
-                                            state,
-                                        )
-                                        .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                            offset: *p as u32,
-                                        })?;
-                                    'try_branches: loop {
-                                        match first {
-                                            61u8 => {
-                                                let at = *p;
-                                                let end = at + 1usize;
-                                                if input.len() >= end && input[at..end] == [61u8] {
-                                                    *p = end;
-                                                    let _ = builder
-                                                        .push_leaf(
-                                                            crate::runtime::tape::TapeKind::Literal,
-                                                            at as u32,
-                                                            end as u32,
-                                                            0,
-                                                            0,
-                                                        );
-                                                    break 'try_branches;
-                                                }
-                                            }
-                                            62u8 => {
-                                                let at = *p;
-                                                let end = at + 1usize;
-                                                if input.len() >= end && input[at..end] == [62u8] {
-                                                    *p = end;
-                                                    let _ = builder
-                                                        .push_leaf(
-                                                            crate::runtime::tape::TapeKind::Literal,
-                                                            at as u32,
-                                                            end as u32,
-                                                            0,
-                                                            0,
-                                                        );
-                                                    break 'try_branches;
-                                                }
-                                            }
-                                            _ => {}
-                                        }
-                                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                            offset: *p as u32,
-                                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                        });
-                                    }
-                                }
-                                ::core::result::Result::Ok(())
-                            })();
-                            if __pos_attempt.is_err() {
-                                return ::core::result::Result::Err(());
-                            }
-                        }
-                        Ok(())
-                    })();
-                    if seq_attempt.is_err() {
-                        *p = span_lo as usize;
-                        builder.rollback_to(seq_save_cols);
-                        return Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                        });
-                    }
-                    let span_hi = *p as u32;
-                    builder.rollback_to(seq_save_cols);
-                    let off = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            10u8,
-                            0u8,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                    return Ok(off);
+                    let at = *p;
+                    let end = at + 1usize;
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [60u8] {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                    builder.arena_mut().push((4u32) as u8);
-                    let off = builder
-                        .push_leaf_with_arena_payload(
-                            crate::runtime::tape::TapeKind::KvPair,
-                            at as u32,
-                            end as u32,
-                            10u8,
-                            0u8,
-                            __arena_off,
-                            1u32,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -4240,21 +3450,12 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                    builder.arena_mut().push((3u32) as u8);
-                    let off = builder
-                        .push_leaf_with_arena_payload(
-                            crate::runtime::tape::TapeKind::KvPair,
-                            at as u32,
-                            end as u32,
-                            10u8,
-                            0u8,
-                            __arena_off,
-                            1u32,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -4265,46 +3466,28 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                    builder.arena_mut().push((2u32) as u8);
-                    let off = builder
-                        .push_leaf_with_arena_payload(
-                            crate::runtime::tape::TapeKind::KvPair,
-                            at as u32,
-                            end as u32,
-                            10u8,
-                            0u8,
-                            __arena_off,
-                            1u32,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [62u8] {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                    builder.arena_mut().push((5u32) as u8);
-                    let off = builder
-                        .push_leaf_with_arena_payload(
-                            crate::runtime::tape::TapeKind::KvPair,
-                            at as u32,
-                            end as u32,
-                            10u8,
-                            0u8,
-                            __arena_off,
-                            1u32,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                Err(crate::runtime::tape::DtaError::Syntax {
+                ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -4312,95 +3495,60 @@ mod __googlesheetsparser_emit_impl {
             }
         }
     }
-    /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
+    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
+    /// function, **struct-direct body**. Targets the grammar's
+    /// concrete `StructBuilder`.
     ///
-    /// Runs the operand-led shunting-yard reducer bounded by the
-    /// emitted per-grammar `PRECEDENCE_LUT`. The reducer mirrors
-    /// the walker's `DtaState::ShuntingYard` arm — `TapeKind::Rule`
-    /// outer compound + per-op reduced binary compounds via
-    /// `emit_reducer_compound`.
+    /// Opens a compound for the rule (e.g. `add_expr` →
+    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
+    /// stamps operator branch tags inline, closes the compound.
+    /// Children land in the order
+    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
+    /// rule's structural alphabet is preserved verbatim;
+    /// associativity-honouring binary-tree reduction is a
+    /// consumer-side projection (the runtime exposes
+    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// # Emitted algorithm
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode.
     ///
-    /// 1. Reserve an outer Rule compound via
-    ///    [`crate::runtime::tape::Tape<()>::mark_children`] +
-    ///    record the parse-open position.
-    /// 2. Dispatch the leftmost operand through the grammar's
-    ///    value-position dispatcher; the operand's records land
-    ///    inside the outer compound's child run.
-    /// 3. Loop: peek the next byte; consult `PRECEDENCE_LUT`; when
-    ///    zero, break; when nonzero:
-    ///    a. Reduce every top-of-op-stack entry whose precedence
-    ///       exceeds the new byte's (or ties + left-assoc); each
-    ///       reduce emits a `TapeKind::Rule` reducer compound via
-    ///       [`crate::runtime::tape::emit_reducer_compound`].
-    ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
-    ///       byte's u8 discriminant into `pay_narrow` directly via
-    ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
-    ///       inline; bypasses the `arena_mut().push` round-trip
-    ///       AX.W0a.2.l routed through).
-    ///    c. Push the operator onto the local op stack with its
-    ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
-    ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
-    ///    e. Re-dispatch the RHS operand.
-    /// 4. On EOF-operator: drain the op stack — every remaining
-    ///    entry reduces into a terminal compound. The final
-    ///    `this_operand_root` is stamped onto the outer Rule
-    ///    compound's `child_off` (overriding the default
-    ///    `mark_children` index) so the cursor's pre-order walk
-    ///    surfaces the reduced tree root as the compound's first
-    ///    child.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-    /// recursion rationale.
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge through the value dispatcher.
     #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
-        unused_assignments,
+        unused_variables,
         unused_mut,
-        unused_variables
+        unused_assignments
     )]
-    pub fn parse_pratt_GoogleSheetsParser_comparison_expr(
-        input: &[u8],
+    pub fn parse_pratt_GoogleSheetsParser_comparison_expr<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        struct LocalOpEntry {
-            op_discriminant: u8,
-            precedence: u8,
-            associativity_is_left: bool,
-            lhs_idx: u32,
-            lhs_span_lo: u32,
-        }
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        let outer_span_lo = *p as u32;
-        let outer_off = builder
-            .begin_compound(
-                crate::runtime::tape::TapeKind::Rule,
-                outer_span_lo,
-                11u8,
-                0u8,
-                0u16,
-            );
-        let _operand_off = ({
+        let __comparison_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 11u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("comparison_expr"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __comparison_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__comparison_expr_layout,
+        );
+        let _ = ({
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             parse_pratt_GoogleSheetsParser_concat_expr(input, p, state, builder)
         })?;
-        let mut this_operand_root: u32 = _operand_off.0;
-        const OP_STACK_CAP: usize = 16;
-        let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
-            op_discriminant: 0,
-            precedence: 0,
-            associativity_is_left: false,
-            lhs_idx: 0,
-            lhs_span_lo: 0,
-        });
-        let mut op_stack_len: usize = 0;
         loop {
             let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
             let mut lut_byte: u8 = PRECEDENCE_LUT_comparison_expr[op_byte as usize];
@@ -4409,54 +3557,9 @@ mod __googlesheetsparser_emit_impl {
                 op_byte = input.get(*p).copied().unwrap_or(0);
                 lut_byte = PRECEDENCE_LUT_comparison_expr[op_byte as usize];
             }
-            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
-                ::core::option::Option::None
-            } else {
-                ::core::option::Option::Some(lut_byte & 0x0Fu8)
-            };
-            loop {
-                if op_stack_len == 0 {
-                    break;
-                }
-                let top_op = &op_stack[op_stack_len - 1];
-                let should_reduce = match new_prec {
-                    ::core::option::Option::None => true,
-                    ::core::option::Option::Some(p_new) => {
-                        top_op.precedence > p_new
-                            || (top_op.precedence == p_new
-                                && top_op.associativity_is_left)
-                    }
-                };
-                if !should_reduce {
-                    break;
-                }
-                let lhs_idx = top_op.lhs_idx;
-                let lhs_span_lo = top_op.lhs_span_lo;
-                let op_discriminant = top_op.op_discriminant;
-                op_stack_len -= 1;
-                let reducer_span_hi = *p as u32;
-                let compound_idx = builder
-                    .begin_compound(
-                        crate::runtime::tape::TapeKind::Rule,
-                        lhs_span_lo,
-                        op_discriminant,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .wrap_existing_children_post_order(
-                        compound_idx,
-                        reducer_span_hi,
-                        crate::runtime::tape::TapeOffset(lhs_idx),
-                    );
-                this_operand_root = compound_idx;
-            }
             if lut_byte == 0 {
                 break;
             }
-            let precedence: u8 = lut_byte & 0x0Fu8;
-            let assoc_bit: u8 = (lut_byte >> 4) & 0x01u8;
-            let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
             let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
@@ -4496,145 +3599,81 @@ mod __googlesheetsparser_emit_impl {
             if !op_matched {
                 break;
             }
-            let op_lo: u32 = *p as u32;
-            *p = (*p).saturating_add(op_width as usize);
-            let op_hi: u32 = *p as u32;
-            let _op_rec = builder
-                .push_leaf_with(
-                    crate::runtime::tape::TapeKind::Span,
-                    op_lo,
-                    op_hi,
-                    0,
-                    0,
-                    crate::runtime::tape::PayloadData::InlineScalar(
-                        op_discriminant as u32,
-                    ),
-                );
-            let lhs_span_lo: u32 = if (this_operand_root as usize)
-                < builder.columns().len()
-            {
-                builder.columns().span_lo_at(this_operand_root)
-            } else {
-                op_hi
-            };
-            debug_assert!(
-                op_stack_len < OP_STACK_CAP,
-                "Pratt op_stack overflow at depth {} (cap {})", op_stack_len,
-                OP_STACK_CAP,
+            <crate::runtime::google_sheets::SheetsStructBuilder<
+                '_,
+            > as crate::runtime::StructBuilder>::push_branch_tag(
+                builder,
+                op_discriminant as u32,
             );
-            op_stack[op_stack_len] = LocalOpEntry {
-                op_discriminant,
-                precedence,
-                associativity_is_left,
-                lhs_idx: this_operand_root,
-                lhs_span_lo,
-            };
-            op_stack_len += 1;
+            *p = (*p).saturating_add(op_width as usize);
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            let _rhs_off = ({
+            let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_pratt_GoogleSheetsParser_concat_expr(input, p, state, builder)
             })?;
-            this_operand_root = _rhs_off.0;
         }
-        let outer_span_hi = *p as u32;
-        builder
-            .end_compound_with_child_off(
-                outer_off,
-                outer_span_hi,
-                crate::runtime::tape::TapeOffset(this_operand_root),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(
+            builder,
+            __comparison_expr_handle,
+        );
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
+    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
+    /// function, **struct-direct body**. Targets the grammar's
+    /// concrete `StructBuilder`.
     ///
-    /// Runs the operand-led shunting-yard reducer bounded by the
-    /// emitted per-grammar `PRECEDENCE_LUT`. The reducer mirrors
-    /// the walker's `DtaState::ShuntingYard` arm — `TapeKind::Rule`
-    /// outer compound + per-op reduced binary compounds via
-    /// `emit_reducer_compound`.
+    /// Opens a compound for the rule (e.g. `add_expr` →
+    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
+    /// stamps operator branch tags inline, closes the compound.
+    /// Children land in the order
+    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
+    /// rule's structural alphabet is preserved verbatim;
+    /// associativity-honouring binary-tree reduction is a
+    /// consumer-side projection (the runtime exposes
+    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// # Emitted algorithm
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode.
     ///
-    /// 1. Reserve an outer Rule compound via
-    ///    [`crate::runtime::tape::Tape<()>::mark_children`] +
-    ///    record the parse-open position.
-    /// 2. Dispatch the leftmost operand through the grammar's
-    ///    value-position dispatcher; the operand's records land
-    ///    inside the outer compound's child run.
-    /// 3. Loop: peek the next byte; consult `PRECEDENCE_LUT`; when
-    ///    zero, break; when nonzero:
-    ///    a. Reduce every top-of-op-stack entry whose precedence
-    ///       exceeds the new byte's (or ties + left-assoc); each
-    ///       reduce emits a `TapeKind::Rule` reducer compound via
-    ///       [`crate::runtime::tape::emit_reducer_compound`].
-    ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
-    ///       byte's u8 discriminant into `pay_narrow` directly via
-    ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
-    ///       inline; bypasses the `arena_mut().push` round-trip
-    ///       AX.W0a.2.l routed through).
-    ///    c. Push the operator onto the local op stack with its
-    ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
-    ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
-    ///    e. Re-dispatch the RHS operand.
-    /// 4. On EOF-operator: drain the op stack — every remaining
-    ///    entry reduces into a terminal compound. The final
-    ///    `this_operand_root` is stamped onto the outer Rule
-    ///    compound's `child_off` (overriding the default
-    ///    `mark_children` index) so the cursor's pre-order walk
-    ///    surfaces the reduced tree root as the compound's first
-    ///    child.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-    /// recursion rationale.
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge through the value dispatcher.
     #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
-        unused_assignments,
+        unused_variables,
         unused_mut,
-        unused_variables
+        unused_assignments
     )]
-    pub fn parse_pratt_GoogleSheetsParser_concat_expr(
-        input: &[u8],
+    pub fn parse_pratt_GoogleSheetsParser_concat_expr<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        struct LocalOpEntry {
-            op_discriminant: u8,
-            precedence: u8,
-            associativity_is_left: bool,
-            lhs_idx: u32,
-            lhs_span_lo: u32,
-        }
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        let outer_span_lo = *p as u32;
-        let outer_off = builder
-            .begin_compound(
-                crate::runtime::tape::TapeKind::Rule,
-                outer_span_lo,
-                12u8,
-                0u8,
-                0u16,
-            );
-        let _operand_off = ({
+        let __concat_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 12u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("concat_expr"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __concat_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__concat_expr_layout,
+        );
+        let _ = ({
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             parse_pratt_GoogleSheetsParser_add_expr(input, p, state, builder)
         })?;
-        let mut this_operand_root: u32 = _operand_off.0;
-        const OP_STACK_CAP: usize = 16;
-        let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
-            op_discriminant: 0,
-            precedence: 0,
-            associativity_is_left: false,
-            lhs_idx: 0,
-            lhs_span_lo: 0,
-        });
-        let mut op_stack_len: usize = 0;
         loop {
             let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
             let mut lut_byte: u8 = PRECEDENCE_LUT_concat_expr[op_byte as usize];
@@ -4643,54 +3682,9 @@ mod __googlesheetsparser_emit_impl {
                 op_byte = input.get(*p).copied().unwrap_or(0);
                 lut_byte = PRECEDENCE_LUT_concat_expr[op_byte as usize];
             }
-            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
-                ::core::option::Option::None
-            } else {
-                ::core::option::Option::Some(lut_byte & 0x0Fu8)
-            };
-            loop {
-                if op_stack_len == 0 {
-                    break;
-                }
-                let top_op = &op_stack[op_stack_len - 1];
-                let should_reduce = match new_prec {
-                    ::core::option::Option::None => true,
-                    ::core::option::Option::Some(p_new) => {
-                        top_op.precedence > p_new
-                            || (top_op.precedence == p_new
-                                && top_op.associativity_is_left)
-                    }
-                };
-                if !should_reduce {
-                    break;
-                }
-                let lhs_idx = top_op.lhs_idx;
-                let lhs_span_lo = top_op.lhs_span_lo;
-                let op_discriminant = top_op.op_discriminant;
-                op_stack_len -= 1;
-                let reducer_span_hi = *p as u32;
-                let compound_idx = builder
-                    .begin_compound(
-                        crate::runtime::tape::TapeKind::Rule,
-                        lhs_span_lo,
-                        op_discriminant,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .wrap_existing_children_post_order(
-                        compound_idx,
-                        reducer_span_hi,
-                        crate::runtime::tape::TapeOffset(lhs_idx),
-                    );
-                this_operand_root = compound_idx;
-            }
             if lut_byte == 0 {
                 break;
             }
-            let precedence: u8 = lut_byte & 0x0Fu8;
-            let assoc_bit: u8 = (lut_byte >> 4) & 0x01u8;
-            let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
             let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
@@ -4730,66 +3724,32 @@ mod __googlesheetsparser_emit_impl {
             if !op_matched {
                 break;
             }
-            let op_lo: u32 = *p as u32;
-            *p = (*p).saturating_add(op_width as usize);
-            let op_hi: u32 = *p as u32;
-            let _op_rec = builder
-                .push_leaf_with(
-                    crate::runtime::tape::TapeKind::Span,
-                    op_lo,
-                    op_hi,
-                    0,
-                    0,
-                    crate::runtime::tape::PayloadData::InlineScalar(
-                        op_discriminant as u32,
-                    ),
-                );
-            let lhs_span_lo: u32 = if (this_operand_root as usize)
-                < builder.columns().len()
-            {
-                builder.columns().span_lo_at(this_operand_root)
-            } else {
-                op_hi
-            };
-            debug_assert!(
-                op_stack_len < OP_STACK_CAP,
-                "Pratt op_stack overflow at depth {} (cap {})", op_stack_len,
-                OP_STACK_CAP,
+            <crate::runtime::google_sheets::SheetsStructBuilder<
+                '_,
+            > as crate::runtime::StructBuilder>::push_branch_tag(
+                builder,
+                op_discriminant as u32,
             );
-            op_stack[op_stack_len] = LocalOpEntry {
-                op_discriminant,
-                precedence,
-                associativity_is_left,
-                lhs_idx: this_operand_root,
-                lhs_span_lo,
-            };
-            op_stack_len += 1;
+            *p = (*p).saturating_add(op_width as usize);
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            let _rhs_off = ({
+            let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_pratt_GoogleSheetsParser_add_expr(input, p, state, builder)
             })?;
-            this_operand_root = _rhs_off.0;
         }
-        let outer_span_hi = *p as u32;
-        builder
-            .end_compound_with_child_off(
-                outer_off,
-                outer_span_hi,
-                crate::runtime::tape::TapeOffset(this_operand_root),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __concat_expr_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
-    /// (Alt of literal-led or Ref-led branches).
+    /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
+    /// (Alt of literal-led branches).
     ///
-    /// AX.W0a.2.g — admits Ref-led branches whose target
-    /// resolves to a literal-prefix body (per `leading_
-    /// literal_bytes`). For each first-byte group, each
-    /// candidate's full prefix is checked before committing:
-    /// Literal branches emit the legacy leaf push;
-    /// Ref branches delegate to the target's shape fn via
-    /// [`emit_ref_call_tape`], threading `state` through.
+    /// Each branch's typed payload routes through
+    /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
+    /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
+    /// untyped). Returns `TapeOffset::NONE` for
+    /// compositional uniformity.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_GoogleSheetsParser_add_op(
@@ -4797,11 +3757,12 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'_>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
             43u8 => {
@@ -4809,21 +3770,12 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                    builder.arena_mut().push((0u32) as u8);
-                    let off = builder
-                        .push_leaf_with_arena_payload(
-                            crate::runtime::tape::TapeKind::KvPair,
-                            at as u32,
-                            end as u32,
-                            13u8,
-                            0u8,
-                            __arena_off,
-                            1u32,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -4834,28 +3786,19 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                    builder.arena_mut().push((1u32) as u8);
-                    let off = builder
-                        .push_leaf_with_arena_payload(
-                            crate::runtime::tape::TapeKind::KvPair,
-                            at as u32,
-                            end as u32,
-                            13u8,
-                            0u8,
-                            __arena_off,
-                            1u32,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                Err(crate::runtime::tape::DtaError::Syntax {
+                ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -4863,95 +3806,57 @@ mod __googlesheetsparser_emit_impl {
             }
         }
     }
-    /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
+    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
+    /// function, **struct-direct body**. Targets the grammar's
+    /// concrete `StructBuilder`.
     ///
-    /// Runs the operand-led shunting-yard reducer bounded by the
-    /// emitted per-grammar `PRECEDENCE_LUT`. The reducer mirrors
-    /// the walker's `DtaState::ShuntingYard` arm — `TapeKind::Rule`
-    /// outer compound + per-op reduced binary compounds via
-    /// `emit_reducer_compound`.
+    /// Opens a compound for the rule (e.g. `add_expr` →
+    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
+    /// stamps operator branch tags inline, closes the compound.
+    /// Children land in the order
+    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
+    /// rule's structural alphabet is preserved verbatim;
+    /// associativity-honouring binary-tree reduction is a
+    /// consumer-side projection (the runtime exposes
+    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// # Emitted algorithm
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode.
     ///
-    /// 1. Reserve an outer Rule compound via
-    ///    [`crate::runtime::tape::Tape<()>::mark_children`] +
-    ///    record the parse-open position.
-    /// 2. Dispatch the leftmost operand through the grammar's
-    ///    value-position dispatcher; the operand's records land
-    ///    inside the outer compound's child run.
-    /// 3. Loop: peek the next byte; consult `PRECEDENCE_LUT`; when
-    ///    zero, break; when nonzero:
-    ///    a. Reduce every top-of-op-stack entry whose precedence
-    ///       exceeds the new byte's (or ties + left-assoc); each
-    ///       reduce emits a `TapeKind::Rule` reducer compound via
-    ///       [`crate::runtime::tape::emit_reducer_compound`].
-    ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
-    ///       byte's u8 discriminant into `pay_narrow` directly via
-    ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
-    ///       inline; bypasses the `arena_mut().push` round-trip
-    ///       AX.W0a.2.l routed through).
-    ///    c. Push the operator onto the local op stack with its
-    ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
-    ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
-    ///    e. Re-dispatch the RHS operand.
-    /// 4. On EOF-operator: drain the op stack — every remaining
-    ///    entry reduces into a terminal compound. The final
-    ///    `this_operand_root` is stamped onto the outer Rule
-    ///    compound's `child_off` (overriding the default
-    ///    `mark_children` index) so the cursor's pre-order walk
-    ///    surfaces the reduced tree root as the compound's first
-    ///    child.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-    /// recursion rationale.
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge through the value dispatcher.
     #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
-        unused_assignments,
+        unused_variables,
         unused_mut,
-        unused_variables
+        unused_assignments
     )]
-    pub fn parse_pratt_GoogleSheetsParser_add_expr(
-        input: &[u8],
+    pub fn parse_pratt_GoogleSheetsParser_add_expr<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        struct LocalOpEntry {
-            op_discriminant: u8,
-            precedence: u8,
-            associativity_is_left: bool,
-            lhs_idx: u32,
-            lhs_span_lo: u32,
-        }
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        let outer_span_lo = *p as u32;
-        let outer_off = builder
-            .begin_compound(
-                crate::runtime::tape::TapeKind::Rule,
-                outer_span_lo,
-                14u8,
-                0u8,
-                0u16,
-            );
-        let _operand_off = ({
+        let __add_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 14u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("add_expr"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __add_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__add_expr_layout);
+        let _ = ({
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             parse_pratt_GoogleSheetsParser_mul_expr(input, p, state, builder)
         })?;
-        let mut this_operand_root: u32 = _operand_off.0;
-        const OP_STACK_CAP: usize = 16;
-        let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
-            op_discriminant: 0,
-            precedence: 0,
-            associativity_is_left: false,
-            lhs_idx: 0,
-            lhs_span_lo: 0,
-        });
-        let mut op_stack_len: usize = 0;
         loop {
             let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
             let mut lut_byte: u8 = PRECEDENCE_LUT_add_expr[op_byte as usize];
@@ -4960,54 +3865,9 @@ mod __googlesheetsparser_emit_impl {
                 op_byte = input.get(*p).copied().unwrap_or(0);
                 lut_byte = PRECEDENCE_LUT_add_expr[op_byte as usize];
             }
-            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
-                ::core::option::Option::None
-            } else {
-                ::core::option::Option::Some(lut_byte & 0x0Fu8)
-            };
-            loop {
-                if op_stack_len == 0 {
-                    break;
-                }
-                let top_op = &op_stack[op_stack_len - 1];
-                let should_reduce = match new_prec {
-                    ::core::option::Option::None => true,
-                    ::core::option::Option::Some(p_new) => {
-                        top_op.precedence > p_new
-                            || (top_op.precedence == p_new
-                                && top_op.associativity_is_left)
-                    }
-                };
-                if !should_reduce {
-                    break;
-                }
-                let lhs_idx = top_op.lhs_idx;
-                let lhs_span_lo = top_op.lhs_span_lo;
-                let op_discriminant = top_op.op_discriminant;
-                op_stack_len -= 1;
-                let reducer_span_hi = *p as u32;
-                let compound_idx = builder
-                    .begin_compound(
-                        crate::runtime::tape::TapeKind::Rule,
-                        lhs_span_lo,
-                        op_discriminant,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .wrap_existing_children_post_order(
-                        compound_idx,
-                        reducer_span_hi,
-                        crate::runtime::tape::TapeOffset(lhs_idx),
-                    );
-                this_operand_root = compound_idx;
-            }
             if lut_byte == 0 {
                 break;
             }
-            let precedence: u8 = lut_byte & 0x0Fu8;
-            let assoc_bit: u8 = (lut_byte >> 4) & 0x01u8;
-            let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
             let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
@@ -5047,66 +3907,32 @@ mod __googlesheetsparser_emit_impl {
             if !op_matched {
                 break;
             }
-            let op_lo: u32 = *p as u32;
-            *p = (*p).saturating_add(op_width as usize);
-            let op_hi: u32 = *p as u32;
-            let _op_rec = builder
-                .push_leaf_with(
-                    crate::runtime::tape::TapeKind::Span,
-                    op_lo,
-                    op_hi,
-                    0,
-                    0,
-                    crate::runtime::tape::PayloadData::InlineScalar(
-                        op_discriminant as u32,
-                    ),
-                );
-            let lhs_span_lo: u32 = if (this_operand_root as usize)
-                < builder.columns().len()
-            {
-                builder.columns().span_lo_at(this_operand_root)
-            } else {
-                op_hi
-            };
-            debug_assert!(
-                op_stack_len < OP_STACK_CAP,
-                "Pratt op_stack overflow at depth {} (cap {})", op_stack_len,
-                OP_STACK_CAP,
+            <crate::runtime::google_sheets::SheetsStructBuilder<
+                '_,
+            > as crate::runtime::StructBuilder>::push_branch_tag(
+                builder,
+                op_discriminant as u32,
             );
-            op_stack[op_stack_len] = LocalOpEntry {
-                op_discriminant,
-                precedence,
-                associativity_is_left,
-                lhs_idx: this_operand_root,
-                lhs_span_lo,
-            };
-            op_stack_len += 1;
+            *p = (*p).saturating_add(op_width as usize);
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            let _rhs_off = ({
+            let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_pratt_GoogleSheetsParser_mul_expr(input, p, state, builder)
             })?;
-            this_operand_root = _rhs_off.0;
         }
-        let outer_span_hi = *p as u32;
-        builder
-            .end_compound_with_child_off(
-                outer_off,
-                outer_span_hi,
-                crate::runtime::tape::TapeOffset(this_operand_root),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __add_expr_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
-    /// (Alt of literal-led or Ref-led branches).
+    /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
+    /// (Alt of literal-led branches).
     ///
-    /// AX.W0a.2.g — admits Ref-led branches whose target
-    /// resolves to a literal-prefix body (per `leading_
-    /// literal_bytes`). For each first-byte group, each
-    /// candidate's full prefix is checked before committing:
-    /// Literal branches emit the legacy leaf push;
-    /// Ref branches delegate to the target's shape fn via
-    /// [`emit_ref_call_tape`], threading `state` through.
+    /// Each branch's typed payload routes through
+    /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
+    /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
+    /// untyped). Returns `TapeOffset::NONE` for
+    /// compositional uniformity.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_GoogleSheetsParser_mul_op(
@@ -5114,11 +3940,12 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'_>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
             42u8 => {
@@ -5126,21 +3953,12 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                    builder.arena_mut().push((0u32) as u8);
-                    let off = builder
-                        .push_leaf_with_arena_payload(
-                            crate::runtime::tape::TapeKind::KvPair,
-                            at as u32,
-                            end as u32,
-                            15u8,
-                            0u8,
-                            __arena_off,
-                            1u32,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -5151,28 +3969,19 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                    builder.arena_mut().push((1u32) as u8);
-                    let off = builder
-                        .push_leaf_with_arena_payload(
-                            crate::runtime::tape::TapeKind::KvPair,
-                            at as u32,
-                            end as u32,
-                            15u8,
-                            0u8,
-                            __arena_off,
-                            1u32,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                Err(crate::runtime::tape::DtaError::Syntax {
+                ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -5180,95 +3989,57 @@ mod __googlesheetsparser_emit_impl {
             }
         }
     }
-    /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
+    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
+    /// function, **struct-direct body**. Targets the grammar's
+    /// concrete `StructBuilder`.
     ///
-    /// Runs the operand-led shunting-yard reducer bounded by the
-    /// emitted per-grammar `PRECEDENCE_LUT`. The reducer mirrors
-    /// the walker's `DtaState::ShuntingYard` arm — `TapeKind::Rule`
-    /// outer compound + per-op reduced binary compounds via
-    /// `emit_reducer_compound`.
+    /// Opens a compound for the rule (e.g. `add_expr` →
+    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
+    /// stamps operator branch tags inline, closes the compound.
+    /// Children land in the order
+    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
+    /// rule's structural alphabet is preserved verbatim;
+    /// associativity-honouring binary-tree reduction is a
+    /// consumer-side projection (the runtime exposes
+    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// # Emitted algorithm
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode.
     ///
-    /// 1. Reserve an outer Rule compound via
-    ///    [`crate::runtime::tape::Tape<()>::mark_children`] +
-    ///    record the parse-open position.
-    /// 2. Dispatch the leftmost operand through the grammar's
-    ///    value-position dispatcher; the operand's records land
-    ///    inside the outer compound's child run.
-    /// 3. Loop: peek the next byte; consult `PRECEDENCE_LUT`; when
-    ///    zero, break; when nonzero:
-    ///    a. Reduce every top-of-op-stack entry whose precedence
-    ///       exceeds the new byte's (or ties + left-assoc); each
-    ///       reduce emits a `TapeKind::Rule` reducer compound via
-    ///       [`crate::runtime::tape::emit_reducer_compound`].
-    ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
-    ///       byte's u8 discriminant into `pay_narrow` directly via
-    ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
-    ///       inline; bypasses the `arena_mut().push` round-trip
-    ///       AX.W0a.2.l routed through).
-    ///    c. Push the operator onto the local op stack with its
-    ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
-    ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
-    ///    e. Re-dispatch the RHS operand.
-    /// 4. On EOF-operator: drain the op stack — every remaining
-    ///    entry reduces into a terminal compound. The final
-    ///    `this_operand_root` is stamped onto the outer Rule
-    ///    compound's `child_off` (overriding the default
-    ///    `mark_children` index) so the cursor's pre-order walk
-    ///    surfaces the reduced tree root as the compound's first
-    ///    child.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-    /// recursion rationale.
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge through the value dispatcher.
     #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
-        unused_assignments,
+        unused_variables,
         unused_mut,
-        unused_variables
+        unused_assignments
     )]
-    pub fn parse_pratt_GoogleSheetsParser_mul_expr(
-        input: &[u8],
+    pub fn parse_pratt_GoogleSheetsParser_mul_expr<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        struct LocalOpEntry {
-            op_discriminant: u8,
-            precedence: u8,
-            associativity_is_left: bool,
-            lhs_idx: u32,
-            lhs_span_lo: u32,
-        }
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        let outer_span_lo = *p as u32;
-        let outer_off = builder
-            .begin_compound(
-                crate::runtime::tape::TapeKind::Rule,
-                outer_span_lo,
-                16u8,
-                0u8,
-                0u16,
-            );
-        let _operand_off = ({
+        let __mul_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 16u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("mul_expr"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __mul_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__mul_expr_layout);
+        let _ = ({
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             parse_pratt_GoogleSheetsParser_exp_expr(input, p, state, builder)
         })?;
-        let mut this_operand_root: u32 = _operand_off.0;
-        const OP_STACK_CAP: usize = 16;
-        let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
-            op_discriminant: 0,
-            precedence: 0,
-            associativity_is_left: false,
-            lhs_idx: 0,
-            lhs_span_lo: 0,
-        });
-        let mut op_stack_len: usize = 0;
         loop {
             let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
             let mut lut_byte: u8 = PRECEDENCE_LUT_mul_expr[op_byte as usize];
@@ -5277,54 +4048,9 @@ mod __googlesheetsparser_emit_impl {
                 op_byte = input.get(*p).copied().unwrap_or(0);
                 lut_byte = PRECEDENCE_LUT_mul_expr[op_byte as usize];
             }
-            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
-                ::core::option::Option::None
-            } else {
-                ::core::option::Option::Some(lut_byte & 0x0Fu8)
-            };
-            loop {
-                if op_stack_len == 0 {
-                    break;
-                }
-                let top_op = &op_stack[op_stack_len - 1];
-                let should_reduce = match new_prec {
-                    ::core::option::Option::None => true,
-                    ::core::option::Option::Some(p_new) => {
-                        top_op.precedence > p_new
-                            || (top_op.precedence == p_new
-                                && top_op.associativity_is_left)
-                    }
-                };
-                if !should_reduce {
-                    break;
-                }
-                let lhs_idx = top_op.lhs_idx;
-                let lhs_span_lo = top_op.lhs_span_lo;
-                let op_discriminant = top_op.op_discriminant;
-                op_stack_len -= 1;
-                let reducer_span_hi = *p as u32;
-                let compound_idx = builder
-                    .begin_compound(
-                        crate::runtime::tape::TapeKind::Rule,
-                        lhs_span_lo,
-                        op_discriminant,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .wrap_existing_children_post_order(
-                        compound_idx,
-                        reducer_span_hi,
-                        crate::runtime::tape::TapeOffset(lhs_idx),
-                    );
-                this_operand_root = compound_idx;
-            }
             if lut_byte == 0 {
                 break;
             }
-            let precedence: u8 = lut_byte & 0x0Fu8;
-            let assoc_bit: u8 = (lut_byte >> 4) & 0x01u8;
-            let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
             let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
@@ -5364,145 +4090,75 @@ mod __googlesheetsparser_emit_impl {
             if !op_matched {
                 break;
             }
-            let op_lo: u32 = *p as u32;
-            *p = (*p).saturating_add(op_width as usize);
-            let op_hi: u32 = *p as u32;
-            let _op_rec = builder
-                .push_leaf_with(
-                    crate::runtime::tape::TapeKind::Span,
-                    op_lo,
-                    op_hi,
-                    0,
-                    0,
-                    crate::runtime::tape::PayloadData::InlineScalar(
-                        op_discriminant as u32,
-                    ),
-                );
-            let lhs_span_lo: u32 = if (this_operand_root as usize)
-                < builder.columns().len()
-            {
-                builder.columns().span_lo_at(this_operand_root)
-            } else {
-                op_hi
-            };
-            debug_assert!(
-                op_stack_len < OP_STACK_CAP,
-                "Pratt op_stack overflow at depth {} (cap {})", op_stack_len,
-                OP_STACK_CAP,
+            <crate::runtime::google_sheets::SheetsStructBuilder<
+                '_,
+            > as crate::runtime::StructBuilder>::push_branch_tag(
+                builder,
+                op_discriminant as u32,
             );
-            op_stack[op_stack_len] = LocalOpEntry {
-                op_discriminant,
-                precedence,
-                associativity_is_left,
-                lhs_idx: this_operand_root,
-                lhs_span_lo,
-            };
-            op_stack_len += 1;
+            *p = (*p).saturating_add(op_width as usize);
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            let _rhs_off = ({
+            let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_pratt_GoogleSheetsParser_exp_expr(input, p, state, builder)
             })?;
-            this_operand_root = _rhs_off.0;
         }
-        let outer_span_hi = *p as u32;
-        builder
-            .end_compound_with_child_off(
-                outer_off,
-                outer_span_hi,
-                crate::runtime::tape::TapeOffset(this_operand_root),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __mul_expr_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
+    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
+    /// function, **struct-direct body**. Targets the grammar's
+    /// concrete `StructBuilder`.
     ///
-    /// Runs the operand-led shunting-yard reducer bounded by the
-    /// emitted per-grammar `PRECEDENCE_LUT`. The reducer mirrors
-    /// the walker's `DtaState::ShuntingYard` arm — `TapeKind::Rule`
-    /// outer compound + per-op reduced binary compounds via
-    /// `emit_reducer_compound`.
+    /// Opens a compound for the rule (e.g. `add_expr` →
+    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
+    /// stamps operator branch tags inline, closes the compound.
+    /// Children land in the order
+    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
+    /// rule's structural alphabet is preserved verbatim;
+    /// associativity-honouring binary-tree reduction is a
+    /// consumer-side projection (the runtime exposes
+    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// # Emitted algorithm
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode.
     ///
-    /// 1. Reserve an outer Rule compound via
-    ///    [`crate::runtime::tape::Tape<()>::mark_children`] +
-    ///    record the parse-open position.
-    /// 2. Dispatch the leftmost operand through the grammar's
-    ///    value-position dispatcher; the operand's records land
-    ///    inside the outer compound's child run.
-    /// 3. Loop: peek the next byte; consult `PRECEDENCE_LUT`; when
-    ///    zero, break; when nonzero:
-    ///    a. Reduce every top-of-op-stack entry whose precedence
-    ///       exceeds the new byte's (or ties + left-assoc); each
-    ///       reduce emits a `TapeKind::Rule` reducer compound via
-    ///       [`crate::runtime::tape::emit_reducer_compound`].
-    ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
-    ///       byte's u8 discriminant into `pay_narrow` directly via
-    ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
-    ///       inline; bypasses the `arena_mut().push` round-trip
-    ///       AX.W0a.2.l routed through).
-    ///    c. Push the operator onto the local op stack with its
-    ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
-    ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
-    ///    e. Re-dispatch the RHS operand.
-    /// 4. On EOF-operator: drain the op stack — every remaining
-    ///    entry reduces into a terminal compound. The final
-    ///    `this_operand_root` is stamped onto the outer Rule
-    ///    compound's `child_off` (overriding the default
-    ///    `mark_children` index) so the cursor's pre-order walk
-    ///    surfaces the reduced tree root as the compound's first
-    ///    child.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-    /// recursion rationale.
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge through the value dispatcher.
     #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
-        unused_assignments,
+        unused_variables,
         unused_mut,
-        unused_variables
+        unused_assignments
     )]
-    pub fn parse_pratt_GoogleSheetsParser_exp_expr(
-        input: &[u8],
+    pub fn parse_pratt_GoogleSheetsParser_exp_expr<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        struct LocalOpEntry {
-            op_discriminant: u8,
-            precedence: u8,
-            associativity_is_left: bool,
-            lhs_idx: u32,
-            lhs_span_lo: u32,
-        }
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        let outer_span_lo = *p as u32;
-        let outer_off = builder
-            .begin_compound(
-                crate::runtime::tape::TapeKind::Rule,
-                outer_span_lo,
-                17u8,
-                0u8,
-                0u16,
-            );
-        let _operand_off = ({
+        let __exp_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 17u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("exp_expr"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __exp_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__exp_expr_layout);
+        let _ = ({
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             parse_flat_GoogleSheetsParser_unary_expr(input, p, state, builder)
         })?;
-        let mut this_operand_root: u32 = _operand_off.0;
-        const OP_STACK_CAP: usize = 16;
-        let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
-            op_discriminant: 0,
-            precedence: 0,
-            associativity_is_left: false,
-            lhs_idx: 0,
-            lhs_span_lo: 0,
-        });
-        let mut op_stack_len: usize = 0;
         loop {
             let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
             let mut lut_byte: u8 = PRECEDENCE_LUT_exp_expr[op_byte as usize];
@@ -5511,54 +4167,9 @@ mod __googlesheetsparser_emit_impl {
                 op_byte = input.get(*p).copied().unwrap_or(0);
                 lut_byte = PRECEDENCE_LUT_exp_expr[op_byte as usize];
             }
-            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
-                ::core::option::Option::None
-            } else {
-                ::core::option::Option::Some(lut_byte & 0x0Fu8)
-            };
-            loop {
-                if op_stack_len == 0 {
-                    break;
-                }
-                let top_op = &op_stack[op_stack_len - 1];
-                let should_reduce = match new_prec {
-                    ::core::option::Option::None => true,
-                    ::core::option::Option::Some(p_new) => {
-                        top_op.precedence > p_new
-                            || (top_op.precedence == p_new
-                                && top_op.associativity_is_left)
-                    }
-                };
-                if !should_reduce {
-                    break;
-                }
-                let lhs_idx = top_op.lhs_idx;
-                let lhs_span_lo = top_op.lhs_span_lo;
-                let op_discriminant = top_op.op_discriminant;
-                op_stack_len -= 1;
-                let reducer_span_hi = *p as u32;
-                let compound_idx = builder
-                    .begin_compound(
-                        crate::runtime::tape::TapeKind::Rule,
-                        lhs_span_lo,
-                        op_discriminant,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .wrap_existing_children_post_order(
-                        compound_idx,
-                        reducer_span_hi,
-                        crate::runtime::tape::TapeOffset(lhs_idx),
-                    );
-                this_operand_root = compound_idx;
-            }
             if lut_byte == 0 {
                 break;
             }
-            let precedence: u8 = lut_byte & 0x0Fu8;
-            let assoc_bit: u8 = (lut_byte >> 4) & 0x01u8;
-            let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
             let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
@@ -5598,66 +4209,32 @@ mod __googlesheetsparser_emit_impl {
             if !op_matched {
                 break;
             }
-            let op_lo: u32 = *p as u32;
-            *p = (*p).saturating_add(op_width as usize);
-            let op_hi: u32 = *p as u32;
-            let _op_rec = builder
-                .push_leaf_with(
-                    crate::runtime::tape::TapeKind::Span,
-                    op_lo,
-                    op_hi,
-                    0,
-                    0,
-                    crate::runtime::tape::PayloadData::InlineScalar(
-                        op_discriminant as u32,
-                    ),
-                );
-            let lhs_span_lo: u32 = if (this_operand_root as usize)
-                < builder.columns().len()
-            {
-                builder.columns().span_lo_at(this_operand_root)
-            } else {
-                op_hi
-            };
-            debug_assert!(
-                op_stack_len < OP_STACK_CAP,
-                "Pratt op_stack overflow at depth {} (cap {})", op_stack_len,
-                OP_STACK_CAP,
+            <crate::runtime::google_sheets::SheetsStructBuilder<
+                '_,
+            > as crate::runtime::StructBuilder>::push_branch_tag(
+                builder,
+                op_discriminant as u32,
             );
-            op_stack[op_stack_len] = LocalOpEntry {
-                op_discriminant,
-                precedence,
-                associativity_is_left,
-                lhs_idx: this_operand_root,
-                lhs_span_lo,
-            };
-            op_stack_len += 1;
+            *p = (*p).saturating_add(op_width as usize);
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            let _rhs_off = ({
+            let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_flat_GoogleSheetsParser_unary_expr(input, p, state, builder)
             })?;
-            this_operand_root = _rhs_off.0;
         }
-        let outer_span_hi = *p as u32;
-        builder
-            .end_compound_with_child_off(
-                outer_off,
-                outer_span_hi,
-                crate::runtime::tape::TapeOffset(this_operand_root),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __exp_expr_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
-    /// (Alt of literal-led or Ref-led branches).
+    /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
+    /// (Alt of literal-led branches).
     ///
-    /// AX.W0a.2.g — admits Ref-led branches whose target
-    /// resolves to a literal-prefix body (per `leading_
-    /// literal_bytes`). For each first-byte group, each
-    /// candidate's full prefix is checked before committing:
-    /// Literal branches emit the legacy leaf push;
-    /// Ref branches delegate to the target's shape fn via
-    /// [`emit_ref_call_tape`], threading `state` through.
+    /// Each branch's typed payload routes through
+    /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
+    /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
+    /// untyped). Returns `TapeOffset::NONE` for
+    /// compositional uniformity.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_GoogleSheetsParser_unary_prefix(
@@ -5665,11 +4242,12 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'_>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
             43u8 => {
@@ -5677,21 +4255,12 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                    builder.arena_mut().push((0u32) as u8);
-                    let off = builder
-                        .push_leaf_with_arena_payload(
-                            crate::runtime::tape::TapeKind::KvPair,
-                            at as u32,
-                            end as u32,
-                            18u8,
-                            0u8,
-                            __arena_off,
-                            1u32,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -5702,28 +4271,19 @@ mod __googlesheetsparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                    builder.arena_mut().push((1u32) as u8);
-                    let off = builder
-                        .push_leaf_with_arena_payload(
-                            crate::runtime::tape::TapeKind::KvPair,
-                            at as u32,
-                            end as u32,
-                            18u8,
-                            0u8,
-                            __arena_off,
-                            1u32,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                Err(crate::runtime::tape::DtaError::Syntax {
+                ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -5731,332 +4291,160 @@ mod __googlesheetsparser_emit_impl {
             }
         }
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_unary_expr(
-        input: &[u8],
+    pub fn parse_flat_GoogleSheetsParser_unary_expr<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __unary_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 19u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("unary_expr"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __unary_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__unary_expr_layout,
+        );
         {
-            {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let mut iter_count: u32 = 0;
-                loop {
-                    let save_p = *p;
-                    let save_cols = builder.position();
-                    let iter_lo = *p as u32;
-                    let iter_child = builder.enter_post_order_children();
-                    let attempt = (|| -> ::core::result::Result<
-                        (),
-                        crate::runtime::tape::DtaError,
-                    > {
-                        let _ = ({
-                            let __first = __shape_support_GoogleSheetsParser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                )
-                                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                    offset: *p as u32,
-                                })?;
-                            parse_keyword_GoogleSheetsParser_unary_prefix(
-                                input,
-                                p,
-                                __first,
-                                state,
-                                builder,
-                            )
-                        })?;
-                        Ok(())
-                    })();
-                    if attempt.is_err() {
-                        *p = save_p;
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    if *p == save_p {
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
-                    iter_count = iter_count.saturating_add(1);
-                }
-                if iter_count < (0usize as u32) {
-                    builder.exit_post_order_children();
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
-            }
-            {
-                let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
-                    parse_flat_GoogleSheetsParser_postfix_expr(input, p, state, builder)
-                })?;
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
+            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                19u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        {
+            let _ = ({
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                parse_flat_GoogleSheetsParser_postfix_expr(input, p, state, builder)
+            })?;
+        }
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __unary_expr_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_postfix_expr(
-        input: &[u8],
+    pub fn parse_flat_GoogleSheetsParser_postfix_expr<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __postfix_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 20u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("postfix_expr"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __postfix_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__postfix_expr_layout,
+        );
         {
-            {
-                let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
-                    parse_wrap_GoogleSheetsParser_primary(input, p, state, builder)
-                })?;
-            }
-            {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let mut iter_count: u32 = 0;
-                loop {
-                    let save_p = *p;
-                    let save_cols = builder.position();
-                    let iter_lo = *p as u32;
-                    let iter_child = builder.enter_post_order_children();
-                    let attempt = (|| -> ::core::result::Result<
-                        (),
-                        crate::runtime::tape::DtaError,
-                    > {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [37u8] {
-                            return Err(crate::runtime::tape::DtaError::Syntax {
-                                offset: at as u32,
-                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                            });
-                        }
-                        *p = end;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                20u8,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        Ok(())
-                    })();
-                    if attempt.is_err() {
-                        *p = save_p;
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    if *p == save_p {
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
-                    iter_count = iter_count.saturating_add(1);
-                }
-                if iter_count < (0usize as u32) {
-                    builder.exit_post_order_children();
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
+            let _ = ({
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                parse_wrap_GoogleSheetsParser_primary(input, p, state, builder)
+            })?;
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                20u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        {
+            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
+        }
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(
+            builder,
+            __postfix_expr_handle,
+        );
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Wrap-shape parse function.
+    /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
-    /// Transparent dispatcher — skip leading ws, byte-dispatch
-    /// to the chosen branch's shape fn, return that shape fn's
-    /// offset unchanged. No outer compound emission; the
-    /// branch's own shape fn owns the tape record.
+    /// Opens a Wrap frame on the builder, dispatches to the matched
+    /// branch's shape fn (which carries its own
+    /// begin_compound/end_compound for compound branches and the
+    /// matching push_leaf_with_* for scalar branches), stamps the
+    /// chosen branch index via push_branch_tag, then closes the
+    /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
+    /// forward-the-single-child semantics.
     ///
-    /// AX.W0a.2.f — compound; see `flat.rs` emission for the
-    /// `#[inline]` downgrade rationale (LLVM inline-cycle
-    /// collapse vs hard-requirement inliner abort).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_GoogleSheetsParser_primary(
-        input: &[u8],
+    pub fn parse_wrap_GoogleSheetsParser_primary<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let mut __wrap_chosen_meta: u8 = 0;
+        let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 21u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("primary"),
+            kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __wrap_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
+        let mut __wrap_branch_idx: u32 = 0;
         let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -6065,442 +4453,396 @@ mod __googlesheetsparser_emit_impl {
             match first {
                 34u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_string_GoogleSheetsParser_string(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 7u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 7u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 35u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_flat_GoogleSheetsParser_error_literal(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 8u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 8u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 40u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_flat_GoogleSheetsParser_paren_expr(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 10u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 10u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 46u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 3u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 3u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 48u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 3u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 3u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 49u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 3u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 3u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 50u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 3u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 3u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 51u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 3u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 3u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 52u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 3u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 3u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 53u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 3u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 3u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 54u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 3u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 3u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 55u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 3u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 3u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 56u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 3u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 3u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 57u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 3u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 3u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 70u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_wrap_GoogleSheetsParser_boolean(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 4u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 4u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 76u8 => {
                     {
                         let attempt_p = *p;
-                        let attempt_len = builder.position();
                         match parse_arglist_GoogleSheetsParser_let_call(
                             input,
                             p,
                             state,
                             builder,
                         ) {
-                            Ok(_) => {
-                                __wrap_chosen_meta = 0u8;
+                            ::core::result::Result::Ok(_) => {
+                                __wrap_branch_idx = 0u32;
                                 break 'try_branches;
                             }
-                            Err(_) => {
+                            ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
-                                builder.rollback_to(attempt_len);
                             }
                         }
                     }
                     {
                         let attempt_p = *p;
-                        let attempt_len = builder.position();
                         match parse_arglist_GoogleSheetsParser_lambda_call(
                             input,
                             p,
                             state,
                             builder,
                         ) {
-                            Ok(_) => {
-                                __wrap_chosen_meta = 1u8;
+                            ::core::result::Result::Ok(_) => {
+                                __wrap_branch_idx = 1u32;
                                 break 'try_branches;
                             }
-                            Err(_) => {
+                            ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
-                                builder.rollback_to(attempt_len);
                             }
                         }
                     }
                 }
                 84u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_wrap_GoogleSheetsParser_boolean(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 4u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 4u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 102u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_wrap_GoogleSheetsParser_boolean(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 4u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 4u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 108u8 => {
                     {
                         let attempt_p = *p;
-                        let attempt_len = builder.position();
                         match parse_arglist_GoogleSheetsParser_let_call(
                             input,
                             p,
                             state,
                             builder,
                         ) {
-                            Ok(_) => {
-                                __wrap_chosen_meta = 0u8;
+                            ::core::result::Result::Ok(_) => {
+                                __wrap_branch_idx = 0u32;
                                 break 'try_branches;
                             }
-                            Err(_) => {
+                            ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
-                                builder.rollback_to(attempt_len);
                             }
                         }
                     }
                     {
                         let attempt_p = *p;
-                        let attempt_len = builder.position();
                         match parse_arglist_GoogleSheetsParser_lambda_call(
                             input,
                             p,
                             state,
                             builder,
                         ) {
-                            Ok(_) => {
-                                __wrap_chosen_meta = 1u8;
+                            ::core::result::Result::Ok(_) => {
+                                __wrap_branch_idx = 1u32;
                                 break 'try_branches;
                             }
-                            Err(_) => {
+                            ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
-                                builder.rollback_to(attempt_len);
                             }
                         }
                     }
                 }
                 116u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_wrap_GoogleSheetsParser_boolean(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 4u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 4u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 123u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_flat_GoogleSheetsParser_array_literal(
                         input,
                         p,
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 9u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 9u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -6508,1541 +4850,733 @@ mod __googlesheetsparser_emit_impl {
             }
             {
                 let attempt_p = *p;
-                let attempt_len = builder.position();
                 match parse_arglist_GoogleSheetsParser_func_call(
                     input,
                     p,
                     state,
                     builder,
                 ) {
-                    Ok(_) => {
-                        __wrap_chosen_meta = 2u8;
+                    ::core::result::Result::Ok(_) => {
+                        __wrap_branch_idx = 2u32;
                         break 'try_branches;
                     }
-                    Err(_) => {
+                    ::core::result::Result::Err(_) => {
                         *p = attempt_p;
-                        builder.rollback_to(attempt_len);
                     }
                 }
             }
             {
                 let attempt_p = *p;
-                let attempt_len = builder.position();
                 match parse_wrap_GoogleSheetsParser_cell_or_range(
                     input,
                     p,
                     state,
                     builder,
                 ) {
-                    Ok(_) => {
-                        __wrap_chosen_meta = 5u8;
+                    ::core::result::Result::Ok(_) => {
+                        __wrap_branch_idx = 5u32;
                         break 'try_branches;
                     }
-                    Err(_) => {
+                    ::core::result::Result::Err(_) => {
                         *p = attempt_p;
-                        builder.rollback_to(attempt_len);
                     }
                 }
             }
             {
                 let attempt_p = *p;
-                let attempt_len = builder.position();
                 match parse_hregex_GoogleSheetsParser_identifier(
                     input,
                     p,
                     state,
                     builder,
                 ) {
-                    Ok(_) => {
-                        __wrap_chosen_meta = 6u8;
+                    ::core::result::Result::Ok(_) => {
+                        __wrap_branch_idx = 6u32;
                         break 'try_branches;
                     }
-                    Err(_) => {
+                    ::core::result::Result::Err(_) => {
                         *p = attempt_p;
-                        builder.rollback_to(attempt_len);
                     }
                 }
             }
+            <crate::runtime::google_sheets::SheetsStructBuilder<
+                '_,
+            > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        let _ = __wrap_chosen_meta;
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::push_branch_tag(builder, __wrap_branch_idx);
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_GoogleSheetsParser_paren_expr<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let __paren_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 22u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("paren_expr"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __paren_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__paren_expr_layout,
+        );
+        {
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [40u8] {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+        }
+        {
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+            let _ = ({
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
+            })?;
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+        }
+        {
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [41u8] {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+        }
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __paren_expr_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_GoogleSheetsParser_func_open<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let __func_open_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 23u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("func_open"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __func_open_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__func_open_layout,
+        );
+        {
+            let _ = ({
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                parse_hregex_GoogleSheetsParser_identifier(input, p, state, builder)
+            })?;
+        }
+        {
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [40u8] {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+        }
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __func_open_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_GoogleSheetsParser_arg<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let __arg_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 24u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("arg"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __arg_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__arg_layout);
+        {
+            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
+        }
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __arg_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_GoogleSheetsParser_func_args<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let __func_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 25u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("func_args"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __func_args_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__func_args_layout,
+        );
+        {
+            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
+        }
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __func_args_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
+    /// **struct-direct body**.
+    ///
+    /// Opens a compound on the grammar's StructBuilder
+    /// (`begin_compound(&__layout)`), walks the head + parens +
+    /// arg positions, and closes via `end_compound(handle)`. The
+    /// builder routes the (LayoutKind, rule_name) to its concrete
+    /// Function frame variant (CSS L4 — calc / min / max / clamp
+    /// / var / env / url / gradient / transform / etc.).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_arglist_GoogleSheetsParser_func_call<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 26u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("func_call"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
+        let _ = ({
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+            parse_flat_GoogleSheetsParser_func_open(input, p, state, builder)
+        })?;
+        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+        loop {
+            let __save = *p;
+            let __res: ::core::result::Result<(), crate::runtime::tape::DtaError> = (|| {
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_flat_GoogleSheetsParser_func_args(input, p, state, builder)
+                })?;
+                Ok(())
+            })();
+            if __res.is_err() {
+                *p = __save;
+                break;
+            }
+        }
+        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+        let at = *p;
+        let end = at + 1usize;
+        if input.len() < end || input[at..end] != [41u8] {
+            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                offset: at as u32,
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+            });
+        }
+        *p = end;
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
         Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_paren_expr(
-        input: &[u8],
+    pub fn parse_flat_GoogleSheetsParser_let_binding<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __let_binding_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 27u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("let_binding"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __let_binding_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__let_binding_layout,
+        );
         {
-            {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [40u8] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        22u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-            }
-            {
+            let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
-                    parse_pratt_GoogleSheetsParser_comparison_expr(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    )
-                })?;
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            }
-            {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [41u8] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        22u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
+                parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
+            })?;
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                22u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        {
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [44u8] {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+        }
+        {
+            let _ = ({
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
+            })?;
+        }
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __let_binding_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_func_open(
-        input: &[u8],
+    pub fn parse_flat_GoogleSheetsParser_let_args<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __let_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 28u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("let_args"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __let_args_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__let_args_layout);
         {
-            {
-                let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
-                    parse_hregex_GoogleSheetsParser_identifier(input, p, state, builder)
-                })?;
-            }
-            {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [40u8] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        23u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
+            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                23u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        {
+            let _ = ({
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
+            })?;
+        }
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __let_args_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
+    /// **struct-direct body**.
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Opens a compound on the grammar's StructBuilder
+    /// (`begin_compound(&__layout)`), walks the head + parens +
+    /// arg positions, and closes via `end_compound(handle)`. The
+    /// builder routes the (LayoutKind, rule_name) to its concrete
+    /// Function frame variant (CSS L4 — calc / min / max / clamp
+    /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_arg(
-        input: &[u8],
+    pub fn parse_arglist_GoogleSheetsParser_let_call<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
-            {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let iter_save_p = *p;
-                let iter_save_cols = builder.position();
-                let iter_lo = *p as u32;
-                let iter_child = builder.enter_post_order_children();
-                let opt_attempt: ::core::result::Result<
-                    (),
-                    crate::runtime::tape::DtaError,
-                > = (|| {
-                    let _ = ({
-                        let _ = __shape_support_GoogleSheetsParser::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
-                        parse_pratt_GoogleSheetsParser_comparison_expr(
-                            input,
-                            p,
-                            state,
-                            builder,
-                        )
-                    })?;
-                    Ok(())
-                })();
-                let matched = opt_attempt.is_ok();
-                if !matched {
-                    *p = iter_save_p;
-                    builder.rollback_to(iter_save_cols);
-                    builder.exit_post_order_children();
-                } else {
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
-                }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
+        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 29u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("let_call"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
+        let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
+        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+        let _ = ({
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+            parse_flat_GoogleSheetsParser_let_args(input, p, state, builder)
+        })?;
+        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+        let at = *p;
+        let end = at + 1usize;
+        if input.len() < end || input[at..end] != [41u8] {
+            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                offset: at as u32,
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+            });
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                24u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        *p = end;
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+        Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_func_args(
-        input: &[u8],
+    pub fn parse_flat_GoogleSheetsParser_lambda_params<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __lambda_params_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 30u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("lambda_params"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __lambda_params_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__lambda_params_layout,
+        );
         {
-            {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let mut iter_count: u32 = 0;
-                loop {
-                    let save_p = *p;
-                    let save_cols = builder.position();
-                    let iter_lo = *p as u32;
-                    let iter_child = builder.enter_post_order_children();
-                    let attempt = (|| -> ::core::result::Result<
-                        (),
-                        crate::runtime::tape::DtaError,
-                    > {
-                        let _ = ({
-                            let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            parse_flat_GoogleSheetsParser_arg(input, p, state, builder)
-                        })?;
-                        let repeat_lo = *p as u32;
-                        let repeat_child = builder.enter_post_order_children();
-                        let iter_save_p = *p;
-                        let iter_save_cols = builder.position();
-                        let iter_lo = *p as u32;
-                        let iter_child = builder.enter_post_order_children();
-                        let opt_attempt: ::core::result::Result<
-                            (),
-                            crate::runtime::tape::DtaError,
-                        > = (|| {
-                            let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [44u8] {
-                                return Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
-                            }
-                            *p = end;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    25u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
-                            let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            Ok(())
-                        })();
-                        let matched = opt_attempt.is_ok();
-                        if !matched {
-                            *p = iter_save_p;
-                            builder.rollback_to(iter_save_cols);
-                            builder.exit_post_order_children();
-                        } else {
-                            let iter_hi = *p as u32;
-                            let __iter_off = builder
-                                .begin_compound_post(
-                                    crate::runtime::tape::TapeKind::Seq,
-                                    iter_lo,
-                                    0u8,
-                                    0u8,
-                                    0u16,
-                                );
-                            builder
-                                .end_compound_post_order(
-                                    __iter_off,
-                                    iter_hi,
-                                    crate::runtime::tape::TapeOffset(iter_child),
-                                );
-                        }
-                        let repeat_hi = *p as u32;
-                        let __repeat_off = builder
-                            .begin_compound_post(
-                                crate::runtime::tape::TapeKind::Repeat,
-                                repeat_lo,
-                                0u8,
-                                0u8,
-                                0u16,
-                            );
-                        builder
-                            .end_compound_post_order(
-                                __repeat_off,
-                                repeat_hi,
-                                crate::runtime::tape::TapeOffset(repeat_child),
-                            );
-                        Ok(())
-                    })();
-                    if attempt.is_err() {
-                        *p = save_p;
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    if *p == save_p {
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
-                    iter_count = iter_count.saturating_add(1);
-                }
-                if iter_count < (1usize as u32) {
-                    builder.exit_post_order_children();
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
+            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                25u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(
+            builder,
+            __lambda_params_handle,
+        );
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar ArgList-shape parse function.
+    /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
+    /// **struct-direct body**.
     ///
-    /// Emits one outer Rule compound over the whole call site.
-    /// Head (Literal / Regex / Ref) + optional `(` + body arg
-    /// positions (dispatched through the grammar's value-
-    /// dispatcher) + `)` literal.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-    /// recursion rationale (see `flat.rs`).
+    /// Opens a compound on the grammar's StructBuilder
+    /// (`begin_compound(&__layout)`), walks the head + parens +
+    /// arg positions, and closes via `end_compound(handle)`. The
+    /// builder routes the (LayoutKind, rule_name) to its concrete
+    /// Function frame variant (CSS L4 — calc / min / max / clamp
+    /// / var / env / url / gradient / transform / etc.).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_GoogleSheetsParser_func_call(
-        input: &[u8],
+    pub fn parse_arglist_GoogleSheetsParser_lambda_call<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
-            {
-                let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
-                    parse_flat_GoogleSheetsParser_func_open(input, p, state, builder)
-                })?;
-            }
-            {
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                let save_p = *p;
-                let iter_save_cols = builder.position();
-                let iter_lo = *p as u32;
-                let iter_child = builder.enter_post_order_children();
-                let attempt = (|| -> ::core::result::Result<
-                    (),
-                    crate::runtime::tape::DtaError,
-                > {
-                    let _ = ({
-                        let _ = __shape_support_GoogleSheetsParser::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
-                        parse_flat_GoogleSheetsParser_func_args(input, p, state, builder)
-                    })?;
-                    Ok(())
-                })();
-                if attempt.is_err() {
-                    *p = save_p;
-                    builder.rollback_to(iter_save_cols);
-                    builder.exit_post_order_children();
-                } else {
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
-                }
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            }
-            {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [41u8] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        26u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
+        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 31u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("lambda_call"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
+        let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
+        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+        let _ = ({
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+            parse_flat_GoogleSheetsParser_lambda_params(input, p, state, builder)
+        })?;
+        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+        let at = *p;
+        let end = at + 1usize;
+        if input.len() < end || input[at..end] != [41u8] {
+            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                offset: at as u32,
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+            });
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Rule,
-                span_lo,
-                26u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        *p = end;
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+        Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
+    /// function, **struct-direct body**. Targets the grammar's
+    /// concrete `StructBuilder`.
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Opens a compound for the rule (e.g. `add_expr` →
+    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
+    /// stamps operator branch tags inline, closes the compound.
+    /// Children land in the order
+    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
+    /// rule's structural alphabet is preserved verbatim;
+    /// associativity-honouring binary-tree reduction is a
+    /// consumer-side projection (the runtime exposes
+    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_let_binding(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
-            {
-                let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
-                    parse_pratt_GoogleSheetsParser_comparison_expr(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    )
-                })?;
-            }
-            {
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [44u8] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        27u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            }
-            {
-                let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
-                    parse_pratt_GoogleSheetsParser_comparison_expr(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    )
-                })?;
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                27u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
-    }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode.
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_let_args(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
-            {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let mut iter_count: u32 = 0;
-                loop {
-                    let save_p = *p;
-                    let save_cols = builder.position();
-                    let iter_lo = *p as u32;
-                    let iter_child = builder.enter_post_order_children();
-                    let attempt = (|| -> ::core::result::Result<
-                        (),
-                        crate::runtime::tape::DtaError,
-                    > {
-                        let _ = ({
-                            let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            parse_flat_GoogleSheetsParser_let_binding(
-                                input,
-                                p,
-                                state,
-                                builder,
-                            )
-                        })?;
-                        let _ = __shape_support_GoogleSheetsParser::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [44u8] {
-                            return Err(crate::runtime::tape::DtaError::Syntax {
-                                offset: at as u32,
-                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                            });
-                        }
-                        *p = end;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                28u8,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        let _ = __shape_support_GoogleSheetsParser::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
-                        Ok(())
-                    })();
-                    if attempt.is_err() {
-                        *p = save_p;
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    if *p == save_p {
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
-                    iter_count = iter_count.saturating_add(1);
-                }
-                if iter_count < (0usize as u32) {
-                    builder.exit_post_order_children();
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
-            }
-            {
-                let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
-                    parse_pratt_GoogleSheetsParser_comparison_expr(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    )
-                })?;
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                28u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
-    }
-    /// AW-V.W4-fix — per-grammar ArgList-shape parse function.
-    ///
-    /// Emits one outer Rule compound over the whole call site.
-    /// Head (Literal / Regex / Ref) + optional `(` + body arg
-    /// positions (dispatched through the grammar's value-
-    /// dispatcher) + `)` literal.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-    /// recursion rationale (see `flat.rs`).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_GoogleSheetsParser_let_call(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
-            {
-                {
-                    let span_lo = *p as u32;
-                    let Some(match_len) = __regex_scan_GoogleSheetsParser(
-                        "[lL][eE][tT]\\(",
-                        input,
-                        *p,
-                    ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                        });
-                    };
-                    *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            29u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                }
-            }
-            {
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
-                    parse_flat_GoogleSheetsParser_let_args(input, p, state, builder)
-                })?;
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            }
-            {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [41u8] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        29u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Rule,
-                span_lo,
-                29u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
-    }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
-    ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_lambda_params(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
-            {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let mut iter_count: u32 = 0;
-                loop {
-                    let save_p = *p;
-                    let save_cols = builder.position();
-                    let iter_lo = *p as u32;
-                    let iter_child = builder.enter_post_order_children();
-                    let attempt = (|| -> ::core::result::Result<
-                        (),
-                        crate::runtime::tape::DtaError,
-                    > {
-                        let _ = ({
-                            let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            parse_pratt_GoogleSheetsParser_comparison_expr(
-                                input,
-                                p,
-                                state,
-                                builder,
-                            )
-                        })?;
-                        let repeat_lo = *p as u32;
-                        let repeat_child = builder.enter_post_order_children();
-                        let iter_save_p = *p;
-                        let iter_save_cols = builder.position();
-                        let iter_lo = *p as u32;
-                        let iter_child = builder.enter_post_order_children();
-                        let opt_attempt: ::core::result::Result<
-                            (),
-                            crate::runtime::tape::DtaError,
-                        > = (|| {
-                            let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [44u8] {
-                                return Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
-                            }
-                            *p = end;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    30u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
-                            let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            Ok(())
-                        })();
-                        let matched = opt_attempt.is_ok();
-                        if !matched {
-                            *p = iter_save_p;
-                            builder.rollback_to(iter_save_cols);
-                            builder.exit_post_order_children();
-                        } else {
-                            let iter_hi = *p as u32;
-                            let __iter_off = builder
-                                .begin_compound_post(
-                                    crate::runtime::tape::TapeKind::Seq,
-                                    iter_lo,
-                                    0u8,
-                                    0u8,
-                                    0u16,
-                                );
-                            builder
-                                .end_compound_post_order(
-                                    __iter_off,
-                                    iter_hi,
-                                    crate::runtime::tape::TapeOffset(iter_child),
-                                );
-                        }
-                        let repeat_hi = *p as u32;
-                        let __repeat_off = builder
-                            .begin_compound_post(
-                                crate::runtime::tape::TapeKind::Repeat,
-                                repeat_lo,
-                                0u8,
-                                0u8,
-                                0u16,
-                            );
-                        builder
-                            .end_compound_post_order(
-                                __repeat_off,
-                                repeat_hi,
-                                crate::runtime::tape::TapeOffset(repeat_child),
-                            );
-                        Ok(())
-                    })();
-                    if attempt.is_err() {
-                        *p = save_p;
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    if *p == save_p {
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
-                    iter_count = iter_count.saturating_add(1);
-                }
-                if iter_count < (1usize as u32) {
-                    builder.exit_post_order_children();
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                30u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
-    }
-    /// AW-V.W4-fix — per-grammar ArgList-shape parse function.
-    ///
-    /// Emits one outer Rule compound over the whole call site.
-    /// Head (Literal / Regex / Ref) + optional `(` + body arg
-    /// positions (dispatched through the grammar's value-
-    /// dispatcher) + `)` literal.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-    /// recursion rationale (see `flat.rs`).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_GoogleSheetsParser_lambda_call(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
-            {
-                {
-                    let span_lo = *p as u32;
-                    let Some(match_len) = __regex_scan_GoogleSheetsParser(
-                        "[lL][aA][mM][bB][dD][aA]\\(",
-                        input,
-                        *p,
-                    ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                        });
-                    };
-                    *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            31u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                }
-            }
-            {
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
-                    parse_flat_GoogleSheetsParser_lambda_params(input, p, state, builder)
-                })?;
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            }
-            {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [41u8] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        31u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Rule,
-                span_lo,
-                31u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
-    }
-    /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
-    ///
-    /// Runs the operand-led shunting-yard reducer bounded by the
-    /// emitted per-grammar `PRECEDENCE_LUT`. The reducer mirrors
-    /// the walker's `DtaState::ShuntingYard` arm — `TapeKind::Rule`
-    /// outer compound + per-op reduced binary compounds via
-    /// `emit_reducer_compound`.
-    ///
-    /// # Emitted algorithm
-    ///
-    /// 1. Reserve an outer Rule compound via
-    ///    [`crate::runtime::tape::Tape<()>::mark_children`] +
-    ///    record the parse-open position.
-    /// 2. Dispatch the leftmost operand through the grammar's
-    ///    value-position dispatcher; the operand's records land
-    ///    inside the outer compound's child run.
-    /// 3. Loop: peek the next byte; consult `PRECEDENCE_LUT`; when
-    ///    zero, break; when nonzero:
-    ///    a. Reduce every top-of-op-stack entry whose precedence
-    ///       exceeds the new byte's (or ties + left-assoc); each
-    ///       reduce emits a `TapeKind::Rule` reducer compound via
-    ///       [`crate::runtime::tape::emit_reducer_compound`].
-    ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
-    ///       byte's u8 discriminant into `pay_narrow` directly via
-    ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
-    ///       inline; bypasses the `arena_mut().push` round-trip
-    ///       AX.W0a.2.l routed through).
-    ///    c. Push the operator onto the local op stack with its
-    ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
-    ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
-    ///    e. Re-dispatch the RHS operand.
-    /// 4. On EOF-operator: drain the op stack — every remaining
-    ///    entry reduces into a terminal compound. The final
-    ///    `this_operand_root` is stamped onto the outer Rule
-    ///    compound's `child_off` (overriding the default
-    ///    `mark_children` index) so the cursor's pre-order walk
-    ///    surfaces the reduced tree root as the compound's first
-    ///    child.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-    /// recursion rationale.
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge through the value dispatcher.
     #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
-        unused_assignments,
+        unused_variables,
         unused_mut,
-        unused_variables
+        unused_assignments
     )]
-    pub fn parse_pratt_GoogleSheetsParser_array_row(
-        input: &[u8],
+    pub fn parse_pratt_GoogleSheetsParser_array_row<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        struct LocalOpEntry {
-            op_discriminant: u8,
-            precedence: u8,
-            associativity_is_left: bool,
-            lhs_idx: u32,
-            lhs_span_lo: u32,
-        }
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        let outer_span_lo = *p as u32;
-        let outer_off = builder
-            .begin_compound(
-                crate::runtime::tape::TapeKind::Rule,
-                outer_span_lo,
-                32u8,
-                0u8,
-                0u16,
-            );
-        let _operand_off = ({
+        let __array_row_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 32u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("array_row"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __array_row_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__array_row_layout,
+        );
+        let _ = ({
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
         })?;
-        let mut this_operand_root: u32 = _operand_off.0;
-        const OP_STACK_CAP: usize = 16;
-        let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
-            op_discriminant: 0,
-            precedence: 0,
-            associativity_is_left: false,
-            lhs_idx: 0,
-            lhs_span_lo: 0,
-        });
-        let mut op_stack_len: usize = 0;
         loop {
             let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
             let mut lut_byte: u8 = PRECEDENCE_LUT_array_row[op_byte as usize];
@@ -8051,54 +5585,9 @@ mod __googlesheetsparser_emit_impl {
                 op_byte = input.get(*p).copied().unwrap_or(0);
                 lut_byte = PRECEDENCE_LUT_array_row[op_byte as usize];
             }
-            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
-                ::core::option::Option::None
-            } else {
-                ::core::option::Option::Some(lut_byte & 0x0Fu8)
-            };
-            loop {
-                if op_stack_len == 0 {
-                    break;
-                }
-                let top_op = &op_stack[op_stack_len - 1];
-                let should_reduce = match new_prec {
-                    ::core::option::Option::None => true,
-                    ::core::option::Option::Some(p_new) => {
-                        top_op.precedence > p_new
-                            || (top_op.precedence == p_new
-                                && top_op.associativity_is_left)
-                    }
-                };
-                if !should_reduce {
-                    break;
-                }
-                let lhs_idx = top_op.lhs_idx;
-                let lhs_span_lo = top_op.lhs_span_lo;
-                let op_discriminant = top_op.op_discriminant;
-                op_stack_len -= 1;
-                let reducer_span_hi = *p as u32;
-                let compound_idx = builder
-                    .begin_compound(
-                        crate::runtime::tape::TapeKind::Rule,
-                        lhs_span_lo,
-                        op_discriminant,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .wrap_existing_children_post_order(
-                        compound_idx,
-                        reducer_span_hi,
-                        crate::runtime::tape::TapeOffset(lhs_idx),
-                    );
-                this_operand_root = compound_idx;
-            }
             if lut_byte == 0 {
                 break;
             }
-            let precedence: u8 = lut_byte & 0x0Fu8;
-            let assoc_bit: u8 = (lut_byte >> 4) & 0x01u8;
-            let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
             let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
@@ -8138,145 +5627,78 @@ mod __googlesheetsparser_emit_impl {
             if !op_matched {
                 break;
             }
-            let op_lo: u32 = *p as u32;
-            *p = (*p).saturating_add(op_width as usize);
-            let op_hi: u32 = *p as u32;
-            let _op_rec = builder
-                .push_leaf_with(
-                    crate::runtime::tape::TapeKind::Span,
-                    op_lo,
-                    op_hi,
-                    0,
-                    0,
-                    crate::runtime::tape::PayloadData::InlineScalar(
-                        op_discriminant as u32,
-                    ),
-                );
-            let lhs_span_lo: u32 = if (this_operand_root as usize)
-                < builder.columns().len()
-            {
-                builder.columns().span_lo_at(this_operand_root)
-            } else {
-                op_hi
-            };
-            debug_assert!(
-                op_stack_len < OP_STACK_CAP,
-                "Pratt op_stack overflow at depth {} (cap {})", op_stack_len,
-                OP_STACK_CAP,
+            <crate::runtime::google_sheets::SheetsStructBuilder<
+                '_,
+            > as crate::runtime::StructBuilder>::push_branch_tag(
+                builder,
+                op_discriminant as u32,
             );
-            op_stack[op_stack_len] = LocalOpEntry {
-                op_discriminant,
-                precedence,
-                associativity_is_left,
-                lhs_idx: this_operand_root,
-                lhs_span_lo,
-            };
-            op_stack_len += 1;
+            *p = (*p).saturating_add(op_width as usize);
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            let _rhs_off = ({
+            let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
             })?;
-            this_operand_root = _rhs_off.0;
         }
-        let outer_span_hi = *p as u32;
-        builder
-            .end_compound_with_child_off(
-                outer_off,
-                outer_span_hi,
-                crate::runtime::tape::TapeOffset(this_operand_root),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __array_row_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4.1 — per-grammar Pratt-shape parse function.
+    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
+    /// function, **struct-direct body**. Targets the grammar's
+    /// concrete `StructBuilder`.
     ///
-    /// Runs the operand-led shunting-yard reducer bounded by the
-    /// emitted per-grammar `PRECEDENCE_LUT`. The reducer mirrors
-    /// the walker's `DtaState::ShuntingYard` arm — `TapeKind::Rule`
-    /// outer compound + per-op reduced binary compounds via
-    /// `emit_reducer_compound`.
+    /// Opens a compound for the rule (e.g. `add_expr` →
+    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
+    /// stamps operator branch tags inline, closes the compound.
+    /// Children land in the order
+    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
+    /// rule's structural alphabet is preserved verbatim;
+    /// associativity-honouring binary-tree reduction is a
+    /// consumer-side projection (the runtime exposes
+    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// # Emitted algorithm
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode.
     ///
-    /// 1. Reserve an outer Rule compound via
-    ///    [`crate::runtime::tape::Tape<()>::mark_children`] +
-    ///    record the parse-open position.
-    /// 2. Dispatch the leftmost operand through the grammar's
-    ///    value-position dispatcher; the operand's records land
-    ///    inside the outer compound's child run.
-    /// 3. Loop: peek the next byte; consult `PRECEDENCE_LUT`; when
-    ///    zero, break; when nonzero:
-    ///    a. Reduce every top-of-op-stack entry whose precedence
-    ///       exceeds the new byte's (or ties + left-assoc); each
-    ///       reduce emits a `TapeKind::Rule` reducer compound via
-    ///       [`crate::runtime::tape::emit_reducer_compound`].
-    ///    b. Emit a `TapeKind::Span` op leaf carrying the operator
-    ///       byte's u8 discriminant into `pay_narrow` directly via
-    ///       `push_leaf_with(InlineScalar)` (AY.W1.4 Pratt Option C
-    ///       inline; bypasses the `arena_mut().push` round-trip
-    ///       AX.W0a.2.l routed through).
-    ///    c. Push the operator onto the local op stack with its
-    ///       `(precedence, associativity, lhs_idx, lhs_span_lo)`.
-    ///    d. Advance past the op bytes (1 or 2 for two-byte ops).
-    ///    e. Re-dispatch the RHS operand.
-    /// 4. On EOF-operator: drain the op stack — every remaining
-    ///    entry reduces into a terminal compound. The final
-    ///    `this_operand_root` is stamped onto the outer Rule
-    ///    compound's `child_off` (overriding the default
-    ///    `mark_children` index) so the cursor's pre-order walk
-    ///    surfaces the reduced tree root as the compound's first
-    ///    child.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-    /// recursion rationale.
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge through the value dispatcher.
     #[inline]
     #[allow(
         non_snake_case,
         clippy::too_many_arguments,
-        unused_assignments,
+        unused_variables,
         unused_mut,
-        unused_variables
+        unused_assignments
     )]
-    pub fn parse_pratt_GoogleSheetsParser_array_rows(
-        input: &[u8],
+    pub fn parse_pratt_GoogleSheetsParser_array_rows<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        struct LocalOpEntry {
-            op_discriminant: u8,
-            precedence: u8,
-            associativity_is_left: bool,
-            lhs_idx: u32,
-            lhs_span_lo: u32,
-        }
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        let outer_span_lo = *p as u32;
-        let outer_off = builder
-            .begin_compound(
-                crate::runtime::tape::TapeKind::Rule,
-                outer_span_lo,
-                33u8,
-                0u8,
-                0u16,
-            );
-        let _operand_off = ({
+        let __array_rows_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 33u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("array_rows"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __array_rows_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__array_rows_layout,
+        );
+        let _ = ({
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             parse_pratt_GoogleSheetsParser_array_row(input, p, state, builder)
         })?;
-        let mut this_operand_root: u32 = _operand_off.0;
-        const OP_STACK_CAP: usize = 16;
-        let mut op_stack: [LocalOpEntry; OP_STACK_CAP] = ::core::array::from_fn(|_| LocalOpEntry {
-            op_discriminant: 0,
-            precedence: 0,
-            associativity_is_left: false,
-            lhs_idx: 0,
-            lhs_span_lo: 0,
-        });
-        let mut op_stack_len: usize = 0;
         loop {
             let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
             let mut lut_byte: u8 = PRECEDENCE_LUT_array_rows[op_byte as usize];
@@ -8285,54 +5707,9 @@ mod __googlesheetsparser_emit_impl {
                 op_byte = input.get(*p).copied().unwrap_or(0);
                 lut_byte = PRECEDENCE_LUT_array_rows[op_byte as usize];
             }
-            let new_prec: ::core::option::Option<u8> = if lut_byte == 0 {
-                ::core::option::Option::None
-            } else {
-                ::core::option::Option::Some(lut_byte & 0x0Fu8)
-            };
-            loop {
-                if op_stack_len == 0 {
-                    break;
-                }
-                let top_op = &op_stack[op_stack_len - 1];
-                let should_reduce = match new_prec {
-                    ::core::option::Option::None => true,
-                    ::core::option::Option::Some(p_new) => {
-                        top_op.precedence > p_new
-                            || (top_op.precedence == p_new
-                                && top_op.associativity_is_left)
-                    }
-                };
-                if !should_reduce {
-                    break;
-                }
-                let lhs_idx = top_op.lhs_idx;
-                let lhs_span_lo = top_op.lhs_span_lo;
-                let op_discriminant = top_op.op_discriminant;
-                op_stack_len -= 1;
-                let reducer_span_hi = *p as u32;
-                let compound_idx = builder
-                    .begin_compound(
-                        crate::runtime::tape::TapeKind::Rule,
-                        lhs_span_lo,
-                        op_discriminant,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .wrap_existing_children_post_order(
-                        compound_idx,
-                        reducer_span_hi,
-                        crate::runtime::tape::TapeOffset(lhs_idx),
-                    );
-                this_operand_root = compound_idx;
-            }
             if lut_byte == 0 {
                 break;
             }
-            let precedence: u8 = lut_byte & 0x0Fu8;
-            let assoc_bit: u8 = (lut_byte >> 4) & 0x01u8;
-            let associativity_is_left: bool = assoc_bit == 0;
             let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
             let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
             let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
@@ -8372,265 +5749,162 @@ mod __googlesheetsparser_emit_impl {
             if !op_matched {
                 break;
             }
-            let op_lo: u32 = *p as u32;
-            *p = (*p).saturating_add(op_width as usize);
-            let op_hi: u32 = *p as u32;
-            let _op_rec = builder
-                .push_leaf_with(
-                    crate::runtime::tape::TapeKind::Span,
-                    op_lo,
-                    op_hi,
-                    0,
-                    0,
-                    crate::runtime::tape::PayloadData::InlineScalar(
-                        op_discriminant as u32,
-                    ),
-                );
-            let lhs_span_lo: u32 = if (this_operand_root as usize)
-                < builder.columns().len()
-            {
-                builder.columns().span_lo_at(this_operand_root)
-            } else {
-                op_hi
-            };
-            debug_assert!(
-                op_stack_len < OP_STACK_CAP,
-                "Pratt op_stack overflow at depth {} (cap {})", op_stack_len,
-                OP_STACK_CAP,
+            <crate::runtime::google_sheets::SheetsStructBuilder<
+                '_,
+            > as crate::runtime::StructBuilder>::push_branch_tag(
+                builder,
+                op_discriminant as u32,
             );
-            op_stack[op_stack_len] = LocalOpEntry {
-                op_discriminant,
-                precedence,
-                associativity_is_left,
-                lhs_idx: this_operand_root,
-                lhs_span_lo,
-            };
-            op_stack_len += 1;
+            *p = (*p).saturating_add(op_width as usize);
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            let _rhs_off = ({
+            let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_pratt_GoogleSheetsParser_array_row(input, p, state, builder)
             })?;
-            this_operand_root = _rhs_off.0;
         }
-        let outer_span_hi = *p as u32;
-        builder
-            .end_compound_with_child_off(
-                outer_off,
-                outer_span_hi,
-                crate::runtime::tape::TapeOffset(this_operand_root),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __array_rows_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_array_literal(
-        input: &[u8],
+    pub fn parse_flat_GoogleSheetsParser_array_literal<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __array_literal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 34u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("array_literal"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __array_literal_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__array_literal_layout,
+        );
         {
-            {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [123u8] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        34u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [123u8] {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            {
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
-                    parse_pratt_GoogleSheetsParser_array_rows(input, p, state, builder)
-                })?;
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            }
-            {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [125u8] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        34u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
+            *p = end;
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                34u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        {
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+            let _ = ({
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                parse_pratt_GoogleSheetsParser_array_rows(input, p, state, builder)
+            })?;
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+        }
+        {
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [125u8] {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+        }
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(
+            builder,
+            __array_literal_handle,
+        );
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_formula(
-        input: &[u8],
+    pub fn parse_flat_GoogleSheetsParser_formula<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __formula_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 35u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("formula"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __formula_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__formula_layout);
         {
-            {
-                {
-                    let span_lo = *p as u32;
-                    let Some(match_len) = __regex_scan_GoogleSheetsParser(
-                        "=?",
-                        input,
-                        *p,
-                    ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                        });
-                    };
-                    *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            35u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                }
-            }
-            {
-                let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
-                    parse_pratt_GoogleSheetsParser_comparison_expr(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    )
-                })?;
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
+            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                35u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        {
+            let _ = ({
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
+            })?;
+        }
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __formula_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AY-II.W0.e — Grammar-activated structural-scan policy table.
     ///
@@ -8847,11 +6121,11 @@ mod __googlesheetsparser_emit_impl {
     /// recursion rationale.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_GoogleSheetsParser_formula(
-        input: &[u8],
+    pub fn parse_GoogleSheetsParser_formula<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -8864,11 +6138,11 @@ mod __googlesheetsparser_emit_impl {
     /// AX.W0a.2.f — compound; plain `#[inline]`.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_GoogleSheetsParser_formula__value(
-        input: &[u8],
+    pub fn parse_GoogleSheetsParser_formula__value<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -21834,21 +19108,19 @@ mod __googlesheetsparser_emit_impl {
         pub fn parse(
             input: &str,
         ) -> ::core::result::Result<
-            crate::runtime::Parsed<'_, Self>,
+            crate::runtime::google_sheets::SheetsDocument<'_>,
             crate::runtime::ParseErr,
         > {
             let __input_bytes = input.as_bytes();
             let mut state = __shape_support_GoogleSheetsParser::ScanState::new();
-            let mut tape = crate::runtime::tape::Tape::<
-                (),
-            >::with_capacity(GRAMMAR_PROFILE.capacity_for(input.len()));
-            let root_off = {
+            let mut builder = crate::runtime::google_sheets::SheetsStructBuilder::new();
+            {
                 let mut pos: usize = 0;
-                let off = parse_GoogleSheetsParser_formula(
+                parse_GoogleSheetsParser_formula(
                         __input_bytes,
                         &mut pos,
                         &mut state,
-                        &mut tape,
+                        &mut builder,
                     )
                     .map_err(|e| match e {
                         crate::runtime::tape::DtaError::Syntax { offset, .. } => {
@@ -21881,17 +19153,8 @@ mod __googlesheetsparser_emit_impl {
                         rule: None,
                     });
                 }
-                off
-            };
-            let tape: crate::runtime::tape::Tape<()> = tape
-                .finish(root_off.0)
-                .map_err(crate::runtime::ParseErr::Tape)?;
-            let tape: crate::runtime::tape::Tape<Self> = unsafe {
-                ::core::mem::transmute(tape)
-            };
-            ::core::result::Result::Ok(
-                crate::runtime::Parsed::new(tape, input, root_off),
-            )
+            }
+            ::core::result::Result::Ok(builder.finalise())
         }
     }
     impl<'p> identifierView<'p> {

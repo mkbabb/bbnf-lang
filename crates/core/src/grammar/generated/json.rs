@@ -1058,7 +1058,7 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         _first_byte: u8,
         _state: &mut __shape_support_JsonParser::ScanState,
-        builder: &mut crate::runtime::JsonStructBuilder<'_>,
+        builder: &mut crate::runtime::json::JsonStructBuilder<'_>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -1092,7 +1092,7 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_JsonParser::ScanState,
-        builder: &mut crate::runtime::JsonStructBuilder<'_>,
+        builder: &mut crate::runtime::json::JsonStructBuilder<'_>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -1397,7 +1397,7 @@ mod __jsonparser_emit_impl {
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
-        builder: &mut crate::runtime::JsonStructBuilder<'p>,
+        builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -1452,14 +1452,15 @@ mod __jsonparser_emit_impl {
         }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
-    /// **struct-direct body**. Targets [`JsonStructBuilder`].
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
     /// Walker-tape compound emission is replaced by typed
     /// `begin_compound` / `end_compound` calls against the in-flight
     /// frame stack. Per-position pushes (string keys, recursive
     /// value calls, byte literals) land directly on the topmost
-    /// open frame; `JsonStructBuilder::begin_compound` routes the
-    /// `(LayoutKind::Struct, "pair")` case to `OpenFrame::Pair`.
+    /// open frame.
     ///
     /// Returns `TapeOffset::NONE` for compositional uniformity
     /// with sibling shape fns under struct-direct mode; the
@@ -1476,7 +1477,7 @@ mod __jsonparser_emit_impl {
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
-        builder: &mut crate::runtime::JsonStructBuilder<'p>,
+        builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -1488,7 +1489,7 @@ mod __jsonparser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let __pair_handle = <crate::runtime::JsonStructBuilder<
+        let __pair_handle = <crate::runtime::json::JsonStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__pair_layout);
         {
@@ -1517,7 +1518,7 @@ mod __jsonparser_emit_impl {
                 parse_wrap_JsonParser_value(input, p, state, builder)
             })?;
         }
-        <crate::runtime::JsonStructBuilder<
+        <crate::runtime::json::JsonStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __pair_handle);
         ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
@@ -1535,7 +1536,7 @@ mod __jsonparser_emit_impl {
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
-        builder: &mut crate::runtime::JsonStructBuilder<'p>,
+        builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -1626,7 +1627,7 @@ mod __jsonparser_emit_impl {
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
-        builder: &mut crate::runtime::JsonStructBuilder<'p>,
+        builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -1638,7 +1639,7 @@ mod __jsonparser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let __wrap_handle = <crate::runtime::JsonStructBuilder<
+        let __wrap_handle = <crate::runtime::json::JsonStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
@@ -1872,7 +1873,7 @@ mod __jsonparser_emit_impl {
                 }
                 _ => {}
             }
-            <crate::runtime::JsonStructBuilder<
+            <crate::runtime::json::JsonStructBuilder<
                 '_,
             > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
@@ -1881,10 +1882,10 @@ mod __jsonparser_emit_impl {
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        <crate::runtime::JsonStructBuilder<
+        <crate::runtime::json::JsonStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::push_branch_tag(builder, __wrap_branch_idx);
-        <crate::runtime::JsonStructBuilder<
+        <crate::runtime::json::JsonStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
         ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)

@@ -17,13 +17,20 @@
 //! GAT `type View<'tape>` (landing in AC.2 alongside the emitter
 //! rewrite).
 
+pub mod builder;
 pub mod error;
 pub mod handle;
+pub mod json;
 pub mod parsed;
 pub mod path;
 
+pub use builder::StructBuilder;
 pub use error::ParseErr;
 pub use handle::{CompoundHandle, StringHandle};
+pub use json::{
+    JsonArena, JsonArray, JsonArrayId, JsonDocument, JsonNumber, JsonObject, JsonObjectId,
+    JsonPair, JsonStructBuilder, JsonValue,
+};
 pub use parsed::{Parsed, PathQuery, Root, ValueRoot};
 pub use path::{IntoPathSegment, Path, PathSegment};
 

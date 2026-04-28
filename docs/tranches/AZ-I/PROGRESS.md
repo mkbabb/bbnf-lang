@@ -810,3 +810,124 @@ surface holds at the substrate level pre-regen.
 - Bench gate verification (normalize ≥ 735 / bootstrap ≥ 600 /
   tailwind ≥ 500) — depends on regen producing the StructDirect
   parse path through the bench binary.
+
+## 2026-04-28 — AZ-I.W2-act.recovery close
+
+Three scope-reveal gaps surfaced under post-flip orchestrator regen
+(W2-act.B1/B2/B3 substrate + resolver flip lands; subsequent regen
+reveals codegen + consumer breakage). The recovery agent closed all
+three plus one absorbed scope-reveal so the W2-act.C close ceremony
+can run.
+
+### Gap #1 — `builder_ty_with_lifetime` lifetime emission
+
+`crates/core/src/backend/rust/emitter/shapes/substrate.rs::builder_ty_with_lifetime`
+spliced a bare `proc_macro2::Ident` carrying `p` into
+`quote! { #path<#lifetime> }`, producing `JsonStructBuilder<p>`
+(generic type argument) instead of `JsonStructBuilder<'p>` (lifetime
+parameter). Generated code failed to compile with E0107 on every
+emitted struct-direct parse fn signature.
+
+Fix: convert the ident through `syn::Lifetime` carrying the leading
+apostrophe before splicing. Regression test asserting the apostrophe
+lands.
+
+### Gap #2 — Pratt struct-direct body
+
+`crates/core/src/backend/rust/emitter/shapes/pratt/{tape.rs,visitor.rs}`
+panicked at codegen time when the resolver returned StructDirect for
+the calling grammar. Sheets's `comparison_expr` / `concat_expr` /
+`add_expr` / `mul_expr` / `exp_expr` Pratt rules tripped the panic
+under W2-act.B2 activation; CSS L4's typed expressions surface Pratt
+similarly under W2-act.B3.
+
+Fix: author `crates/core/src/backend/rust/emitter/shapes/pratt/struct_direct.rs`
+emitting the rule-level compound directly through the grammar's
+concrete StructBuilder. The rule's `begin_compound` opens the rule
+frame (e.g. `add_expr` → `SheetsCompoundKind::AddExpr`); the
+LUT-driven loop dispatches operands through the per-grammar value
+dispatcher and stamps `push_branch_tag` on each operator boundary;
+`end_compound` finalises. Children land linearly as
+`[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
+SheetsCompoundKind discriminator preserves the rule-level kind, so
+consumers reconstruct the binary tree using the exposed
+`PRECEDENCE_ENTRIES_<rule>` metadata. The wire-contract test at
+`sheets_expr_parity.rs::tests::document_add_expr_one_plus_two_via_wire_contract`
+confirms this is the layout the SheetsStructBuilder consumer
+expects. Visitor-path body becomes substrate-agnostic (V is
+generic); strategy panic retires.
+
+### Gap #3 — JSON tape-shaped test migrations
+
+Six JSON-consuming tests asserted on tape-shaped accessors that
+retired with the substrate flip:
+
+- `structural.rs` — migrated to walk `JsonDocument`'s typed value
+  tree; kept-shaped invariants project to `JsonValue` variant
+  equality + arena slot count.
+- `sonic_rs_parity.rs` — migrated; bbnf side projects `JsonValue`
+  → `RefValue` directly (the `RefParser` re-parse layer dropped).
+- `wrap_compound_elision.rs` — migrated; record-count budgets
+  project to compound-count budgets via the new
+  `count_compound_nodes` walker.
+- `serialize_roundtrip.rs` — JSON path migrated to walk the typed
+  tree through a minimal compact-JSON emitter; Sheets and CSS L4
+  paths deleted (their typed serializers are unauthored).
+- `value_api_apples_to_apples.rs` — DELETED. The "view-path vs
+  value-path serialization" invariant retired with the dual-projection
+  substrate; under struct-direct there is one path. Tape-allocation
+  parse-count invariant retires alongside.
+- `runtime_root.rs` — UNCHANGED. Grammar-agnostic; uses generic
+  `Parsed<R>` / `Tape<R>` with hand-rolled fixture. Substrate
+  survives the JSON flip intact.
+
+### Absorbed scope-reveal — alt_dispatch struct-direct emitter
+
+`crates/core/src/backend/rust/emitter/shapes/alt_dispatch/mod.rs::emit_parse_alt_dispatch_struct_direct`
+emitted a call to `ir_struct_registry_layout(<rule_id>u32)` — a
+helper that does not exist in `bbnf_ir` or any consumed crate.
+JSON's `value` rule classifies as Wrap (not AltDispatch), so the
+bug did not fire under W2-act.B1; CSS L4 exercises 6 AltDispatch
+rules under StructDirect (namedColor / mathValue / value /
+typeSelector / anPlusB / keyframeStop) and the post-flip regen
+output failed to compile. The function signature also carried
+`input: &[u8]` instead of `&'p [u8]`, breaking lifetime threading
+to per-branch Ref calls.
+
+Fix: replace the helper call with the inline `StructLayout` literal
+pattern used by every other per-shape struct-direct emitter (array,
+flat, wrap, keyword, pratt). Fix the lifetime parameter on the
+function signature. The bootstrap escape hand-patched the 6 stale
+calls in `crates/core/src/grammar/generated/css_l4.rs` so the lib
+compiled, then `cargo xtask regen --check` produced the byte-stable
+emitter output.
+
+### Verification
+
+Per the recovery dispatch hard gates:
+
+1. `cargo xtask regen --check` — clean across all 9 grammars
+   (per-commit hook output: "regen --check: clean (9 grammars
+   matched)").
+2. Per-grammar struct-direct lifetime-parameterised signatures:
+   - `JsonStructBuilder<'p>|<'_>` × 10 in `json.rs`
+   - `SheetsStructBuilder<'p>|<'_>` × 38 in `google_sheets.rs`
+   - `CssStructBuilder<'p>|<'_>` × 189 in `css_l4.rs`
+3. `rg 'panic!\(.*StructDirect' crates/core/src/backend/rust/emitter/shapes/`
+   returns zero hits.
+
+### Commits
+
+- `84b9fd11` fix(emitter): lifetime emission in builder_ty_with_lifetime
+- `1313dfe6` feat(emitter): Pratt-shape struct-direct body
+- `953f67fb` fix(emitter): alt_dispatch struct-direct layout literal + lifetime
+- `cfa6a7ab` regen(grammars): JSON / Sheets / CSS L4 post-flip struct-direct
+- `be93a44f` test(json): migrate tape-shaped JSON consumers to JsonDocument
+
+### Handoff to W2-act.C
+
+The W2-act.C close ceremony can now run: regen is byte-stable, every
+shape supports StructDirect, the migrated test surfaces compile.
+Bench gate verification (twitter ≥ 1967, canada ≥ 1231, citm ≥ 2438;
+CSS normalize ≥ 735, bootstrap ≥ 600, tailwind ≥ 500; Sheets
+parse_simple ≥ 95) and the FINAL.md absorption remain.

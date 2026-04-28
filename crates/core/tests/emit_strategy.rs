@@ -123,25 +123,44 @@ fn json_grammar_alias_routes_struct_direct() {
 }
 
 #[test]
-fn bbnf_with_populated_registry_routes_tape_direct() {
-    // BBNF's project_types pass populates a non-trivial registry,
-    // but BBNF is exempt from the W2 struct-direct activation
-    // (AZ-I.md §Invariant 4: "BBNF continues on tape" — the
-    // bootstrap parser reads / writes tape records throughout
-    // AZ-I; AZ-II cuts BBNF over). This test pins the resolver's
-    // identity-based filter: grammar name, not registry shape,
-    // gates struct-direct admission.
+fn bbnf_with_populated_registry_routes_struct_direct() {
+    // AZ-II.cutover.A — BBNF's project_types pass populates a
+    // non-trivial registry; the cutover.A resolver-arm extension
+    // routes `BbnfBootstrap` / `BbnfParser` to StructDirect when the
+    // registry is populated. cutover.B regens the parser onto the
+    // struct-direct path; cutover.C deletes the tape crate.
+    //
+    // Pre-AZ-II.cutover.A this test asserted TapeDirect routing per
+    // AZ-I §Invariant 4 ("BBNF continues on tape" — frozen for AZ-I).
+    // AZ-II.cutover lifts that freeze.
     let registry = populated_registry();
     let strategy = EmitStrategy::for_grammar("BbnfBootstrap", &registry);
-    assert_eq!(
-        strategy,
-        EmitStrategy::TapeDirect,
-        "BbnfBootstrap must route TapeDirect even with populated registry",
-    );
+    match strategy {
+        EmitStrategy::StructDirect { rust, .. } => {
+            assert_eq!(
+                rust.builder_path,
+                "crate::runtime::bbnf::BbnfStructBuilder",
+                "BbnfBootstrap StructDirect arm binds the BBNF runtime builder",
+            );
+            assert_eq!(
+                rust.document_path,
+                "crate::runtime::bbnf::BbnfDocument",
+                "BbnfBootstrap StructDirect arm binds the BBNF runtime document",
+            );
+        }
+        EmitStrategy::TapeDirect => panic!(
+            "BbnfBootstrap with populated registry must route StructDirect post-cutover.A; got TapeDirect"
+        ),
+    }
 }
 
 #[test]
 fn bbnf_with_empty_registry_routes_tape_direct() {
+    // The activation guard in EmitStrategy::for_grammar downgrades a
+    // nominally-struct-direct grammar to TapeDirect when the registry
+    // is empty. BBNF + empty registry therefore stays on TapeDirect
+    // — the closure-substrate gate is the same one JSON / CSS L4 /
+    // Sheets respect.
     let registry = empty_registry();
     let strategy = EmitStrategy::for_grammar("BbnfBootstrap", &registry);
     assert_eq!(

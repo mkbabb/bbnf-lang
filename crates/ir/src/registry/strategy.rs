@@ -196,6 +196,21 @@ impl EmitStrategy {
                 ts: None,
                 wasm: None,
             },
+            // AZ-II.cutover.A: BBNF struct-direct activation. The
+            // BBNF self-hosted grammar projects through the
+            // `bbnf::runtime::bbnf` typed-value enum + `BbnfStructBuilder`
+            // / `BbnfDocument` substrate authored at cutover.A. The
+            // resolver arm activates here; cutover.B regens the BBNF
+            // parser onto the struct-direct path and cutover.C
+            // retires the tape crate.
+            ("BbnfBootstrap" | "BbnfParser", true) => EmitStrategy::StructDirect {
+                rust: SubstrateBinding {
+                    builder_path: "crate::runtime::bbnf::BbnfStructBuilder",
+                    document_path: "crate::runtime::bbnf::BbnfDocument",
+                },
+                ts: None,
+                wasm: None,
+            },
             // Catch-all — every grammar not yet activated stays on the
             // legacy tape substrate. The `_ => TapeDirect` close is
             // the wave-local revert per W2.md §Reversal — per

@@ -62,13 +62,17 @@ use crate::types::{FnDescriptor, FnId, GrammarIR, IrNode, IrRule, RuleId, TypeDe
 // ── Public report shape ─────────────────────────────────────────────────
 
 /// Identifier for the grammar a coverage row describes. `Custom`
-/// admits in-tree audits of grammars not in the AZ-I three-grammar
-/// slice; the `&'static str` ride-along is the JSON output's row key.
+/// admits in-tree audits of grammars not in the named slice; the
+/// `&'static str` ride-along is the JSON output's row key.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum GrammarAuditTag {
     Json,
     CssL4,
     Sheets,
+    /// AZ-II.cutover.A — BBNF self-hosted grammar; admitted as a
+    /// fleet-wide tag so the audit's coverage roll-up covers the
+    /// fourth direct-to-struct grammar.
+    Bbnf,
     Custom(&'static str),
 }
 
@@ -79,6 +83,7 @@ impl GrammarAuditTag {
             GrammarAuditTag::Json => "json",
             GrammarAuditTag::CssL4 => "css_l4",
             GrammarAuditTag::Sheets => "sheets",
+            GrammarAuditTag::Bbnf => "bbnf",
             GrammarAuditTag::Custom(s) => s,
         }
     }

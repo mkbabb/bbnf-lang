@@ -17,6 +17,7 @@
 //! GAT `type View<'tape>` (landing in AC.2 alongside the emitter
 //! rewrite).
 
+pub mod bbnf;
 pub mod builder;
 pub mod css_l4;
 pub mod error;
@@ -27,6 +28,10 @@ pub mod parsed;
 pub mod path;
 pub mod view;
 
+pub use bbnf::{
+    BbnfArena, BbnfCompound, BbnfCompoundId, BbnfCompoundKind, BbnfDocument, BbnfKind,
+    BbnfPathQuery, BbnfStructBuilder, BbnfValue, BbnfView,
+};
 pub use builder::StructBuilder;
 pub use css_l4::{
     CssAngle, CssAngleUnit, CssArena, CssColor, CssColorFunction, CssColorMix,

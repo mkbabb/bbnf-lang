@@ -1,6 +1,10 @@
+//! AZ-II.cutover.D4 — document / range / on-type formatting over
+//! the struct-direct [`BbnfView`] surface.
+
 use ls_types::*;
 
-use bbnf::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
+use bbnf::runtime::RuntimeView;
+use bbnf::runtime::bbnf::{BbnfCompoundKind, BbnfView};
 use bbnf::types::AST;
 
 use crate::state::DocumentState;
@@ -127,134 +131,71 @@ fn format_ast(ast: &AST<'_>) -> String {
     lines.join("\n") + "\n"
 }
 
-/// Recursively render a tape-first view into formatted BBNF source.
-///
-/// Walks structural compounds (alternation, concatenation,
-/// binary_factor, mapped_factor, factor, term_*, closure) via the
-/// same shape-agnostic helpers as the rest of the analysis layer,
-/// and falls back to `span_text()` for everything else — which is
-/// exactly the input slice the user typed.
-fn format_expression(node: BbnfBootstrapNodeView<'_>, indent_level: usize) -> String {
-    use crate::state::ast_utils::{collect_binary_operand_views, is_term_kind, iter_iteration_views};
+/// Recursively render a [`BbnfView`] into formatted BBNF source.
+fn format_expression(node: BbnfView<'_, '_>, indent_level: usize) -> String {
+    use crate::state::ast_utils::{collect_binary_operand_views, iter_iteration_views};
 
-    match node.rule_kind() {
-        BbnfBootstrapRuleKind::literal | BbnfBootstrapRuleKind::regex => {
-            // Spans already cover the delimiters.
-            node.span_text().to_string()
-        }
+    // Span leaves — the source slice IS the formatted form.
+    if !node.is_compound() {
+        return node
+            .span_text()
+            .map(str::to_string)
+            .unwrap_or_default();
+    }
 
-        BbnfBootstrapRuleKind::identifier => node.span_text().to_string(),
-
-        BbnfBootstrapRuleKind::term_0 => "epsilon".into(),
-
-        BbnfBootstrapRuleKind::term => node
-            .child(0)
-            .map(|c| format_expression(c, indent_level))
-            .unwrap_or_else(|| node.span_text().to_string()),
-
-        BbnfBootstrapRuleKind::term_1 => {
-            let ident = match node.child(0) {
-                Some(i) => i,
-                None => return node.span_text().to_string(),
-            };
-            let name = ident.span_text();
-            if let Some(call) = node.child(1) {
-                let (lo, hi) = call.span();
-                if hi > lo {
-                    let args: Vec<String> = call
-                        .children()
-                        .filter_map(|c| {
-                            let (clo, chi) = c.span();
-                            if chi <= clo {
-                                return None;
-                            }
-                            let text = c.span_text();
-                            if text == "(" || text == ")" || text == "," {
-                                return None;
-                            }
-                            Some(format_expression(c, indent_level))
-                        })
-                        .collect();
-                    return format!("{}({})", name, args.join(", "));
-                }
-            }
-            name.to_string()
-        }
-
-        BbnfBootstrapRuleKind::term_2 | BbnfBootstrapRuleKind::value_atom_0 => {
-            let open = node
+    match node.compound_kind() {
+        Some(BbnfCompoundKind::Term) => match node.branch_tag() {
+            Some(0) => "epsilon".into(),
+            Some(1) => format_term_call(node, indent_level),
+            Some(b @ 4..=7) => format_term_grouped(node, b, indent_level),
+            _ => node
                 .child(0)
-                .map(|c| c.span_text().to_string())
-                .unwrap_or_else(|| "(".into());
-            let inner_str = node
-                .child(1)
-                .map(|c| format_expression(c, indent_level + 1))
-                .unwrap_or_default();
-            match open.as_str() {
-                "(" => format!("({})", inner_str),
-                "[" => format!("[{}]", inner_str),
-                "{" => format!("{{{}}}", inner_str),
-                "@{" => format!("@{{{}}}", inner_str),
-                _ => format!("({})", inner_str),
-            }
-        }
+                .map(|c| format_expression(c, indent_level))
+                .unwrap_or_else(|| span_or_dots(node)),
+        },
 
-        BbnfBootstrapRuleKind::factor => {
-            let term = node.children().find(|c| is_term_kind(c.rule_kind()));
-            let modifier = node
+        Some(BbnfCompoundKind::Factor) => {
+            let term = node
                 .children()
-                .find(|c| c.rule_kind() == BbnfBootstrapRuleKind::modifier);
+                .find(|c| c.compound_kind() == Some(BbnfCompoundKind::Term));
+            // Modifier is a non-compound Span-bearing leaf adjacent
+            // to the Term.
+            let modifier_text = node
+                .children()
+                .filter(|c| c.compound_kind().is_none())
+                .find_map(|c| {
+                    let t = c.span_text()?.trim();
+                    if matches!(t, "?" | "?w" | "*" | "+") {
+                        Some(t.to_string())
+                    } else {
+                        None
+                    }
+                });
             let term_str = term
                 .map(|t| format_expression(t, indent_level))
-                .unwrap_or_else(|| node.span_text().to_string());
-            if let Some(m) = modifier {
-                let (lo, hi) = m.span();
-                if hi > lo {
-                    return format!("{}{}", term_str, m.span_text());
-                }
+                .unwrap_or_else(|| span_or_dots(node));
+            match modifier_text {
+                Some(m) => format!("{}{}", term_str, m),
+                None => term_str,
             }
-            term_str
         }
 
-        BbnfBootstrapRuleKind::modifier => node.span_text().to_string(),
-
-        BbnfBootstrapRuleKind::mapped_factor => {
-            let mapping = node.child(1);
-            let has_arrow = mapping.is_some_and(|m| {
-                let (lo, hi) = m.span();
-                hi > lo && m.span_text().contains("->")
-            });
-            if !has_arrow {
-                // The inner child (child(0)) may be an empty wrapper under
-                // the tape-first parser. Fall back to the parent span text.
-                let inner = match node.child(0) {
-                    Some(c) => c,
-                    None => return node.span_text().trim().to_string(),
-                };
-                let (ilo, ihi) = inner.span();
-                if ihi <= ilo {
-                    return node.span_text().trim().to_string();
-                }
-                return format_expression(inner, indent_level);
-            }
+        Some(BbnfCompoundKind::MappedFactor) => {
             let inner = match node.child(0) {
                 Some(c) => c,
-                None => return node.span_text().to_string(),
+                None => return span_or_dots(node),
             };
-            let inner_str = {
-                let (ilo, ihi) = inner.span();
-                if ihi <= ilo {
-                    node.span_text().trim().to_string()
-                } else {
-                    format_expression(inner, indent_level)
-                }
-            };
-            // Extract the value_expr / type annotation from the
-            // mapping group's children via rule_kind dispatch —
-            // mirrors `lower/expression.rs::find_value_expr_child`.
-            let mapping_node = mapping.unwrap();
-            let value_expr = find_value_expr_child(mapping_node);
-            let type_ann = find_type_annotation_child(mapping_node);
+            let has_arrow = node.span_text().is_some_and(|s| s.contains("->"));
+            if !has_arrow {
+                return format_expression(inner, indent_level);
+            }
+            let inner_str = format_expression(inner, indent_level);
+            // Find value_expr / type_annotation companions among the
+            // mapped_factor's children. The struct-direct alphabet
+            // emits expressions.bbnf rules under BbnfCompoundKind::Other;
+            // distinguish by checking is_compound() and walking depth.
+            let value_expr = find_value_expr_child(node);
+            let type_ann = find_type_annotation_child(node);
             match (value_expr, type_ann) {
                 (Some(v), Some(t)) => format!(
                     "{} -> {} : {}",
@@ -262,39 +203,47 @@ fn format_expression(node: BbnfBootstrapNodeView<'_>, indent_level: usize) -> St
                     format_value_expr_short(v),
                     format_value_expr_short(t)
                 ),
-                (Some(v), None) => {
-                    format!("{} -> {}", inner_str, format_value_expr_short(v))
-                }
-                _ => mapping_node.span_text().trim().to_string(),
+                (Some(v), None) => format!("{} -> {}", inner_str, format_value_expr_short(v)),
+                _ => node
+                    .span_text()
+                    .map(|s| s.trim().to_string())
+                    .unwrap_or_else(|| span_or_dots(node)),
             }
         }
 
-        BbnfBootstrapRuleKind::binary_factor => {
+        Some(BbnfCompoundKind::BinaryFactor) => {
             let operands: Vec<_> = collect_binary_operand_views(node).collect();
             if operands.is_empty() {
-                node.span_text().to_string()
+                span_or_dots(node)
             } else if operands.len() == 1 {
                 format_expression(operands[0], indent_level)
             } else {
                 let input = node.input();
                 let mut out = format_expression(operands[0], indent_level);
-                let mut prev_end = operands[0].span().1;
+                let mut prev_end = operands[0].byte_span().map(|(_, hi)| hi);
                 for op in operands.iter().skip(1) {
-                    let gap = &input[prev_end as usize..op.span().0 as usize];
-                    let trimmed = gap.trim();
-                    out.push(' ');
-                    out.push_str(trimmed);
-                    out.push(' ');
+                    let op_lo = op.byte_span().map(|(lo, _)| lo);
+                    if let (Some(end), Some(start)) = (prev_end, op_lo) {
+                        if end <= start {
+                            let gap = &input[end..start];
+                            let trimmed = gap.trim();
+                            out.push(' ');
+                            out.push_str(trimmed);
+                            out.push(' ');
+                        } else {
+                            out.push(' ');
+                        }
+                    } else {
+                        out.push(' ');
+                    }
                     out.push_str(&format_expression(*op, indent_level));
-                    prev_end = op.span().1;
+                    prev_end = op.byte_span().map(|(_, hi)| hi);
                 }
                 out
             }
         }
 
-        BbnfBootstrapRuleKind::binary_operators => node.span_text().to_string(),
-
-        BbnfBootstrapRuleKind::concatenation => {
+        Some(BbnfCompoundKind::Concatenation) => {
             let formatted: Vec<String> = iter_iteration_views(node)
                 .map(|c| format_expression(c, indent_level))
                 .collect();
@@ -308,7 +257,7 @@ fn format_expression(node: BbnfBootstrapNodeView<'_>, indent_level: usize) -> St
             }
         }
 
-        BbnfBootstrapRuleKind::alternation => {
+        Some(BbnfCompoundKind::Alternation) => {
             let formatted: Vec<String> = iter_iteration_views(node)
                 .map(|c| format_expression(c, indent_level))
                 .collect();
@@ -322,76 +271,121 @@ fn format_expression(node: BbnfBootstrapNodeView<'_>, indent_level: usize) -> St
             }
         }
 
-        BbnfBootstrapRuleKind::closure => {
-            // Closure source slice is already `|params| body`.
-            node.span_text().trim().to_string()
-        }
+        Some(BbnfCompoundKind::Closure) => node
+            .span_text()
+            .map(|s| s.trim().to_string())
+            .unwrap_or_else(|| span_or_dots(node)),
 
-        BbnfBootstrapRuleKind::comment | BbnfBootstrapRuleKind::big_comment => String::new(),
-
-        // Transparent wrappers.
-        BbnfBootstrapRuleKind::rhs
-        | BbnfBootstrapRuleKind::grammar_item
-        | BbnfBootstrapRuleKind::directive
-        | BbnfBootstrapRuleKind::lhs => node
+        // Transparent wrappers — descend.
+        Some(BbnfCompoundKind::Rhs)
+        | Some(BbnfCompoundKind::GrammarItem)
+        | Some(BbnfCompoundKind::Directive)
+        | Some(BbnfCompoundKind::Lhs) => node
             .child(0)
             .map(|c| format_expression(c, indent_level))
-            .unwrap_or_else(|| node.span_text().to_string()),
+            .unwrap_or_else(|| span_or_dots(node)),
 
-        // Anything else: use the raw source slice.
-        _ => {
-            let text = node.span_text().trim();
-            if text.is_empty() {
-                "...".into()
-            } else {
-                text.to_string()
-            }
-        }
+        // CallArg: render the substantive expression.
+        Some(BbnfCompoundKind::CallArg) => node
+            .span_text()
+            .map(|s| s.trim().to_string())
+            .unwrap_or_else(|| span_or_dots(node)),
+
+        // Everything else: use the recovered source slice.
+        _ => span_or_dots(node),
     }
 }
 
-/// Walk the children of a mapping group to find the value expression root.
-fn find_value_expr_child<'p>(
-    node: BbnfBootstrapNodeView<'p>,
-) -> Option<BbnfBootstrapNodeView<'p>> {
+fn span_or_dots(node: BbnfView<'_, '_>) -> String {
+    let text = node.span_text().unwrap_or("").trim();
+    if text.is_empty() {
+        "...".into()
+    } else {
+        text.to_string()
+    }
+}
+
+/// Format `term_1` (identifier with optional call-args).
+fn format_term_call(node: BbnfView<'_, '_>, indent_level: usize) -> String {
+    let ident = match node.child(0) {
+        Some(c) => c,
+        None => return span_or_dots(node),
+    };
+    let name = ident.span_text().unwrap_or("").to_string();
+    let args: Vec<String> = node
+        .children()
+        .filter(|c| c.compound_kind() == Some(BbnfCompoundKind::CallArg))
+        .map(|c| format_expression(c, indent_level))
+        .filter(|s| !s.trim().is_empty())
+        .collect();
+    if args.is_empty() {
+        name
+    } else {
+        format!("{}({})", name, args.join(", "))
+    }
+}
+
+/// Format a grouped term — `( rhs )` / `[ rhs ]` / `{ rhs }` /
+/// `@{ rhs }`. The `branch` argument is the term's branch_tag (4..=7).
+fn format_term_grouped(node: BbnfView<'_, '_>, branch: u32, indent_level: usize) -> String {
+    let inner_view = node
+        .children()
+        .find(|c| c.compound_kind() == Some(BbnfCompoundKind::Rhs));
+    let inner = inner_view
+        .map(|i| format_expression(i, indent_level + 1))
+        .unwrap_or_else(|| span_or_dots(node));
+    match branch {
+        4 => format!("@{{{}}}", inner),
+        5 => format!("({})", inner),
+        6 => format!("[{}]", inner),
+        7 => format!("{{{}}}", inner),
+        _ => format!("({})", inner),
+    }
+}
+
+/// Walk the children of a mapped_factor to find the value-expression
+/// root. The struct-direct alphabet collapses every imported
+/// `expressions.bbnf` rule onto [`BbnfCompoundKind::Other`]; the
+/// value-expression sits as the first non-Factor compound child of
+/// the mapped_factor.
+fn find_value_expr_child<'a, 'p>(node: BbnfView<'a, 'p>) -> Option<BbnfView<'a, 'p>> {
     for c in node.children() {
-        match c.rule_kind() {
-            BbnfBootstrapRuleKind::value_expr
-            | BbnfBootstrapRuleKind::value_or
-            | BbnfBootstrapRuleKind::value_and
-            | BbnfBootstrapRuleKind::value_cmp
-            | BbnfBootstrapRuleKind::value_add
-            | BbnfBootstrapRuleKind::value_mul
-            | BbnfBootstrapRuleKind::value_unary
-            | BbnfBootstrapRuleKind::value_unary_0
-            | BbnfBootstrapRuleKind::value_atom
-            | BbnfBootstrapRuleKind::value_atom_0
-            | BbnfBootstrapRuleKind::value_fn_call
-            | BbnfBootstrapRuleKind::value_path
-            | BbnfBootstrapRuleKind::value_ident
-            | BbnfBootstrapRuleKind::value_input
-            | BbnfBootstrapRuleKind::value_closure
-            | BbnfBootstrapRuleKind::int_lit
-            | BbnfBootstrapRuleKind::float_lit
-            | BbnfBootstrapRuleKind::bool_lit
-            | BbnfBootstrapRuleKind::string_lit => return Some(c),
-            _ => {
+        match c.compound_kind() {
+            Some(BbnfCompoundKind::Factor) => continue,
+            Some(BbnfCompoundKind::Other) => return Some(c),
+            Some(_) => {
                 if let Some(found) = find_value_expr_child(c) {
                     return Some(found);
                 }
+            }
+            None => {
+                // Non-compound child (Span / numeric leaf): recurse
+                // through the parent's structural children only.
             }
         }
     }
     None
 }
 
-fn find_type_annotation_child<'p>(
-    node: BbnfBootstrapNodeView<'p>,
-) -> Option<BbnfBootstrapNodeView<'p>> {
+/// Locate the type_annotation child of a mapped_factor. The
+/// type_annotation rule lowers to BbnfCompoundKind::Other; we
+/// disambiguate by matching the trailing `:` token in the source
+/// gap before it.
+fn find_type_annotation_child<'a, 'p>(node: BbnfView<'a, 'p>) -> Option<BbnfView<'a, 'p>> {
+    // Walk children to find one whose leading source byte is `:`.
+    let input = node.input();
+    let mut prev_end: Option<usize> = None;
     for c in node.children() {
-        if c.rule_kind() == BbnfBootstrapRuleKind::type_annotation {
-            return Some(c);
+        let span = c.byte_span()?;
+        if let Some(end) = prev_end {
+            if end < span.0 {
+                let gap = input[end..span.0].trim_start();
+                if gap.starts_with(':') {
+                    return Some(c);
+                }
+            }
         }
+        prev_end = Some(span.1);
         if let Some(found) = find_type_annotation_child(c) {
             return Some(found);
         }

@@ -1,10 +1,14 @@
+//! AZ-II.cutover.D4 — selection-range computation over the
+//! struct-direct [`BbnfView`] surface.
+
 use ls_types::*;
 
-use bbnf::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
+use bbnf::runtime::RuntimeView;
+use bbnf::runtime::bbnf::{BbnfCompoundKind, BbnfView};
 
 use crate::state::DocumentState;
 use crate::state::ast_utils::{
-    collect_binary_operand_views, compute_expression_end, is_term_kind, iter_iteration_views,
+    collect_binary_operand_views, compute_expression_end, iter_iteration_views,
 };
 
 /// Compute selection ranges for each requested position.
@@ -79,46 +83,31 @@ fn compute_selection_range(
 }
 
 /// Recursively collect all expression spans that contain the given offset.
-///
-/// Under the tape-first view API every rule compound carries its
-/// own `(lo, hi)` span on the cursor, so the collection is just a
-/// shape-agnostic pre-order walk that pushes `(lo, hi)` when the
-/// offset lands inside and descends into structural children
-/// relevant to the grammar hierarchy.
 fn collect_spans(
-    node: BbnfBootstrapNodeView<'_>,
+    node: BbnfView<'_, '_>,
     offset: usize,
     spans: &mut Vec<(usize, usize)>,
 ) {
-    let (lo, hi) = node.span();
-    let lo = lo as usize;
-    let hi = hi as usize;
-    let contains = offset >= lo && offset <= hi;
+    let span = node.byte_span();
+    let contains = span.is_some_and(|(lo, hi)| offset >= lo && offset <= hi);
 
-    match node.rule_kind() {
-        // Span leaves — push on contain.
-        BbnfBootstrapRuleKind::identifier
-        | BbnfBootstrapRuleKind::literal
-        | BbnfBootstrapRuleKind::regex
-        | BbnfBootstrapRuleKind::modifier
-        | BbnfBootstrapRuleKind::binary_operators
-        | BbnfBootstrapRuleKind::comment
-        | BbnfBootstrapRuleKind::big_comment
-        | BbnfBootstrapRuleKind::term_0
-        | BbnfBootstrapRuleKind::int_lit
-        | BbnfBootstrapRuleKind::float_lit
-        | BbnfBootstrapRuleKind::bool_lit
-        | BbnfBootstrapRuleKind::string_lit
-        | BbnfBootstrapRuleKind::value_ident => {
-            if contains {
+    // Span-leaf focus: push and return.
+    if !node.is_compound() {
+        if contains {
+            if let Some((lo, hi)) = span {
                 spans.push((lo, hi));
             }
         }
+        return;
+    }
 
+    match node.compound_kind() {
         // Alternation.
-        BbnfBootstrapRuleKind::alternation => {
+        Some(BbnfCompoundKind::Alternation) => {
             if contains {
-                spans.push((lo, hi));
+                if let Some((lo, hi)) = span {
+                    spans.push((lo, hi));
+                }
             }
             for branch in iter_iteration_views(node) {
                 collect_spans(branch, offset, spans);
@@ -126,9 +115,11 @@ fn collect_spans(
         }
 
         // Concatenation.
-        BbnfBootstrapRuleKind::concatenation => {
+        Some(BbnfCompoundKind::Concatenation) => {
             if contains {
-                spans.push((lo, hi));
+                if let Some((lo, hi)) = span {
+                    spans.push((lo, hi));
+                }
             }
             for part in iter_iteration_views(node) {
                 collect_spans(part, offset, spans);
@@ -136,9 +127,11 @@ fn collect_spans(
         }
 
         // Binary factor.
-        BbnfBootstrapRuleKind::binary_factor => {
+        Some(BbnfCompoundKind::BinaryFactor) => {
             if contains {
-                spans.push((lo, hi));
+                if let Some((lo, hi)) = span {
+                    spans.push((lo, hi));
+                }
             }
             for operand in collect_binary_operand_views(node) {
                 collect_spans(operand, offset, spans);
@@ -146,9 +139,11 @@ fn collect_spans(
         }
 
         // Mapped factor: inner + optional mapping.
-        BbnfBootstrapRuleKind::mapped_factor => {
+        Some(BbnfCompoundKind::MappedFactor) => {
             if contains {
-                spans.push((lo, hi));
+                if let Some((lo, hi)) = span {
+                    spans.push((lo, hi));
+                }
             }
             if let Some(inner) = node.child(0) {
                 collect_spans(inner, offset, spans);
@@ -156,61 +151,71 @@ fn collect_spans(
         }
 
         // Factor.
-        BbnfBootstrapRuleKind::factor => {
+        Some(BbnfCompoundKind::Factor) => {
             if contains {
-                spans.push((lo, hi));
-            }
-            for c in node.children() {
-                if is_term_kind(c.rule_kind())
-                    || c.rule_kind() == BbnfBootstrapRuleKind::modifier
-                {
-                    collect_spans(c, offset, spans);
+                if let Some((lo, hi)) = span {
+                    spans.push((lo, hi));
                 }
             }
-        }
-
-        // term: transparent wrapper.
-        BbnfBootstrapRuleKind::term => {
-            if let Some(inner) = node.child(0) {
-                collect_spans(inner, offset, spans);
-            }
-        }
-
-        // term_1: identifier + optional call args.
-        BbnfBootstrapRuleKind::term_1 => {
-            if let Some(ident) = node.child(0) {
-                collect_spans(ident, offset, spans);
-            }
-            for c in node.children().skip(1) {
+            for c in node.children() {
                 collect_spans(c, offset, spans);
             }
         }
 
-        // term_2 / value_atom_0: grouped expression.
-        BbnfBootstrapRuleKind::term_2 | BbnfBootstrapRuleKind::value_atom_0 => {
-            if contains {
-                spans.push((lo, hi));
+        // Term: dispatch on branch_tag.
+        Some(BbnfCompoundKind::Term) => match node.branch_tag() {
+            Some(b @ 4..=7) => {
+                let _ = b;
+                // Grouped: span is meaningful for the wrapping
+                // brackets.
+                if contains {
+                    if let Some((lo, hi)) = span {
+                        spans.push((lo, hi));
+                    }
+                }
+                if let Some(inner) = node
+                    .children()
+                    .find(|c| c.compound_kind() == Some(BbnfCompoundKind::Rhs))
+                {
+                    collect_spans(inner, offset, spans);
+                }
             }
-            if let Some(inner) = node.child(1) {
-                collect_spans(inner, offset, spans);
+            Some(1) => {
+                // Identifier with optional call-args.
+                if let Some(ident) = node.child(0) {
+                    collect_spans(ident, offset, spans);
+                }
+                for c in node.children().skip(1) {
+                    collect_spans(c, offset, spans);
+                }
             }
-        }
+            _ => {
+                if let Some(inner) = node.child(0) {
+                    collect_spans(inner, offset, spans);
+                }
+            }
+        },
 
         // Closure: recurse into body.
-        BbnfBootstrapRuleKind::closure => {
+        Some(BbnfCompoundKind::Closure) => {
             if contains {
-                spans.push((lo, hi));
+                if let Some((lo, hi)) = span {
+                    spans.push((lo, hi));
+                }
             }
-            if let Some(body) = node.child(4) {
+            if let Some(body) = node
+                .children()
+                .find(|c| c.compound_kind() == Some(BbnfCompoundKind::Rhs))
+            {
                 collect_spans(body, offset, spans);
             }
         }
 
         // Transparent wrappers.
-        BbnfBootstrapRuleKind::rhs
-        | BbnfBootstrapRuleKind::grammar_item
-        | BbnfBootstrapRuleKind::directive
-        | BbnfBootstrapRuleKind::lhs => {
+        Some(BbnfCompoundKind::Rhs)
+        | Some(BbnfCompoundKind::GrammarItem)
+        | Some(BbnfCompoundKind::Directive)
+        | Some(BbnfCompoundKind::Lhs) => {
             if let Some(inner) = node.child(0) {
                 collect_spans(inner, offset, spans);
             }

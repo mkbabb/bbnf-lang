@@ -1,29 +1,27 @@
-//! Compute byte-offset spans on tape-first `BbnfBootstrapNodeView` nodes.
+//! Compute byte-offset spans on struct-direct [`BbnfView`] nodes.
 //!
-//! Under the tape-first view API, every rule compound carries its
-//! own `(lo, hi)` span on the cursor. `compute_expression_end` still
-//! exists as a thin wrapper for consumers that historically asked
-//! "where does this expression's last byte land?", but it simply
-//! forwards to `view.span().1` — the tape already records the
-//! answer. The signature is kept to preserve the current call sites
-//! (which thread `Option<usize>` through their callers).
+//! AZ-II.cutover.D4 — every BBNF compound carries a recoverable
+//! byte-span via [`BbnfView::byte_span`] (a pointer-arithmetic walk
+//! over descendant `Span` leaves through the document's input
+//! slice). `compute_expression_end` is therefore a thin wrapper that
+//! returns the upper bound of the focus's byte span; consumers
+//! historically asked "where does this expression's last byte
+//! land?", and the struct-direct runtime answers that authentically.
+//!
+//! Returns `None` only when the focused value carries no descendant
+//! `Span` leaf at all (an empty compound, or a numeric / boolean /
+//! unit leaf). The same signal the pre-AE code used to skip absent
+//! optional wrappers.
 
-use bbnf::grammar::generated::BbnfBootstrapNodeView;
+use bbnf::runtime::bbnf::BbnfView;
 
 /// Public wrapper for `compute_expression_end` (used by selection_range).
-pub fn compute_expression_end_pub(node: BbnfBootstrapNodeView<'_>) -> Option<usize> {
+pub fn compute_expression_end_pub(node: BbnfView<'_, '_>) -> Option<usize> {
     compute_expression_end(node)
 }
 
-/// Compute the end byte offset of a bootstrap tape view.
-///
-/// Returns `None` only for empty placeholder compounds (span
-/// `(lo, lo)` with no children) — the same signal the pre-AE
-/// enum-based code used to skip absent optional wrappers.
-pub fn compute_expression_end(node: BbnfBootstrapNodeView<'_>) -> Option<usize> {
-    let (lo, hi) = node.span();
-    if hi == lo && node.children().next().is_none() {
-        return None;
-    }
-    Some(hi as usize)
+/// Compute the end byte offset of a [`BbnfView`] focus.
+pub fn compute_expression_end(node: BbnfView<'_, '_>) -> Option<usize> {
+    let (_lo, hi) = node.byte_span()?;
+    Some(hi)
 }

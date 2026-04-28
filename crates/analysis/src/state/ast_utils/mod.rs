@@ -1,8 +1,41 @@
-//! AST helper functions over tape-first `BbnfBootstrapNodeView` nodes.
+//! AST helper functions over the struct-direct [`BbnfView`] surface.
 //!
-//! Pure functions consumed by `state/diagnostics.rs` and `features/*.rs`.
+//! AZ-II.cutover.D4 — every analysis-side ast walker migrates from
+//! the tape-cursor `BbnfBootstrapNodeView` to the struct-direct
+//! [`bbnf::runtime::bbnf::BbnfView`] (a [`bbnf::runtime::RuntimeView`]
+//! impl). Pure functions consumed by `state/diagnostics.rs` and
+//! `features/*.rs`.
+//!
+//! # Discriminator translation
+//!
+//! Pre-cutover.D the helpers dispatched on `BbnfBootstrapRuleKind`,
+//! whose alphabet included sub-variant tokens (`term_0`, `term_1`,
+//! `term_2`) emitted by the tape-first generator. The struct-direct
+//! `BbnfCompoundKind` alphabet collapses every Alt sub-variant onto
+//! the parent `term` arm and exposes the branch index via
+//! [`BbnfView::branch_tag`]. The translation:
+//!
+//! - `term_0` (epsilon)        → `BbnfCompoundKind::Term` +
+//!   `branch_tag == Some(0)`.
+//! - `term_1` (ident + call)   → `BbnfCompoundKind::Term` +
+//!   `branch_tag == Some(1)`.
+//! - `term_2` (grouped expr)   → `BbnfCompoundKind::Term` +
+//!   `branch_tag in 4..=7`.
+//! - `value_atom_0` (grouped value-expr) — preserved when the
+//!   analysis-layer call sites carry it; today every consumer that
+//!   matches `term_2 | value_atom_0` also accepts the grouped Term
+//!   branches, so the unified predicate is `is_grouped_term`.
+//!
+//! Anonymous-wrapper compounds (the tape-first generator's
+//! `int_lit`-collision wrappers around quantified groups) do not
+//! exist in the struct-direct world: every compound entry resolves
+//! through [`BbnfArena::compound`] to an explicit
+//! [`BbnfCompoundKind`] arm, including [`BbnfCompoundKind::Other`]
+//! for rules outside the alphabet. The analysis helpers therefore
+//! drop the tape-only `Unknown / int_lit` peeling branches.
 
-use bbnf::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
+use bbnf::runtime::RuntimeView;
+use bbnf::runtime::bbnf::{BbnfCompoundKind, BbnfView};
 
 pub mod cycles;
 pub mod format;
@@ -32,47 +65,63 @@ pub fn format_char(b: u8) -> String {
 
 /// Check if a rule RHS is effectively empty (epsilon only).
 ///
-/// Walks the tape view structure, peeling transparent wrappers
-/// (`term`, `factor` without a modifier, single-branch
-/// `alternation`/`concatenation`) to their leaf, and returns true
-/// when the leaf is the `term_0` epsilon marker.
-pub fn is_empty_rhs(node: BbnfBootstrapNodeView<'_>) -> bool {
-    match node.rule_kind() {
-        BbnfBootstrapRuleKind::term_0 => true,
+/// Walks the [`BbnfView`] structure, peeling transparent wrappers
+/// (`Term`, `Rhs`, `GrammarItem`, `Directive`, `Lhs` — the
+/// single-child compounds whose body is a pure indirection) to their
+/// leaf, and returns `true` when the leaf is the `Term` epsilon
+/// branch (`branch_tag == Some(0)`).
+pub fn is_empty_rhs(node: BbnfView<'_, '_>) -> bool {
+    match node.compound_kind() {
+        // Epsilon term branch.
+        Some(BbnfCompoundKind::Term) if node.branch_tag() == Some(0) => true,
 
         // Transparent wrappers — descend into the single inner child.
-        BbnfBootstrapRuleKind::term
-        | BbnfBootstrapRuleKind::rhs
-        | BbnfBootstrapRuleKind::grammar_item
-        | BbnfBootstrapRuleKind::directive
-        | BbnfBootstrapRuleKind::lhs => node
-            .child(0)
-            .map(is_empty_rhs)
-            .unwrap_or(false),
+        Some(BbnfCompoundKind::Term)
+        | Some(BbnfCompoundKind::Rhs)
+        | Some(BbnfCompoundKind::GrammarItem)
+        | Some(BbnfCompoundKind::Directive)
+        | Some(BbnfCompoundKind::Lhs) => node.child(0).map(is_empty_rhs).unwrap_or(false),
 
-        // Factor: epsilon iff the inner term is epsilon AND there's no modifier.
-        BbnfBootstrapRuleKind::factor => {
+        // Factor: epsilon iff the inner term is epsilon AND there's
+        // no modifier child.
+        Some(BbnfCompoundKind::Factor) => {
             let term = node
                 .children()
-                .find(|c| is_term_kind(c.rule_kind()));
-            let modifier_present = node
-                .children()
-                .any(|c| c.rule_kind() == BbnfBootstrapRuleKind::modifier);
+                .find(|c| c.compound_kind() == Some(BbnfCompoundKind::Term));
+            // The `modifier` rule lowers to a Span leaf in the BBNF
+            // struct-direct runtime (regex-only single-token rule).
+            // Modifier presence is signalled by a non-empty Span leaf
+            // in the factor's children outside the Term position.
+            let modifier_present = node.children().any(|c| {
+                if c.compound_kind().is_some() {
+                    return false;
+                }
+                // Span / leaf with non-empty source slice → modifier
+                // (the only span-emitting non-compound child of
+                // factor is the modifier).
+                c.span_text().is_some_and(|t| !t.trim().is_empty())
+            });
             match (term, modifier_present) {
                 (Some(t), false) => is_empty_rhs(t),
                 _ => false,
             }
         }
 
-        // Mapped factor: epsilon iff inner is epsilon AND there's no `->` mapping.
-        BbnfBootstrapRuleKind::mapped_factor => {
+        // Mapped factor: epsilon iff inner is epsilon AND there's no
+        // `->` mapping. Mapping presence is signalled by the inner
+        // factor being followed by a value_expr child (the
+        // `mapped_factor = factor , ( "->" ?w , value_expr ,
+        // type_annotation ? ) ?` shape carries the optional mapping
+        // as additional children when present).
+        Some(BbnfCompoundKind::MappedFactor) => {
             let inner = match node.child(0) {
                 Some(c) => c,
                 None => return false,
             };
-            let mapping_present = node.child(1).is_some_and(|m| {
-                let (lo, hi) = m.span();
-                hi > lo && m.span_text().contains("->")
+            // Heuristic: any non-Factor compound child indicates a
+            // mapping is attached.
+            let mapping_present = node.children().skip(1).any(|c| {
+                c.compound_kind().is_some_and(|k| k != BbnfCompoundKind::Factor)
             });
             if mapping_present {
                 false
@@ -81,15 +130,16 @@ pub fn is_empty_rhs(node: BbnfBootstrapNodeView<'_>) -> bool {
             }
         }
 
-        // Binary factor: epsilon iff single operand and that operand is epsilon.
-        BbnfBootstrapRuleKind::binary_factor => {
+        // Binary factor: epsilon iff single operand and that operand
+        // is epsilon.
+        Some(BbnfCompoundKind::BinaryFactor) => {
             let operands: Vec<_> = collect_binary_operand_views(node).collect();
             operands.len() == 1 && is_empty_rhs(operands[0])
         }
 
-        // Concatenation / alternation: epsilon iff exactly one branch and that
-        // branch is epsilon.
-        BbnfBootstrapRuleKind::concatenation | BbnfBootstrapRuleKind::alternation => {
+        // Concatenation / alternation: epsilon iff exactly one branch
+        // and that branch is epsilon.
+        Some(BbnfCompoundKind::Concatenation) | Some(BbnfCompoundKind::Alternation) => {
             let parts: Vec<_> = iter_iteration_views(node).collect();
             parts.len() == 1 && is_empty_rhs(parts[0])
         }
@@ -98,119 +148,91 @@ pub fn is_empty_rhs(node: BbnfBootstrapNodeView<'_>) -> bool {
     }
 }
 
-/// True iff `kind` belongs to the `term` family (term or one of
-/// its sub-variants term_0/1/2, plus value_atom_0 and the leaf
-/// terminals that the lowering dispatches through `lower_term_dispatch`).
-pub(crate) fn is_term_kind(kind: BbnfBootstrapRuleKind) -> bool {
-    matches!(
-        kind,
-        BbnfBootstrapRuleKind::term
-            | BbnfBootstrapRuleKind::term_0
-            | BbnfBootstrapRuleKind::term_1
-            | BbnfBootstrapRuleKind::term_2
-            | BbnfBootstrapRuleKind::value_atom_0
-            | BbnfBootstrapRuleKind::literal
-            | BbnfBootstrapRuleKind::regex
-            | BbnfBootstrapRuleKind::identifier
-    )
-}
-
-/// Collect binary-factor operand views, peeling a single-Repeat
-/// wrapper when present (mirrors `iter_rep_children` from the
-/// lowering, but for the operand list specifically).
-pub(crate) fn collect_binary_operand_views<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-) -> impl Iterator<Item = BbnfBootstrapNodeView<'a>> + 'a {
-    use ::bbnf::runtime::tape::TapeKind;
-    let mut children = node.children();
-    let first = children.next();
-    let rest: Vec<_> = children.collect();
-    let expanded: Vec<BbnfBootstrapNodeView<'a>> = if let Some(f) = first {
-        let mut v = vec![f];
-        if rest.len() == 1 && rest[0].kind() == TapeKind::Repeat {
-            v.extend(rest[0].children());
-        } else {
-            v.extend(rest);
+/// True iff the focused view participates in the `term` family —
+/// either the polymorphic `Term` compound or its leaf payloads
+/// (`identifier`, `literal`, `regex`). Mirrors the pre-cutover.D
+/// `is_term_kind` predicate over `BbnfBootstrapRuleKind`.
+pub(crate) fn is_term_kind(node: BbnfView<'_, '_>) -> bool {
+    match node.compound_kind() {
+        Some(BbnfCompoundKind::Term) => true,
+        // value_atom (grouped value-expr) lowers to its own compound
+        // alphabet entry; analysis treats it as a structural peer of
+        // Term for grouped-expression handling.
+        _ => {
+            // Bare leaf identifiers / literals / regex carry no
+            // compound kind but the analysis layer treats them as
+            // term-family for descent purposes.
+            !node.is_compound() && node.is_span()
         }
-        v
-    } else {
-        Vec::new()
-    };
-    expanded.into_iter()
+    }
 }
 
-/// Iterate the operand views of an iteration-pair compound. Mirrors
-/// `lower/expression.rs::iter_iteration_pairs`: peels a single
-/// `TapeKind::Repeat` wrapper, filters out separators and empty
-/// placeholder spans, and descends through anonymous Repeat wrappers
-/// to reach the substantive `Rule` content child within each
-/// iteration body.
-pub(crate) fn iter_iteration_views<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-) -> impl Iterator<Item = BbnfBootstrapNodeView<'a>> + 'a {
-    use ::bbnf::runtime::tape::TapeKind;
-    iter_rep_children(node).filter_map(|pair| {
-        // Peel an explicit Seq wrapper around `(content, optional_sep)`.
-        let candidate = match pair.kind() {
-            TapeKind::Seq => pair.child(0)?,
-            _ => pair,
-        };
-        // Filter out separator / whitespace placeholder compounds.
-        let span = candidate.span_text().trim();
-        if span.is_empty() || span == "|" || span == "," {
-            return None;
-        }
-        // Anonymous Repeat/Optional wrapper: peel to the single
-        // substantive Rule child (mirrors the lowering's
-        // dispatch_expression fallback for variant_idx=0 compounds).
-        Some(peel_anonymous_wrapper(candidate))
-    })
+/// True iff the focused compound is a grouped-expression term
+/// (`(rhs)` / `[rhs]` / `{rhs}` / `@{rhs}`) — encodes the analysis
+/// layer's `term_2 | value_atom_0` discrimination over the
+/// struct-direct alphabet.
+#[inline]
+pub(crate) fn is_grouped_term(node: BbnfView<'_, '_>) -> bool {
+    match node.compound_kind() {
+        Some(BbnfCompoundKind::Term) => matches!(node.branch_tag(), Some(4..=7)),
+        _ => false,
+    }
 }
 
-/// Peel anonymous wrapper compounds — `Repeat` or `Rule` compounds
-/// whose `variant_idx` is 0 (collides with `int_lit` in the
-/// `BbnfBootstrapRuleKind` enum). These are iteration-body wrappers
-/// emitted by the tape-first generator for quantified expressions.
-/// Walk through them to reach the single substantive `Rule` child.
+/// Collect binary-factor operand views.
 ///
-/// Mirrors `dispatch_expression` in `lower/expression.rs`, lines 90-146.
-pub(crate) fn peel_anonymous_wrapper<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-) -> BbnfBootstrapNodeView<'a> {
-    use ::bbnf::runtime::tape::TapeKind;
-    let kind = node.rule_kind();
-    let is_unknown_or_sentinel = matches!(
-        kind,
-        BbnfBootstrapRuleKind::Unknown | BbnfBootstrapRuleKind::int_lit,
-    );
-    if !is_unknown_or_sentinel {
-        return node;
-    }
-    // Collect substantive Rule children (skip Repeat/Optional wrappers).
-    let substantive: Vec<BbnfBootstrapNodeView<'a>> = node
+/// `binary_factor = mapped_factor , ( binary_operators ?w ,
+/// mapped_factor ) *` lowers to a Compound whose first child is the
+/// leading mapped_factor and whose remaining children are operator /
+/// operand pairs (with the optional `*` repeat collapsed inline).
+/// The analysis layer needs every operand `mapped_factor` view; this
+/// helper extracts them in source order.
+pub(crate) fn collect_binary_operand_views<'a, 'p>(
+    node: BbnfView<'a, 'p>,
+) -> impl Iterator<Item = BbnfView<'a, 'p>> {
+    let kept: Vec<BbnfView<'a, 'p>> = node
         .children()
-        .filter(|c| c.kind() == TapeKind::Rule)
+        .filter(|c| {
+            // Operands are mapped_factor compounds; skip the
+            // binary_operators leaf compounds and any anonymous
+            // wrapper shapes the lowering may have introduced.
+            matches!(
+                c.compound_kind(),
+                Some(BbnfCompoundKind::MappedFactor)
+                    | Some(BbnfCompoundKind::BinaryFactor)
+                    | Some(BbnfCompoundKind::Factor)
+            )
+        })
         .collect();
-    match substantive.len() {
-        1 => peel_anonymous_wrapper(substantive[0]),
-        _ => node,
-    }
+    kept.into_iter()
 }
 
-/// Iterate iteration children, unwrapping a single top-level
-/// `TapeKind::Repeat` wrapper if present. Matches the lowering's
-/// `tape_walk::iter_rep_children` helper.
-pub(crate) fn iter_rep_children<'a>(
-    view: BbnfBootstrapNodeView<'a>,
-) -> Box<dyn Iterator<Item = BbnfBootstrapNodeView<'a>> + 'a> {
-    use ::bbnf::runtime::tape::TapeKind;
-    let mut children = view.children();
-    let first = match children.next() {
-        Some(c) => c,
-        None => return Box::new(std::iter::empty()),
-    };
-    if children.next().is_none() && first.kind() == TapeKind::Repeat {
-        return Box::new(first.children());
-    }
-    Box::new(view.children())
+/// Iterate the operand views of an iteration-pair compound.
+///
+/// `concatenation = ( binary_factor ?w , "," ? ) +` and
+/// `alternation = ( concatenation ?w , "|" ? ) +` lower to a
+/// Compound whose direct children are the iteration bodies. Each
+/// body wraps its content; this helper unwraps to the substantive
+/// inner expression and drops separator literals (the `,` and `|`
+/// tokens that ride alongside the body in the source order).
+pub(crate) fn iter_iteration_views<'a, 'p>(
+    node: BbnfView<'a, 'p>,
+) -> impl Iterator<Item = BbnfView<'a, 'p>> {
+    let kept: Vec<BbnfView<'a, 'p>> = node
+        .children()
+        .filter_map(|child| {
+            // Drop separator-only / whitespace-only Span children —
+            // the analysis layer is interested in the substantive
+            // operand compounds, not the delimiters.
+            if !child.is_compound() {
+                let text = child.span_text().unwrap_or("").trim();
+                if text.is_empty() || text == "|" || text == "," {
+                    return None;
+                }
+                return Some(child);
+            }
+            Some(child)
+        })
+        .collect();
+    kept.into_iter()
 }

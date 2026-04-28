@@ -19,6 +19,7 @@
 
 pub mod builder;
 pub mod error;
+pub mod google_sheets;
 pub mod handle;
 pub mod json;
 pub mod parsed;
@@ -26,6 +27,10 @@ pub mod path;
 
 pub use builder::StructBuilder;
 pub use error::ParseErr;
+pub use google_sheets::{
+    SheetsArena, SheetsCompound, SheetsCompoundId, SheetsCompoundKind, SheetsCompoundView,
+    SheetsDocument, SheetsKind, SheetsPathQuery, SheetsStructBuilder, SheetsValue, SheetsView,
+};
 pub use handle::{CompoundHandle, StringHandle};
 pub use json::{
     JsonArena, JsonArray, JsonArrayId, JsonDocument, JsonKind, JsonNumber, JsonObject,

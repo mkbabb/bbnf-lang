@@ -223,6 +223,34 @@ fn write_audit_coverage_artefact(ir: &GrammarIR) {
         other => GrammarAuditTag::Custom(other),
     };
     let coverage = audit_payload_coverage(ir, tag.clone(), &&ir.struct_registry);
+
+    // AZ-I.W2-act.close A.fix — wire-or-delete decay item. The
+    // audit pass becomes load-bearing as a development invariant:
+    // every `Missing` marker is the red signal that a registered
+    // `StructLayout` exists but does not cover the typed `->` site
+    // its enclosing rule projects. Gated behind `cfg(debug_assertions)`
+    // so release builds skip the assertion (the artefact write
+    // continues so downstream tooling can still consume the JSON).
+    #[cfg(debug_assertions)]
+    {
+        if !coverage.is_clean() {
+            panic!(
+                "audit_payload_coverage: grammar {:?} reports {} `Missing` typed-`->` marker(s):\n  {}",
+                tag.key(),
+                coverage.missing_markers,
+                coverage
+                    .missing
+                    .iter()
+                    .map(|m| format!(
+                        "rule={} fn_id={} typed_leaf={:?} fn_kind={}",
+                        m.rule_name, m.fn_id, m.typed_leaf, m.fn_kind,
+                    ))
+                    .collect::<Vec<_>>()
+                    .join("\n  "),
+            );
+        }
+    }
+
     let mut report = bbnf_ir::passes::AuditCoverageReport::new();
     report.push(coverage);
 

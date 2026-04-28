@@ -48,7 +48,7 @@ quote = "1"
 regex = "1"
 tempfile = "3"
 prettyplease = "0.2"
-json-prototype = { path = "../json-prototype" }
+json-prototype = { path = "benches/json-prototype" }
 pprint = "0.3"
 parse_that = "0.4"
 divan = "0.1"

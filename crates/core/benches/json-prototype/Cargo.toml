@@ -9,8 +9,11 @@ crate-type = ["lib"]
 
 [dependencies]
 # AW-V.W2 substrate dependencies per B1 §1.
-tape = { path = "../tape" }
-simd-scan = { path = "../simd-scan" }
+# Paths relative to this manifest at
+# `crates/core/benches/json-prototype/Cargo.toml`. The substrate crates
+# live two levels up at `crates/<name>`, hence `../../../<name>`.
+tape = { path = "../../../tape" }
+simd-scan = { path = "../../../simd-scan" }
 # Inline Eisel-Lemire via `parse_that::parsers::eisel_lemire::compute_f64`.
 # The function is `#[inline]`; workspace LTO + `codegen-units = 1` resolve
 # it into the prototype's `parse_number` body.

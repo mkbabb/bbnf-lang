@@ -1,5 +1,13 @@
 # Tranche BB — E-graph Rewrite Rule Inference
 
+> **Refined 2026-04-28** — per `docs/tranches/AZ-I/audit/W2-CLOSE-AUDIT.md`
+> §2 + Audit-5 Proposal E, BB splits into two parallel-friendly halves:
+> **BB.scaffold** (rule storage + e-graph→VM-residue oracle skeleton +
+> cost-model interface + per-grammar inference loop) opens in parallel
+> with AZ-II.cutover (substrate-independent on `IrNode`); **BB.close**
+> follows AZ-II + BA, folding the scaffold and landing rule discovery +
+> ranking + emission + competitor delta refresh.
+
 BB closes the loop on `feedback_pluggable-components`,
 `feedback_csp-always-optimize`, and `feedback_general-infra-crates`
 by letting the e-graph *discover* grammar-level rewrite rules rather

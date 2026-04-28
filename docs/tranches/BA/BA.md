@@ -1,5 +1,13 @@
 # Tranche BA — Lazy Typed Pointer-Path Queries over Struct Trees
 
+> **Refined 2026-04-28** — per `docs/tranches/AZ-I/audit/W2-CLOSE-AUDIT.md`
+> §2 + Audit-5 Proposal D, BA collapses to one wave: Path IR + type
+> checker + `path!` macro + zero-allocation traversal + host bindings
+> (Rust + TS + Python) under one isomorphic-API close. The
+> parent-pointer-vs-root-traversal micro-bench folds into the opening
+> preflight (15-min preface), retiring the separate BA.W-1 / BA.W0
+> wave letters.
+
 BA opens on AZ-II's settled substrate. Where AZ-II dissolved the tape in
 favor of direct-to-struct materialization — every `->` producing a
 typed node in a grammar-derived struct tree via `project_types` and

@@ -31,7 +31,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::dispatcher::{shape_fn_ident, visitor_shape_fn_ident};
-use super::super::strategy::EmitStrategy;
+use bbnf_ir::registry::EmitStrategy;
 
 /// Emit `pub fn parse_string_<grammar>_<rule>(input, p, state, builder)
 /// -> Result<TapeOffset, DtaError>`.
@@ -127,9 +127,9 @@ pub fn emit_parse_string(
                 }
             }
         },
-        EmitStrategy::StructDirect { builder_path, .. } => {
-            let builder_ty: syn::Path = syn::parse_str(builder_path).expect(
-                "EmitStrategy::StructDirect.builder_path must parse as a Rust path",
+        EmitStrategy::StructDirect { rust, .. } => {
+            let builder_ty: syn::Path = syn::parse_str(rust.builder_path).expect(
+                "EmitStrategy::StructDirect.rust.builder_path must parse as a Rust path",
             );
             quote! {
                 /// AZ-I.W2.RC — per-grammar String-shape parse function

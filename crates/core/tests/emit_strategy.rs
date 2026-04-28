@@ -27,7 +27,12 @@
 //! new struct-direct grammar (Sheets W2.B, CSS L4 W3) extends the
 //! resolver with a new arm and lands a sibling test here.
 
-use bbnf::backend::rust::emitter::EmitStrategy;
+// AZ-I.W2-act.A — `EmitStrategy` lives in `bbnf_ir::registry::strategy`
+// per `audit/AUDIT-6-ARCHITECTURE.md` §4 + §8.1. The Rust emitter
+// re-exports the IR-level enum so existing
+// `bbnf::backend::rust::emitter::EmitStrategy` paths continue to
+// resolve, but the canonical home is the IR registry.
+use bbnf_ir::registry::EmitStrategy;
 use bbnf_ir::registry::{LayoutKind, StructLayout, StructRegistry};
 use bbnf_ir::TypeDesc;
 

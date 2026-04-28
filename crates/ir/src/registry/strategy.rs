@@ -1,0 +1,190 @@
+//! AZ-I.W2-act.A — `EmitStrategy` — IR-level codegen-time substrate
+//! selector.
+//!
+//! Per `audit/AUDIT-6-ARCHITECTURE.md` §4 + §8.1, the substrate-
+//! selection decision is **backend-shared, not Rust-specific**. The
+//! pre-W2-act home at `crates/core/src/backend/rust/emitter/strategy.rs`
+//! coupled the selector to the Rust backend and would have forced
+//! per-backend duplicates when TS / WASM host bindings activate the
+//! same struct-direct grammar at BA. Hoisting the enum + resolver to
+//! `bbnf_ir::registry::strategy` makes the decision native at the IR
+//! layer; each backend reads the resolved [`EmitStrategy`] off the
+//! prepared grammar and consults its own [`SubstrateBinding`] field
+//! ([`SubstrateBinding::rust`] today; `ts` / `wasm` populated at
+//! BA-host-bindings time).
+//!
+//! The Rust emitter writes one of two disjoint parse-fn bodies per
+//! grammar:
+//!
+//! - [`EmitStrategy::TapeDirect`] — the legacy fused `Tape<()>` path.
+//!   The dispatcher writes structural columns + paired value frames
+//!   into a single `Tape<R>` substrate, finalises with `Tape::finish`,
+//!   and returns `Parsed<Self>`.
+//! - [`EmitStrategy::StructDirect`] — the AZ-I.W2 struct-builder path.
+//!   The dispatcher writes typed compound / leaf records into a
+//!   grammar-specific concrete `StructBuilder` (e.g. `JsonStructBuilder`)
+//!   and returns the matching grammar-specific document type
+//!   (e.g. `JsonDocument`).
+//!
+//! Selection happens at codegen time, not at runtime —
+//! `feedback_no-orthogonal-codepaths` is in force: ONE codegen path
+//! per grammar; the dispatch is data, not branches threaded through
+//! every emitted shape body.
+//!
+//! # Pluggability
+//!
+//! Per `feedback_pluggable-components`, the resolver
+//! [`EmitStrategy::for_grammar`] is data-driven: the variant carries
+//! per-backend [`SubstrateBinding`] records as `&'static str` data;
+//! future grammars (Sheets in W2-act.B2, CSS L4 in W2-act.B3) extend
+//! the resolver match by adding new arms — they do not modify
+//! existing call sites.
+//!
+//! # Wire contract
+//!
+//! `for_grammar(grammar_ident, &registry)` is invoked by:
+//!
+//! - `pipeline::compile::resolve_emit_strategy` — the pipeline-level
+//!   adapter so test harnesses can drive the resolver without reaching
+//!   into the backend module path directly.
+//! - `backend::rust::emitter::shapes::emit_shapes_for_grammar` — to
+//!   thread `&EmitStrategy` to per-shape emitter call sites.
+//! - `backend::rust::emitter::grammar::emit_grammar_impl` — to choose
+//!   the matching `parse_body` arm.
+//!
+//! The resolver is the single decision surface; per-shape emitters
+//! consume the result, they do not re-derive it.
+
+use crate::registry::StructRegistry;
+
+/// Per-backend binding describing where the codegen-time substrate
+/// resolves on a given backend.
+///
+/// Carries fully-qualified type-path strings the emitter splices into
+/// the generated `parse()` body. The Rust backend consumes
+/// [`SubstrateBinding::builder_path`] / [`SubstrateBinding::document_path`]
+/// directly; the TS / WASM hosts (BA wave) read the same field
+/// shapes, mapped per-binding to that backend's native module path.
+///
+/// # Field semantics
+///
+/// - `builder_path` — fully-qualified type path the emitter
+///   instantiates with `<builder_path>::new()` (e.g.
+///   `"::bbnf::runtime::json::JsonStructBuilder"`).
+/// - `document_path` — fully-qualified type path the emitter
+///   returns from `parse()` (e.g.
+///   `"::bbnf::runtime::json::JsonDocument"`). Same lifetime
+///   signature as the builder; per-grammar code threads `'p` for
+///   arena-borrowed slices.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SubstrateBinding {
+    /// Fully-qualified type path of the grammar's `StructBuilder`
+    /// implementor — e.g.
+    /// `"::bbnf::runtime::json::JsonStructBuilder"`.
+    pub builder_path: &'static str,
+    /// Fully-qualified type path of the grammar's `Document` return
+    /// type — e.g. `"::bbnf::runtime::json::JsonDocument"`.
+    pub document_path: &'static str,
+}
+
+/// Per-grammar codegen-time substrate selector.
+///
+/// Variants are data, not behaviour: the [`SubstrateBinding`] payloads
+/// carry fully-qualified type paths the emitter splices into the
+/// generated `parse()` body. Adding a new struct-builder grammar
+/// (Sheets, CSS L4) extends the [`EmitStrategy::for_grammar`]
+/// resolver with a new arm — no existing arm changes.
+///
+/// # Per-backend bindings
+///
+/// The `rust` field is populated for every active struct-direct
+/// grammar; `ts` / `wasm` are reserved for BA host-bindings when
+/// the per-backend native runtime types land. Today's resolver
+/// returns `None` for `ts` / `wasm` on every arm — the BA wave
+/// extends the resolver with backend-specific bindings; backends
+/// failing to find their slot fall back to TapeDirect at codegen
+/// time.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum EmitStrategy {
+    /// Generated `parse()` builds the grammar's typed document via a
+    /// concrete `StructBuilder` impl.
+    StructDirect {
+        /// Rust-backend binding — consumed by
+        /// `crates/core/src/backend/rust/emitter/`.
+        rust: SubstrateBinding,
+        /// TS-backend binding — reserved for BA host bindings; the
+        /// per-grammar resolver arm fills this when the TS runtime
+        /// types land.
+        ts: Option<SubstrateBinding>,
+        /// WASM-backend binding — reserved for BA host bindings;
+        /// same dynamic as `ts`.
+        wasm: Option<SubstrateBinding>,
+    },
+    /// Generated `parse()` writes through the `Tape<()>` substrate
+    /// and returns `Parsed<Self>`. The pre-AZ-I.W2 default for every
+    /// grammar; remains the default for BBNF, BNF, EBNF, CSV, math
+    /// throughout AZ-I.
+    TapeDirect,
+}
+
+impl EmitStrategy {
+    /// Resolve the codegen substrate for `grammar_ident`.
+    ///
+    /// `grammar_ident` is the parser-struct identifier the emitter
+    /// passes to `emit_shapes_for_grammar` — the literal Rust ident
+    /// that names the generated parser (e.g. `"JsonParser"`,
+    /// `"BbnfBootstrap"`, `"CssL4Parser"`). The resolver matches on
+    /// the canonical idents the bootstrap regen produces (see
+    /// `crates/core/src/grammar/generated/`).
+    ///
+    /// `registry` is the rule-id → layout map populated by
+    /// `bbnf_ir::passes::project_types`. The struct-direct path
+    /// requires a populated registry — an empty registry on a
+    /// nominally struct-direct grammar resolves to [`Self::TapeDirect`]
+    /// rather than emitting a structurally-broken parse body.
+    ///
+    /// # AZ-I.W2-act admission rules
+    ///
+    /// - The W2-act.A resolver leaves the catch-all `_ => TapeDirect`
+    ///   intact; W2-act.B1 owns the JSON arm flip + JSON regen.
+    /// - W2-act.B2 (Sheets) and W2-act.B3 (CSS L4) extend the resolver
+    ///   with their own arms in the same wave; each adds a positive
+    ///   arm that the negative default falls through.
+    pub fn for_grammar(grammar_ident: &str, registry: &StructRegistry) -> Self {
+        // The struct-direct path requires the registry to carry at
+        // least one layout — projection ran and produced something.
+        // An empty registry signals project_types saw no Named rules
+        // worth recording; downgrade to tape rather than emit a
+        // body that calls `begin_compound` against a missing layout.
+        let registry_populated = !registry.is_empty();
+
+        match (grammar_ident, registry_populated) {
+            // AZ-I.W2-act.A: the substrate hoist preserves the
+            // pre-hoist all-TapeDirect close from W2.md §Reversal.
+            // W2-act.B1 owns the JsonParser / JsonGrammar arm flip
+            // (per W2-act.md §AZ-I.W2-act.B1); W2-act.B2 and
+            // W2-act.B3 add the GoogleSheetsParser and CssL4Parser
+            // arms respectively. Per `feedback_no-orthogonal-codepaths`
+            // there is no co-emission; per `feedback_no-backward-compat`
+            // there is no Parsed-shim; the resolver's all-TapeDirect
+            // close at W2-act.A is the wave-local revert that
+            // W2.md §Reversal calls for, NOT a fallback path.
+            _ => EmitStrategy::TapeDirect,
+        }
+    }
+
+    /// Returns `true` when the strategy emits the struct-direct
+    /// parse-body path. Used by the dispatcher and `parse_body`
+    /// arms to pick the matching emission template.
+    #[inline]
+    pub fn is_struct_direct(&self) -> bool {
+        matches!(self, EmitStrategy::StructDirect { .. })
+    }
+
+    /// Returns `true` when the strategy emits the legacy tape-direct
+    /// parse-body path.
+    #[inline]
+    pub fn is_tape_direct(&self) -> bool {
+        matches!(self, EmitStrategy::TapeDirect)
+    }
+}

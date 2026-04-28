@@ -31,7 +31,7 @@
 //! Hard gate 1 of W0a.2.g: this test must pass.
 
 use bbnf::backend::rust::emitter::shapes::keyword::emit_parse_keyword;
-use bbnf::backend::rust::emitter::strategy::EmitStrategy;
+use bbnf_ir::registry::EmitStrategy;
 use bbnf::pipeline::{
     compile_paths_request, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
 };

@@ -22,7 +22,10 @@ pub mod types;
 pub mod vm;
 
 pub use cost_config::CostConfig;
-pub use registry::{FieldSource, LayoutKind, StructField, StructLayout, StructRegistry};
+pub use registry::{
+    EmitStrategy, FieldSource, LayoutKind, StructField, StructLayout, StructRegistry,
+    SubstrateBinding,
+};
 
 // Re-export from bbnf-regex (canonical source of CharSet128, regex_first, classify)
 pub use bbnf_regex::sets::charset::CharSet128;

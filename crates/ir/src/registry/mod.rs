@@ -33,5 +33,7 @@
 
 #[allow(clippy::module_inception)]
 mod r#struct;
+pub mod strategy;
 
 pub use r#struct::{FieldSource, LayoutKind, StructField, StructLayout, StructRegistry};
+pub use strategy::{EmitStrategy, SubstrateBinding};

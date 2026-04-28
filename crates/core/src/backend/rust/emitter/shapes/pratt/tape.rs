@@ -10,7 +10,7 @@ use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::super::strategy::EmitStrategy;
+use bbnf_ir::registry::EmitStrategy;
 use super::super::dispatcher::{
     dispatcher_fn_ident, emit_ref_call_tape, shape_fn_ident,
 };

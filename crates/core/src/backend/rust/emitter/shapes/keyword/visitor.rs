@@ -11,7 +11,7 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::super::strategy::EmitStrategy;
+use bbnf_ir::registry::EmitStrategy;
 use super::super::dispatcher::{emit_ref_call_visitor, visitor_shape_fn_ident};
 use super::payload::leading_literal_bytes;
 use super::unwrap_trivia;

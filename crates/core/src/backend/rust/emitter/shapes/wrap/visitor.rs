@@ -9,7 +9,7 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::super::strategy::EmitStrategy;
+use bbnf_ir::registry::EmitStrategy;
 use super::super::dispatcher::{visitor_dispatcher_fn_ident, visitor_shape_fn_ident};
 use super::super::root_rule_name;
 use super::{shape_tag_name, unwrap_outer};

@@ -1075,8 +1075,10 @@ impl RustEmitter {
         // `EmitStrategy::for_grammar` resolves the (grammar_ident,
         // registry-population) pair to one of:
         //
-        // - `EmitStrategy::StructDirect { builder_path, document_path }`
+        // - `EmitStrategy::StructDirect { rust: SubstrateBinding { .. }, .. }`
         //   — JSON's typed struct-builder body (W2 activation target).
+        //   The `rust` SubstrateBinding carries the codegen-time
+        //   builder/document paths spliced into the parse-fn body.
         // - `EmitStrategy::TapeDirect` — the legacy fused `Tape<()>`
         //   body. Default for every grammar pre-W2.
         //
@@ -1085,7 +1087,7 @@ impl RustEmitter {
         // Per `feedback_no-orthogonal-codepaths` the strategy decision
         // happens here, at codegen time — there is no runtime
         // conditional inside the emitted parse fn body.
-        let strategy = super::strategy::EmitStrategy::for_grammar(
+        let strategy = bbnf_ir::registry::EmitStrategy::for_grammar(
             ident.to_string().as_str(),
             &ir.struct_registry,
         );
@@ -1098,16 +1100,15 @@ impl RustEmitter {
                 super::shapes::sanitise_grammar(ident.to_string().as_str()),
             );
             match strategy {
-                super::strategy::EmitStrategy::StructDirect {
-                    builder_path,
-                    document_path,
-                } => emit_parse_body_struct_direct(
-                    dispatcher,
-                    &support_mod_ident,
-                    builder_path,
-                    document_path,
-                ),
-                super::strategy::EmitStrategy::TapeDirect => {
+                bbnf_ir::registry::EmitStrategy::StructDirect { rust, .. } => {
+                    emit_parse_body_struct_direct(
+                        dispatcher,
+                        &support_mod_ident,
+                        rust.builder_path,
+                        rust.document_path,
+                    )
+                }
+                bbnf_ir::registry::EmitStrategy::TapeDirect => {
                     emit_parse_body_tape_direct(dispatcher, &support_mod_ident)
                 }
             }
@@ -1117,13 +1118,13 @@ impl RustEmitter {
         // grammar-specific document type (`JsonDocument<'_>` for JSON).
         // Both paths wrap in `Result<_, ParseErr>`.
         let parse_return_type: TokenStream = match strategy {
-            super::strategy::EmitStrategy::StructDirect { document_path, .. } => {
-                let path: syn::Path = syn::parse_str(document_path).expect(
-                    "EmitStrategy::StructDirect.document_path must parse as a Rust path",
+            bbnf_ir::registry::EmitStrategy::StructDirect { rust, .. } => {
+                let path: syn::Path = syn::parse_str(rust.document_path).expect(
+                    "EmitStrategy::StructDirect.rust.document_path must parse as a Rust path",
                 );
                 quote! { #path<'_> }
             }
-            super::strategy::EmitStrategy::TapeDirect => quote! {
+            bbnf_ir::registry::EmitStrategy::TapeDirect => quote! {
                 crate::runtime::Parsed<'_, Self>
             },
         };
@@ -1359,9 +1360,10 @@ fn emit_parse_body_tape_direct(
 /// document type (e.g. `JsonDocument<'_>`).
 ///
 /// `builder_path` and `document_path` are fully-qualified Rust paths
-/// from [`super::strategy::EmitStrategy::StructDirect`]. The path
-/// strings are spliced via `syn::parse_str` so the emitter rejects
-/// malformed paths at codegen time.
+/// drawn from [`bbnf_ir::registry::EmitStrategy::StructDirect`]'s
+/// [`bbnf_ir::registry::SubstrateBinding`] for the Rust backend.
+/// The path strings are spliced via `syn::parse_str` so the emitter
+/// rejects malformed paths at codegen time.
 ///
 /// Wire contract: the dispatcher emitted under struct-direct mode
 /// (when B/C/D/E activate per-shape struct-builder bodies in stage

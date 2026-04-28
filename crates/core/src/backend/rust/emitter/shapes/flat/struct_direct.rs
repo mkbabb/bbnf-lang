@@ -62,7 +62,7 @@ use quote::{format_ident, quote};
 
 use super::super::dispatcher::{emit_ref_call_tape, shape_fn_ident};
 use super::super::root_rule_name;
-use super::super::super::strategy::EmitStrategy;
+use bbnf_ir::registry::EmitStrategy;
 use super::collect_positions;
 use super::PositionedNode;
 

@@ -160,8 +160,7 @@ fn compile_ast_request_internal<'a>(
 /// AZ-I.W2.RA — Pipeline-level dispatch hook for the codegen
 /// substrate selector.
 ///
-/// Delegates to
-/// [`crate::backend::rust::emitter::EmitStrategy::for_grammar`] —
+/// Delegates to [`bbnf_ir::registry::EmitStrategy::for_grammar`] —
 /// the single source of truth for "which substrate does this grammar
 /// emit?" The pipeline does not branch on the result; the strategy
 /// is consumed at the per-grammar emit site (`emit_grammar_impl`)
@@ -174,18 +173,17 @@ fn compile_ast_request_internal<'a>(
 /// fixtures) call this helper before codegen to record the resolved
 /// substrate alongside the prepared IR.
 ///
-/// Per `feedback_pluggable-components` the resolver lives at the
-/// `EmitStrategy` boundary; this fn is a thin pipeline-side
-/// adapter so test harnesses can drive the resolver without
-/// reaching into the backend module path directly.
+/// AZ-I.W2-act.A — `EmitStrategy` lives in `bbnf-ir` per
+/// `audit/AUDIT-6-ARCHITECTURE.md` §4 + §8.1; the resolver is
+/// backend-shared. Per `feedback_pluggable-components` the resolver
+/// is the boundary; this fn is a thin pipeline-side adapter so test
+/// harnesses can drive the resolver without reaching into the IR
+/// module path directly.
 pub fn resolve_emit_strategy(
     grammar_ident: &str,
     ir: &GrammarIR,
-) -> crate::backend::rust::emitter::EmitStrategy {
-    crate::backend::rust::emitter::EmitStrategy::for_grammar(
-        grammar_ident,
-        &ir.struct_registry,
-    )
+) -> bbnf_ir::registry::EmitStrategy {
+    bbnf_ir::registry::EmitStrategy::for_grammar(grammar_ident, &ir.struct_registry)
 }
 
 fn finalize_compile(

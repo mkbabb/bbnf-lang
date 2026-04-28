@@ -37,7 +37,7 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::strategy::EmitStrategy;
+use bbnf_ir::registry::EmitStrategy;
 use super::dispatcher::shape_fn_ident;
 
 mod branches;

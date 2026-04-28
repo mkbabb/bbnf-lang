@@ -93,7 +93,7 @@ use bbnf_ir::GrammarIR;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::strategy::EmitStrategy;
+use bbnf_ir::registry::EmitStrategy;
 
 pub use dispatcher::{
     dispatcher_fn_ident, has_w4_classified, visitor_dispatcher_fn_ident,
@@ -151,9 +151,13 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
     // `EmitStrategy::for_grammar` resolves the grammar identity +
     // registry-population state to one of:
     //
-    // - `EmitStrategy::StructDirect { builder_path, document_path }`
+    // - `EmitStrategy::StructDirect { rust: SubstrateBinding { .. }, .. }`
     //   for JSON post-W2 activation; the per-shape emitters key on
     //   this variant to emit `builder.*` calls instead of `tape.*`.
+    //   Per `audit/AUDIT-6-ARCHITECTURE.md` §4 + §8.1 the strategy
+    //   lives in `bbnf_ir::registry::strategy`; the Rust emitter
+    //   reads its `rust: SubstrateBinding` field for the codegen-
+    //   time builder/document type paths.
     // - `EmitStrategy::TapeDirect` for every other grammar; the
     //   per-shape emitters emit the legacy `tape.*` calls unchanged.
     //

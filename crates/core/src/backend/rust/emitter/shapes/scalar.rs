@@ -28,7 +28,7 @@ use quote::quote;
 use super::dispatcher::{
     emit_ref_call_tape, emit_ref_call_visitor, shape_fn_ident, visitor_shape_fn_ident,
 };
-use super::super::strategy::EmitStrategy;
+use bbnf_ir::registry::EmitStrategy;
 
 /// Emit `pub fn parse_scalar_<grammar>_<rule>(input, p, state, builder)
 /// -> Result<TapeOffset, DtaError>`.
@@ -102,10 +102,10 @@ pub fn emit_parse_scalar(
                         Ok(off)
                     }
                 },
-                EmitStrategy::StructDirect { builder_path, .. } => {
-                    let builder_ty: syn::Path = syn::parse_str(builder_path)
+                EmitStrategy::StructDirect { rust, .. } => {
+                    let builder_ty: syn::Path = syn::parse_str(rust.builder_path)
                         .expect(
-                            "EmitStrategy::StructDirect.builder_path must parse as a Rust path",
+                            "EmitStrategy::StructDirect.rust.builder_path must parse as a Rust path",
                         );
                     // AZ-I.W2.RC — codegen-time literal dispatch. The
                     // emitter inspects the literal's bytes once and
@@ -194,10 +194,10 @@ pub fn emit_parse_scalar(
                         #call
                     }
                 },
-                EmitStrategy::StructDirect { builder_path, .. } => {
-                    let builder_ty: syn::Path = syn::parse_str(builder_path)
+                EmitStrategy::StructDirect { rust, .. } => {
+                    let builder_ty: syn::Path = syn::parse_str(rust.builder_path)
                         .expect(
-                            "EmitStrategy::StructDirect.builder_path must parse as a Rust path",
+                            "EmitStrategy::StructDirect.rust.builder_path must parse as a Rust path",
                         );
                     quote! {
                         /// AZ-I.W2.RC — per-grammar Scalar-shape parse

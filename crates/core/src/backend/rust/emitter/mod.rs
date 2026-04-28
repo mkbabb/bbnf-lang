@@ -17,10 +17,13 @@ pub mod precedence;
 mod prettify;
 pub(crate) mod profile;
 pub mod shapes;
-pub mod strategy;
 pub mod visitor;
 
-pub use strategy::EmitStrategy;
+// AZ-I.W2-act.A — `EmitStrategy` hoisted to `bbnf_ir::registry::strategy`.
+// Per `audit/AUDIT-6-ARCHITECTURE.md` §4 + §8.1 the substrate-selection
+// decision is backend-shared, not Rust-specific; the IR layer owns it
+// so TS / WASM host bindings (BA wave) consume the same resolver.
+pub use bbnf_ir::registry::{EmitStrategy, SubstrateBinding};
 
 use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, RuleId, TypeDesc};
 use proc_macro2::TokenStream;

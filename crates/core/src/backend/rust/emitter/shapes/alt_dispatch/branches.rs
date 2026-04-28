@@ -13,7 +13,7 @@ use super::payload::{
 };
 
 /// AZ-I.W2.RB — emit the dispatch body for an AltDispatch rule under
-/// [`super::super::super::strategy::EmitStrategy::StructDirect`].
+/// [`bbnf_ir::registry::EmitStrategy::StructDirect`].
 ///
 /// Each branch attempt routes through the per-Ref struct-direct shape
 /// fn (or — for non-Ref leaf branches — emits a typed `builder.push_*`

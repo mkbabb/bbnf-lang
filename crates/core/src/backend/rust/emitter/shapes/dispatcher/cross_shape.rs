@@ -25,7 +25,7 @@ use super::shape_tag_name;
 use super::symbol_composition::{
     dispatcher_fn_ident, shape_fn_ident, visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
 };
-use crate::backend::rust::emitter::strategy::EmitStrategy;
+use bbnf_ir::registry::EmitStrategy;
 
 /// Build the dispatcher's `builder: &mut <Type>` parameter for the
 /// active emit strategy. TapeDirect grammars carry the legacy
@@ -35,9 +35,13 @@ use crate::backend::rust::emitter::strategy::EmitStrategy;
 fn dispatcher_builder_type(strategy: &EmitStrategy) -> TokenStream {
     match strategy {
         EmitStrategy::TapeDirect => quote! { crate::runtime::tape::Tape<()> },
-        EmitStrategy::StructDirect { builder_path, .. } => {
-            let path: syn::Path = parse_str(builder_path)
-                .unwrap_or_else(|_| panic!("invalid builder_path in EmitStrategy: {}", builder_path));
+        EmitStrategy::StructDirect { rust, .. } => {
+            let path: syn::Path = parse_str(rust.builder_path).unwrap_or_else(|_| {
+                panic!(
+                    "invalid rust.builder_path in EmitStrategy: {}",
+                    rust.builder_path,
+                )
+            });
             // Bind the builder's type parameter to `'p` so the dispatcher's
             // input lifetime threads to per-shape calls (which all expect
             // `&mut <Builder><'p>` matching `input: &'p [u8]`).

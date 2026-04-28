@@ -13,7 +13,7 @@ use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::super::strategy::EmitStrategy;
+use bbnf_ir::registry::EmitStrategy;
 use super::super::dispatcher::{
     emit_ref_call_visitor, visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
 };

@@ -23,7 +23,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use super::dispatcher::{shape_fn_ident, visitor_shape_fn_ident};
-use super::super::strategy::EmitStrategy;
+use bbnf_ir::registry::EmitStrategy;
 
 /// Emit `pub fn parse_number_<grammar>_<rule>(input, p, first_byte,
 /// builder) -> Result<TapeOffset, DtaError>`.
@@ -57,8 +57,8 @@ pub fn emit_parse_number(
             &fn_ident,
             variant_idx,
         ),
-        EmitStrategy::StructDirect { builder_path, .. } => {
-            emit_parse_number_struct_direct(&fn_ident, builder_path)
+        EmitStrategy::StructDirect { rust, .. } => {
+            emit_parse_number_struct_direct(&fn_ident, rust.builder_path)
         }
     }
 }

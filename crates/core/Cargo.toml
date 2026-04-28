@@ -29,18 +29,52 @@ dhat = { version = "0.3", optional = true }
 
 [features]
 dhat-heap = ["dep:dhat"]
-# iai-callgrind CI surface. Linux-only (requires valgrind). The `iai` feature
-# gates the json_callgrind bench's compile; iai-callgrind itself is a
-# Linux-target-only dev-dep (see [target.'cfg(target_os = "linux")'.dev-deps]
-# further down in this file). `.github/workflows/bench-iai.yml` invokes
-# `cargo bench --bench json_callgrind --features iai` on Linux CI only.
+
+# Tranche BB.scaffold.C — bench-matrix tier features.
+#
+# The 5 always-on benches (`json_monolithic`, `css_l4`,
+# `google_sheets_monolithic`, `bbnf_monolithic`, `compile_pipeline`)
+# carry the per-grammar parse+codegen ground truth and compile under
+# `cargo bench --no-run` with NO features. The remainder split into
+# four tiers, each gated by its own feature, so routine `cargo
+# bench-*` paths skip the heavy competitor / stress / VM / callgrind
+# surfaces unless explicitly opted in.
+
+# `competitor` — BBNF-vs-external benches (serde_json, sonic-rs,
+# simd-json, jiter, lightningcss, cssparser, pest, nom, winnow, plus
+# the parse_that internal competitor variant). Gates: `json_competitors`,
+# `css_competitors`, `json_parse_that`, `json_value`.
+competitor = []
+
+# `stress` — large-fixture stress benches that stretch parser
+# robustness on deeply nested / pathological inputs. Gates:
+# `json_stress`, `css_stress`.
+stress = []
+
+# `vm` — VM-target bench surface. The interpreter / DTA walker
+# benches against the AOT path on the same fixtures. Gates:
+# `json_vm`, `css_vm`, `google_sheets_vm`.
+vm = []
+
+# `callgrind` — iai-callgrind CI surface. Linux-only (requires
+# valgrind). Gates: `json_callgrind`. Pulls in the pre-existing
+# `iai` feature alias so a single `--features callgrind` opts in
+# the full bench (the bench source is also gated by
+# `#![cfg(feature = "iai")]` at the file top). iai-callgrind itself
+# is a Linux-target-only dev-dep (see
+# [target.'cfg(target_os = "linux")'.dev-deps] further down in this
+# file); on macOS dev-hosts the dep is absent, so callgrind is a
+# Linux-only opt-in. `.github/workflows/bench-iai.yml` invokes
+# `cargo bench --bench json_callgrind --features callgrind` on
+# Linux CI only.
+callgrind = ["iai"]
 iai = []
-# AZ-I.W2-act.W0 hygiene cut H5: WASM/TS competitor benches (json_ts,
-# json_wasm, css_ts, css_wasm) are gated behind `wasm-bench` so routine
-# nextest discovery + `cargo bench-json` / `cargo bench-css` skip the
-# wasmtime + tree-sitter + WASM payload compile. Activate with
-# `cargo bench --features wasm-bench --bench <name>` for the cross-runtime
-# competitor sweep.
+
+# `wasm-bench` — WASM/TS competitor surface. Gates: `json_ts`,
+# `json_wasm`, `css_ts`, `css_wasm`. Routine nextest discovery +
+# `cargo bench-json` / `cargo bench-css` skip the wasmtime +
+# tree-sitter + WASM payload compile unless this feature is set.
+# Activate with `cargo bench --features wasm-bench --bench <name>`.
 wasm-bench = []
 
 [dev-dependencies]
@@ -81,29 +115,20 @@ wasmtime = "29"
 fast-float2 = "0.2"
 
 
+# ── Bench matrix — Tranche BB.scaffold.C compaction ──────────────────
+#
+# Five always-on benches carry the per-grammar parse+codegen ground
+# truth; the remainder split into four tiers gated by the
+# `competitor`, `stress`, `vm`, `callgrind` features (plus the
+# pre-existing `wasm-bench`). `cargo bench --no-run` with no
+# features compiles only the always-on five; opting into a tier
+# adds its benches without pulling in adjacent tiers.
+
+# ── Always-on (5) ────────────────────────────────────────────────────
+
 [[bench]]
 name = "json_monolithic"
 path = "benches/json/monolithic.rs"
-harness = false
-
-[[bench]]
-name = "json_parse_that"
-path = "benches/json/parse_that.rs"
-harness = false
-
-[[bench]]
-name = "json_vm"
-path = "benches/json/vm.rs"
-harness = false
-
-[[bench]]
-name = "json_competitors"
-path = "benches/json/competitors.rs"
-harness = false
-
-[[bench]]
-name = "json_stress"
-path = "benches/json/stress.rs"
 harness = false
 
 [[bench]]
@@ -112,29 +137,95 @@ path = "benches/css/l4.rs"
 harness = false
 
 [[bench]]
-name = "css_vm"
-path = "benches/css/vm.rs"
-harness = false
-
-[[bench]]
-name = "css_competitors"
-path = "benches/css/competitors.rs"
-harness = false
-
-[[bench]]
-name = "css_stress"
-path = "benches/css/stress.rs"
-harness = false
-
-[[bench]]
 name = "google_sheets_monolithic"
 path = "benches/google_sheets/monolithic.rs"
 harness = false
 
 [[bench]]
+name = "bbnf_monolithic"
+path = "benches/bbnf/monolithic.rs"
+harness = false
+
+[[bench]]
+name = "compile_pipeline"
+path = "benches/compile_pipeline.rs"
+harness = false
+
+# ── Competitor tier (`competitor` feature) ──────────────────────────
+
+[[bench]]
+name = "json_competitors"
+path = "benches/json/competitors.rs"
+harness = false
+required-features = ["competitor"]
+
+[[bench]]
+name = "css_competitors"
+path = "benches/css/competitors.rs"
+harness = false
+required-features = ["competitor"]
+
+[[bench]]
+name = "json_parse_that"
+path = "benches/json/parse_that.rs"
+harness = false
+required-features = ["competitor"]
+
+[[bench]]
+name = "json_value"
+path = "benches/json/value.rs"
+harness = false
+required-features = ["competitor"]
+
+# ── Stress tier (`stress` feature) ──────────────────────────────────
+
+[[bench]]
+name = "json_stress"
+path = "benches/json/stress.rs"
+harness = false
+required-features = ["stress"]
+
+[[bench]]
+name = "css_stress"
+path = "benches/css/stress.rs"
+harness = false
+required-features = ["stress"]
+
+# ── VM tier (`vm` feature) ──────────────────────────────────────────
+
+[[bench]]
+name = "json_vm"
+path = "benches/json/vm.rs"
+harness = false
+required-features = ["vm"]
+
+[[bench]]
+name = "css_vm"
+path = "benches/css/vm.rs"
+harness = false
+required-features = ["vm"]
+
+[[bench]]
 name = "google_sheets_vm"
 path = "benches/google_sheets/vm.rs"
 harness = false
+required-features = ["vm"]
+
+# ── Callgrind tier (`callgrind` feature; pulls `iai`) ──────────────
+#
+# `json_callgrind` requires only `callgrind`; the feature pulls in
+# the pre-existing `iai` alias so the bench source's
+# `#![cfg(feature = "iai")]` inner gate also activates. On non-Linux
+# hosts the iai-callgrind dev-dep is absent and the bench is
+# unbuildable; CI uses Linux exclusively for this tier.
+
+[[bench]]
+name = "json_callgrind"
+path = "benches/json_callgrind.rs"
+harness = false
+required-features = ["callgrind"]
+
+# ── WASM/TS competitor tier (`wasm-bench` feature) ─────────────────
 
 [[bench]]
 name = "json_ts"
@@ -159,27 +250,6 @@ name = "css_wasm"
 path = "benches/css/wasm.rs"
 harness = false
 required-features = ["wasm-bench"]
-
-[[bench]]
-name = "compile_pipeline"
-path = "benches/compile_pipeline.rs"
-harness = false
-
-[[bench]]
-name = "json_callgrind"
-path = "benches/json_callgrind.rs"
-harness = false
-required-features = ["iai"]
-
-[[bench]]
-name = "json_value"
-path = "benches/json/value.rs"
-harness = false
-
-[[bench]]
-name = "bbnf_monolithic"
-path = "benches/bbnf/monolithic.rs"
-harness = false
 
 
 # iai-callgrind is a Linux-only dev-dep (requires valgrind linkage).

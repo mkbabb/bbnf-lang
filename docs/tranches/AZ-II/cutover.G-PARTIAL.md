@@ -303,3 +303,91 @@ deletion) and well-scoped at cutover.H.
 cutover.G does NOT supersede cutover.F-PARTIAL's emitter-side
 substrate-landed status. Both reports stand as concurrent records
 of the cutover trajectory.
+
+## Late-session emitter-fix attempt (uncommitted, archived)
+
+After the documented PARTIAL state, an additional ~90 minutes
+attempted the emitter codegen fix:
+
+1. **Added** `&& !strategy.is_struct_direct()` guard to the
+   transparent-rule skip at
+   `crates/core/src/backend/rust/emitter/shapes/mod.rs:202`.
+   Result: under StructDirect, transparent alias rules
+   (`value_expr`, `rhs`) emit per-shape fns, resolving the 12
+   call-site link errors.
+2. **Re-flipped** the BbnfBootstrap StructDirect resolver-arm in
+   `crates/ir/src/registry/strategy.rs`. The bootstrap_parser
+   bypass (cutover.G commit `cc5b2877`) keeps regen running
+   through the hand-written parser so the cutover.F-fixed
+   emitter produces a clean output.
+3. **Re-ran regen** — produced a 34230-LOC bbnf.rs with all 3
+   wrap fns defined (`grammar_item`, `value_expr`, `rhs`).
+   `cargo check -p bbnf --profile ax-iter` PASSES (only
+   warnings: `comparison is useless due to type limits` for
+   `__iter_count < 0u32` from the cutover.F repeat-emitter,
+   harmless).
+4. **Re-ran BBNF self-parity** — 56/56 PASS under the new
+   regenerated parser (no longer routing through the
+   bootstrap_parser bypass).
+5. **Pre-commit hook (`cargo xtask regen --check`)** ran
+   `cargo xtask regen` on ALL 9 grammars. **JSON regen failed**
+   with `rule string references unknown nonterminal
+   decode_json_string_to_arena`. Root cause: the
+   bootstrap_parser's `value_fn_call` compound surfaces the
+   function name `decode_json_string_to_arena` (which is a
+   value-expression host-fn call, not a nonterminal ref) as a
+   Span leaf inside `value_path → value_ident`. The validator's
+   `collect_refs_from_compound` walks every child including the
+   value-expression subtree.
+
+A partial fix to `crates/core/src/graph/deps.rs::collect_refs_from_compound`
+that skips children whose span starts with `->` / `=>` / `:` did
+NOT resolve the JSON regen failure, because
+`decode_json_string_to_arena` is nested deeper than
+mapped_factor's direct children.
+
+A more comprehensive fix (skip the entire value-expression
+subtree when walking mapped_factor children — recurse only into
+non-value-expression subtrees) is required. The fix is
+~30-50 LOC in `deps.rs` but requires careful identification of
+which BbnfCompoundKind variants are value-expression-rooted (no
+explicit kind for `value_expr` since it's transparent under the
+StructDirect resolution).
+
+The late-session uncommitted state is archived to git stash:
+`git stash list | grep cutover.G` recovers the StructDirect arm
+flip + emitter fix + regen output for cutover.H pickup.
+**Update**: stash was discarded after the JSON regen failure
+surfaced — the StructDirect arm flip + emitter fix can be
+reproduced trivially in cutover.H from this report's
+mechanical descriptions; the regen output is reproducible from
+those changes.
+
+## Phase 1.c update (post-PARTIAL)
+
+The transparent-rule emitter codegen issue documented as the
+Phase 1.c blocker IS NOT the binding issue. With the fix at
+`shapes/mod.rs:202` AND the resolver-arm re-flipped, the
+on-disk bbnf.rs compiles and BBNF self-parity is 56/56. The
+binding issue is the **validator-vs-bootstrap_parser shape
+mismatch** for the value-expression sub-grammar's host-fn
+identifiers.
+
+Cutover.H sub-phase plan revision:
+
+1. **Fix `collect_refs_from_compound`** to skip
+   value-expression subtrees during nonterminal-reference
+   walks (~30 min).
+2. **Restore the cutover.G-late-session uncommitted state**:
+   re-flip the StructDirect arm + add the emitter
+   transparent-rule fix (~10 min — both are documented above).
+3. **Run `cargo xtask regen`** — should now succeed for all 9
+   grammars (~5 min).
+4. **Verify workspace** (`cargo nextest run --workspace
+   --profile ax-iter`) (~30 min).
+5. **Phase A.regen-fleet activation**: re-enable non-BBNF
+   resolver arms (`csv`/`math`/`bnf`/`ebnf`/`css_pretty`) and
+   re-run regen-fleet (~20 min).
+6. **Phase B/C/D/E/F/G** as documented above (~3 hours).
+
+Total cutover.H scope: 4-5 hours.

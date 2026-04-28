@@ -32,7 +32,7 @@
 //! them through eight coarse frame variants whose composition covers
 //! the full alternation.
 
-use bbnf_ir::registry::{LayoutKind, StructLayout};
+use bbnf_ir::registry::StructLayout;
 
 use crate::runtime::builder::StructBuilder;
 use crate::runtime::css_l4::arena::CssArena;

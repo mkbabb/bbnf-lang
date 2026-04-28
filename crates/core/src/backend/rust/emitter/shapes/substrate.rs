@@ -27,9 +27,12 @@
 //! function per binding field; the per-shape emitters consume those
 //! TokenStreams directly with no further branching.
 
-use bbnf_ir::registry::{EmitStrategy, SubstrateBinding};
+use bbnf_ir::registry::EmitStrategy;
 use proc_macro2::TokenStream;
 use quote::quote;
+
+#[cfg(test)]
+use bbnf_ir::registry::SubstrateBinding;
 
 /// Resolve the rust-backend builder path token-stream from an
 /// [`EmitStrategy`]. Returns the JSON builder under `TapeDirect` so

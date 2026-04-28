@@ -232,7 +232,7 @@ enum CssWalkCursor<'a, 'p> {
     /// Declaration — admits Field("property") / Field("value").
     Decl(&'a Declaration<'p>, &'a CssArena<'p>),
     /// Typed value — terminal path target.
-    Value(&'a CssTypedValue<'p>, &'a CssArena<'p>),
+    Value(&'a CssTypedValue<'p>, #[allow(dead_code)] &'a CssArena<'p>),
 }
 
 #[inline]

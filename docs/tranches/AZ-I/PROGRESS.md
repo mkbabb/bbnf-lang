@@ -181,6 +181,84 @@ preserved per `feedback_pluggable-components`.
 
 **W2 dispatch follows.**
 
+## 2026-04-27 — W2 close ceremony (substrate-only; activation reverted per W2.md §Reversal)
+
+W2 closed substrate-only. The wave landed:
+
+- **StructBuilder trait** at `crates/core/src/runtime/builder.rs`.
+- **JSON runtime types** (`JsonValue`, `JsonDocument`, `JsonObject`,
+  `JsonArray`, `JsonPair`, `JsonNumber`, `JsonArena`,
+  `JsonStructBuilder`) at `crates/core/src/runtime/json/`.
+- **`EmitStrategy` enum** + per-grammar resolver at
+  `crates/core/src/backend/rust/emitter/strategy.rs`.
+- **`parse_body` two-path emission** in
+  `crates/core/src/backend/rust/emitter/grammar.rs` keyed on strategy.
+- **Nine per-shape struct-direct emitters** (Object, Array, Number,
+  String, Scalar, Keyword, Wrap, AltDispatch, Flat).
+- **Dispatcher signature threading** in
+  `crates/core/src/backend/rust/emitter/shapes/dispatcher/cross_shape.rs`
+  parameterized by `&EmitStrategy`.
+- **Wire-contract test substrate**: `crates/core/tests/emit_strategy.rs`
+  + `crates/core/tests/struct_direct_snapshots.rs` driver +
+  per-shape `.snap` files.
+- **JSON parity harness scaffold** at
+  `crates/core/tests/json_parity_struct.rs` (sonic-rs / simdjson
+  OnDemand / serde_json comparison stubs against `JsonDocument`).
+
+**Activation reverted.** The `for_grammar` resolver returns
+`TapeDirect` for every grammar including JsonParser / JsonGrammar
+per W2.md §Reversal. Three blockers exceeded W2's wave budget:
+
+1. `parsed.view()` / `parsed.to_value()` callers across 3 existing
+   tests (`json_slab`, `projection_totality`,
+   `typed_accessor_surface`) require a `JsonDocument`-side accessor
+   API that has not been authored yet.
+2. JSON parity harnesses (sonic-rs / simdjson OnDemand /
+   serde_json) still compare `Parsed<JsonGrammar>` outputs and
+   need recoding against `JsonDocument`.
+3. The `cargo bench` gate (twitter ≥ 1967, canada ≥ 1231,
+   citm ≥ 2438) was not run on the struct-only path.
+
+These three carry forward to **W2-act**, the follow-on activation
+wave. W2.B (Sheets) opens after W2-act per the same activation
+gate; W3 (CSS L4) and W4 (FINAL) follow.
+
+**W2 commit ledger** (master HEAD `31269bb6` post-close):
+
+| SHA | Stage | Description |
+|---|---|---|
+| `85cf83e7` | W2.A | StructBuilder trait + JSON value graph |
+| `f8638d58` | W2.A | JSON parity harness scaffold |
+| `8f5e50f4` | W2.plan | Emitter rewire plan (5-agent decomposition) |
+| `1c6f00d0` | W2.RA | EmitStrategy enum + per-grammar resolver |
+| `afcd6c26` | W2.RA | parse_body two-path emission |
+| `f23c20d4` | W2.RA | pipeline `resolve_emit_strategy` hook |
+| `ffb7eeb5` | W2.RA | leaf tests + snapshot driver |
+| `41dd776e` | W2.RB | Object/Array/AltDispatch struct-direct |
+| `24d6d888` | W2.RB | TapeDirect-pinned golden tests |
+| `d78fe10e` | W2.RC | Number/String/Scalar struct-direct |
+| `5f8c1774` | W2.RC | Number/String/Scalar test caller migration |
+| `4ab581ef` | W2.RC | TapeDirect docstring byte-parity |
+| `b9ee8e45` | W2.RD | Keyword struct-direct |
+| `8d6edbf5` | W2.RD | Wrap struct-direct |
+| `24db8de2` | W2.RE | Pratt/Flat/ArgList/Unordered/HRegex strategy gates |
+| `dfde7673` | W2.RF | Flat struct-direct (JSON pair) |
+| `d66e61e7` | W2.RF | Flat snapshot |
+| `31269bb6` | W2.close | Cross-agent integration surgery + activation revert |
+
+**Workspace verification at close**: `cargo nextest run --profile
+ax-iter --workspace` → 1546 / 1546 passed, 27 skipped.
+
+**Hard-gate ledger:**
+
+| # | Gate | Status | Evidence |
+|---|---|---|---|
+| 1 | JSON + Sheets emit struct builders only | DEFERRED-TO-W2-ACT | substrate exists, activation gated |
+| 2 | JSON twitter ≥ 1967, canada ≥ 1231, citm ≥ 2438; Sheets parse_simple ≥ 95 | DEFERRED-TO-W2-ACT | bench gate not yet run |
+| 3 | Parity harnesses green (sonic-rs / simdjson / serde_json / Sheets) | DEFERRED-TO-W2-ACT | scaffolds exist, recoding pending |
+| 4 | No AU-baseline regression on CSS L4 or BBNF | PASS | 1546/1546 workspace nextest green |
+| 5 | `cargo nextest run --workspace --profile ax-iter` ≥ 1480 pass | PASS | 1546 / 1546 |
+
 ## 2026-04-27 — W2 dispatch (re-shaped)
 
 W2.md's original 2-parallel JSON + Sheets shape collides on shared

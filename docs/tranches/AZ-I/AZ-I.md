@@ -154,8 +154,10 @@ same-commit samply capture.
 |---|---|---|---|
 | **W0** | Research + classifier-unification study + audit baseline | AZ-I open | closed (2026-04-27) |
 | **W1** | `StructRegistry` + `project_types` closure — JSON + CSS L4 + Sheets | W0 | closed (2026-04-27) |
-| **W2** | Direct-to-struct emission — JSON + Sheets (scalar payloads) | W1 | in progress |
-| **W3** | Direct-to-struct emission — CSS L4 aggregate / Named (lightningcss parity) | W2 | planned |
+| **W2** | Direct-to-struct emission — JSON + Sheets (scalar payloads) | W1 | closed substrate-only (2026-04-27); activation gated to **W2-act** follow-on |
+| **W2-act** | JSON struct-direct activation — view/value API on `JsonDocument`, parity harness recoding, bench gate (twitter ≥ 1967) | W2 substrate | planned |
+| **W2.B** | Sheets struct-direct (mirrors W2 substrate post-W2-act) | W2-act | planned |
+| **W3** | Direct-to-struct emission — CSS L4 aggregate / Named (lightningcss parity) | W2.B | planned |
 | **W4** | FINAL — three-grammar slice at AU parity + AZ-II handoff | W3 | planned |
 
 ### W0 — Research and measurement surface

@@ -123,8 +123,16 @@ fn pascal_case(input: &str) -> String {
 /// Top-level entry. `grammar = None` regenerates every grammar in the
 /// workspace manifest; `Some(ident)` regenerates that grammar only.
 /// `check = true` regenerates to a tempdir + diffs against the
-/// checked-in tree, exiting non-zero on drift.
-pub fn run(grammar: Option<&str>, check: bool) -> Result<()> {
+/// checked-in tree, exiting non-zero on drift. `output_override`
+/// redirects every per-grammar emission to `<output_override>/<ident>.rs`
+/// — used by the AZ-II.cutover.B reproducibility CI gate to capture
+/// successive regen outputs into a tempdir without disturbing the
+/// checked-in `crates/core/src/grammar/generated/` tree.
+pub fn run(
+    grammar: Option<&str>,
+    check: bool,
+    output_override: Option<&Path>,
+) -> Result<()> {
     let (workspace_root, grammars) = load_manifest()?;
 
     if check {
@@ -134,7 +142,17 @@ pub fn run(grammar: Option<&str>, check: bool) -> Result<()> {
             .iter()
             .find(|g| g.ident == ident)
             .ok_or_else(|| anyhow!("grammar `{ident}` not found in [workspace.metadata.bbnf.grammars]"))?;
-        regen_grammar(&workspace_root, entry, &output_path(&workspace_root, &entry.ident))?;
+        let target = match output_override {
+            Some(dir) => dir.join(format!("{}.rs", entry.ident)),
+            None => output_path(&workspace_root, &entry.ident),
+        };
+        regen_grammar(&workspace_root, entry, &target)?;
+        Ok(())
+    } else if let Some(dir) = output_override {
+        for entry in &grammars {
+            let target = dir.join(format!("{}.rs", entry.ident));
+            regen_grammar(&workspace_root, entry, &target)?;
+        }
         Ok(())
     } else {
         regen_all(&workspace_root, &grammars)

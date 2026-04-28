@@ -8,6 +8,8 @@
 //! AUDIT-D-architectural-transposition.md` for the architectural
 //! rationale (T3: xtask + checked-in generation).
 
+use std::path::PathBuf;
+
 use clap::{Parser, Subcommand};
 
 mod regen;
@@ -32,12 +34,22 @@ enum Cmd {
         /// exit non-zero on drift. Used by CI + pre-commit hook.
         #[arg(long)]
         check: bool,
+        /// Override the output directory. When set, generated files
+        /// land at `<output>/<ident>.rs` instead of the default
+        /// `crates/core/src/grammar/generated/<ident>.rs`. Used by the
+        /// `bbnf_bootstrap_reproducibility` CI gate to capture two
+        /// successive regen outputs into a tempdir without polluting
+        /// the workspace.
+        #[arg(long)]
+        output: Option<PathBuf>,
     },
 }
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     match cli.cmd {
-        Cmd::Regen { grammar, check } => regen::run(grammar.as_deref(), check),
+        Cmd::Regen { grammar, check, output } => {
+            regen::run(grammar.as_deref(), check, output.as_deref())
+        }
     }
 }

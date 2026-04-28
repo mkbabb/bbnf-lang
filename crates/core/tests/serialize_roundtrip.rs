@@ -234,17 +234,21 @@ fn math_num() {
 // `input` over the document's covering range and asserts idempotence
 // under reparse.
 //
-// Currently `#[ignore]`d: cutover.E discovered the BBNF struct-direct
-// parse path is broken on real BBNF source — `bbnf_self_parity`
-// reports 28 / 56 fixtures failing the `BbnfBootstrap::parse` entry.
-// Re-activating this test requires the parse-path repair landing at
-// cutover.F (re-author of value-expr emitter arms / inner shape
-// dispatchers; see `cutover.E-PARTIAL.md` §Discovery 1).
+// AZ-II.cutover.H Phase 5 — DEFERRED. The bootstrap_parser admits
+// real BBNF source via `bbnf::grammar::bootstrap_parser::parse`, but
+// the serialize_compact path requires a non-naive walker that emits
+// terminator literals (`;`) which are non-Span in the BBNF grammar.
+// The naive `span_range()`-based serializer drops trailing `;` and
+// re-parsing fails. Authoring `BbnfDocument::serialize_compact` /
+// `BbnfBootstrap::serialize_compact_doc` is a deferred follow-up
+// gated on a typed-walker over BbnfDocument that materialises every
+// non-Span literal — out of scope for cutover.H.
 
 use bbnf::runtime::BbnfDocument;
 
 fn bbnf_emit(input: &str) -> String {
-    let doc = BbnfBootstrap::parse(input).expect("BBNF grammar parse failed");
+    let doc = bbnf::grammar::bootstrap_parser::parse(input)
+        .expect("BBNF grammar parse failed");
     bbnf_serialize_doc(&doc)
 }
 
@@ -252,9 +256,9 @@ fn bbnf_serialize_doc<'p>(doc: &BbnfDocument<'p>) -> String {
     // The grammar emits one borrowed Span per source-bearing leaf;
     // `BbnfView::span_range()` walks every Span descendant and returns
     // the union of their byte offsets against the document's input
-    // slice. The covered slice is the canonical source the parser
-    // admitted — slicing input over that range yields a byte-equal
-    // re-emission for every well-formed input.
+    // slice. Note the covered slice excludes literal terminators
+    // (`;` / `.`) which are not Span leaves — re-parsing the slice
+    // therefore fails on grammars whose terminators are mandatory.
     let view = doc.view();
     match view.span_range() {
         Some((lo, hi)) => doc.input[lo..hi].to_string(),
@@ -263,9 +267,9 @@ fn bbnf_serialize_doc<'p>(doc: &BbnfDocument<'p>) -> String {
 }
 
 #[test]
-#[ignore = "BBNF struct-direct parse broken on real source; cutover.F repair"]
+#[ignore = "BBNF serialize_compact_doc deferred to post-cutover.H — see Phase 5 PARTIAL"]
 fn bbnf_rule() {
-    let input = "x = /[a-z]+/ ;\ny = \"hello\" ;\n";
+    let input = "x = /[a-z]+/ ;\ny = \"hello\" ;";
     let e = bbnf_emit(input);
     assert!(!e.is_empty(), "BBNF serialize empty");
     // Idempotence: parse → serialize → reparse → serialize → equality.

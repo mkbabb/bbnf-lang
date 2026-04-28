@@ -480,38 +480,46 @@ fn every_accessor_class_has_nonzero_coverage() {
 
 #[test]
 fn json_compile_time_accessors() {
-    // JSON `bool` is an Alt with payload-eligible branches → the
-    // emitter produces `.as_true()` / `.as_false()` (or variant-named
-    // equivalents) + `.chosen()` + `.value() -> BoolValue`. We can't
-    // reference the generated per-rule View by name at compile time
-    // without knowing it's exactly `boolView`, so instead we walk
-    // through the NodeView's universal accessors — `.rule_kind()`
-    // dispatch gives us runtime-typed access to any rule without
-    // hard-coding view type names in the test file. The generic
-    // NodeView carries the same accessor shape as each per-rule view
-    // and is always emitted.
-    let parsed = JsonParser::parse("true").expect("JSON bool parse");
-    let view = parsed.view();
+    // AZ-I.W2-act.B1 — JSON crosses to the struct-direct path; the
+    // grammar-emitted `JsonParser::parse` returns `JsonDocument<'_>`
+    // and `doc.view()` yields the struct-tree `JsonView` (not the
+    // tape-cursor `View`). The cursor-backed universal accessors are
+    // replaced by the struct-tree surface: `kind()` / `is_*()` /
+    // arena handle resolution / root borrow.
+    let doc = JsonParser::parse("true").expect("JSON bool parse");
+    let view = doc.view();
 
-    // Universal accessors (shared by every emitted view type):
-    let _ = view.cursor();
-    let _ = view.input();
-    let _ = view.kind();
-    let _ = view.span();
-    let _ = view.span_text();
-    let _ = view.variant_idx();
-    let _ = view.rule_kind();
-    let _: Vec<_> = view.children().collect();
-    let _ = view.child(0);
-    let _ = view.is_recovered();
-    let _ = view.identifier_span();
+    // Struct-tree accessors (always emitted on JsonView):
+    let _: bbnf::runtime::JsonKind = view.kind();
+    let _: bool = view.is_object();
+    let _: bool = view.is_array();
+    let _: bool = view.is_string();
+    let _: bool = view.is_number();
+    let _: bool = view.is_bool();
+    let _: bool = view.is_null();
+    let _: &bbnf::runtime::JsonValue<'_> = view.root();
+    let _: &bbnf::runtime::JsonArena<'_> = view.arena();
 
-    // Compile-time proof: the generated NodeView + RuleKind enum
-    // exist and carry the expected shape.
-    fn _require_view_types<'p>(
-        _v: <JsonParser as bbnf::runtime::Root>::View<'p>,
-        _nv: JsonParserNodeView<'p>,
-        _kind: JsonParserRuleKind,
+    // The struct-tree shape is the post-flip evidence: `"true"` parses
+    // to `JsonValue::Bool(true)`; the discriminator must agree.
+    assert!(
+        view.is_bool(),
+        "JsonParser::parse(\"true\") must yield a Bool root",
+    );
+    assert_eq!(
+        view.kind(),
+        bbnf::runtime::JsonKind::Bool,
+        "JsonView::kind() must dispatch Bool for a bool root",
+    );
+
+    // Compile-time proof: the JsonDocument / JsonView types exist and
+    // carry the expected shape. Per the W2-act.B1 substrate the
+    // pre-W2-act `View` GAT is replaced for JSON; the struct-tree
+    // types are referenced here so a future regression surfaces.
+    fn _require_struct_types<'p>(
+        _doc: bbnf::runtime::JsonDocument<'p>,
+        _view: bbnf::runtime::JsonView<'_, 'p>,
+        _kind: bbnf::runtime::JsonKind,
     ) { }
 }
 
@@ -634,26 +642,26 @@ fn bnf_compile_time_accessors() {
 
 #[test]
 fn rule_kind_enum_dispatch_nonempty() {
-    // JSON is the smallest grammar with all the dispatch bits;
-    // `{"a":1}` traverses object, pair, string, number, reaching
-    // every emitter branch at runtime.
-    let parsed = JsonParser::parse("{\"a\":1}").expect("JSON parse");
-    let view = parsed.view();
-    // The root's rule_kind must resolve to a non-Unknown variant.
-    // If the dispatch table is empty (regression), the match falls
-    // through to Unknown and this assertion fires.
-    let kind_dbg = format!("{:?}", view.rule_kind());
-    assert!(
-        !kind_dbg.is_empty(),
-        "JSON root view rule_kind() must dispatch to a known variant"
+    // AZ-I.W2-act.B1 — JSON's struct-direct path replaces the
+    // cursor-backed rule_kind / children dispatch with the typed
+    // `JsonValue` shape. `{"a":1}` parses to a JsonValue::Object root
+    // whose pair slice resolves through the document arena; the
+    // post-flip evidence is the typed shape (object handle resolves
+    // to one pair) plus the kind discriminator.
+    let doc = JsonParser::parse("{\"a\":1}").expect("JSON parse");
+    let view = doc.view();
+    assert_eq!(
+        view.kind(),
+        bbnf::runtime::JsonKind::Object,
+        "JSON {{\"a\":1}} root must resolve as JsonKind::Object",
     );
-    // The NodeView children walk must produce >0 sub-nodes for a
-    // non-trivial input.
-    let child_count = view.children().count();
-    assert!(
-        child_count > 0,
-        "JSON {{\"a\":1}} must expose sub-cursors via .children()"
-    );
+    if let bbnf::runtime::JsonValue::Object(id) = doc.root {
+        let pairs = doc.object(id);
+        assert_eq!(pairs.len(), 1, "{{\"a\":1}} must resolve to one pair");
+        assert_eq!(pairs[0].key, "a", "first pair key must be 'a'");
+    } else {
+        panic!("JSON {{\"a\":1}} root view kind reported Object but root is not Object");
+    }
 }
 
 // ───────────────────────────────────────────────────────────────────

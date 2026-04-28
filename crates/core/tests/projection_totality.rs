@@ -351,26 +351,49 @@ fn assert_runtime_materializer_fires(label: &str, rendered: &str, admissions: us
 /// grammar's fused-pipeline projection routes through the
 /// admission-specific materializer at runtime. The evidence is
 /// two-fold: (a) `to_value()` completes without panicking under the
-/// dispatcher's `unwrap_or_else(panic)` guard, and (b) the rendered
-/// `<Grammar>Value` tree contains a projection-struct-typed variant
-/// (identified by the `"Projection"` suffix marker in the debug
-/// rendering).
+/// dispatcher's `unwrap_or_else(panic)` guard, and (b) for the
+/// tape-direct grammars, the rendered `<Grammar>Value` tree contains
+/// a projection-struct-typed variant (identified by the `"Projection"`
+/// suffix marker in the debug rendering).
+///
+/// AZ-I.W2-act.B1 — JSON crosses to the struct-direct path. Its
+/// `JsonParser::parse` returns `JsonDocument<'_>`; `doc.to_value()`
+/// returns `&JsonValue<'p>` (the typed tree itself, not a fused
+/// `<Grammar>Value` enum). The `"Projection"` suffix marker no longer
+/// applies — the JSON block now asserts the typed shape directly: the
+/// returned `JsonValue` matches the input ("\"hello\"" parses to
+/// `JsonValue::String("hello")`). The structural slice-length
+/// assertions above still cover the projection-admission count for
+/// JSON; runtime evidence for the tape-direct grammars (CSS L4,
+/// Sheets, BBNF) remains the rendered-debug "Projection" probe.
 ///
 /// Per-grammar smoke fixtures are minimal inputs that exercise at
 /// least one admitted rule. The assertion harness
 /// (`assert_runtime_materializer_fires`) is grammar-agnostic.
 #[test]
 fn projection_totality_runtime_call_count() {
-    // JSON — `"hello"` exercises the `string` admission
-    // (resolver-backed `Named("String")`).
+    // JSON — struct-direct path. `"hello"` parses to a JsonValue::String
+    // root borrowed from the input; the typed shape IS the runtime
+    // evidence that the struct-builder body fired (an unmaterialised
+    // root would panic inside `JsonParser::parse`).
     {
-        let parsed = JsonParser::parse("\"hello\"")
+        let doc = JsonParser::parse("\"hello\"")
             .unwrap_or_else(|e| panic!("JsonParser: parse failed: {e:?}"));
-        let value = parsed.to_value();
-        assert_runtime_materializer_fires(
-            "JsonParser",
-            &format!("{value:?}"),
-            JsonParser::PROJECTION_DIRECT_TO_STRUCT.len(),
+        let value = doc.to_value();
+        match value {
+            bbnf::runtime::JsonValue::String(s) => assert_eq!(
+                *s, "hello",
+                "JsonParser: struct-direct String value must round-trip the input slice",
+            ),
+            other => panic!(
+                "JsonParser: \"\\\"hello\\\"\" must parse to JsonValue::String; got {other:?}",
+            ),
+        }
+        // The structural admission slice still records the rule's
+        // admission; the post-flip evidence is the typed shape above.
+        assert!(
+            JsonParser::PROJECTION_DIRECT_TO_STRUCT.len() > 0,
+            "JsonParser: admission count must be > 0 for runtime-call-count evidence",
         );
     }
 

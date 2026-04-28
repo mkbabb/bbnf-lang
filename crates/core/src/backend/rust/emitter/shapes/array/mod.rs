@@ -141,17 +141,50 @@ pub fn emit_parse_array(
 
 /// AZ-I.W2.RB — struct-direct body for the Array shape.
 ///
-/// Emits a `parse_array_<grammar>_<rule>` whose body drives
-/// `JsonStructBuilder` directly: `begin_compound(&__layout)` opens the
-/// array frame, the parse loop dispatches each element via the per-Ref
-/// shape fn, and `end_compound(handle)` closes it. Structural
-/// `[` / `,` / `]` punctuation is consumed but not recorded — the
-/// builder's frame stack is the source of truth for shape.
+/// Emits a `parse_array_<grammar>_<rule>` whose body drives the
+/// per-grammar `StructBuilder` directly. Structurally mirrors the
+/// TapeDirect dispatch: dispatch on the rule body shape (Wrap-vs-
+/// Repeat) and emit the matching per-shape body. The TapeDirect
+/// path branches at [`emit_parse_array`]; the StructDirect path
+/// branches here so emission tracks the body shape rather than
+/// claiming a single hard-coded shape.
+///
+/// AZ-II.cutover.F — pre-fix the body unconditionally emitted the
+/// Shape-1 wrapped form (hard-coded `[`/`,`/`]`), which rejected
+/// every Shape-2 entry-rule list (BBNF `grammar`, future CSS-like
+/// list rules). Post-fix the dispatch is the same as the
+/// TapeDirect path: `unwrap_wrap` → Shape 1 (wrapped homogeneous
+/// repeat); else → Shape 2 (entry-rule list).
 ///
 /// The `__layout` lookup is asserted (not fall-back). Per the W2-EMITTER-
 /// REWIRE plan §1, `for_grammar` GUARANTEES the layout exists for every
 /// rule when the strategy is `StructDirect`.
 fn emit_parse_array_struct_direct(
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+    strategy: &EmitStrategy,
+) -> TokenStream {
+    let body = unwrap_map_ow(&rule.body);
+    if let Some((open, _middle, close)) = unwrap_wrap(body) {
+        if single_byte_literal(open, ir).is_some()
+            && single_byte_literal(close, ir).is_some()
+        {
+            return emit_parse_array_struct_direct_wrapped(
+                grammar_suffix,
+                rule,
+                ir,
+                strategy,
+            );
+        }
+    }
+    emit_parse_array_struct_direct_list(grammar_suffix, rule, ir, strategy)
+}
+
+/// Shape-1 struct-direct body — wrapped homogeneous repeat
+/// (canonical JSON `array`). Hard-codes the open/comma/close
+/// punctuation derived from `unwrap_wrap`.
+fn emit_parse_array_struct_direct_wrapped(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
@@ -187,7 +220,7 @@ fn emit_parse_array_struct_direct(
 
     quote! {
         /// AZ-I.W2.RB — per-grammar Array-shape parse function,
-        /// **struct-direct body**. Targets [`JsonStructBuilder`].
+        /// **struct-direct body** (Shape 1 — wrapped homogeneous repeat).
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #fn_ident<'p>(
@@ -254,6 +287,187 @@ fn emit_parse_array_struct_direct(
                     }),
                 }
             }
+        }
+    }
+}
+
+/// AZ-II.cutover.F — Shape-2 struct-direct body — entry-rule list
+/// with NO bracket wrap. Mirrors the TapeDirect Shape-2 dispatch
+/// at [`list::emit_parse_array_list`]: open the rule's compound
+/// frame against the StructBuilder, iterate the inner Repeat with
+/// per-iter savepoint + rollback, dispatch each element via the
+/// per-Ref shape fn, close the compound frame on EOF / first-set
+/// rejection.
+///
+/// The body uses NO hard-coded delimiter literals: termination is
+/// driven by the dispatcher's first-byte rejection (which surfaces
+/// as `Err`) and the savepoint protocol on `*p`.
+///
+/// Body-shape recognition: `unwrap_map_ow` is applied first to
+/// peel transparent wrappers, then a structural match selects
+/// between direct `Repeat` (BBNF `grammar = (item ?w)*`) and
+/// outer-OW-wrapped `Repeat` (CSS `stylesheet = ruleList ?w`);
+/// `Map { inner, .. }` is also peeled. Anything else returns an
+/// empty TokenStream — the rule's classification was inconsistent
+/// with the body shape, and per `feedback_no-silent-epsilon` the
+/// downstream consumer will surface the missing fn at link time.
+fn emit_parse_array_struct_direct_list(
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+    strategy: &EmitStrategy,
+) -> TokenStream {
+    use bbnf_ir::IrNode;
+
+    let rule_name = ir.get_string(rule.name);
+    let fn_ident = shape_fn_ident("array", grammar_suffix, rule_name);
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+    let rule_id_lit = rule.id;
+    let rule_name_lit = rule_name.to_string();
+    let p_lt = format_ident!("p");
+    let builder_ty = super::substrate::builder_ty_with_lifetime(strategy, &p_lt);
+
+    let dispatcher_ident = match root_rule_name(ir) {
+        Some(root) => {
+            let root_disp = dispatcher_fn_ident(grammar_suffix, &root);
+            format_ident!("{}__value", root_disp)
+        }
+        None => return quote! {},
+    };
+
+    // Pattern-match the body. Mirrors `list::emit_parse_array_list`.
+    let (has_outer_ow, repeat_inner) = match &rule.body {
+        IrNode::OptionalWhitespace(inner) => match inner.as_ref() {
+            IrNode::Repeat { inner: r_inner, .. } => (true, r_inner.as_ref()),
+            _ => return quote! {},
+        },
+        IrNode::Repeat { inner, .. } => (false, inner.as_ref()),
+        IrNode::Map { inner, .. } => match inner.as_ref() {
+            IrNode::OptionalWhitespace(ow_inner) => match ow_inner.as_ref() {
+                IrNode::Repeat { inner: r_inner, .. } => (true, r_inner.as_ref()),
+                _ => return quote! {},
+            },
+            IrNode::Repeat { inner: r_inner, .. } => (false, r_inner.as_ref()),
+            _ => return quote! {},
+        },
+        _ => return quote! {},
+    };
+
+    // Per-Ref direct value call when classified. The struct-direct
+    // path uses the same dispatcher contract as TapeDirect — every
+    // per-shape struct-direct fn carries the
+    // `(input, p, state, builder)` signature.
+    let value_ref = element::extract_array_value_ref(&rule.body, ir);
+    let value_call = value_ref
+        .and_then(|rid| emit_ref_call_tape(grammar_suffix, rid, ir))
+        .map(|call| quote! { (#call)?; })
+        .unwrap_or_else(|| {
+            quote! {
+                #dispatcher_ident(input, p, state, builder)?;
+            }
+        });
+
+    // Skip the leading whitespace in OW-wrapped variants so the
+    // first-set check below sees the iter's actual leading byte.
+    // For the bare-Repeat shape the inner iterator's own dispatcher
+    // handles whitespace via the per-Ref pre-skip.
+    let leading_ow_skip = if has_outer_ow {
+        quote! { let _ = #support_mod::skip_space(input, p, state); }
+    } else {
+        quote! {}
+    };
+    let trailing_ow_skip = leading_ow_skip.clone();
+
+    // Whether the Repeat's inner carries an OW wrapper that admits
+    // intra-iteration whitespace. Mirrors `list::has_iter_ow`.
+    let has_iter_ow = matches!(
+        repeat_inner,
+        IrNode::OptionalWhitespace(_)
+            | IrNode::Seq(_)
+            | IrNode::Next(_, _)
+            | IrNode::Skip(_, _),
+    );
+    let intra_iter_ws = if has_iter_ow {
+        quote! { let _ = #support_mod::skip_space(input, p, state); }
+    } else {
+        quote! {}
+    };
+
+    quote! {
+        /// AZ-II.cutover.F — per-grammar Array-shape parse function
+        /// (Shape 2 — entry-rule list, **struct-direct body**).
+        ///
+        /// Opens the rule's compound frame on the StructBuilder,
+        /// iterates the inner Repeat with savepoint rollback, and
+        /// closes the frame on first-byte rejection or EOF. NO
+        /// bracket-delimiter literals — termination is driven by
+        /// the inner dispatcher's first-set check.
+        #[inline]
+        #[allow(non_snake_case, clippy::too_many_arguments)]
+        pub fn #fn_ident<'p>(
+            input: &'p [u8],
+            p: &mut usize,
+            state: &mut #support_mod::ScanState,
+            builder: &mut #builder_ty,
+        ) -> ::core::result::Result<
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
+        > {
+            use crate::runtime::builder::StructBuilder;
+
+            // Open the rule's compound frame (the outer Repeat).
+            let __layout: ::bbnf_ir::registry::StructLayout =
+                ::bbnf_ir::registry::StructLayout {
+                    rule_id: #rule_id_lit as ::bbnf_ir::RuleId,
+                    rule_name: ::std::string::String::from(#rule_name_lit),
+                    kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                    rule_type: ::bbnf_ir::TypeDesc::Span,
+                    fields: ::std::vec::Vec::new(),
+                };
+            let __handle = builder.begin_compound(&__layout);
+
+            // Outer-OW leading skip. No-op when the body is a bare
+            // Repeat without an outer OW wrapper.
+            #leading_ow_skip
+
+            loop {
+                let __iter_save_p = *p;
+                // EOF terminates iteration.
+                if input.get(*p).is_none() {
+                    break;
+                }
+                // Attempt one iteration via a closure so failures
+                // surface as `Err` and unwind to `*p` rollback.
+                let __iter_result: ::core::result::Result<
+                    (),
+                    crate::runtime::tape::DtaError,
+                > = (|| {
+                    #intra_iter_ws
+                    #value_call
+                    #intra_iter_ws
+                    Ok(())
+                })();
+                match __iter_result {
+                    Ok(()) => {
+                        // Zero-width iteration guard — terminate
+                        // rather than spin.
+                        if *p == __iter_save_p {
+                            break;
+                        }
+                    }
+                    Err(_) => {
+                        *p = __iter_save_p;
+                        break;
+                    }
+                }
+            }
+
+            // Outer-OW trailing skip. No-op when the body is bare
+            // Repeat.
+            #trailing_ow_skip
+
+            builder.end_compound(__handle);
+            Ok(crate::runtime::tape::TapeOffset::NONE)
         }
     }
 }

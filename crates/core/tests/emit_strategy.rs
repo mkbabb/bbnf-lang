@@ -74,11 +74,11 @@ fn json_parser_with_populated_registry_routes_struct_direct() {
     match strategy {
         EmitStrategy::StructDirect { rust, ts, wasm } => {
             assert_eq!(
-                rust.builder_path, "::bbnf::runtime::json::JsonStructBuilder",
+                rust.builder_path, "crate::runtime::json::JsonStructBuilder",
                 "JsonParser StructDirect must wire the canonical builder path",
             );
             assert_eq!(
-                rust.document_path, "::bbnf::runtime::json::JsonDocument",
+                rust.document_path, "crate::runtime::json::JsonDocument",
                 "JsonParser StructDirect must wire the canonical document path",
             );
             assert!(
@@ -107,11 +107,11 @@ fn json_grammar_alias_routes_struct_direct() {
     match strategy {
         EmitStrategy::StructDirect { rust, .. } => {
             assert_eq!(
-                rust.builder_path, "::bbnf::runtime::json::JsonStructBuilder",
+                rust.builder_path, "crate::runtime::json::JsonStructBuilder",
                 "JsonGrammar alias must wire the same builder path as JsonParser",
             );
             assert_eq!(
-                rust.document_path, "::bbnf::runtime::json::JsonDocument",
+                rust.document_path, "crate::runtime::json::JsonDocument",
                 "JsonGrammar alias must wire the same document path as JsonParser",
             );
         }

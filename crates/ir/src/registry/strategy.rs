@@ -68,22 +68,23 @@ use crate::registry::StructRegistry;
 ///
 /// # Field semantics
 ///
-/// - `builder_path` — fully-qualified type path the emitter
-///   instantiates with `<builder_path>::new()` (e.g.
-///   `"::bbnf::runtime::json::JsonStructBuilder"`).
-/// - `document_path` — fully-qualified type path the emitter
-///   returns from `parse()` (e.g.
-///   `"::bbnf::runtime::json::JsonDocument"`). Same lifetime
+/// - `builder_path` — Rust path the emitter instantiates with
+///   `<builder_path>::new()` (e.g.
+///   `"crate::runtime::json::JsonStructBuilder"`). Generated code
+///   lives inside the `bbnf` crate, so paths are rooted at `crate::`
+///   (B5 retired the `extern crate self as bbnf` self-alias; an
+///   absolute `::bbnf::` path does not resolve from inside the crate).
+/// - `document_path` — Rust path the emitter returns from `parse()`
+///   (e.g. `"crate::runtime::json::JsonDocument"`). Same lifetime
 ///   signature as the builder; per-grammar code threads `'p` for
 ///   arena-borrowed slices.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SubstrateBinding {
-    /// Fully-qualified type path of the grammar's `StructBuilder`
-    /// implementor — e.g.
-    /// `"::bbnf::runtime::json::JsonStructBuilder"`.
+    /// Rust path of the grammar's `StructBuilder` implementor — e.g.
+    /// `"crate::runtime::json::JsonStructBuilder"`.
     pub builder_path: &'static str,
-    /// Fully-qualified type path of the grammar's `Document` return
-    /// type — e.g. `"::bbnf::runtime::json::JsonDocument"`.
+    /// Rust path of the grammar's `Document` return type — e.g.
+    /// `"crate::runtime::json::JsonDocument"`.
     pub document_path: &'static str,
 }
 
@@ -172,8 +173,8 @@ impl EmitStrategy {
             // W2-EMITTER-REWIRE plan §1).
             ("JsonParser" | "JsonGrammar", true) => EmitStrategy::StructDirect {
                 rust: SubstrateBinding {
-                    builder_path: "::bbnf::runtime::json::JsonStructBuilder",
-                    document_path: "::bbnf::runtime::json::JsonDocument",
+                    builder_path: "crate::runtime::json::JsonStructBuilder",
+                    document_path: "crate::runtime::json::JsonDocument",
                 },
                 ts: None,
                 wasm: None,

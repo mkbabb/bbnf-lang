@@ -1042,13 +1042,15 @@ mod __jsonparser_emit_impl {
             true
         }
     }
-    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
+    /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (single-literal body).
     ///
-    /// AX.W0a.2.g — `state` parameter unused for single-
-    /// literal form (no downstream ws-skip / Ref delegation);
-    /// present so every `parse_keyword_<grammar>_<rule>`
-    /// shares one signature across sub-cases.
+    /// Matches the literal byte sequence and routes the
+    /// rule's projected payload through the `StructBuilder`
+    /// trait surface. Returns `TapeOffset::NONE` on success
+    /// for compositional uniformity with the tape-path
+    /// emission; the offset is unused by struct-direct
+    /// callers (the dispatcher discards `Ok(_)` payloads).
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_JsonParser_null(
@@ -1056,45 +1058,33 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         _first_byte: u8,
         _state: &mut __shape_support_JsonParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::JsonStructBuilder<'_>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let at = *p;
         let end = at + 4usize;
         if input.len() < end || input[at..end] != [110u8, 117u8, 108u8, 108u8] {
-            return Err(crate::runtime::tape::DtaError::Syntax {
+            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                 offset: at as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         *p = end;
-        let __arena_off: u32 = builder.arena_mut().len() as u32;
-        builder.arena_mut().push((0u32) as u8);
-        let off = builder
-            .push_leaf_with_arena_payload(
-                crate::runtime::tape::TapeKind::Span,
-                at as u32,
-                end as u32,
-                0u8,
-                0,
-                __arena_off,
-                1u32,
-            );
-        Ok(off)
+        builder.push_leaf_with_unit();
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
-    /// (Alt of literal-led or Ref-led branches).
+    /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
+    /// (Alt of literal-led branches).
     ///
-    /// AX.W0a.2.g — admits Ref-led branches whose target
-    /// resolves to a literal-prefix body (per `leading_
-    /// literal_bytes`). For each first-byte group, each
-    /// candidate's full prefix is checked before committing:
-    /// Literal branches emit the legacy leaf push;
-    /// Ref branches delegate to the target's shape fn via
-    /// [`emit_ref_call_tape`], threading `state` through.
+    /// Each branch's typed payload routes through
+    /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
+    /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
+    /// untyped). Returns `TapeOffset::NONE` for
+    /// compositional uniformity.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_JsonParser_bool(
@@ -1102,11 +1092,12 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_JsonParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::JsonStructBuilder<'_>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
             102u8 => {
@@ -1116,21 +1107,12 @@ mod __jsonparser_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                    builder.arena_mut().push((0u32) as u8);
-                    let off = builder
-                        .push_leaf_with_arena_payload(
-                            crate::runtime::tape::TapeKind::Span,
-                            at as u32,
-                            end as u32,
-                            1u8,
-                            0u8,
-                            __arena_off,
-                            1u32,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_bool(((0u32) as u32) != 0u32);
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -1143,28 +1125,19 @@ mod __jsonparser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    let __arena_off: u32 = builder.arena_mut().len() as u32;
-                    builder.arena_mut().push((1u32) as u8);
-                    let off = builder
-                        .push_leaf_with_arena_payload(
-                            crate::runtime::tape::TapeKind::Span,
-                            at as u32,
-                            end as u32,
-                            1u8,
-                            0u8,
-                            __arena_off,
-                            1u32,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_bool(((1u32) as u32) != 0u32);
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                Err(crate::runtime::tape::DtaError::Syntax {
+                ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -1172,22 +1145,27 @@ mod __jsonparser_emit_impl {
             }
         }
     }
-    /// AW-V.W3.2 — per-grammar Number-shape parse function.
+    /// AZ-I.W2.RC — per-grammar Number-shape parse function
+    /// (struct-direct substrate).
     ///
-    /// Mirrors `json_prototype::number::parse_number_body`.
-    /// `first_byte` is the byte the dispatcher already matched;
-    /// passing it avoids a redundant re-read for the sign check.
+    /// Mirrors `json_prototype::number::parse_number_body` for the
+    /// scan body; the trailing leaf push routes through
+    /// `builder.push_leaf_with_f64(value)` against the
+    /// grammar-specific concrete `StructBuilder` impl. `first_byte`
+    /// is the byte the dispatcher already matched; passing it
+    /// avoids a redundant re-read for the sign check.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_number_JsonParser_number(
-        input: &[u8],
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_number_JsonParser_number<'p>(
+        input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         const POW10_U64: [u64; 17] = [
             1, 10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000,
             1_000_000_000, 10_000_000_000, 100_000_000_000, 1_000_000_000_000,
@@ -1300,33 +1278,31 @@ mod __jsonparser_emit_impl {
                 None => parse_number_fallback(bytes),
             }
         };
-        let off = builder
-            .push_leaf_with_f64_direct(
-                crate::runtime::tape::TapeKind::Span,
-                start as u32,
-                end as u32,
-                2u8,
-                value.to_bits(),
-            );
-        Ok(off)
+        builder.push_leaf_with_f64(value);
+        Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W3.2 — per-grammar String-shape parse function.
+    /// AZ-I.W2.RC — per-grammar String-shape parse function
+    /// (struct-direct substrate).
     ///
-    /// Mirrors `json_prototype::string::parse_string_body`.
-    /// `"` must NOT be consumed by the caller — this function
-    /// reads it, scans for the closing quote, and pushes a Span
-    /// leaf with appropriate borrow / arena-decode metadata.
+    /// `"` must NOT be consumed by the caller — this
+    /// function reads it, scans for the closing quote, and
+    /// pushes a `&'p str` leaf via the builder. The borrow
+    /// path slices the input directly; the cold escape
+    /// path decodes into the builder's arena and emits
+    /// the decoded bytes via the same `push_leaf_with_str`
+    /// surface.
     #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_string_JsonParser_string(
-        input: &[u8],
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_string_JsonParser_string<'p>(
+        input: &'p [u8],
         p: &mut usize,
         _state: &mut __shape_support_JsonParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let open = *p;
         if input.get(open).copied() != Some(b'"') {
             return Err(crate::runtime::tape::DtaError::Syntax {
@@ -1348,19 +1324,63 @@ mod __jsonparser_emit_impl {
             Some((off, b'"')) => {
                 let end = body_start + off;
                 *p = end + 1;
-                let lo = open as u32;
-                let hi = *p as u32;
-                let leaf = builder
-                    .push_leaf_borrowed_string(
-                        crate::runtime::tape::TapeKind::Span,
-                        lo,
-                        hi,
-                        3u8,
-                        0,
-                    );
-                Ok(leaf)
+                let body: &'p str = unsafe {
+                    ::core::str::from_utf8_unchecked(&input[body_start..end])
+                };
+                builder.push_leaf_with_str(body);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
             }
-            Some((_off, b'\\')) => parse_string_escaped(input, p, open, builder, 3u8),
+            Some((_off, b'\\')) => {
+                let mut buf: Vec<u8> = Vec::with_capacity(
+                    input.len().saturating_sub(open + 1),
+                );
+                match ::parse_that::parsers::scan::decode_json_string_to_arena(
+                    input,
+                    open,
+                    &mut buf,
+                ) {
+                    Some(
+                        (
+                            ::parse_that::parsers::scan::StringPayload::Owned { .. },
+                            end_pos,
+                        ),
+                    ) => {
+                        *p = end_pos;
+                        let bytes: Box<[u8]> = buf.into_boxed_slice();
+                        let leaked: &'static [u8] = Box::leak(bytes);
+                        let leaked_str: &'static str = unsafe {
+                            ::core::str::from_utf8_unchecked(leaked)
+                        };
+                        builder.push_leaf_with_str(leaked_str);
+                        Ok(crate::runtime::tape::TapeOffset::NONE)
+                    }
+                    Some(
+                        (
+                            ::parse_that::parsers::scan::StringPayload::Borrowed {
+                                start,
+                                end,
+                            },
+                            end_pos,
+                        ),
+                    ) => {
+                        *p = end_pos;
+                        let body: &'p str = unsafe {
+                            ::core::str::from_utf8_unchecked(
+                                &input[start as usize..end as usize],
+                            )
+                        };
+                        builder.push_leaf_with_str(body);
+                        Ok(crate::runtime::tape::TapeOffset::NONE)
+                    }
+                    None => {
+                        Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: open as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        })
+                    }
+                }
+            }
             Some(_) => unreachable!(),
             None => {
                 Err(crate::runtime::tape::DtaError::UnexpectedEnd {
@@ -1369,29 +1389,20 @@ mod __jsonparser_emit_impl {
             }
         }
     }
-    /// AW-V.W3.2 — per-grammar Array-shape parse function,
-    /// **walker-tape-identical**.
-    ///
-    /// Emits the same nested Seq/Seq/Repeat/Seq compound tree the
-    /// walker produces for the canonical JSON array rule. The
-    /// record tree is navigated by every downstream view derive
-    /// and the `tape_parity` golden fixtures; only dispatch is
-    /// inlined relative to the walker, not the record stream.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-    /// recursion rationale (the array ↔ value cycle).
+    /// AZ-I.W2.RB — per-grammar Array-shape parse function,
+    /// **struct-direct body**. Targets [`JsonStructBuilder`].
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_array_JsonParser_array(
-        input: &[u8],
+    pub fn parse_array_JsonParser_array<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::JsonStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
+        use crate::runtime::builder::StructBuilder;
         if input.get(*p).copied() != Some(b'[') {
             return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
@@ -1399,298 +1410,137 @@ mod __jsonparser_emit_impl {
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        let outer_off = builder
-            .begin_compound(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                4u8,
-                0u8,
-                0u16,
-            );
-        let lbracket_open = *p as u32;
-        let next_off = builder
-            .begin_compound(
-                crate::runtime::tape::TapeKind::Seq,
-                lbracket_open,
-                0,
-                0u8,
-                0u16,
-            );
+        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 4u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("array"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __handle = builder.begin_compound(&__layout);
         *p += 1;
-        let bracket_close = *p as u32;
-        let _ = builder
-            .push_leaf_with(
-                crate::runtime::tape::TapeKind::Literal,
-                lbracket_open,
-                bracket_close,
-                4u8,
-                0,
-                crate::runtime::tape::PayloadData::None,
-            );
-        let opt_ws_open = *p as u32;
-        let opt_ws_off = builder
-            .begin_compound(
-                crate::runtime::tape::TapeKind::Seq,
-                opt_ws_open,
-                0,
-                0u8,
-                0u16,
-            );
         let _ = __shape_support_JsonParser::skip_space(input, p, state);
-        let repeat_open = *p as u32;
-        let repeat_off = builder
-            .begin_compound(
-                crate::runtime::tape::TapeKind::Rule,
-                repeat_open,
-                0,
-                0u8,
-                0u16,
-            );
-        let maybe_close = input.get(*p).copied();
-        if maybe_close == Some(b']') {
-            let repeat_close = *p as u32;
-            builder.end_compound(repeat_off, repeat_close);
-            let opt_ws_close = *p as u32;
-            builder.end_compound(opt_ws_off, opt_ws_close);
+        if input.get(*p).copied() == Some(b']') {
             *p += 1;
-            let rbracket_lo = opt_ws_close;
-            let rbracket_hi = *p as u32;
-            let _ = builder
-                .push_leaf_with(
-                    crate::runtime::tape::TapeKind::Literal,
-                    rbracket_lo,
-                    rbracket_hi,
-                    4u8,
-                    0,
-                    crate::runtime::tape::PayloadData::None,
-                );
-            let next_close = rbracket_hi;
-            builder.end_compound(next_off, next_close);
-            let outer_close = *p as u32;
-            builder.end_compound(outer_off, outer_close);
-            return Ok(crate::runtime::tape::TapeOffset(outer_off));
+            builder.end_compound(__handle);
+            return Ok(crate::runtime::tape::TapeOffset::NONE);
         }
         loop {
-            let iter_open = *p as u32;
-            let iter_off = builder
-                .begin_compound(
-                    crate::runtime::tape::TapeKind::Seq,
-                    iter_open,
-                    0,
-                    0u8,
-                    0u16,
-                );
-            let _value_off = ({
+            ({
                 let _ = __shape_support_JsonParser::skip_space(input, p, state);
                 parse_wrap_JsonParser_value(input, p, state, builder)
             })?;
-            let comma_repeat_open = *p as u32;
-            let comma_repeat_off = builder
-                .begin_compound(
-                    crate::runtime::tape::TapeKind::Rule,
-                    comma_repeat_open,
-                    0,
-                    0u8,
-                    0u16,
-                );
-            let comma_iter_save_p = *p;
             let _ = __shape_support_JsonParser::skip_space(input, p, state);
-            let has_comma = input.get(*p).copied() == Some(b',');
-            if has_comma {
-                let comma_iter_open = comma_iter_save_p as u32;
-                let comma_iter_off = builder
-                    .begin_compound(
-                        crate::runtime::tape::TapeKind::Seq,
-                        comma_iter_open,
-                        0,
-                        0u8,
-                        0u16,
-                    );
-                let comma_lo = *p as u32;
-                *p += 1;
-                let comma_hi = *p as u32;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        comma_lo,
-                        comma_hi,
-                        4u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-                let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                let comma_iter_close = *p as u32;
-                builder.end_compound(comma_iter_off, comma_iter_close);
-            } else {
-                *p = comma_iter_save_p;
-            }
-            let comma_repeat_close = *p as u32;
-            builder.end_compound(comma_repeat_off, comma_repeat_close);
-            let iter_close = *p as u32;
-            builder.end_compound(iter_off, iter_close);
-            let is_value_start = match input.get(*p).copied() {
-                Some(b'{')
-                | Some(b'[')
-                | Some(b'"')
-                | Some(b'-')
-                | Some(b'0'..=b'9')
-                | Some(b't')
-                | Some(b'f')
-                | Some(b'n') => true,
-                _ => false,
-            };
-            if !is_value_start {
-                let repeat_close = *p as u32;
-                builder.end_compound(repeat_off, repeat_close);
-                let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                let opt_ws_close = *p as u32;
-                builder.end_compound(opt_ws_off, opt_ws_close);
-                if input.get(*p).copied() != Some(b']') {
-                    return Err(
-                        match input.get(*p).copied() {
-                            None => {
-                                crate::runtime::tape::DtaError::UnexpectedEnd {
-                                    offset: *p as u32,
-                                }
-                            }
-                            _ => {
-                                crate::runtime::tape::DtaError::Syntax {
-                                    offset: *p as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                }
-                            }
-                        },
-                    );
-                }
-                *p += 1;
-                let rbracket_hi = *p as u32;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        opt_ws_close,
-                        rbracket_hi,
-                        4u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-                let next_close = rbracket_hi;
-                builder.end_compound(next_off, next_close);
-                let outer_close = *p as u32;
-                builder.end_compound(outer_off, outer_close);
-                return Ok(crate::runtime::tape::TapeOffset(outer_off));
-            }
-        }
-    }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
-    ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_JsonParser_pair(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_JsonParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
-            {
-                let _ = ({
+            match input.get(*p).copied() {
+                Some(b',') => {
+                    *p += 1;
                     let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                    parse_string_JsonParser_string(input, p, state, builder)
-                })?;
-            }
-            {
-                let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [58u8] {
+                }
+                Some(b']') => {
+                    *p += 1;
+                    builder.end_compound(__handle);
+                    return Ok(crate::runtime::tape::TapeOffset::NONE);
+                }
+                _ => {
                     return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
+                        offset: *p as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
                         failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
-                *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        5u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-                let _ = __shape_support_JsonParser::skip_space(input, p, state);
             }
-            {
-                let _ = ({
-                    let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                    parse_wrap_JsonParser_value(input, p, state, builder)
-                })?;
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                5u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
-    /// AW-V.W3.2 — per-grammar Object-shape parse function,
-    /// **walker-tape-identical**.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets [`JsonStructBuilder`].
     ///
-    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-    /// recursion rationale (object → value → object).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame; `JsonStructBuilder::begin_compound` routes the
+    /// `(LayoutKind::Struct, "pair")` case to `OpenFrame::Pair`.
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_object_JsonParser_object(
-        input: &[u8],
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_JsonParser_pair<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::JsonStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
+        let __pair_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 5u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("pair"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __pair_handle = <crate::runtime::JsonStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__pair_layout);
+        {
+            let _ = ({
+                let _ = __shape_support_JsonParser::skip_space(input, p, state);
+                parse_string_JsonParser_string(input, p, state, builder)
+            })?;
+        }
+        {
+            let _ = __shape_support_JsonParser::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [58u8] {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            let _ = __shape_support_JsonParser::skip_space(input, p, state);
+        }
+        {
+            let _ = ({
+                let _ = __shape_support_JsonParser::skip_space(input, p, state);
+                parse_wrap_JsonParser_value(input, p, state, builder)
+            })?;
+        }
+        <crate::runtime::JsonStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __pair_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2.RB — per-grammar Object-shape parse function,
+    /// **struct-direct body**. Targets [`JsonStructBuilder`].
+    ///
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-element pushes (string keys + value
+    /// dispatch) land directly on the topmost open frame.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_object_JsonParser_object<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_JsonParser::ScanState,
+        builder: &mut crate::runtime::JsonStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        use crate::runtime::builder::StructBuilder;
         if input.get(*p).copied() != Some(b'{') {
             return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
@@ -1698,94 +1548,22 @@ mod __jsonparser_emit_impl {
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        let outer_off = builder
-            .begin_compound(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                6u8,
-                0u8,
-                0u16,
-            );
-        let lbrace_open = *p as u32;
-        let next_off = builder
-            .begin_compound(
-                crate::runtime::tape::TapeKind::Seq,
-                lbrace_open,
-                0,
-                0u8,
-                0u16,
-            );
+        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 6u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("object"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __handle = builder.begin_compound(&__layout);
         *p += 1;
-        let brace_close = *p as u32;
-        let _ = builder
-            .push_leaf_with(
-                crate::runtime::tape::TapeKind::Literal,
-                lbrace_open,
-                brace_close,
-                6u8,
-                0,
-                crate::runtime::tape::PayloadData::None,
-            );
-        let opt_ws_open = *p as u32;
-        let opt_ws_off = builder
-            .begin_compound(
-                crate::runtime::tape::TapeKind::Seq,
-                opt_ws_open,
-                0,
-                0u8,
-                0u16,
-            );
         let _ = __shape_support_JsonParser::skip_space(input, p, state);
-        let repeat_open = *p as u32;
-        let repeat_off = builder
-            .begin_compound(
-                crate::runtime::tape::TapeKind::Rule,
-                repeat_open,
-                0,
-                0u8,
-                0u16,
-            );
         if input.get(*p).copied() == Some(b'}') {
-            let repeat_close = *p as u32;
-            builder.end_compound(repeat_off, repeat_close);
-            let opt_ws_close = *p as u32;
-            builder.end_compound(opt_ws_off, opt_ws_close);
             *p += 1;
-            let rbrace_hi = *p as u32;
-            let _ = builder
-                .push_leaf_with(
-                    crate::runtime::tape::TapeKind::Literal,
-                    opt_ws_close,
-                    rbrace_hi,
-                    6u8,
-                    0,
-                    crate::runtime::tape::PayloadData::None,
-                );
-            let next_close = rbrace_hi;
-            builder.end_compound(next_off, next_close);
-            let outer_close = *p as u32;
-            builder.end_compound(outer_off, outer_close);
-            return Ok(crate::runtime::tape::TapeOffset(outer_off));
+            builder.end_compound(__handle);
+            return Ok(crate::runtime::tape::TapeOffset::NONE);
         }
         loop {
-            let iter_open = *p as u32;
-            let iter_off = builder
-                .begin_compound(
-                    crate::runtime::tape::TapeKind::Seq,
-                    iter_open,
-                    0,
-                    0u8,
-                    0u16,
-                );
-            let pair_open = *p as u32;
-            let pair_off = builder
-                .begin_compound(
-                    crate::runtime::tape::TapeKind::Seq,
-                    pair_open,
-                    5u8,
-                    0u8,
-                    0u16,
-                );
             if input.get(*p).copied() != Some(b'"') {
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -1793,25 +1571,7 @@ mod __jsonparser_emit_impl {
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
-            let _key_off = parse_string_JsonParser_string(input, p, state, builder)?;
-            let colon_next_open = *p as u32;
-            let colon_next_off = builder
-                .begin_compound(
-                    crate::runtime::tape::TapeKind::Seq,
-                    colon_next_open,
-                    0,
-                    0u8,
-                    0u16,
-                );
-            let opt_colon_open = *p as u32;
-            let opt_colon_off = builder
-                .begin_compound(
-                    crate::runtime::tape::TapeKind::Seq,
-                    opt_colon_open,
-                    0,
-                    0u8,
-                    0u16,
-                );
+            parse_string_JsonParser_string(input, p, state, builder)?;
             let _ = __shape_support_JsonParser::skip_space(input, p, state);
             if input.get(*p).copied() != Some(b':') {
                 return Err(crate::runtime::tape::DtaError::Syntax {
@@ -1820,140 +1580,68 @@ mod __jsonparser_emit_impl {
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
-            let colon_lo = *p as u32;
             *p += 1;
-            let colon_hi = *p as u32;
-            let _ = builder
-                .push_leaf_with(
-                    crate::runtime::tape::TapeKind::Literal,
-                    colon_lo,
-                    colon_hi,
-                    5u8,
-                    0,
-                    crate::runtime::tape::PayloadData::None,
-                );
             let _ = __shape_support_JsonParser::skip_space(input, p, state);
-            let opt_colon_close = *p as u32;
-            builder.end_compound(opt_colon_off, opt_colon_close);
-            let _value_off = ({
+            ({
                 let _ = __shape_support_JsonParser::skip_space(input, p, state);
                 parse_wrap_JsonParser_value(input, p, state, builder)
             })?;
-            let colon_next_close = *p as u32;
-            builder.end_compound(colon_next_off, colon_next_close);
-            let pair_close = *p as u32;
-            builder.end_compound(pair_off, pair_close);
-            let comma_repeat_open = *p as u32;
-            let comma_repeat_off = builder
-                .begin_compound(
-                    crate::runtime::tape::TapeKind::Rule,
-                    comma_repeat_open,
-                    0,
-                    0u8,
-                    0u16,
-                );
-            let comma_iter_save_p = *p;
             let _ = __shape_support_JsonParser::skip_space(input, p, state);
-            let has_comma = input.get(*p).copied() == Some(b',');
-            if has_comma {
-                let comma_iter_open = comma_iter_save_p as u32;
-                let comma_iter_off = builder
-                    .begin_compound(
-                        crate::runtime::tape::TapeKind::Seq,
-                        comma_iter_open,
-                        0,
-                        0u8,
-                        0u16,
-                    );
-                let comma_lo = *p as u32;
-                *p += 1;
-                let comma_hi = *p as u32;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        comma_lo,
-                        comma_hi,
-                        6u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-                let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                let comma_iter_close = *p as u32;
-                builder.end_compound(comma_iter_off, comma_iter_close);
-            } else {
-                *p = comma_iter_save_p;
-            }
-            let comma_repeat_close = *p as u32;
-            builder.end_compound(comma_repeat_off, comma_repeat_close);
-            let iter_close = *p as u32;
-            builder.end_compound(iter_off, iter_close);
-            let is_pair_start = input.get(*p).copied() == Some(b'"');
-            if !is_pair_start {
-                let repeat_close = *p as u32;
-                builder.end_compound(repeat_off, repeat_close);
-                let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                let opt_ws_close = *p as u32;
-                builder.end_compound(opt_ws_off, opt_ws_close);
-                if input.get(*p).copied() != Some(b'}') {
-                    return Err(
-                        match input.get(*p).copied() {
-                            None => {
-                                crate::runtime::tape::DtaError::UnexpectedEnd {
-                                    offset: *p as u32,
-                                }
-                            }
-                            _ => {
-                                crate::runtime::tape::DtaError::Syntax {
-                                    offset: *p as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                }
-                            }
-                        },
-                    );
+            match input.get(*p).copied() {
+                Some(b',') => {
+                    *p += 1;
+                    let _ = __shape_support_JsonParser::skip_space(input, p, state);
                 }
-                *p += 1;
-                let rbrace_hi = *p as u32;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        opt_ws_close,
-                        rbrace_hi,
-                        6u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-                let next_close = rbrace_hi;
-                builder.end_compound(next_off, next_close);
-                let outer_close = *p as u32;
-                builder.end_compound(outer_off, outer_close);
-                let _ = 3u8;
-                return Ok(crate::runtime::tape::TapeOffset(outer_off));
+                Some(b'}') => {
+                    *p += 1;
+                    builder.end_compound(__handle);
+                    return Ok(crate::runtime::tape::TapeOffset::NONE);
+                }
+                _ => {
+                    return Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
             }
         }
     }
-    /// AW-V.W4-fix — per-grammar Wrap-shape parse function.
+    /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
-    /// Transparent dispatcher — skip leading ws, byte-dispatch
-    /// to the chosen branch's shape fn, return that shape fn's
-    /// offset unchanged. No outer compound emission; the
-    /// branch's own shape fn owns the tape record.
+    /// Opens a Wrap frame on the builder, dispatches to the matched
+    /// branch's shape fn (which carries its own
+    /// begin_compound/end_compound for compound branches and the
+    /// matching push_leaf_with_* for scalar branches), stamps the
+    /// chosen branch index via push_branch_tag, then closes the
+    /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
+    /// forward-the-single-child semantics.
     ///
-    /// AX.W0a.2.f — compound; see `flat.rs` emission for the
-    /// `#[inline]` downgrade rationale (LLVM inline-cycle
-    /// collapse vs hard-requirement inliner abort).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_JsonParser_value(
-        input: &[u8],
+    pub fn parse_wrap_JsonParser_value<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::JsonStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let mut __wrap_chosen_meta: u8 = 0;
+        let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 7u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("value"),
+            kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __wrap_handle = <crate::runtime::JsonStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
+        let mut __wrap_branch_idx: u32 = 0;
         let first = __shape_support_JsonParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -1962,189 +1650,162 @@ mod __jsonparser_emit_impl {
             match first {
                 34u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_string_JsonParser_string(input, p, state, builder) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 2u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 2u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 45u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_number_JsonParser_number(input, p, first, builder) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 5u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 48u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_number_JsonParser_number(input, p, first, builder) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 5u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 49u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_number_JsonParser_number(input, p, first, builder) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 5u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 50u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_number_JsonParser_number(input, p, first, builder) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 5u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 51u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_number_JsonParser_number(input, p, first, builder) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 5u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 52u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_number_JsonParser_number(input, p, first, builder) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 5u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 53u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_number_JsonParser_number(input, p, first, builder) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 5u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 54u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_number_JsonParser_number(input, p, first, builder) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 5u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 55u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_number_JsonParser_number(input, p, first, builder) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 5u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 56u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_number_JsonParser_number(input, p, first, builder) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 5u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 57u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_number_JsonParser_number(input, p, first, builder) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 5u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 91u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_array_JsonParser_array(input, p, state, builder) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 1u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 1u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 102u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_keyword_JsonParser_bool(
                         input,
                         p,
@@ -2152,19 +1813,17 @@ mod __jsonparser_emit_impl {
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 4u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 4u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 110u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_keyword_JsonParser_null(
                         input,
                         p,
@@ -2172,19 +1831,17 @@ mod __jsonparser_emit_impl {
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 3u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 3u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 116u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_keyword_JsonParser_bool(
                         input,
                         p,
@@ -2192,40 +1849,45 @@ mod __jsonparser_emit_impl {
                         state,
                         builder,
                     ) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 4u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 4u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 123u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_object_JsonParser_object(input, p, state, builder) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 0u8;
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 0u32;
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
                 _ => {}
             }
+            <crate::runtime::JsonStructBuilder<
+                '_,
+            > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        let _ = __wrap_chosen_meta;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        <crate::runtime::JsonStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::push_branch_tag(builder, __wrap_branch_idx);
+        <crate::runtime::JsonStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AW-V.W3-bench-fix — visitor-path Keyword-shape parse
     /// function (single-literal body).
@@ -2881,11 +2543,11 @@ mod __jsonparser_emit_impl {
     /// recursion rationale.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_JsonParser_value(
-        input: &[u8],
+    pub fn parse_JsonParser_value<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -2898,11 +2560,11 @@ mod __jsonparser_emit_impl {
     /// AX.W0a.2.f — compound; plain `#[inline]`.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_JsonParser_value__value(
-        input: &[u8],
+    pub fn parse_JsonParser_value__value<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -5684,22 +5346,15 @@ mod __jsonparser_emit_impl {
         pub fn parse(
             input: &str,
         ) -> ::core::result::Result<
-            crate::runtime::Parsed<'_, Self>,
+            crate::runtime::json::JsonDocument<'_>,
             crate::runtime::ParseErr,
         > {
             let __input_bytes = input.as_bytes();
             let mut state = __shape_support_JsonParser::ScanState::new();
-            let mut tape = crate::runtime::tape::Tape::<
-                (),
-            >::with_capacity(GRAMMAR_PROFILE.capacity_for(input.len()));
-            let root_off = {
+            let mut builder = crate::runtime::json::JsonStructBuilder::new();
+            {
                 let mut pos: usize = 0;
-                let off = parse_JsonParser_value(
-                        __input_bytes,
-                        &mut pos,
-                        &mut state,
-                        &mut tape,
-                    )
+                parse_JsonParser_value(__input_bytes, &mut pos, &mut state, &mut builder)
                     .map_err(|e| match e {
                         crate::runtime::tape::DtaError::Syntax { offset, .. } => {
                             crate::runtime::ParseErr::Syntax {
@@ -5731,17 +5386,8 @@ mod __jsonparser_emit_impl {
                         rule: None,
                     });
                 }
-                off
-            };
-            let tape: crate::runtime::tape::Tape<()> = tape
-                .finish(root_off.0)
-                .map_err(crate::runtime::ParseErr::Tape)?;
-            let tape: crate::runtime::tape::Tape<Self> = unsafe {
-                ::core::mem::transmute(tape)
-            };
-            ::core::result::Result::Ok(
-                crate::runtime::Parsed::new(tape, input, root_off),
-            )
+            }
+            ::core::result::Result::Ok(builder.finalise())
         }
     }
     #[inline]

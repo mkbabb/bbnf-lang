@@ -192,6 +192,19 @@ pub(super) fn emit_parse_wrap_struct_direct(
     // is defensive (single-Ref aliases would not be classified as
     // Wrap by W3.1's classifier).
     let dispatch = match body {
+        IrNode::Alt(branches, _) if rule.meta.is_transparent => {
+            // AZ-II.cutover.H Phase 1 — transparent rules emit
+            // passthrough dispatch only. The pre-cutover.H emitter
+            // gate `if rule.meta.is_transparent { continue; }` skipped
+            // emission entirely; cutover.H lifts the gate so call
+            // sites can resolve to the per-shape fn, but the body
+            // must NOT open a compound — the consumer of the
+            // transparent rule (the Ref's host) does not expect a
+            // record for the alias itself; it expects the chosen
+            // branch's record to bubble up directly. Mirrors the
+            // TapeDirect `wrap_can_elide_compound` semantics.
+            emit_alt_struct_dispatch_transparent(branches, grammar_suffix, ir, strategy)
+        }
         IrNode::Alt(branches, _) => {
             emit_alt_struct_dispatch(branches, grammar_suffix, ir, rule, strategy)
         }
@@ -355,5 +368,100 @@ fn emit_alt_struct_dispatch(
             #builder_ty_e as crate::runtime::StructBuilder
         >::end_compound(builder, __wrap_handle);
         ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+}
+
+/// AZ-II.cutover.H Phase 1 — transparent-rule wrap dispatch.
+///
+/// Emits the Alt-dispatch body without an outer `begin_compound` /
+/// `end_compound` pair. The transparent rule's compound is elided
+/// per the runtime contract: the Ref's host expects the chosen
+/// branch's record to bubble up directly, not a wrapper compound
+/// for the alias rule itself.
+fn emit_alt_struct_dispatch_transparent(
+    branches: &[bbnf_ir::AltBranch],
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+    strategy: &EmitStrategy,
+) -> TokenStream {
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+    let _ = strategy;
+
+    let mut per_byte: std::collections::BTreeMap<u8, Vec<TokenStream>> = Default::default();
+    let mut linear_arms: Vec<TokenStream> = Vec::new();
+
+    for branch in branches.iter() {
+        let inner = unwrap_outer(&branch.node);
+        let Some((call, first_bytes)) =
+            emit_wrap_branch_call_struct_direct(inner, grammar_suffix, ir)
+        else {
+            continue;
+        };
+        let attempt_body = emit_struct_branch_attempt_transparent(&call);
+        if first_bytes.is_empty() {
+            linear_arms.push(attempt_body);
+        } else {
+            for b in first_bytes {
+                per_byte.entry(b).or_default().push(attempt_body.clone());
+            }
+        }
+    }
+
+    let byte_arms: Vec<TokenStream> = per_byte
+        .into_iter()
+        .map(|(byte, bodies)| {
+            let byte_lit = byte;
+            quote! {
+                #byte_lit => {
+                    #(#bodies)*
+                }
+            }
+        })
+        .collect();
+
+    quote! {
+        // AZ-II.cutover.H Phase 1 — transparent-rule passthrough.
+        // No outer compound. Dispatch to the chosen branch; the
+        // branch's per-shape fn carries its own record emission.
+        let first = #support_mod::skip_space(input, p, state)
+            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                offset: *p as u32,
+            })?;
+        'try_branches: loop {
+            match first {
+                #(#byte_arms)*
+                _ => {}
+            }
+            #(#linear_arms)*
+            return ::core::result::Result::Err(
+                crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state:
+                        crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule:
+                        crate::runtime::tape::DtaRuleId(u32::MAX),
+                },
+            );
+        }
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+}
+
+/// Branch attempt for the transparent-rule wrap path: same shape as
+/// `emit_struct_branch_attempt` but does NOT touch `__wrap_branch_idx`
+/// since no wrap compound is open.
+fn emit_struct_branch_attempt_transparent(call: &TokenStream) -> TokenStream {
+    quote! {
+        {
+            let attempt_p = *p;
+            match #call {
+                ::core::result::Result::Ok(_) => {
+                    break 'try_branches;
+                }
+                ::core::result::Result::Err(_) => {
+                    *p = attempt_p;
+                }
+            }
+        }
     }
 }

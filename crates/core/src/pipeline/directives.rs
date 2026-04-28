@@ -92,9 +92,10 @@ pub(crate) fn parse_to_pipeline_inputs(
     let _ = grammar::generated::BbnfBootstrap; // referenced for compile-time visibility
 
     let input: &'static str = Box::leak(source.to_owned().into_boxed_str());
-    // AZ-II.cutover.G — route through the hand-written bootstrap
-    // parser to break the chicken-and-egg between regen and the
-    // broken on-disk `generated::BbnfBootstrap::parse`.
+    // AZ-II.cutover.H Phase 1 — route through the hand-written
+    // bootstrap parser per the rationale documented at
+    // `grammar::parse`. The codegen-emitted `BbnfBootstrap::parse`
+    // does not yet self-parse the BBNF fixture corpus.
     let document = bootstrap_parser::parse(input).ok()?;
     let document: &'static BbnfDocument<'static> = Box::leak(Box::new(document));
     Some(host::extract_for_pipeline(document))

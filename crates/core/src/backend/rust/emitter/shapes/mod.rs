@@ -199,8 +199,32 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
     let emit_visitor_path = !dispatcher::has_w4_classified(ir);
 
     for rule in &ir.rules {
+        // AZ-II.cutover.H Phase 1 — transparent-rule passthrough
+        // emission. The pre-cutover.H gate
+        // `if rule.meta.is_transparent { continue; }` skipped per-rule
+        // fn emission for ALL transparent rules. The Ref-call
+        // resolver at `dispatcher::ref_call::emit_ref_call_*` resolves
+        // calls via `parse_<shape>_<grammar>_<name>` based on the
+        // target's classified shape — so cross-rule references to
+        // transparent rules fail to link when the per-shape fn isn't
+        // emitted.
+        //
+        // For Wrap-classified transparent rules under StructDirect,
+        // emit a transparency-aware body (no outer compound — the
+        // chosen branch's record bubbles through the alias). For
+        // every other transparent rule, retain the unconditional
+        // skip: TapeDirect's `wrap_can_elide_compound` path already
+        // handles Wrap; non-Wrap transparent rules under both
+        // strategies are handled by dispatcher inlining at root, or
+        // surface as pre-existing call-link drift on the on-disk
+        // generated trees (cutover.H Phase 2 captures the wider
+        // regen-fleet hardening).
         if rule.meta.is_transparent {
-            continue;
+            let is_wrap_under_structdirect = strategy.is_struct_direct()
+                && matches!(ir.shape_assignments.get(rule.id), ShapeTag::Wrap);
+            if !is_wrap_under_structdirect {
+                continue;
+            }
         }
         let tag = ir.shape_assignments.get(rule.id);
         // AW-V.W4-activation — emit per-shape fns for BOTH W3-active

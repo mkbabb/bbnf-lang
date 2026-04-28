@@ -764,10 +764,19 @@ impl<'p> Parser<'p> {
     }
 
     /// `pretty_hint = identifier , ( "(" , /[^)]*/ , ")" ) ?`
+    ///
+    /// AZ-II.cutover.H — push the parenthesised arg span as a
+    /// second child Span leaf. Consumers (`grammar::host::pretty_hint_text`)
+    /// read `child(0)` for the identifier and `child(1)` for the
+    /// `(...)` arg group, concatenating into hint strings like
+    /// `sep(", ")`. Without the second-child push, `sep(", ")`
+    /// emits as bare `sep` and the validator rejects it as an
+    /// unknown hint.
     fn parse_pretty_hint(&mut self) -> Result<(), ParseErr> {
         let h = self.begin("pretty_hint");
         self.parse_identifier()?;
         if self.at() == Some(b'(') {
+            let lo = self.pos;
             self.pos += 1;
             while let Some(b) = self.at() {
                 if b == b')' {
@@ -776,6 +785,7 @@ impl<'p> Parser<'p> {
                 }
                 self.pos += 1;
             }
+            self.push_span(lo, self.pos);
         }
         self.end(h);
         Ok(())

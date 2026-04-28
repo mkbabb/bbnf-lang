@@ -196,21 +196,24 @@ impl EmitStrategy {
                 ts: None,
                 wasm: None,
             },
-            // AZ-II.cutover.E (DEFERRED to post-AZ-II): BBNF struct-direct
-            // activation deferred. Discovery 1 from cutover.E surfaced a
-            // structural regression in the BBNF struct-direct emit path:
-            // the regen output rejects every input at offset 0 because
-            // the cutover-era emitter coerces BBNF's iteration shape
-            // toward an array-delimited (`[`...`]`) JSON-shaped body.
-            //
-            // The substrate at `crates/core/src/runtime/bbnf/` + cutover.D
-            // consumer migration are CORRECT and remain on disk. The
-            // resolver-arm activation routes back to TapeDirect until a
-            // follow-up tranche audits the cutover.D2 value-expr emitter
-            // additions that introduced the iteration-shape regression
-            // and re-flips the arm under a working post-regen verifier.
-            //
-            // ("BbnfBootstrap" | "BbnfParser", true) => EmitStrategy::StructDirect { … },
+            // AZ-II.cutover.H — BBNF struct-direct activation. cutover.F
+            // landed the emitter-side fixes (Array Shape-2 dispatch +
+            // Flat Alt/Repeat/Regex/Negate/Minus inline emission);
+            // cutover.G landed the bootstrap-parser break-and-regen
+            // substrate; cutover.H Phase 0 landed the validator
+            // value-expr-subtree skip in `graph::deps`; cutover.H
+            // Phase 1 lands the transparent-rule emitter fix at
+            // `shapes/mod.rs:202` together with this resolver-arm
+            // re-flip. The regen pipeline is now self-hosting via the
+            // generated parser.
+            ("BbnfBootstrap" | "BbnfParser", true) => EmitStrategy::StructDirect {
+                rust: SubstrateBinding {
+                    builder_path: "crate::runtime::bbnf::BbnfStructBuilder",
+                    document_path: "crate::runtime::bbnf::BbnfDocument",
+                },
+                ts: None,
+                wasm: None,
+            },
             // AZ-II.cutover.E DEFERRED — the CSV / math / BNF / EBNF /
             // CSS pretty struct-direct substrates exist on disk under
             // `crates/core/src/runtime/{csv,math,bnf,ebnf,css_pretty}/`

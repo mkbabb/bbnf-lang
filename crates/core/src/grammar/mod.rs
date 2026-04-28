@@ -52,9 +52,15 @@ pub fn parse(source: &str) -> Option<GrammarExtract<'_>> {
     // resolver-arm flip. The leak preserves the same observational
     // ownership model (LSP analysis, gorgeous JIT, debug_parse).
     let input: &'static str = Box::leak(source.to_owned().into_boxed_str());
-    // AZ-II.cutover.G — route through the hand-written bootstrap
-    // parser to break the chicken-and-egg between regen and the
-    // broken on-disk `generated::BbnfBootstrap::parse`.
+    // AZ-II.cutover.H Phase 1 — route through the hand-written
+    // bootstrap parser. The post-cutover.H regen output compiles
+    // and the BBNF self-parity tests pass against the bootstrap
+    // parser, but the regen-derived `BbnfBootstrap::parse` itself
+    // does not yet self-parse (cutover.G's chicken-and-egg parser
+    // covers compound shape coercion the codegen-emitted parser
+    // doesn't yet reproduce). cutover.H Phase 1 retains the
+    // bootstrap parser as the canonical entry point; the codegen
+    // parser self-host is a deferred follow-up.
     let document = bootstrap_parser::parse(input).ok()?;
     let document: &'static crate::runtime::bbnf::BbnfDocument<'static> =
         Box::leak(Box::new(document));

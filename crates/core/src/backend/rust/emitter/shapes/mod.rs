@@ -258,13 +258,13 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
                     number::emit_parse_number(&grammar_suffix, rule, ir, &strategy)
                 }
             }
-            ShapeTag::Keyword => keyword::emit_parse_keyword(&grammar_suffix, rule, ir),
+            ShapeTag::Keyword => keyword::emit_parse_keyword(&grammar_suffix, rule, ir, &strategy),
             ShapeTag::Scalar => scalar::emit_parse_scalar(&grammar_suffix, rule, ir, &strategy),
             ShapeTag::Pratt => pratt::emit_parse_pratt(&grammar_suffix, rule, ir),
             ShapeTag::Unordered => unordered::emit_parse_unordered(&grammar_suffix, rule, ir),
             ShapeTag::ArgList => arglist::emit_parse_arglist(&grammar_suffix, rule, ir),
             ShapeTag::Flat => flat::emit_parse_flat(&grammar_suffix, rule, ir),
-            ShapeTag::Wrap => wrap::emit_parse_wrap(&grammar_suffix, rule, ir),
+            ShapeTag::Wrap => wrap::emit_parse_wrap(&grammar_suffix, rule, ir, &strategy),
             ShapeTag::HRegex => hregex::emit_parse_hregex(&grammar_suffix, rule, ir),
             ShapeTag::AltDispatch => {
                 alt_dispatch::emit_parse_alt_dispatch(&grammar_suffix, rule, ir, &strategy)
@@ -299,11 +299,11 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
                     }
                 }
                 ShapeTag::Keyword => {
-                    keyword::emit_parse_keyword_visitor(&grammar_suffix, rule, ir)
+                    keyword::emit_parse_keyword_visitor(&grammar_suffix, rule, ir, &strategy)
                 }
                 ShapeTag::Scalar => scalar::emit_parse_scalar_visitor(&grammar_suffix, rule, ir),
                 ShapeTag::Flat => flat::emit_parse_flat_visitor(&grammar_suffix, rule, ir),
-                ShapeTag::Wrap => wrap::emit_parse_wrap_visitor(&grammar_suffix, rule, ir),
+                ShapeTag::Wrap => wrap::emit_parse_wrap_visitor(&grammar_suffix, rule, ir, &strategy),
                 ShapeTag::ArgList => {
                     arglist::emit_parse_arglist_visitor(&grammar_suffix, rule, ir)
                 }

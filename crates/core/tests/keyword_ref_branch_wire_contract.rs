@@ -31,6 +31,7 @@
 //! Hard gate 1 of W0a.2.g: this test must pass.
 
 use bbnf::backend::rust::emitter::shapes::keyword::emit_parse_keyword;
+use bbnf::backend::rust::emitter::strategy::EmitStrategy;
 use bbnf::pipeline::{
     compile_paths_request, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
 };
@@ -84,7 +85,10 @@ fn bbnf_directive_keyword_emitter_delegates_to_ref_targets() {
         .iter()
         .find(|r| ir.get_string(r.name) == "directive")
         .expect("BBNF grammar must contain `directive` rule");
-    let tokens = emit_parse_keyword("BbnfGrammar", directive, &ir);
+    // BBNF resolves to TapeDirect — the existing wire contract scrutinises
+    // the tape-path emission unchanged.
+    let strategy = EmitStrategy::TapeDirect;
+    let tokens = emit_parse_keyword("BbnfGrammar", directive, &ir, &strategy);
     let emitted = tokens.to_string();
 
     // The fn signature must carry the threaded `state: &mut
@@ -136,7 +140,8 @@ fn bbnf_directive_keyword_emitter_produces_named_fn() {
         .iter()
         .find(|r| ir.get_string(r.name) == "directive")
         .expect("BBNF grammar must contain `directive` rule");
-    let tokens = emit_parse_keyword("BbnfGrammar", directive, &ir);
+    let strategy = EmitStrategy::TapeDirect;
+    let tokens = emit_parse_keyword("BbnfGrammar", directive, &ir, &strategy);
     let emitted = tokens.to_string();
     assert!(
         emitted.contains("parse_keyword_BbnfGrammar_directive"),

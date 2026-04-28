@@ -11,6 +11,7 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::super::super::strategy::EmitStrategy;
 use super::super::dispatcher::{emit_ref_call_visitor, visitor_shape_fn_ident};
 use super::payload::leading_literal_bytes;
 use super::unwrap_trivia;
@@ -24,10 +25,18 @@ use super::unwrap_trivia;
 /// single-literal and pure-Literal Alt forms, `state` is unused — the
 /// parameter is present only so the signature stays uniform across
 /// sub-cases.
+///
+/// AZ-I.W2.RD — `strategy` accepted for signature uniformity with the
+/// tape-path entry. The visitor-path emission is strategy-independent:
+/// the visitor trait surface is a separate codegen artefact from the
+/// tape / struct-builder substrate decision, and `has_w4_classified`
+/// gates whether the visitor path emits at all (orthogonal to W2's
+/// struct-direct activation).
 pub fn emit_parse_keyword_visitor(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
+    _strategy: &EmitStrategy,
 ) -> TokenStream {
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("keyword", grammar_suffix, rule_name);

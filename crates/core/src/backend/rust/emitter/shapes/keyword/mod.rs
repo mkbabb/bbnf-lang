@@ -29,9 +29,11 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::super::strategy::EmitStrategy;
 use super::dispatcher::{emit_ref_call_tape, shape_fn_ident};
 
 mod payload;
+mod struct_direct;
 mod visitor;
 
 pub use visitor::emit_parse_keyword_visitor;
@@ -41,7 +43,33 @@ use payload::{
     rule_keyword_leaf_kind,
 };
 
+/// AZ-I.W2.RD — emit the per-grammar Keyword-shape parse function,
+/// keyed on `EmitStrategy`. On [`EmitStrategy::TapeDirect`] the legacy
+/// fused-tape body emits unchanged; on [`EmitStrategy::StructDirect`]
+/// the body routes JSON's keyword-payload projection through
+/// `builder.push_leaf_with_bool(value)` (for `bool` rules) and
+/// `builder.push_leaf_with_unit()` (for `null`-marker rules) per the
+/// `JsonStructBuilder` contract documented in
+/// `crates/core/src/runtime/json/builder.rs`.
 pub fn emit_parse_keyword(
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+    strategy: &EmitStrategy,
+) -> TokenStream {
+    if strategy.is_struct_direct() {
+        return struct_direct::emit_parse_keyword_struct_direct(
+            grammar_suffix,
+            rule,
+            ir,
+        );
+    }
+    emit_parse_keyword_tape(grammar_suffix, rule, ir)
+}
+
+/// Tape-path body — pre-AZ-I.W2 emission preserved for every grammar
+/// the [`EmitStrategy::for_grammar`] resolver routes to TapeDirect.
+fn emit_parse_keyword_tape(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,

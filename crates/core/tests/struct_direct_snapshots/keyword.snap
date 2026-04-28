@@ -1,0 +1,114 @@
+// AZ-I.W2.RD — struct-direct Keyword-shape snapshot.
+//
+// Canonical JSON keyword emissions on EmitStrategy::StructDirect.
+// Anchored snippets the snapshot driver scans for `builder.` presence
+// and tape-emission absence (token "tape" + dot + push) — see the
+// driver's gate assertions for the exact pattern. The struct-direct
+// body emits exclusively through the StructBuilder trait surface.
+//
+// Source: crates/core/src/backend/rust/emitter/shapes/keyword/struct_direct.rs
+// Emitted by `emit_parse_keyword_struct_direct` for JSON's two
+// keyword-classified rules (`null = "null" -> 0u8`,
+// `bool = "true" -> true | "false" -> false`).
+
+// ─── Single-literal: null = "null" -> 0u8 ─────────────────────────────
+// `TypeDesc::U8` rule whose payload is zero projects to the unit /
+// null marker per JsonStructBuilder::push_leaf_with_unit.
+
+#[inline(always)]
+#[allow(non_snake_case, clippy::too_many_arguments)]
+pub fn parse_keyword_json_null(
+    input: &[u8],
+    p: &mut usize,
+    _first_byte: u8,
+    _state: &mut __shape_support_json::ScanState,
+    builder: &mut crate::runtime::JsonStructBuilder<'_>,
+) -> ::core::result::Result<
+    crate::runtime::tape::TapeOffset,
+    crate::runtime::tape::DtaError,
+> {
+    let at = *p;
+    let end = at + 4usize;
+    if input.len() < end || input[at..end] != [110u8, 117u8, 108u8, 108u8] {
+        return ::core::result::Result::Err(
+            crate::runtime::tape::DtaError::Syntax {
+                offset: at as u32,
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+            },
+        );
+    }
+    *p = end;
+    builder.push_leaf_with_unit();
+    ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+}
+
+// ─── Alt-of-literals: bool = "true" -> true | "false" -> false ───────
+// `TypeDesc::Bool` rule whose branches carry InlineScalar(0u32) /
+// InlineScalar(1u32) project to push_leaf_with_bool(payload != 0).
+
+#[inline(always)]
+#[allow(non_snake_case, clippy::too_many_arguments)]
+pub fn parse_keyword_json_bool(
+    input: &[u8],
+    p: &mut usize,
+    first_byte: u8,
+    state: &mut __shape_support_json::ScanState,
+    builder: &mut crate::runtime::JsonStructBuilder<'_>,
+) -> ::core::result::Result<
+    crate::runtime::tape::TapeOffset,
+    crate::runtime::tape::DtaError,
+> {
+    let _ = state;
+    match first_byte {
+        102u8 => {
+            // "false" branch — payload is 0u32 → push_leaf_with_bool(false)
+            if input.len() >= *p + 5usize
+                && input[*p..*p + 5usize] == [102u8, 97u8, 108u8, 115u8, 101u8]
+            {
+                let at = *p;
+                let end = at + 5usize;
+                *p = end;
+                builder.push_leaf_with_bool(((0u32) as u32) != 0u32);
+                return ::core::result::Result::Ok(
+                    crate::runtime::tape::TapeOffset::NONE,
+                );
+            }
+            return ::core::result::Result::Err(
+                crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                },
+            );
+        }
+        116u8 => {
+            // "true" branch — payload is 1u32 → push_leaf_with_bool(true)
+            if input.len() >= *p + 4usize
+                && input[*p..*p + 4usize] == [116u8, 114u8, 117u8, 101u8]
+            {
+                let at = *p;
+                let end = at + 4usize;
+                *p = end;
+                builder.push_leaf_with_bool(((1u32) as u32) != 0u32);
+                return ::core::result::Result::Ok(
+                    crate::runtime::tape::TapeOffset::NONE,
+                );
+            }
+            return ::core::result::Result::Err(
+                crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                },
+            );
+        }
+        _ => ::core::result::Result::Err(
+            crate::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+            },
+        ),
+    }
+}

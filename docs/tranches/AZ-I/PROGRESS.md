@@ -931,3 +931,84 @@ shape supports StructDirect, the migrated test surfaces compile.
 Bench gate verification (twitter ≥ 1967, canada ≥ 1231, citm ≥ 2438;
 CSS normalize ≥ 735, bootstrap ≥ 600, tailwind ≥ 500; Sheets
 parse_simple ≥ 95) and the FINAL.md absorption remain.
+
+### Discovered scope-reveal — JsonStructBuilder Object deposit bug
+
+The migrated JSON tests (`structural`, `sonic_rs_parity`,
+`serialize_roundtrip`, `wrap_compound_elision`) compile post-flip
+but 15/50 fail with the same panic:
+
+    thread '...' panicked at crates/core/src/runtime/json/builder.rs:190:17:
+    Object value pushed without pending key
+
+Root cause: `OpenFrame::Object`'s `deposit` arm asserts
+`pending_key.is_some()` and only pushes a `JsonPair` if
+`pending_key.take()` returns Some. But the JSON struct-direct
+emitter calls `parse_string_JsonParser_string` for the FIRST
+object key directly (no enclosing `parse_flat_JsonParser_pair`
+compound), so the deposit lands on the Object frame with
+`pending_key = None`. The assertion fires; in release builds the
+deposit silently drops the key and produces an Object whose
+pairs Vec is empty.
+
+The intended protocol (per the OpenFrame::Object docstring) is for
+`pending_key` to be set on the Object frame BEFORE the value push
+arrives. The mechanism for that — either a key-vs-value
+disambiguation inside `push_leaf_with_str` or a Pair-compound
+wrapping every key/value pair from the emitter side — was never
+authored in the W2-act.B1 substrate landing.
+
+The bug is invisible at W2-act.B1 close because:
+- Single-pair objects: only one push_leaf_with_str hits the
+  Object frame; the value push consumes it (the key path is
+  silently broken but the test fixtures didn't exercise multi-
+  pair objects).
+- Multi-pair objects: the SECOND key push hits the assertion or
+  silently drops in release.
+- Empty objects: never hit the deposit path.
+
+Fix candidates (orchestrator-owned, both forbidden in
+W2-act.recovery scope):
+
+1. **Runtime side** (`crates/core/src/runtime/json/builder.rs`):
+   teach `OpenFrame::Object`'s deposit to set `pending_key` when
+   it's None and the deposited value is `JsonValue::String`. This
+   matches the JsonStructBuilder docstring's semantics:
+   "Object's value slot fills here; the matching key was set by
+   the most recent `push_leaf_with_str`."
+2. **Emitter side**
+   (`crates/core/src/backend/rust/emitter/shapes/object.rs`):
+   wrap each key/value iteration in `begin_compound(pair_layout)`
+   / `end_compound`. The Pair frame's key/value slot logic is
+   already correct (verified at
+   `JsonStructBuilder::deposit` `OpenFrame::Pair` arm).
+
+Choice (1) is more KISS — single-method change in the runtime;
+the existing emitter is unchanged. Choice (2) is more grammar-
+authoritative — the `pair` rule is the syntactic unit, the
+emitter should respect it.
+
+Either fix is a single-commit close; the W2-act.C close ceremony
+should pick it up before bench-gate verification.
+
+### Other pre-existing test breakages (orchestrator-owned)
+
+The following tests fail to compile post-flip; these are
+substrate-without-consumer landings from W2-act.B1/B2/B3 that
+never had their consumer migrated (the AUDIT-1 §2(a) violation
+the recovery synthesis flagged):
+
+- `crates/core/tests/sheets_expr_parity.rs` — uses
+  `parsed.tape()` / `parsed.root_offset()` /
+  `GoogleSheetsParserNodeView::new` against `SheetsDocument`.
+- `crates/core/tests/typed_accessor_surface.rs` — uses
+  `view.input()` / `view.span()` / `view.rule_kind()` /
+  `view.children()` against `SheetsView`. The `SheetsView`
+  newtype's surface authored at W2-act.B2 doesn't expose those
+  cursor-shaped accessors (intentional — the typed view IS the
+  parse output).
+- `crates/core/tests/css_l4_parity.rs` — uses `parsed.tape()`
+  against `CssDocument`.
+
+These migrations are outside W2-act.recovery scope per the file
+allow-list. The W2-act.C close ceremony picks them up.

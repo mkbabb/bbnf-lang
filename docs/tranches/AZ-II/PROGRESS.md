@@ -51,14 +51,43 @@ and `feedback_no-orthogonal-codepaths` forbid retaining a
 tape-bearing substrate for BBNF alongside struct-only data
 grammars, even under W2 pressure.
 
+## 2026-04-28 — wave plan refined per W2-CLOSE-AUDIT
+
+The original W0 / W1 / W2 / W3 four-wave shape collapses into a
+single **AZ-II.cutover** wave per `docs/tranches/AZ-I/audit/W2-CLOSE-AUDIT.md`
+§9. The W2-act activation pattern is reusable for BBNF without
+further substrate work; Stage A / Stage B is two regen invocations
+rather than a wave's worth of ceremony; tape deletion is mechanical
+once `crates/tape/` has zero remaining consumers. Wave doc lands at
+`docs/tranches/AZ-II/waves/cutover.md`. The W0 / W1 / W2 wave docs
+carry supersede notices and stay on disk as historical record.
+
+The cutover wave runs in three sequential sub-stages:
+
+- **AZ-II.cutover.A** (cap 120 min) — `tape::dta` hoist to
+  `bbnf-ir::dta` per `audit/AUDIT-6` §8.2; `tape::visitor` family
+  deletion (746 LOC) per §8.3; tape driver dead-helper deletion per
+  `audit/AUDIT-3` §6; BBNF typed-leaf authoring closes
+  `StructRegistry` for BBNF; `crates/core/src/runtime/bbnf/`
+  authored; resolver-arm extension for `BbnfBootstrap`. IR-side
+  decay: `crates/ir/src/passes/recognizers/dta.rs` ~900 LOC
+  amputation per `audit/AUDIT-3` §1.
+- **AZ-II.cutover.B** (cap 60 min) — Stage A regen + Stage B
+  byte-equal cycle. Permanent CI gate at
+  `crates/core/tests/bbnf_bootstrap_reproducibility.rs`.
+- **AZ-II.cutover.C** (cap 120 min) — `crates/tape/` deletion;
+  cross-crate severance; view / pprint / @debug recode; parity
+  harness recode; AZ-II FINAL.md; `docs/benchmarks/post-AZ-II.json`
+  archive.
+
 ## Wave status
 
 | Wave | Status | Headline |
 |---|---|---|
-| W0 | planned | Bootstrap-cutover research + classifier extension |
-| W1 | planned | Stage A — tape-compiler builds candidate |
-| W2 | planned | Stage B — candidate rebuilds itself, byte-equal gate |
-| W3 | planned | FINAL — tape deletion + parity recode + BA handoff |
+| W0 | superseded (2026-04-28) | Folded into cutover.A (substrate hoist + BBNF runtime + decay sweep) |
+| W1 | superseded (2026-04-28) | Folded into cutover.B (Stage A + Stage B byte-equal cycle) |
+| W2 | superseded (2026-04-28) | Folded into cutover.C (`crates/tape/` deletion + recode + FINAL) |
+| cutover | planned | BBNF self-host + tape deletion ([waves/cutover.md](waves/cutover.md)) |
 
 ## Handoff
 

@@ -63,9 +63,8 @@ pub use csp_strategy::{
     StrategyDomain, StrategyValue, WrapMode,
 };
 pub use recognizers::dta::{
-    lift_dta, summarise as summarise_dta, Associativity, CounterOptional, DtaBuilder, DtaProfile,
-    DtaState, DtaSummary, DtaTable, FrameKind, LiteralPayload, PrecedenceEntry, PrecedenceTable,
-    RegexPayloadKind, SeqPromote, StateId,
+    lift_dta, Associativity, CounterOptional, DtaBuilder, DtaState, DtaTable, FrameKind,
+    LiteralPayload, PrecedenceEntry, PrecedenceTable, RegexPayloadKind, SeqPromote, StateId,
 };
 pub use recognizers::mine_list_rules;
 pub use recognizers::mine_recognizers;

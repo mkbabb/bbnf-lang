@@ -73,7 +73,6 @@
 
 use std::collections::HashMap;
 
-use crate::passes::sets::PushFingerprint;
 use crate::{FnDescriptor, GrammarIR, IrNode, IrRule, MapExpr, RuleId, StringId, TypeDesc};
 
 // ── State identifiers ───────────────────────────────────────────────
@@ -1549,66 +1548,15 @@ fn infer_associativity(literal: &str) -> Associativity {
     }
 }
 
-// ── Inspector helpers ───────────────────────────────────────────────
-
-/// Produce a coarse summary of a [`DtaTable`] — state count, chain
-/// count, max depth, counter-optional count. Used by tests and the
-/// emitter's debug logging; no runtime consumer touches this.
-pub fn summarise(table: &DtaTable, ir: &GrammarIR) -> DtaSummary {
-    let non_transparent = ir.rules.iter().filter(|r| !r.meta.is_transparent).count();
-    DtaSummary {
-        state_count: table.states.len(),
-        rule_count: non_transparent,
-        lifted_rules: table.rule_entries.len(),
-        shunting_yard_count: table
-            .shunting_yard_chains
-            .values()
-            .collect::<std::collections::HashSet<_>>()
-            .len(),
-        counter_optional_count: table.counter_optional_rules.len(),
-        max_depth: table.max_nesting_depth,
-    }
-}
-
-/// Structural summary of a DTA lift. Mostly for test assertions —
-/// the runtime consumer reads the table directly.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct DtaSummary {
-    pub state_count: usize,
-    pub rule_count: usize,
-    pub lifted_rules: usize,
-    pub shunting_yard_count: usize,
-    pub counter_optional_count: usize,
-    pub max_depth: u16,
-}
-
-// ── Profile hook ────────────────────────────────────────────────────
-
-/// Per-grammar DTA stats for the profile struct. Populated by
-/// `GrammarIR::profile()` in a later wave; V3 exposes the stats
-/// standalone so tests can assert coverage before the profile
-/// integration.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct DtaProfile {
-    pub state_count: u16,
-    pub shunting_yard_chains: u16,
-    pub counter_optional_rules: u16,
-    pub max_nesting_depth: u16,
-}
-
-impl DtaProfile {
-    pub fn from_table(table: &DtaTable) -> Self {
-        let unique_chains: std::collections::HashSet<_> =
-            table.shunting_yard_chains.values().copied().collect();
-        Self {
-            state_count: table.states.len().min(u16::MAX as usize) as u16,
-            shunting_yard_chains: unique_chains.len().min(u16::MAX as usize) as u16,
-            counter_optional_rules: table
-                .counter_optional_rules
-                .len()
-                .min(u16::MAX as usize) as u16,
-            max_nesting_depth: table.max_nesting_depth,
-        }
-    }
-}
+// AZ-II.cutover.A — `summarise` / `DtaSummary` / `DtaProfile` retired
+// per `audit/AUDIT-3-DECAY-INVENTORY.md` §1 + AUDIT-6 §8.4. Verified
+// zero non-doc consumers across the workspace pre-deletion. The
+// remaining DTA surface (`DtaState`, `DtaTable`, `DtaBuilder`,
+// `lift_dta`, `Associativity`, `CounterOptional`, `FrameKind`,
+// `LiteralPayload`, `PrecedenceEntry`, `PrecedenceTable`,
+// `RegexPayloadKind`, `SeqPromote`, `StateId`) is consumed by
+// `core::backend::rust::emitter::dfa_codegen`,
+// `recognizers::operator_chain`, and `core::backend::rust::emitter::grammar`
+// — those entries stay live until cutover.C retires the tape-direct
+// path entirely.
 

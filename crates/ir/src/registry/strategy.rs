@@ -227,6 +227,19 @@ impl EmitStrategy {
                 ts: None,
                 wasm: None,
             },
+            // AZ-II.cutover.E (Phase 2): math struct-direct substrate.
+            // The math grammar projects through the `bbnf::runtime::math`
+            // typed-value enum + `MathStructBuilder` / `MathDocument`
+            // substrate authored at cutover.E. Substrate-only; cutover.F
+            // regens.
+            ("MathParser", true) => EmitStrategy::StructDirect {
+                rust: SubstrateBinding {
+                    builder_path: "crate::runtime::math::MathStructBuilder",
+                    document_path: "crate::runtime::math::MathDocument",
+                },
+                ts: None,
+                wasm: None,
+            },
             // Catch-all — every grammar not yet activated stays on the
             // legacy tape substrate. The `_ => TapeDirect` close is
             // the wave-local revert per W2.md §Reversal — per

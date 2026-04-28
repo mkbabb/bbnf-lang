@@ -25,6 +25,7 @@ pub mod error;
 pub mod google_sheets;
 pub mod handle;
 pub mod json;
+pub mod math;
 pub mod parsed;
 pub mod path;
 pub mod view;
@@ -37,6 +38,10 @@ pub use builder::StructBuilder;
 pub use csv::{
     CsvArena, CsvCompound, CsvCompoundId, CsvCompoundKind, CsvDocument, CsvKind,
     CsvPathQuery, CsvStructBuilder, CsvValue, CsvView,
+};
+pub use math::{
+    MathArena, MathCompound, MathCompoundId, MathCompoundKind, MathDocument, MathKind,
+    MathPathQuery, MathStructBuilder, MathValue, MathView,
 };
 pub use css_l4::{
     CssAngle, CssAngleUnit, CssArena, CssColor, CssColorFunction, CssColorMix,

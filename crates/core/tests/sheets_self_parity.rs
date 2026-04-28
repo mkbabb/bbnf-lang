@@ -25,11 +25,17 @@ use ::bbnf::grammar::generated::google_sheets::*;
 // ── Helpers ─────────────────────────────────────────────────────────
 
 /// Parse once, emit the `serialize_compact` canonical form.
+///
+/// AZ-I.W2-act.close B2 — migrated from the cursor-backed
+/// `GoogleSheetsParser::serialize_compact(node)` route to the
+/// struct-tree walker on [`bbnf::runtime::SheetsDocument`]. The
+/// pre-W2-act emitter consulted [`crate::runtime::tape::TapeCursor`]
+/// span text via `GoogleSheetsParserNodeView::from_cursor`; under the
+/// struct-direct flip the parse output IS the typed tree, so the
+/// equivalent surface is `doc.serialize_compact()`.
 fn serialize(input: &str) -> String {
-    let parsed = GoogleSheetsParser::parse(input).expect("sheets parse must succeed");
-    let view = parsed.view();
-    let node = GoogleSheetsParserNodeView::from_cursor(view.cursor(), parsed.input());
-    GoogleSheetsParser::serialize_compact(node)
+    let doc = GoogleSheetsParser::parse(input).expect("sheets parse must succeed");
+    doc.serialize_compact()
 }
 
 /// Prettify one round via the combinator side-channel + shared printer.

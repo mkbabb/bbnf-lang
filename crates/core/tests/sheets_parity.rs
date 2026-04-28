@@ -15,137 +15,124 @@
 //!   mul_op       = "*" -> 0u8 | "/" -> 1u8         -> Nu8
 //!   unary_prefix = "+" -> 0u8 | "-" -> 1u8         -> Nu8
 //!
-//! Each test parses representative formulas and walks the tape via
-//! `ChildIter` (zero-alloc) to confirm the typed payloads land.
+//! Each test parses a representative formula and walks the resulting
+//! [`bbnf::runtime::SheetsDocument`]'s typed value tree to confirm
+//! the typed projections land.
 //!
-//! AU.6.8 audit findings:
+//! # AZ-I.W2-act.close B2 — struct-direct migration
 //!
-//!   1. `number -> f64` does NOT reach the tape — the regex match
-//!      completes but the f64 conversion is not emitted; the inner
-//!      `__has_payload` flag stays false (similar gap to BBNF
-//!      int_lit / float_lit).
-//!   2. `boolean`, `error_literal`, `sheet_prefix`, `compare_op`,
-//!      `add_op`, `mul_op`, `unary_prefix` are all multi-branch
-//!      Nu8 alts — the alt-payload-emission gap means only the
-//!      FIRST alt branch carries the payload write per rule.
-//!   3. `string`, `cell_ref`, `identifier` use `-> input : Span`
-//!      which the grammar passes through but the codegen emits
-//!      structural `push_compound(Rule, …)`. The `Span` payload
-//!      is lost.
-//!
-//! See `docs/tranches/AU/typed-parity-audit.md`.
+//! Pre-W2-act this file walked the parser's [`crate::runtime::tape::Tape`]
+//! looking for `Span` / `KvPair` records whose `payload_u8` /
+//! `payload_bytes(rec, 8)` columns carried the typed leaves. Under the
+//! struct-direct flip the tape substrate retired alongside the
+//! cursor-backed view; `GoogleSheetsParser::parse` now returns a
+//! [`bbnf::runtime::SheetsDocument`] whose [`bbnf::runtime::SheetsValue`]
+//! tree IS the typed projection. The walker now collects every
+//! [`bbnf::runtime::SheetsValue::Tag`] / [`bbnf::runtime::SheetsValue::Error`]
+//! / [`bbnf::runtime::SheetsValue::Bool`] / [`bbnf::runtime::SheetsValue::Number`]
+//! reachable from the document root; the per-leaf assertions below
+//! re-target onto the typed-tree shape the grammar's `->` projections
+//! produce.
 
-use bbnf::runtime::tape::{Tape, TapeCursor, TapeKind};
 use ::bbnf::grammar::generated::google_sheets::*;
+use bbnf::runtime::{
+    SheetsCompoundKind, SheetsDocument, SheetsValue,
+};
 
 
 // ─── Walker helpers ──────────────────────────────────────────────────
 
-/// Pre-order tape walk via the AU.3.2 zero-alloc child iterator.
+/// Walk every [`SheetsValue`] reachable from `doc.root()` in pre-order
+/// and invoke `visit` once per node, passing the value plus its
+/// enclosing compound's structural-kind tag (the parent's
+/// [`SheetsCompoundKind`], or [`SheetsCompoundKind::Wrap`] for the
+/// root).
 ///
-/// B5.W0 — iterative `Vec<TapeCursor>` worklist replaces the prior
-/// recursive descent. Deeply-nested formulae (e.g.
-/// `=IF(A1>10, SUM(B1:B10), 0)`) overflowed the host stack on the
-/// recursive form because every nested call frame's locals plus the
-/// `children_zero_alloc()` iterator state pinned ~hundreds of bytes
-/// per recursion level. The worklist visits the same pre-order
-/// sequence: pop a cursor, record it, push its children in natural
-/// left-to-right order so the LIFO pop yields them in reverse —
-/// the order the prior recursive form's
-/// `kids.reverse(); for c in kids { walk(c) }` step produced.
-/// A `seen` offset set guards against substrate cycles (defensive,
-/// not expected to trigger).
-fn walk<'t, R>(
-    _tape: &'t Tape<R>,
-    root: TapeCursor<'t, R>,
-    out: &mut Vec<(TapeKind, u8, u8, bool)>,
+/// AZ-I.W2-act.close B2 — replaces the pre-flip `walk(tape, cursor,
+/// out)` worklist that consumed [`crate::runtime::tape::TapeCursor`]
+/// records. The struct-tree walker uses an iterative `Vec` worklist
+/// over the arena's compound slabs — deeply-nested formulae
+/// (`=IF(A1>10, SUM(B1:B10), 0)`, the nested LET / LAMBDA chains in
+/// `data/sheets/stress.txt`) cannot overflow the host stack. The
+/// worklist visits the same pre-order sequence: pop, visit, push
+/// children in reverse so LIFO yields source order.
+fn walk_value_tree<'p, F: FnMut(&SheetsValue<'p>, SheetsCompoundKind)>(
+    doc: &SheetsDocument<'p>,
+    visit: &mut F,
 ) {
-    let mut stack: Vec<TapeCursor<'t, R>> = Vec::with_capacity(32);
-    let mut seen: std::collections::HashSet<u32> =
-        std::collections::HashSet::new();
-    stack.push(root);
-    while let Some(cursor) = stack.pop() {
-        if !seen.insert(cursor.offset().0) {
-            // Defensive: a tape with cyclic child_off / sib_skip
-            // should never occur in correctly-built substrate, but
-            // re-visiting an offset would otherwise re-walk its
-            // entire subtree forever.
-            continue;
-        }
-        let rec = cursor.record();
-        out.push((
-            rec.kind(),
-            cursor.variant_idx(),
-            cursor.meta_idx(),
-            rec.has_payload(),
-        ));
-        if rec.has_children() {
-            let kids: Vec<TapeCursor<'t, R>> =
-                cursor.children_zero_alloc().collect();
-            // Push children in natural order so the LIFO pop yields
-            // them in reverse — matching the recursive form's
-            // `kids.reverse(); for c in kids { walk(c) }`.
-            for c in kids {
-                stack.push(c);
+    let mut stack: Vec<(SheetsValue<'p>, SheetsCompoundKind)> =
+        Vec::with_capacity(32);
+    stack.push((*doc.root(), SheetsCompoundKind::Wrap));
+    while let Some((value, parent)) = stack.pop() {
+        visit(&value, parent);
+        if let SheetsValue::Compound(id) = value {
+            let entry = doc.compound(id);
+            // Push children in reverse so the LIFO pop yields them in
+            // natural left-to-right pre-order.
+            for child in entry.children.iter().rev() {
+                stack.push((*child, entry.kind));
             }
         }
     }
 }
 
-#[allow(dead_code)]
-fn parse_records(input: &str) -> Vec<(TapeKind, u8, u8, bool)> {
-    let parsed = GoogleSheetsParser::parse(input)
-        .unwrap_or_else(|e| panic!("Sheets parse failed for {input:?}: {e:?}"));
-    let root_off = parsed.view().cursor().offset();
-    let tape = parsed.tape();
-    let cursor = TapeCursor::new(tape, root_off);
-    let mut out = Vec::new();
-    walk(tape, cursor, &mut out);
-    out
-}
-
-/// Collect every typed-leaf record (Span or KvPair) carrying a 1-byte
-/// payload. The codegen uses `TapeKind::KvPair` for Alt-bodied rules
-/// with explicit `-> Nu8` annotations and `TapeKind::Span` for plain
-/// Span / single-discriminator paths.
+/// Collect every [`SheetsValue::Tag`] / [`SheetsValue::Error`] /
+/// [`SheetsValue::Bool`] reachable from `doc.root()` as a `(parent_kind,
+/// byte)` tuple — the struct-tree analog of the pre-flip
+/// `typed_u8_payloads(input)` tape-walk that surfaced every Nu8
+/// payload byte.
 ///
-/// AY.W1.4: routed through `payload_u8` rather than
-/// `payload_bytes(rec, 1)` because the Pratt-emitter Option C inline
-/// switch landed the operator-discriminant byte in `pay_narrow`
-/// (`PayloadData::InlineScalar`) instead of `pay_agg` (the pre-AY
-/// `arena_mut().push + push_leaf_with_arena_payload` route). Both
-/// `add_op` / `mul_op` / `unary_prefix` Alt-as-KvPair records and the
-/// in-Pratt op-leaf Span records now carry their 1-byte discriminant
-/// via the inline-scalar column. `payload_u8` consults the
-/// `PAYLOAD_IN_ARENA_BIT` bit and fans out to the correct column.
-fn typed_u8_payloads(input: &str) -> Vec<(u8, u8)> {
-    let parsed = GoogleSheetsParser::parse(input).expect("parse");
-    let tape = parsed.tape();
+/// `Bool(true)` projects to `(Formula, 1)` for the `boolean -> true`
+/// branch; `Bool(false)` to `(Formula, 0)` for the `-> false` branch.
+/// The grammar's typed declaration order matches the bool's truthiness
+/// so consumers can assert the branch tag fired without re-deriving
+/// the discriminator from the focused compound.
+fn typed_u8_payloads(input: &str) -> Vec<(SheetsCompoundKind, u8)> {
+    let doc = GoogleSheetsParser::parse(input).expect("parse");
     let mut out = Vec::new();
-    for rec in tape.iter() {
-        if (rec.kind() == TapeKind::Span || rec.kind() == TapeKind::KvPair) && rec.has_payload() {
-            if let Some(b) = tape.payload_u8(rec) {
-                out.push((rec.variant_idx(), b));
-            }
-        }
-    }
+    walk_value_tree(&doc, &mut |value, parent| match *value {
+        SheetsValue::Tag(b) => out.push((parent, b)),
+        SheetsValue::Error(b) => out.push((parent, b)),
+        SheetsValue::SheetPrefix { tag, .. } => out.push((parent, tag)),
+        SheetsValue::Bool(b) => out.push((parent, if b { 1 } else { 0 })),
+        _ => {}
+    });
     out
 }
 
-/// Read 8-byte aggregate-path f64 payloads (for `number -> f64`).
-fn typed_f64_payloads(input: &str) -> Vec<(u8, f64)> {
-    let parsed = GoogleSheetsParser::parse(input).expect("parse");
-    let tape = parsed.tape();
+/// Collect every [`SheetsValue::Number`] reachable from `doc.root()`.
+///
+/// Pre-W2-act this read 8-byte aggregate `payload_bytes(rec, 8)`
+/// payloads off Span / KvPair tape records; under the struct-direct
+/// flip every `number -> f64` projection lands as
+/// [`SheetsValue::Number(f64)`] directly.
+fn typed_f64_payloads(input: &str) -> Vec<(SheetsCompoundKind, f64)> {
+    let doc = GoogleSheetsParser::parse(input).expect("parse");
     let mut out = Vec::new();
-    for rec in tape.iter() {
-        if (rec.kind() == TapeKind::Span || rec.kind() == TapeKind::KvPair) && rec.has_payload() {
-            if let Some(b) = tape.payload_bytes(rec, 8) {
-                let arr: [u8; 8] = b.try_into().unwrap();
-                out.push((rec.variant_idx(), f64::from_le_bytes(arr)));
-            }
+    walk_value_tree(&doc, &mut |value, parent| {
+        if let SheetsValue::Number(n) = *value {
+            out.push((parent, n));
         }
-    }
+    });
     out
+}
+
+/// Total node count under `doc.root()` — pre-order tree size of the
+/// struct-direct value tree.
+///
+/// AZ-I.W2-act.close B2 — replaces the pre-flip `parse_records(input)`
+/// → `Vec<(TapeKind, u8, u8, bool)>` walker. The struct-tree node
+/// count is the count-of-walked-values; per-record kind/variant/meta
+/// triples retire alongside the tape substrate (the tape's
+/// `(kind, variant, meta, has_payload)` quadruple has no struct-tree
+/// equivalent — the typed value tree is one-to-one with grammar shape,
+/// not with the row-major substrate that previously interleaved
+/// payload + structural records).
+fn count_value_nodes(input: &str) -> usize {
+    let doc = GoogleSheetsParser::parse(input).expect("parse");
+    let mut count = 0usize;
+    walk_value_tree(&doc, &mut |_, _| count += 1);
+    count
 }
 
 // ─── Parse-reach tests: every grammar branch parses ──────────────────
@@ -473,17 +460,18 @@ fn pinned_number_drops_f64_payload() {
 
 #[test]
 fn child_iter_walks_complex_formula() {
+    // AZ-I.W2-act.close B2 — pre-flip this asserted that
+    // `walk(tape, cursor, &mut out)` reached ≥ 5 tape records for a
+    // representative nested formula. Under struct-direct the
+    // equivalent invariant is the value-tree node count: `IF(...)`
+    // has at least one func_call compound, an identifier, and several
+    // typed leaves under its arg list.
     let input = "=IF(A1>10, SUM(B1:B10), 0)";
-    let parsed = GoogleSheetsParser::parse(input).expect("parse");
-    let tape = parsed.tape();
-    let root_off = parsed.view().cursor().offset();
-    let cursor = TapeCursor::new(tape, root_off);
-    let mut out = Vec::new();
-    walk(tape, cursor, &mut out);
+    let total = count_value_nodes(input);
     assert!(
-        out.len() >= 5,
-        "complex formula walk must produce many records, got {}",
-        out.len()
+        total >= 5,
+        "complex formula walk must produce many value-tree nodes, got {}",
+        total
     );
 }
 
@@ -533,17 +521,16 @@ fn range_ref_parses_with_and_without_sheet_prefix() {
 //
 // Two test families:
 //
-// 1. Tape-payload tests above exercise the existing tape-direct parser
-//    (today's GoogleSheetsParser::parse() returns Parsed<...>). These
-//    activate post-orchestrator-regen when the parser flips to
-//    StructDirect.
+// 1. Tape-payload tests above exercise the struct-direct parser
+//    (`GoogleSheetsParser::parse()` returns `SheetsDocument`). They
+//    walk the value tree through the helpers at the top of this file.
 //
 // 2. Wire-contract tests below build SheetsDocument values directly
 //    via SheetsStructBuilder against synthetic StructLayouts that
-//    mirror the grammar's typed projections. These prove the
-//    substrate is wired before the regen lands; once the orchestrator
-//    regens, the parse tests above read SheetsDocument and the two
-//    surfaces converge.
+//    mirror the grammar's typed projections. These tests use
+//    `b.finalise("")` to thread an empty input slice through the
+//    A.fix-introduced `SheetsDocument::input` field — the wire
+//    contract has no real source text, so the slice is empty.
 
 mod wire_contract {
     use bbnf::runtime::{
@@ -569,7 +556,7 @@ mod wire_contract {
     fn add_op_first_branch_maps_to_tag_zero() {
         let mut b = SheetsStructBuilder::new();
         b.push_branch_tag(0);
-        let doc = b.finalise();
+        let doc = b.finalise("");
         assert_eq!(*doc.root(), SheetsValue::Tag(0));
     }
 
@@ -577,7 +564,7 @@ mod wire_contract {
     fn add_op_second_branch_maps_to_tag_one() {
         let mut b = SheetsStructBuilder::new();
         b.push_branch_tag(1);
-        let doc = b.finalise();
+        let doc = b.finalise("");
         assert_eq!(*doc.root(), SheetsValue::Tag(1));
     }
 
@@ -587,7 +574,7 @@ mod wire_contract {
     fn boolean_true_lands_as_bool_leaf() {
         let mut b = SheetsStructBuilder::new();
         b.push_leaf_with_bool(true);
-        let doc = b.finalise();
+        let doc = b.finalise("");
         assert_eq!(*doc.root(), SheetsValue::Bool(true));
     }
 
@@ -597,7 +584,7 @@ mod wire_contract {
     fn error_literal_n_a_lands_as_error_zero() {
         let mut b = SheetsStructBuilder::new();
         b.push_leaf_error(0);
-        let doc = b.finalise();
+        let doc = b.finalise("");
         assert_eq!(*doc.root(), SheetsValue::Error(0));
     }
 
@@ -605,7 +592,7 @@ mod wire_contract {
     fn error_literal_null_lands_as_error_four() {
         let mut b = SheetsStructBuilder::new();
         b.push_leaf_error(4);
-        let doc = b.finalise();
+        let doc = b.finalise("");
         assert_eq!(*doc.root(), SheetsValue::Error(4));
     }
 
@@ -615,7 +602,7 @@ mod wire_contract {
     fn number_42_lands_as_f64_leaf() {
         let mut b = SheetsStructBuilder::new();
         b.push_leaf_with_f64(42.0);
-        let doc = b.finalise();
+        let doc = b.finalise("");
         assert_eq!(*doc.root(), SheetsValue::Number(42.0));
     }
 
@@ -632,7 +619,7 @@ mod wire_contract {
         b.push_branch_tag(0); // `+`
         b.push_leaf_with_f64(2.0);
         b.end_compound(h);
-        let doc = b.finalise();
+        let doc = b.finalise("");
         match *doc.root() {
             SheetsValue::Compound(id) => {
                 let view = doc.compound(id);
@@ -653,7 +640,7 @@ mod wire_contract {
         let h = b.begin_compound(&formula_layout);
         b.push_leaf_with_f64(3.14);
         b.end_compound(h);
-        let doc = b.finalise();
+        let doc = b.finalise("");
         match *doc.root() {
             SheetsValue::Compound(id) => {
                 let view = doc.compound(id);
@@ -678,7 +665,7 @@ mod wire_contract {
         b.push_leaf_with_f64(2.0);
         b.end_compound(h2);
         b.end_compound(h);
-        let doc = b.finalise();
+        let doc = b.finalise("");
         match *doc.root() {
             SheetsValue::Compound(id) => {
                 let view = doc.compound(id);
@@ -711,7 +698,7 @@ mod wire_contract {
         b.push_leaf_sheet_prefix(1, "Sheet1!");
         b.push_leaf_cell_ref("A1");
         b.end_compound(h);
-        let doc = b.finalise();
+        let doc = b.finalise("");
         match *doc.root() {
             SheetsValue::Compound(id) => {
                 let view = doc.compound(id);

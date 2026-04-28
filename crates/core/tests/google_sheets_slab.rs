@@ -155,7 +155,7 @@ fn prettify_index_match_formula() {
 fn wire_contract_number_is_f64_leaf() {
     let mut b = SheetsStructBuilder::new();
     b.push_leaf_with_f64(42.0);
-    let doc: SheetsDocument<'_> = b.finalise();
+    let doc: SheetsDocument<'_> = b.finalise("");
     match *doc.root() {
         SheetsValue::Number(n) => assert_eq!(n, 42.0),
         ref other => panic!("expected Number leaf, got {:?}", other),
@@ -166,7 +166,7 @@ fn wire_contract_number_is_f64_leaf() {
 fn wire_contract_bool_true_leaf() {
     let mut b = SheetsStructBuilder::new();
     b.push_leaf_with_bool(true);
-    let doc = b.finalise();
+    let doc = b.finalise("");
     match *doc.root() {
         SheetsValue::Bool(true) => {}
         ref other => panic!("expected Bool(true), got {:?}", other),
@@ -177,7 +177,7 @@ fn wire_contract_bool_true_leaf() {
 fn wire_contract_bool_false_leaf() {
     let mut b = SheetsStructBuilder::new();
     b.push_leaf_with_bool(false);
-    let doc = b.finalise();
+    let doc = b.finalise("");
     match *doc.root() {
         SheetsValue::Bool(false) => {}
         ref other => panic!("expected Bool(false), got {:?}", other),
@@ -189,7 +189,7 @@ fn wire_contract_string_leaf_borrows_input() {
     let s: &'static str = "hello";
     let mut b = SheetsStructBuilder::new();
     b.push_leaf_with_str(s);
-    let doc = b.finalise();
+    let doc = b.finalise("");
     match *doc.root() {
         SheetsValue::String(slice) => assert_eq!(slice, "hello"),
         ref other => panic!("expected String leaf, got {:?}", other),
@@ -200,7 +200,7 @@ fn wire_contract_string_leaf_borrows_input() {
 fn wire_contract_cell_ref_specialised_leaf() {
     let mut b = SheetsStructBuilder::new();
     b.push_leaf_cell_ref("$B$2");
-    let doc = b.finalise();
+    let doc = b.finalise("");
     match *doc.root() {
         SheetsValue::CellRef(slice) => assert_eq!(slice, "$B$2"),
         ref other => panic!("expected CellRef leaf, got {:?}", other),
@@ -211,7 +211,7 @@ fn wire_contract_cell_ref_specialised_leaf() {
 fn wire_contract_identifier_specialised_leaf() {
     let mut b = SheetsStructBuilder::new();
     b.push_leaf_identifier("SUM");
-    let doc = b.finalise();
+    let doc = b.finalise("");
     match *doc.root() {
         SheetsValue::Identifier(slice) => assert_eq!(slice, "SUM"),
         ref other => panic!("expected Identifier leaf, got {:?}", other),
@@ -222,7 +222,7 @@ fn wire_contract_identifier_specialised_leaf() {
 fn wire_contract_error_literal_carries_tag() {
     let mut b = SheetsStructBuilder::new();
     b.push_leaf_error(2); // #REF!
-    let doc = b.finalise();
+    let doc = b.finalise("");
     match *doc.root() {
         SheetsValue::Error(2) => {}
         ref other => panic!("expected Error(2), got {:?}", other),
@@ -233,7 +233,7 @@ fn wire_contract_error_literal_carries_tag() {
 fn wire_contract_sheet_prefix_carries_tag_and_text() {
     let mut b = SheetsStructBuilder::new();
     b.push_leaf_sheet_prefix(0, "'Sheet 1'!");
-    let doc = b.finalise();
+    let doc = b.finalise("");
     match *doc.root() {
         SheetsValue::SheetPrefix { tag, text } => {
             assert_eq!(tag, 0);
@@ -253,7 +253,7 @@ fn wire_contract_compound_with_two_children() {
     b.push_leaf_with_f64(1.0);
     b.push_leaf_with_f64(2.0);
     b.end_compound(h);
-    let doc = b.finalise();
+    let doc = b.finalise("");
     match *doc.root() {
         SheetsValue::Compound(id) => {
             let view = doc.compound(id);
@@ -273,7 +273,7 @@ fn wire_contract_branch_tag_deposits_as_tag() {
     // add_op = "+" -> 0u8 | "-" -> 1u8.
     let mut b = SheetsStructBuilder::new();
     b.push_branch_tag(1);
-    let doc = b.finalise();
+    let doc = b.finalise("");
     match *doc.root() {
         SheetsValue::Tag(1) => {}
         ref other => panic!("expected Tag(1), got {:?}", other),
@@ -289,7 +289,7 @@ fn wire_contract_wrap_with_one_child_collapses() {
     let h = b.begin_compound(&wrap_layout);
     b.push_leaf_with_f64(3.14);
     b.end_compound(h);
-    let doc = b.finalise();
+    let doc = b.finalise("");
     // Primary -> Wrap path: collapses to the single child.
     match *doc.root() {
         SheetsValue::Number(n) => assert!((n - 3.14).abs() < f64::EPSILON),
@@ -306,14 +306,14 @@ fn wire_contract_compound_kind_disambiguates_role() {
     let h = b1.begin_compound(&add_layout);
     b1.push_branch_tag(0);
     b1.end_compound(h);
-    let doc1 = b1.finalise();
+    let doc1 = b1.finalise("");
 
     let mut b2 = SheetsStructBuilder::new();
     let mul_layout = synth_layout(0, "mul_expr", LayoutKind::Struct);
     let h = b2.begin_compound(&mul_layout);
     b2.push_branch_tag(0);
     b2.end_compound(h);
-    let doc2 = b2.finalise();
+    let doc2 = b2.finalise("");
 
     match *doc1.root() {
         SheetsValue::Compound(id) => {
@@ -333,7 +333,7 @@ fn wire_contract_compound_kind_disambiguates_role() {
 fn wire_contract_view_kind_discriminates_root() {
     let mut b = SheetsStructBuilder::new();
     b.push_leaf_with_f64(1.0);
-    let doc = b.finalise();
+    let doc = b.finalise("");
     let view = doc.view();
     assert!(view.is_number());
     assert!(!view.is_string());
@@ -344,7 +344,7 @@ fn wire_contract_view_kind_discriminates_root() {
 fn wire_contract_to_value_borrows_root() {
     let mut b = SheetsStructBuilder::new();
     b.push_leaf_with_f64(42.5);
-    let doc = b.finalise();
+    let doc = b.finalise("");
     let v = doc.to_value();
     match *v {
         SheetsValue::Number(n) => assert!((n - 42.5).abs() < f64::EPSILON),
@@ -363,7 +363,7 @@ fn wire_contract_get_path_resolves_compound_index() {
     b.push_leaf_with_f64(20.0);
     b.push_leaf_with_f64(30.0);
     b.end_compound(h);
-    let doc = b.finalise();
+    let doc = b.finalise("");
     use bbnf::runtime::path::{Path, PathSegment};
     let p0 = [PathSegment::Index(0)];
     let p1 = [PathSegment::Index(1)];

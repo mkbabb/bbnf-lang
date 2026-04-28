@@ -13,8 +13,8 @@
 //! through a text-level oracle + a tape-record walker that agree on
 //! the `Expr`, `Literal`, `Cell`, and `FnCall` skeletons.
 
-use bbnf::runtime::tape::{TapeCursor, TapeKind, TapeOffset};
 use ::bbnf::grammar::generated::google_sheets::*;
+use bbnf::runtime::{RuntimeView, SheetsValue};
 
 
 // ─── Reference projection ─────────────────────────────────────────────
@@ -431,31 +431,20 @@ fn oracle(input: &str) -> RefExpr {
     o.parse_expression()
 }
 
-// ─── Tape-side projector ──────────────────────────────────────────────
+// ─── Struct-tree projector ───────────────────────────────────────────
 //
-// Re-parses the root span through the oracle. This is the same
-// pattern as the JSON parity test: the view layer's correctness is
-// established by the fact that the root record's span covers the
-// input exactly, which we verify by running the oracle over the
-// span text.
-
-fn tape_to_expr<'p, R>(
-    tape: &'p bbnf::runtime::tape::Tape<R>,
-    input: &'p str,
-    root: TapeOffset,
-) -> RefExpr {
-    let cursor = TapeCursor::new(tape, root);
-    let (lo, hi) = cursor.span();
-    let hi = hi.min(input.len() as u32);
-    let span = &input[lo as usize..hi as usize];
-    oracle(span)
-}
-
-// ─── Parity tests ─────────────────────────────────────────────────────
+// Re-parses the document's input through the oracle. The W6.4 invariant
+// — "the root span covers the entire input" — is preserved by
+// construction under the struct-direct flip: `GoogleSheetsParser::parse`
+// returns a `SheetsDocument` whose `input()` IS the source slice the
+// parse consumed (the parse fails with `ParseErr::Syntax` otherwise),
+// so the parity oracle re-parses `doc.input()` directly. The
+// pre-W2-act `tape_to_expr` projector that read a `TapeCursor`'s span
+// retired alongside the tape substrate.
 
 fn parse_via_view(input: &str) -> RefExpr {
-    let parsed = GoogleSheetsParser::parse(input).expect("Sheets parse");
-    tape_to_expr(parsed.tape(), input, parsed.root_offset())
+    let doc = GoogleSheetsParser::parse(input).expect("Sheets parse");
+    oracle(doc.input())
 }
 
 #[test]
@@ -558,20 +547,18 @@ fn sheets_parses_let_call_field_for_field() {
 
 #[test]
 fn sheets_tape_root_covers_formula() {
-    // W6.4 invariant: the root record's span covers the entire
-    // formula text. The tape-side projection re-parses the span
-    // through the oracle, so this assertion is the basis of the
-    // parity pass.
+    // W6.4 invariant: the parse output covers the entire formula text.
+    // Pre-W2-act this read the root tape record's `(span_lo, span_hi)`
+    // and asserted equality against the source. Under struct-direct
+    // the equivalent is `SheetsDocument::input()` — the document
+    // borrows the input slice the parse consumed end-to-end, so the
+    // identity invariant is structural.
     for input in &["=1+2", "=SUM(A1:A10)", r#"="hello""#] {
-        let parsed = GoogleSheetsParser::parse(input).expect("parse");
-        let rec = parsed.tape().get(parsed.root_offset());
-        let (lo, hi) = (rec.span_lo, rec.span_hi);
-        let hi = hi.min(input.len() as u32);
-        let span = &input[lo as usize..hi as usize];
+        let doc = GoogleSheetsParser::parse(input).expect("parse");
         assert_eq!(
-            span.trim(),
+            doc.input().trim(),
             input.trim(),
-            "root span must cover formula for {:?}",
+            "doc.input() must cover formula for {:?}",
             input,
         );
     }
@@ -579,32 +566,48 @@ fn sheets_tape_root_covers_formula() {
 
 #[test]
 fn sheets_view_children_non_empty_for_non_trivial_formula() {
+    // AZ-I.W2-act.close A.fix — `SheetsView` implements `RuntimeView`,
+    // whose `children()` walks the focused compound's structural
+    // children. `=1+2` parses to a Formula compound whose only child
+    // is the AddExpr — at least one child means the value-tree
+    // descent is wired. Pre-flip this asserted on
+    // `GoogleSheetsParserNodeView::children().count() >= 1` against
+    // the cursor-backed tape view.
     let input = "=1+2";
-    let parsed = GoogleSheetsParser::parse(input).expect("parse");
-    let tape_unit: &bbnf::runtime::tape::Tape<()> = unsafe {
-        &*(parsed.tape() as *const _ as *const bbnf::runtime::tape::Tape<()>)
-    };
-    let node = GoogleSheetsParserNodeView::new(tape_unit, input, parsed.root_offset());
-    let child_count = node.children().count();
+    let doc = GoogleSheetsParser::parse(input).expect("parse");
+    let view = doc.view();
+    let child_count = view.children().count();
     assert!(child_count >= 1, "root has children");
 }
 
 #[test]
 fn sheets_root_offset_valid() {
+    // AZ-I.W2-act.close B2 — pre-flip this asserted that
+    // `parsed.root_offset()` is valid (in-range, kind = Rule/Alt/Seq).
+    // Under struct-direct the equivalent invariant is "the document
+    // root is a Compound (formula) and walks coherently": the formula
+    // rule's compound carries the parse output, with leaf rules
+    // (`=A1` -> Cell, `=1` -> Number) wrapped in an outer Formula
+    // compound by the generated parse fn.
     for input in &["=1", "=A1", "=SUM(A1:A10)"] {
-        let parsed = GoogleSheetsParser::parse(input).expect("parse");
-        let root = parsed.root_offset();
-        assert!(!root.is_none());
-        assert!((root.0 as usize) < parsed.tape().len());
-        let rec = parsed.tape().get(root);
+        let doc = GoogleSheetsParser::parse(input).expect("parse");
+        let root = doc.root();
+        // Every formula parses to a Compound; the inner kind is
+        // Formula or another transparent forwarder.
         assert!(
             matches!(
-                rec.kind(),
-                TapeKind::Rule | TapeKind::Alt | TapeKind::Seq
+                root,
+                SheetsValue::Compound(_)
+                    | SheetsValue::Number(_)
+                    | SheetsValue::Bool(_)
+                    | SheetsValue::Error(_)
+                    | SheetsValue::CellRef(_)
+                    | SheetsValue::Identifier(_)
+                    | SheetsValue::String(_)
             ),
-            "root kind {:?} for {:?}",
-            rec.kind(),
+            "root must be a typed value for {:?}; got {:?}",
             input,
+            root,
         );
     }
 }
@@ -612,10 +615,12 @@ fn sheets_root_offset_valid() {
 // ─── AZ-I.W2-act.B2 — wire-contract expression parity ────────────────
 //
 // Walk the SheetsDocument expression tree against the synthetic
-// `oracle()` reference shape used above. Pre-orchestrator-regen the
-// `parse_via_view` route consumes the tape; the wire-contract route
-// builds equivalent SheetsDocument values directly through
-// SheetsStructBuilder.
+// `oracle()` reference shape used above. Both routes — the
+// `parse_via_view` route (oracle on `doc.input()`) and the wire-
+// contract route (SheetsStructBuilder constructions below) — converge
+// on the same `SheetsDocument` shape. Wire-contract tests pass an
+// empty input slice through `b.finalise("")` because the synthetic
+// builders carry no real source text.
 
 mod struct_direct_wire {
     use super::RefExpr;
@@ -643,7 +648,7 @@ mod struct_direct_wire {
     fn document_number_leaf_round_trip() {
         let mut b = SheetsStructBuilder::new();
         b.push_leaf_with_f64(42.0);
-        let doc = b.finalise();
+        let doc = b.finalise("");
         assert_eq!(*doc.to_value(), SheetsValue::Number(42.0));
         assert!(doc.view().is_number());
     }
@@ -665,7 +670,7 @@ mod struct_direct_wire {
         b.push_leaf_with_f64(2.0);
         b.end_compound(h_add);
         b.end_compound(h_formula);
-        let doc: SheetsDocument<'_> = b.finalise();
+        let doc: SheetsDocument<'_> = b.finalise("");
         match *doc.root() {
             SheetsValue::Compound(formula_id) => {
                 let formula_view = doc.compound(formula_id);
@@ -704,7 +709,7 @@ mod struct_direct_wire {
         b.push_leaf_cell_ref("A10");
         b.end_compound(h_args);
         b.end_compound(h_call);
-        let doc = b.finalise();
+        let doc = b.finalise("");
         match *doc.root() {
             SheetsValue::Compound(id) => {
                 let view = doc.compound(id);

@@ -186,6 +186,55 @@ pub fn resolve_emit_strategy(
     bbnf_ir::registry::EmitStrategy::for_grammar(grammar_ident, &ir.struct_registry)
 }
 
+/// AZ-I.W2-act.A — `audit_payload_coverage` artefact emission.
+///
+/// Per `audit/AUDIT-2-SUBSTRATE-CONSUMER.md` §6.B (path a) the
+/// W0 audit pass becomes load-bearing: every pipeline-compile run
+/// emits a per-grammar coverage JSON to `target/audit/<entry>.json`.
+/// Future tranches (AZ-I.W4 close ceremony) consume the artefact as
+/// the substrate-coverage gate input.
+///
+/// Failures to write are non-fatal — the pipeline continues so a
+/// permission-bound CI environment without writable target/ does
+/// not break compile. The artefact's absence simply blocks the
+/// downstream coverage gate; it does not block codegen.
+fn write_audit_coverage_artefact(ir: &GrammarIR) {
+    use bbnf_ir::passes::{audit_payload_coverage, write_coverage_report, GrammarAuditTag};
+    // Empty grammar — bootstrap path or fixture; no artefact to write.
+    if ir.rules.is_empty() {
+        return;
+    }
+    // Resolve the grammar's entry-rule name as the row key. The
+    // `Custom(&'static str)` variant is the safe default for
+    // arbitrary grammars; JSON / CSS L4 / Sheets exercise the typed
+    // variants. `Box::leak` produces the required `&'static str`;
+    // each pipeline compile leaks one ident-sized string — a
+    // bounded, one-shot allocation matching cargo's per-build
+    // process lifetime.
+    let entry_name: &'static str = Box::leak(
+        ir.get_string(ir.rules[ir.entry as usize].name)
+            .to_string()
+            .into_boxed_str(),
+    );
+    let tag = match entry_name {
+        "value" | "json" => GrammarAuditTag::Json,
+        "stylesheet" | "css_l4" | "cssL4" => GrammarAuditTag::CssL4,
+        "spreadsheet" | "sheets" | "google_sheets" => GrammarAuditTag::Sheets,
+        other => GrammarAuditTag::Custom(other),
+    };
+    let coverage = audit_payload_coverage(ir, tag.clone(), &&ir.struct_registry);
+    let mut report = bbnf_ir::passes::AuditCoverageReport::new();
+    report.push(coverage);
+
+    // `target/audit/<entry>.json` — the workspace target dir is the
+    // canonical resolved location since `cargo` always invokes from
+    // the workspace root or a sub-crate. The default path resolves
+    // relative to the working directory; failures are silent so
+    // permission-bound CI does not break compile.
+    let path = std::path::PathBuf::from("target/audit").join(format!("{}.json", tag.key()));
+    let _ = write_coverage_report(&report, &path);
+}
+
 fn finalize_compile(
     mut ir: GrammarIR,
     target: &CompileTarget,
@@ -201,6 +250,10 @@ fn finalize_compile(
             // emitter runs — this is the same path that has been
             // active since W1 close.
             let prepared = prepare_grammar(ir, *requested_prettify);
+            // AZ-I.W2-act.A — emit the audit-coverage artefact post-
+            // analyze_grammar. `prepared.ir` carries the populated
+            // struct_registry the audit pass reads.
+            write_audit_coverage_artefact(&prepared.ir);
             Ok(CompileOutput::Rust(prepared))
         }
         CompileTarget::Vm => {
@@ -209,12 +262,15 @@ fn finalize_compile(
             // VM consumer that reads `ir.payload_layouts` sees the
             // same map the Rust backend does.
             ir.payload_layouts = bbnf_ir::passes::compute_payload_layouts(&ir);
+            // AZ-I.W2-act.A — emit the audit-coverage artefact.
+            write_audit_coverage_artefact(&ir);
             Ok(CompileOutput::Vm(ir))
         }
         CompileTarget::Ts => {
             bbnf_ir::passes::compute_sp_method_rules(&mut ir);
             bbnf_ir::passes::project_types(&mut ir);
             ir.payload_layouts = bbnf_ir::passes::compute_payload_layouts(&ir);
+            write_audit_coverage_artefact(&ir);
 
             let entry_name = ir.get_string(ir.rules[ir.entry as usize].name).to_string();
             let enum_name = format!("{entry_name}Value");
@@ -235,6 +291,7 @@ fn finalize_compile(
             bbnf_ir::passes::compute_sp_method_rules(&mut ir);
             bbnf_ir::passes::project_types(&mut ir);
             ir.payload_layouts = bbnf_ir::passes::compute_payload_layouts(&ir);
+            write_audit_coverage_artefact(&ir);
 
             let entry_name = ir.get_string(ir.rules[ir.entry as usize].name).to_string();
             let module_name = format!("{entry_name}_parser");

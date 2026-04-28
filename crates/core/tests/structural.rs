@@ -1,49 +1,101 @@
-//! Deep structural validation tests for the tape-first JSON parser.
+//! AZ-I.W2-act.recovery — deep structural validation tests for the
+//! JSON struct-direct parse path.
 //!
-//! These tests parse known JSON inputs via `the proc-macro derive (retired B2)`, obtain
-//! the tape + view, and walk the cursor tree to assert specific
-//! structural properties: tape kinds, child counts, span text, and
-//! record bounds. This fills the gap where `tape_parity` checks only
-//! root record + total count, and `grammar_roundtrip` checks only rule
-//! counts.
+//! These tests parse known JSON inputs via `JsonParser::parse`, walk
+//! the resulting `JsonDocument`'s typed value tree, and assert specific
+//! structural properties: typed kind discrimination, child counts,
+//! span text recovery, and bounds. This fills the gap where
+//! `tape_parity` (BBNF-only post-AZ-I.W2-act) checks only root record +
+//! total count, and `grammar_roundtrip` checks only rule counts.
+//!
+//! # Migration history
+//!
+//! Pre-AZ-I.W2-act these tests asserted on `parsed.tape()` /
+//! `view.cursor()` accessors against the tape substrate. AZ-I.W2-act
+//! flipped JSON to the struct-direct path — `JsonParser::parse`
+//! returns a `JsonDocument` with no tape, no cursor. The migrated
+//! assertions walk the typed value tree directly: object pair lookups
+//! by key, array element indexing, scalar shape kind-tags. Tests whose
+//! pre-flip assertion was tape-shape-specific with no equivalent
+//! struct-tree invariant (e.g. record-count thresholds) project to
+//! the structural invariant the typed tree exposes (object pair count,
+//! array element count, etc.).
 
-use bbnf::runtime::tape::{TapeCursor, TapeKind};
 use ::bbnf::grammar::generated::json::*;
-
+use bbnf::runtime::{JsonValue, JsonNumber, JsonView};
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
-/// Extract the span text for a cursor from the input.
-fn cursor_text<'a>(cursor: &TapeCursor<'_>, input: &'a str) -> &'a str {
-    let (lo, hi) = cursor.span();
-    &input[lo as usize..hi as usize]
-}
-
-/// Recursively count all records reachable from a cursor
-/// (the cursor itself plus all transitive children).
-fn count_reachable(cursor: TapeCursor<'_>) -> usize {
-    let mut total = 1;
-    for child in cursor.children() {
-        total += count_reachable(child);
+/// Walk a `JsonValue` and count every reachable node (compound + leaf).
+/// Mirrors the pre-flip `count_reachable(cursor)` walker shape, lifted
+/// off the struct tree.
+fn count_reachable<'p>(view: &JsonView<'_, 'p>, value: &JsonValue<'p>) -> usize {
+    match value {
+        JsonValue::Null
+        | JsonValue::Bool(_)
+        | JsonValue::Number(_)
+        | JsonValue::String(_) => 1,
+        JsonValue::Array(id) => {
+            1 + view
+                .array(*id)
+                .iter()
+                .map(|child| count_reachable(view, child))
+                .sum::<usize>()
+        }
+        JsonValue::Object(id) => {
+            1 + view
+                .object(*id)
+                .iter()
+                .map(|pair| count_reachable(view, &pair.value))
+                .sum::<usize>()
+        }
     }
-    total
 }
 
-/// Collect all unique span texts from the tape.
-fn all_span_texts<'a, R>(tape: &bbnf::runtime::tape::Tape<R>, input: &'a str) -> Vec<&'a str> {
-    tape.iter()
-        .map(|rec| &input[rec.span_lo as usize..rec.span_hi as usize])
-        .collect()
-}
-
-/// Check whether any span text in the tape contains `needle` as a substring.
-fn tape_contains_substr<R>(
-    tape: &bbnf::runtime::tape::Tape<R>,
-    input: &str,
+/// `true` if any reachable string scalar in the tree contains `needle`.
+/// Replaces the pre-flip `tape_contains_substr` walker that searched
+/// span-text on every record; the struct tree's strings are the
+/// scalar-projection equivalent.
+fn tree_contains_string<'p>(
+    view: &JsonView<'_, 'p>,
+    value: &JsonValue<'p>,
     needle: &str,
 ) -> bool {
-    tape.iter()
-        .any(|rec| input[rec.span_lo as usize..rec.span_hi as usize].contains(needle))
+    match value {
+        JsonValue::String(s) => s.contains(needle),
+        JsonValue::Array(id) => view
+            .array(*id)
+            .iter()
+            .any(|child| tree_contains_string(view, child, needle)),
+        JsonValue::Object(id) => view.object(*id).iter().any(|pair| {
+            pair.key.contains(needle) || tree_contains_string(view, &pair.value, needle)
+        }),
+        _ => false,
+    }
+}
+
+/// `true` if any reachable number scalar matches `target` exactly.
+fn tree_contains_number<'p>(
+    view: &JsonView<'_, 'p>,
+    value: &JsonValue<'p>,
+    target: f64,
+) -> bool {
+    match value {
+        JsonValue::Number(n) => match n {
+            JsonNumber::Float(f) => *f == target,
+            JsonNumber::Int(i) => (*i as f64) == target,
+            JsonNumber::UInt(u) => (*u as f64) == target,
+        },
+        JsonValue::Array(id) => view
+            .array(*id)
+            .iter()
+            .any(|child| tree_contains_number(view, child, target)),
+        JsonValue::Object(id) => view
+            .object(*id)
+            .iter()
+            .any(|pair| tree_contains_number(view, &pair.value, target)),
+        _ => false,
+    }
 }
 
 /// Try to load a data file from standard candidate locations.
@@ -63,41 +115,41 @@ fn load_data(name: &str) -> Option<String> {
 #[test]
 fn structural_object_with_array() {
     let input = r#"{"key": [1, true, null]}"#;
-    let parsed = JsonParser::parse(input)
+    let doc = JsonParser::parse(input)
         .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
-    let tape = parsed.tape();
+    let view = doc.view();
 
-    // Tape must be non-empty.
-    assert!(tape.len() > 0, "tape should have records");
-
-    let view = parsed.view();
-    let root = view.cursor();
-
-    // Root should be a compound kind (Rule, Alt, Seq, etc.), not a leaf.
+    // Root must be an object compound, not a leaf.
     assert!(
-        !matches!(root.kind(), TapeKind::None | TapeKind::Epsilon),
-        "root should be a compound kind, got {:?}",
-        root.kind()
+        view.is_object(),
+        "root should be an object compound, got {:?}",
+        view.kind()
     );
 
-    // The full input span should cover the entire input.
-    let root_text = cursor_text(&root, input);
-    assert_eq!(root_text, input, "root span should cover entire input");
+    // The object should carry exactly one pair (the "key" entry).
+    let pairs = match doc.root {
+        JsonValue::Object(id) => view.object(id),
+        _ => unreachable!(),
+    };
+    assert_eq!(pairs.len(), 1, "root object should have 1 pair");
+    assert_eq!(pairs[0].key, "key");
 
-    // Walk the tree and verify total record count is reasonable.
-    let total = count_reachable(root);
+    // The pair's value should be an array of three elements.
+    let elements = match pairs[0].value {
+        JsonValue::Array(id) => view.array(id),
+        ref other => panic!("expected pair value to be array, got {:?}", other),
+    };
+    assert_eq!(elements.len(), 3, "expected 3 array elements");
+
+    // Walk the tree and verify total node count matches the structure
+    // (1 root + 1 array + 3 elements = 5 nodes, mirroring the pre-flip
+    // ≥ 5 record-count invariant).
+    let total = count_reachable(&view, view.root());
     assert!(
         total >= 5,
-        "expected at least 5 records for '{}', got {}",
+        "expected at least 5 nodes for '{}', got {}",
         input,
         total
-    );
-
-    // The tape should have more records than just the root.
-    assert!(
-        tape.len() >= 5,
-        "tape should have at least 5 records, got {}",
-        tape.len()
     );
 }
 
@@ -106,29 +158,23 @@ fn structural_object_with_array() {
 #[test]
 fn structural_array_three_numbers() {
     let input = "[1, 2, 3]";
-    let parsed = JsonParser::parse(input)
+    let doc = JsonParser::parse(input)
         .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let view = doc.view();
 
-    let view = parsed.view();
-    let root = view.cursor();
+    assert!(view.is_array(), "root should be an array, got {:?}", view.kind());
 
-    // Root span covers the whole input.
-    assert_eq!(cursor_text(&root, input), input);
+    let elements = match doc.root {
+        JsonValue::Array(id) => view.array(id),
+        _ => unreachable!(),
+    };
+    assert_eq!(elements.len(), 3, "expected 3 array elements");
 
-    // Walk depth-one children and count.
-    let children: Vec<_> = root.children().collect();
-    assert!(
-        !children.is_empty(),
-        "root should have children for array '{}'",
-        input
-    );
-
-    // The total reachable records should include at least the root + the
-    // three number elements.
-    let total = count_reachable(root);
+    // Total reachable: array root + 3 number scalars = 4 nodes.
+    let total = count_reachable(&view, view.root());
     assert!(
         total >= 4,
-        "expected at least 4 records for '{}', got {}",
+        "expected at least 4 nodes for '{}', got {}",
         input,
         total
     );
@@ -139,45 +185,42 @@ fn structural_array_three_numbers() {
 #[test]
 fn structural_object_two_pairs() {
     let input = r#"{"a": 1, "b": "hello"}"#;
-    let parsed = JsonParser::parse(input)
+    let doc = JsonParser::parse(input)
         .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let view = doc.view();
 
-    let view = parsed.view();
-    let root = view.cursor();
+    assert!(view.is_object(), "root should be an object");
 
-    assert_eq!(cursor_text(&root, input), input);
+    let pairs = match doc.root {
+        JsonValue::Object(id) => view.object(id),
+        _ => unreachable!(),
+    };
+    assert_eq!(pairs.len(), 2, "expected 2 object pairs");
 
-    // The tree should have a reasonable depth.
-    let total = count_reachable(root);
+    // Pair-by-pair shape verification.
+    assert_eq!(pairs[0].key, "a");
+    assert!(matches!(pairs[0].value, JsonValue::Number(_)));
+    assert_eq!(pairs[1].key, "b");
+    assert!(matches!(pairs[1].value, JsonValue::String("hello")));
+
+    let total = count_reachable(&view, view.root());
     assert!(
         total >= 5,
-        "expected at least 5 records for '{}', got {}",
+        "expected at least 5 nodes for '{}', got {}",
         input,
         total
     );
 
-    // Verify that expected substrings appear in some tape record's span.
-    // Leaf spans may be fused or rolled up in the tape-first architecture,
-    // so we check containment rather than exact matches.
-    let tape = parsed.tape();
+    // Verify expected leaves appear in the tree. Pre-flip these were
+    // span-substring lookups against tape records; the struct tree's
+    // typed scalars surface the same content directly.
     assert!(
-        tape_contains_substr(tape, input, "\"a\""),
-        "some span should contain the key \"a\"; spans: {:?}",
-        all_span_texts(tape, input)
+        tree_contains_string(&view, view.root(), "hello"),
+        "tree should contain string 'hello'"
     );
     assert!(
-        tape_contains_substr(tape, input, "\"b\""),
-        "some span should contain the key \"b\"; spans: {:?}",
-        all_span_texts(tape, input)
-    );
-    assert!(
-        tape_contains_substr(tape, input, "1"),
-        "some span should contain number 1"
-    );
-    assert!(
-        tape_contains_substr(tape, input, "\"hello\""),
-        "some span should contain string \"hello\"; spans: {:?}",
-        all_span_texts(tape, input)
+        tree_contains_number(&view, view.root(), 1.0),
+        "tree should contain number 1"
     );
 }
 
@@ -186,38 +229,41 @@ fn structural_object_two_pairs() {
 #[test]
 fn structural_nested_objects() {
     let input = r#"{"outer": {"inner": 42}}"#;
-    let parsed = JsonParser::parse(input)
+    let doc = JsonParser::parse(input)
         .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let view = doc.view();
 
-    let view = parsed.view();
-    let root = view.cursor();
+    assert!(view.is_object(), "root should be an object");
 
-    // Root covers entire input.
-    assert_eq!(cursor_text(&root, input), input);
+    let outer_pairs = match doc.root {
+        JsonValue::Object(id) => view.object(id),
+        _ => unreachable!(),
+    };
+    assert_eq!(outer_pairs.len(), 1);
+    assert_eq!(outer_pairs[0].key, "outer");
 
-    // Should have enough depth for nested structure.
-    let total = count_reachable(root);
+    let inner_pairs = match outer_pairs[0].value {
+        JsonValue::Object(id) => view.object(id),
+        ref other => panic!("expected nested object, got {:?}", other),
+    };
+    assert_eq!(inner_pairs.len(), 1);
+    assert_eq!(inner_pairs[0].key, "inner");
+    assert!(matches!(inner_pairs[0].value, JsonValue::Number(_)));
+
+    // 1 outer + 1 inner + 1 number = 3 distinct nodes; with pair edges
+    // surfacing through the count_reachable walker (which recurses into
+    // pair.value), we should see ≥ 3 nodes.
+    let total = count_reachable(&view, view.root());
     assert!(
-        total >= 6,
-        "expected at least 6 records for nested object, got {}",
+        total >= 3,
+        "expected at least 3 nodes for nested object, got {}",
         total
     );
 
-    // Verify nested values appear in tape span text.
-    let tape = parsed.tape();
+    // The number 42 should be present.
     assert!(
-        tape_contains_substr(tape, input, "\"outer\""),
-        "some span should contain the key \"outer\"; spans: {:?}",
-        all_span_texts(tape, input)
-    );
-    assert!(
-        tape_contains_substr(tape, input, "\"inner\""),
-        "some span should contain the key \"inner\"; spans: {:?}",
-        all_span_texts(tape, input)
-    );
-    assert!(
-        tape_contains_substr(tape, input, "42"),
-        "some span should contain the value 42"
+        tree_contains_number(&view, view.root(), 42.0),
+        "nested tree should contain 42"
     );
 }
 
@@ -226,28 +272,33 @@ fn structural_nested_objects() {
 #[test]
 fn structural_empty_array() {
     let input = "[]";
-    let parsed = JsonParser::parse(input)
+    let doc = JsonParser::parse(input)
         .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let view = doc.view();
 
-    let view = parsed.view();
-    let root = view.cursor();
-    assert_eq!(cursor_text(&root, input), input);
+    assert!(view.is_array(), "root should be an empty array");
 
-    // Empty array should still parse and produce tape records.
-    assert!(parsed.tape().len() >= 1, "empty array should produce at least 1 record");
+    let elements = match doc.root {
+        JsonValue::Array(id) => view.array(id),
+        _ => unreachable!(),
+    };
+    assert_eq!(elements.len(), 0, "empty array should have 0 elements");
 }
 
 #[test]
 fn structural_empty_object() {
     let input = "{}";
-    let parsed = JsonParser::parse(input)
+    let doc = JsonParser::parse(input)
         .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
+    let view = doc.view();
 
-    let view = parsed.view();
-    let root = view.cursor();
-    assert_eq!(cursor_text(&root, input), input);
+    assert!(view.is_object(), "root should be an empty object");
 
-    assert!(parsed.tape().len() >= 1, "empty object should produce at least 1 record");
+    let pairs = match doc.root {
+        JsonValue::Object(id) => view.object(id),
+        _ => unreachable!(),
+    };
+    assert_eq!(pairs.len(), 0, "empty object should have 0 pairs");
 }
 
 // ── Test: all scalar types ─────────────────────────────────────────────
@@ -255,134 +306,82 @@ fn structural_empty_object() {
 #[test]
 fn structural_scalar_null() {
     let input = "null";
-    let parsed = JsonParser::parse(input)
+    let doc = JsonParser::parse(input)
         .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
-
-    let view = parsed.view();
-    let root = view.cursor();
-    assert_eq!(cursor_text(&root, input), "null");
+    assert!(doc.view().is_null(), "expected null");
 }
 
 #[test]
 fn structural_scalar_bool_true() {
     let input = "true";
-    let parsed = JsonParser::parse(input)
+    let doc = JsonParser::parse(input)
         .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
-
-    let view = parsed.view();
-    let root = view.cursor();
-    assert_eq!(cursor_text(&root, input), "true");
+    assert_eq!(doc.root, JsonValue::Bool(true));
 }
 
 #[test]
 fn structural_scalar_bool_false() {
     let input = "false";
-    let parsed = JsonParser::parse(input)
+    let doc = JsonParser::parse(input)
         .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
-
-    let view = parsed.view();
-    let root = view.cursor();
-    assert_eq!(cursor_text(&root, input), "false");
+    assert_eq!(doc.root, JsonValue::Bool(false));
 }
 
 #[test]
 fn structural_scalar_number_integer() {
     let input = "42";
-    let parsed = JsonParser::parse(input)
+    let doc = JsonParser::parse(input)
         .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
-
-    let view = parsed.view();
-    let root = view.cursor();
-    assert_eq!(cursor_text(&root, input), "42");
+    match doc.root {
+        JsonValue::Number(n) => assert_eq!(n.as_f64(), 42.0),
+        ref other => panic!("expected number, got {:?}", other),
+    }
 }
 
 #[test]
 fn structural_scalar_number_negative_float() {
     let input = "-3.14";
-    let parsed = JsonParser::parse(input)
+    let doc = JsonParser::parse(input)
         .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
-
-    let view = parsed.view();
-    let root = view.cursor();
-    assert_eq!(cursor_text(&root, input), "-3.14");
+    match doc.root {
+        JsonValue::Number(n) => assert!((n.as_f64() - (-3.14)).abs() < 1e-9),
+        ref other => panic!("expected number, got {:?}", other),
+    }
 }
 
 #[test]
 fn structural_scalar_number_exponent() {
     let input = "1e10";
-    let parsed = JsonParser::parse(input)
+    let doc = JsonParser::parse(input)
         .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
-
-    let view = parsed.view();
-    let root = view.cursor();
-    assert_eq!(cursor_text(&root, input), "1e10");
+    match doc.root {
+        JsonValue::Number(n) => assert_eq!(n.as_f64(), 1e10),
+        ref other => panic!("expected number, got {:?}", other),
+    }
 }
 
 #[test]
 fn structural_scalar_string() {
     let input = r#""hello world""#;
-    let parsed = JsonParser::parse(input)
+    let doc = JsonParser::parse(input)
         .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
-
-    let view = parsed.view();
-    let root = view.cursor();
-    assert_eq!(cursor_text(&root, input), r#""hello world""#);
+    match doc.root {
+        JsonValue::String(s) => assert_eq!(s, "hello world"),
+        ref other => panic!("expected string, got {:?}", other),
+    }
 }
 
 #[test]
 fn structural_scalar_string_with_escapes() {
     let input = r#""line\nbreak""#;
-    let parsed = JsonParser::parse(input)
+    let doc = JsonParser::parse(input)
         .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
-
-    let view = parsed.view();
-    let root = view.cursor();
-    assert_eq!(cursor_text(&root, input), r#""line\nbreak""#);
-}
-
-// ── Test: tape record bounds ───────────────────────────────────────────
-
-#[test]
-fn structural_tape_record_bounds() {
-    let input = r#"{"key": [1, true, null]}"#;
-    let parsed = JsonParser::parse(input)
-        .unwrap_or_else(|e| panic!("parse failed: {:?}", e));
-
-    let tape = parsed.tape();
-
-    // Every record's span should be within the input bounds.
-    for (i, rec) in tape.iter().enumerate() {
-        assert!(
-            (rec.span_lo as usize) <= input.len(),
-            "record {} span_lo {} exceeds input len {}",
-            i,
-            rec.span_lo,
-            input.len()
-        );
-        assert!(
-            (rec.span_hi as usize) <= input.len(),
-            "record {} span_hi {} exceeds input len {}",
-            i,
-            rec.span_hi,
-            input.len()
-        );
-        assert!(
-            rec.span_lo <= rec.span_hi,
-            "record {} has inverted span: lo={} hi={}",
-            i,
-            rec.span_lo,
-            rec.span_hi
-        );
-    }
-
-    // No TapeKind::None records should appear in a successful parse.
-    for (i, rec) in tape.iter().enumerate() {
-        assert_ne!(
-            rec.kind(),
-            TapeKind::None,
-            "record {} has TapeKind::None in a successful parse",
-            i
-        );
+    // The arena-decoded string should resolve the `\n` escape to a
+    // literal newline byte. The struct-direct decoder runs the same
+    // `decode_json_string_to_arena` kernel the pre-flip path used.
+    match doc.root {
+        JsonValue::String(s) => assert_eq!(s, "line\nbreak"),
+        ref other => panic!("expected string, got {:?}", other),
     }
 }
 
@@ -398,42 +397,37 @@ fn structural_data_json_sanity() {
         }
     };
 
-    let parsed = JsonParser::parse(&input)
+    let doc = JsonParser::parse(&input)
         .unwrap_or_else(|e| panic!("data.json parse failed: {:?}", e));
+    let view = doc.view();
 
-    let tape = parsed.tape();
-
-    // data.json should produce a substantial tape.
+    // Total reachable nodes — data.json should produce a substantial
+    // tree (the pre-flip baseline asserted ≥ 10 records; the struct
+    // tree projection retains every typed leaf + compound, so the
+    // floor still holds).
+    let total = count_reachable(&view, view.root());
     assert!(
-        tape.len() >= 10,
-        "data.json tape too small: {} records",
-        tape.len()
+        total >= 10,
+        "data.json tree too small: {} nodes",
+        total
     );
 
-    let view = parsed.view();
-    let root = view.cursor();
-
-    // Root should start at 0 and cover most of the input
-    // (trailing whitespace/newline may not be included in the span).
-    let (lo, hi) = root.span();
-    assert_eq!(lo, 0, "root span should start at 0");
+    // Root should be a compound (object or array), not a scalar leaf.
     assert!(
-        hi as usize >= input.trim_end().len(),
-        "root span should cover at least the trimmed input: hi={}, trimmed={}",
-        hi,
-        input.trim_end().len()
-    );
-
-    // Root should be a compound kind.
-    assert!(
-        !matches!(root.kind(), TapeKind::None | TapeKind::Epsilon),
+        view.is_object() || view.is_array(),
         "data.json root should be compound, got {:?}",
-        root.kind()
+        view.kind()
     );
 
-    // Should have at least one child.
+    // Non-empty children invariant — the root compound has at least
+    // one child (data.json's top-level array carries entries).
+    let child_count = match doc.root {
+        JsonValue::Array(id) => view.array(id).len(),
+        JsonValue::Object(id) => view.object(id).len(),
+        _ => 0,
+    };
     assert!(
-        root.child_count() >= 1,
+        child_count >= 1,
         "data.json root should have at least 1 child"
     );
 }

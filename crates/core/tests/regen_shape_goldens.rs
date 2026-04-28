@@ -8,6 +8,7 @@
 //! as a regen utility for subsequent sub-waves.
 
 use bbnf::backend::rust::emitter::shapes::{array, keyword, number, object, scalar, string};
+use bbnf::backend::rust::emitter::EmitStrategy;
 
 #[path = "shape_dispatch_emission/fixtures.rs"]
 mod fixtures;
@@ -33,10 +34,14 @@ fn golden_path(name: &str) -> std::path::PathBuf {
 #[ignore = "regen-only — run with `--ignored` to refresh goldens"]
 fn regen_shape_goldens() {
     let (ir, rules) = build_json_ir();
+    // AZ-I.W2.RB — pin TapeDirect for golden regen (the goldens
+    // capture the legacy tape body; struct-direct goldens are a
+    // future-tranche concern).
+    let strategy = EmitStrategy::TapeDirect;
 
     let object_ts =
-        object::emit_parse_object("JsonFixture", &ir.rules[rules.object as usize], &ir);
-    let array_ts = array::emit_parse_array("JsonFixture", &ir.rules[rules.array as usize], &ir);
+        object::emit_parse_object("JsonFixture", &ir.rules[rules.object as usize], &ir, &strategy);
+    let array_ts = array::emit_parse_array("JsonFixture", &ir.rules[rules.array as usize], &ir, &strategy);
     let string_ts =
         string::emit_parse_string("JsonFixture", &ir.rules[rules.string as usize], &ir);
     let number_ts =

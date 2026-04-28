@@ -30,6 +30,7 @@ use bbnf::backend::rust::emitter::shapes::{
     arglist, array, flat, hregex, keyword, number, object, pratt, scalar,
     string, unordered, wrap,
 };
+use bbnf::backend::rust::emitter::EmitStrategy;
 use bbnf_ir::passes::recognizers::shape_dispatch::{
     scalar as scalar_detect, shape_dispatch, ShapeTag,
 };
@@ -93,7 +94,7 @@ fn object_shape_classifies_correctly() {
 fn object_shape_emit_matches_golden() {
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.object as usize];
-    let ts = object::emit_parse_object("JsonFixture", rule, &ir);
+    let ts = object::emit_parse_object("JsonFixture", rule, &ir, &EmitStrategy::TapeDirect);
     let actual = format_tokens(&ts);
     let expected = include_str!(
         "fixtures/shape_dispatch_emission/object.rs.expected"
@@ -113,7 +114,7 @@ fn array_shape_classifies_correctly() {
 fn array_shape_emit_matches_golden() {
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.array as usize];
-    let ts = array::emit_parse_array("JsonFixture", rule, &ir);
+    let ts = array::emit_parse_array("JsonFixture", rule, &ir, &EmitStrategy::TapeDirect);
     let actual = format_tokens(&ts);
     let expected = include_str!(
         "fixtures/shape_dispatch_emission/array.rs.expected"

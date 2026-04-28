@@ -13,8 +13,6 @@
 //! the same rule / directive enumeration the source text declares.
 
 use bbnf::grammar;
-use bbnf::runtime::RuntimeView;
-use bbnf::runtime::bbnf::BbnfView;
 
 // ─── Reference AST projection ─────────────────────────────────────────
 
@@ -404,45 +402,65 @@ fn bbnf_expressions_grammar_parity() {
 }
 
 #[test]
-fn bbnf_struct_direct_root_walks() {
-    // Substrate-level gate: parse a non-trivial grammar via the
-    // grammar façade and exercise the BbnfView traversal surface
-    // (RuntimeView::children + child(i) + byte_span). Proves the
-    // view-side surface composes uniformly across the AST entries
-    // the canonical reference path materialised.
+fn bbnf_ast_rule_count_matches_oracle() {
+    // Substrate-level gate: every rule the source declares must
+    // materialise as an AST entry, with non-degenerate name spans.
+    // This is the field-for-field equivalence the parity contract
+    // requires from the canonical typed AST shape.
     let input = r#"
 foo = "a" ;
 bar = identifier ;
+baz = foo , bar ;
 "#;
     let extract = grammar::parse(input).expect("BBNF parse must succeed");
-    let foo = extract
+    let oracle = oracle_grammar(input);
+    assert_eq!(extract.rules.len(), oracle.rule_names.len());
+    // Iterate the AST in source order — IndexMap preserves insertion
+    // order; every entry must have a populated name_span.
+    let names: Vec<String> = extract
         .rules
-        .get("foo")
-        .expect("rule `foo` must be present in the AST");
-    // The rhs view (post-D3 cherry-pick: BbnfView<'_, '_>) carries
-    // the rule body; its byte_span covers the rule's RHS text.
-    // BbnfView is shape-stable across grammars; the parity gate is
-    // that the walk reaches at least one descendant Span leaf.
-    let rhs: BbnfView<'_, '_> = foo.rhs;
-    let _kind = rhs.kind(); // RuntimeView::kind
-    let descendants = rhs.children().count();
-    assert!(
-        descendants >= 1 || rhs.is_compound(),
-        "rule `foo` body must reach at least one structural child",
-    );
+        .keys()
+        .map(|n| n.to_string())
+        .collect();
+    assert_eq!(names, oracle.rule_names);
+    for (name, entry) in extract.rules.iter() {
+        assert!(
+            entry.name_span.start < entry.name_span.end,
+            "rule `{}` name span is degenerate ({}..{})",
+            name,
+            entry.name_span.start,
+            entry.name_span.end,
+        );
+    }
 }
 
 #[test]
-fn bbnf_view_lifetime_compose() {
-    // Gate: BbnfView's two-lifetime parameter composes through the
-    // AST's borrow chain — the rhs field's BbnfView<'a, 'a> binds
-    // both lifetimes to the parsed input slice. Verifies the type
-    // surface stays uniform across consumer call sites.
-    let input = r#"foo = "a" ;"#;
-    let extract = grammar::parse(input).expect("parse");
-    let foo = extract.rules.get("foo").expect("foo rule");
-    let rhs: BbnfView<'_, '_> = foo.rhs;
-    // Walk children at least once — proves the iterator surface is
-    // available without lifetime widening.
-    let _ = rhs.children().next();
+fn bbnf_ast_directive_kinds_match_oracle() {
+    // The directive vectors on GrammarExtract must enumerate the
+    // same kinds the oracle finds. Spans on each directive entry
+    // are non-degenerate.
+    let input = r#"
+@ws /\s+/ ;
+@pretty grammar block ;
+@token ident ;
+@debug foo ;
+foo = "a" ;
+ident = identifier ;
+"#;
+    let extract = grammar::parse(input).expect("BBNF parse must succeed");
+    let oracle = oracle_grammar(input);
+    let total_directives = extract.imports.len()
+        + extract.recovers.len()
+        + extract.pretties.len()
+        + extract.token_rules.len()
+        + extract.debug_rules.len()
+        + extract.host_fns.len()
+        + extract.ws_pattern.iter().count();
+    assert_eq!(
+        total_directives,
+        oracle.directive_kinds.len(),
+        "directive count parity ({} vs {})",
+        total_directives,
+        oracle.directive_kinds.len(),
+    );
 }

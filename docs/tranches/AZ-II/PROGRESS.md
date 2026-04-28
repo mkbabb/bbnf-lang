@@ -87,7 +87,41 @@ The cutover wave runs in three sequential sub-stages:
 | W0 | superseded (2026-04-28) | Folded into cutover.A (substrate hoist + BBNF runtime + decay sweep) |
 | W1 | superseded (2026-04-28) | Folded into cutover.B (Stage A + Stage B byte-equal cycle) |
 | W2 | superseded (2026-04-28) | Folded into cutover.C (`crates/tape/` deletion + recode + FINAL) |
-| cutover | planned | BBNF self-host + tape deletion ([waves/cutover.md](waves/cutover.md)) |
+| cutover | partial-close (cutover.A through cutover.G LANDED; cutover.H emitter fix + close ceremony pending) | BBNF self-host + tape deletion ([waves/cutover.md](waves/cutover.md)) |
+
+## 2026-04-28 — cutover.G partial close
+
+cutover.G HEAD `2060dd8d` lands the chicken-and-egg break: a
+hand-written BBNF bootstrap parser at
+`crates/core/src/grammar/bootstrap_parser.rs` (~900 LOC)
+consumes BBNF source and emits `BbnfDocument<'_>` directly via
+`BbnfStructBuilder`. The consumer entry points (`crate::grammar::parse`,
+`crate::pipeline::directives::parse_to_pipeline_inputs`) route
+through it; all 56 BBNF self-parity tests pass under cutover.G.
+
+`cargo xtask regen --grammar bbnf` runs to completion under
+cutover.G — `compile_paths_request` 10ms; `generate_all` 35ms;
+`prettyplease` 252ms; on-disk bbnf.rs 34230 LOC produced. The
+regen output exposes a follow-up emitter codegen inconsistency
+(12 unresolved `parse_wrap_BbnfBootstrap_value_expr` /
+`parse_wrap_BbnfBootstrap_rhs` references — call sites reference
+the per-shape fn but the wrap emitter no longer defines those
+fns when the IR pass marks alias rules transparent). Fix
+deferred to cutover.H per the dispatch brief's emitter-scope
+boundary.
+
+cutover.G commits:
+- `47ba1256` chore(az-ii): cutover.{C,E,F}-PARTIAL move to audit/
+  (Phase H cleanup)
+- `cc5b2877` feat(cutover.G): hand-written BBNF bootstrap parser
+  breaks chicken-and-egg
+- `2060dd8d` fix(cutover.G): leaf-shape rules emit Span directly
+  + type-keyword filter
+
+PARTIAL close report at `docs/tranches/AZ-II/cutover.G-PARTIAL.md`
+(373 LOC) details the strategy analysis, Phase 1.b regen success,
+Phase 1.c emitter fix scope, and the cutover.H sub-phase plan
+(estimated 2-3 hour cap to close AZ-II).
 
 ## Handoff
 

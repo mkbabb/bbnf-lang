@@ -217,29 +217,6 @@ impl<'a, 'p: 'a> BbnfView<'a, 'p> {
     // `BbnfCompoundKind` alphabet instead of the tape's
     // `BbnfBootstrapRuleKind`.
 
-    /// Compound kind discriminator for compound focuses; `None` for
-    /// scalar / span / unit / tag focuses. Replaces the tape-side
-    /// `BbnfBootstrapNodeView::rule_kind()` for consumers dispatching
-    /// on the focused compound's structural shape.
-    #[inline]
-    pub fn compound_kind(&self) -> Option<BbnfCompoundKind> {
-        match self.focus {
-            BbnfValue::Compound(id) => Some(self.doc.compound(id).kind),
-            _ => None,
-        }
-    }
-
-    /// Branch tag for Alt-typed compound focuses (the chosen
-    /// alternation branch index recorded by the struct builder via
-    /// `push_branch_tag`); `None` for non-Alt compounds and leaves.
-    #[inline]
-    pub fn branch_tag(&self) -> Option<u32> {
-        match self.focus {
-            BbnfValue::Compound(id) => self.doc.compound(id).branch_tag,
-            _ => None,
-        }
-    }
-
     /// Number of structural children in this view's focus. Compound
     /// focuses report their child count; leaf focuses report `0`.
     #[inline]
@@ -247,23 +224,6 @@ impl<'a, 'p: 'a> BbnfView<'a, 'p> {
         match self.focus {
             BbnfValue::Compound(id) => self.doc.compound(id).children.len(),
             _ => 0,
-        }
-    }
-
-    /// Positional child access. Returns the i-th child sub-view of a
-    /// compound focus (in source order); `None` for leaves and
-    /// out-of-range indices.
-    #[inline]
-    pub fn child(&self, i: usize) -> Option<BbnfView<'a, 'p>> {
-        match self.focus {
-            BbnfValue::Compound(id) => self
-                .doc
-                .compound(id)
-                .children
-                .get(i)
-                .copied()
-                .map(|v| BbnfView::focused(self.doc, v)),
-            _ => None,
         }
     }
 
@@ -309,17 +269,6 @@ impl<'a, 'p: 'a> BbnfView<'a, 'p> {
                 }
             }
             _ => {}
-        }
-    }
-
-    /// Source text aggregated across this view's focus, sliced from
-    /// the document's input via [`Self::span_range`]. Empty string
-    /// when the focus contains no source-bearing leaves.
-    #[inline]
-    pub fn span_text(&self) -> &'p str {
-        match self.span_range() {
-            Some((lo, hi)) => &self.doc.input[lo..hi],
-            None => "",
         }
     }
 

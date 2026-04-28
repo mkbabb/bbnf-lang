@@ -1069,7 +1069,27 @@ impl RustEmitter {
         // `Parsed::new_fused_output` consumes the fused output directly
         // — no second finish call, no separate value allocation.
         let _ = visitor_dispatcher_ident;
-        let parse_body = {
+
+        // AZ-I.W2.RA — codegen-time substrate selection.
+        //
+        // `EmitStrategy::for_grammar` resolves the (grammar_ident,
+        // registry-population) pair to one of:
+        //
+        // - `EmitStrategy::StructDirect { builder_path, document_path }`
+        //   — JSON's typed struct-builder body (W2 activation target).
+        // - `EmitStrategy::TapeDirect` — the legacy fused `Tape<()>`
+        //   body. Default for every grammar pre-W2.
+        //
+        // The `parse_body` match below picks the matching emission
+        // template exactly once per `emit_grammar_impl` invocation.
+        // Per `feedback_no-orthogonal-codepaths` the strategy decision
+        // happens here, at codegen time — there is no runtime
+        // conditional inside the emitted parse fn body.
+        let strategy = super::strategy::EmitStrategy::for_grammar(
+            ident.to_string().as_str(),
+            &ir.struct_registry,
+        );
+        let parse_body: TokenStream = {
             let dispatcher = shape_dispatcher_ident
                 .as_ref()
                 .expect("shape dispatcher gated on root_rule_name");
@@ -1077,94 +1097,36 @@ impl RustEmitter {
                 "__shape_support_{}",
                 super::shapes::sanitise_grammar(ident.to_string().as_str()),
             );
-            quote! {
-                let __input_bytes = input.as_bytes();
-                // AY.W1-fix — `ScanState::new()` constructs the
-                // per-parse SIMD scratch (whitespace bitmap cache only).
-                // AY.W1.3's eager `scan_structural` call retired here
-                // after AYW1-twitter-regression-diag identified the
-                // O(N) scan cost as ~50% of twitter parse self-time
-                // for negligible probe benefit. The substrate stays in
-                // the tape crate awaiting AY.W4's regex-scan
-                // specialisation — which can wire it through CTNS-style
-                // predicates that deliver material savings. Tape
-                // capacity falls back to the per-grammar density
-                // estimate via `GRAMMAR_PROFILE.capacity_for`.
-                let mut state = #support_mod_ident::ScanState::new();
-                // B5.W1 — single unified [`Tape<()>`] allocation.
-                // The substrate owns both the structural columns and
-                // the paired value-frame arena; every `begin_compound`
-                // / `end_compound` / `push_leaf_*` writes to both in
-                // lockstep, and `finish(root)` returns the finalised
-                // [`Tape<()>`] with sib_skip / span_hi / child_off
-                // back-patched.
-                let mut tape = crate::runtime::tape::Tape::<()>::with_capacity(
-                    GRAMMAR_PROFILE.capacity_for(input.len()),
-                );
-                let root_off = {
-                    let mut pos: usize = 0;
-                    let off = #dispatcher(
-                        __input_bytes,
-                        &mut pos,
-                        &mut state,
-                        &mut tape,
-                    )
-                    .map_err(|e| match e {
-                        crate::runtime::tape::DtaError::Syntax { offset, .. } => {
-                            crate::runtime::ParseErr::Syntax {
-                                offset,
-                                rule: None,
-                            }
-                        }
-                        crate::runtime::tape::DtaError::UnexpectedEnd { offset } => {
-                            crate::runtime::ParseErr::Syntax {
-                                offset,
-                                rule: None,
-                            }
-                        }
-                        crate::runtime::tape::DtaError::InvalidState { .. } => {
-                            crate::runtime::ParseErr::Syntax {
-                                offset: 0,
-                                rule: None,
-                            }
-                        }
-                    })?;
-                    // Trailing whitespace.
-                    let _ = #support_mod_ident::skip_space(
-                        __input_bytes, &mut pos, &mut state,
-                    );
-                    if pos != input.len() {
-                        return Err(crate::runtime::ParseErr::Syntax {
-                            offset: pos as u32,
-                            rule: None,
-                        });
-                    }
-                    off
-                };
-                // B5.W1 — `Tape::finish(root)` runs Stage-C
-                // finalisation + stamps the root offset on the
-                // substrate. The substrate is parse-time
-                // grammar-agnostic (`Tape<()>`); at finish time we
-                // re-bind the phantom `R` from `()` to `Self` so
-                // projection-time consumers (`Parsed::to_value`) see
-                // the grammar-bound substrate. Layout-identical
-                // transmute is sound because `R` is
-                // `PhantomData<fn() -> R>`.
-                let tape: crate::runtime::tape::Tape<()> = tape
-                    .finish(root_off.0)
-                    .map_err(crate::runtime::ParseErr::Tape)?;
-                let tape: crate::runtime::tape::Tape<Self> =
-                    // SAFETY: `Tape<R>` is layout-identical for all
-                    // `R` (the marker is `PhantomData<fn() -> R>`,
-                    // a ZST). `()` and `Self` differ only in the
-                    // phantom binding.
-                    unsafe { ::core::mem::transmute(tape) };
-                ::core::result::Result::Ok(
-                    crate::runtime::Parsed::new(tape, input, root_off),
-                )
+            match strategy {
+                super::strategy::EmitStrategy::StructDirect {
+                    builder_path,
+                    document_path,
+                } => emit_parse_body_struct_direct(
+                    dispatcher,
+                    &support_mod_ident,
+                    builder_path,
+                    document_path,
+                ),
+                super::strategy::EmitStrategy::TapeDirect => {
+                    emit_parse_body_tape_direct(dispatcher, &support_mod_ident)
+                }
             }
         };
-
+        // The parse() return type follows the strategy: tape-direct
+        // returns `Parsed<'_, Self>`; struct-direct returns the
+        // grammar-specific document type (`JsonDocument<'_>` for JSON).
+        // Both paths wrap in `Result<_, ParseErr>`.
+        let parse_return_type: TokenStream = match strategy {
+            super::strategy::EmitStrategy::StructDirect { document_path, .. } => {
+                let path: syn::Path = syn::parse_str(document_path).expect(
+                    "EmitStrategy::StructDirect.document_path must parse as a Rust path",
+                );
+                quote! { #path<'_> }
+            }
+            super::strategy::EmitStrategy::TapeDirect => quote! {
+                crate::runtime::Parsed<'_, Self>
+            },
+        };
         // AY-II.W0'.a — visitor-generic parse entry retired. The
         // fused parse above IS the visitor lane — every shape
         // emitter's push goes through the fused builder's atomic
@@ -1282,12 +1244,189 @@ impl RustEmitter {
                 pub fn parse(
                     input: &str,
                 ) -> ::core::result::Result<
-                    crate::runtime::Parsed<'_, Self>,
+                    #parse_return_type,
                     crate::runtime::ParseErr,
                 > {
                     #parse_body
                 }
             }
         }
+    }
+}
+
+/// AZ-I.W2.RA — emit the legacy fused-tape `parse()` body.
+///
+/// The body builds a `Tape<()>` substrate, drives the shape
+/// dispatcher against `(&__input_bytes, &mut pos, &mut state, &mut tape)`,
+/// finalises via `Tape::finish` + grammar-binding transmute, and
+/// returns `Parsed<Self>`.
+///
+/// This is the pre-AZ-I.W2 default body for every grammar; remains
+/// the default for BBNF / BNF / EBNF / CSV / math throughout AZ-I,
+/// and for CSS / Sheets until W3 / W2.B activates them.
+fn emit_parse_body_tape_direct(
+    dispatcher: &syn::Ident,
+    support_mod_ident: &syn::Ident,
+) -> TokenStream {
+    quote! {
+        let __input_bytes = input.as_bytes();
+        // AY.W1-fix — `ScanState::new()` constructs the per-parse
+        // SIMD scratch (whitespace bitmap cache only). AY.W1.3's
+        // eager `scan_structural` call retired here after
+        // AYW1-twitter-regression-diag identified the O(N) scan
+        // cost as ~50% of twitter parse self-time for negligible
+        // probe benefit. The substrate stays in the tape crate
+        // awaiting AY.W4's regex-scan specialisation. Tape capacity
+        // falls back to the per-grammar density estimate via
+        // `GRAMMAR_PROFILE.capacity_for`.
+        let mut state = #support_mod_ident::ScanState::new();
+        // B5.W1 — single unified [`Tape<()>`] allocation. The
+        // substrate owns both the structural columns and the paired
+        // value-frame arena; every `begin_compound` / `end_compound`
+        // / `push_leaf_*` writes to both in lockstep, and
+        // `finish(root)` returns the finalised [`Tape<()>`] with
+        // sib_skip / span_hi / child_off back-patched.
+        let mut tape = crate::runtime::tape::Tape::<()>::with_capacity(
+            GRAMMAR_PROFILE.capacity_for(input.len()),
+        );
+        let root_off = {
+            let mut pos: usize = 0;
+            let off = #dispatcher(
+                __input_bytes,
+                &mut pos,
+                &mut state,
+                &mut tape,
+            )
+            .map_err(|e| match e {
+                crate::runtime::tape::DtaError::Syntax { offset, .. } => {
+                    crate::runtime::ParseErr::Syntax {
+                        offset,
+                        rule: None,
+                    }
+                }
+                crate::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                    crate::runtime::ParseErr::Syntax {
+                        offset,
+                        rule: None,
+                    }
+                }
+                crate::runtime::tape::DtaError::InvalidState { .. } => {
+                    crate::runtime::ParseErr::Syntax {
+                        offset: 0,
+                        rule: None,
+                    }
+                }
+            })?;
+            // Trailing whitespace.
+            let _ = #support_mod_ident::skip_space(
+                __input_bytes, &mut pos, &mut state,
+            );
+            if pos != input.len() {
+                return Err(crate::runtime::ParseErr::Syntax {
+                    offset: pos as u32,
+                    rule: None,
+                });
+            }
+            off
+        };
+        // B5.W1 — `Tape::finish(root)` runs Stage-C finalisation
+        // + stamps the root offset on the substrate. The substrate
+        // is parse-time grammar-agnostic (`Tape<()>`); at finish
+        // time we re-bind the phantom `R` from `()` to `Self` so
+        // projection-time consumers (`Parsed::to_value`) see the
+        // grammar-bound substrate. Layout-identical transmute is
+        // sound because `R` is `PhantomData<fn() -> R>`.
+        let tape: crate::runtime::tape::Tape<()> = tape
+            .finish(root_off.0)
+            .map_err(crate::runtime::ParseErr::Tape)?;
+        let tape: crate::runtime::tape::Tape<Self> =
+            // SAFETY: `Tape<R>` is layout-identical for all `R` (the
+            // marker is `PhantomData<fn() -> R>`, a ZST). `()` and
+            // `Self` differ only in the phantom binding.
+            unsafe { ::core::mem::transmute(tape) };
+        ::core::result::Result::Ok(
+            crate::runtime::Parsed::new(tape, input, root_off),
+        )
+    }
+}
+
+/// AZ-I.W2.RA — emit the struct-direct `parse()` body.
+///
+/// The body instantiates a concrete `StructBuilder` (e.g.
+/// `JsonStructBuilder::new()`), drives the shape dispatcher against
+/// `(&__input_bytes, &mut pos, &mut state, &mut builder)`, finalises
+/// via `builder.finalise()`, and returns the grammar-specific
+/// document type (e.g. `JsonDocument<'_>`).
+///
+/// `builder_path` and `document_path` are fully-qualified Rust paths
+/// from [`super::strategy::EmitStrategy::StructDirect`]. The path
+/// strings are spliced via `syn::parse_str` so the emitter rejects
+/// malformed paths at codegen time.
+///
+/// Wire contract: the dispatcher emitted under struct-direct mode
+/// (when B/C/D/E activate per-shape struct-builder bodies in stage
+/// 2) must accept `&mut <builder>` matching `builder_path`'s type.
+/// The pre-stage-2 dispatcher emits tape bodies that take `&mut tape`;
+/// until B/C/D/E land, this struct-direct body is exercised only
+/// when the same regen and per-shape activation cherry-pick onto
+/// master together. The activation gate below (`for_grammar`'s
+/// JSON arm + populated registry) governs when this path is
+/// selected at codegen time.
+fn emit_parse_body_struct_direct(
+    dispatcher: &syn::Ident,
+    support_mod_ident: &syn::Ident,
+    builder_path: &str,
+    _document_path: &str,
+) -> TokenStream {
+    let builder_ty: syn::Path = syn::parse_str(builder_path).expect(
+        "EmitStrategy::StructDirect.builder_path must parse as a Rust path",
+    );
+    quote! {
+        let __input_bytes = input.as_bytes();
+        // AZ-I.W2.RA — struct-direct parse body. The builder owns a
+        // typed in-flight stack of compound frames; `finalise()`
+        // recovers the rooted document.
+        let mut state = #support_mod_ident::ScanState::new();
+        let mut builder = #builder_ty::new();
+        {
+            let mut pos: usize = 0;
+            #dispatcher(
+                __input_bytes,
+                &mut pos,
+                &mut state,
+                &mut builder,
+            )
+            .map_err(|e| match e {
+                crate::runtime::tape::DtaError::Syntax { offset, .. } => {
+                    crate::runtime::ParseErr::Syntax {
+                        offset,
+                        rule: None,
+                    }
+                }
+                crate::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                    crate::runtime::ParseErr::Syntax {
+                        offset,
+                        rule: None,
+                    }
+                }
+                crate::runtime::tape::DtaError::InvalidState { .. } => {
+                    crate::runtime::ParseErr::Syntax {
+                        offset: 0,
+                        rule: None,
+                    }
+                }
+            })?;
+            // Trailing whitespace.
+            let _ = #support_mod_ident::skip_space(
+                __input_bytes, &mut pos, &mut state,
+            );
+            if pos != input.len() {
+                return Err(crate::runtime::ParseErr::Syntax {
+                    offset: pos as u32,
+                    rule: None,
+                });
+            }
+        }
+        ::core::result::Result::Ok(builder.finalise())
     }
 }

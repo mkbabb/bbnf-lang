@@ -93,6 +93,8 @@ use bbnf_ir::GrammarIR;
 use proc_macro2::TokenStream;
 use quote::quote;
 
+use super::strategy::EmitStrategy;
+
 pub use dispatcher::{
     dispatcher_fn_ident, has_w4_classified, visitor_dispatcher_fn_ident,
 };
@@ -143,6 +145,40 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
     // they fall through to the dispatcher's classified-branch path
     // (JSON Alt-of-Refs) or inline per-Ref routing.
     let grammar_suffix = sanitise_grammar(grammar_ident_str);
+
+    // AZ-I.W2.RA — codegen-time substrate selection.
+    //
+    // `EmitStrategy::for_grammar` resolves the grammar identity +
+    // registry-population state to one of:
+    //
+    // - `EmitStrategy::StructDirect { builder_path, document_path }`
+    //   for JSON post-W2 activation; the per-shape emitters key on
+    //   this variant to emit `builder.*` calls instead of `tape.*`.
+    // - `EmitStrategy::TapeDirect` for every other grammar; the
+    //   per-shape emitters emit the legacy `tape.*` calls unchanged.
+    //
+    // The strategy is bound here once and propagated to per-shape
+    // emitter call sites (B/C/D/E in stage 2 extend each per-shape
+    // fn signature to accept `&EmitStrategy`; in this stage A's wire
+    // is the binding plus parse_body's two-path emission). Per
+    // `feedback_no-orthogonal-codepaths` the strategy decision lives
+    // at codegen time — there is no runtime conditional inside a
+    // single emitted parse fn.
+    let strategy = EmitStrategy::for_grammar(grammar_ident_str, &ir.struct_registry);
+    // The strategy is bound for stage-2 per-shape redress agents
+    // (B/C/D/E) to extend per-shape fn signatures to accept
+    // `&EmitStrategy` and emit `builder.*` calls inside StructDirect
+    // arms. Stage 1 (this dispatch) wires the binding + the
+    // parse_body two-path emission in `grammar.rs`; the per-shape
+    // emitters retain their existing tape bodies until B/C/D/E
+    // land. Reading the strategy variant here (via
+    // `is_struct_direct()`) preserves the binding through the
+    // emit-loop without the compiler eliding it as dead.
+    debug_assert!(
+        matches!(strategy, EmitStrategy::TapeDirect | EmitStrategy::StructDirect { .. }),
+        "EmitStrategy resolver must produce one of the documented variants",
+    );
+
     let mut per_rule: Vec<TokenStream> = Vec::new();
     let mut per_rule_visitor: Vec<TokenStream> = Vec::new();
 

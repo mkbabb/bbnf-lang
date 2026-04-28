@@ -1,0 +1,134 @@
+//! AZ-II.cutover.E (Phase 2) — `CssPrettyDocument` + view / value /
+//! path accessor surface. Mirror of `CsvDocument`.
+
+use crate::runtime::css_pretty::arena::{CssPrettyArena, CssPrettyCompound, CssPrettyCompoundId, CssPrettyCompoundKind};
+use crate::runtime::css_pretty::value::CssPrettyValue;
+use crate::runtime::path::{Path, PathSegment};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum CssPrettyKind {
+    Span,
+    Unit,
+    Compound,
+}
+
+#[derive(Debug)]
+pub struct CssPrettyDocument<'p> {
+    pub arena: CssPrettyArena<'p>,
+    pub root: CssPrettyValue<'p>,
+    pub input: &'p str,
+}
+
+impl<'p> CssPrettyDocument<'p> {
+    #[inline]
+    pub fn new(arena: CssPrettyArena<'p>, root: CssPrettyValue<'p>, input: &'p str) -> Self {
+        Self { arena, root, input }
+    }
+
+    #[inline] pub fn root(&self) -> &CssPrettyValue<'p> { &self.root }
+    #[inline] pub fn arena(&self) -> &CssPrettyArena<'p> { &self.arena }
+    #[inline] pub fn input(&self) -> &'p str { self.input }
+
+    #[inline]
+    pub fn compound(&self, id: CssPrettyCompoundId) -> &CssPrettyCompound<'p> {
+        self.arena.compound(id)
+    }
+
+    #[inline]
+    pub fn view<'a>(&'a self) -> CssPrettyView<'a, 'p> {
+        CssPrettyView { doc: self, focus: self.root }
+    }
+
+    #[inline] pub fn to_value(&self) -> &CssPrettyValue<'p> { &self.root }
+
+    #[inline]
+    pub fn get<T: CssPrettyPathQuery>(&self, path: Path<'_>) -> Option<T> {
+        T::query(self, path)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct CssPrettyView<'a, 'p: 'a> {
+    pub(crate) doc: &'a CssPrettyDocument<'p>,
+    pub(crate) focus: CssPrettyValue<'p>,
+}
+
+impl<'a, 'p: 'a> CssPrettyView<'a, 'p> {
+    #[inline]
+    pub fn focused(doc: &'a CssPrettyDocument<'p>, focus: CssPrettyValue<'p>) -> Self {
+        Self { doc, focus }
+    }
+
+    #[inline] pub fn document(&self) -> &'a CssPrettyDocument<'p> { self.doc }
+    #[inline] pub fn focus(&self) -> CssPrettyValue<'p> { self.focus }
+    #[inline] pub fn root(&self) -> &'a CssPrettyValue<'p> { &self.doc.root }
+    #[inline] pub fn arena(&self) -> &'a CssPrettyArena<'p> { &self.doc.arena }
+
+    #[inline]
+    pub fn compound(&self, id: CssPrettyCompoundId) -> &'a CssPrettyCompound<'p> {
+        self.doc.compound(id)
+    }
+
+    #[inline]
+    pub fn kind(&self) -> CssPrettyKind {
+        match &self.focus {
+            CssPrettyValue::Span(_) => CssPrettyKind::Span,
+            CssPrettyValue::Unit => CssPrettyKind::Unit,
+            CssPrettyValue::Compound(_) => CssPrettyKind::Compound,
+        }
+    }
+
+    #[inline] pub fn is_compound(&self) -> bool { matches!(self.focus, CssPrettyValue::Compound(_)) }
+    #[inline] pub fn is_span(&self) -> bool { matches!(self.focus, CssPrettyValue::Span(_)) }
+    #[inline] pub fn input(&self) -> &'p str { self.doc.input }
+
+    #[inline]
+    pub fn compound_kind(&self) -> Option<CssPrettyCompoundKind> {
+        match self.focus {
+            CssPrettyValue::Compound(id) => Some(self.doc.compound(id).kind),
+            _ => None,
+        }
+    }
+}
+
+pub trait CssPrettyPathQuery: Sized {
+    fn query<'p>(doc: &CssPrettyDocument<'p>, path: Path<'_>) -> Option<Self>;
+}
+
+#[inline]
+fn walk_path<'a, 'p>(doc: &'a CssPrettyDocument<'p>, path: Path<'_>) -> Option<&'a CssPrettyValue<'p>> {
+    let mut current: &'a CssPrettyValue<'p> = &doc.root;
+    for segment in path.iter() {
+        current = match (current, segment) {
+            (CssPrettyValue::Compound(id), PathSegment::Index(idx)) => {
+                let entry = doc.compound(*id);
+                entry.children.get(*idx)?
+            }
+            (CssPrettyValue::Compound(_), PathSegment::Field(_)) => return None,
+            _ => return None,
+        };
+    }
+    Some(current)
+}
+
+impl CssPrettyPathQuery for &str {
+    #[inline]
+    fn query<'p>(doc: &CssPrettyDocument<'p>, path: Path<'_>) -> Option<Self> {
+        match walk_path(doc, path)? {
+            CssPrettyValue::Span(s) => {
+                let extended: &'p str = *s;
+                Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
+            }
+            _ => None,
+        }
+    }
+}
+
+impl CssPrettyPathQuery for CssPrettyValue<'_> {
+    #[inline]
+    fn query<'p>(doc: &CssPrettyDocument<'p>, path: Path<'_>) -> Option<Self> {
+        let value = walk_path(doc, path)?;
+        let copied: CssPrettyValue<'p> = *value;
+        Some(unsafe { core::mem::transmute::<CssPrettyValue<'p>, CssPrettyValue<'_>>(copied) })
+    }
+}

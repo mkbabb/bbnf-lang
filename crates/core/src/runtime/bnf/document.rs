@@ -1,0 +1,134 @@
+//! AZ-II.cutover.E (Phase 2) — `BnfDocument` + view / value /
+//! path accessor surface. Mirror of `CsvDocument`.
+
+use crate::runtime::bnf::arena::{BnfArena, BnfCompound, BnfCompoundId, BnfCompoundKind};
+use crate::runtime::bnf::value::BnfValue;
+use crate::runtime::path::{Path, PathSegment};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BnfKind {
+    Span,
+    Unit,
+    Compound,
+}
+
+#[derive(Debug)]
+pub struct BnfDocument<'p> {
+    pub arena: BnfArena<'p>,
+    pub root: BnfValue<'p>,
+    pub input: &'p str,
+}
+
+impl<'p> BnfDocument<'p> {
+    #[inline]
+    pub fn new(arena: BnfArena<'p>, root: BnfValue<'p>, input: &'p str) -> Self {
+        Self { arena, root, input }
+    }
+
+    #[inline] pub fn root(&self) -> &BnfValue<'p> { &self.root }
+    #[inline] pub fn arena(&self) -> &BnfArena<'p> { &self.arena }
+    #[inline] pub fn input(&self) -> &'p str { self.input }
+
+    #[inline]
+    pub fn compound(&self, id: BnfCompoundId) -> &BnfCompound<'p> {
+        self.arena.compound(id)
+    }
+
+    #[inline]
+    pub fn view<'a>(&'a self) -> BnfView<'a, 'p> {
+        BnfView { doc: self, focus: self.root }
+    }
+
+    #[inline] pub fn to_value(&self) -> &BnfValue<'p> { &self.root }
+
+    #[inline]
+    pub fn get<T: BnfPathQuery>(&self, path: Path<'_>) -> Option<T> {
+        T::query(self, path)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct BnfView<'a, 'p: 'a> {
+    pub(crate) doc: &'a BnfDocument<'p>,
+    pub(crate) focus: BnfValue<'p>,
+}
+
+impl<'a, 'p: 'a> BnfView<'a, 'p> {
+    #[inline]
+    pub fn focused(doc: &'a BnfDocument<'p>, focus: BnfValue<'p>) -> Self {
+        Self { doc, focus }
+    }
+
+    #[inline] pub fn document(&self) -> &'a BnfDocument<'p> { self.doc }
+    #[inline] pub fn focus(&self) -> BnfValue<'p> { self.focus }
+    #[inline] pub fn root(&self) -> &'a BnfValue<'p> { &self.doc.root }
+    #[inline] pub fn arena(&self) -> &'a BnfArena<'p> { &self.doc.arena }
+
+    #[inline]
+    pub fn compound(&self, id: BnfCompoundId) -> &'a BnfCompound<'p> {
+        self.doc.compound(id)
+    }
+
+    #[inline]
+    pub fn kind(&self) -> BnfKind {
+        match &self.focus {
+            BnfValue::Span(_) => BnfKind::Span,
+            BnfValue::Unit => BnfKind::Unit,
+            BnfValue::Compound(_) => BnfKind::Compound,
+        }
+    }
+
+    #[inline] pub fn is_compound(&self) -> bool { matches!(self.focus, BnfValue::Compound(_)) }
+    #[inline] pub fn is_span(&self) -> bool { matches!(self.focus, BnfValue::Span(_)) }
+    #[inline] pub fn input(&self) -> &'p str { self.doc.input }
+
+    #[inline]
+    pub fn compound_kind(&self) -> Option<BnfCompoundKind> {
+        match self.focus {
+            BnfValue::Compound(id) => Some(self.doc.compound(id).kind),
+            _ => None,
+        }
+    }
+}
+
+pub trait BnfPathQuery: Sized {
+    fn query<'p>(doc: &BnfDocument<'p>, path: Path<'_>) -> Option<Self>;
+}
+
+#[inline]
+fn walk_path<'a, 'p>(doc: &'a BnfDocument<'p>, path: Path<'_>) -> Option<&'a BnfValue<'p>> {
+    let mut current: &'a BnfValue<'p> = &doc.root;
+    for segment in path.iter() {
+        current = match (current, segment) {
+            (BnfValue::Compound(id), PathSegment::Index(idx)) => {
+                let entry = doc.compound(*id);
+                entry.children.get(*idx)?
+            }
+            (BnfValue::Compound(_), PathSegment::Field(_)) => return None,
+            _ => return None,
+        };
+    }
+    Some(current)
+}
+
+impl BnfPathQuery for &str {
+    #[inline]
+    fn query<'p>(doc: &BnfDocument<'p>, path: Path<'_>) -> Option<Self> {
+        match walk_path(doc, path)? {
+            BnfValue::Span(s) => {
+                let extended: &'p str = *s;
+                Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
+            }
+            _ => None,
+        }
+    }
+}
+
+impl BnfPathQuery for BnfValue<'_> {
+    #[inline]
+    fn query<'p>(doc: &BnfDocument<'p>, path: Path<'_>) -> Option<Self> {
+        let value = walk_path(doc, path)?;
+        let copied: BnfValue<'p> = *value;
+        Some(unsafe { core::mem::transmute::<BnfValue<'p>, BnfValue<'_>>(copied) })
+    }
+}

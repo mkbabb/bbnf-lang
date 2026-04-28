@@ -240,6 +240,33 @@ impl EmitStrategy {
                 ts: None,
                 wasm: None,
             },
+            // AZ-II.cutover.E (Phase 2): BNF struct-direct substrate.
+            ("BnfParser", true) => EmitStrategy::StructDirect {
+                rust: SubstrateBinding {
+                    builder_path: "crate::runtime::bnf::BnfStructBuilder",
+                    document_path: "crate::runtime::bnf::BnfDocument",
+                },
+                ts: None,
+                wasm: None,
+            },
+            // AZ-II.cutover.E (Phase 2): EBNF struct-direct substrate.
+            ("EbnfParser", true) => EmitStrategy::StructDirect {
+                rust: SubstrateBinding {
+                    builder_path: "crate::runtime::ebnf::EbnfStructBuilder",
+                    document_path: "crate::runtime::ebnf::EbnfDocument",
+                },
+                ts: None,
+                wasm: None,
+            },
+            // AZ-II.cutover.E (Phase 2): CSS pretty struct-direct substrate.
+            ("CssPrettyParser", true) => EmitStrategy::StructDirect {
+                rust: SubstrateBinding {
+                    builder_path: "crate::runtime::css_pretty::CssPrettyStructBuilder",
+                    document_path: "crate::runtime::css_pretty::CssPrettyDocument",
+                },
+                ts: None,
+                wasm: None,
+            },
             // Catch-all — every grammar not yet activated stays on the
             // legacy tape substrate. The `_ => TapeDirect` close is
             // the wave-local revert per W2.md §Reversal — per

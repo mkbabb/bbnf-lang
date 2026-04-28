@@ -18,9 +18,12 @@
 //! rewrite).
 
 pub mod bbnf;
+pub mod bnf;
 pub mod builder;
 pub mod css_l4;
+pub mod css_pretty;
 pub mod csv;
+pub mod ebnf;
 pub mod error;
 pub mod google_sheets;
 pub mod handle;
@@ -42,6 +45,19 @@ pub use csv::{
 pub use math::{
     MathArena, MathCompound, MathCompoundId, MathCompoundKind, MathDocument, MathKind,
     MathPathQuery, MathStructBuilder, MathValue, MathView,
+};
+pub use bnf::{
+    BnfArena, BnfCompound, BnfCompoundId, BnfCompoundKind, BnfDocument, BnfKind,
+    BnfPathQuery, BnfStructBuilder, BnfValue, BnfView,
+};
+pub use ebnf::{
+    EbnfArena, EbnfCompound, EbnfCompoundId, EbnfCompoundKind, EbnfDocument, EbnfKind,
+    EbnfPathQuery, EbnfStructBuilder, EbnfValue, EbnfView,
+};
+pub use css_pretty::{
+    CssPrettyArena, CssPrettyCompound, CssPrettyCompoundId, CssPrettyCompoundKind,
+    CssPrettyDocument, CssPrettyKind, CssPrettyPathQuery, CssPrettyStructBuilder,
+    CssPrettyValue, CssPrettyView,
 };
 pub use css_l4::{
     CssAngle, CssAngleUnit, CssArena, CssColor, CssColorFunction, CssColorMix,

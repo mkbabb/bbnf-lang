@@ -18,3 +18,7 @@ smallvec = "1.13"
 csp-solver = "0.1"
 egraph = { path = "../egraph" }
 egraph-derive = { path = "../egraph-derive" }
+# RON serialisation for per-grammar rewrite-rule files
+# (`grammar/<g>/rewrites/*.ron`); consumed by `crate::rewrites::schema`
+# and `crate::rewrites::RuleSet::{load_from_ron, save_to_ron}`.
+ron = "0.12"

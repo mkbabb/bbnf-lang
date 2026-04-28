@@ -19,6 +19,7 @@ pub mod egraph;
 pub mod passes;
 pub mod recognizer;
 pub mod registry;
+pub mod rewrites;
 pub mod types;
 pub mod vm;
 

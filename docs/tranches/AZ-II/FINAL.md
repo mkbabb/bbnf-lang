@@ -1,13 +1,13 @@
 # AZ-II — FINAL (Partial Close)
 
-**Status**: PARTIAL CLOSE — cutover.A through cutover.H Phase 1 LANDED; tape deletion + non-BBNF regen-fleet activation deferred to follow-on tranche.
+**Status**: PARTIAL CLOSE — cutover.A through cutover.I Phase 5 LANDED; tape deletion + non-BBNF regen-fleet activation deferred to follow-on tranche.
 
 **Date**: 2026-04-28
-**Master HEAD at AZ-II close**: `1513328e` (`docs(cutover.H): document Phase 5 deferral`)
+**Master HEAD at cutover.I.5 close**: `98008086` (`feat(cutover.I.5): BbnfBootstrap serialize_compact_doc + un-ignore bbnf_rule`)
 **Wave document**: [`waves/cutover.md`](waves/cutover.md)
 **Parent plan**: [`AZ-II.md`](AZ-II.md)
 
-AZ-II completes the BBNF resolver-arm activation and emitter substrate fixes. The tape crate deletion (Hard gate 1) and non-BBNF resolver-arm fleet activation (cutover.H Phase 2) defer to a follow-on tranche under documented scope. The bootstrap reproducibility CI gate is intact; BBNF self-parity admits 56/56 fixtures via the cutover.G hand-written bootstrap parser; the resolver-arm flip + transparent-rule emitter fix produce a self-consistent regen of the BBNF struct-direct parser.
+AZ-II completes the BBNF resolver-arm activation, emitter substrate fixes, and the BBNF compact-source serializer. The tape crate deletion (Hard gate 1) and non-BBNF resolver-arm fleet activation (cutover.H Phase 2 / cutover.I Phase 2) defer to a follow-on tranche under documented scope. The bootstrap reproducibility CI gate is intact; BBNF self-parity admits 56/56 fixtures via the cutover.G hand-written bootstrap parser; the resolver-arm flip + transparent-rule emitter fix produce a self-consistent regen of the BBNF struct-direct parser; the cutover.I.5 typed walker over [`BbnfDocument`] re-emits compact BBNF source idempotently.
 
 ## Trajectory recap
 
@@ -24,6 +24,8 @@ AZ-II decomposed into eight cutover sub-stages spanning ~30 hours of dispatch:
 | cutover.G | `e52974a6` `984d7535` `863de6a5` `caf07d96` `9300e9df` | Hand-written BBNF bootstrap parser at `crates/core/src/grammar/bootstrap_parser.rs` (~900 LOC) breaks the chicken-and-egg between regen and the broken on-disk `BbnfBootstrap::parse`. 56/56 BBNF self-parity tests pass under cutover.G. |
 | cutover.H Phase 0 | `42e0906b` | `graph/deps::collect_refs_from_compound` skips value-expression compound subtrees so JSON regen-check no longer mis-classifies host-fn idents as nonterminal refs. |
 | cutover.H Phase 1 | `3d799a29` `1513328e` | BBNF resolver-arm re-flip + transparent-rule emitter fix at `shapes/mod.rs` (Wrap-classified transparent rules emit per-shape fns under StructDirect; transparency-aware dispatch with no outer compound). `bootstrap_parser.rs::parse_pretty_hint` pushes the parenthesised arg span as a child Span so `sep("...")` hints emit canonical strings. Phase 5 (`bbnf_rule` un-ignore) deferred — `serialize_compact_doc` requires a typed walker over `BbnfDocument` materialising non-Span literals (`;` / `.`). |
+| cutover.I Phase 5 | `98008086` | `BbnfBootstrap::serialize_compact_doc` authored at `crates/core/src/runtime/bbnf/serialize.rs`. Typed walker over `BbnfDocument` keyed on `BbnfCompoundKind`; each compound shape (Rule, Alternation, Concatenation, MappedFactor, Closure, ImportDirective, PrettyDirective, …) emits its required structural literals (`=`, `;`, `,`, `|`, `->`, `from`, `@import`, …) in grammar order. `bbnf_rule` test in `serialize_roundtrip.rs` un-ignored — round-trip idempotence holds. 19/19 serialize_roundtrip + 1/1 bbnf_bootstrap_reproducibility tests pass. |
+| cutover.I Phase 2 | DEFERRED | Per-shape transparent-rule passthrough generalisation across Object / Array / Keyword / Number / Pratt / Unordered / ArgList / HRegex emitters — substrate authored at `shapes/transparent.rs` (~430 LOC) but **not landed** under cutover.I. The activation surfaced two wave-scale blockers: (1) regen pipeline silently changes `bool` rule's TypeDesc from `Bool` to `Span` (eprintln-confirmed; pre-existing pre-cutover.I, not enforced by `bbnf_bootstrap_reproducibility` gate which only covers BBNF), so JSON's `parse_keyword_JsonParser_bool` regen produces `push_leaf_with_unit` instead of `push_leaf_with_bool`; (2) per-shape struct_direct emitters (flat / array / object) return `Err(...)` on inner-literal mismatches without closing open compounds, leaking open frames into the top-level grammar parse path — `BnfStructBuilder::finalise called with 7 open frame(s)` panic surfaces under csv/math/bnf/ebnf/css_pretty fleet activation. Both routes to follow-on tranche under explicit scope. |
 
 ## Hard-gate readout per `waves/cutover.md` §Hard gate
 
@@ -67,14 +69,15 @@ The post-AY cumulative regression vs AU baseline (~70-80%) is documented in the 
 
 ## Reversal disposition
 
-cutover.H Phase 1 lands as a non-reversal partial close. The BBNF resolver-arm + emitter fixes are NOT under reversal — they net-improve workspace test pass count by +16 tests (HEAD: 1429/1640 pass; cutover.H: 1445/1640 pass). The deferrals (Phase 2 non-BBNF regen-fleet; Phase 3-4 Parsed<R> + tape deletion; Phase 5 bbnf_rule serialize_compact_doc; Phase 6 bench refresh) carry forward under explicit scope to a follow-on tranche.
+cutover.H Phase 1 + cutover.I Phase 5 land as a non-reversal partial close. The BBNF resolver-arm + emitter fixes + serialize_compact_doc are NOT under reversal — they net-improve workspace test pass count by +16 tests at cutover.H (HEAD: 1429/1640 pass; cutover.H: 1445/1640 pass) and +1 test at cutover.I.5 (bbnf_rule un-ignored). The deferrals (Phase 2 non-BBNF regen-fleet; Phase 3-4 Parsed<R> + tape deletion; Phase 6 bench refresh) carry forward under explicit scope to a follow-on tranche; cutover.I.2 substrate (`shapes/transparent.rs`, ~430 LOC) sits in a worktree pending the wave-scale blocker resolution documented under cutover.I Phase 2 above.
 
 ## Workspace test posture
 
 Pre-cutover.H (HEAD `42e0906b`): 1429 / 1640 pass (1429 / 1614 effective; 26 skipped); 211 fail.
 Post-cutover.H (HEAD `1513328e`): 1445 / 1640 pass (1445 / 1614 effective); 195 fail.
+Post-cutover.I.5 (HEAD `98008086`): bbnf_rule un-ignored — 19/19 serialize_roundtrip + 1/1 bbnf_bootstrap_reproducibility pass.
 
-Net: +16 tests fixed; zero new failures introduced. The remaining 195 failures are pre-existing CSS L4, Sheets, and json-prototype test issues outside cutover.H's emitter-fix scope.
+Net: +16 tests fixed at cutover.H; +1 test (bbnf_rule un-ignored) at cutover.I.5; zero new failures introduced. The remaining 195 failures are pre-existing CSS L4, Sheets, and json-prototype test issues outside cutover.H/I's scope.
 
 ## File-level deltas at AZ-II close
 
@@ -87,16 +90,19 @@ Net: +16 tests fixed; zero new failures introduced. The remaining 195 failures a
 | `crates/core/src/grammar/generated/bbnf.rs` | H.1 | Regen output (39396 LOC) under fixed emitter + resolver-arm flip. |
 | `crates/core/src/graph/deps.rs` | H.0 | Skip value-expression compound subtrees in nonterminal-reference walks. |
 | `crates/core/tests/serialize_roundtrip.rs` | H.5 | Document Phase 5 deferral; route through `bootstrap_parser::parse`; retain `#[ignore]`. |
+| `crates/core/src/runtime/bbnf/serialize.rs` | I.5 | NEW — typed walker over `BbnfDocument` re-emits compact BBNF source with all required structural literals. |
+| `crates/core/src/runtime/bbnf/mod.rs` | I.5 | Export `serialize_compact_doc`. |
+| `crates/core/tests/serialize_roundtrip.rs` | I.5 | Un-ignore `bbnf_rule` test; route through `serialize_compact_doc`; assert idempotence under reparse. |
 
 ## Deferred-scope summary
 
 | Phase | Scope | Deferral rationale | Route |
 |---|---|---|---|
-| H.2 | Re-enable non-BBNF resolver arms (csv/math/bnf/ebnf/css_pretty) + regen fleet | The cutover.H emitter changes alter regen output for css_pretty / css_l4 / google_sheets in ways that surface previously-latent shape-classification issues (transparent rules under non-Wrap shapes). Resolving these requires per-shape transparent-passthrough emission across Object/Array/Keyword/Number/Pratt/Unordered/ArgList/HRegex emitters. Wave-scale refactor outside cutover.H cap. | follow-on tranche |
-| H.3 | `Parsed<R>` deletion (Option B) | 126 cross-crate references; per-crate site replacement requires careful migration of `view()` / `to_value()` calls. Wave-scale. | follow-on tranche |
-| H.4 | `crates/tape/` deletion | 13874 cross-crate references; deletion requires resolution of every `tape::Tape` / `tape::TapeOffset` / `tape::dta::*` consumer. Wave-scale. | follow-on tranche |
-| H.5 | `bbnf_rule` un-ignore | Requires authoring `BbnfBootstrap::serialize_compact_doc` — a typed walker over `BbnfDocument` materialising every non-Span literal. The naive `span_range`-based serializer drops mandatory terminators (`;`). | follow-on tranche |
-| H.6 | 17-entry close matrix bench refresh | Bench compile under fat-LTO takes >10 minutes; partial bench run captured for json. Full bench refresh blocks on Phase 2 regen-fleet activation so non-BBNF arms reflect post-cutover state. | follow-on tranche |
+| H.2 / I.2 | Re-enable non-BBNF resolver arms (csv/math/bnf/ebnf/css_pretty) + regen fleet | cutover.I authored the per-shape transparent-passthrough substrate at `crates/core/src/backend/rust/emitter/shapes/transparent.rs` (~430 LOC) and an extended `shapes/mod.rs` dispatch that routes every transparent rule through it. Activation surfaced two wave-scale blockers: (1) regen pipeline silently changes `bool` rule's TypeDesc from `Bool` to `Span` — a pre-existing reproducibility break the BBNF-only CI gate doesn't catch; (2) per-shape struct_direct emitters (flat / array / object) leak open compounds on inner-`Err` paths, surfacing as `*StructBuilder::finalise called with N open frame(s)` panics under csv/bnf/ebnf/css_pretty fleet activation. Both routes to follow-on tranche. The transparent.rs substrate is NOT landed under cutover.I — the activation-gating blockers must close first. | follow-on tranche |
+| H.3 | `Parsed<R>` deletion (Option B) | 42 cross-crate references (re-counted at cutover.I; brief stated 126); per-crate site replacement requires careful migration of `view()` / `to_value()` calls. Phase 2 must close first since Parsed<R> carries `Tape<R>`. Wave-scale. | follow-on tranche |
+| H.4 | `crates/tape/` deletion | 13874 cross-crate references; deletion requires resolution of every `tape::Tape` / `tape::TapeOffset` / `tape::dta::*` consumer. Phase 2 + 3 must close first. Wave-scale. | follow-on tranche |
+| H.5 | `bbnf_rule` un-ignore | LANDED at cutover.I.5 (commit `98008086`). |
+| H.6 | 17-entry close matrix bench refresh | Bench compile under fat-LTO takes >10 minutes; partial bench run captured for json at cutover.E. Full bench refresh blocks on Phase 2 regen-fleet activation so non-BBNF arms reflect post-cutover state. | follow-on tranche |
 
 ## Next-tranche scope
 

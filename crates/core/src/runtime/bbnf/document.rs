@@ -7,7 +7,7 @@
 //! [`crate::runtime::json::JsonDocument`] /
 //! [`crate::runtime::google_sheets::SheetsDocument`].
 
-use crate::runtime::bbnf::arena::{BbnfArena, BbnfCompound, BbnfCompoundId};
+use crate::runtime::bbnf::arena::{BbnfArena, BbnfCompound, BbnfCompoundId, BbnfCompoundKind};
 use crate::runtime::bbnf::value::BbnfValue;
 use crate::runtime::path::{Path, PathSegment};
 
@@ -198,6 +198,198 @@ impl<'a, 'p: 'a> BbnfView<'a, 'p> {
     #[inline]
     pub fn is_unit(&self) -> bool {
         matches!(self.focus, BbnfValue::Unit)
+    }
+
+    /// Borrow the document's input slice. Inherent re-export of
+    /// [`crate::runtime::RuntimeView::input`] so consumers can read
+    /// the input without importing the trait at every call site.
+    #[inline]
+    pub fn input(&self) -> &'p str {
+        self.doc.input
+    }
+
+    // ─── AZ-II.cutover.D3 — extension surface ─────────────────────
+    // Walking accessors used by `crates/core/src/graph/{deps,metadata}.rs`
+    // and `crates/core/src/pipeline/{compile,directives}.rs` after the
+    // BBNF consumer migration. Mirrors the helpers retired from
+    // `crates/core/src/lower/tape_walk.rs` (find_descendant_by_kind,
+    // peel_transparent) but operates over the struct-direct
+    // `BbnfCompoundKind` alphabet instead of the tape's
+    // `BbnfBootstrapRuleKind`.
+
+    /// Compound kind discriminator for compound focuses; `None` for
+    /// scalar / span / unit / tag focuses. Replaces the tape-side
+    /// `BbnfBootstrapNodeView::rule_kind()` for consumers dispatching
+    /// on the focused compound's structural shape.
+    #[inline]
+    pub fn compound_kind(&self) -> Option<BbnfCompoundKind> {
+        match self.focus {
+            BbnfValue::Compound(id) => Some(self.doc.compound(id).kind),
+            _ => None,
+        }
+    }
+
+    /// Branch tag for Alt-typed compound focuses (the chosen
+    /// alternation branch index recorded by the struct builder via
+    /// `push_branch_tag`); `None` for non-Alt compounds and leaves.
+    #[inline]
+    pub fn branch_tag(&self) -> Option<u32> {
+        match self.focus {
+            BbnfValue::Compound(id) => self.doc.compound(id).branch_tag,
+            _ => None,
+        }
+    }
+
+    /// Number of structural children in this view's focus. Compound
+    /// focuses report their child count; leaf focuses report `0`.
+    #[inline]
+    pub fn num_children(&self) -> usize {
+        match self.focus {
+            BbnfValue::Compound(id) => self.doc.compound(id).children.len(),
+            _ => 0,
+        }
+    }
+
+    /// Positional child access. Returns the i-th child sub-view of a
+    /// compound focus (in source order); `None` for leaves and
+    /// out-of-range indices.
+    #[inline]
+    pub fn child(&self, i: usize) -> Option<BbnfView<'a, 'p>> {
+        match self.focus {
+            BbnfValue::Compound(id) => self
+                .doc
+                .compound(id)
+                .children
+                .get(i)
+                .copied()
+                .map(|v| BbnfView::focused(self.doc, v)),
+            _ => None,
+        }
+    }
+
+    /// Aggregate byte range covering this view's focus. Walks
+    /// every Span descendant (computed via pointer-arithmetic
+    /// against the document's input slice) and returns the union
+    /// `(min_lo, max_hi)`. Returns `None` when the focus contains
+    /// no source-bearing leaves (pure scalar compounds, Unit
+    /// focuses, or Span values whose pointer falls outside the
+    /// input slice).
+    pub fn span_range(&self) -> Option<(usize, usize)> {
+        let input = self.doc.input;
+        let input_start = input.as_ptr() as usize;
+        let input_end = input_start + input.len();
+        let mut acc: Option<(usize, usize)> = None;
+        self.fold_span_range(input_start, input_end, &mut acc);
+        acc
+    }
+
+    fn fold_span_range(
+        &self,
+        input_start: usize,
+        input_end: usize,
+        acc: &mut Option<(usize, usize)>,
+    ) {
+        match self.focus {
+            BbnfValue::Span(s) => {
+                let s_start = s.as_ptr() as usize;
+                let s_end = s_start + s.len();
+                if s_start < input_start || s_end > input_end {
+                    return;
+                }
+                let lo = s_start - input_start;
+                let hi = s_end - input_start;
+                *acc = Some(match *acc {
+                    None => (lo, hi),
+                    Some((a, b)) => (a.min(lo), b.max(hi)),
+                });
+            }
+            BbnfValue::Compound(_) => {
+                for child in self.children_iter() {
+                    child.fold_span_range(input_start, input_end, acc);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// Source text aggregated across this view's focus, sliced from
+    /// the document's input via [`Self::span_range`]. Empty string
+    /// when the focus contains no source-bearing leaves.
+    #[inline]
+    pub fn span_text(&self) -> &'p str {
+        match self.span_range() {
+            Some((lo, hi)) => &self.doc.input[lo..hi],
+            None => "",
+        }
+    }
+
+    /// Children iterator over compound focuses. Yields owned views
+    /// (each with the same document lifetime) in source order; leaves
+    /// yield nothing. Mirrors [`crate::runtime::RuntimeView::children`]
+    /// without the trait-method receiver-borrow dance — usable inside
+    /// recursive helpers without importing the trait.
+    #[inline]
+    pub fn children_iter(&self) -> BbnfChildrenSlice<'a, 'p> {
+        match self.focus {
+            BbnfValue::Compound(id) => BbnfChildrenSlice {
+                doc: self.doc,
+                children: &self.doc.compound(id).children,
+                index: 0,
+            },
+            _ => BbnfChildrenSlice {
+                doc: self.doc,
+                children: &[],
+                index: 0,
+            },
+        }
+    }
+
+    /// Depth-first descent: return the first descendant compound
+    /// whose [`BbnfCompoundKind`] equals `target` (the receiver itself
+    /// counts as a candidate). Mirrors the retired
+    /// `tape_walk::find_descendant_by_kind`.
+    pub fn find_descendant_by_kind(&self, target: BbnfCompoundKind) -> Option<BbnfView<'a, 'p>> {
+        if self.compound_kind() == Some(target) {
+            return Some(*self);
+        }
+        for child in self.children_iter() {
+            if let Some(found) = child.find_descendant_by_kind(target) {
+                return Some(found);
+            }
+        }
+        None
+    }
+
+    /// Iterate the iteration children of a compound focus, unwrapping
+    /// the implicit `Repeat` shape that tape walkers produced. Under
+    /// struct-direct the children are already flat (the builder
+    /// deposits each iteration's body directly), so this is the same
+    /// view sequence as [`Self::children_iter`].
+    #[inline]
+    pub fn iter_children(&self) -> BbnfChildrenSlice<'a, 'p> {
+        self.children_iter()
+    }
+}
+
+/// Slice-backed children iterator. Co-resident with [`BbnfView`] so
+/// callers can use the iterator inside non-trait-bound recursion (the
+/// trait `RuntimeView::children` returns `impl Iterator + '_` whose
+/// hidden type doesn't compose with explicit recursion).
+#[derive(Clone)]
+pub struct BbnfChildrenSlice<'a, 'p: 'a> {
+    doc: &'a BbnfDocument<'p>,
+    children: &'a [BbnfValue<'p>],
+    index: usize,
+}
+
+impl<'a, 'p: 'a> Iterator for BbnfChildrenSlice<'a, 'p> {
+    type Item = BbnfView<'a, 'p>;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        let value = self.children.get(self.index)?;
+        self.index += 1;
+        Some(BbnfView::focused(self.doc, *value))
     }
 }
 

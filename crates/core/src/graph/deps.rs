@@ -1,20 +1,22 @@
 //! Dependency graph construction from grammar AST.
 //!
-//! Tranche AC.2: rewritten against the tape-first view surface.
-//! Identifier references are collected by walking `children()` on a
-//! [`BbnfBootstrapNodeView`] and matching on [`BbnfBootstrapRuleKind`].
+//! AZ-II.cutover.D — rewritten against the struct-direct
+//! [`BbnfView`] surface. Identifier references are collected by
+//! walking [`BbnfView::children_iter`] and dispatching on
+//! [`BbnfCompoundKind`] for compound focuses or on
+//! [`BbnfKind::Span`] for borrowed-source leaves.
 //!
-//! Tranche AF.0: shape-agnostic structural walk — every semantic
-//! handler dispatches on canonical `rule_kind` names only. Sub-
-//! variant wrapper kinds (`term_N`) that structural-mode dedup may
-//! or may not produce are never referenced; the generic descent
-//! into `children()` collects identifier nodes regardless of which
-//! wrapper compounds the optimizer has elided around them.
+//! The struct-direct emitter never produces anonymous wrapper
+//! compounds — every compound entry has a named
+//! [`BbnfCompoundKind`] populated from the registry's
+//! `StructLayout::rule_name`. The pre-cutover.D `int_lit` /
+//! `Unknown` peel-through dispatch (which existed only because the
+//! tape walker's `variant_idx = 0` collided with the leaf-shape
+//! enum's zeroth variant) is therefore gone.
 
 use indexmap::{IndexMap, IndexSet};
 
-use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
-use crate::lower::tape_walk::find_descendant_by_kind;
+use crate::runtime::bbnf::{BbnfCompoundKind, BbnfKind, BbnfView};
 use crate::types::AST;
 
 /// Rule name → set of referenced rule names.
@@ -39,188 +41,138 @@ pub fn calculate_ast_deps<'a>(ast: &AST<'a>) -> Dependencies<'a> {
 }
 
 /// Recursively collect nonterminal (identifier) references from a
-/// bootstrap view node.
+/// struct-direct view node.
 ///
-/// The walk dispatches on canonical `rule_kind` first, then falls
-/// through to a shape-agnostic structural walk. Under the tape-
-/// first bootstrap parser, leaf terminals (identifier, literal,
-/// regex) are consumed as span-only operations that do NOT push
-/// child `Rule` records. Their text sits in the span gap between
-/// adjacent child records of the parent compound. The
-/// `mapped_factor` / `factor` arms mirror the analysis layer's
-/// `collect_refs_from_compound` — scan span-text gaps for bare
-/// identifier tokens.
-pub fn collect_nonterminal_refs<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-    refs: &mut IndexSet<&'a str>,
-) {
-    use crate::runtime::tape::TapeKind;
-
-    match node.rule_kind() {
-        // Leaf: an explicit identifier rule compound.
-        BbnfBootstrapRuleKind::identifier => {
-            let text = node.span_text().trim();
-            if !text.is_empty() && !is_value_keyword(text) {
-                refs.insert(text);
+/// The walk dispatches on [`BbnfView::compound_kind`] for compounds
+/// and on the focused [`BbnfKind`] for leaves. Span leaves whose
+/// text matches the identifier shape contribute a reference; literal
+/// / regex / numeric leaves emit nothing. The `closure` arm skips
+/// the parameter identifiers (the leading Span children) so they
+/// aren't mis-classified as nonterminal references.
+pub fn collect_nonterminal_refs<'a>(view: BbnfView<'a, 'a>, refs: &mut IndexSet<&'a str>) {
+    match view.compound_kind() {
+        // ─── Leaf focus dispatch ──────────────────────────────────
+        None => {
+            if view.kind() == BbnfKind::Span {
+                let raw = view.span_text();
+                let text = raw.trim();
+                if !text.is_empty()
+                    && is_ident(text.as_bytes())
+                    && !is_value_keyword(text)
+                {
+                    refs.insert(slice_lifetime_extend(view.input(), text));
+                }
             }
         }
-
-        // Structural: alternation, concatenation — iterate branches.
-        BbnfBootstrapRuleKind::alternation | BbnfBootstrapRuleKind::concatenation => {
-            for child in iter_tape_iteration_views(node) {
+        // ─── Compound focus dispatch ──────────────────────────────
+        Some(BbnfCompoundKind::Alternation)
+        | Some(BbnfCompoundKind::Concatenation)
+        | Some(BbnfCompoundKind::CallArg) => {
+            for child in view.children_iter() {
                 collect_nonterminal_refs(child, refs);
             }
         }
-
-        // Binary factor: first operand + rest operands.
-        BbnfBootstrapRuleKind::binary_factor => {
-            for operand in collect_tape_binary_operand_views(node) {
-                collect_nonterminal_refs(operand, refs);
+        Some(BbnfCompoundKind::BinaryFactor) => {
+            for child in view.children_iter() {
+                collect_nonterminal_refs(child, refs);
             }
         }
-
-        // mapped_factor / factor: the term body is often fully inlined
-        // into the compound — individual optionals appear as empty
-        // Repeat children and the actual content (identifier, literal,
-        // regex) is consumed span-only. Scan the span-text gaps between
-        // child records for bare identifier tokens.
-        BbnfBootstrapRuleKind::mapped_factor | BbnfBootstrapRuleKind::factor => {
-            collect_refs_from_compound(node, refs);
+        Some(BbnfCompoundKind::MappedFactor) | Some(BbnfCompoundKind::Factor) => {
+            collect_refs_from_compound(view, refs);
         }
-
-        // Canonical `term` + transparent wrappers. Grammar:
+        // `term = "ε" | identifier , ( "(" , call_arg ... ")" ) ?
+        //       | literal | regex | "@{" rhs "}" | "(" rhs ")"
+        //       | "[" rhs "]" | "{" rhs "}"`.
         //
-        //   term = "ε" | "epsilon"
-        //        | identifier , ( "(" , call_arg … ")" ) ?
-        //        | literal | regex
-        //        | "@{" , rhs ?w , "}"
-        //        | "(" , rhs ?w , ")"
-        //        | "[" , rhs ?w , "]"
-        //        | "{" , rhs ?w , "}" ;
+        // Under struct-direct the `term` compound's children carry
+        // either:
+        //   - a Span leaf (identifier / literal / regex)
+        //   - a CallArg compound (when call_arg present alongside
+        //     identifier)
+        //   - an Rhs compound (the four grouped forms)
+        //   - the `epsilon` literal — no record is emitted, so the
+        //     compound has zero children
         //
-        // Walker-era emission stamped each Alt branch with a sub-
-        // variant name (`term_0` / `term_1` / `term_2`); AX.W0a.2.i.b
-        // retires those under shape-authoritative Wrap emission. The
-        // canonical `term` compound now carries the chosen Alt
-        // branch's children directly — either the grouped `rhs`
-        // descendant (branches 4–7), the `identifier` + optional
-        // `call_arg` children (branch 3), or a single leaf token
-        // (branches 1, 2, 5, 6).
-        //
-        // The unified handler: (a) descends into a grouped `rhs`
-        // descendant when present (former `term_2`), else (b)
-        // iterates every Rule child (former `term_1` identifier +
-        // call_args AND the canonical single-inner-child transparent
-        // descent), else (c) extracts a bare identifier from the
-        // compound's span (fully-inlined terminal). No keying on
-        // sub-variant NAMES — the projection is IR-structural.
-        //
-        // `grammar_item` / `directive` / `lhs` share the single-
-        // inner-child transparent semantics; they fold into the same
-        // Rule-iteration path.
-        BbnfBootstrapRuleKind::term
-        | BbnfBootstrapRuleKind::grammar_item
-        | BbnfBootstrapRuleKind::directive
-        | BbnfBootstrapRuleKind::lhs => {
-            // First: descend into a grouped `rhs` inner expression
-            // if present (covers former `term_2`).
-            if let Some(inner) = find_descendant_by_kind(node, BbnfBootstrapRuleKind::rhs) {
-                collect_nonterminal_refs(inner, refs);
-                return;
-            }
-            // Second: iterate every Rule child — covers the former
-            // `term_1` identifier + call_args shape and the other
-            // transparent wrappers whose sub-expression pushes a
-            // Rule compound.
+        // Walk every child: nested rhs / call_arg compounds recurse;
+        // bare Span children check identifier shape; numeric / unit
+        // leaves are skipped. literal / regex leaves are also Span
+        // values but their content begins with `"` / `'` / `/`, so
+        // `is_ident` rules them out.
+        Some(BbnfCompoundKind::Term)
+        | Some(BbnfCompoundKind::GrammarItem)
+        | Some(BbnfCompoundKind::Directive)
+        | Some(BbnfCompoundKind::Lhs)
+        | Some(BbnfCompoundKind::Rhs) => {
+            // First pass: descend into structural children. If any
+            // child contributed a ref, we are done. Otherwise fall
+            // back to span-text inspection so a single-token term
+            // (literal / regex / identifier already inlined into the
+            // compound's text via its child Span) still registers.
             let initial = refs.len();
-            for c in node.children() {
-                if c.kind() == TapeKind::Rule {
-                    collect_nonterminal_refs(c, refs);
-                }
+            for child in view.children_iter() {
+                collect_nonterminal_refs(child, refs);
             }
-            if refs.len() > initial {
-                return;
-            }
-            // Third: fully-inlined terminal — scan the compound's
-            // span for a bare identifier token so a single-token
-            // term still registers its reference.
-            let text = node.span_text().trim();
-            if !text.is_empty() && is_ident(text.as_bytes()) && !is_value_keyword(text) {
-                refs.insert(text);
-            }
-        }
-
-        // Closure: |params| body — recurse into body.
-        BbnfBootstrapRuleKind::closure => {
-            // Body is the trailing Rule child.
-            for c in node.children() {
-                if c.kind() == TapeKind::Rule {
-                    collect_nonterminal_refs(c, refs);
+            if refs.len() == initial {
+                let text = view.span_text().trim();
+                if !text.is_empty()
+                    && is_ident(text.as_bytes())
+                    && !is_value_keyword(text)
+                {
+                    refs.insert(slice_lifetime_extend(view.input(), text));
                 }
             }
         }
-
-        // Anonymous wrapper compounds (variant_idx=0 collides with
-        // `int_lit` in the enum): peel to substantive Rule children.
-        BbnfBootstrapRuleKind::int_lit | BbnfBootstrapRuleKind::Unknown => {
-            let mut found_rule = false;
-            for c in node.children() {
-                if c.kind() == TapeKind::Rule {
-                    collect_nonterminal_refs(c, refs);
-                    found_rule = true;
-                }
-            }
-            if !found_rule {
-                let text = node.span_text().trim();
-                if !text.is_empty() && is_ident(text.as_bytes()) && !is_value_keyword(text) {
-                    refs.insert(text);
+        // `closure = "|" , identifier , ( "," ?w , identifier ) * , "|" ?w , rhs`.
+        // The leading Span children are parameter names — skip them.
+        // Trailing children that are compounds (the rhs body) recurse
+        // normally. The struct-direct emitter records identifier
+        // params as Span leaves AND the rhs as a compound child.
+        Some(BbnfCompoundKind::Closure) => {
+            for child in view.children_iter() {
+                if child.is_compound() {
+                    collect_nonterminal_refs(child, refs);
                 }
             }
         }
-
-        // Terminals, value-expression compounds, comments — no grammar refs.
-        _ => {}
+        // Top-level grammar / rule / directive compounds aren't
+        // expected on the RHS-walking path (they're peeled before
+        // descent). Defensive recurse-anyway: better to over-collect
+        // than to drop a valid reference.
+        Some(_) => {
+            for child in view.children_iter() {
+                collect_nonterminal_refs(child, refs);
+            }
+        }
     }
 }
 
-/// Scan span-text gaps of a compound node for bare identifier tokens.
-/// Mirrors the analysis layer's `collect_refs_from_compound`.
-fn collect_refs_from_compound<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-    refs: &mut IndexSet<&'a str>,
-) {
-    use crate::runtime::tape::TapeKind;
-
-    // First pass: recurse into Rule children.
-    let initial_count = refs.len();
-    for c in node.children() {
-        if c.kind() == TapeKind::Rule {
-            collect_nonterminal_refs(c, refs);
-        }
+/// Compound-aware identifier scanner. Mirrors the analysis layer's
+/// `collect_refs_from_compound` — first descend into children, then
+/// fall back to scanning span-text gaps for a leading identifier
+/// when no child contributed a reference.
+fn collect_refs_from_compound<'a>(view: BbnfView<'a, 'a>, refs: &mut IndexSet<&'a str>) {
+    let initial = refs.len();
+    for child in view.children_iter() {
+        collect_nonterminal_refs(child, refs);
     }
-    if refs.len() > initial_count {
+    if refs.len() > initial {
         return;
     }
-
-    // Second pass: scan span-text gaps for identifiers.
-    let (node_lo, node_hi) = node.span();
-    let input = node.input();
-
-    let child_spans: Vec<(u32, u32)> = node
-        .children()
-        .map(|c| c.span())
-        .filter(|(lo, hi)| lo < hi)
-        .collect();
-
+    let Some((node_lo, node_hi)) = view.span_range() else {
+        return;
+    };
+    let input = view.input();
     let mut scan_start = node_lo;
-    for &(clo, chi) in &child_spans {
-        if scan_start < clo {
-            extract_ident_from_range(input, scan_start as usize, clo as usize, refs);
+    for child in view.children_iter() {
+        if let Some((clo, chi)) = child.span_range() {
+            if scan_start < clo {
+                extract_ident_from_range(input, scan_start, clo, refs);
+            }
+            scan_start = chi;
         }
-        scan_start = chi;
     }
     if scan_start < node_hi {
-        extract_ident_from_range(input, scan_start as usize, node_hi as usize, refs);
+        extract_ident_from_range(input, scan_start, node_hi, refs);
     }
 }
 
@@ -251,8 +203,6 @@ fn extract_ident_from_range<'a>(
     }
     let ident = &text[..ident_len];
     if !is_value_keyword(ident) {
-        // Compute the slice within the input string so we get a
-        // reference with the `'a` lifetime of `input`.
         let lead_ws = input[lo..hi].len() - input[lo..hi].trim_start().len();
         let abs_lo = lo + lead_ws;
         let abs_hi = abs_lo + ident_len;
@@ -260,81 +210,29 @@ fn extract_ident_from_range<'a>(
     }
 }
 
-/// Iterate iteration-pair children, unwrapping a single top-level
-/// `TapeKind::Repeat` wrapper. Local mirror of the analysis layer's
-/// `iter_iteration_views` / `iter_rep_children`.
-pub(crate) fn iter_tape_iteration_views<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-) -> Vec<BbnfBootstrapNodeView<'a>> {
-    use crate::runtime::tape::TapeKind;
-
-    let raw_children: Vec<_> = {
-        let mut children = node.children();
-        let first = match children.next() {
-            Some(c) => c,
-            None => return Vec::new(),
-        };
-        if children.next().is_none() && first.kind() == TapeKind::Repeat {
-            first.children().collect()
-        } else {
-            node.children().collect()
+/// Re-borrow `text` from `input` so the returned slice has the
+/// `'a` lifetime of the input. Used when `view.span_text()` returns a
+/// slice whose lifetime is tied to the document's input — we know the
+/// slice is a sub-slice of the input, so the re-borrow is safe.
+fn slice_lifetime_extend<'a>(input: &'a str, text: &str) -> &'a str {
+    let input_start = input.as_ptr() as usize;
+    let input_end = input_start + input.len();
+    let s_start = text.as_ptr() as usize;
+    let s_end = s_start + text.len();
+    if s_start < input_start || s_end > input_end {
+        // Fallback: text is not a sub-slice of input. This should not
+        // happen on the happy path; locate-or-insert a stable slice
+        // by linear search (very rare; bounded by input length).
+        if let Some(pos) = input.find(text) {
+            return &input[pos..pos + text.len()];
         }
-    };
-
-    raw_children
-        .into_iter()
-        .filter_map(|pair| {
-            let candidate = match pair.kind() {
-                TapeKind::Seq => match pair.child(0) {
-                    Some(c) => c,
-                    None => return None,
-                },
-                _ => pair,
-            };
-            let span = candidate.span_text().trim();
-            if span.is_empty() || span == "|" || span == "," {
-                return None;
-            }
-            Some(peel_wrapper(candidate))
-        })
-        .collect()
-}
-
-/// Collect binary-factor operand views.
-pub(crate) fn collect_tape_binary_operand_views<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-) -> Vec<BbnfBootstrapNodeView<'a>> {
-    use crate::runtime::tape::TapeKind;
-    let mut children = node.children();
-    let first = match children.next() {
-        Some(f) => f,
-        None => return Vec::new(),
-    };
-    let rest: Vec<_> = children.collect();
-    let mut v = vec![first];
-    if rest.len() == 1 && rest[0].kind() == TapeKind::Repeat {
-        v.extend(rest[0].children());
-    } else {
-        v.extend(rest);
+        // Last resort — return an empty slice rather than panic. The
+        // collected refs set will never contain a stale pointer.
+        return &input[..0];
     }
-    v
-}
-
-/// Peel anonymous wrapper compounds to reach the substantive Rule child.
-fn peel_wrapper<'a>(node: BbnfBootstrapNodeView<'a>) -> BbnfBootstrapNodeView<'a> {
-    use crate::runtime::tape::TapeKind;
-    let kind = node.rule_kind();
-    if !matches!(kind, BbnfBootstrapRuleKind::Unknown | BbnfBootstrapRuleKind::int_lit) {
-        return node;
-    }
-    let substantive: Vec<_> = node
-        .children()
-        .filter(|c| c.kind() == TapeKind::Rule)
-        .collect();
-    match substantive.len() {
-        1 => peel_wrapper(substantive[0]),
-        _ => node,
-    }
+    let lo = s_start - input_start;
+    let hi = lo + text.len();
+    &input[lo..hi]
 }
 
 /// Returns true if the text is a value keyword that should never

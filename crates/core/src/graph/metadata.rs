@@ -1,18 +1,20 @@
 //! Alias detection for AST-level diagnostics.
 //!
-//! Tranche AC.2: rewritten against the tape-first view surface.
+//! AZ-II.cutover.D — rewritten against the struct-direct
+//! [`BbnfView`] surface. Grouped expressions and plain-reference
+//! shapes are distinguished by the `term` compound's leading-byte
+//! signature (the `(rhs)` / `[rhs]` / `{rhs}` / `@{rhs}` and bare
+//! `identifier (call_args)?` branches share a single
+//! `BbnfCompoundKind::Term` discriminator under struct-direct, so
+//! their disambiguation runs off the focused compound's span text
+//! and child structure rather than a sub-variant tag).
 //!
-//! Tranche AF.0: shape-agnostic `term` handling — grouped
-//! expressions and plain-reference shapes are distinguished by
-//! leading-byte dispatch and by the presence of substantive
-//! non-identifier children, not by sub-variant wrapper kinds
-//! that structural-mode dedup may or may not produce. Every
-//! rule_kind reference here is a canonical grammar rule name.
+//! Every dispatch here is on the compound focus's
+//! [`BbnfCompoundKind`]; leaf focuses route through `view.kind()`.
 
 use std::collections::{HashMap, HashSet};
 
-use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
-use crate::lower::tape_walk::{find_descendant_by_kind, peel_transparent};
+use crate::runtime::bbnf::{BbnfCompoundKind, BbnfKind, BbnfView};
 use crate::types::AST;
 
 /// Find rules whose RHS is simply a reference to another nonterminal.
@@ -39,206 +41,178 @@ pub fn find_aliases<'a>(
 
 /// Extract the target nonterminal name if the expression is a simple
 /// alias (possibly grouped).
-fn extract_alias_target<'a>(node: BbnfBootstrapNodeView<'a>) -> Option<&'a str> {
-    match node.rule_kind() {
-        // Direct identifier reference
-        BbnfBootstrapRuleKind::identifier => Some(node.span_text()),
+fn extract_alias_target<'a>(view: BbnfView<'a, 'a>) -> Option<&'a str> {
+    match view.compound_kind() {
+        // Leaf focus — direct identifier reference if the leaf is a
+        // Span whose content matches the identifier shape.
+        None => match view.kind() {
+            BbnfKind::Span => {
+                let text = view.span_text().trim();
+                if !text.is_empty() && super::deps::is_ident(text.as_bytes()) {
+                    Some(text_in_input(view.input(), text))
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        },
 
         // Transparent wrappers — descend into the single inner child.
-        BbnfBootstrapRuleKind::grammar_item
-        | BbnfBootstrapRuleKind::directive
-        | BbnfBootstrapRuleKind::lhs => {
-            node.child(0).and_then(extract_alias_target)
+        Some(BbnfCompoundKind::GrammarItem)
+        | Some(BbnfCompoundKind::Directive)
+        | Some(BbnfCompoundKind::Lhs)
+        | Some(BbnfCompoundKind::Rhs) => {
+            view.child(0).and_then(extract_alias_target)
         }
 
         // `term = ε | identifier (call_args)? | literal | regex
-        //       | "(" rhs ")" | "[" rhs "]" | "{" rhs "}" | "@{" rhs "}"`
+        //       | "(" rhs ")" | "[" rhs "]" | "{" rhs "}" | "@{" rhs "}"`.
         //
-        // Structural-mode dedup may collapse the per-branch `term_N`
-        // wrappers, so dispatch on content:
+        // Struct-direct collapses every Alt branch to a single
+        // `BbnfCompoundKind::Term` discriminator — disambiguate via
+        // the compound's leading source byte:
         //
-        // - Leading byte `(` / `[` / `{` / `@{` → grouped form. Only
-        //   `(rhs)` preserves alias semantics (the other wrappers
-        //   imply optional / repetition / host-call); descend into
-        //   the inner `rhs` compound found by `rule_kind` lookup.
-        // - Otherwise → bare term. If there's exactly one substantive
-        //   non-wrapper child and it's an `identifier` with no
-        //   accompanying call-args compound, the term is a plain
-        //   reference.
-        BbnfBootstrapRuleKind::term => {
-            let leading = node.span_text().as_bytes().first().copied();
+        // - `(`  → `(rhs)` grouped form preserves alias semantics;
+        //   descend into the inner Rhs compound child.
+        // - `[`/`{`/`@` → optional / repetition / host-call; not an
+        //   alias.
+        // - otherwise → bare `identifier (call_args)?` form. Alias
+        //   only when the compound carries no `CallArg` child.
+        Some(BbnfCompoundKind::Term) => {
+            let leading = view.span_text().as_bytes().first().copied();
             if leading == Some(b'(') {
-                // Grouped `( expr )` form — descend into the inner
-                // expression. Find the first substantive non-literal
-                // descendant.
-                let inner = find_semantic_child(node)?;
-                return extract_alias_target(peel_transparent(inner));
+                let inner = view.find_descendant_by_kind(BbnfCompoundKind::Rhs)?;
+                return extract_alias_target(inner);
             }
             if matches!(leading, Some(b'[') | Some(b'{') | Some(b'@')) {
-                // Optional / repetition / host-call — not an alias.
                 return None;
             }
-            // Bare term: `identifier (call_args)?` / `literal` / `regex` / `ε`.
-            // Alias only when the sole substantive child is an identifier.
-            //
-            // Under DTA the identifier and any call_args compound
-            // sit inside a Seq wrapper on the term compound, so a
-            // direct-child scan misses them. Descend to the first
-            // identifier descendant; call-args detection uses the
-            // `call_arg` rule_kind directly, which is semantically
-            // tighter than "any non-identifier substantive child"
-            // and immune to the Seq-wrapper false positive.
-            let ident =
-                find_descendant_by_kind(node, BbnfBootstrapRuleKind::identifier)?;
-            let has_call_args =
-                find_descendant_by_kind(node, BbnfBootstrapRuleKind::call_arg).is_some();
+            // Bare term: the compound holds an identifier Span child
+            // and (optionally) a CallArg compound child. Alias only
+            // when the CallArg slot is absent.
+            let has_call_args = view.find_descendant_by_kind(BbnfCompoundKind::CallArg).is_some();
             if has_call_args {
-                None
-            } else {
-                Some(ident.span_text())
+                return None;
             }
+            // Find the identifier Span — first Span descendant whose
+            // text is a bare identifier.
+            find_first_identifier_text(view)
         }
 
         // factor = (comment_before?, term, modifier?, comment_after?)
-        // — unwrap when all three optional slots are absent.
-        //
-        // Under DTA the factor body is wrapped in a Seq compound, so
-        // the modifier and term may sit one compound deeper than the
-        // direct children. Descend to them by rule_kind.
-        BbnfBootstrapRuleKind::factor => {
-            let modifier = find_descendant_by_kind(node, BbnfBootstrapRuleKind::modifier);
-            let has_modifier = modifier
-                .map(|m| m.span().1 > m.span().0)
-                .unwrap_or(false);
-            if has_modifier {
+        // — alias only when the modifier slot is absent. Modifier
+        // detection runs off the compound's span text: if the trimmed
+        // span ends in `?` / `*` / `+` then the modifier slot is
+        // populated.
+        Some(BbnfCompoundKind::Factor) => {
+            let span = view.span_text().trim_end();
+            if matches!(span.as_bytes().last(), Some(b'?') | Some(b'*') | Some(b'+')) {
                 return None;
             }
-            // Under tape-first, the `term` child may not exist as a
-            // separate Rule record. Check for it explicitly, then fall
-            // back to the factor's span text for a bare identifier.
-            if let Some(term) = find_descendant_by_kind(node, BbnfBootstrapRuleKind::term) {
+            // Locate the inner `term` compound and recurse. If absent,
+            // fall back to a span-text identifier check.
+            if let Some(term) = view.find_descendant_by_kind(BbnfCompoundKind::Term) {
                 extract_alias_target(term)
             } else {
-                let text = node.span_text().trim();
+                let text = view.span_text().trim();
                 if !text.is_empty() && super::deps::is_ident(text.as_bytes()) {
-                    Some(text)
+                    Some(text_in_input(view.input(), text))
                 } else {
                     None
                 }
             }
         }
 
-        // mapped_factor = (inner, mapping?) — unwrap when the
-        // mapping slot is absent.
-        //
-        // Under DTA the mapped_factor body is wrapped in a Seq
-        // compound; the positional child(0) / child(1) reads picked
-        // up stale slots. The mapping's semantic leading rule is
-        // `value_expr` — absence of a value_expr descendant is the
-        // DTA-shape-stable test for "no mapping". The inner
-        // expression is resolved via find_descendant_by_kind
-        // against the inner layer (factor / term).
-        BbnfBootstrapRuleKind::mapped_factor => {
-            let has_mapping = find_descendant_by_kind(
-                node,
-                BbnfBootstrapRuleKind::value_expr,
-            )
-            .is_some();
-            if has_mapping {
+        // mapped_factor = (factor, ("->" value_expr type_annotation?)?)
+        // — alias only when the mapping slot is absent. Detect the
+        // mapping by scanning the compound's span text for `->`; the
+        // mapping is the only way `->` reaches the source slice.
+        Some(BbnfCompoundKind::MappedFactor) => {
+            if view.span_text().contains("->") {
                 return None;
             }
-            // Look for the inner expression (factor / term /
-            // identifier). `find_descendant_by_kind` hits the first
-            // semantic rule in document order — factor precedes the
-            // mapping slot. Fall back to a bare-ident span check.
-            if let Some(inner) = find_descendant_by_kind(
-                node,
-                BbnfBootstrapRuleKind::factor,
-            )
-            .or_else(|| find_descendant_by_kind(node, BbnfBootstrapRuleKind::term))
+            if let Some(inner) = view
+                .find_descendant_by_kind(BbnfCompoundKind::Factor)
+                .or_else(|| view.find_descendant_by_kind(BbnfCompoundKind::Term))
             {
                 return extract_alias_target(inner);
             }
-            let text = node.span_text().trim();
+            let text = view.span_text().trim();
             if !text.is_empty() && super::deps::is_ident(text.as_bytes()) {
-                Some(text)
+                Some(text_in_input(view.input(), text))
             } else {
                 None
             }
         }
 
-        // Single-branch alternation / single-element concatenation
-        // / single-operand binary factor — descend transparently.
-        BbnfBootstrapRuleKind::alternation | BbnfBootstrapRuleKind::call_arg => {
-            let branches: Vec<_> = super::deps::iter_tape_iteration_views(node);
-            if branches.len() != 1 {
+        // Single-branch alternation / single-element concatenation /
+        // single-operand binary factor / single-arg call_arg —
+        // descend transparently when there's exactly one substantive
+        // child, else alias chain breaks.
+        Some(BbnfCompoundKind::Alternation) | Some(BbnfCompoundKind::CallArg) => {
+            let mut iter = view.children_iter();
+            let first = iter.next()?;
+            if iter.next().is_some() {
                 return None;
             }
-            extract_alias_target(branches[0])
+            extract_alias_target(first)
         }
-        BbnfBootstrapRuleKind::concatenation => {
-            let parts: Vec<_> = super::deps::iter_tape_iteration_views(node);
-            if parts.len() != 1 {
+        Some(BbnfCompoundKind::Concatenation) => {
+            let mut iter = view.children_iter();
+            let first = iter.next()?;
+            if iter.next().is_some() {
                 return None;
             }
-            extract_alias_target(parts[0])
+            extract_alias_target(first)
         }
-        BbnfBootstrapRuleKind::binary_factor => {
-            let operands: Vec<_> = super::deps::collect_tape_binary_operand_views(node);
-            if operands.len() != 1 {
+        Some(BbnfCompoundKind::BinaryFactor) => {
+            let mut iter = view.children_iter();
+            let first = iter.next()?;
+            if iter.next().is_some() {
                 return None;
             }
-            extract_alias_target(operands[0])
+            extract_alias_target(first)
         }
 
-        // Anonymous wrapper compounds (variant_idx=0 collides with
-        // `int_lit`): peel to the single substantive Rule child and
-        // re-dispatch. When no Rule child exists but the span text
-        // is a bare identifier, treat it as a direct reference.
-        BbnfBootstrapRuleKind::int_lit | BbnfBootstrapRuleKind::Unknown => {
-            use crate::runtime::tape::TapeKind;
-            let substantive: Vec<BbnfBootstrapNodeView<'a>> = node
-                .children()
-                .filter(|c| c.kind() == TapeKind::Rule)
-                .collect();
-            match substantive.len() {
-                1 => extract_alias_target(substantive[0]),
-                0 => {
-                    // No Rule children — check if span is a bare identifier.
-                    let text = node.span_text().trim();
-                    if !text.is_empty() && super::deps::is_ident(text.as_bytes()) {
-                        Some(text)
-                    } else {
-                        None
-                    }
-                }
-                _ => None,
-            }
-        }
-
-        _ => None,
+        // Closures and remaining compound shapes — no alias semantics.
+        Some(_) => None,
     }
 }
 
-/// Find the first substantive (non-literal-punctuation, non-empty)
-/// child of a view — used as a fallback when a named `rhs` child
-/// isn't available because structural-mode dedup elided the wrapper.
-///
-/// "Substantive" here means: compound children with non-zero span
-/// whose rule_kind isn't one of the grammar's literal punctuation
-/// slots (no `identifier`, `literal`, etc. filter — we want
-/// whichever expression layer sits under the opening `(`).
-fn find_semantic_child<'a>(
-    view: BbnfBootstrapNodeView<'a>,
-) -> Option<BbnfBootstrapNodeView<'a>> {
-    view.children().find(|c| {
-        let (lo, hi) = c.span();
-        if hi <= lo {
-            return false;
+/// Locate the first descendant Span leaf whose content reads as a
+/// bare identifier and return its text re-borrowed against the
+/// input slice.
+fn find_first_identifier_text<'a>(view: BbnfView<'a, 'a>) -> Option<&'a str> {
+    if view.kind() == BbnfKind::Span {
+        let text = view.span_text().trim();
+        if !text.is_empty() && super::deps::is_ident(text.as_bytes()) {
+            return Some(text_in_input(view.input(), text));
         }
-        // Skip the opening / closing delimiter literals — they carry
-        // a single byte of span and no rule_kind of interest.
-        let text = c.span_text();
-        !matches!(text, "(" | ")" | "[" | "]" | "{" | "}" | "@{")
-    })
+        return None;
+    }
+    for child in view.children_iter() {
+        if let Some(t) = find_first_identifier_text(child) {
+            return Some(t);
+        }
+    }
+    None
+}
+
+/// Re-borrow `text` from `input` so the returned slice has the
+/// `'a` lifetime of the input. Used for span-text projections that
+/// the underlying view returns with its document-bound lifetime.
+fn text_in_input<'a>(input: &'a str, text: &str) -> &'a str {
+    let input_start = input.as_ptr() as usize;
+    let input_end = input_start + input.len();
+    let s_start = text.as_ptr() as usize;
+    let s_end = s_start + text.len();
+    if s_start < input_start || s_end > input_end {
+        if let Some(pos) = input.find(text) {
+            return &input[pos..pos + text.len()];
+        }
+        return &input[..0];
+    }
+    let lo = s_start - input_start;
+    let hi = lo + text.len();
+    &input[lo..hi]
 }

@@ -23,26 +23,25 @@ use super::extract_first_ref;
 /// Emit `pub fn parse_pratt_visitor_<grammar>_<rule><V>(input, p,
 /// state, visitor) -> Result<(), ParseErr>`.
 ///
-/// # AZ-I.W2.RE — strategy gate
+/// # AZ-I.W2-act.recovery — substrate-agnostic body
 ///
-/// Mirrors [`super::tape::emit_parse_pratt`]. Pratt-shape rules are
-/// tape-only in W2; codegen-time panic on [`EmitStrategy::StructDirect`].
+/// The visitor-path body takes `&mut V` where `V: PrattVisitor + …`
+/// composes statically at the call site. The visitor methods do not
+/// depend on the codegen substrate (tape vs struct), so the same
+/// emitted body services every [`EmitStrategy`] arm. The pre-recovery
+/// `StructDirect` panic retires here; the visitor path is gated off
+/// wholesale at the per-grammar admission level by
+/// [`super::super::dispatcher::has_w4_classified`] when the grammar
+/// carries any Pratt / Unordered rule, so this body is emitted only
+/// when the per-grammar caller has already determined the visitor
+/// trait-bound surface admits Pratt — substrate-independence is the
+/// invariant.
 pub fn emit_parse_pratt_visitor(
-    strategy: &EmitStrategy,
+    _strategy: &EmitStrategy,
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    match strategy {
-        EmitStrategy::TapeDirect => {}
-        EmitStrategy::StructDirect { .. } => {
-            panic!(
-                "AZ-I.W2.RE: Pratt shape does not support StructDirect; \
-                 W3 / W2.B expected to extend before activating this \
-                 strategy for the calling grammar"
-            );
-        }
-    }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("pratt", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);

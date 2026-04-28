@@ -20,6 +20,20 @@ use super::extract_first_ref;
 /// Emit `pub fn parse_pratt_<grammar>_<rule>(input, p, state, builder)
 /// -> Result<TapeOffset, DtaError>`.
 ///
+/// `strategy` is the codegen-time substrate selector resolved by
+/// [`EmitStrategy::for_grammar`] in `shapes/mod.rs`. The TapeDirect
+/// arm emits the operand-led shunting-yard reducer that writes
+/// outer / reducer compounds and op-leaf Spans through `Tape<()>`'s
+/// columns; the StructDirect arm dispatches to
+/// [`super::struct_direct::emit_parse_pratt_struct_direct`], which
+/// targets the grammar's concrete `StructBuilder` directly via
+/// `begin_compound` / `push_branch_tag` / `end_compound`.
+///
+/// Per `feedback_no-orthogonal-codepaths` ONE function body is
+/// emitted per `(grammar, rule)`; the strategy match selects which.
+///
+/// # TapeDirect emission
+///
 /// The emitted body invokes the grammar's value-position dispatcher
 /// for the leftmost operand, then runs a byte-load + bit-unpack over
 /// the per-grammar `PRECEDENCE_LUT` — the same table
@@ -29,16 +43,6 @@ use super::extract_first_ref;
 /// the outer Pratt compound is patched to point at the final
 /// reduced operand on close, matching the walker's byte-for-byte
 /// tape layout.
-///
-/// # AZ-I.W2.RE — strategy gate
-///
-/// `strategy` is the codegen-time substrate selector resolved by
-/// [`EmitStrategy::for_grammar`] in `shapes/mod.rs`. Pratt-shape rules
-/// are tape-only in W2; JSON does not exercise this shape. On
-/// [`EmitStrategy::StructDirect`] this emitter panics at codegen time
-/// (unreachable assertion preventing silent codegen drift; W3 / W2.B
-/// extend the per-shape struct-direct path before activating
-/// StructDirect for any grammar that exercises this shape).
 pub fn emit_parse_pratt(
     strategy: &EmitStrategy,
     grammar_suffix: &str,
@@ -48,10 +52,11 @@ pub fn emit_parse_pratt(
     match strategy {
         EmitStrategy::TapeDirect => {}
         EmitStrategy::StructDirect { .. } => {
-            panic!(
-                "AZ-I.W2.RE: Pratt shape does not support StructDirect; \
-                 W3 / W2.B expected to extend before activating this \
-                 strategy for the calling grammar"
+            return super::struct_direct::emit_parse_pratt_struct_direct(
+                grammar_suffix,
+                rule,
+                ir,
+                strategy,
             );
         }
     }

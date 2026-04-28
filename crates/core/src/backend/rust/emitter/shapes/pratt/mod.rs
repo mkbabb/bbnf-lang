@@ -51,6 +51,7 @@
 //! record `[K+1]` — the final reducer. Intermediate rows (operands,
 //! op leaves, reducers) carry W5.b `SIB_SKIP_STAMPED_BIT` stamping.
 
+mod struct_direct;
 mod tape;
 mod visitor;
 

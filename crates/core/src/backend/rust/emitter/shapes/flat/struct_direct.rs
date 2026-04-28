@@ -56,7 +56,7 @@
 //! `feedback_no-workarounds`.
 
 use bbnf_ir::registry::LayoutKind;
-use bbnf_ir::{GrammarIR, IrNode, IrRule};
+use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -377,20 +377,312 @@ fn emit_position_core_struct_direct(
             ir,
         ),
         IrNode::Epsilon => quote! {},
-        // Variants below are not exercised by JSON's `pair` rule. The
-        // dispatcher delegation keeps the emission total — under
-        // StructDirect the dispatcher's own body is struct-direct (per
-        // for_grammar's contract for the admitted grammar), so the
-        // call is signature-compatible.
-        IrNode::Alt(_, _)
-        | IrNode::Regex(_)
-        | IrNode::Negate(_)
-        | IrNode::Minus(_, _)
-        | IrNode::TokenDispatch { .. }
-        | IrNode::Repeat { .. } => {
+        // AZ-II.cutover.F — inline Alt position. Emit byte-dispatch
+        // over the branches' first-byte sets without pushing a
+        // compound — the surrounding rule's `begin_compound` already
+        // opens the structural frame; inline Alt branches inside a
+        // Flat body are structural disjunctions (e.g. BBNF's
+        // `( ";" | "." )` terminator), not compound-producing
+        // sub-rules.
+        //
+        // Pre-fix this position fell back to
+        // `#dispatcher_ident(input, p, state, builder)?` — for non-
+        // Alt-rooted grammars (BBNF `grammar`, CSS `stylesheet`,
+        // Sheets `formula`) the dispatcher IS the root shape fn,
+        // creating an infinite recursive edge that rejected every
+        // input at offset 0. Discovery 1 from cutover.E surfaced
+        // this for BBNF; the structural fix admits every Flat-body
+        // inline Alt position on every struct-direct grammar.
+        IrNode::Alt(branches, _) => emit_inline_alt_struct_direct(
+            branches,
+            support_mod,
+            dispatcher_ident,
+            grammar_suffix,
+            ir,
+        ),
+        // AZ-II.cutover.F — inline Repeat position. Emit a savepoint
+        // loop that runs the inner emission once per iteration
+        // until first-set rejection or zero-width progress. NO
+        // per-iter compound push — the rule's outer compound owns
+        // the children. Mirrors the Shape-2 array-list emission
+        // pattern but at the inline (Flat-body-position) level.
+        IrNode::Repeat { inner, lo, hi } => emit_inline_repeat_struct_direct(
+            inner,
+            *lo,
+            *hi,
+            support_mod,
+            dispatcher_ident,
+            grammar_suffix,
+            ir,
+        ),
+        // (`lo, hi` are u32 with hi==0 representing unbounded — see
+        // emit_inline_repeat_struct_direct.)
+        // AZ-II.cutover.F — inline Regex position. Emit a regex
+        // adapter scan via the support module; no compound push.
+        // Falls back to the dispatcher for the non-StructDirect
+        // case where regex_info is missing, which on activated
+        // struct-direct grammars is structurally unreachable.
+        IrNode::Regex(sid) => emit_inline_regex_struct_direct(
+            *sid,
+            support_mod,
+            grammar_suffix,
+            ir,
+        ),
+        // AZ-II.cutover.F — Negate guard. Try the inner; on
+        // success return Err (the negation rejects), on failure
+        // continue. Mirrors the walker's NotFollowedBy semantics.
+        IrNode::Negate(inner) => {
+            let inner_emit = emit_position_core_struct_direct(
+                inner,
+                support_mod,
+                dispatcher_ident,
+                grammar_suffix,
+                ir,
+            );
+            quote! {
+                {
+                    let __neg_save_p = *p;
+                    let __neg_result: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
+                        #inner_emit
+                        Ok(())
+                    })();
+                    *p = __neg_save_p;
+                    if __neg_result.is_ok() {
+                        return ::core::result::Result::Err(
+                            crate::runtime::tape::DtaError::Syntax {
+                                offset: *p as u32,
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
+                    }
+                }
+            }
+        }
+        // AZ-II.cutover.F — Minus position. First try `excluded`; on
+        // success fail (the minus rejects). On failure attempt the
+        // primary. Matches the walker's `emit_minus_arm` semantics.
+        IrNode::Minus(primary, excluded) => {
+            let primary_emit = emit_position_core_struct_direct(
+                primary,
+                support_mod,
+                dispatcher_ident,
+                grammar_suffix,
+                ir,
+            );
+            let excluded_emit = emit_position_core_struct_direct(
+                excluded,
+                support_mod,
+                dispatcher_ident,
+                grammar_suffix,
+                ir,
+            );
+            quote! {
+                {
+                    let __minus_save_p = *p;
+                    let __minus_excl: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
+                        #excluded_emit
+                        Ok(())
+                    })();
+                    *p = __minus_save_p;
+                    if __minus_excl.is_ok() {
+                        return ::core::result::Result::Err(
+                            crate::runtime::tape::DtaError::Syntax {
+                                offset: *p as u32,
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                            },
+                        );
+                    }
+                    #primary_emit
+                }
+            }
+        }
+        // TokenDispatch — out of cutover.F scope; remains routed
+        // through the dispatcher fallback. Activating TokenDispatch
+        // under StructDirect is a follow-up tranche concern (see
+        // cutover.G plan).
+        IrNode::TokenDispatch { .. } => {
             quote! {
                 let _ = #dispatcher_ident(input, p, state, builder)?;
             }
+        }
+    }
+}
+
+/// AZ-II.cutover.F — inline Alt-position emission for Flat
+/// struct-direct bodies.
+///
+/// Emits a `'try_branches: loop` over the Alt's branches with
+/// per-branch savepoint rollback; no compound push (the rule's
+/// outer compound already opens). Each branch is admitted via
+/// the same `emit_position_core_struct_direct` recursive walker
+/// so nested structural composition works. The first matching
+/// branch breaks the loop; on no-match the position fails with
+/// `Syntax`.
+fn emit_inline_alt_struct_direct(
+    branches: &[AltBranch],
+    support_mod: &proc_macro2::Ident,
+    dispatcher_ident: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let mut arms: Vec<TokenStream> = Vec::with_capacity(branches.len());
+    for branch in branches {
+        let body = emit_position_core_struct_direct(
+            &branch.node,
+            support_mod,
+            dispatcher_ident,
+            grammar_suffix,
+            ir,
+        );
+        arms.push(quote! {
+            {
+                let __alt_save_p = *p;
+                let __alt_result: ::core::result::Result<
+                    (),
+                    crate::runtime::tape::DtaError,
+                > = (|| {
+                    #body
+                    Ok(())
+                })();
+                match __alt_result {
+                    Ok(()) => break 'try_branches,
+                    Err(_) => {
+                        *p = __alt_save_p;
+                    }
+                }
+            }
+        });
+    }
+    let _ = support_mod;
+    quote! {
+        'try_branches: loop {
+            #(#arms)*
+            return ::core::result::Result::Err(
+                crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                },
+            );
+        }
+    }
+}
+
+/// AZ-II.cutover.F — inline Repeat-position emission for Flat
+/// struct-direct bodies.
+///
+/// Mirrors the array-list Shape-2 retry loop: capture `*p` per
+/// iteration; run the inner emission via a closure; on success
+/// continue (with zero-width guard); on failure restore `*p` and
+/// terminate. Honours `lo` (minimum iterations) by failing if
+/// fewer iterations succeed.
+fn emit_inline_repeat_struct_direct(
+    inner: &IrNode,
+    lo: u32,
+    hi: u32,
+    support_mod: &proc_macro2::Ident,
+    dispatcher_ident: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let inner_emit = emit_position_core_struct_direct(
+        inner,
+        support_mod,
+        dispatcher_ident,
+        grammar_suffix,
+        ir,
+    );
+    let lo_lit = lo as u32;
+    // `hi == 0` represents unbounded iteration in the IR convention.
+    let hi_check = if hi == 0 {
+        quote! {}
+    } else {
+        let n_lit = hi as u32;
+        quote! { if __iter_count >= #n_lit { break; } }
+    };
+    quote! {
+        {
+            let mut __iter_count: u32 = 0;
+            loop {
+                #hi_check
+                let __iter_save_p = *p;
+                if input.get(*p).is_none() {
+                    break;
+                }
+                let __iter_result: ::core::result::Result<
+                    (),
+                    crate::runtime::tape::DtaError,
+                > = (|| {
+                    #inner_emit
+                    Ok(())
+                })();
+                match __iter_result {
+                    Ok(()) => {
+                        if *p == __iter_save_p {
+                            break;
+                        }
+                        __iter_count += 1;
+                    }
+                    Err(_) => {
+                        *p = __iter_save_p;
+                        break;
+                    }
+                }
+            }
+            if __iter_count < #lo_lit {
+                return ::core::result::Result::Err(
+                    crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    },
+                );
+            }
+        }
+    }
+}
+
+/// AZ-II.cutover.F — inline Regex-position emission for Flat
+/// struct-direct bodies. Calls into the per-grammar regex
+/// adapter to byte-scan and advance `*p`. No compound push —
+/// inline regex positions inside Flat bodies are structural
+/// scans (e.g. BBNF `comment = "//", /[^\n]*/`); the surrounding
+/// rule's `begin_compound` already opens the structural frame
+/// and the regex match itself contributes no payload to the
+/// frame stack.
+fn emit_inline_regex_struct_direct(
+    sid: u32,
+    support_mod: &proc_macro2::Ident,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+) -> TokenStream {
+    use super::super::super::dfa_codegen::regex_scan_adapter_ident;
+    use super::super::sanitise_grammar;
+    let pattern = ir.get_string(sid);
+    let pattern_lit = pattern.to_string();
+    let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
+    let _ = support_mod;
+    quote! {
+        {
+            let __scan_start = *p;
+            let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
+                return ::core::result::Result::Err(
+                    crate::runtime::tape::DtaError::Syntax {
+                        offset: __scan_start as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    },
+                );
+            };
+            *p += match_len as usize;
         }
     }
 }

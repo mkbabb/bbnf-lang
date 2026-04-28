@@ -182,15 +182,22 @@ impl<'p> JsonStructBuilder<'p> {
                 pairs,
                 pending_key,
             }) => {
-                // Object's value slot fills here; the matching key
-                // was set by the most recent `push_leaf_with_str`
-                // (or by a typed Pair frame's finalisation). When
-                // pending_key is None the value lands as a
-                // string-pair without a paired key — the emitter
-                // generation order guarantees a key push precedes
-                // every value push on the Object frame, so this
-                // branch should never fire in well-formed
-                // generation.
+                // AZ-I.W2-act.close A.fix — the JSON struct-direct
+                // emitter calls `parse_string_JsonParser_string`
+                // directly against the open Object frame (no enclosing
+                // Pair sub-frame): the key arrives as a deposited
+                // `JsonValue::String` BEFORE the value. When
+                // `pending_key.is_none()` and `value` is a string,
+                // promote it to the pending-key slot; the matching
+                // value lands on the next call. Genuine bugs (a value
+                // arriving when no key has been deposited and the
+                // value is non-string) still trip the assertion below.
+                if pending_key.is_none() {
+                    if let JsonValue::String(s) = value {
+                        *pending_key = Some(s);
+                        return;
+                    }
+                }
                 debug_assert!(
                     pending_key.is_some(),
                     "Object value pushed without pending key"

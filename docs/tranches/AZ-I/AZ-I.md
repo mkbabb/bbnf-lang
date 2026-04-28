@@ -154,11 +154,17 @@ same-commit samply capture.
 |---|---|---|---|
 | **W0** | Research + classifier-unification study + audit baseline | AZ-I open | closed (2026-04-27) |
 | **W1** | `StructRegistry` + `project_types` closure — JSON + CSS L4 + Sheets | W0 | closed (2026-04-27) |
-| **W2** | Direct-to-struct emission — JSON + Sheets (scalar payloads) | W1 | closed substrate-only (2026-04-27); activation gated to **W2-act** follow-on |
-| **W2-act** | JSON struct-direct activation — view/value API on `JsonDocument`, parity harness recoding, bench gate (twitter ≥ 1967) | W2 substrate | planned |
-| **W2.B** | Sheets struct-direct (mirrors W2 substrate post-W2-act) | W2-act | planned |
-| **W3** | Direct-to-struct emission — CSS L4 aggregate / Named (lightningcss parity) | W2.B | planned |
-| **W4** | FINAL — three-grammar slice at AU parity + AZ-II handoff | W3 | planned |
+| **W2** | Direct-to-struct emission — substrate (StructBuilder + JSON runtime + EmitStrategy + 9 per-shape struct-direct emitters) | W1 | closed substrate-only (2026-04-28); activation rolls into **W2-act** |
+| **W2-act** | GESTALT-ACTIVATE — resolver flip activates JSON + Sheets + CSS L4 simultaneously; per-grammar runtime view-API; parity harness recoding; 17-entry bench gate; EmitStrategy hoist to `bbnf-ir`; dead-substrate sweep; W4 FINAL absorbed (per `audit/W2-CLOSE-AUDIT.md`) | W2 substrate | in progress |
+
+**Wave plan refined 2026-04-28** per six-agent audit synthesis at
+`docs/tranches/AZ-I/audit/W2-CLOSE-AUDIT.md`. The original W2.B / W3 /
+W4 waves collapse into W2-act because the W2 substrate is grammar-
+general; activation is one resolver match-arm extension per grammar,
+not a per-grammar wave. AZ-II's three waves likewise collapse into a
+single `AZ-II.cutover` (BBNF cutover + tape deletion), and BB scaffold
+opens in parallel. Total declared waves to BB.close: 5 (down from the
+17 the trajectory previously held).
 
 ### W0 — Research and measurement surface
 

@@ -482,6 +482,138 @@ Commits:
 - `0e7485c5` refactor(tests/json): AZ-I.W2-act.B1 — migrate consumers to JsonDocument
 - `f94c31c9` refactor(tests/json): AZ-I.W2-act.B1 — recode parity harnesses against JsonDocument
 
+### W2-act.B2 — Sheets activation (2026-04-28)
+
+Parallel after A. Cap 90 min. Worktree `/Users/mkbabb/Programming/bbnf-wt-az-i-w2-act-b2`.
+
+- Authored the Sheets struct-direct runtime under
+  `crates/core/src/runtime/google_sheets/`:
+  - `value.rs` — `SheetsValue<'p>` closing the grammar's typed
+    projections: `Number(f64)` / `String(&'p str)` / `Bool(bool)` /
+    `Error(u8)` / `CellRef(&'p str)` / `Identifier(&'p str)` /
+    `SheetPrefix { tag, text }` / `Tag(u8)` / `Compound(SheetsCompoundId)`.
+    Every variant `Copy` per the JSON pattern; the eight-bit `Tag`
+    discriminator covers operator-Alt rules (`compare_op`, `add_op`,
+    `mul_op`, `unary_prefix`).
+  - `arena.rs` — `SheetsArena<'p>` slab-of-Vec; each compound entry
+    carries a `SheetsCompoundKind` discriminator alongside the child
+    slice. `SheetsCompoundKind` enumerates 28 structural shapes from
+    the grammar (Formula / Expression / ComparisonExpr / ConcatExpr /
+    AddExpr / MulExpr / ExpExpr / UnaryExpr / PostfixExpr / Primary /
+    ParenExpr / FuncOpen / Arg / FuncArgs / FuncCall / LetBinding /
+    LetArgs / LetCall / LambdaParams / LambdaCall / ArrayRow /
+    ArrayRows / ArrayLiteral / Cell / RangeRef / RangeEnd /
+    CellOrRange / Wrap), plus `is_transparent_wrap` for the single-
+    child wrap-collapse semantics.
+  - `builder.rs` — `SheetsStructBuilder<'p>` implementing
+    `StructBuilder`. Open-frame stack uniform across compounds (no
+    per-shape specialisation analogous to JSON's Object/Pair —
+    Sheets's grammar collapses every compound into a children-Vec
+    layout). Specialised entry points for `cell_ref` / `identifier` /
+    `sheet_prefix` / `error_literal` projections so the emitter's
+    per-rule body picks the matching deposit surface.
+  - `document.rs` — `SheetsDocument<'p>` with `view()` /
+    `to_value()` / `get::<T>(path)`. `SheetsView` mirrors the JSON
+    two-lifetime newtype shape; `SheetsPathQuery` impls land for
+    `&str` / `f64` / `bool` / `u8` / `SheetsValue`. Sheets compounds
+    are positional (no field-keyed step); a `PathSegment::Field` step
+    against a Sheets compound returns `None`.
+  - `mod.rs` re-exports the public surface.
+- Extended `crates/ir/src/registry/strategy.rs::EmitStrategy::for_grammar`
+  with the GoogleSheetsParser arm: `("GoogleSheetsParser" |
+  "GoogleSheetsGrammar", true) => StructDirect { rust: SubstrateBinding {
+  builder_path: "::bbnf::runtime::google_sheets::SheetsStructBuilder",
+  document_path: "::bbnf::runtime::google_sheets::SheetsDocument" },
+  ts: None, wasm: None }`. The empty-registry guard at the resolver
+  entry point downgrades to TapeDirect (mirrors the JSON activation
+  guard).
+- Landed the HRegex struct-direct emission body at
+  `crates/core/src/backend/rust/emitter/shapes/hregex.rs`. The four
+  W2.RE panic sites (lines 285 / 446 / 579 / 718) retire by writing
+  the actual struct-direct bodies. Each emitter now dispatches on
+  `&EmitStrategy`:
+  - `emit_parse_hregex`: TapeDirect arm preserves the existing
+    Span-leaf push + optional typed host-fn decode; StructDirect arm
+    targets the resolved struct builder (via `rust.builder_path`
+    `syn::Path` splice), parses the regex, slices the matched span as
+    `&'p str`, and pushes through `builder.push_leaf_with_str`.
+    Sheets's `cell_ref` / `identifier` rules light up the activation.
+  - `emit_parse_number_via_hregex`: leading-dot Number-via-HRegex
+    (Sheets `=.5`). TapeDirect arm preserves the f64 arena-payload
+    write; StructDirect arm decodes via `str::parse::<f64>()` and
+    pushes through `builder.push_leaf_with_f64`. Sheets's `number`
+    is the canonical activation.
+  - `emit_parse_hregex_visitor` /
+    `emit_parse_number_visitor_via_hregex`: visitor-path bodies are
+    substrate-independent (they take `&mut V` where V is generic);
+    both strategies emit the same body. The strategy parameter is
+    accepted for signature symmetry.
+  - `emit_unsupported_stub`: strategy-aware so the emitted token
+    stream type-checks against the same builder type the non-stub
+    branch uses.
+- Extended `crates/core/tests/emit_strategy.rs` with three Sheets-arm
+  tests:
+  `google_sheets_parser_with_populated_registry_routes_struct_direct`
+  asserts the rust binding paths byte-for-byte;
+  `google_sheets_grammar_alias_routes_struct_direct` pins the alias;
+  `google_sheets_parser_with_empty_registry_routes_tape_direct` pins
+  the activation guard. `unknown_grammar_with_populated_registry_routes_tape_direct`
+  loses its GoogleSheetsParser assertion (now a positive arm).
+- Recoded the Sheets parity harness — added wire-contract tests
+  alongside the existing parse-execution tests in
+  `tests/google_sheets_slab.rs` (+14), `tests/sheets_parity.rs` (+9),
+  `tests/sheets_expr_parity.rs` (+3). The wire-contract tests build
+  SheetsDocument values directly through `SheetsStructBuilder`
+  against synthetic StructLayouts that mirror the grammar's typed
+  projections; they prove the substrate is wired before the
+  orchestrator regens the parser. The parse-execution tests preserve
+  the existing tape-direct corpus until orchestrator regens.
+
+Hard gates verified:
+1. `find crates/core/src/runtime/google_sheets -name '*.rs' | wc -l`
+   returns 5.
+2. `cargo check -p bbnf --profile ax-iter` returns 0 errors;
+   SheetsStructBuilder implements StructBuilder cleanly.
+3. `cargo nextest run -p bbnf --test emit_strategy --profile ax-iter`
+   10/10 green (3 new Sheets-arm tests + 7 pre-existing).
+4. `rg 'panic!\(.*StructDirect'
+   crates/core/src/backend/rust/emitter/shapes/hregex.rs` returns
+   zero matches; W2.RE panic quartet retired.
+5. `cargo nextest run -p bbnf --test sheets_parity --test
+   sheets_expr_parity --test google_sheets_slab --profile ax-iter`
+   73/73 green (parse-execution tests + wire-contract tests).
+6. `cargo iter-check` 0 errors (8 pre-existing labeled-break
+   warnings in `generated/bbnf.rs` only).
+7. `cargo nextest run --workspace --profile ax-iter --no-fail-fast`
+   1575 passed / 27 skipped / 0 failed (baseline 1547 + 28 new
+   wire-contract tests; no regression).
+8. `git status --short` empty (modulo `target.local/`).
+
+Commits:
+- `9b6f4468` feat(runtime/google_sheets): SheetsValue + arena + builder + document substrate
+- `9f3df00f` feat(ir/registry/strategy): GoogleSheetsParser arm routes StructDirect
+- `2301470b` feat(emitter/hregex): land HRegex struct-direct body, retire W2.RE panic quartet
+- `1f6d66ad` test(google_sheets): wire-contract harness against SheetsDocument substrate
+
+Out-of-scope scope-reveal (reported, not patched in B2 per spec):
+- `crates/core/src/backend/rust/emitter/shapes/wrap/struct_direct.rs`
+  hardcodes `crate::runtime::JsonStructBuilder<'p>` in the emitted
+  parse-fn signature (5 sites at lines 248 / 311 / 328 / 344 / 347).
+  Sheets's `primary | range_end | cell_or_range` rules exercise
+  Wrap; under the resolver's GoogleSheetsParser arm, the orchestrator's
+  regen will emit Sheets parse fns referencing JsonStructBuilder
+  paired with SheetsStructBuilder paths. This is W2-act.A territory
+  per the spec ("do not patch W2-act.A's shape emitters from inside
+  B2"); the orchestrator-owned regen surfaces this as a follow-on.
+- `crates/core/src/backend/rust/emitter/shapes/flat/struct_direct.rs`
+  similarly hardcodes JsonStructBuilder. Sheets's `cell` /
+  `range_ref` / similar Seq compounds exercise Flat. Same posture.
+
+Both hardcodings are pre-W2-act.B2 substrate, untouched in B2 to
+respect the file-bound rules. The orchestrator's regen pass will
+need to address them (or dispatch a follow-on B-prime agent) before
+the resolver flip can produce executable code.
+
 ## Handoff
 
 - Opens on: post-B7 substrate (AY-II → AY-II-I → AY-III deferred;

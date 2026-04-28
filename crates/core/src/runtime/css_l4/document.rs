@@ -134,6 +134,141 @@ impl<'p> CssDocument<'p> {
     pub fn get<T: CssPathQuery>(&self, path: Path<'_>) -> Option<T> {
         T::query(self, path)
     }
+
+    /// AZ-I.W2-act.close B3 — pre-order walk over every [`Declaration`]
+    /// in the document.
+    ///
+    /// Yields declarations in source order, descending into media-rule
+    /// inner rules and keyframes-rule blocks. The returned iterator
+    /// borrows the document (and the arena it owns) for the iteration's
+    /// lifetime so consumers can match on each declaration's
+    /// [`Declaration::value`] without intermediate cloning.
+    ///
+    /// Used by the CSS L4 typed-payload parity tests to find every
+    /// `(property, typed-value)` pair without knowing the structural
+    /// path in advance.
+    #[inline]
+    pub fn walk_declarations(&self) -> CssDeclWalk<'_, 'p> {
+        CssDeclWalk {
+            doc: self,
+            stack: vec![CssWalkItem::RuleList(self.root.rules, 0)],
+        }
+    }
+
+    /// AZ-I.W2-act.close B3 — pre-order walk over every typed value in
+    /// the document, yielding `(property, &CssTypedValue)` pairs.
+    ///
+    /// Each declaration contributes its [`Declaration::value`] under the
+    /// declaration's `property` name; if the value resolves to a
+    /// [`CssTypedValue::List`] handle, the walker descends into the
+    /// arena-backed list and yields each element under the same property
+    /// name.
+    ///
+    /// Used by the CSS L4 typed-payload parity tests to assert that
+    /// typed leaves (`CssDimension::Percentage`, `CssColor::Hex(...)`,
+    /// etc.) reach the document graph — the post-tape equivalent of the
+    /// pre-W2-act tape-walk parity surface.
+    pub fn walk_values<'a>(&'a self) -> impl Iterator<Item = (&'p str, &'a CssTypedValue<'p>)> + 'a {
+        self.walk_declarations()
+            .flat_map(|decl| {
+                let property = decl.property;
+                let primary = std::iter::once((property, &decl.value));
+                let list_extra: Box<dyn Iterator<Item = (&'p str, &'a CssTypedValue<'p>)> + 'a> =
+                    match &decl.value {
+                        CssTypedValue::List(id) => {
+                            Box::new(self.values(*id).iter().map(move |v| (property, v)))
+                        }
+                        _ => Box::new(std::iter::empty()),
+                    };
+                primary.chain(list_extra)
+            })
+    }
+}
+
+/// AZ-I.W2-act.close B3 — frame on the [`CssDocument::walk_declarations`]
+/// stack.
+///
+/// The walker visits rule lists / style rules / media rules / keyframe
+/// rules / keyframe blocks in turn, descending in pre-order through the
+/// document's typed tree.
+#[derive(Debug)]
+enum CssWalkItem {
+    /// A rule list (top-level stylesheet rules or @media inner rules);
+    /// `usize` is the next-index cursor.
+    RuleList(CssRuleListId, usize),
+    /// A declaration list (style-rule decls or keyframe-block decls);
+    /// `usize` is the next-index cursor.
+    DeclList(CssDeclListId, usize),
+    /// A keyframe-block list inside an @keyframes rule; `usize` is the
+    /// next-index cursor.
+    KeyframeList(CssKeyframeListId, usize),
+}
+
+/// AZ-I.W2-act.close B3 — pre-order [`Declaration`] walker over a
+/// [`CssDocument`].
+///
+/// Maintains a stack of in-flight rule / declaration / keyframe lists so
+/// the iteration is allocation-free past the initial stack push and
+/// progresses one declaration per `next()` call. The arena-backed
+/// declaration slices outlive the iterator (they live for `'p`); the
+/// iterator's lifetime `'a` bounds the borrow on the [`CssDocument`].
+pub struct CssDeclWalk<'a, 'p: 'a> {
+    doc: &'a CssDocument<'p>,
+    stack: Vec<CssWalkItem>,
+}
+
+impl<'a, 'p: 'a> Iterator for CssDeclWalk<'a, 'p> {
+    type Item = &'a Declaration<'p>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let top = self.stack.last_mut()?;
+            match top {
+                CssWalkItem::RuleList(id, idx) => {
+                    let id = *id;
+                    let rules = self.doc.rules(id);
+                    if let Some(rule) = rules.get(*idx) {
+                        *idx += 1;
+                        match rule {
+                            CssRule::Style(style) => {
+                                self.stack.push(CssWalkItem::DeclList(style.declarations, 0));
+                            }
+                            CssRule::Media(media) => {
+                                self.stack.push(CssWalkItem::RuleList(media.rules, 0));
+                            }
+                            CssRule::Keyframes(kf) => {
+                                self.stack.push(CssWalkItem::KeyframeList(kf.blocks, 0));
+                            }
+                            CssRule::GenericAt(_) => {
+                                // Generic at-rules carry no declarations.
+                            }
+                        }
+                    } else {
+                        self.stack.pop();
+                    }
+                }
+                CssWalkItem::DeclList(id, idx) => {
+                    let id = *id;
+                    let decls = self.doc.decls(id);
+                    if let Some(decl) = decls.get(*idx) {
+                        *idx += 1;
+                        return Some(decl);
+                    }
+                    self.stack.pop();
+                }
+                CssWalkItem::KeyframeList(id, idx) => {
+                    let id = *id;
+                    let blocks = self.doc.keyframes(id);
+                    if let Some(block) = blocks.get(*idx) {
+                        *idx += 1;
+                        self.stack.push(CssWalkItem::DeclList(block.declarations, 0));
+                    } else {
+                        self.stack.pop();
+                    }
+                }
+            }
+        }
+    }
 }
 
 /// AZ-I.W2-act.B3 — a thin newtype over `&CssDocument`.

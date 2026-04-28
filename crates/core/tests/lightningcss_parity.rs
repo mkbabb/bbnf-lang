@@ -39,7 +39,6 @@
 //! field-for-field data test per the W5.2 plan's explicit call-out
 //! to `Color::RGBA` projection.
 
-use bbnf::runtime::tape::TapeKind;
 use bbnf::runtime::view::Color;
 use lightningcss::properties::Property;
 use lightningcss::rules::CssRule;
@@ -118,13 +117,21 @@ fn assert_corpus_parity(fixture: &str) -> (usize, usize) {
     let input = std::fs::read_to_string(&path)
         .unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
 
-    let bbnf_parsed = CssL4Parser::parse(&input)
+    let bbnf_doc = CssL4Parser::parse(&input)
         .unwrap_or_else(|e| panic!("{fixture}: bbnf parse failed: {e:?}"));
-    let tape_val = bbnf_parsed.tape();
-    let bbnf_rec_count = tape_val.len();
+    // AZ-I.W2-act.close B3 — the struct-direct CSS L4 path returns a
+    // `CssDocument` whose typed graph carries every rule + declaration.
+    // The post-substrate metric replaces the pre-W2-act tape-record
+    // count with the union of top-level rule count + transitive
+    // declaration count, preserving the diagnostic role: a non-zero
+    // total indicates the bbnf parser produced a non-empty typed
+    // graph for the fixture.
+    let bbnf_rule_count = bbnf_doc.rules(bbnf_doc.root().rules).len();
+    let bbnf_decl_count = bbnf_doc.walk_declarations().count();
+    let bbnf_node_count = bbnf_rule_count + bbnf_decl_count;
     assert!(
-        bbnf_rec_count > 0,
-        "{fixture}: bbnf produced an empty tape"
+        bbnf_node_count > 0,
+        "{fixture}: bbnf produced an empty typed CSS graph"
     );
 
     let lc_sheet = StyleSheet::parse(&input, ParserOptions::default())
@@ -136,11 +143,12 @@ fn assert_corpus_parity(fixture: &str) -> (usize, usize) {
     );
 
     eprintln!(
-        "{fixture}: bbnf tape records = {bbnf_rec_count}; \
+        "{fixture}: bbnf rules+decls = {bbnf_node_count} \
+         (rules={bbnf_rule_count}, decls={bbnf_decl_count}); \
          lightningcss top-level rules = {lc_rule_count}"
     );
 
-    (bbnf_rec_count, lc_rule_count)
+    (bbnf_node_count, lc_rule_count)
 }
 
 // ─── Per-fixture admission tests ─────────────────────────────────────
@@ -196,20 +204,83 @@ fn lightningcss_parity_tailwind() {
 // 0..=255 `(r, g, b, a)` tuple space lightningcss uses in
 // `CssColor::RGBA(RGBA)` and asserts channel-for-channel equivalence.
 
-/// Walk the bbnf tape and collect every decoded 40 B colour payload.
-/// The emitter writes `LargeAggregate` on `colorFunction` /
-/// `colorMix` rules; each tape record carrying a 40 B `KvPair`
-/// payload decodes to a [`Color`].
+/// AZ-I.W2-act.close B3 — walk the bbnf [`CssDocument`] graph and
+/// collect every typed colour value the parse produced.
+///
+/// The pre-W2-act tape walk read 40-byte `LargeAggregate` payloads and
+/// decoded them into [`Color`]; the struct-direct path's typed graph
+/// already carries [`bbnf::runtime::css_l4::CssColor`] variants
+/// directly. This helper projects the W2-act.close colour types into
+/// the legacy `Color` shape that the field-for-field comparator
+/// expects (5-component vector + colour-space tag).
 fn bbnf_find_colors(input: &str) -> Vec<Color> {
-    let parsed = CssL4Parser::parse(input).expect("bbnf parse");
-    let tape = parsed.tape();
+    use ::bbnf::runtime::css_l4::{
+        CssColor, CssColorPredefined, CssColorSpace, CssColorType, CssColorFunction,
+        CssTypedValue,
+    };
+    use ::bbnf::runtime::view::ColorSpace;
+
+    fn project_function(f: &CssColorFunction) -> Color {
+        let space = match f.kind {
+            CssColorType::Rgb => ColorSpace::Rgb,
+            CssColorType::Rgba => ColorSpace::Rgba,
+            CssColorType::Hsl => ColorSpace::Hsl,
+            CssColorType::Hsla => ColorSpace::Hsla,
+            CssColorType::Hwb => ColorSpace::Hwb,
+            CssColorType::Lab => ColorSpace::Lab,
+            CssColorType::Lch => ColorSpace::Lch,
+            CssColorType::Oklab => ColorSpace::Oklab,
+            CssColorType::Oklch => ColorSpace::Oklch,
+        };
+        Color {
+            space,
+            c1: f.c1,
+            c2: f.c2,
+            c3: f.c3,
+            alpha: f.alpha.unwrap_or(f64::NAN),
+        }
+    }
+
+    fn project_predefined(p: &CssColorPredefined) -> Color {
+        // Map the colour-space discriminant onto the closest
+        // `crate::runtime::view::ColorSpace` variant. The W2-act.close
+        // ColorSpace surface admits only the legacy view-side
+        // discriminants; CSS L4's wider `CssColorSpace` (display-p3 /
+        // a98-rgb / xyz-d50 / etc.) resolves to the closest match for
+        // the field-for-field RGB comparator below — every space that
+        // isn't directly representable lands on `Rgb`, mirroring the
+        // pre-W2-act decoder's RGB-family bias.
+        let space = match p.space {
+            CssColorSpace::Hsl => ColorSpace::Hsl,
+            CssColorSpace::Hwb => ColorSpace::Hwb,
+            CssColorSpace::Lab => ColorSpace::Lab,
+            CssColorSpace::Lch => ColorSpace::Lch,
+            CssColorSpace::Oklab => ColorSpace::Oklab,
+            CssColorSpace::Oklch => ColorSpace::Oklch,
+            _ => ColorSpace::Rgb,
+        };
+        Color {
+            space,
+            c1: p.c1,
+            c2: p.c2,
+            c3: p.c3,
+            alpha: p.alpha.unwrap_or(f64::NAN),
+        }
+    }
+
+    let doc = CssL4Parser::parse(input).expect("bbnf parse");
     let mut out = Vec::new();
-    for rec in tape.iter() {
-        if rec.has_payload() && rec.kind() == TapeKind::KvPair {
-            if let Some(bytes) = tape.payload_bytes(rec, 40) {
-                if let Some(color) = Color::try_decode(bytes) {
-                    out.push(color);
-                }
+    for (_property, value) in doc.walk_values() {
+        if let CssTypedValue::Color(color) = value {
+            match color {
+                CssColor::Function(f) => out.push(project_function(f)),
+                CssColor::Predefined(p) => out.push(project_predefined(p)),
+                // Hex / Named / Mix don't surface in the W5.2 colour-
+                // channel parity gate (the gate inspects the typed
+                // colour-function path; hex / named lower to InlineScalar
+                // u32, and Mix is a recursive shape outside the per-
+                // colour comparator's scope).
+                _ => {}
             }
         }
     }

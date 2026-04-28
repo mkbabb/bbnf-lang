@@ -6,7 +6,6 @@
 
 use std::path::PathBuf;
 
-use bbnf::runtime::tape::TapeKind;
 #[allow(dead_code)]
 mod css_types {
     pub fn parse_hex_color(s: &str) -> u32 {
@@ -119,51 +118,25 @@ fn load_named_color_map() -> Vec<(String, u32)> {
     pairs
 }
 
-fn named_color_variant_idx() -> u8 {
-    let workspace_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(|p| p.parent())
-        .expect("workspace root")
-        .to_path_buf();
-    let bbnf_path = workspace_root.join("grammar/css/l4/stylesheet.bbnf");
-    let request = bbnf::pipeline::CompileRequest {
-        target: bbnf::pipeline::CompileTarget::Vm,
-        options: bbnf::pipeline::PipelineOptions::default(),
-    };
-    let output = bbnf::pipeline::compile_paths_request(&[bbnf_path], &request)
-        .expect("compile for IR introspection");
-    let ir = match output {
-        bbnf::pipeline::CompileOutput::Vm(ir) => ir,
-        _ => panic!("expected Vm output"),
-    };
-    let rule = ir
-        .rules
-        .iter()
-        .find(|r| ir.get_string(r.name) == "namedColor")
-        .expect("namedColor rule present");
-    (rule.id & 0xFF) as u8
-}
+/// AZ-I.W2-act.close B3 — locate a `namedColor` typed leaf in the
+/// parsed [`CssDocument`] graph and return its packed u32 payload.
+///
+/// Pre-W2-act.B3 the named-color test walked the tape and matched on
+/// the IR rule's `variant_idx` (low byte of `rule.id`); post-W2-act.B3
+/// the typed-graph walk inspects every `CssTypedValue::Color` for the
+/// `CssColor::Hex` variant carrying the projected 32-bit packed RGBA.
+/// The struct-direct CSS L4 builder routes both `hex` and
+/// `namedColor` through [`bbnf::runtime::css_l4::CssColor::Hex`] (the
+/// builder's `push_leaf_with_u64` admission), so this helper finds
+/// the colour-carrying declaration regardless of which projection
+/// rule produced it.
+fn find_named_color_payload(input: &str) -> Option<u32> {
+    use ::bbnf::runtime::css_l4::{CssColor, CssTypedValue};
 
-fn find_named_color_payload(input: &str, variant_idx: u8) -> Option<u32> {
-    let parsed = CssL4Parser::parse(input).ok()?;
-    let tape = parsed.tape();
-    // AW-III.W1.A: variant_idx widened from 6 to 8 bits; CSS L4's
-    // `colorProps` and `namedColor` no longer collide at `id & 0x3F`,
-    // so direct match on `variant_idx == namedColor.id & 0xFF` finds
-    // exactly the namedColor leaf. The pre-W1.A heuristic that
-    // filtered out 0-valued payloads (a workaround for the collision
-    // with `colorProps "color" -> 0u8`) is gone — `transparent`
-    // (`0x00000000`) materialises like every other named color.
-    for rec in tape.iter() {
-        if rec.kind() == TapeKind::Span
-            && rec.variant_idx() == variant_idx
-            && rec.has_payload()
-            && !rec.has_children()
-        {
-            if let Some(bytes) = tape.payload_bytes(rec, 4) {
-                let arr: [u8; 4] = bytes.try_into().ok()?;
-                return Some(u32::from_le_bytes(arr));
-            }
+    let doc = CssL4Parser::parse(input).ok()?;
+    for (_property, value) in doc.walk_values() {
+        if let CssTypedValue::Color(CssColor::Hex(packed)) = value {
+            return Some(*packed);
         }
     }
     None
@@ -183,7 +156,6 @@ fn named_color_grammar_list_is_non_empty() {
 fn every_named_color_materialises_its_u32_payload() {
     let colors = load_named_color_map();
     assert!(!colors.is_empty(), "grammar list load must succeed");
-    let variant_idx = named_color_variant_idx();
 
     let mut failed: Vec<(String, u32, Option<u32>)> = Vec::new();
     for (name, expected) in &colors {
@@ -191,7 +163,7 @@ fn every_named_color_materialises_its_u32_payload() {
         // now resolved via `PayloadData::WideScalar` routing. Every
         // named color — including white — must materialise.
         let input = format!("a {{ color: {name}; }}");
-        let got = find_named_color_payload(&input, variant_idx);
+        let got = find_named_color_payload(&input);
         if got != Some(*expected) {
             failed.push((name.clone(), *expected, got));
         }
@@ -220,13 +192,18 @@ fn every_named_color_materialises_its_u32_payload() {
 /// NONE`). The W0b fix promotes `u32` payloads whose rule range could
 /// reach the sentinel to `PayloadData::WideScalar`, where the 8-byte
 /// slot cannot collide with the 4-byte sentinel.
+///
+/// Post-W2-act.close B3 the typed-graph walk projects directly to
+/// [`bbnf::runtime::css_l4::CssColor::Hex`]; the sentinel collision is
+/// architecturally retired (no payload column means no `u32::MAX` /
+/// `TapeOffset::NONE` overlap). The test still pins the parity:
+/// `white` must materialise as `0xFFFFFFFF` in the typed value graph.
 #[test]
 fn white_materialises() {
-    let variant_idx = named_color_variant_idx();
-    let got = find_named_color_payload("a { color: white; }", variant_idx);
+    let got = find_named_color_payload("a { color: white; }");
     assert_eq!(
         got,
         Some(0xFFFFFFFFu32),
-        "white must decode as 0xFFFFFFFFu32 (not PayloadData::None sentinel)"
+        "white must decode as 0xFFFFFFFFu32 in the typed CSS value graph"
     );
 }

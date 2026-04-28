@@ -525,42 +525,70 @@ fn json_compile_time_accessors() {
 
 #[test]
 fn css_l4_compile_time_accessors() {
-    // CSS L4 emits the full spectrum: leaves, Seqs, Alts, Repeats,
-    // aggregates. A simple rule + declaration exercises enough of
-    // the surface to gate compilation.
+    // AZ-I.W2-act.close B3 — CSS L4 crosses to the struct-direct path;
+    // `CssL4Parser::parse` returns `CssDocument<'_>` and `doc.view()`
+    // yields the struct-tree `CssView` (not the cursor-backed
+    // `stylesheetView`). The cursor / rule_kind / input / span /
+    // children surface from the pre-W2-act `Parsed::view()` is replaced
+    // by the [`bbnf::runtime::RuntimeView`] trait surface, exercised
+    // here in lockstep with the JSON / Sheets sibling tests.
     let src = "a { color: red; }";
-    let parsed = CssL4Parser::parse(src).expect("CSS L4 parse");
-    let view = parsed.view();
-    // Universal accessors on the root view.
-    let _ = view.cursor();
-    let _ = view.input();
-    let _ = view.kind();
-    let _ = view.span();
-    let _ = view.rule_kind();
-    let _: Vec<_> = view.children().collect();
+    let doc = CssL4Parser::parse(src).expect("CSS L4 parse");
+    let view = doc.view();
 
-    fn _require_view_types<'p>(
-        _v: <CssL4Parser as bbnf::runtime::Root>::View<'p>,
-        _nv: CssL4ParserNodeView<'p>,
-        _kind: CssL4ParserRuleKind,
+    // Struct-tree accessors on the CssView itself:
+    let _: bbnf::runtime::CssDocumentKind = view.kind();
+    let _: &bbnf::runtime::css_l4::StyleSheet = view.root();
+    let _: &bbnf::runtime::css_l4::CssArena<'_> = view.arena();
+
+    // RuntimeView trait surface — the uniform navigation API:
+    use bbnf::runtime::RuntimeView;
+    let _: bbnf::runtime::CssDocumentKind = RuntimeView::kind(&view);
+    let _: Option<&str> = RuntimeView::span(&view);
+    let _: &str = RuntimeView::input(&view);
+    let _: Vec<_> = RuntimeView::children(&view).collect();
+
+    // The struct-tree shape is the post-flip evidence: a non-empty
+    // stylesheet root reports `StyleSheet`; an empty one reports
+    // `Empty`. The discriminator must agree with the typed graph.
+    assert_eq!(
+        RuntimeView::kind(&view),
+        bbnf::runtime::CssDocumentKind::StyleSheet,
+        "CssL4Parser::parse(\"a {{ color: red; }}\") must yield a non-empty StyleSheet root",
+    );
+
+    fn _require_struct_types<'p>(
+        _doc: bbnf::runtime::css_l4::CssDocument<'p>,
+        _view: bbnf::runtime::css_l4::CssView<'_, 'p>,
+        _kind: bbnf::runtime::CssDocumentKind,
     ) { }
 }
 
 #[test]
 fn sheets_compile_time_accessors() {
-    let parsed = GoogleSheetsParser::parse("=1+2").expect("Sheets parse");
-    let view = parsed.view();
-    let _ = view.cursor();
-    let _ = view.input();
-    let _ = view.kind();
-    let _ = view.span();
-    let _ = view.rule_kind();
-    let _: Vec<_> = view.children().collect();
+    // AZ-I.W2-act.close B3 — Sheets crosses to the struct-direct path;
+    // `GoogleSheetsParser::parse` returns `SheetsDocument<'_>` and
+    // `doc.view()` yields the struct-tree `SheetsView`. The legacy
+    // cursor surface is replaced by [`bbnf::runtime::RuntimeView`].
+    let doc = GoogleSheetsParser::parse("=1+2").expect("Sheets parse");
+    let view = doc.view();
 
-    fn _require_view_types<'p>(
-        _v: <GoogleSheetsParser as bbnf::runtime::Root>::View<'p>,
-        _nv: GoogleSheetsParserNodeView<'p>,
-        _kind: GoogleSheetsParserRuleKind,
+    // Struct-tree accessors on the SheetsView itself:
+    let _: bbnf::runtime::SheetsKind = view.kind();
+    let _: &bbnf::runtime::SheetsValue<'_> = view.root();
+    let _: &bbnf::runtime::SheetsArena<'_> = view.arena();
+
+    // RuntimeView trait surface — uniform with JSON + CSS L4:
+    use bbnf::runtime::RuntimeView;
+    let _: bbnf::runtime::SheetsKind = RuntimeView::kind(&view);
+    let _: Option<&str> = RuntimeView::span(&view);
+    let _: &str = RuntimeView::input(&view);
+    let _: Vec<_> = RuntimeView::children(&view).collect();
+
+    fn _require_struct_types<'p>(
+        _doc: bbnf::runtime::SheetsDocument<'p>,
+        _view: bbnf::runtime::SheetsView<'_, 'p>,
+        _kind: bbnf::runtime::SheetsKind,
     ) { }
 }
 

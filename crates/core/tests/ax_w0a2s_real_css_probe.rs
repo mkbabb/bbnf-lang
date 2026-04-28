@@ -25,9 +25,19 @@ fn assert_parses_full(label: &str, path: &str) {
         .unwrap_or_else(|e| panic!("read {path}: {e}"));
     let size = input.len();
     match CssL4Parser::parse(&input) {
-        Ok(parsed) => {
-            let tape_len = parsed.tape().len();
-            eprintln!("{label}: {size} bytes -> tape_len={tape_len}");
+        Ok(doc) => {
+            // AZ-I.W2-act.close B3 — the struct-direct CSS L4 path
+            // returns a `CssDocument` directly. The post-substrate
+            // structural metric is the top-level rule-list length plus
+            // the declaration count discovered via `walk_declarations`,
+            // matching the pre-substrate tape-record count's diagnostic
+            // role: a non-zero number indicates the parse produced a
+            // non-empty typed graph.
+            let rule_count = doc.rules(doc.root().rules).len();
+            let decl_count = doc.walk_declarations().count();
+            eprintln!(
+                "{label}: {size} bytes -> rules={rule_count} decls={decl_count}"
+            );
         }
         Err(e) => panic!(
             "{label} ({size} bytes) failed: {e:?} — \

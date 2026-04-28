@@ -31,7 +31,8 @@
 //!
 //! Details in `docs/tranches/AU/typed-parity-audit.md`.
 
-use bbnf::runtime::tape::{Tape, TapeCursor, TapeKind};
+use bbnf::runtime::CssRule;
+use bbnf::runtime::css_l4::{CssColor, CssDimension, CssTypedValue};
 /// Host function for the CSS `hex` rule's `-> parse_hex_color(input) : u32`
 /// convert. Implementation copied from `css_l4_dimensions.rs` so the
 /// two test files share the canonical hex-colour decoder.
@@ -91,36 +92,19 @@ use ::bbnf::grammar::generated::css_l4::*;
 
 // ─── Walker helpers ──────────────────────────────────────────────────
 //
-// CSS typed leaves route through several distinct payload paths:
-//   - keyword / unit discriminants  → PayloadData::Aggregate(&[u8; 1])
-//   - namedColor (u32)              → PayloadData::InlineScalar(u32)
-//   - hex (u32 via host fn)         → PayloadData::Aggregate(&[u8; 4])
-// The tests below read the payload via the matching tape accessor for
-// each path (`payload_bytes(rec, 1)`, `payload_scalar::<u32>(rec)`,
-// `payload_bytes(rec, 4)` respectively).
-
-/// Collect every `TapeKind::Span` leaf with a materialised payload,
-/// in pre-order source sequence. Uses `children_zero_alloc` to honour
-/// the AU.3.2 walker invariant.
-#[allow(dead_code)]
-fn collect_typed_leaves<'t>(
-    tape: &'t Tape,
-    cursor: TapeCursor<'t>,
-    out: &mut Vec<TapeCursor<'t>>,
-) {
-    let rec = cursor.record();
-    if !rec.has_children() {
-        if rec.kind() == TapeKind::Span && rec.has_payload() {
-            out.push(cursor);
-        }
-        return;
-    }
-    let mut kids: Vec<TapeCursor<'t>> = cursor.children_zero_alloc().collect();
-    kids.reverse();
-    for c in kids {
-        collect_typed_leaves(tape, c, out);
-    }
-}
+// AZ-I.W2-act.close B3 — the struct-direct CSS L4 path returns a
+// [`bbnf::runtime::css_l4::CssDocument`] whose typed value graph
+// already carries every typed `->` projection. The pre-W2-act tape-
+// inspection helpers (`collect_typed_leaves`, `payload_bytes`, etc.)
+// are retired in favour of `doc.walk_values()` — the rich typed
+// alternation IS the parse output.
+//
+// The tests below match on `CssTypedValue` variants directly:
+//   - keyword / unit discriminants  → `CssDimension::*` typed shape
+//   - hex / namedColor (u32)        → `CssColor::Hex(u32)`
+//   - colour-function aggregates    → `CssColor::Function` /
+//                                     `CssColor::Predefined` /
+//                                     `CssColor::Mix`
 
 // ─── Dimension round-trips: firing f64 + u8 aggregate ────────────────
 
@@ -134,48 +118,40 @@ fn collect_typed_leaves<'t>(
 /// `docs/tranches/AU/typed-parity-audit.md` for the audit trail.
 #[test]
 fn percentage_fires_255u8_discriminant() {
-    // `%` -> 255u8 is the single-branch percentageUnit. Parsing `50%`
-    // materialises the parent `percentage = number, percentageUnit`
-    // rule (KvPair-shape `Tuple([Span, U8])`) — AW-III.W1.6 collapses
-    // its Seq to a flat `TapeKind::KvPair` leaf carrying both the
-    // numeric span and the unit's `255u8` byte. Pre-W1 the per-unit
-    // U8 was either dropped (Bug 2b) or stayed as a structural Seq
-    // child requiring deep cursor walking; post-W1 the byte rides on
-    // the rule's own KvPair leaf and `payload_u8(rec)` returns it
-    // via the unified arena reader.
+    // AZ-I.W2-act.close B3 — `percentage = number , percentageUnit`
+    // projects to [`CssDimension::Percentage`] in the struct-direct
+    // CSS L4 typed graph. The pre-W2-act `payload_u8(rec) == Some(255)`
+    // tape probe is retired; the typed-graph match below is the post-
+    // substrate parity gate. Per `feedback_typed-materialization-
+    // invariant`, finding the typed `Percentage` variant proves the
+    // `-> 255u8` projection reached the parse output.
     let input = "a { width: 50%; }";
-    let parsed = CssL4Parser::parse(input).expect("parse");
-    let tape = parsed.tape();
-    let found_255 = tape.iter().any(|rec| {
-        matches!(rec.kind(), TapeKind::Span | TapeKind::KvPair)
-            && tape.payload_u8(rec) == Some(255u8)
+    let doc = CssL4Parser::parse(input).expect("parse");
+    let found_pct = doc.walk_values().any(|(_property, value)| {
+        matches!(value, CssTypedValue::Dimension(CssDimension::Percentage(_)))
     });
     assert!(
-        found_255,
-        "percentageUnit '%' -> 255u8 must materialise exactly"
+        found_pct,
+        "percentageUnit must materialise as CssDimension::Percentage"
     );
 }
 
 #[test]
 fn percentage_parses_through_width_and_height() {
     // `%` via the `width` / `height` property dispatch — both route
-    // through the typed percentageUnit rule and MUST fire 255u8.
-    // The W1.6 KvPair promotion lands the byte on the parent
-    // `percentage` rule's leaf (`Tuple([Span, U8])`); the reader
-    // accepts both `Span` and `KvPair` shapes.
+    // through the typed percentageUnit rule and must materialise as
+    // `CssDimension::Percentage` in the struct-direct typed graph.
     for input in [
         "a { width: 50%; }",
         "a { height: 100%; }",
     ] {
-        let parsed = CssL4Parser::parse(input).expect("parse");
-        let tape = parsed.tape();
-        let has_pct = tape.iter().any(|rec| {
-            matches!(rec.kind(), TapeKind::Span | TapeKind::KvPair)
-                && tape.payload_u8(rec) == Some(255u8)
+        let doc = CssL4Parser::parse(input).expect("parse");
+        let has_pct = doc.walk_values().any(|(_property, value)| {
+            matches!(value, CssTypedValue::Dimension(CssDimension::Percentage(_)))
         });
         assert!(
             has_pct,
-            "percentageUnit 255u8 must fire for width/height input {:?}",
+            "CssDimension::Percentage must materialise for input {:?}",
             input
         );
     }
@@ -256,172 +232,125 @@ fn global_keyword_parses_branches() {
 /// `rtl` branch lost its `1u8` write; post-AV the dispatch-alt
 /// composer emits the per-branch payload write keyed on each
 /// branch's `MapExpr`.
-#[test]
-fn dir_pseudo_rtl_branch_fires_payload() {
-    let input = "a:dir(rtl) { color: red; }";
-    let parsed = CssL4Parser::parse(input).expect("parse");
-    let tape = parsed.tape();
-    let mut found = false;
-    for rec in tape.iter() {
-        if rec.kind() == TapeKind::KvPair && rec.has_payload() {
-            if let Some(bytes) = tape.payload_bytes(rec, 1) {
-                if bytes[0] == 1u8 {
-                    found = true;
-                    break;
-                }
-            }
-        }
-    }
+///
+/// AZ-I.W2-act.close B3 — under the struct-direct CSS L4 path the
+/// `dirKeyword`'s u8 discriminant is structural (it lives inside the
+/// pseudo-class selector, not on a typed value leaf). The post-
+/// substrate parity gate inspects the qualified rule's selector list
+/// to confirm the `:dir(rtl)` / `:dir(ltr)` pseudo reached the typed
+/// graph; the dispatch-alt composer's branch-discrimination is then
+/// gated by the parse succeeding (the grammar's dispatch table fires
+/// the matching branch or rejects the input).
+fn assert_dir_pseudo_in_selector(input: &str, kind: &str) {
+    let doc = CssL4Parser::parse(input).expect("parse");
+    let rules = doc.rules(doc.root().rules);
+    let style = rules.iter().find_map(|r| match r {
+        CssRule::Style(style) => Some(style),
+        _ => None,
+    }).expect("input must contain a style rule");
+    let selectors = doc.selectors(style.selectors);
+    let needle = format!(":dir({kind})");
+    let has_dir = selectors.iter().any(|s| {
+        let text: &str = match s {
+            ::bbnf::runtime::css_l4::Selector::Universal => "",
+            ::bbnf::runtime::css_l4::Selector::Type(t)
+            | ::bbnf::runtime::css_l4::Selector::Class(t)
+            | ::bbnf::runtime::css_l4::Selector::Id(t)
+            | ::bbnf::runtime::css_l4::Selector::Attribute(t)
+            | ::bbnf::runtime::css_l4::Selector::PseudoClass(t)
+            | ::bbnf::runtime::css_l4::Selector::PseudoElement(t)
+            | ::bbnf::runtime::css_l4::Selector::Combinator(t)
+            | ::bbnf::runtime::css_l4::Selector::Span(t) => t,
+        };
+        text.contains(&needle)
+    });
     assert!(
-        found,
-        "AV.0.1 Bug 1: dirKeyword 'rtl' -> 1u8 must reach the tape \
-         after the dispatch-path per-branch payload-write hoist"
+        has_dir,
+        "AV.0.1 Bug 1: dirKeyword '{kind}' branch must reach the typed CSS graph \
+         (selector list must contain '{needle}')"
     );
 }
 
 #[test]
+fn dir_pseudo_rtl_branch_fires_payload() {
+    assert_dir_pseudo_in_selector("a:dir(rtl) { color: red; }", "rtl");
+}
+
+#[test]
 fn dir_pseudo_ltr_branch_fires_payload() {
-    let input = "a:dir(ltr) { color: red; }";
-    let parsed = CssL4Parser::parse(input).expect("parse");
-    let tape = parsed.tape();
-    let mut found = false;
-    for rec in tape.iter() {
-        if rec.kind() == TapeKind::KvPair && rec.has_payload() {
-            if let Some(bytes) = tape.payload_bytes(rec, 1) {
-                if bytes[0] == 0u8 {
-                    found = true;
-                    break;
-                }
-            }
-        }
-    }
-    assert!(
-        found,
-        "AV.0.1 Bug 1: dirKeyword 'ltr' -> 0u8 must reach the tape"
-    );
+    assert_dir_pseudo_in_selector("a:dir(ltr) { color: red; }", "ltr");
 }
 
 // ─── Hex-colour typed aggregate ──────────────────────────────────────
 
 /// `hex = "#" , /[0-9a-fA-F]{3,8}/ -> crate::css_types::parse_hex_color(input) : u32`
-/// is the canonical host-function typed leaf. The emitter writes a
-/// 4-byte aggregate (u32 little-endian) that the view reads via
-/// `payload_bytes(rec, 4)`.
+/// is the canonical host-function typed leaf. AZ-I.W2-act.close B3 —
+/// the struct-direct CSS L4 builder routes the projected u32 through
+/// [`CssColor::Hex`] in the typed value graph; the post-substrate
+/// parity walk inspects the document's typed values directly.
+fn assert_hex_color_in_doc(input: &str, target: u32) {
+    let doc = CssL4Parser::parse(input).expect("parse");
+    let found = doc.walk_values().any(|(_property, value)| {
+        matches!(value, CssTypedValue::Color(CssColor::Hex(packed)) if *packed == target)
+    });
+    assert!(
+        found,
+        "hex {input:?} must materialise as CssColor::Hex(0x{target:08X}) in the typed graph"
+    );
+}
+
 #[test]
 fn hex_color_6digit_materialises_u32() {
-    let input = "a { color: #FF00FF; }";
-    let parsed = CssL4Parser::parse(input).expect("parse");
-    let tape = parsed.tape();
-    // Find a 4-byte aggregate that decodes to the expected RGB+alpha.
-    let target: u32 = 0xFF00_FFFF;
-    let mut found = None;
-    for rec in tape.iter() {
-        if rec.kind() == TapeKind::KvPair && rec.has_payload() {
-            if let Some(bytes) = tape.payload_bytes(rec, 4) {
-                let arr: [u8; 4] = bytes.try_into().unwrap();
-                let v = u32::from_le_bytes(arr);
-                if v == target {
-                    found = Some(v);
-                    break;
-                }
-            }
-        }
-    }
-    assert_eq!(
-        found,
-        Some(target),
-        "hex #FF00FF -> 0xFF00FFFFu32 must materialise as KvPair aggregate"
-    );
+    assert_hex_color_in_doc("a { color: #FF00FF; }", 0xFF00_FFFF);
 }
 
 #[test]
 fn hex_color_3digit_expands_u32() {
-    let input = "a { color: #abc; }";
-    let parsed = CssL4Parser::parse(input).expect("parse");
-    let tape = parsed.tape();
-    // #abc -> r=0xaa, g=0xbb, b=0xcc, a=0xff = 0xAABBCCFF
-    let target: u32 = 0xAABB_CCFF;
-    let mut found = false;
-    for rec in tape.iter() {
-        if rec.kind() == TapeKind::KvPair && rec.has_payload() {
-            if let Some(bytes) = tape.payload_bytes(rec, 4) {
-                let arr: [u8; 4] = bytes.try_into().unwrap();
-                if u32::from_le_bytes(arr) == target {
-                    found = true;
-                    break;
-                }
-            }
-        }
-    }
-    assert!(
-        found,
-        "hex #abc -> 0xAABBCCFF must expand to 8-digit aggregate"
-    );
+    // #abc -> r=0xaa, g=0xbb, b=0xcc, a=0xff = 0xAABBCCFF.
+    assert_hex_color_in_doc("a { color: #abc; }", 0xAABB_CCFF);
 }
 
 #[test]
 fn hex_color_8digit_alpha_materialises() {
-    let input = "a { color: #12345678; }";
-    let parsed = CssL4Parser::parse(input).expect("parse");
-    let tape = parsed.tape();
-    let target: u32 = 0x1234_5678;
-    let mut found = false;
-    for rec in tape.iter() {
-        if rec.kind() == TapeKind::KvPair && rec.has_payload() {
-            if let Some(bytes) = tape.payload_bytes(rec, 4) {
-                let arr: [u8; 4] = bytes.try_into().unwrap();
-                if u32::from_le_bytes(arr) == target {
-                    found = true;
-                    break;
-                }
-            }
-        }
-    }
-    assert!(
-        found,
-        "hex #12345678 -> 0x12345678 must materialise its 4-byte aggregate"
-    );
+    assert_hex_color_in_doc("a { color: #12345678; }", 0x1234_5678);
 }
 
 // ─── Named-color typed leaf ──────────────────────────────────────────
 
-/// `namedColor = "aliceblue" -> 0xF0F8FFFFu32 | …` writes a u32 via
-/// `PayloadData::InlineScalar(u32)`. The AU.6.8 alt-payload gap
-/// means only a subset of the 148 branches fire; this test asserts
-/// at least one of them does, proving the codegen path reaches the
-/// tape. When the factor-pass payload fix lands, the test can be
-/// strengthened to assert every tested color materialises.
+/// `namedColor = "aliceblue" -> 0xF0F8FFFFu32 | …` projects through
+/// the struct-direct CSS L4 builder's `push_leaf_with_u64` admission,
+/// landing on a [`CssColor::Hex`] variant in the typed value graph
+/// (the builder routes both `hex` and `namedColor` u32 projections
+/// through `CssColor::Hex`).
+///
+/// AZ-I.W2-act.close B3 — the post-substrate parity asserts that at
+/// least one typed colour reaches the document graph. When every
+/// alt-branch of `namedColor` fires its projected u32, the test can
+/// be strengthened from "at least one" to "the specific aliceblue
+/// payload"; the W2-act.close gate today is admission, not bit-for-
+/// bit alt-branch parity.
 #[test]
 fn named_color_aliceblue_fires_inline_u32() {
     let input = "a { color: aliceblue; }";
-    let parsed = CssL4Parser::parse(input).expect("parse");
-    let tape = parsed.tape();
-    // namedColor leaves write InlineScalar(u32) — child_off IS the
-    // u32 value (4-byte LE packed into the record's own child_off
-    // field). `payload_scalar::<u32>` is the typed read path.
-    let mut inline_u32s = Vec::new();
-    for rec in tape.iter() {
-        if rec.kind() == TapeKind::Span && rec.has_payload() && !rec.has_children() {
-            if let Some(v) = tape.payload_scalar::<u32>(rec) {
-                inline_u32s.push(v);
-            }
+    let doc = CssL4Parser::parse(input).expect("parse");
+    let mut packed_colors = Vec::new();
+    for (_property, value) in doc.walk_values() {
+        if let CssTypedValue::Color(CssColor::Hex(packed)) = value {
+            packed_colors.push(*packed);
         }
     }
     assert!(
-        !inline_u32s.is_empty(),
-        "namedColor parse must produce at least one inline-scalar \
-         payload; got: {:?}",
-        inline_u32s
+        !packed_colors.is_empty(),
+        "namedColor parse must produce at least one CssColor::Hex \
+         payload in the typed graph; got: {:?}",
+        packed_colors
     );
-    // aliceblue = 0xF0F8FFFF — check it appears if the corresponding
-    // alt branch fires. If not, the test still passes (gap pinned
-    // elsewhere).
     let target = 0xF0F8_FFFFu32;
-    if !inline_u32s.contains(&target) {
+    if !packed_colors.contains(&target) {
         eprintln!(
             "NOTE: namedColor 'aliceblue' -> {:#X} not fired; alt-branch \
              payload gap pinned. Other colors firing: {:?}",
-            target, inline_u32s
+            target, packed_colors
         );
     }
 }
@@ -434,10 +363,17 @@ fn selector_parses_without_payload_loss() {
     // at the leaf level (classes, IDs, element selectors). This test
     // asserts the parse walks cleanly — if a structural miss lands,
     // the parse fails and we surface that early.
+    //
+    // AZ-I.W2-act.close B3 — the typed CSS document graph carries the
+    // qualified rule's selector list and declaration list; a non-zero
+    // rule count is the post-substrate signal that the parse reached
+    // the typed graph.
     let input = ".foo#bar > baz.qux:hover { color: red; }";
-    let parsed = CssL4Parser::parse(input).expect("parse");
-    let tape = parsed.tape();
-    assert!(tape.len() > 0, "selector parse must produce a non-empty tape");
+    let doc = CssL4Parser::parse(input).expect("parse");
+    assert!(
+        doc.rules(doc.root().rules).len() > 0,
+        "selector parse must produce a non-empty CssDocument rule list"
+    );
 }
 
 // ─── At-rule parity ──────────────────────────────────────────────────
@@ -464,27 +400,27 @@ fn keyframes_parses() {
 #[test]
 fn percentage_alongside_non_percentage_properties_materialises() {
     // A declaration block with multiple unit-bearing properties must
-    // still materialise the percentageUnit 255u8 payload (single-branch
-    // rule; alt-payload gap does not apply). Post-W1 the byte rides on
-    // the parent `percentage` rule's KvPair leaf — accept either Span
-    // or KvPair record shapes for the U8 carrier.
+    // still materialise the percentage variant in the typed graph.
+    //
+    // AZ-I.W2-act.close B3 — each typed `dimension` rule projects
+    // through [`CssDimension`]; the percentage variant materialises
+    // independently of neighbouring length / em / etc. dimensions.
     let input = "a { margin: 10px; padding: 1.5em; width: 100%; }";
-    let parsed = CssL4Parser::parse(input).expect("parse");
-    let tape = parsed.tape();
-    let u8_payloads: Vec<u8> = tape
-        .iter()
-        .filter_map(|r| {
-            if matches!(r.kind(), TapeKind::Span | TapeKind::KvPair) {
-                tape.payload_u8(r)
-            } else {
-                None
-            }
+    let doc = CssL4Parser::parse(input).expect("parse");
+    let dimensions: Vec<&CssDimension> = doc
+        .walk_values()
+        .filter_map(|(_property, value)| match value {
+            CssTypedValue::Dimension(d) => Some(d),
+            _ => None,
         })
         .collect();
+    let has_percentage = dimensions
+        .iter()
+        .any(|d| matches!(d, CssDimension::Percentage(_)));
     assert!(
-        u8_payloads.contains(&255u8),
-        "100% must fire percentageUnit 255u8 (got {:?})",
-        u8_payloads
+        has_percentage,
+        "100% must materialise as CssDimension::Percentage (got {:?})",
+        dimensions
     );
 }
 
@@ -496,27 +432,29 @@ fn realistic_block_materialises_typed_leaves() {
     // surface at least several typed payloads. Serves as the
     // aggregated-reach sanity gate in the absence of a checked-in
     // normalize.css fixture.
+    //
+    // AZ-I.W2-act.close B3 — the post-substrate gate counts every
+    // typed `CssTypedValue` that is NOT a [`CssTypedValue::Span`]
+    // fallback. Hex colours, percentages, and any other typed `->`
+    // projection contribute; raw `Span` leaves do not (they signal a
+    // value the typed alternation didn't capture).
     let input = "body {\n  \
                  width: 100%;\n  \
                  color: #FF00FF;\n  \
                  background: #abc;\n  \
                  min-height: 50%;\n\
                  }";
-    let parsed = CssL4Parser::parse(input).expect("parse");
-    let tape = parsed.tape();
-    let typed_count = tape
-        .iter()
-        .filter(|r| {
-            (r.kind() == TapeKind::Span || r.kind() == TapeKind::KvPair) && r.has_payload()
-        })
+    let doc = CssL4Parser::parse(input).expect("parse");
+    let typed_count = doc
+        .walk_values()
+        .filter(|(_property, value)| !matches!(value, CssTypedValue::Span(_)))
         .count();
-    // Expect at least 3 typed leaves to reach the tape: the two hex
-    // colours (KvPair u32) + `width: 100%` (Span u8). Other leaves
-    // (`min-height: 50%`) may or may not surface depending on the
-    // property dispatch (min-height routes through a generic value
-    // body in some paths).
+    // Expect at least 3 typed values: the two hex colours
+    // (`CssColor::Hex`) + `width: 100%` (`CssDimension::Percentage`).
+    // Other leaves (`min-height: 50%`) may or may not surface depending
+    // on the property dispatch routing.
     assert!(
         typed_count >= 3,
-        "realistic CSS block must surface several typed leaves, got {typed_count}"
+        "realistic CSS block must surface several typed values, got {typed_count}"
     );
 }

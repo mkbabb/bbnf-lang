@@ -67,7 +67,7 @@ pub use arena::{
     CssValueListId,
 };
 pub use builder::CssStructBuilder;
-pub use document::{CssDocument, CssDocumentKind, CssFocus, CssPathQuery, CssView};
+pub use document::{CssDeclWalk, CssDocument, CssDocumentKind, CssFocus, CssPathQuery, CssView};
 pub use value::{
     CssAngle, CssAngleUnit, CssColor, CssColorFunction, CssColorMix, CssColorPredefined,
     CssColorSpace, CssColorType, CssDimension, CssFlex, CssFrequency, CssFrequencyUnit,

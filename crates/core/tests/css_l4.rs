@@ -292,34 +292,26 @@ fn parse_bootstrap_css() {
 // lightningcss-equivalent 0xRRGGBBAA u32.
 // ---------------------------------------------------------------------------
 
-/// Walk the parsed tape for a hex-colour rule, returning a decoded
-/// u32 payload that equals `target`. Returns None when the parse
-/// fails or no matching KvPair record exists.
+/// AZ-I.W2-act.close B3 — walk the parsed [`CssDocument`] for a
+/// hex-colour typed leaf, returning the decoded u32 payload when it
+/// matches `target`. Returns `None` when the parse fails or no
+/// matching `CssColor::Hex` (the variant `parse_hex_color`'s u32
+/// projection lands on per the struct-direct builder) appears in the
+/// document's typed value graph.
 ///
-/// The CSS L4 grammar emits multiple KvPair records per declaration —
-/// the outer `color: <value>` declaration KvPair carries the
-/// LargeAggregate colorspace slot whose first byte is a discriminant,
-/// while the inner `hex` rule KvPair carries the 4-byte u32 written
-/// by `parse_hex_color`. Reading the first KvPair found and decoding
-/// 4 bytes off it picks the outer aggregate's discriminant + first 3
-/// payload bytes — the wrong record. The matching parity tests in
-/// `css_l4_parity.rs` (`hex_color_*_materialises*`) use the same
-/// search pattern: walk every KvPair with `has_payload()`, decode 4
-/// bytes, return the first match against `target`.
+/// The post-W2-act.B3 builder routes `hex = "#" , /…/ -> u32`
+/// through [`bbnf::runtime::css_l4::CssTypedValue::Color`] /
+/// [`bbnf::runtime::css_l4::CssColor::Hex`]; the typed walk is more
+/// direct than the pre-W2-act `payload_bytes(rec, 4)` tape inspection
+/// because the value IS the parse output.
 fn find_hex_payload_u32(css_input: &str, target: u32) -> Option<u32> {
-    use ::bbnf::runtime::tape::TapeKind;
+    use ::bbnf::runtime::css_l4::{CssColor, CssTypedValue};
 
-    let parsed = CssL4Parser::parse(css_input).ok()?;
-    let tape = parsed.tape();
-    for rec in tape.iter() {
-        if rec.kind() == TapeKind::KvPair && rec.has_payload() {
-            if let Some(payload) = tape.payload_bytes(rec, 4) {
-                if let Ok(bytes) = <[u8; 4]>::try_from(payload) {
-                    let v = u32::from_le_bytes(bytes);
-                    if v == target {
-                        return Some(v);
-                    }
-                }
+    let doc = CssL4Parser::parse(css_input).ok()?;
+    for (_property, value) in doc.walk_values() {
+        if let CssTypedValue::Color(CssColor::Hex(packed)) = value {
+            if *packed == target {
+                return Some(*packed);
             }
         }
     }

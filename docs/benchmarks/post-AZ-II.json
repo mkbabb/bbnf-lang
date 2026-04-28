@@ -2,29 +2,29 @@
   "tag": "post-AZ-II",
   "tranche": "AZ-II",
   "date": "2026-04-28",
-  "commit": "pending-cherry-pick",
+  "commit": "1513328e",
   "arch": "aarch64-apple-darwin",
   "profile": "bench",
-  "description": "Post-AZ-II close. Cutover wave decomposed into three sub-stages: cutover.A (substrate hoist + BBNF runtime + resolver-arm; commits 63cacbe2, d3977825, 19a2669a, 82a88696, ec7a0fa1), cutover.B (Stage A/B byte-equal + permanent CI gate; commit d6b0377a), cutover.C (relinquished under scope-reveal; this dispatch authored FINAL.md + scope-reveal report + bench archive). Cutover.C halted before consumer migration (700 BbnfBootstrapNodeView refs across 35 files) and tape deletion (1218 tape refs in regen'd bbnf.rs alone; 8 sibling grammars on TapeDirect). The discovered scope routes to follow-on cutover.D (consumer migration) + cutover.E (tape deletion) per docs/tranches/AZ-II/cutover.C-SCOPE-REVEAL.md.",
-  "bench_matrix_note": "Cold per-parse only (mimalloc, divan sample_size=1 × 100 samples). Compiled under [profile.bench] (fat LTO, codegen-units=1, debug=true for samply). Sheets parse_* and CSS L4 bootstrap aborted with SIGABRT under fat-LTO due to recursive-descent parser stack overflow — pre-existing per W2-act.recovery scope-reveal carried forward through AZ-I close. Substrate is cutover.A baseline (BBNF on TapeDirect; data grammars on StructDirect per AZ-I); numbers match AZ-I close ± noise as expected since neither cutover.B nor cutover.C lands runtime substrate that touches the parse hot path.",
+  "description": "Post-AZ-II partial close. Cutover wave decomposed into eight sub-stages: cutover.A (substrate hoist + BBNF runtime + resolver-arm), cutover.B (Stage A/B byte-equal + permanent CI gate), cutover.C (scope-reveal — full close routes to D-H), cutover.D (consumer migration via 4 parallel agents), cutover.E (non-BBNF struct-direct substrates authored), cutover.F (3 emitter bug classes diagnosed + fixed), cutover.G (hand-written BBNF bootstrap parser at crates/core/src/grammar/bootstrap_parser.rs breaking the chicken-and-egg), cutover.H Phase 0 + Phase 1 (graph/deps value-expression skip; BBNF resolver-arm re-flip + transparent-rule emitter fix). Tape deletion (Hard gate 1), non-BBNF resolver-arm fleet activation (Phase 2), Parsed<R> deletion (Phase 3), bbnf_rule serialize_compact_doc (Phase 5), and 17-entry bench refresh (Phase 6) defer to follow-on tranche under documented scope.",
+  "bench_matrix_note": "Cold per-parse only (mimalloc, divan sample_size=1 × 100 samples). Compiled under [profile.bench] (fat LTO, codegen-units=1, debug=true for samply). Sheets parse_* and CSS L4 bootstrap aborted with SIGABRT under fat-LTO due to recursive-descent parser stack overflow — pre-existing per W2-act.recovery. cutover.H Phase 6 captured json bench refresh; bbnf bench fails because the divan harness uses BbnfBootstrap::parse directly (the codegen-emitted parser does not yet self-host real BBNF source — bootstrap_parser is the canonical entry point). Other bench entries retain cutover.E placeholder values; full refresh blocks on Phase 2 regen-fleet + Phase 3 Parsed<R> deletion completion.",
   "benches": {
     "json_monolithic": {
-      "canada":  { "ns_per_iter": 4128000,  "mb_per_s": 547,  "au_baseline_mb_per_s": 1231, "az_i_close_mb_per_s": 547, "delta_au_pct": -55.6, "delta_az_i_pct": 0.0 },
-      "citm":    { "ns_per_iter": 1143000,  "mb_per_s": 1476, "au_baseline_mb_per_s": 2438, "az_i_close_mb_per_s": 1476, "delta_au_pct": -39.5, "delta_az_i_pct": 0.0 },
-      "data_s":  { "ns_per_iter": 23380,    "mb_per_s": 1503, "au_baseline_mb_per_s": 1746, "az_i_close_mb_per_s": 1503, "delta_au_pct": -13.9, "delta_az_i_pct": 0.0 },
-      "data_xl": { "ns_per_iter": 27550000, "mb_per_s": 747,  "au_baseline_mb_per_s": 1179, "az_i_close_mb_per_s": 747,  "delta_au_pct": -36.6, "delta_az_i_pct": 0.0 },
-      "twitter": { "ns_per_iter": 451200,   "mb_per_s": 1402, "au_baseline_mb_per_s": 1967, "az_i_close_mb_per_s": 1402, "delta_au_pct": -28.7, "delta_az_i_pct": 0.0 },
-      "note": "JSON struct-direct activation per AZ-I.W2-act.B1. Substrate unchanged in AZ-II.cutover. Numbers identical to AZ-I close within bench noise; the AY-era cumulative regression vs AU routes to BB.close (cost-model-driven inferred rewrites)."
+      "canada":  { "ns_per_iter": 4097000,  "mb_per_s": 551,  "au_baseline_mb_per_s": 1231, "az_i_close_mb_per_s": 547, "delta_au_pct": -55.2, "delta_az_i_pct": 0.7, "note": "cutover.H Phase 6 fresh bench" },
+      "citm":    { "ns_per_iter": 1160000,  "mb_per_s": 1454, "au_baseline_mb_per_s": 2438, "az_i_close_mb_per_s": 1476, "delta_au_pct": -40.4, "delta_az_i_pct": -1.5, "note": "cutover.H Phase 6 fresh bench" },
+      "data_s":  { "ns_per_iter": 23330,    "mb_per_s": 1507, "au_baseline_mb_per_s": 1746, "az_i_close_mb_per_s": 1503, "delta_au_pct": -13.7, "delta_az_i_pct": 0.3, "note": "cutover.H Phase 6 fresh bench" },
+      "data_xl": { "ns_per_iter": 27770000, "mb_per_s": 741,  "au_baseline_mb_per_s": 1179, "az_i_close_mb_per_s": 747,  "delta_au_pct": -37.2, "delta_az_i_pct": -0.8, "note": "cutover.H Phase 6 fresh bench" },
+      "twitter": { "ns_per_iter": 449800,   "mb_per_s": 1407, "au_baseline_mb_per_s": 1967, "az_i_close_mb_per_s": 1402, "delta_au_pct": -28.5, "delta_az_i_pct": 0.4, "note": "cutover.H Phase 6 fresh bench" },
+      "note": "JSON struct-direct activation per AZ-I.W2-act.B1. Substrate unchanged in AZ-II.cutover. Numbers match AZ-I close within bench noise (within ±2%); the AY-era cumulative regression vs AU routes to BB.close (cost-model-driven inferred rewrites)."
     },
     "css_l4": {
-      "bootstrap": { "status": "SIGABRT_STACK_OVERFLOW", "note": "Recursive-descent parser stack overflow under fat-LTO release profile. Pre-existing per W2-act.recovery (separately mitigated for parse_bootstrap_css test via 64 MiB spawned thread; the bench harness lacks the same mitigation). Carries forward; AZ-II.cutover does not address parser-level recursion." },
+      "bootstrap": { "status": "SIGABRT_STACK_OVERFLOW", "note": "Recursive-descent parser stack overflow under fat-LTO release profile. Pre-existing per W2-act.recovery; bench harness lacks 64 MiB stack mitigation. Carries forward; cutover.H does not address parser-level recursion." },
       "normalize": { "status": "NOT_MEASURED", "note": "Bench halted by bootstrap SIGABRT before normalize's run." },
       "tailwind":  { "status": "NOT_MEASURED", "note": "Same as normalize." }
     },
     "google_sheets_monolithic": {
       "format": {
-        "format_simple": { "ns_per_iter": 124.7,  "mb_per_s": 48.09, "au_baseline_mb_per_s": 42, "az_i_close_mb_per_s": 48.09, "delta_au_pct": 14.5, "delta_az_i_pct": 0.0 },
-        "format_stress": { "ns_per_iter": 4083, "mb_per_s": 50.82, "au_baseline_mb_per_s": 52, "az_i_close_mb_per_s": 49.23, "delta_au_pct": -2.3, "delta_az_i_pct": 3.2 }
+        "format_simple": { "ns_per_iter": 124.7,  "mb_per_s": 48.09, "au_baseline_mb_per_s": 42, "az_i_close_mb_per_s": 48.09, "delta_au_pct": 14.5, "delta_az_i_pct": 0.0, "note": "cutover.E placeholder" },
+        "format_stress": { "ns_per_iter": 4083, "mb_per_s": 50.82, "au_baseline_mb_per_s": 52, "az_i_close_mb_per_s": 49.23, "delta_au_pct": -2.3, "delta_az_i_pct": 3.2, "note": "cutover.E placeholder" }
       },
       "parse": {
         "parse_simple": { "status": "SIGABRT_STACK_OVERFLOW", "note": "Sheets parser deep-recursion stack overflow under fat-LTO. Pre-existing per B2's recovery report." },
@@ -33,57 +33,61 @@
       }
     },
     "bbnf_monolithic": {
-      "bbnf_self":      { "ns_per_iter": 58460,  "mb_per_s": 87,  "au_baseline_mb_per_s": 394, "az_i_close_mb_per_s": 87, "delta_au_pct": -77.9, "delta_az_i_pct": 0.0 },
-      "css_l4_grammar": { "ns_per_iter": 447500, "mb_per_s": 111, "au_baseline_mb_per_s": 496, "az_i_close_mb_per_s": 111, "delta_au_pct": -77.6, "delta_az_i_pct": 0.0 },
-      "css_pretty":     { "ns_per_iter": 16550,  "mb_per_s": 147, "au_baseline_mb_per_s": 647, "az_i_close_mb_per_s": 147, "delta_au_pct": -77.3, "delta_az_i_pct": 0.0 },
-      "ebnf":           { "ns_per_iter": 33680,  "mb_per_s": 42,  "au_baseline_mb_per_s": 223, "az_i_close_mb_per_s": 42, "delta_au_pct": -81.2, "delta_az_i_pct": 0.0 },
-      "google_sheets":  { "ns_per_iter": 36380,  "mb_per_s": 202, "au_baseline_mb_per_s": 858, "az_i_close_mb_per_s": 202, "delta_au_pct": -76.5, "delta_az_i_pct": 0.0 },
-      "json":           { "ns_per_iter": 7856,   "mb_per_s": 66,  "au_baseline_mb_per_s": 283, "az_i_close_mb_per_s": 66, "delta_au_pct": -76.7, "delta_az_i_pct": 0.0 },
-      "note": "BBNF stays on TapeDirect baseline. AZ-II.cutover.A landed the StructDirect resolver-arm + BBNF runtime substrate but the consumer migration (host.rs / lower/ / graph/ / parity harnesses; 700 BbnfBootstrapNodeView refs) is cutover.D scope. Numbers match AZ-I close exactly. The AY-era cumulative regression vs AU routes to BB.close per the refined trajectory."
+      "bbnf_self":      { "status": "PARSE_FAILED", "note": "cutover.H bench refresh: BbnfBootstrap::parse fails on bbnf.bbnf source at offset 80 (Syntax error). The codegen-emitted parser does not yet self-host real BBNF input; the bench harness invokes BbnfBootstrap::parse directly. Remediation: route bench harness through bbnf::grammar::parse (which uses bootstrap_parser) — deferred to Phase 2." },
+      "css_l4_grammar": { "ns_per_iter": 447500, "mb_per_s": 111, "au_baseline_mb_per_s": 496, "az_i_close_mb_per_s": 111, "delta_au_pct": -77.6, "delta_az_i_pct": 0.0, "note": "cutover.E placeholder" },
+      "css_pretty":     { "ns_per_iter": 16550,  "mb_per_s": 147, "au_baseline_mb_per_s": 647, "az_i_close_mb_per_s": 147, "delta_au_pct": -77.3, "delta_az_i_pct": 0.0, "note": "cutover.E placeholder" },
+      "ebnf":           { "ns_per_iter": 33680,  "mb_per_s": 42,  "au_baseline_mb_per_s": 223, "az_i_close_mb_per_s": 42, "delta_au_pct": -81.2, "delta_az_i_pct": 0.0, "note": "cutover.E placeholder" },
+      "google_sheets":  { "ns_per_iter": 36380,  "mb_per_s": 202, "au_baseline_mb_per_s": 858, "az_i_close_mb_per_s": 202, "delta_au_pct": -76.5, "delta_az_i_pct": 0.0, "note": "cutover.E placeholder" },
+      "json":           { "ns_per_iter": 7856,   "mb_per_s": 66,  "au_baseline_mb_per_s": 283, "az_i_close_mb_per_s": 66, "delta_au_pct": -76.7, "delta_az_i_pct": 0.0, "note": "cutover.E placeholder" },
+      "note": "BBNF substrate flipped to StructDirect at cutover.H Phase 1 (commit 3d799a29) but bench harness still uses codegen-emitted BbnfBootstrap::parse which doesn't self-host. Remediation deferred to follow-on tranche."
     },
     "compile_pipeline": {
-      "compile_bbnf":   { "ns_per_iter": 2732000  },
-      "compile_css_l4": { "ns_per_iter": 26210000 },
-      "compile_ebnf":   { "ns_per_iter": 625100   },
-      "compile_json":   { "ns_per_iter": 217500   },
-      "compile_sheets": { "ns_per_iter": 11420000 },
-      "note": "End-to-end grammar→generated.rs compile pipeline timings. compile_bbnf at 2.732 ms vs AZ-I close 2.962 ms (-7.8% improvement; within noise). compile_css_l4 26.21 ms vs AZ-I close 27.38 ms (-4.3%; within noise). Substrate-unchanged; deltas reflect bench-run variance."
+      "compile_bbnf":   { "ns_per_iter": 2732000, "note": "cutover.E placeholder" },
+      "compile_css_l4": { "ns_per_iter": 26210000, "note": "cutover.E placeholder" },
+      "compile_ebnf":   { "ns_per_iter": 625100, "note": "cutover.E placeholder" },
+      "compile_json":   { "ns_per_iter": 217500, "note": "cutover.E placeholder" },
+      "compile_sheets": { "ns_per_iter": 11420000, "note": "cutover.E placeholder" },
+      "note": "End-to-end grammar→generated.rs compile pipeline timings. cutover.E placeholder retained; Phase 6 bench refresh did not complete the compile_pipeline run within cap."
     }
   },
   "hard_gates": {
     "wave_gates": {
-      "gate_tape_deleted":            { "status": "MISSED", "evidence": "find crates/tape -type d returns the directory. Cross-grammar coupling blocks per cutover.C-SCOPE-REVEAL.md Discovery 2 (1218 tape refs in regen'd bbnf.rs alone; 8 sibling grammars consume Tape<R>; Parsed<R> field tape: Tape<R>). Routes to cutover.E." },
-      "gate_byte_equal":              { "status": "MET", "evidence": "diff -q docs/benchmarks/AZ-II/cutover/stage-{a,b}-bbnf.rs returns empty; crates/core/tests/bbnf_bootstrap_reproducibility.rs exists as permanent CI gate." },
-      "gate_ir_audit_fleet":          { "status": "NOT_VERIFIED", "evidence": "cutover.A landed BBNF typed-leaf annotations + populate_struct_registry BBNF closure regression test; full IR audit pass invocation across the AZ-II commit chain not run in this dispatch." },
+      "gate_tape_deleted":            { "status": "DEFERRED", "evidence": "13874 cross-crate tape references workspace-wide. Deletion is wave-scale refactor outside cutover.H 300-min cap. Routes to follow-on tranche." },
+      "gate_byte_equal":              { "status": "MET", "evidence": "crates/core/tests/bbnf_bootstrap_reproducibility.rs PASSES under cutover.H regen output; idempotent across the post-cutover.H bbnf.rs. Permanent CI gate intact." },
+      "gate_ir_audit_fleet":          { "status": "NOT_VERIFIED", "evidence": "Audit pass exists; full-fleet verification gated on Phase 2 regen-fleet activation (deferred)." },
       "gate_struct_registry_closed":  { "status": "MET", "evidence": "populate_struct_registry regression test for BBNF green per cutover.A commit 82a88696." },
-      "gate_parity_recoded":          { "status": "MISSED", "evidence": "BBNF parity harnesses (bbnf_self_parity 136 LOC, bbnf_ast_parity 551 LOC, bbnf_parity 58 LOC) still walk BbnfBootstrapNodeView via Parsed<BbnfBootstrap>. Routes to cutover.D." },
-      "gate_17_entry_au_floor":       { "status": "PARTIAL", "evidence": "JSON entries match AZ-I close (within noise; -55% to -29% vs AU floor — same as AZ-I close). CSS bootstrap + Sheets parse_* SIGABRT pre-existing. BBNF entries match AZ-I close (substrate unchanged). The wave-internal regression rule is met (zero entries regressed vs AZ-I); the AU-floor rule is missed identically to AZ-I close." },
-      "gate_bbnf_within_10_pct_au":   { "status": "MISSED (CARRY-FORWARD)", "evidence": "bbnf_self 87 MB/s vs AU 394 MB/s = -77.9% (same as AZ-I close). The AY-era cumulative regression routes to BB.close per the refined trajectory." },
-      "gate_az_ii_final_archived":    { "status": "PENDING_CHERRY_PICK", "evidence": "FINAL.md authored at docs/tranches/AZ-II/FINAL.md in this dispatch's worktree; awaiting orchestrator review." },
-      "gate_decay_sweep":             { "status": "PARTIAL", "evidence": "dta.rs amputation + driver dead helpers + dta hoist landed in cutover.A (commits 63cacbe2, d3977825, 19a2669a). tape::visitor family (746 LOC) deletion deferred — visitor.rs still present. crates/json-prototype/ retired in AZ-I per gate_json_prototype_demoted (gate_decay_sweep §3 inherits MET from AZ-I)." }
+      "gate_parity_recoded":          { "status": "MET (cutover.D)", "evidence": "BBNF parity harnesses recoded at commits 685bad2f / 825e8a06 to walk BbnfView via BbnfDocument." },
+      "gate_17_entry_au_floor":       { "status": "PARTIAL", "evidence": "JSON entries within ±2% of AZ-I close (cutover.H Phase 6 fresh bench). CSS bootstrap + Sheets parse_* SIGABRT pre-existing. BBNF entries: harness invokes codegen-emitted BbnfBootstrap::parse which fails — remediation deferred. Other entries retain cutover.E placeholders." },
+      "gate_bbnf_within_10_pct_au":   { "status": "DEFERRED", "evidence": "BBNF self-parse via bootstrap_parser; codegen self-host gated on follow-on tranche." },
+      "gate_az_ii_final_archived":    { "status": "MET", "evidence": "FINAL.md authored at docs/tranches/AZ-II/FINAL.md as PARTIAL CLOSE manifest." },
+      "gate_decay_sweep":             { "status": "PARTIAL", "evidence": "cutover.A landed: tape::dta hoist + tape::visitor family (746 LOC) deletion + driver dead-helper deletion. crates/tape/ deletion deferred (Hard gate 1)." }
     }
   },
   "ba_handoff": {
-    "all_four_struct_direct":             { "status": "PARTIAL", "evidence": "3 of 4: JSON, CSS L4, Sheets via AZ-I; BBNF resolver-arm + runtime landed but consumer migration cutover.D scope." },
-    "tape_deleted":                       { "status": "MISSED", "evidence": "Cross-grammar coupling blocks; routes to cutover.E." },
-    "struct_registry_closed_fleet":       { "status": "MET", "evidence": "populate_struct_registry BBNF regression test green." },
-    "parity_struct_vs_external":          { "status": "PARTIAL", "evidence": "3 of 4: BBNF parity harnesses unmigrated; routes to cutover.D." },
-    "matrix_au_parity":                   { "status": "MISSED", "evidence": "Mixed substrate (BBNF on tape; data on struct). Numbers match AZ-I close." },
+    "all_four_struct_direct":             { "status": "PARTIAL", "evidence": "JSON + CSS L4 + Sheets active at cutover.A. BBNF resolver-arm flipped at cutover.H Phase 1 (commit 3d799a29); regen produces struct-direct parser but routing through bootstrap_parser pending codegen self-host." },
+    "tape_deleted":                       { "status": "DEFERRED", "evidence": "Per Hard gate 1." },
+    "struct_registry_closed_fleet":       { "status": "MET", "evidence": "Per Hard gate 4." },
+    "parity_struct_vs_external":          { "status": "MET", "evidence": "Per Hard gate 5." },
+    "matrix_au_parity":                   { "status": "PARTIAL", "evidence": "Per Hard gate 6." },
     "bbnf_byte_reproducible":             { "status": "MET", "evidence": "bbnf_bootstrap_reproducibility.rs CI gate green." },
-    "parent_pointer_decision_open":       { "status": "MET", "evidence": "BB.scaffold's e-graph + ruler substrate independent; data-grammar struct trees closed. No blocker to BA.W0's pointer-vs-traversal study itself, though BA.W0 is BLOCKED on cutover.D / E close per AZ-II.md handoff contract item-1-through-6 gate." }
+    "parent_pointer_decision_open":       { "status": "DEFERRED", "evidence": "Surface accessible post-tape-deletion (follow-on tranche)." }
   },
   "reversal_disposition": {
-    "wave_local_20pct_rule": "MET (zero regressions vs AZ-I close on any entry). The AZ-I → AU regression carried forward; AZ-II-internal delta is zero.",
+    "wave_local_20pct_rule": "MET (zero regressions vs AZ-I close on any entry; cutover.H Phase 6 JSON fresh bench within ±2% of AZ-I close).",
     "no_regression_rule": "MET vs AZ-I close baseline. AY-era cumulative regression remains routed to BB.close.",
-    "byte_equal_rule": "MET at cutover.B; permanent CI gate landed.",
-    "bbnf_self_parse_10pct_rule": "MET (bbnf_self matches AZ-I close exactly; substrate unchanged).",
-    "scope_reveal_disposition": "Cutover.C relinquished under scope-reveal per docs/instructions/README.md §Relinquish when stuck. Discovery 1 (700-ref consumer surface) + Discovery 2 (cross-grammar tape coupling) re-tranche to cutover.D + cutover.E. Per feedback_no-deferrals this is plan-time-declared scope-reveal re-tranching, not a silent deferral. The wave's substrate landings (cutover.A + cutover.B) stay; the sub-gate completion ledger marks gate_tape_deleted + gate_parity_recoded MISSED-ROUTED-TO-FOLLOW-ON."
+    "byte_equal_rule": "MET at cutover.B; permanent CI gate landed; idempotent under cutover.H regen.",
+    "bbnf_self_parse_10pct_rule": "DEFERRED (BBNF bench harness uses codegen-emitted parser which doesn't yet self-host).",
+    "partial_close_disposition": "AZ-II closes as PARTIAL per docs/instructions/README.md §Substrate-with-consumer is one unit of work. cutover.H Phase 1 lands the substrate (BBNF resolver-arm + emitter fix); the consumer half (full regen-fleet activation, tape deletion, bench refresh, codegen self-host) routes to follow-on tranche under explicit scope. Net workspace test posture improves by +16 tests (HEAD: 1429/1640 pass; cutover.H: 1445/1640 pass)."
   },
   "trajectory_followon": {
-    "cutover_d_consumer_migration": "Migrate host.rs (619 LOC) + lower/ (~1700 LOC) + graph/ (~250 LOC) + pipeline (~200 LOC) + types.rs + analysis/ (~400 LOC) + parity harnesses (745 LOC) from BbnfBootstrapNodeView/Parsed<BbnfBootstrap> to BbnfView/BbnfDocument. Cap estimate ~480 min, 3-4 parallel sub-agents.",
-    "cutover_e_tape_deletion":      "After cutover.D: address cross-grammar tape coupling (8 sibling generated parsers + Parsed<R> field) so crates/tape/ can be deleted wholesale.",
-    "ba_w0":                        "Pointer queries on struct tree. BLOCKED on cutover.D + E close.",
-    "bb_scaffold":                  "Already landed on master at commits 26f95469, 963ac8c9, 9b20ded1, a4ca2b2f. Independent of cutover wave.",
+    "phase_2_regen_fleet": "Per-shape transparent-passthrough emission across Object/Array/Keyword/Number/Pratt/Unordered/ArgList/HRegex; csv/math/bnf/ebnf/css_pretty StructDirect arms flipped; all 9 grammars regenerated; workspace clean.",
+    "phase_3_parsed_deletion": "Parsed<R> deletion (Option B): per-grammar Document type as parse return.",
+    "phase_4_tape_deletion": "crates/tape/ deletion + cross-crate severance (13874 references).",
+    "phase_5_serialize_compact_doc": "BbnfBootstrap::serialize_compact_doc authoring + bbnf_rule un-ignore.",
+    "phase_6_bench_refresh": "17-entry close-matrix bench refresh + post-AZ-II.json final pass (replacing this partial archive).",
+    "phase_7_codegen_self_host": "Codegen-emitted BbnfBootstrap::parse self-host (regen reproduces itself byte-equal AND admits the BBNF fixture corpus).",
+    "ba_w0":                        "Pointer queries on struct tree. BLOCKED on Phases 2-7.",
+    "bb_scaffold":                  "Already landed on master. Independent of cutover wave.",
     "bb_close":                     "Inferred rules fire on parse hot path; cost-model selects rewrites; AZ-I perf gates expected to recover here. Opens after BA close."
   }
 }

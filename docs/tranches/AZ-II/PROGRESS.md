@@ -87,7 +87,7 @@ The cutover wave runs in three sequential sub-stages:
 | W0 | superseded (2026-04-28) | Folded into cutover.A (substrate hoist + BBNF runtime + decay sweep) |
 | W1 | superseded (2026-04-28) | Folded into cutover.B (Stage A + Stage B byte-equal cycle) |
 | W2 | superseded (2026-04-28) | Folded into cutover.C (`crates/tape/` deletion + recode + FINAL) |
-| cutover | partial-close (cutover.A through cutover.G LANDED; cutover.H emitter fix + close ceremony pending) | BBNF self-host + tape deletion ([waves/cutover.md](waves/cutover.md)) |
+| cutover | partial-close (cutover.A through cutover.H Phase 1 LANDED; tape deletion + non-BBNF regen-fleet activation deferred) | BBNF self-host substrate canonical; tape deletion routes to follow-on tranche ([waves/cutover.md](waves/cutover.md)) |
 
 ## 2026-04-28 — cutover.G partial close
 
@@ -118,10 +118,75 @@ cutover.G commits:
 - `2060dd8d` fix(cutover.G): leaf-shape rules emit Span directly
   + type-keyword filter
 
-PARTIAL close report at `docs/tranches/AZ-II/cutover.G-PARTIAL.md`
-(373 LOC) details the strategy analysis, Phase 1.b regen success,
-Phase 1.c emitter fix scope, and the cutover.H sub-phase plan
-(estimated 2-3 hour cap to close AZ-II).
+PARTIAL close report at `docs/tranches/AZ-II/audit/cutover.G-PARTIAL.md`
+(393 LOC, archived at cutover.H close) details the strategy
+analysis, Phase 1.b regen success, Phase 1.c emitter fix scope,
+and the cutover.H sub-phase plan.
+
+## 2026-04-28 — cutover.H Phase 0 + Phase 1 + AZ-II PARTIAL close
+
+cutover.H lands the BBNF resolver-arm re-flip + transparent-rule
+emitter fix that cutover.E deferred at `9f40f17c`. Phase 0
+(`42e0906b`) lands the validator value-expression-subtree skip in
+`graph::deps::collect_refs_from_compound` so the JSON regen-check
+no longer mis-classifies host-fn idents as nonterminal refs.
+Phase 1 (`3d799a29`) re-flips the BBNF resolver-arm at
+`crates/ir/src/registry/strategy.rs::for_grammar` and lands the
+transparent-rule wrap-fn fix at `shapes/mod.rs:202` (gate on
+`!is_struct_direct()`-AND-non-Wrap retains the legacy skip;
+Wrap-classified transparent rules under StructDirect emit a
+transparency-aware body via the new `emit_alt_struct_dispatch_transparent`
+in `shapes/wrap/struct_direct.rs`). The bootstrap_parser's
+`parse_pretty_hint` now pushes the parenthesised arg span as a
+child Span so `sep("...")` hints emit canonical strings.
+
+cutover.H Phase 1 commits:
+- `3d799a29` feat(cutover.H): re-flip BBNF resolver-arm +
+  transparent-rule emitter fix
+- `1513328e` docs(cutover.H): document Phase 5 deferral —
+  bbnf_rule serialize_roundtrip
+
+Test posture vs HEAD: +16 tests fixed (1429 → 1445 pass);
+zero new failures introduced.
+
+Phases 2-7 partial / deferred:
+- **Phase 2** (non-BBNF resolver-arm fleet activation) — DEFERRED.
+  The cutover.H emitter changes alter regen output for css_pretty /
+  css_l4 / google_sheets in ways that surface previously-latent
+  shape-classification issues (transparent rules under non-Wrap
+  shapes). Resolution requires per-shape transparent-passthrough
+  emission across Object/Array/Keyword/Number/Pratt/Unordered/
+  ArgList/HRegex emitters — wave-scale refactor.
+- **Phase 3** (`Parsed<R>` deletion) — DEFERRED. 126 cross-crate
+  references; per-crate site replacement is wave-scale.
+- **Phase 4** (`crates/tape/` deletion) — DEFERRED. 13874
+  cross-crate references; deletion is wave-scale.
+- **Phase 5** (`bbnf_rule` un-ignore) — PARTIAL (`1513328e`).
+  Documented deferral; the naive `span_range`-based serializer
+  drops mandatory terminators (`;`); requires authoring
+  `BbnfBootstrap::serialize_compact_doc` (typed walker over
+  BbnfDocument materialising non-Span literals).
+- **Phase 6** (17-entry close matrix bench) — PARTIAL. JSON bench
+  refresh captured; bbnf bench fails because divan harness uses
+  `BbnfBootstrap::parse` directly which doesn't yet self-host;
+  CSS L4 + Sheets parse_* SIGABRT pre-existing; compile_pipeline
+  bench did not complete within cap. `docs/benchmarks/post-AZ-II.json`
+  refreshed with cutover.H Phase 6 JSON values + cutover.E
+  placeholder retention for non-BBNF deferred entries.
+- **Phase 7** (FINAL.md + PROGRESS close) — MET (this commit
+  series). `docs/tranches/AZ-II/FINAL.md` authored as PARTIAL CLOSE
+  manifest. `docs/tranches/AZ-II/audit/cutover.G-PARTIAL.md`
+  archived alongside C/E/F partials.
+
+AZ-II closes as **PARTIAL** per `docs/instructions/README.md`
+§"Substrate-with-consumer is one unit of work". The substrate
+(cutover.A through cutover.H Phase 1) is canonical; the consumer
+half (full regen-fleet activation, tape deletion, bench refresh,
+codegen self-host) routes to a follow-on tranche under explicit
+scope.
+
+Master HEAD at AZ-II close: tracked in cutover.H worktree;
+cherry-picks gated on orchestrator review.
 
 ## Handoff
 

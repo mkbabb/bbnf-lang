@@ -1,158 +1,294 @@
    Compiling bitflags v2.11.0
-   Compiling csp-solver v0.1.0 (/private/tmp/bbnf-worktrees/cutover-C/crates/csp-solver)
+   Compiling csp-solver v0.1.0 (/private/tmp/bbnf-worktrees/cutover-H2/crates/csp-solver)
    Compiling typeid v1.0.3
    Compiling pprint_derive v0.2.2 (/private/tmp/bbnf-worktrees/pprint/rust/derive)
-   Compiling egraph-derive v0.1.0 (/private/tmp/bbnf-worktrees/cutover-C/crates/egraph-derive)
-   Compiling bbnf-ser v0.1.0 (/private/tmp/bbnf-worktrees/cutover-C/crates/ser)
-   Compiling pprint v0.3.6 (/private/tmp/bbnf-worktrees/pprint/rust)
+   Compiling egraph-derive v0.1.0 (/private/tmp/bbnf-worktrees/cutover-H2/crates/egraph-derive)
+   Compiling bbnf-ser v0.1.0 (/private/tmp/bbnf-worktrees/cutover-H2/crates/ser)
    Compiling rustix v1.1.4
    Compiling wasmparser v0.221.3
    Compiling rustix v0.38.44
    Compiling parcel_selectors v0.28.2
    Compiling fxprof-processed-profile v0.6.0
-   Compiling ron v0.12.1
-   Compiling egraph v0.1.0 (/private/tmp/bbnf-worktrees/cutover-C/crates/egraph)
-   Compiling wasmtime-fiber v29.0.1
-   Compiling wasmtime-cache v29.0.1
+   Compiling pprint v0.3.6 (/private/tmp/bbnf-worktrees/pprint/rust)
    Compiling terminal_size v0.4.4
    Compiling tempfile v3.27.0
+   Compiling wasmtime-fiber v29.0.1
+   Compiling wasmtime-cache v29.0.1
    Compiling clap_builder v4.6.0
-   Compiling bbnf-regex v0.1.0 (/private/tmp/bbnf-worktrees/parse-that/rust/regex)
-   Compiling lightningcss v1.0.0-alpha.71
-   Compiling parse_that v0.4.0 (/private/tmp/bbnf-worktrees/parse-that/rust/parse_that)
    Compiling clap v4.6.1
    Compiling divan v0.1.21
    Compiling wasmprinter v0.221.3
    Compiling wasmtime-environ v29.0.1
-   Compiling bbnf-ir v0.1.6 (/private/tmp/bbnf-worktrees/cutover-C/crates/ir)
+   Compiling ron v0.12.1
+   Compiling egraph v0.1.0 (/private/tmp/bbnf-worktrees/cutover-H2/crates/egraph)
    Compiling wasmtime-cranelift v29.0.1
+   Compiling bbnf-regex v0.1.0 (/private/tmp/bbnf-worktrees/parse-that/rust/regex)
    Compiling wasmtime v29.0.1
-   Compiling tape v0.1.0 (/private/tmp/bbnf-worktrees/cutover-C/crates/tape)
-   Compiling simd-scan v0.1.0 (/private/tmp/bbnf-worktrees/cutover-C/crates/simd-scan)
-   Compiling bbnf v0.2.11 (/private/tmp/bbnf-worktrees/cutover-C/crates/core)
-   Compiling json-prototype v0.1.0 (/private/tmp/bbnf-worktrees/cutover-C/crates/core/benches/json-prototype)
+   Compiling lightningcss v1.0.0-alpha.71
+   Compiling parse_that v0.4.0 (/private/tmp/bbnf-worktrees/parse-that/rust/parse_that)
+   Compiling bbnf-ir v0.1.6 (/private/tmp/bbnf-worktrees/cutover-H2/crates/ir)
+   Compiling tape v0.1.0 (/private/tmp/bbnf-worktrees/cutover-H2/crates/tape)
+   Compiling simd-scan v0.1.0 (/private/tmp/bbnf-worktrees/cutover-H2/crates/simd-scan)
+   Compiling json-prototype v0.1.0 (/private/tmp/bbnf-worktrees/cutover-H2/crates/core/benches/json-prototype)
+   Compiling bbnf v0.2.11 (/private/tmp/bbnf-worktrees/cutover-H2/crates/core)
 warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
-     --> crates/core/src/grammar/generated/bbnf.rs:30002:69
+     --> crates/core/src/grammar/generated/bbnf.rs:24049:69
       |
-30002 | / ...                   break 'avx2_scan {
-30003 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
-30004 | | ...                   };
+24049 | / ...                   break 'avx2_scan {
+24050 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+24051 | | ...                   };
       | |_______________________^
       |
       = note: `#[warn(break_with_label_and_loop)]` on by default
 help: wrap this expression in parentheses
       |
-30002 ~                                                                     break 'avx2_scan ({
-30003 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
-30004 ~                                                                     });
+24049 ~                                                                     break 'avx2_scan ({
+24050 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+24051 ~                                                                     });
       |
 
 warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
-     --> crates/core/src/grammar/generated/bbnf.rs:30021:69
+     --> crates/core/src/grammar/generated/bbnf.rs:24068:69
       |
-30021 | / ...                   break 'avx2_scan {
-30022 | | ...                       ::core::option::Option::Some(__i - __start)
-30023 | | ...                   };
+24068 | / ...                   break 'avx2_scan {
+24069 | | ...                       ::core::option::Option::Some(__i - __start)
+24070 | | ...                   };
       | |_______________________^
       |
 help: wrap this expression in parentheses
       |
-30021 ~                                                                     break 'avx2_scan ({
-30022 |                                                                         ::core::option::Option::Some(__i - __start)
-30023 ~                                                                     });
+24068 ~                                                                     break 'avx2_scan ({
+24069 |                                                                         ::core::option::Option::Some(__i - __start)
+24070 ~                                                                     });
       |
 
 warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
-     --> crates/core/src/grammar/generated/bbnf.rs:30179:69
+     --> crates/core/src/grammar/generated/bbnf.rs:24224:69
       |
-30179 | / ...                   break 'avx2_scan {
-30180 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
-30181 | | ...                   };
+24224 | / ...                   break 'avx2_scan {
+24225 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+24226 | | ...                   };
       | |_______________________^
       |
 help: wrap this expression in parentheses
       |
-30179 ~                                                                     break 'avx2_scan ({
-30180 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
-30181 ~                                                                     });
+24224 ~                                                                     break 'avx2_scan ({
+24225 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+24226 ~                                                                     });
       |
 
 warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
-     --> crates/core/src/grammar/generated/bbnf.rs:30198:69
+     --> crates/core/src/grammar/generated/bbnf.rs:24243:69
       |
-30198 | / ...                   break 'avx2_scan {
-30199 | | ...                       ::core::option::Option::Some(__i - __start)
-30200 | | ...                   };
+24243 | / ...                   break 'avx2_scan {
+24244 | | ...                       ::core::option::Option::Some(__i - __start)
+24245 | | ...                   };
       | |_______________________^
       |
 help: wrap this expression in parentheses
       |
-30198 ~                                                                     break 'avx2_scan ({
-30199 |                                                                         ::core::option::Option::Some(__i - __start)
-30200 ~                                                                     });
+24243 ~                                                                     break 'avx2_scan ({
+24244 |                                                                         ::core::option::Option::Some(__i - __start)
+24245 ~                                                                     });
       |
 
 warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
-     --> crates/core/src/grammar/generated/bbnf.rs:32582:69
+     --> crates/core/src/grammar/generated/bbnf.rs:25103:69
       |
-32582 | / ...                   break 'avx2_scan {
-32583 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
-32584 | | ...                   };
+25103 | / ...                   break 'avx2_scan {
+25104 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+25105 | | ...                   };
       | |_______________________^
       |
 help: wrap this expression in parentheses
       |
-32582 ~                                                                     break 'avx2_scan ({
-32583 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
-32584 ~                                                                     });
+25103 ~                                                                     break 'avx2_scan ({
+25104 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+25105 ~                                                                     });
       |
 
 warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
-     --> crates/core/src/grammar/generated/bbnf.rs:32601:69
+     --> crates/core/src/grammar/generated/bbnf.rs:25122:69
       |
-32601 | / ...                   break 'avx2_scan {
-32602 | | ...                       ::core::option::Option::Some(__i - __start)
-32603 | | ...                   };
+25122 | / ...                   break 'avx2_scan {
+25123 | | ...                       ::core::option::Option::Some(__i - __start)
+25124 | | ...                   };
       | |_______________________^
       |
 help: wrap this expression in parentheses
       |
-32601 ~                                                                     break 'avx2_scan ({
-32602 |                                                                         ::core::option::Option::Some(__i - __start)
-32603 ~                                                                     });
+25122 ~                                                                     break 'avx2_scan ({
+25123 |                                                                         ::core::option::Option::Some(__i - __start)
+25124 ~                                                                     });
       |
 
 warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
-     --> crates/core/src/grammar/generated/bbnf.rs:33665:81
+     --> crates/core/src/grammar/generated/bbnf.rs:29186:81
       |
-33665 | / ...                   break 'avx2_scan {
-33666 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
-33667 | | ...                   };
+29186 | / ...                   break 'avx2_scan {
+29187 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+29188 | | ...                   };
       | |_______________________^
       |
 help: wrap this expression in parentheses
       |
-33665 ~                                                                                 break 'avx2_scan ({
-33666 |                                                                                     ::core::option::Option::Some((__i + __rel) - __start)
-33667 ~                                                                                 });
+29186 ~                                                                                 break 'avx2_scan ({
+29187 |                                                                                     ::core::option::Option::Some((__i + __rel) - __start)
+29188 ~                                                                                 });
       |
 
 warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
-     --> crates/core/src/grammar/generated/bbnf.rs:33684:81
+     --> crates/core/src/grammar/generated/bbnf.rs:29205:81
       |
-33684 | / ...                   break 'avx2_scan {
-33685 | | ...                       ::core::option::Option::Some(__i - __start)
-33686 | | ...                   };
+29205 | / ...                   break 'avx2_scan {
+29206 | | ...                       ::core::option::Option::Some(__i - __start)
+29207 | | ...                   };
       | |_______________________^
       |
 help: wrap this expression in parentheses
       |
-33684 ~                                                                                 break 'avx2_scan ({
-33685 |                                                                                     ::core::option::Option::Some(__i - __start)
-33686 ~                                                                                 });
+29205 ~                                                                                 break 'avx2_scan ({
+29206 |                                                                                     ::core::option::Option::Some(__i - __start)
+29207 ~                                                                                 });
       |
 
-warning: `bbnf` (lib) generated 8 warnings (run `cargo fix --lib -p bbnf` to apply 8 suggestions)
+warning: function `lower_string_lit` is never used
+   --> crates/core/src/lower/value_expr/atom.rs:487:15
+    |
+487 | pub(super) fn lower_string_lit<'a, 'p: 'a>(
+    |               ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:3888:20
+     |
+3888 |                 if __iter_count < 0u32 {
+     |                    ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_comparisons)]` on by default
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:4126:20
+     |
+4126 |                 if __iter_count < 0u32 {
+     |                    ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:4271:20
+     |
+4271 |                 if __iter_count < 0u32 {
+     |                    ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:4440:20
+     |
+4440 |                 if __iter_count < 0u32 {
+     |                    ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:4668:20
+     |
+4668 |                 if __iter_count < 0u32 {
+     |                    ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:4825:20
+     |
+4825 |                 if __iter_count < 0u32 {
+     |                    ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:4921:20
+     |
+4921 |                 if __iter_count < 0u32 {
+     |                    ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:5091:20
+     |
+5091 |                 if __iter_count < 0u32 {
+     |                    ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:5840:20
+     |
+5840 |                 if __iter_count < 0u32 {
+     |                    ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:6534:20
+     |
+6534 |                 if __iter_count < 0u32 {
+     |                    ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:6824:20
+     |
+6824 |                 if __iter_count < 0u32 {
+     |                    ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:6962:32
+     |
+6962 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:7117:32
+     |
+7117 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:7275:32
+     |
+7275 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:7437:20
+     |
+7437 |                 if __iter_count < 0u32 {
+     |                    ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:7834:20
+     |
+7834 |                 if __iter_count < 0u32 {
+     |                    ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:7898:20
+     |
+7898 |                 if __iter_count < 0u32 {
+     |                    ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:7950:20
+     |
+7950 |                 if __iter_count < 0u32 {
+     |                    ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:8099:32
+     |
+8099 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:8122:20
+     |
+8122 |                 if __iter_count < 0u32 {
+     |                    ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:8436:20
+     |
+8436 |                 if __iter_count < 0u32 {
+     |                    ^^^^^^^^^^^^^^^^^^^
+
+warning: `bbnf` (lib) generated 30 warnings (run `cargo fix --lib -p bbnf` to apply 8 suggestions)
 warning: unused import: `RuntimeView`
   --> crates/core/benches/json/monolithic.rs:10:33
    |
@@ -162,13 +298,13 @@ warning: unused import: `RuntimeView`
    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
 
 warning: `bbnf` (bench "json_monolithic") generated 1 warning
-    Finished `bench` profile [optimized + debuginfo] target(s) in 1m 29s
+    Finished `bench` profile [optimized + debuginfo] target(s) in 1m 26s
      Running benches/json/monolithic.rs (target/release/deps/json_monolithic-6ea0f3d77c2ca1c0)
 Timer precision: 41 ns
 json_monolithic  fastest       │ slowest       │ median        │ mean          │ samples │ iters
-├─ canada        4.053 ms      │ 4.317 ms      │ 4.121 ms      │ 4.128 ms      │ 100     │ 100
-├─ citm          1.137 ms      │ 1.156 ms      │ 1.141 ms      │ 1.143 ms      │ 100     │ 100
-├─ data_s        22.87 µs      │ 30.66 µs      │ 23.2 µs       │ 23.38 µs      │ 100     │ 100
-├─ data_xl       27.18 ms      │ 28.35 ms      │ 27.44 ms      │ 27.55 ms      │ 100     │ 100
-╰─ twitter       438.6 µs      │ 472.7 µs      │ 449.4 µs      │ 451.2 µs      │ 100     │ 100
+├─ canada        4.031 ms      │ 4.421 ms      │ 4.078 ms      │ 4.097 ms      │ 100     │ 100
+├─ citm          1.141 ms      │ 1.217 ms      │ 1.155 ms      │ 1.16 ms       │ 100     │ 100
+├─ data_s        22.7 µs       │ 26.04 µs      │ 23.2 µs       │ 23.33 µs      │ 100     │ 100
+├─ data_xl       27.22 ms      │ 28.86 ms      │ 27.7 ms       │ 27.77 ms      │ 100     │ 100
+╰─ twitter       439.8 µs      │ 489.4 µs      │ 447.6 µs      │ 449.8 µs      │ 100     │ 100
 

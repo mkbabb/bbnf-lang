@@ -120,12 +120,29 @@ impl EmitStrategy {
             // generated parser ident (`JsonParser`) and the plan's
             // nominal name (`JsonGrammar`) admit; the latter exists
             // for forward-compat with hand-written test fixtures.
-            ("JsonParser" | "JsonGrammar", true) => EmitStrategy::StructDirect {
-                builder_path: "::bbnf::runtime::JsonStructBuilder",
-                document_path: "::bbnf::runtime::JsonDocument",
-            },
-            // Everything else — tape-direct. Includes BBNF / BNF /
-            // EBNF / CSV / math / CSS / Sheets pre-W2.B / W3.
+            // AZ-I.W2 close ceremony: substrate lands but activation
+            // reverts to TapeDirect per W2.md §Reversal. Three blockers
+            // surfaced during regen integration that exceed W2's wave
+            // budget: (a) `parsed.view()` / `parsed.to_value()` callers
+            // across 3 existing tests (`json_slab`, `projection_totality`,
+            // `typed_accessor_surface`) require migration to a
+            // `JsonDocument` accessor API that hasn't yet been authored;
+            // (b) the sonic-rs / simdjson OnDemand / serde_json parity
+            // harnesses still compare `Parsed<JsonGrammar>` outputs and
+            // haven't been recoded against `JsonDocument`; (c) the
+            // `cargo bench` gate (twitter ≥ 1967, canada ≥ 1231,
+            // citm ≥ 2438) has not been run on the struct-only path.
+            // The substrate is complete (StructBuilder trait, JSON
+            // runtime, EmitStrategy, 9 per-shape struct-direct paths
+            // including Object / Array / Number / String / Scalar /
+            // Keyword / Wrap / AltDispatch / Flat); a follow-on wave
+            // (AZ-I.W2-act, opening on this close) lands the
+            // activation by extending the resolver here.
+            //
+            // Per `feedback_no-orthogonal-codepaths` no co-emission;
+            // per `feedback_no-backward-compat` no Parsed-shim; the
+            // resolver's all-TapeDirect close is the wave-local revert
+            // W2.md §Reversal calls for, NOT a fallback path.
             _ => EmitStrategy::TapeDirect,
         }
     }

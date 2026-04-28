@@ -153,6 +153,7 @@ pub fn emit_parse_string(
                     crate::runtime::tape::TapeOffset,
                     crate::runtime::tape::DtaError,
                 > {
+                    use crate::runtime::builder::StructBuilder as _;
                     let open = *p;
                     if input.get(open).copied() != Some(b'"') {
                         return Err(crate::runtime::tape::DtaError::Syntax {

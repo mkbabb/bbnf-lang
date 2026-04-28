@@ -447,6 +447,7 @@ fn emit_parse_object_struct_direct(
     let fn_ident = shape_fn_ident("object", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let rule_id_lit = rule.id;
+    let rule_name_lit = rule_name.to_string();
 
     let dispatcher_ident = match root_rule_name(ir) {
         Some(root) => {
@@ -483,11 +484,14 @@ fn emit_parse_object_struct_direct(
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
         pub fn #fn_ident<'p>(
-            input: &[u8],
+            input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut crate::runtime::JsonStructBuilder<'p>,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<
+            crate::runtime::tape::TapeOffset,
+            crate::runtime::tape::DtaError,
+        > {
             use crate::runtime::builder::StructBuilder;
 
             if input.get(*p).copied() != Some(b'{') {
@@ -498,12 +502,19 @@ fn emit_parse_object_struct_direct(
                 });
             }
 
-            // AZ-I.W2.RB — open the object compound. Layout is W1.A-
-            // guaranteed for StructDirect; the .expect asserts the
-            // invariant rather than falling back.
-            let __layout = ir_struct_registry_layout(#rule_id_lit)
-                .expect("StructDirect requires populated layout for Object rule");
-            let __handle = builder.begin_compound(__layout);
+            // AZ-I.W2.RB — open the object compound. Inline layout
+            // literal mirrors W2.RD/RF's pattern; JsonStructBuilder's
+            // `begin_compound` consults `(kind, rule_name)` to route
+            // OpenFrame::Object.
+            let __layout: ::bbnf_ir::registry::StructLayout =
+                ::bbnf_ir::registry::StructLayout {
+                    rule_id: #rule_id_lit as ::bbnf_ir::RuleId,
+                    rule_name: ::std::string::String::from(#rule_name_lit),
+                    kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                    rule_type: ::bbnf_ir::TypeDesc::Span,
+                    fields: ::std::vec::Vec::new(),
+                };
+            let __handle = builder.begin_compound(&__layout);
 
             *p += 1;
             let _ = #support_mod::skip_space(input, p, state);
@@ -511,7 +522,7 @@ fn emit_parse_object_struct_direct(
             if input.get(*p).copied() == Some(b'}') {
                 *p += 1;
                 builder.end_compound(__handle);
-                return Ok(());
+                return Ok(crate::runtime::tape::TapeOffset::NONE);
             }
 
             loop {
@@ -550,7 +561,7 @@ fn emit_parse_object_struct_direct(
                     Some(b'}') => {
                         *p += 1;
                         builder.end_compound(__handle);
-                        return Ok(());
+                        return Ok(crate::runtime::tape::TapeOffset::NONE);
                     }
                     _ => return Err(crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,

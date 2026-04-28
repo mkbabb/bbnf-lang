@@ -18,12 +18,33 @@ use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
 use bbnf_ir::GrammarIR;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
+use syn::parse_str;
 
 use super::super::{has_shape_dispatch, root_rule_name};
 use super::shape_tag_name;
 use super::symbol_composition::{
     dispatcher_fn_ident, shape_fn_ident, visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
 };
+use crate::backend::rust::emitter::strategy::EmitStrategy;
+
+/// Build the dispatcher's `builder: &mut <Type>` parameter for the
+/// active emit strategy. TapeDirect grammars carry the legacy
+/// `crate::runtime::tape::Tape<()>` substrate; StructDirect grammars
+/// carry the per-grammar concrete struct-builder declared in the
+/// strategy variant (e.g. `crate::runtime::JsonStructBuilder<'_>`).
+fn dispatcher_builder_type(strategy: &EmitStrategy) -> TokenStream {
+    match strategy {
+        EmitStrategy::TapeDirect => quote! { crate::runtime::tape::Tape<()> },
+        EmitStrategy::StructDirect { builder_path, .. } => {
+            let path: syn::Path = parse_str(builder_path)
+                .unwrap_or_else(|_| panic!("invalid builder_path in EmitStrategy: {}", builder_path));
+            // Bind the builder's type parameter to `'p` so the dispatcher's
+            // input lifetime threads to per-shape calls (which all expect
+            // `&mut <Builder><'p>` matching `input: &'p [u8]`).
+            quote! { #path<'p> }
+        }
+    }
+}
 
 /// Emit the dispatcher fn — `parse_<grammar>_<root>`.
 ///
@@ -33,7 +54,16 @@ use super::symbol_composition::{
 /// object | array | string | number | bool | null` pattern); when the
 /// root is a single-shape rule (e.g. a top-level Array), the
 /// dispatcher emits a thin delegator.
-pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
+pub fn emit_dispatcher(
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+    strategy: &EmitStrategy,
+) -> TokenStream {
+    let builder_ty = dispatcher_builder_type(strategy);
+    let (lifetime_params, input_lifetime) = match strategy {
+        EmitStrategy::TapeDirect => (quote! {}, quote! { & }),
+        EmitStrategy::StructDirect { .. } => (quote! { <'p> }, quote! { &'p }),
+    };
     let Some(root_name) = root_rule_name(ir) else {
         return quote! {};
     };
@@ -149,11 +179,11 @@ pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
         /// recursion rationale.
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
-        pub fn #dispatcher_ident(
-            input: &[u8],
+        pub fn #dispatcher_ident #lifetime_params(
+            input: #input_lifetime [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::tape::Tape<()>,
+            builder: &mut #builder_ty,
         ) -> ::core::result::Result<
             crate::runtime::tape::TapeOffset,
             crate::runtime::tape::DtaError,
@@ -167,11 +197,11 @@ pub fn emit_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
         /// AX.W0a.2.f — compound; plain `#[inline]`.
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments)]
-        pub fn #nonroot_ident(
-            input: &[u8],
+        pub fn #nonroot_ident #lifetime_params(
+            input: #input_lifetime [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::tape::Tape<()>,
+            builder: &mut #builder_ty,
         ) -> ::core::result::Result<
             crate::runtime::tape::TapeOffset,
             crate::runtime::tape::DtaError,

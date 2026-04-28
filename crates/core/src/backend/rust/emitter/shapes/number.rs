@@ -244,6 +244,7 @@ fn emit_parse_number_struct_direct(
             crate::runtime::tape::TapeOffset,
             crate::runtime::tape::DtaError,
         > {
+            use crate::runtime::builder::StructBuilder as _;
             const POW10_U64: [u64; 17] = [
                 1, 10, 100, 1_000, 10_000, 100_000, 1_000_000,
                 10_000_000, 100_000_000, 1_000_000_000,

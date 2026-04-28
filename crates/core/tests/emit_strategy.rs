@@ -56,46 +56,34 @@ fn empty_registry() -> StructRegistry {
 }
 
 #[test]
-fn json_parser_with_populated_registry_routes_struct_direct() {
+fn json_parser_with_populated_registry_routes_tape_direct_post_w2_close() {
+    // AZ-I.W2 close ceremony: substrate landed but activation
+    // reverted to TapeDirect per W2.md §Reversal. JsonParser +
+    // populated registry resolves to TapeDirect until the W2-act
+    // follow-on wave migrates `parsed.view()` / `parsed.to_value()`
+    // callers, recodes the parity harnesses, and runs the cargo
+    // bench gate. The substrate (StructBuilder + JsonDocument +
+    // 9 per-shape struct-direct paths) exists; only the resolver
+    // arm activating it is gated.
     let registry = populated_registry();
     let strategy = EmitStrategy::for_grammar("JsonParser", &registry);
     assert!(
-        matches!(strategy, EmitStrategy::StructDirect { .. }),
-        "JsonParser + populated registry must route StructDirect, got {:?}",
+        matches!(strategy, EmitStrategy::TapeDirect),
+        "Post-W2-close: JsonParser + populated registry routes TapeDirect (activation gated on W2-act); got {:?}",
         strategy,
     );
-    if let EmitStrategy::StructDirect {
-        builder_path,
-        document_path,
-    } = strategy
-    {
-        assert_eq!(
-            builder_path, "::bbnf::runtime::JsonStructBuilder",
-            "AZ-I.W2.RA wire contract: builder_path must point at \
-             JsonStructBuilder via the runtime re-export",
-        );
-        assert_eq!(
-            document_path, "::bbnf::runtime::JsonDocument",
-            "AZ-I.W2.RA wire contract: document_path must point at \
-             JsonDocument via the runtime re-export",
-        );
-    }
 }
 
 #[test]
-fn json_grammar_alias_with_populated_registry_routes_struct_direct() {
-    // Forward-compat alias per W2-EMITTER-REWIRE plan §1: hand-
-    // written test fixtures using the nominal `"JsonGrammar"`
-    // identifier resolve identically to `"JsonParser"`. The two
-    // arms collapse onto one match in the resolver; the test
-    // pins the alias so a future refactor that drops it fails
-    // here visibly rather than silently downgrading hand-written
-    // fixtures to TapeDirect.
+fn json_grammar_alias_routes_tape_direct_post_w2_close() {
+    // Forward-compat alias resolves identically to JsonParser; the
+    // post-W2-close-ceremony resolver collapses both onto TapeDirect
+    // until W2-act activates struct-direct.
     let registry = populated_registry();
     let strategy = EmitStrategy::for_grammar("JsonGrammar", &registry);
     assert!(
-        matches!(strategy, EmitStrategy::StructDirect { .. }),
-        "JsonGrammar (alias) + populated registry must route StructDirect, got {:?}",
+        matches!(strategy, EmitStrategy::TapeDirect),
+        "Post-W2-close: JsonGrammar (alias) + populated registry routes TapeDirect; got {:?}",
         strategy,
     );
 }

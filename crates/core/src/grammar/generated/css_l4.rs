@@ -48824,8 +48824,8 @@ mod __cssl4parser_emit_impl {
         Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
     /// AX.W0a.2.b — per-grammar Scalar-shape parse function
-    /// (transparent-Ref body). Delegates to the target's
-    /// shape fn.
+    /// (transparent-Ref body, tape substrate). Delegates
+    /// to the target's shape fn.
     ///
     /// AX.W0a.2.f — compound (delegates via
     /// `emit_ref_call_tape`); plain `#[inline]`.

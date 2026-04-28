@@ -140,6 +140,7 @@ pub fn emit_parse_scalar(
                             crate::runtime::tape::TapeOffset,
                             crate::runtime::tape::DtaError,
                         > {
+                            use crate::runtime::builder::StructBuilder as _;
                             let at = *p;
                             let end = at + #len;
                             if input.len() < end || input[at..end] != [#(#byte_lits),*] {

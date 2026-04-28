@@ -241,11 +241,11 @@ pub(super) fn emit_parse_wrap_struct_direct(
         /// offset is unused by struct-direct callers.
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-        pub fn #fn_ident(
-            input: &[u8],
+        pub fn #fn_ident<'p>(
+            input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::JsonStructBuilder<'_>,
+            builder: &mut crate::runtime::JsonStructBuilder<'p>,
         ) -> ::core::result::Result<
             crate::runtime::tape::TapeOffset,
             crate::runtime::tape::DtaError,

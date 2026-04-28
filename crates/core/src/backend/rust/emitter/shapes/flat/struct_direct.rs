@@ -195,11 +195,11 @@ pub(super) fn emit_parse_flat_struct_direct(
         /// profitable and bails cleanly on detected recursion.
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-        pub fn #fn_ident(
-            input: &[u8],
+        pub fn #fn_ident<'p>(
+            input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::JsonStructBuilder<'_>,
+            builder: &mut crate::runtime::JsonStructBuilder<'p>,
         ) -> ::core::result::Result<
             crate::runtime::tape::TapeOffset,
             crate::runtime::tape::DtaError,

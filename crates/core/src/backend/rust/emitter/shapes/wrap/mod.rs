@@ -42,9 +42,11 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::super::strategy::EmitStrategy;
 use super::dispatcher::{dispatcher_fn_ident, shape_fn_ident};
 use super::root_rule_name;
 
+mod struct_direct;
 mod tape_dispatch;
 mod visitor;
 
@@ -207,11 +209,34 @@ fn wrap_can_elide_compound(rule: &IrRule, ir: &GrammarIR) -> bool {
 
 /// Emit `pub fn parse_wrap_<grammar>_<rule>(input, p, state, builder)
 /// -> Result<TapeOffset, DtaError>`.
+///
+/// AZ-I.W2.RD — `strategy` selects the emission template:
+///
+/// - [`EmitStrategy::TapeDirect`] — pre-AZ-I.W2 fused-tape body with
+///   post-order Rule-compound emission via the existing
+///   `emit_alt_tape_dispatch` machinery.
+/// - [`EmitStrategy::StructDirect`] — AZ-I.W2 struct-direct body that
+///   resolves the wrap's own layout via
+///   `ir.struct_registry.layout(rule.id)`, opens a Wrap frame on the
+///   builder via `begin_compound(&__layout)`, stamps the chosen branch
+///   index via `push_branch_tag(idx)`, dispatches into the matched
+///   Ref's per-shape body (which carries its own `begin_compound` /
+///   `end_compound`), and closes via `end_compound(handle)` per the
+///   `JsonStructBuilder::OpenFrame::Wrap` contract documented at
+///   `crates/core/src/runtime/json/builder.rs:80`.
 pub fn emit_parse_wrap(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
+    strategy: &EmitStrategy,
 ) -> TokenStream {
+    if strategy.is_struct_direct() {
+        return struct_direct::emit_parse_wrap_struct_direct(
+            grammar_suffix,
+            rule,
+            ir,
+        );
+    }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("wrap", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);

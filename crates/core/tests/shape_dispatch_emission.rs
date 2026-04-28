@@ -189,7 +189,11 @@ fn keyword_shape_classifies_correctly() {
 fn keyword_shape_emit_matches_golden() {
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.bool_rule as usize];
-    let ts = keyword::emit_parse_keyword("JsonFixture", rule, &ir);
+    // AZ-I.W2.RD — `JsonFixture` is not in the StructDirect resolver
+    // admission list (`JsonParser` / `JsonGrammar`); the fixture
+    // continues to exercise the tape-direct golden.
+    let strategy = EmitStrategy::TapeDirect;
+    let ts = keyword::emit_parse_keyword("JsonFixture", rule, &ir, &strategy);
     let actual = format_tokens(&ts);
     let expected = include_str!(
         "fixtures/shape_dispatch_emission/keyword.rs.expected"
@@ -375,9 +379,10 @@ fn w4_flat_emitter_produces_parsable_tokens() {
 fn w4_wrap_emitter_produces_parsable_tokens() {
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.value as usize];
-    let ts = wrap::emit_parse_wrap("JsonFixture", rule, &ir);
+    let strategy = EmitStrategy::TapeDirect;
+    let ts = wrap::emit_parse_wrap("JsonFixture", rule, &ir, &strategy);
     let _ = format_tokens(&ts);
-    let ts_v = wrap::emit_parse_wrap_visitor("JsonFixture", rule, &ir);
+    let ts_v = wrap::emit_parse_wrap_visitor("JsonFixture", rule, &ir, &strategy);
     let _ = format_tokens(&ts_v);
 }
 

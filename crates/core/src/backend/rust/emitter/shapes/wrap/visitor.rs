@@ -9,16 +9,24 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::super::super::strategy::EmitStrategy;
 use super::super::dispatcher::{visitor_dispatcher_fn_ident, visitor_shape_fn_ident};
 use super::super::root_rule_name;
 use super::{shape_tag_name, unwrap_outer};
 
 /// Emit `pub fn parse_wrap_visitor_<grammar>_<rule><V>(input, p,
 /// state, visitor) -> Result<(), ParseErr>`.
+///
+/// AZ-I.W2.RD — `strategy` accepted for signature uniformity with the
+/// tape-path entry. The visitor-path emission is strategy-independent;
+/// `has_w4_classified` upstream gates whether the visitor path emits
+/// at all. Threading the strategy here keeps the per-shape dispatch
+/// surface uniform across all shape emitters.
 pub fn emit_parse_wrap_visitor(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
+    _strategy: &EmitStrategy,
 ) -> TokenStream {
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("wrap", grammar_suffix, rule_name);

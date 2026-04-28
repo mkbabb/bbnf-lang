@@ -1,0 +1,128 @@
+// AZ-I.W2.RD — struct-direct Wrap-shape snapshot.
+//
+// Canonical JSON Wrap emission on EmitStrategy::StructDirect.
+// Anchored snippet the snapshot driver scans for `builder.` presence
+// and tape-emission absence (token "tape" + dot + push) — see the
+// driver's gate assertions for the exact pattern. The struct-direct
+// body emits exclusively through the StructBuilder trait surface.
+//
+// Source: crates/core/src/backend/rust/emitter/shapes/wrap/struct_direct.rs
+// Emitted by `emit_parse_wrap_struct_direct` for JSON's `value` rule:
+//   value = object | array | string | number | bool | null
+//
+// Emission shape (per W2-EMITTER-REWIRE plan §6 Risk 2):
+//   builder.begin_compound(&__wrap_layout)
+//   builder.push_branch_tag(__wrap_branch_idx)
+//   builder.end_compound(__wrap_handle)
+//
+// The wrap's own layout is resolved at codegen time from
+// ir.struct_registry.layout(rule.id) and spliced as a
+// bbnf_ir::StructLayout literal; JsonStructBuilder routes any rule
+// whose name is not (array | object | pair) to OpenFrame::Wrap.
+
+#[inline]
+#[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+pub fn parse_wrap_json_value(
+    input: &[u8],
+    p: &mut usize,
+    state: &mut __shape_support_json::ScanState,
+    builder: &mut crate::runtime::JsonStructBuilder<'_>,
+) -> ::core::result::Result<
+    crate::runtime::tape::TapeOffset,
+    crate::runtime::tape::DtaError,
+> {
+    // Layout literal — built inline from the rule's registered metadata.
+    // JsonStructBuilder::begin_compound consults (kind, rule_name) and
+    // routes any rule whose name is not in (array | object | pair) to
+    // OpenFrame::Wrap.
+    let __wrap_layout: ::bbnf_ir::registry::StructLayout =
+        ::bbnf_ir::registry::StructLayout {
+            rule_id: 5u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("value"),
+            kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+    let __wrap_handle = <
+        crate::runtime::JsonStructBuilder<'_> as crate::runtime::StructBuilder
+    >::begin_compound(builder, &__wrap_layout);
+    let mut __wrap_branch_idx: u32 = 0;
+    let first = __shape_support_json::skip_space(input, p, state)
+        .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+            offset: *p as u32,
+        })?;
+    'try_branches: loop {
+        match first {
+            // 91u8 = '[' → array
+            91u8 => {
+                {
+                    let attempt_p = *p;
+                    match parse_array_json_array(input, p, state, builder) {
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 1u32;
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+            }
+            // 123u8 = '{' → object
+            123u8 => {
+                {
+                    let attempt_p = *p;
+                    match parse_object_json_object(input, p, state, builder) {
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 0u32;
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+            }
+            // 34u8 = '"' → string
+            34u8 => {
+                {
+                    let attempt_p = *p;
+                    match parse_string_json_string(input, p, state, builder) {
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 2u32;
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+            }
+            // ... number / bool / null arms keyed on their first-byte sets
+            _ => {}
+        }
+        // Linear-try fallback for branches with overlapping or
+        // unbounded first-byte sets.
+        <
+            crate::runtime::JsonStructBuilder<'_> as crate::runtime::StructBuilder
+        >::end_compound(builder, __wrap_handle);
+        return ::core::result::Result::Err(
+            crate::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+            },
+        );
+    }
+    // Stamp the branch tag and close the Wrap frame. JsonStructBuilder
+    // retains the tag for audit symmetry but does not store it on the
+    // value (untagged-enum projection collapses every branch into the
+    // unitary JsonValue).
+    <
+        crate::runtime::JsonStructBuilder<'_> as crate::runtime::StructBuilder
+    >::push_branch_tag(builder, __wrap_branch_idx);
+    <
+        crate::runtime::JsonStructBuilder<'_> as crate::runtime::StructBuilder
+    >::end_compound(builder, __wrap_handle);
+    ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+}

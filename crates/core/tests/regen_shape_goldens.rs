@@ -45,7 +45,6 @@ fn regen_shape_goldens() {
     // surface they captured before per-shape rewire; the StructDirect
     // path's emission is captured under
     // `tests/struct_direct_snapshots/`.
-    let strategy = bbnf::backend::rust::emitter::EmitStrategy::TapeDirect;
 
     let object_ts = object::emit_parse_object(
         "JsonFixture",
@@ -71,8 +70,12 @@ fn regen_shape_goldens() {
         &ir,
         &strategy,
     );
-    let keyword_ts =
-        keyword::emit_parse_keyword("JsonFixture", &ir.rules[rules.bool_rule as usize], &ir);
+    let keyword_ts = keyword::emit_parse_keyword(
+        "JsonFixture",
+        &ir.rules[rules.bool_rule as usize],
+        &ir,
+        &strategy,
+    );
     let scalar_ts = scalar::emit_parse_scalar(
         "JsonFixture",
         &ir.rules[rules.comma as usize],

@@ -174,25 +174,78 @@ fn json_parser_with_empty_registry_routes_tape_direct() {
 #[test]
 fn unknown_grammar_with_populated_registry_routes_tape_direct() {
     // Default fallthrough: any grammar the resolver does not
-    // explicitly admit (CssL4Parser, GoogleSheetsParser pre-W2.B,
-    // CsvParser, EbnfParser, MathParser, BnfParser) routes
-    // TapeDirect regardless of registry shape. W2.B / W3
-    // extend the resolver by adding positive arms for the new
-    // grammars; this test pins the negative default so an
-    // accidental wildcard match-all in a future refactor fails
+    // explicitly admit (CssL4Parser pre-W2-act.B3, CsvParser,
+    // EbnfParser, MathParser, BnfParser) routes TapeDirect regardless
+    // of registry shape. W2-act.B3 extends the resolver by adding the
+    // CssL4Parser positive arm; this test pins the negative default
+    // so an accidental wildcard match-all in a future refactor fails
     // here.
     let registry = populated_registry();
     let strategy = EmitStrategy::for_grammar("CssL4Parser", &registry);
     assert_eq!(
         strategy,
         EmitStrategy::TapeDirect,
-        "CssL4Parser must route TapeDirect in W2 (W3 activates struct-direct)",
+        "CssL4Parser must route TapeDirect in W2 (W2-act.B3 activates struct-direct)",
     );
+}
+
+#[test]
+fn google_sheets_parser_with_populated_registry_routes_struct_direct() {
+    // AZ-I.W2-act.B2 — Sheets struct-direct activation. The resolver
+    // returns `EmitStrategy::StructDirect` carrying the
+    // `SheetsStructBuilder` / `SheetsDocument` paths the emitter
+    // splices into the generated `parse()` body. The orchestrator's
+    // regen pass consumes this arm; pre-regen the existing
+    // tape-backed parser persists alongside the new strategy choice.
+    let registry = populated_registry();
+    let strategy = EmitStrategy::for_grammar("GoogleSheetsParser", &registry);
+    let EmitStrategy::StructDirect { rust, ts, wasm } = strategy else {
+        panic!(
+            "GoogleSheetsParser + populated registry must route StructDirect; got {:?}",
+            strategy
+        );
+    };
+    assert_eq!(
+        rust.builder_path,
+        "crate::runtime::google_sheets::SheetsStructBuilder",
+        "Sheets rust builder path must address SheetsStructBuilder",
+    );
+    assert_eq!(
+        rust.document_path,
+        "crate::runtime::google_sheets::SheetsDocument",
+        "Sheets rust document path must address SheetsDocument",
+    );
+    // BA host bindings populate `ts` / `wasm` later; AZ-I leaves
+    // them as None.
+    assert!(ts.is_none(), "Sheets ts binding reserved for BA");
+    assert!(wasm.is_none(), "Sheets wasm binding reserved for BA");
+}
+
+#[test]
+fn google_sheets_grammar_alias_routes_struct_direct() {
+    // The `GoogleSheetsGrammar` alias resolves identically to
+    // `GoogleSheetsParser`, mirroring the JSON pattern (JsonParser /
+    // JsonGrammar). Forward-compat with hand-authored test fixtures.
+    let registry = populated_registry();
+    let strategy = EmitStrategy::for_grammar("GoogleSheetsGrammar", &registry);
+    assert!(
+        matches!(strategy, EmitStrategy::StructDirect { .. }),
+        "GoogleSheetsGrammar (alias) + populated registry routes StructDirect; got {:?}",
+        strategy,
+    );
+}
+
+#[test]
+fn google_sheets_parser_with_empty_registry_routes_tape_direct() {
+    // The activation guard downgrades a nominally-struct-direct
+    // grammar to TapeDirect when the registry is empty. Mirrors the
+    // JSON empty-registry guard.
+    let registry = empty_registry();
     let strategy = EmitStrategy::for_grammar("GoogleSheetsParser", &registry);
     assert_eq!(
         strategy,
         EmitStrategy::TapeDirect,
-        "GoogleSheetsParser must route TapeDirect in W2.RA (W2.B activates struct-direct)",
+        "GoogleSheetsParser + empty registry must downgrade to TapeDirect (activation guard)",
     );
 }
 

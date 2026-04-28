@@ -179,14 +179,31 @@ impl EmitStrategy {
                 ts: None,
                 wasm: None,
             },
-            // AZ-I.W2-act.B2 / B3 extend with their own positive
-            // arms; until they land, every other grammar (BBNF,
-            // BNF, EBNF, CSV, math, Sheets pre-B2, CSS L4 pre-B3)
-            // routes onto the legacy fused tape path. Per
-            // `feedback_no-orthogonal-codepaths` there is no
-            // co-emission; per `feedback_no-backward-compat` there
-            // is no Parsed-shim — the catch-all is the single
-            // negative default, not a fallback path.
+            // AZ-I.W2-act.B2: Sheets struct-direct activation. The
+            // GoogleSheetsParser ident emitted by `cargo xtask regen
+            // --grammar google_sheets` resolves to the Sheets runtime
+            // bindings. The orchestrator's regen pass consumes this
+            // arm — pre-regen the existing tape-backed parser remains
+            // in the workspace; post-regen the emitted parse_body
+            // writes through `SheetsStructBuilder` and returns
+            // `SheetsDocument`.
+            ("GoogleSheetsParser" | "GoogleSheetsGrammar", true) => {
+                EmitStrategy::StructDirect {
+                    rust: SubstrateBinding {
+                        builder_path: "crate::runtime::google_sheets::SheetsStructBuilder",
+                        document_path: "crate::runtime::google_sheets::SheetsDocument",
+                    },
+                    ts: None,
+                    wasm: None,
+                }
+            }
+            // AZ-I.W2-act.B3 extends this with `CssL4Parser`; until it
+            // lands, every other grammar (BBNF, BNF, EBNF, CSV, math,
+            // CSS L4 pre-B3) routes onto the legacy fused tape path.
+            // Per `feedback_no-orthogonal-codepaths` there is no
+            // co-emission; per `feedback_no-backward-compat` there is
+            // no Parsed-shim — the catch-all is the single negative
+            // default, not a fallback path.
             _ => EmitStrategy::TapeDirect,
         }
     }

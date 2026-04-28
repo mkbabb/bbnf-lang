@@ -85,13 +85,24 @@ fn substrate_path(path: &'static str) -> TokenStream {
 /// Resolve the rust-backend builder type with a `'p` lifetime
 /// parameter, suitable for splicing as a function-argument type in
 /// `quote!`. The result is `<builder_path><'p>`.
+///
+/// `lifetime` carries the bare ident (e.g. `p`); the helper prepends
+/// the leading apostrophe via [`syn::Lifetime`] so the spliced tokens
+/// emit a Rust lifetime parameter rather than a generic-type
+/// argument. Pre-fix the helper spliced a bare Ident, producing
+/// `JsonStructBuilder<p>` and tripping E0107 on every emitted
+/// struct-direct parse fn signature.
 #[inline]
 pub fn builder_ty_with_lifetime(
     strategy: &EmitStrategy,
     lifetime: &proc_macro2::Ident,
 ) -> TokenStream {
     let path = builder_path(strategy);
-    quote! { #path<#lifetime> }
+    let lt = syn::Lifetime::new(
+        &format!("'{}", lifetime),
+        proc_macro2::Span::call_site(),
+    );
+    quote! { #path<#lt> }
 }
 
 /// Resolve the rust-backend builder type with the elided `'_` lifetime
@@ -146,5 +157,30 @@ mod tests {
         let strategy = EmitStrategy::TapeDirect;
         let ts = builder_path(&strategy).to_string();
         assert!(ts.contains("JsonStructBuilder"), "got {}", ts);
+    }
+
+    #[test]
+    fn builder_ty_with_lifetime_emits_apostrophe() {
+        // AZ-I.W2-act.recovery — gap #1 regression. `quote!` splicing
+        // a bare proc_macro2::Ident produces `<p>` (a generic type
+        // argument), not `<'p>` (a lifetime parameter). The helper
+        // converts the ident through `syn::Lifetime` so the emitted
+        // tokens carry the leading apostrophe.
+        let strategy = make_strategy(
+            "::bbnf::runtime::json::JsonStructBuilder",
+            "::bbnf::runtime::json::JsonDocument",
+        );
+        let lt_ident = proc_macro2::Ident::new("p", proc_macro2::Span::call_site());
+        let ts = builder_ty_with_lifetime(&strategy, &lt_ident).to_string();
+        assert!(
+            ts.contains("'p"),
+            "expected lifetime apostrophe in {}",
+            ts
+        );
+        assert!(
+            !ts.contains("< p >") && !ts.contains("<p>"),
+            "expected lifetime, not generic type, in {}",
+            ts
+        );
     }
 }

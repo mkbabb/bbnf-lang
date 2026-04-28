@@ -238,8 +238,36 @@ fn slice_lifetime_extend<'a>(input: &'a str, text: &str) -> &'a str {
 /// Returns true if the text is a value keyword that should never
 /// be treated as a nonterminal reference (e.g., `true`, `false` in
 /// `-> true` mapper expressions).
+///
+/// Type-name keywords are admitted here so the bootstrap parser's
+/// type-annotation surfacing (e.g. `int_lit = /…/ -> i64` —
+/// the `i64` Span surfaces inside a `value_expr` subtree) does not
+/// register the type name as a nonterminal reference. The list
+/// mirrors `crate::lower::value_expr::is_type_name` which the
+/// `lower_map_arrow` consumer already special-cases.
 fn is_value_keyword(s: &str) -> bool {
-    matches!(s, "true" | "false" | "null" | "epsilon" | "ε")
+    matches!(
+        s,
+        "true"
+            | "false"
+            | "null"
+            | "epsilon"
+            | "ε"
+            | "Span"
+            | "f32"
+            | "f64"
+            | "u8"
+            | "u16"
+            | "u32"
+            | "u64"
+            | "i8"
+            | "i16"
+            | "i32"
+            | "i64"
+            | "usize"
+            | "bool"
+            | "input"
+    )
 }
 
 /// Quick identifier check on a byte slice.

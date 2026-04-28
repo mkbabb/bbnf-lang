@@ -146,11 +146,11 @@ impl<'p> Parser<'p> {
         Ok((lo, self.pos))
     }
 
+    /// `identifier = /…/ -> Span` — projects directly to a Span leaf
+    /// (the regex's match), no compound wrapper.
     fn parse_identifier(&mut self) -> Result<(), ParseErr> {
-        let h = self.begin("identifier");
         let (lo, hi) = self.parse_identifier_span()?;
         self.push_span(lo, hi);
-        self.end(h);
         Ok(())
     }
 
@@ -172,15 +172,12 @@ impl<'p> Parser<'p> {
     }
 
     /// `literal = ( "\"" , /(\\.|[^"\\])*/ , "\"" | "'" , … | "`" , … ) -> Span`
+    /// — projects directly to a Span leaf.
     fn parse_literal(&mut self) -> Result<(), ParseErr> {
-        let h = self.begin("literal");
         let lo = self.pos;
         let quote = match self.at() {
             Some(b @ (b'"' | b'\'' | b'`')) => b,
-            _ => {
-                self.end(h);
-                return Err(self.err());
-            }
+            _ => return Err(self.err()),
         };
         self.pos += 1;
         while let Some(b) = self.at() {
@@ -192,22 +189,18 @@ impl<'p> Parser<'p> {
                 self.pos += 1;
                 let hi = self.pos;
                 self.push_span(lo, hi);
-                self.end(h);
                 return Ok(());
             }
             self.pos += 1;
         }
-        self.end(h);
         Err(self.err())
     }
 
     /// `regex = ( "/" , /(\\.|[^\/])+/ , "/" ) -> Span`
-    /// The body is at least one character.
+    /// — projects directly to a Span leaf.
     fn parse_regex(&mut self) -> Result<(), ParseErr> {
-        let h = self.begin("regex");
         let lo = self.pos;
         if !self.eat_byte(b'/') {
-            self.end(h);
             return Err(self.err());
         }
         let body_start = self.pos;
@@ -216,33 +209,25 @@ impl<'p> Parser<'p> {
                 Some(b'\\') => self.pos += 2,
                 Some(b'/') => break,
                 Some(_) => self.pos += 1,
-                None => {
-                    self.end(h);
-                    return Err(self.err());
-                }
+                None => return Err(self.err()),
             }
         }
         if self.pos == body_start {
-            // Empty regex body — not valid BBNF.
-            self.end(h);
             return Err(self.err());
         }
         if !self.eat_byte(b'/') {
-            self.end(h);
             return Err(self.err());
         }
         let hi = self.pos;
         self.push_span(lo, hi);
-        self.end(h);
         Ok(())
     }
 
     /// `big_comment = ( "/*" , /[^\*]*/ , "*/" ) ?w -> Span`
+    /// — projects directly to a Span leaf.
     fn parse_big_comment(&mut self) -> Result<(), ParseErr> {
-        let h = self.begin("big_comment");
         let lo = self.pos;
         if !self.peek_str("/*") {
-            self.end(h);
             return Err(self.err());
         }
         self.pos += 2;
@@ -252,11 +237,9 @@ impl<'p> Parser<'p> {
                 let hi = self.pos;
                 self.push_span(lo, hi);
                 self.skip_ws();
-                self.end(h);
                 return Ok(());
             }
             if self.at().is_none() {
-                self.end(h);
                 return Err(self.err());
             }
             self.pos += 1;
@@ -264,11 +247,10 @@ impl<'p> Parser<'p> {
     }
 
     /// `comment = ( "//" , /.*/ ) ?w -> Span`
+    /// — projects directly to a Span leaf.
     fn parse_comment(&mut self) -> Result<(), ParseErr> {
-        let h = self.begin("comment");
         let lo = self.pos;
         if !self.peek_str("//") {
-            self.end(h);
             return Err(self.err());
         }
         self.pos += 2;
@@ -281,7 +263,6 @@ impl<'p> Parser<'p> {
         let hi = self.pos;
         self.push_span(lo, hi);
         self.skip_ws();
-        self.end(h);
         Ok(())
     }
 
@@ -329,50 +310,69 @@ impl<'p> Parser<'p> {
                 Ok(())
             }
             Some(b'@') if self.peek_str("@{") => {
+                let open_lo = self.pos;
                 self.pos += 2;
+                // Push the "@{" delimiter as a Span so the term
+                // compound's recovered span starts with '@' — the
+                // lower_term leading-byte dispatch needs this.
+                self.push_span(open_lo, self.pos);
                 self.skip_ws();
                 self.parse_rhs()?;
                 self.skip_ws();
+                let close_lo = self.pos;
                 if !self.eat_byte(b'}') {
                     self.end(h);
                     return Err(self.err());
                 }
+                self.push_span(close_lo, self.pos);
                 self.end(h);
                 Ok(())
             }
             Some(b'(') => {
+                let open_lo = self.pos;
                 self.pos += 1;
+                self.push_span(open_lo, self.pos);
                 self.skip_ws();
                 self.parse_rhs()?;
                 self.skip_ws();
+                let close_lo = self.pos;
                 if !self.eat_byte(b')') {
                     self.end(h);
                     return Err(self.err());
                 }
+                self.push_span(close_lo, self.pos);
                 self.end(h);
                 Ok(())
             }
             Some(b'[') => {
+                let open_lo = self.pos;
                 self.pos += 1;
+                self.push_span(open_lo, self.pos);
                 self.skip_ws();
                 self.parse_rhs()?;
                 self.skip_ws();
+                let close_lo = self.pos;
                 if !self.eat_byte(b']') {
                     self.end(h);
                     return Err(self.err());
                 }
+                self.push_span(close_lo, self.pos);
                 self.end(h);
                 Ok(())
             }
             Some(b'{') => {
+                let open_lo = self.pos;
                 self.pos += 1;
+                self.push_span(open_lo, self.pos);
                 self.skip_ws();
                 self.parse_rhs()?;
                 self.skip_ws();
+                let close_lo = self.pos;
                 if !self.eat_byte(b'}') {
                     self.end(h);
                     return Err(self.err());
                 }
+                self.push_span(close_lo, self.pos);
                 self.end(h);
                 Ok(())
             }
@@ -406,9 +406,8 @@ impl<'p> Parser<'p> {
         }
     }
 
-    /// `modifier = "?w" | "?" | "*" | "+"`
+    /// `modifier = "?w" | "?" | "*" | "+"` — Span leaf.
     fn parse_modifier(&mut self) -> Result<(), ParseErr> {
-        let h = self.begin("modifier");
         let lo = self.pos;
         let ok = if self.peek_str("?w") {
             self.pos += 2;
@@ -420,11 +419,9 @@ impl<'p> Parser<'p> {
             false
         };
         if !ok {
-            self.end(h);
             return Err(self.err());
         }
         self.push_span(lo, self.pos);
-        self.end(h);
         Ok(())
     }
 
@@ -795,10 +792,8 @@ impl<'p> Parser<'p> {
         if self.at() == Some(b'*') {
             let lo = self.pos;
             self.pos += 1;
-            // Push as a span so consumers see "*".
-            let inner = self.begin("identifier");
+            // identifier projects to Span; emit directly.
             self.push_span(lo, self.pos);
-            self.end(inner);
         } else {
             self.parse_identifier()?;
         }
@@ -871,9 +866,7 @@ impl<'p> Parser<'p> {
         if self.at() == Some(b'*') {
             let lo = self.pos;
             self.pos += 1;
-            let inner = self.begin("identifier");
             self.push_span(lo, self.pos);
-            self.end(inner);
         } else if matches!(self.at(), Some(b) if b == b'_' || b.is_ascii_alphabetic()) {
             self.parse_identifier()?;
         }
@@ -1035,11 +1028,12 @@ impl<'p> Parser<'p> {
         Ok(())
     }
 
+    /// `value_ident` projects directly to a Span leaf — no compound
+    /// wrapper. Mirrors the original codegen which emits a regex
+    /// hregex shape that pushes a Span via `push_leaf_with_str`.
     fn parse_value_ident(&mut self) -> Result<(), ParseErr> {
         let (lo, hi) = self.parse_value_ident_span()?;
-        let h = self.begin("value_ident");
         self.push_span(lo, hi);
-        self.end(h);
         Ok(())
     }
 
@@ -1229,11 +1223,10 @@ impl<'p> Parser<'p> {
         }
     }
 
+    /// `string_lit = ( "\"" , /…/ , "\"" ) -> Span` — projects to Span.
     fn parse_string_lit(&mut self) -> Result<(), ParseErr> {
-        let h = self.begin("string_lit");
         let lo = self.pos;
         if !self.eat_byte(b'"') {
-            self.end(h);
             return Err(self.err());
         }
         loop {
@@ -1244,14 +1237,10 @@ impl<'p> Parser<'p> {
                     break;
                 }
                 Some(_) => self.pos += 1,
-                None => {
-                    self.end(h);
-                    return Err(self.err());
-                }
+                None => return Err(self.err()),
             }
         }
         self.push_span(lo, self.pos);
-        self.end(h);
         Ok(())
     }
 
@@ -1413,27 +1402,30 @@ impl<'p> Parser<'p> {
         Ok(())
     }
 
-    /// `type_annotation = ":" ?w , type_name`
+    /// `type_annotation = ":" ?w , type_name` — surfaces inside
+    /// mapped_factor. Since `BbnfCompoundKind` does not declare a
+    /// `TypeAnnotation` arm, the lowering pipeline reads the
+    /// annotation off the parent's span via `mapped_factor`'s
+    /// trailing text. Emit a non-compound Span leaf.
     fn parse_type_annotation(&mut self) -> Result<(), ParseErr> {
-        let h = self.begin("type_annotation");
+        let lo = self.pos;
         if !self.eat_byte(b':') {
-            self.end(h);
             return Err(self.err());
         }
         self.skip_ws();
-        self.parse_type_name()?;
-        self.end(h);
+        let _name_lo = self.pos;
+        let (_, name_hi) = self.parse_value_ident_span()?;
+        // Push the entire ":<ws>type_name" annotation as a Span so
+        // consumers (lower_map_arrow line 341) can `trim().strip_prefix(':')`.
+        self.push_span(lo, name_hi);
         Ok(())
     }
 
-    /// `type_name = primitive | identifier`
+    /// `type_name = primitive | identifier` — projects directly to a
+    /// Span leaf, mirroring `value_ident` (no compound wrapper).
     fn parse_type_name(&mut self) -> Result<(), ParseErr> {
-        let h = self.begin("type_name");
-        // Primitives are themselves valid identifiers, so just parse
-        // an identifier; lowering disambiguates by string match.
         let (lo, hi) = self.parse_value_ident_span()?;
         self.push_span(lo, hi);
-        self.end(h);
         Ok(())
     }
 }

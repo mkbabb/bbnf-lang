@@ -118,8 +118,13 @@ Four parallel agents on disjoint file bounds:
 
 - **W1.B1 JSON** — `grammar/json/json.bbnf` typed-leaf authoring +
   `crates/core/tests/project_types_json.rs` registry-shape test.
-- **W1.B2 Sheets** — `grammar/sheets/sheets.bbnf` + per-grammar test.
-- **W1.B3 CSS L4** — `grammar/css-l4/css-l4.bbnf` + per-grammar test.
+- **W1.B2 Sheets** — `grammar/google-sheets/google-sheets.bbnf` +
+  per-grammar test (path corrected from the W1.md plan's stale
+  `grammar/sheets/sheets.bbnf`).
+- **W1.B3 CSS L4** — `grammar/css/l4/*.bbnf` (15-file `@import`
+  modular grammar; 454 markers pre-existing) + per-grammar test
+  (path corrected from the W1.md plan's stale
+  `grammar/css-l4/css-l4.bbnf`).
 - **W1.B4 Emitter** — `crates/core/src/backend/rust/emitter/`
   registry-read on every compound emission, bridge mode preserves
   the existing tape co-emission for AZ-I.W1 stability (W2/W3 sever
@@ -128,6 +133,53 @@ Four parallel agents on disjoint file bounds:
 Each W1.B worktree seeded with `scripts/seed-worktree.sh
 --no-target`; the agent uses `CARGO_TARGET_DIR=$(pwd)/target.local`
 for cargo invocations to avoid the shared-target serialisation.
+
+### W1 close (2026-04-27)
+
+W1 closed in ~70 min real wall (W1.A solo + W1.B 4-parallel +
+orchestrator integration). **Zero grammar edits across all three
+data grammars** — the W1.A `populate_struct_registry` closure
+already covers JSON / Sheets / CSS L4 markers from the existing
+typed-leaf surface. RESEARCH §6 expectation of 7 / 8 / 60 layouts
+exceeded: JSON 8, Sheets 8+, CSS L4 187 (162 named + 25 anonymous
+continuation rules surfaced by the lowering pipeline).
+
+W1 commit ledger:
+
+| SHA | Stage | Description |
+|---|---|---|
+| `e0e0af30` | W1.A | StructRegistry substrate (`registry/{mod,struct}.rs` + `lib.rs` re-exports + `GrammarIR.struct_registry` field) |
+| `43ea56bb` | W1.A | `project_types` populates `StructRegistry`; `&StructRegistry` impls `StructRegistryProbe` |
+| `710d3952` | W1.A | Leaf tests for `StructRegistry` + 38-fixture init-site update |
+| `d1528d2d` | W1.A | Target-symlink fixup |
+| `401b3e65` | W1.B1 | JSON `project_types` registry-closure wire contract (9 tests) |
+| `3bd7434e` | W1.B2 | Sheets registry-closure wire contract (orchestrator-rescue, 6 tests) |
+| `01ada2f0` | W1.B3 | CSS L4 registry-closure wire contract (4 tests) |
+| `4e914418` | W1.B4 | Emitter registry-read at compound-emission boundary + `registry_observer` submodule |
+| `3fe69fb4` | W1.B4 | Emitter wire-contract test (2 tests) |
+| `73602813` | W1.B3 fixup | `TypeDesc::has_scalar_payload` recursion + `admits_scalar_payload` recursion + `dimension`/`color` test cleanup |
+
+**W1 hard-gate ledger:**
+
+| # | Gate | Status | Evidence |
+|---|---|---|---|
+| 1 | `project_types` closes on JSON / CSS L4 / Sheets without build-stop | PASS | per-grammar wire-contract tests assert closure totality |
+| 2 | `StructRegistry` non-empty for every Named rule on the three | PASS | `every_named_*_rule_has_non_empty_layout` tests green per grammar |
+| 3 | IR audit pass reports 100% `->` coverage on the three | PASS | `audit_pass_reports_*_for_every_*_marker` tests green per grammar; CSS L4 substrate-fix retired the 42-marker `Missing` cohort |
+| 4 | No AU-baseline regression on any 17-entry matrix entry | DEFERRED-TO-W4 | matrix re-measurement is W4 close ceremony per orchestrator directive |
+| 5 | `cargo nextest run --workspace --profile ax-iter` ≥ 1480 pass | PASS | 1517 / 1517 passed, 27 skipped at master HEAD `73602813` (`/tmp/workspace-w1.txt`) |
+
+**Key substrate addition:**
+
+`TypeDesc::has_scalar_payload(&self) -> bool` — recurses through
+`Tuple`, `Option`, `Vec` wrappers to find any nested scalar.
+`StructLayout::admits_scalar_payload` switches to the recursive
+helper. The lowering pipeline wraps keyword-discriminator branches
+as `Tuple([Span, scalar])`; the audit's coverage policy now admits
+these as `Mapped`. Single layout-coverage decision surface
+preserved per `feedback_pluggable-components`.
+
+**W2 dispatch follows.**
 
 AZ-I ships direct-to-struct materialisation for the three primary
 data grammars — JSON, CSS L4, and Sheets — via `project_types` +

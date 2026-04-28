@@ -223,15 +223,54 @@ fn math_num() {
 // of which is orchestrator-owned, outside W2-act.recovery scope).
 
 // ── BBNF ─────────────────────────────────────────────────────────────────────
+//
+// AZ-II.cutover.E (Phase 5) — BBNF parse returns a `BbnfDocument` post-
+// cutover.A; the pre-cutover `parsed.view().cursor()` cursor surface is
+// gone. Re-author the round-trip against `BbnfDocument`'s span-fold
+// surface: every `BbnfValue::Span` borrows from `input`, and the
+// compound tree's aggregate `span_range()` returns the byte range
+// covered by every borrowed leaf — which for the BBNF grammar is the
+// canonical source slice the parser admitted. The round-trip slices
+// `input` over the document's covering range and asserts idempotence
+// under reparse.
+//
+// Currently `#[ignore]`d: cutover.E discovered the BBNF struct-direct
+// parse path is broken on real BBNF source — `bbnf_self_parity`
+// reports 28 / 56 fixtures failing the `BbnfBootstrap::parse` entry.
+// Re-activating this test requires the parse-path repair landing at
+// cutover.F (re-author of value-expr emitter arms / inner shape
+// dispatchers; see `cutover.E-PARTIAL.md` §Discovery 1).
+
+use bbnf::runtime::BbnfDocument;
+
+fn bbnf_emit(input: &str) -> String {
+    let doc = BbnfBootstrap::parse(input).expect("BBNF grammar parse failed");
+    bbnf_serialize_doc(&doc)
+}
+
+fn bbnf_serialize_doc<'p>(doc: &BbnfDocument<'p>) -> String {
+    // The grammar emits one borrowed Span per source-bearing leaf;
+    // `BbnfView::span_range()` walks every Span descendant and returns
+    // the union of their byte offsets against the document's input
+    // slice. The covered slice is the canonical source the parser
+    // admitted — slicing input over that range yields a byte-equal
+    // re-emission for every well-formed input.
+    let view = doc.view();
+    match view.span_range() {
+        Some((lo, hi)) => doc.input[lo..hi].to_string(),
+        None => String::new(),
+    }
+}
 
 #[test]
-#[ignore = "AZ-II.cutover.D — BbnfBootstrap moved to StructDirect; BbnfBootstrap::serialize_compact still takes BbnfBootstrapNodeView (tape-shaped). cutover.E re-authors serialize_compact against BbnfDocument, after which this test's serialize-then-reparse-then-serialize idempotence chain unblocks."]
+#[ignore = "BBNF struct-direct parse broken on real source; cutover.F repair"]
 fn bbnf_rule() {
-    // Double-quoted literals now work — unescape moved to lowering.
     let input = "x = /[a-z]+/ ;\ny = \"hello\" ;\n";
-    let _parsed = BbnfBootstrap::parse(input).expect("BBNF grammar parse failed");
-    // serialize_compact still consumes tape-shaped BbnfBootstrapNodeView;
-    // BbnfDocument-based reserialization lands in cutover.E.
+    let e = bbnf_emit(input);
+    assert!(!e.is_empty(), "BBNF serialize empty");
+    // Idempotence: parse → serialize → reparse → serialize → equality.
+    let e2 = bbnf_emit(&e);
+    assert_eq!(e, e2, "BBNF serialize not idempotent:\n  s1={e:?}\n  s2={e2:?}");
 }
 
 // ── CSS Pretty ───────────────────────────────────────────────────────────────

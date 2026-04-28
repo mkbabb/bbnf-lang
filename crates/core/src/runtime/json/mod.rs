@@ -10,11 +10,15 @@
 //!
 //! # Module layout
 //!
-//! - [`value`]   — typed [`JsonValue`] / [`JsonNumber`] / [`JsonPair`]
+//! - [`value`]    — typed [`JsonValue`] / [`JsonNumber`] / [`JsonPair`]
 //!   / [`JsonObject`] / [`JsonArray`] sum-types and their handles.
-//! - [`arena`]   — the [`JsonArena`] owning slab for compound child
+//! - [`arena`]    — the [`JsonArena`] owning slab for compound child
 //!   slices ([`JsonValue`] in arrays, [`JsonPair`] in objects).
-//! - [`builder`] — the [`JsonStructBuilder`] concrete `StructBuilder`
+//! - [`document`] — the [`JsonDocument`] root + the [`JsonView`]
+//!   newtype + [`JsonPathQuery`] trait per AZ-I.W2-act.A. This is
+//!   the API surface mirroring pre-W2-act `Parsed::view()` /
+//!   `Parsed::to_value()` / `Parsed::get::<T>(path)`.
+//! - [`builder`]  — the [`JsonStructBuilder`] concrete `StructBuilder`
 //!   impl that the generated parse function targets.
 //!
 //! # Wire contract
@@ -38,8 +42,10 @@
 
 pub mod arena;
 pub mod builder;
+pub mod document;
 pub mod value;
 
 pub use arena::{JsonArena, JsonArrayId, JsonObjectId};
 pub use builder::JsonStructBuilder;
-pub use value::{JsonArray, JsonDocument, JsonNumber, JsonObject, JsonPair, JsonValue};
+pub use document::{JsonDocument, JsonKind, JsonPathQuery, JsonView};
+pub use value::{JsonArray, JsonNumber, JsonObject, JsonPair, JsonValue};

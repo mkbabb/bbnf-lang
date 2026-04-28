@@ -28,8 +28,8 @@ pub use builder::StructBuilder;
 pub use error::ParseErr;
 pub use handle::{CompoundHandle, StringHandle};
 pub use json::{
-    JsonArena, JsonArray, JsonArrayId, JsonDocument, JsonNumber, JsonObject, JsonObjectId,
-    JsonPair, JsonStructBuilder, JsonValue,
+    JsonArena, JsonArray, JsonArrayId, JsonDocument, JsonKind, JsonNumber, JsonObject,
+    JsonObjectId, JsonPair, JsonPathQuery, JsonStructBuilder, JsonValue, JsonView,
 };
 pub use parsed::{Parsed, PathQuery, Root, ValueRoot};
 pub use path::{IntoPathSegment, Path, PathSegment};

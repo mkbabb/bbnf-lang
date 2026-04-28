@@ -1,10 +1,11 @@
 //! AZ-I.W2.A — JSON typed value sum.
 //!
-//! The parse output is rooted at a [`JsonDocument<'p>`] holding a
-//! [`JsonArena<'p>`] (the owner of every compound's child slice) and a
-//! root [`JsonValue<'p>`]. The `'p` lifetime ties every borrowed
-//! string slice and every arena-allocated child slice to the parse
-//! call site.
+//! The parse output is rooted at a
+//! [`crate::runtime::json::document::JsonDocument`] holding a
+//! [`crate::runtime::json::arena::JsonArena`] (the owner of every
+//! compound's child slice) and a root [`JsonValue<'p>`]. The `'p`
+//! lifetime ties every borrowed string slice and every
+//! arena-allocated child slice to the parse call site.
 //!
 //! Shape derivation comes directly from `grammar/json/json.bbnf`:
 //!
@@ -21,10 +22,10 @@
 //!
 //! [`JsonValue`] is the closure of `value`'s alternation; the
 //! `Object` / `Array` arms hold `JsonObjectId` / `JsonArrayId`
-//! arena handles that resolve to slices via [`JsonDocument::object`]
-//! / [`JsonDocument::array`].
+//! arena handles that resolve to slices via the document module's
+//! `JsonDocument::object` / `JsonDocument::array` accessors.
 
-use crate::runtime::json::arena::{JsonArena, JsonArrayId, JsonObjectId};
+use crate::runtime::json::arena::{JsonArrayId, JsonObjectId};
 
 /// A JSON value — sum of every alternation branch in the `value`
 /// rule. Arrays and objects carry arena-backed handles; strings carry
@@ -44,10 +45,10 @@ pub enum JsonValue<'p> {
     /// strings, from the arena for escaped strings.
     String(&'p str),
     /// `array = "[" >> (value …)* << "]"` — pair handle resolves via
-    /// [`JsonDocument::array`] to a `&[JsonValue]` slice.
+    /// `JsonDocument::array` to a `&[JsonValue]` slice.
     Array(JsonArrayId),
     /// `object = "{" >> (pair …)* << "}"` — pair handle resolves via
-    /// [`JsonDocument::object`] to a `&[JsonPair]` slice.
+    /// `JsonDocument::object` to a `&[JsonPair]` slice.
     Object(JsonObjectId),
 }
 
@@ -113,42 +114,8 @@ pub struct JsonObject<'p> {
     pub pairs: &'p [JsonPair<'p>],
 }
 
-/// The root document returned by `bbnf::grammar::generated::json::JsonParser::parse`.
-///
-/// Holds the parse arena (which owns every compound child slice) and
-/// the root value. Borrows the input bytes via the `'p` lifetime.
-///
-/// Resolving a [`JsonValue::Array`] / [`JsonValue::Object`] handle
-/// goes through [`Self::array`] / [`Self::object`].
-#[derive(Debug)]
-pub struct JsonDocument<'p> {
-    /// The compound child arena — owns every `[JsonValue]` and
-    /// `[JsonPair]` slice the document references via handles.
-    pub arena: JsonArena<'p>,
-    /// The root value of the document.
-    pub root: JsonValue<'p>,
-}
-
-impl<'p> JsonDocument<'p> {
-    /// Construct a document from a populated arena and a root value.
-    /// The typical caller is the generated parse function; consumers
-    /// outside the emitter rarely build a `JsonDocument` directly.
-    #[inline]
-    pub fn new(arena: JsonArena<'p>, root: JsonValue<'p>) -> Self {
-        Self { arena, root }
-    }
-
-    /// Resolve a [`JsonArrayId`] handle to the underlying element
-    /// slice. Returns an empty slice for `JsonArrayId::EMPTY`.
-    #[inline]
-    pub fn array(&self, id: JsonArrayId) -> &[JsonValue<'p>] {
-        self.arena.array(id)
-    }
-
-    /// Resolve a [`JsonObjectId`] handle to the underlying pair slice.
-    /// Returns an empty slice for `JsonObjectId::EMPTY`.
-    #[inline]
-    pub fn object(&self, id: JsonObjectId) -> &[JsonPair<'p>] {
-        self.arena.object(id)
-    }
-}
+// AZ-I.W2-act.A — `JsonDocument` moved to
+// `crate::runtime::json::document` per directory-module discipline.
+// `value.rs` retains only the typed-value enum + its companion
+// records; the document + view + path-query surface lives in its
+// own module.

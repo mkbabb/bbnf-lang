@@ -49,7 +49,8 @@ use bbnf_ir::registry::{LayoutKind, StructLayout};
 use crate::runtime::builder::StructBuilder;
 use crate::runtime::handle::CompoundHandle;
 use crate::runtime::json::arena::JsonArena;
-use crate::runtime::json::value::{JsonDocument, JsonNumber, JsonPair, JsonValue};
+use crate::runtime::json::document::JsonDocument;
+use crate::runtime::json::value::{JsonNumber, JsonPair, JsonValue};
 
 /// One open compound frame on the builder's stack.
 ///

@@ -66,16 +66,39 @@ pub(super) fn value_expr_head<'a, 'p: 'a>(
 /// inspecting the leading byte of the compound's span text. Under
 /// structural mode the closure markers consume bytes without
 /// pushing, so the closure case is identified by the leading `|`.
+///
+/// The caller supplies a `value_expr`-shaped (or `value_or`-shaped,
+/// when the optimizer collapsed the outer alt) compound. When the
+/// alt resolves to a closure, this routes through `lower_value_closure`
+/// after descending to the actual `ValueClosure` compound; when the
+/// alt resolves to an or-chain, this folds through
+/// [`fold_value_chain`] with the OR layer.
 pub(super) fn lower_value_expr_or_closure<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
     ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
     let text = node.span_text().unwrap_or("");
     if text.as_bytes().first() == Some(&b'|') {
-        lower_value_closure(node, ctx)
+        // Closure — find the actual ValueClosure compound (it may
+        // be `node` itself, or it may sit one wrapper deeper inside
+        // a preserved ValueExpr alt).
+        let closure = if node.compound_kind() == Some(BbnfCompoundKind::ValueClosure) {
+            node
+        } else {
+            find_descendant_by_compound_kind(node, BbnfCompoundKind::ValueClosure)
+                .unwrap_or(node)
+        };
+        lower_value_closure(closure, ctx)
     } else {
-        // value_or chain — body is `value_and , ( "||" ?w , value_and ) *`.
-        fold_value_chain(node, &LAYER_OR, ctx)
+        // value_or chain — find the actual ValueOr compound, or fall
+        // back to `node` itself when the optimizer inlined the alt.
+        let or_chain = if node.compound_kind() == Some(BbnfCompoundKind::ValueOr) {
+            node
+        } else {
+            find_descendant_by_compound_kind(node, BbnfCompoundKind::ValueOr)
+                .unwrap_or(node)
+        };
+        fold_value_chain(or_chain, &LAYER_OR, ctx)
     }
 }
 
@@ -153,13 +176,18 @@ pub(super) fn lower_value_closure<'a, 'p: 'a>(
         .filter(|s| !s.is_empty())
         .collect();
 
-    // The body is the trailing `value_expr` rule compound. Look it
-    // up by compound-kind descent.
-    let body = find_descendant_by_compound_kind(node, BbnfCompoundKind::ValueExpr)
+    // The body is the trailing `value_expr` rule compound — under
+    // struct-direct emission the closure's children are
+    // `[param_idents..., body_value_expr]` (param idents project to
+    // `BbnfValue::Span` leaves; the body is the last compound child).
+    // Pick the LAST compound child to avoid descending into a nested
+    // closure body when the optimizer inlined wrappers.
+    let body = RuntimeView::children(&node)
+        .filter(|c| matches!(c.focus(), BbnfValue::Compound(_)))
+        .last()
         .or_else(|| {
-            // Fallback when the body's `value_expr` wrapper was
-            // inlined away — the body resolves to one of the
-            // chain-layer compound kinds directly.
+            // Defensive fallback — descend through any value-layer
+            // wrapper to find the body when direct-child scan fails.
             for &kind in VALUE_HEAD_KINDS {
                 if let Some(v) = find_descendant_by_compound_kind(node, kind) {
                     if !same_focus(v, node) {
@@ -167,13 +195,10 @@ pub(super) fn lower_value_closure<'a, 'p: 'a>(
                     }
                 }
             }
-            None
-        })
-        .or_else(|| {
-            // Last-resort fallback: pick the first compound child
-            // (defensive against shape-routed empty-wrap collapses).
-            RuntimeView::children(&node)
-                .find(|c| matches!(c.focus(), BbnfValue::Compound(_)))
+            // Last resort: any descendant ValueExpr that isn't the
+            // closure itself.
+            find_descendant_by_compound_kind(node, BbnfCompoundKind::ValueExpr)
+                .filter(|v| !same_focus(*v, node))
         })
         .expect("lower_value_closure: missing body value_expr child");
 

@@ -2,9 +2,22 @@
 
 A senior engineer joining the project reads this document first. Every
 claim cites a commit or a file path; every number is measured. The
-source corpus is the full audit record at master `48e6eaa9` plus eleven
-worktree branches totalling roughly 15,000 lines of tranche
-documentation, twelve of them new within the last calendar day.
+source corpus is the full audit record at master `409b835d` (post-AZ-I.W2
+substrate close) plus the cumulative tranche corpus from 2026-04-08
+through 2026-04-28.
+
+**Current era (2026-04-28).** Era VI ran B1 → B7 (cross-cutting
+substrate restoration + cross-repo modernization) and opened AZ-I.
+AZ-I.W0 (CLASSIFIER-UNIFICATION + IR audit pass) and AZ-I.W1
+(`StructRegistry` substrate + `project_types` closure on the three
+data grammars) closed clean. AZ-I.W2 closed substrate-only:
+`StructBuilder` trait + `JsonValue` / `JsonDocument` /
+`JsonStructBuilder` runtime + `EmitStrategy` enum + `parse_body`
+two-path emission + nine per-shape struct-direct emitters all
+landed and compile-clean; the `for_grammar` resolver returns
+`TapeDirect` for every grammar pending **W2-act** follow-on
+(JsonDocument view/value accessor API + parity harness recoding +
+cargo bench gate). Workspace 1546 / 1546 nextest green at close.
 
 ## 1. Abstract
 

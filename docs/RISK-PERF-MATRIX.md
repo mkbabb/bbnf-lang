@@ -12,16 +12,18 @@ with the dominant risk named.
 
 The post-B1 predecessor sequence (B3 parser-baseline restoration →
 B4 codegen `syn::parse2` emit-correctness + unified rollback → B2
-build-time codegen transposition → B5 substrate restoration) closed
-2026-04-26; the matrix below reflects the post-B5 substrate where
-the proc-macro IR-pipeline contract retires (B2), `cargo xtask
-regen` is the canonical regen entrypoint (B2), per-grammar source
-emerges on disk (B2), the 80-min cold rustc-side IR-pipeline wall
-ceases to exist (B2), and the welded `FusedBuilder` surface
-dissolves into a unified `Tape<R>` over `Columns` with a two-method
-parser-substrate boundary (`Tape::position()`,
-`Tape::rollback_to(open)`) (B5). Probability lifts on AY-II / AZ-I /
-AZ-II floors track those substrate shifts.
+build-time codegen transposition → B5 substrate restoration → B6
+dev-loop annex → B7 cross-repo modernization) closed 2026-04-27;
+AZ-I.W0 (CLASSIFIER-UNIFICATION + audit pass) and AZ-I.W1
+(`StructRegistry` + `project_types` closure on JSON / Sheets /
+CSS L4) closed clean; AZ-I.W2 closed substrate-only 2026-04-28
+(StructBuilder + JSON runtime + EmitStrategy + 9 per-shape struct-
+direct emitters all integrated and compile-clean; resolver returns
+TapeDirect for every grammar pending the W2-act follow-on wave that
+lands JsonDocument view/value accessors, parity harness recoding,
+and the cargo bench gate). Probability lifts on AZ-I (residual
+W2-act / W2.B / W3 / W4) and downstream tranches track that
+substrate footing.
 
 ## How to read this matrix
 

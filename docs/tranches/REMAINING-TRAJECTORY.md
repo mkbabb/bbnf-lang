@@ -6,6 +6,19 @@ after the 2026-04-26 B5 close, with AY-III deferred and its durable
 gates absorbed into AZ-I.W4 + AZ-II.W2. It does not authorize
 execution.
 
+**2026-04-28 status update.** AZ-I.W0 + W1 + W2-substrate closed.
+W2 substrate landed nine per-shape struct-direct emitters with the
+EmitStrategy substrate; the activation flip is gated on **W2-act**
+(JsonDocument view/value accessor API + parity harness recoding +
+cargo bench gate). The per-shape pattern proven at W2 (inline
+`StructLayout` literal + fully-qualified trait calls + dispatcher
+signature parameterized by strategy + `<'p>` lifetime threading)
+is reusable for W2.B (Sheets) and W3 (CSS L4) without further
+substrate work. The 2026-04-28 audit synthesis (six parallel
+reviewers — see `docs/tranches/AZ-I/audit/W2-CLOSE-AUDIT.md`)
+collapses W2-act + W2.B + W3 into one gestalt activation pass and
+folds W4 into AZ-II.W0 to retire the ceremonial wave overhead.
+
 ## 1. Path Change From The Redress
 
 The runway picks up four predecessor tranches between B1 and AY-II:

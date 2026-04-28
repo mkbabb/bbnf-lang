@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-04-28 — AZ-I W0/W1/W2-substrate close
+
+AZ-I opened against post-B7 substrate and closed three waves in
+sequence: W0 (CLASSIFIER-UNIFICATION.md locked-split disposition +
+typed-`->` audit pass with three-way `MarkerStatus` and pluggable
+`StructRegistryProbe` trait), W1 (`StructRegistry` + `StructLayout`
++ `LayoutKind`; `project_types` populates the registry inside the
+fixed-point pass; per-grammar wire-contract tests on JSON / Sheets
+/ CSS L4; emitter registry-read consumer in bridge mode;
+`TypeDesc::has_scalar_payload` recursion closing the keyword-
+discriminator Tuple-wrapped audit gate), W2 substrate
+(`StructBuilder` trait + JSON runtime types + `EmitStrategy` enum +
+parse_body two-path emission + nine per-shape struct-direct
+emitters covering Object / Array / Number / String / Scalar /
+Keyword / Wrap / AltDispatch / Flat + dispatcher signature
+threading + JSON parity harness scaffold).
+
+W2 closed substrate-only per `W2.md` §Reversal: the resolver
+returns `TapeDirect` for every grammar pending W2-act follow-on
+landing the JsonDocument view/value accessor API, the parity
+harness recoding, and the cargo bench gate. The wave's underlying
+patterns — inline `bbnf_ir::registry::StructLayout` literal,
+fully-qualified trait method calls, dispatcher signature
+parameterized by strategy — are proven and integrated; activation
+is a single resolver-arm flip plus three downstream consumer
+migrations away.
+
+Workspace verification at AZ-I.W2 close: 1546 / 1546 nextest
+passed, 27 skipped. master HEAD `409b835d`.
+
 ## 2026-04-27 — B-series (B2-B7) cross-cutting closures
 
 Six tranches landed in sequence post-B1: B3 (parser-baseline

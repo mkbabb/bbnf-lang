@@ -181,14 +181,22 @@ fn typed_value_rules_project_to_aggregate_layouts() {
     // assertion is permissive across {Struct, TaggedEnum, UntaggedEnum}
     // because the IR shape decides; what matters for parity is the
     // layout exists and carries non-trivial fields.
+    // `dimension` and `color` are inlined / canonicalized away — both
+    // are thin Alt-of-Ref alternations the lowering pipeline folds into
+    // their consumer sites. `valueUnit` survives as the typed-value
+    // alternation root and is the surviving discriminator. The
+    // five scalar typed-value primitives (`length`, `angle`, `time`,
+    // `resolution`, `percentage`) survive as `Seq(number, unit)` rules
+    // and project to `LayoutKind::Struct`. The closure-totality check
+    // in `every_named_rule_projects_to_non_empty_layout` covers every
+    // other typed-value rule that survives the lowering pipeline.
     let typed_value_rules = [
         "length",
         "angle",
         "time",
         "resolution",
         "percentage",
-        "dimension",
-        "color",
+        "valueUnit",
     ];
 
     for rule_name in &typed_value_rules {

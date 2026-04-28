@@ -103,6 +103,29 @@ impl TypeDesc {
         )
     }
 
+    /// True if this type contains a scalar payload at any nesting depth —
+    /// directly, inside a `Tuple`, or behind an `Option` / `Vec`.
+    ///
+    /// The lowering pipeline wraps typed-leaf markers in `Tuple([Span,
+    /// payload])` for keyword-discriminator alternatives where the
+    /// branch carries a captured source span alongside its semantic
+    /// payload (e.g. `"row" -> 0u8` lowers through `Skip(spanned)` to
+    /// `Tuple([Span, U8])`). The audit pass's coverage policy treats a
+    /// marker as `Mapped` whenever the layout's projected type reaches
+    /// a scalar at any depth — flat and Tuple-wrapped scalars are both
+    /// admitted under the single layout-coverage decision surface
+    /// (`feedback_pluggable-components`).
+    pub fn has_scalar_payload(&self) -> bool {
+        if self.is_scalar_payload() {
+            return true;
+        }
+        match self {
+            TypeDesc::Tuple(parts) => parts.iter().any(|t| t.has_scalar_payload()),
+            TypeDesc::Option(inner) | TypeDesc::Vec(inner) => inner.has_scalar_payload(),
+            _ => false,
+        }
+    }
+
     /// True if a standalone rule of this type requires a payload slot.
     ///
     /// `Span`-typed rules store their span natively in `TapeRec.span_lo/

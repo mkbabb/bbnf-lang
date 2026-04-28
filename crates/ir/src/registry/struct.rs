@@ -289,11 +289,18 @@ impl StructLayout {
         self.fields.iter().any(|f| f.type_desc == *ty)
     }
 
-    /// True if any field on this layout admits a scalar payload (the
-    /// `Mapped` admission criterion under the audit pass's default
-    /// scalar-cover policy).
+    /// True if any field on this layout admits a scalar payload at any
+    /// nesting depth (the `Mapped` admission criterion under the audit
+    /// pass's default scalar-cover policy).
+    ///
+    /// Recurses into `Tuple`, `Option`, and `Vec` wrappers via
+    /// [`TypeDesc::has_scalar_payload`]. The lowering pipeline wraps
+    /// keyword-discriminator branch payloads as `Tuple([Span,
+    /// scalar])`; the coverage policy admits these as Mapped because
+    /// the typed leaf the marker declared still reaches the layout's
+    /// projected type — only the wrapper nesting differs.
     pub fn admits_scalar_payload(&self) -> bool {
-        self.fields.iter().any(|f| f.type_desc.is_scalar_payload())
+        self.fields.iter().any(|f| f.type_desc.has_scalar_payload())
     }
 }
 

@@ -134,7 +134,12 @@ fn string_shape_classifies_correctly() {
 fn string_shape_emit_matches_golden() {
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.string as usize];
-    let ts = string::emit_parse_string("JsonFixture", rule, &ir);
+    let ts = string::emit_parse_string(
+        "JsonFixture",
+        rule,
+        &ir,
+        &bbnf::backend::rust::emitter::EmitStrategy::TapeDirect,
+    );
     let actual = format_tokens(&ts);
     let expected = include_str!(
         "fixtures/shape_dispatch_emission/string.rs.expected"
@@ -154,7 +159,12 @@ fn number_shape_classifies_correctly() {
 fn number_shape_emit_matches_golden() {
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.number as usize];
-    let ts = number::emit_parse_number("JsonFixture", rule, &ir);
+    let ts = number::emit_parse_number(
+        "JsonFixture",
+        rule,
+        &ir,
+        &bbnf::backend::rust::emitter::EmitStrategy::TapeDirect,
+    );
     let actual = format_tokens(&ts);
     let expected = include_str!(
         "fixtures/shape_dispatch_emission/number.rs.expected"
@@ -243,7 +253,12 @@ fn scalar_shape_emit_matches_golden() {
     // match + push_leaf(Literal) path.
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.comma as usize];
-    let ts = scalar::emit_parse_scalar("JsonFixture", rule, &ir);
+    let ts = scalar::emit_parse_scalar(
+        "JsonFixture",
+        rule,
+        &ir,
+        &bbnf::backend::rust::emitter::EmitStrategy::TapeDirect,
+    );
     let actual = format_tokens(&ts);
     let expected = include_str!(
         "fixtures/shape_dispatch_emission/scalar.rs.expected"

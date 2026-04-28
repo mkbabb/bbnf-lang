@@ -17,7 +17,10 @@ pub mod precedence;
 mod prettify;
 pub(crate) mod profile;
 pub mod shapes;
+pub mod strategy;
 pub mod visitor;
+
+pub use strategy::EmitStrategy;
 
 use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, RuleId, TypeDesc};
 use proc_macro2::TokenStream;

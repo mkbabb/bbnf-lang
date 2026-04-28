@@ -28,7 +28,7 @@ fn assert_struct_eq_sonic(
     oracle: &sonic_rs::Value,
     path: &str,
 ) {
-    use sonic_rs::JsonValueTrait;
+    use sonic_rs::{JsonContainerTrait, JsonValueTrait};
     match bbnf_value {
         JsonValue::Null => {
             assert!(
@@ -340,13 +340,18 @@ fn integer_witness_supported_in_struct_layer() {
     // witnesses for future grammar refinements. Pin both shapes via
     // the builder API so the runtime contract stays stable.
     use bbnf::runtime::{JsonStructBuilder, StructBuilder};
+    // AZ-I.W2-act.close A.fix — `JsonStructBuilder::finalise(input)`
+    // threads the parse-consumed source slice into `JsonDocument::input`.
+    // These wire-level checks synthesise documents directly from the
+    // builder API with no parse involvement; the source slice the
+    // document carries is the empty string — the synthesis identity.
     let mut b = JsonStructBuilder::new();
     b.push_leaf_with_i64(-42);
-    let doc = b.finalise();
+    let doc = b.finalise("");
     assert!(matches!(doc.root, JsonValue::Number(JsonNumber::Int(-42))));
 
     let mut b = JsonStructBuilder::new();
     b.push_leaf_with_u64(99);
-    let doc = b.finalise();
+    let doc = b.finalise("");
     assert!(matches!(doc.root, JsonValue::Number(JsonNumber::UInt(99))));
 }

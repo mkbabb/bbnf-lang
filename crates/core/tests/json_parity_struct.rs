@@ -57,11 +57,22 @@ fn synth_layout_with_fields(
     }
 }
 
+// AZ-I.W2-act.close A.fix — `JsonStructBuilder::finalise(input)`
+// threads the parse-consumed source slice into `JsonDocument::input`
+// so the `RuntimeView::input()` surface can lend it back. The wire-
+// contract tests below exercise the builder against synthetic layouts
+// with no parse involvement; the source slice the document carries is
+// therefore the empty string — the synthesis identity. The
+// `JsonDocument::input` accessor and `RuntimeView::input()` projection
+// remain reachable on every constructed document, returning `""` for
+// these synthetic builds.
+const SYNTH_INPUT: &str = "";
+
 #[test]
 fn wire_contract_null_is_unit_leaf() {
     let mut b = JsonStructBuilder::new();
     b.push_leaf_with_unit();
-    let doc: JsonDocument<'_> = b.finalise();
+    let doc: JsonDocument<'_> = b.finalise(SYNTH_INPUT);
     assert!(matches!(doc.root, JsonValue::Null));
 }
 
@@ -69,12 +80,12 @@ fn wire_contract_null_is_unit_leaf() {
 fn wire_contract_bool_is_typed_bool() {
     let mut b = JsonStructBuilder::new();
     b.push_leaf_with_bool(true);
-    let doc = b.finalise();
+    let doc = b.finalise(SYNTH_INPUT);
     assert!(matches!(doc.root, JsonValue::Bool(true)));
 
     let mut b = JsonStructBuilder::new();
     b.push_leaf_with_bool(false);
-    let doc = b.finalise();
+    let doc = b.finalise(SYNTH_INPUT);
     assert!(matches!(doc.root, JsonValue::Bool(false)));
 }
 
@@ -82,7 +93,7 @@ fn wire_contract_bool_is_typed_bool() {
 fn wire_contract_number_is_typed_f64() {
     let mut b = JsonStructBuilder::new();
     b.push_leaf_with_f64(3.14);
-    let doc = b.finalise();
+    let doc = b.finalise(SYNTH_INPUT);
     match doc.root {
         JsonValue::Number(JsonNumber::Float(v)) => assert_eq!(v, 3.14),
         other => panic!("unexpected root variant: {:?}", other),
@@ -93,7 +104,7 @@ fn wire_contract_number_is_typed_f64() {
 fn wire_contract_number_supports_integral_witnesses() {
     let mut b = JsonStructBuilder::new();
     b.push_leaf_with_i64(-42);
-    let doc = b.finalise();
+    let doc = b.finalise(SYNTH_INPUT);
     match doc.root {
         JsonValue::Number(JsonNumber::Int(v)) => assert_eq!(v, -42),
         other => panic!("unexpected root variant: {:?}", other),
@@ -101,7 +112,7 @@ fn wire_contract_number_supports_integral_witnesses() {
 
     let mut b = JsonStructBuilder::new();
     b.push_leaf_with_u64(99);
-    let doc = b.finalise();
+    let doc = b.finalise(SYNTH_INPUT);
     match doc.root {
         JsonValue::Number(JsonNumber::UInt(v)) => assert_eq!(v, 99),
         other => panic!("unexpected root variant: {:?}", other),
@@ -113,7 +124,7 @@ fn wire_contract_string_borrows_input_lifetime() {
     let s = "hello";
     let mut b = JsonStructBuilder::new();
     b.push_leaf_with_str(s);
-    let doc = b.finalise();
+    let doc = b.finalise(SYNTH_INPUT);
     match doc.root {
         JsonValue::String(borrowed) => assert_eq!(borrowed, "hello"),
         other => panic!("unexpected root variant: {:?}", other),
@@ -126,7 +137,7 @@ fn wire_contract_empty_array_resolves_to_empty_slice() {
     let layout = synth_layout(1, "array", LayoutKind::Struct);
     let h = b.begin_compound(&layout);
     b.end_compound(h);
-    let doc = b.finalise();
+    let doc = b.finalise(SYNTH_INPUT);
     match doc.root {
         JsonValue::Array(id) => {
             assert!(id.is_empty());
@@ -145,7 +156,7 @@ fn wire_contract_array_of_scalars_collects_in_order() {
     b.push_leaf_with_f64(2.0);
     b.push_leaf_with_f64(3.0);
     b.end_compound(h);
-    let doc = b.finalise();
+    let doc = b.finalise(SYNTH_INPUT);
     match doc.root {
         JsonValue::Array(id) => {
             let items = doc.array(id);
@@ -164,7 +175,7 @@ fn wire_contract_empty_object_resolves_to_empty_slice() {
     let layout = synth_layout(1, "object", LayoutKind::Struct);
     let h = b.begin_compound(&layout);
     b.end_compound(h);
-    let doc = b.finalise();
+    let doc = b.finalise(SYNTH_INPUT);
     match doc.root {
         JsonValue::Object(id) => {
             assert!(id.is_empty());
@@ -195,7 +206,7 @@ fn wire_contract_object_collects_pairs_via_pair_compound() {
     }
     b.end_compound(obj);
 
-    let doc = b.finalise();
+    let doc = b.finalise(SYNTH_INPUT);
     match doc.root {
         JsonValue::Object(id) => {
             let pairs = doc.object(id);
@@ -239,7 +250,7 @@ fn wire_contract_nested_array_of_objects() {
     }
     b.end_compound(arr);
 
-    let doc = b.finalise();
+    let doc = b.finalise(SYNTH_INPUT);
     match doc.root {
         JsonValue::Array(arr_id) => {
             let items = doc.array(arr_id);
@@ -272,7 +283,7 @@ fn wire_contract_value_alt_branch_tag_is_idempotent() {
     b.push_branch_tag(2);
     b.push_leaf_with_f64(2.71);
     b.end_compound(h);
-    let doc = b.finalise();
+    let doc = b.finalise(SYNTH_INPUT);
     match doc.root {
         JsonValue::Number(JsonNumber::Float(v)) => assert_eq!(v, 2.71),
         other => panic!("unexpected root variant: {:?}", other),

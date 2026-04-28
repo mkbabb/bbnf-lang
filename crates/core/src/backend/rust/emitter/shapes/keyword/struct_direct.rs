@@ -17,6 +17,7 @@
 //! admit those grammars in W2; this module's StructDirect emission
 //! covers JSON's two known shapes.
 
+use bbnf_ir::registry::EmitStrategy;
 use bbnf_ir::{GrammarIR, IrNode, IrRule, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -24,6 +25,7 @@ use quote::{format_ident, quote};
 use super::payload::{alt_branch_payload_value, leading_literal_bytes};
 use super::unwrap_trivia;
 use super::super::dispatcher::shape_fn_ident;
+use super::super::substrate::builder_ty_elided;
 
 /// Resolve the rule's projected `TypeDesc`. Returns `None` when the
 /// rule is absent from `ir.types` (untyped) — the caller treats this as
@@ -89,11 +91,13 @@ pub(super) fn emit_parse_keyword_struct_direct(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
+    strategy: &EmitStrategy,
 ) -> TokenStream {
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("keyword", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let rule_ty = rule_type_desc(rule, ir);
+    let builder_ty = builder_ty_elided(strategy);
 
     let body = unwrap_trivia(&rule.body);
     match body {
@@ -125,7 +129,7 @@ pub(super) fn emit_parse_keyword_struct_direct(
                     p: &mut usize,
                     _first_byte: u8,
                     _state: &mut #support_mod::ScanState,
-                    builder: &mut crate::runtime::JsonStructBuilder<'_>,
+                    builder: &mut #builder_ty,
                 ) -> ::core::result::Result<
                     crate::runtime::tape::TapeOffset,
                     crate::runtime::tape::DtaError,
@@ -269,7 +273,7 @@ pub(super) fn emit_parse_keyword_struct_direct(
                     p: &mut usize,
                     first_byte: u8,
                     state: &mut #support_mod::ScanState,
-                    builder: &mut crate::runtime::JsonStructBuilder<'_>,
+                    builder: &mut #builder_ty,
                 ) -> ::core::result::Result<
                     crate::runtime::tape::TapeOffset,
                     crate::runtime::tape::DtaError,

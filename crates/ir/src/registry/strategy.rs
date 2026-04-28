@@ -167,10 +167,6 @@ impl EmitStrategy {
             // path. The grammar-emitted `JsonParser::parse` returns
             // `Result<JsonDocument<'_>, ParseErr>` after the
             // orchestrator's post-flip regen consumes this strategy.
-            // The `JsonGrammar` alias mirrors the same admission so
-            // hand-written test fixtures resolving via the plan-
-            // nominal name route to the same substrate (per
-            // W2-EMITTER-REWIRE plan §1).
             ("JsonParser" | "JsonGrammar", true) => EmitStrategy::StructDirect {
                 rust: SubstrateBinding {
                     builder_path: "crate::runtime::json::JsonStructBuilder",
@@ -179,31 +175,32 @@ impl EmitStrategy {
                 ts: None,
                 wasm: None,
             },
-            // AZ-I.W2-act.B2: Sheets struct-direct activation. The
-            // GoogleSheetsParser ident emitted by `cargo xtask regen
-            // --grammar google_sheets` resolves to the Sheets runtime
-            // bindings. The orchestrator's regen pass consumes this
-            // arm — pre-regen the existing tape-backed parser remains
-            // in the workspace; post-regen the emitted parse_body
-            // writes through `SheetsStructBuilder` and returns
-            // `SheetsDocument`.
-            ("GoogleSheetsParser" | "GoogleSheetsGrammar", true) => {
-                EmitStrategy::StructDirect {
-                    rust: SubstrateBinding {
-                        builder_path: "crate::runtime::google_sheets::SheetsStructBuilder",
-                        document_path: "crate::runtime::google_sheets::SheetsDocument",
-                    },
-                    ts: None,
-                    wasm: None,
-                }
-            }
-            // AZ-I.W2-act.B3 extends this with `CssL4Parser`; until it
-            // lands, every other grammar (BBNF, BNF, EBNF, CSV, math,
-            // CSS L4 pre-B3) routes onto the legacy fused tape path.
-            // Per `feedback_no-orthogonal-codepaths` there is no
-            // co-emission; per `feedback_no-backward-compat` there is
-            // no Parsed-shim — the catch-all is the single negative
-            // default, not a fallback path.
+            // AZ-I.W2-act.B2: Google Sheets struct-direct activation.
+            ("GoogleSheetsParser" | "GoogleSheetsGrammar", true) => EmitStrategy::StructDirect {
+                rust: SubstrateBinding {
+                    builder_path: "crate::runtime::google_sheets::SheetsStructBuilder",
+                    document_path: "crate::runtime::google_sheets::SheetsDocument",
+                },
+                ts: None,
+                wasm: None,
+            },
+            // AZ-I.W2-act.B3: CSS L4 struct-direct activation. The CSS
+            // L4 grammar projects through the `bbnf::runtime::css_l4`
+            // typed-value enum family + `CssStructBuilder` /
+            // `CssDocument` substrate authored at W2-act.B3.
+            ("CssL4Parser", true) => EmitStrategy::StructDirect {
+                rust: SubstrateBinding {
+                    builder_path: "crate::runtime::css_l4::CssStructBuilder",
+                    document_path: "crate::runtime::css_l4::CssDocument",
+                },
+                ts: None,
+                wasm: None,
+            },
+            // Catch-all — every grammar not yet activated stays on the
+            // legacy tape substrate. The `_ => TapeDirect` close is
+            // the wave-local revert per W2.md §Reversal — per
+            // `feedback_no-orthogonal-codepaths` it is the single
+            // negative default, not a fallback path.
             _ => EmitStrategy::TapeDirect,
         }
     }

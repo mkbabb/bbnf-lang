@@ -235,6 +235,7 @@ pub fn emit_parse_wrap(
             grammar_suffix,
             rule,
             ir,
+            strategy,
         );
     }
     let rule_name = ir.get_string(rule.name);

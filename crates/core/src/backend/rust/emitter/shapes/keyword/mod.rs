@@ -62,6 +62,7 @@ pub fn emit_parse_keyword(
             grammar_suffix,
             rule,
             ir,
+            strategy,
         );
     }
     emit_parse_keyword_tape(grammar_suffix, rule, ir)

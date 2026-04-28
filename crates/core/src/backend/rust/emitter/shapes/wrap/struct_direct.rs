@@ -30,12 +30,13 @@
 //! `rule_type` slots are unused by the Wrap dispatch; defaults
 //! suffice.
 
-use bbnf_ir::registry::LayoutKind;
+use bbnf_ir::registry::{EmitStrategy, LayoutKind};
 use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::super::dispatcher::shape_fn_ident;
+use super::super::substrate::{builder_ty_elided, builder_ty_with_lifetime};
 use super::shape_tag_name;
 use super::unwrap_outer;
 
@@ -173,12 +174,17 @@ pub(super) fn emit_parse_wrap_struct_direct(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
+    strategy: &EmitStrategy,
 ) -> TokenStream {
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("wrap", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
 
     let body = unwrap_outer(&rule.body);
+
+    // AZ-I.W2-act.B3 — splice the builder type from the SubstrateBinding.
+    let p_lt = format_ident!("p");
+    let builder_ty = builder_ty_with_lifetime(strategy, &p_lt);
 
     // For non-Alt Wrap bodies we emit a single Ref delegation; the
     // outer wrap compound is unnecessary because the delegated body
@@ -187,7 +193,7 @@ pub(super) fn emit_parse_wrap_struct_direct(
     // Wrap by W3.1's classifier).
     let dispatch = match body {
         IrNode::Alt(branches, _) => {
-            emit_alt_struct_dispatch(branches, grammar_suffix, ir, rule)
+            emit_alt_struct_dispatch(branches, grammar_suffix, ir, rule, strategy)
         }
         IrNode::Ref(rid) => {
             // Single-Ref Wrap — emit a direct delegation. No outer
@@ -245,7 +251,7 @@ pub(super) fn emit_parse_wrap_struct_direct(
             input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::JsonStructBuilder<'p>,
+            builder: &mut #builder_ty,
         ) -> ::core::result::Result<
             crate::runtime::tape::TapeOffset,
             crate::runtime::tape::DtaError,
@@ -264,9 +270,11 @@ fn emit_alt_struct_dispatch(
     grammar_suffix: &str,
     ir: &GrammarIR,
     rule: &IrRule,
+    strategy: &EmitStrategy,
 ) -> TokenStream {
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let layout_literal = quote_layout_literal(rule, ir);
+    let builder_ty_e = builder_ty_elided(strategy);
 
     let mut per_byte: std::collections::BTreeMap<u8, Vec<TokenStream>> = Default::default();
     let mut linear_arms: Vec<TokenStream> = Vec::new();
@@ -308,7 +316,7 @@ fn emit_alt_struct_dispatch(
         // OpenFrame::Wrap per the JsonStructBuilder dispatch.
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = #layout_literal;
         let __wrap_handle = <
-            crate::runtime::JsonStructBuilder<'_> as crate::runtime::StructBuilder
+            #builder_ty_e as crate::runtime::StructBuilder
         >::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
         let first = #support_mod::skip_space(input, p, state)
@@ -325,7 +333,7 @@ fn emit_alt_struct_dispatch(
             // bubbling the error so the builder's stack stays
             // balanced for downstream finalisation diagnostics.
             <
-                crate::runtime::JsonStructBuilder<'_> as crate::runtime::StructBuilder
+                #builder_ty_e as crate::runtime::StructBuilder
             >::end_compound(builder, __wrap_handle);
             return ::core::result::Result::Err(
                 crate::runtime::tape::DtaError::Syntax {
@@ -341,10 +349,10 @@ fn emit_alt_struct_dispatch(
         // builder retains the tag for audit symmetry but does not
         // store it on the value), then close the wrap.
         <
-            crate::runtime::JsonStructBuilder<'_> as crate::runtime::StructBuilder
+            #builder_ty_e as crate::runtime::StructBuilder
         >::push_branch_tag(builder, __wrap_branch_idx);
         <
-            crate::runtime::JsonStructBuilder<'_> as crate::runtime::StructBuilder
+            #builder_ty_e as crate::runtime::StructBuilder
         >::end_compound(builder, __wrap_handle);
         ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }

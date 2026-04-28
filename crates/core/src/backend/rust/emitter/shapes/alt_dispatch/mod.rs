@@ -39,6 +39,7 @@ use quote::{format_ident, quote};
 
 use bbnf_ir::registry::EmitStrategy;
 use super::dispatcher::shape_fn_ident;
+use super::substrate::builder_ty_with_lifetime;
 
 mod branches;
 mod payload;
@@ -64,7 +65,7 @@ pub fn emit_parse_alt_dispatch(
 ) -> TokenStream {
     match strategy {
         EmitStrategy::StructDirect { .. } => {
-            emit_parse_alt_dispatch_struct_direct(grammar_suffix, rule, ir)
+            emit_parse_alt_dispatch_struct_direct(grammar_suffix, rule, ir, strategy)
         }
         EmitStrategy::TapeDirect => emit_parse_alt_dispatch_tape(grammar_suffix, rule, ir),
     }
@@ -171,11 +172,14 @@ fn emit_parse_alt_dispatch_struct_direct(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
+    strategy: &EmitStrategy,
 ) -> TokenStream {
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("altdispatch", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let rule_id_lit = rule.id;
+    let p_lt = format_ident!("p");
+    let builder_ty = builder_ty_with_lifetime(strategy, &p_lt);
 
     let body = unwrap_trivia(&rule.body);
     let IrNode::Alt(branches, _) = body else {
@@ -198,7 +202,7 @@ fn emit_parse_alt_dispatch_struct_direct(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::JsonStructBuilder<'p>,
+            builder: &mut #builder_ty,
         ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             use crate::runtime::builder::StructBuilder;
 

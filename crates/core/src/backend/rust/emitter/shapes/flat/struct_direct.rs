@@ -62,6 +62,7 @@ use quote::{format_ident, quote};
 
 use super::super::dispatcher::{emit_ref_call_tape, shape_fn_ident};
 use super::super::root_rule_name;
+use super::super::substrate::{builder_ty_elided, builder_ty_with_lifetime};
 use bbnf_ir::registry::EmitStrategy;
 use super::collect_positions;
 use super::PositionedNode;
@@ -135,7 +136,7 @@ pub(super) fn emit_parse_flat_struct_direct(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
-    _strategy: &EmitStrategy,
+    strategy: &EmitStrategy,
 ) -> TokenStream {
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("flat", grammar_suffix, rule_name);
@@ -159,6 +160,16 @@ pub(super) fn emit_parse_flat_struct_direct(
     let layout_var = format_ident!("__{}_layout", rule_name);
     let handle_var = format_ident!("__{}_handle", rule_name);
 
+    // AZ-I.W2-act.B3 — substrate-binding splice: convert the
+    // strategy's `builder_path` into a TokenStream so the function
+    // signature carries the grammar's concrete builder type rather
+    // than the JSON-specific path. Per `feedback_no-orthogonal-
+    // codepaths`, the resolution happens once here; the resulting
+    // tokens are spliced unchanged at every call site.
+    let p_lt = format_ident!("p");
+    let builder_ty = builder_ty_with_lifetime(strategy, &p_lt);
+    let builder_ty_elided = builder_ty_elided(strategy);
+
     // Flatten the rule body into positional IR nodes (same walker the
     // tape path uses; ws-trim metadata threaded per position).
     let positions = collect_positions(&rule.body);
@@ -175,14 +186,15 @@ pub(super) fn emit_parse_flat_struct_direct(
 
     quote! {
         /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
-        /// **struct-direct body**. Targets [`JsonStructBuilder`].
+        /// **struct-direct body**. Targets the grammar's concrete
+        /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+        /// resolver's `SubstrateBinding`).
         ///
         /// Walker-tape compound emission is replaced by typed
         /// `begin_compound` / `end_compound` calls against the in-flight
         /// frame stack. Per-position pushes (string keys, recursive
         /// value calls, byte literals) land directly on the topmost
-        /// open frame; `JsonStructBuilder::begin_compound` routes the
-        /// `(LayoutKind::Struct, "pair")` case to `OpenFrame::Pair`.
+        /// open frame.
         ///
         /// Returns `TapeOffset::NONE` for compositional uniformity
         /// with sibling shape fns under struct-direct mode; the
@@ -199,31 +211,25 @@ pub(super) fn emit_parse_flat_struct_direct(
             input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::JsonStructBuilder<'p>,
+            builder: &mut #builder_ty,
         ) -> ::core::result::Result<
             crate::runtime::tape::TapeOffset,
             crate::runtime::tape::DtaError,
         > {
             // AZ-I.W2.RF — open the Flat compound. The layout literal is
             // built inline from the rule's registered metadata; the
-            // builder routes (LayoutKind::Struct, "pair") to
-            // OpenFrame::Pair per the JsonStructBuilder dispatch.
+            // grammar's StructBuilder routes (kind, rule_name) to its
+            // own concrete OpenFrame variant.
             let #layout_var: ::bbnf_ir::registry::StructLayout = #layout_literal;
             let #handle_var = <
-                crate::runtime::JsonStructBuilder<'_> as crate::runtime::StructBuilder
+                #builder_ty_elided as crate::runtime::StructBuilder
             >::begin_compound(builder, &#layout_var);
 
-            // Per-position emission. Errors propagate via `?`; the
-            // builder's frame stack stays balanced because the parent
-            // call's error path is the canonical place to roll back
-            // partial frames (orchestrator-owned at the parse() entry).
+            // Per-position emission.
             #(#emissions)*
 
-            // Close the Flat compound. Pair / Struct frames finalise
-            // onto the enclosing Object / parent frame; Wrap-route
-            // frames forward their single child via `deposit`.
             <
-                crate::runtime::JsonStructBuilder<'_> as crate::runtime::StructBuilder
+                #builder_ty_elided as crate::runtime::StructBuilder
             >::end_compound(builder, #handle_var);
 
             ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)

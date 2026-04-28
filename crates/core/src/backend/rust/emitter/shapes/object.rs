@@ -44,6 +44,7 @@ use super::dispatcher::{
     visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
 };
 use super::root_rule_name;
+use super::substrate::{builder_ty_elided, builder_ty_with_lifetime};
 
 /// Emit `pub fn parse_object_<grammar>_<rule>(input, p, state, builder)
 /// -> Result<TapeOffset, DtaError>` for [`EmitStrategy::TapeDirect`], or
@@ -62,7 +63,7 @@ pub fn emit_parse_object(
 ) -> TokenStream {
     match strategy {
         EmitStrategy::StructDirect { .. } => {
-            emit_parse_object_struct_direct(grammar_suffix, rule, ir)
+            emit_parse_object_struct_direct(grammar_suffix, rule, ir, strategy)
         }
         EmitStrategy::TapeDirect => emit_parse_object_tape(grammar_suffix, rule, ir),
     }
@@ -442,12 +443,16 @@ fn emit_parse_object_struct_direct(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
+    strategy: &EmitStrategy,
 ) -> TokenStream {
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("object", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let rule_id_lit = rule.id;
     let rule_name_lit = rule_name.to_string();
+    let p_lt = format_ident!("p");
+    let builder_ty = builder_ty_with_lifetime(strategy, &p_lt);
+    let _builder_ty_e = builder_ty_elided(strategy);
 
     let dispatcher_ident = match root_rule_name(ir) {
         Some(root) => {
@@ -487,7 +492,7 @@ fn emit_parse_object_struct_direct(
             input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::JsonStructBuilder<'p>,
+            builder: &mut #builder_ty,
         ) -> ::core::result::Result<
             crate::runtime::tape::TapeOffset,
             crate::runtime::tape::DtaError,

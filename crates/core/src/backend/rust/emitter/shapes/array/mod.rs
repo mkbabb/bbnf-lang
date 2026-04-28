@@ -123,7 +123,7 @@ pub fn emit_parse_array(
 ) -> TokenStream {
     match strategy {
         EmitStrategy::StructDirect { .. } => {
-            emit_parse_array_struct_direct(grammar_suffix, rule, ir)
+            emit_parse_array_struct_direct(grammar_suffix, rule, ir, strategy)
         }
         EmitStrategy::TapeDirect => {
             let body = unwrap_map_ow(&rule.body);
@@ -155,12 +155,15 @@ fn emit_parse_array_struct_direct(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
+    strategy: &EmitStrategy,
 ) -> TokenStream {
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("array", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let rule_id_lit = rule.id;
     let rule_name_lit = rule_name.to_string();
+    let p_lt = format_ident!("p");
+    let builder_ty = super::substrate::builder_ty_with_lifetime(strategy, &p_lt);
 
     let dispatcher_ident = match root_rule_name(ir) {
         Some(root) => {
@@ -191,7 +194,7 @@ fn emit_parse_array_struct_direct(
             input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::JsonStructBuilder<'p>,
+            builder: &mut #builder_ty,
         ) -> ::core::result::Result<
             crate::runtime::tape::TapeOffset,
             crate::runtime::tape::DtaError,

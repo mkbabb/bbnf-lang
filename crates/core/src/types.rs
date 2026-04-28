@@ -4,25 +4,28 @@ use parse_that::Span;
 
 use indexmap::IndexMap;
 
-use crate::grammar::generated::BbnfBootstrapNodeView;
+use crate::runtime::bbnf::BbnfView;
 
 // ─── Grammar AST ─────────────────────────────────────────────────────────────
 
 /// A single rule entry: name span + reference to the RHS in the bootstrap AST.
 ///
-/// Tranche AC.2 — under the tape-first generated parser, the RHS is no
-/// longer a borrowed `&'a BbnfBootstrapEnum<'a>`; it's a
-/// [`BbnfBootstrapNodeView`], a cursor-backed view over the finished
-/// tape that carries both a `TapeCursor<'a>` and a `&'a str` slice of
-/// the owning source buffer. Walking the RHS is identical in shape to
-/// the old enum (iterate children, dispatch on rule kind), but every
-/// access goes through view methods instead of pattern matching.
+/// AZ-II.cutover.D — under the struct-direct BBNF parser, the RHS is a
+/// [`BbnfView`] focused on the rule's RHS [`crate::runtime::bbnf::BbnfValue`]
+/// inside the owning [`crate::runtime::bbnf::BbnfDocument`]. The view
+/// shares its `'a` lifetime with the parse arena and the source slice
+/// (a single shared lifetime since the document and input borrow from
+/// the same parse call site). Walking the RHS dispatches on the
+/// focused compound's [`crate::runtime::bbnf::BbnfCompoundKind`]
+/// (compound shape) or on [`crate::runtime::bbnf::BbnfKind`] (when
+/// scalar / span / unit semantics matter).
 #[derive(Debug, Clone, Copy)]
 pub struct RuleEntry<'a> {
     /// Span of the rule's LHS identifier.
     pub name_span: Span<'a>,
-    /// The RHS expression — a view over the bootstrap parse tape.
-    pub rhs: BbnfBootstrapNodeView<'a>,
+    /// The RHS expression — a view focused on the rule body inside the
+    /// owning [`crate::runtime::bbnf::BbnfDocument`].
+    pub rhs: BbnfView<'a, 'a>,
 }
 
 /// Grammar rules: rule name → RHS entry. Insertion-ordered to preserve source order.
@@ -54,8 +57,10 @@ pub struct ImportDirective<'a> {
 pub struct RecoverDirective<'a> {
     /// The name of the rule to wrap with recovery.
     pub rule_name: &'a str,
-    /// The sync expression — a view into the bootstrap parse tape.
-    pub sync_expr: BbnfBootstrapNodeView<'a>,
+    /// The sync expression — a view focused on the recover-directive's
+    /// body expression inside the owning
+    /// [`crate::runtime::bbnf::BbnfDocument`].
+    pub sync_expr: BbnfView<'a, 'a>,
     /// The byte-offset span of the entire recover directive.
     pub span: Span<'a>,
 }

@@ -416,6 +416,72 @@ Commits:
 - `78370c87` chore(emitter,tests): retire registry_observer + emitter_registry_read
 - `2d7b2e4e` feat(pipeline): wire audit_payload_coverage to write target/audit/<grammar>.json
 
+### W2-act.B1 — JSON activation: resolver flip + consumer migrations + parity recoding (2026-04-28, returned)
+
+Parallel after A. Cap 60 min.
+
+- Resolver arm flipped: `EmitStrategy::for_grammar` now resolves
+  `("JsonParser" | "JsonGrammar", true)` to `EmitStrategy::StructDirect`
+  with the canonical `JsonStructBuilder` / `JsonDocument` substrate
+  paths. The catch-all `_ => TapeDirect` preserves the W2-act
+  substrate-only state for every other grammar; W2-act.B2 / B3 land
+  their own positive arms in the same wave.
+- `crates/core/tests/emit_strategy.rs` — JSON-arm leaf tests flipped
+  from "TapeDirect (post-W2-close)" to "StructDirect (post-W2-act.B1)";
+  asserts canonical builder/document paths + None for ts/wasm; empty-
+  registry guard tests unchanged.
+- Three broken JSON test consumers migrated onto `JsonDocument`:
+  - `tests/json_slab.rs` — `parsed.view()` → `doc.view()`; assertions
+    check `JsonView::kind()` + arena handle resolution on the canonical
+    fixture corpus.
+  - `tests/projection_totality.rs` — JSON's runtime-call-count block
+    asserts the typed `JsonValue::String` shape post-flip (not the
+    "Projection" debug-suffix marker, which no longer applies); CSS L4 /
+    Sheets / BBNF blocks unchanged (still tape-direct).
+  - `tests/typed_accessor_surface.rs` — JSON compile-time accessor block
+    swaps to `JsonView` surface (`kind()` / `is_*()` / `root()` /
+    `arena()`); rule_kind dispatch test pins `JsonValue::Object` shape
+    on `{"a":1}`.
+- Five JSON parity harnesses recoded for struct-direct:
+  - `tests/json_parity.rs` (sonic-rs) — recursive walker comparing
+    every `JsonValue` variant against `sonic_rs::Value`; numbers reduce
+    to f64; objects walked in source order. Typed-leaf activation
+    tests (null/bool/number/string) assert variant landing on the
+    document directly — no tape symbols.
+  - `tests/json_canonical_parity.rs` — replaces `serialize_compact` /
+    `NodeView::from_cursor` with a local compact serializer over
+    `JsonDocument`; both sides feed through shared
+    `strip_insignificant_ws` for byte-symmetric compare.
+  - `tests/json_value_parity.rs` (serde_json + simdjson) —
+    `assert_doc_eq_serde` / `assert_doc_eq_simd` walkers compare
+    `JsonDocument` against `serde_json::Value` and
+    `simd_json::owned::Value`.
+  - `tests/json_parity_struct.rs` — promoted from W2-act probe to
+    load-bearing; wire-contract section retained (StructBuilder trait
+    surface), native-parity section adds serde_json fixture-corpus
+    comparisons + compile-time pin that `JsonParser::parse` returns
+    `JsonDocument<'_>`.
+  - `tests/json_decode.rs` — string-decode round-trips walk the
+    document tree; collect_strings recurses through arena handles.
+
+Tests will compile against the post-flip generated.rs once the
+orchestrator runs `cargo xtask regen --grammar json` post-cherry-pick.
+The bench gate (twitter ≥ 1967, canada ≥ 1231, citm ≥ 2438) is
+orchestrator-owned.
+
+Hard gates (per dispatch spec):
+1. Resolver: `cargo nextest run -p bbnf --test emit_strategy --profile ax-iter` — 7/7 pass.
+2. Three broken consumers: forward-migrated; verifies post-orchestrator-regen.
+3. Parity harnesses: forward-migrated; verifies post-orchestrator-regen.
+4. `cargo iter-check` — 0 errors (8 pre-existing warnings).
+5. `cargo nextest run --workspace --profile ax-iter --no-fail-fast` — pending orchestrator regen for full pass count.
+6. `git status --short` — empty modulo `target.local/`.
+
+Commits:
+- `3167faf0` feat(ir): AZ-I.W2-act.B1 — flip JsonParser/JsonGrammar resolver to StructDirect
+- `0e7485c5` refactor(tests/json): AZ-I.W2-act.B1 — migrate consumers to JsonDocument
+- `f94c31c9` refactor(tests/json): AZ-I.W2-act.B1 — recode parity harnesses against JsonDocument
+
 ## Handoff
 
 - Opens on: post-B7 substrate (AY-II → AY-II-I → AY-III deferred;

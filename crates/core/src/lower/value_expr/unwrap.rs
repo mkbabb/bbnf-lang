@@ -5,12 +5,13 @@
 //! (`lower/expression.rs`), which uses them for type-shorthand and
 //! `@host` return-type recovery on `-> T` map arrows.
 
-use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
-use crate::lower::tape_walk::find_descendant_by_kind;
+use crate::runtime::RuntimeView;
+use crate::runtime::bbnf::{BbnfCompoundKind, BbnfKind, BbnfValue, BbnfView};
 
-use super::atom::{recover_call_path, scan_ident_len};
+use super::atom::{recover_call_path, same_focus, scan_ident_len};
 use super::precedence::collect_chain_operands;
 use super::simple_kinds::value_expr_head;
+use super::view_walk::find_descendant_by_compound_kind;
 
 // ─── Value-expression helpers exported to expression.rs ──────────────────────
 
@@ -25,65 +26,67 @@ use super::simple_kinds::value_expr_head;
 /// `value_unary` / `value_atom`) when each wrapper has only one
 /// child compound (i.e. no operators in the chain). Returns the
 /// raw identifier byte slice without copying.
-pub(crate) fn unwrap_value_ident_str<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-) -> Option<&'a str> {
-    use crate::runtime::tape::TapeKind;
+pub(crate) fn unwrap_value_ident_str<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+) -> Option<&'p str> {
     let mut cur = node;
     loop {
-        match cur.rule_kind() {
-            BbnfBootstrapRuleKind::value_ident
-            | BbnfBootstrapRuleKind::identifier => {
-                return Some(cur.span_text());
+        // Leaf payload — a `Span` carries the identifier slice
+        // directly; other typed leaves can't yield an ident-string
+        // without their span.
+        match cur.focus() {
+            BbnfValue::Span(s) => {
+                return Some(s);
             }
-            BbnfBootstrapRuleKind::value_path => {
-                let text = cur.span_text().trim();
+            BbnfValue::Int(_) | BbnfValue::Float(_) | BbnfValue::Bool(_)
+            | BbnfValue::Tag(_) | BbnfValue::Unit => {
+                return None;
+            }
+            BbnfValue::Compound(_) => {}
+        }
+
+        match cur.compound_kind() {
+            // value_path is identifier-shaped iff it's a single
+            // segment (no `::`).
+            Some(BbnfCompoundKind::ValuePath) => {
+                let text = cur.span_text()?.trim();
                 return if text.contains("::") { None } else { Some(text) };
             }
             // Top-level value_expr wrapper — peel into the inner
-            // head. Under DTA, `children().next()` picks the
-            // anonymous Seq wrapper rather than the semantic head;
-            // descend to the first value-layer rule compound.
-            BbnfBootstrapRuleKind::value_expr => {
+            // head.
+            Some(BbnfCompoundKind::ValueExpr) => {
                 cur = value_expr_head(cur)?;
             }
             // Precedence-chain wrappers: descend through the
             // first-and-only operand if there are no operators.
-            BbnfBootstrapRuleKind::value_or
-            | BbnfBootstrapRuleKind::value_and
-            | BbnfBootstrapRuleKind::value_cmp
-            | BbnfBootstrapRuleKind::value_add
-            | BbnfBootstrapRuleKind::value_mul => {
-                // Single-operand chain → text == operand text. Use
-                // `collect_chain_operands` to detect. The operand
-                // collection is already DTA-aware (W4.2 migration)
-                // so this site inherits the descent through any
-                // anonymous wrappers transparently.
+            Some(BbnfCompoundKind::ValueOr)
+            | Some(BbnfCompoundKind::ValueAnd)
+            | Some(BbnfCompoundKind::ValueCmp)
+            | Some(BbnfCompoundKind::ValueAdd)
+            | Some(BbnfCompoundKind::ValueMul) => {
+                // Single-operand chain → text == operand text.
                 let operands = collect_chain_operands(cur);
                 if operands.len() != 1 {
                     return None;
                 }
                 cur = operands.into_iter().next().unwrap();
             }
-            BbnfBootstrapRuleKind::value_unary => {
+            Some(BbnfCompoundKind::ValueUnary) => {
                 // Bare unary (no `!`/`-`) — descend into the atom.
-                // Under DTA the atom sits one Seq deeper; descend to
-                // the value_atom descendant rather than picking the
-                // anonymous wrapper via `children().next()`.
-                let text = cur.span_text();
+                let text = cur.span_text()?;
                 let first = text.as_bytes().first().copied();
                 if first == Some(b'!') || first == Some(b'-') {
                     return None;
                 }
-                cur = find_descendant_by_kind(cur, BbnfBootstrapRuleKind::value_atom)
-                    .filter(|v| v.cursor().offset() != cur.cursor().offset())
-                    .or_else(|| cur.children().next())?;
+                cur = find_descendant_by_compound_kind(cur, BbnfCompoundKind::ValueAtom)
+                    .filter(|v| !same_focus(*v, cur))
+                    .or_else(|| RuntimeView::children(&cur).next())?;
             }
-            BbnfBootstrapRuleKind::value_atom => {
+            Some(BbnfCompoundKind::ValueAtom) => {
                 // Atom is identifier-shaped iff its leading non-ws
                 // byte is `_`/alpha and the contiguous identifier
                 // run equals the trimmed text length.
-                let text = cur.span_text();
+                let text = cur.span_text()?;
                 let trimmed = text.trim();
                 let first = trimmed.as_bytes().first().copied()?;
                 if first != b'_' && !(first as char).is_ascii_alphabetic() {
@@ -96,24 +99,17 @@ pub(crate) fn unwrap_value_ident_str<'a>(
                     return None;
                 }
             }
-            // Under DTA the walker surfaces `int_lit` / `Unknown` as
-            // the sentinel rule_kind for compounds emitted without a
-            // `DtaState::Ref`. In the value-expression chain, these
-            // appear when the optimizer inlined the `value_unary` +
-            // `value_atom` layers entirely — the sentinel compound's
-            // span text IS the atom's text (for a type-name / bare
-            // ident: `"i64"`, `"Span"`). Classify it as an atom when
-            // the span is identifier-shaped.
-            BbnfBootstrapRuleKind::int_lit | BbnfBootstrapRuleKind::Unknown => {
-                let text = cur.span_text();
+            // Anonymous / Other compounds may surface when the
+            // optimizer fully inlined the value-layer wrappers and
+            // the atom's span IS the identifier-shaped text. Try
+            // the same atom-style classification.
+            Some(BbnfCompoundKind::Other) => {
+                let text = cur.span_text()?;
                 let trimmed = text.trim();
                 let first = trimmed.as_bytes().first().copied()?;
-                // If the span starts with a digit or `.`, this is a
-                // real int_lit / numeric — not an identifier.
                 if first.is_ascii_digit() || first == b'.' {
                     return None;
                 }
-                // Treat as value_atom body: identifier-shaped span.
                 if first != b'_' && !(first as char).is_ascii_alphabetic() {
                     return None;
                 }
@@ -126,14 +122,15 @@ pub(crate) fn unwrap_value_ident_str<'a>(
             }
             _ => return None,
         }
-        // Termination is guaranteed because every iteration either
-        // returns or descends through `children().next()` /
-        // `collect_chain_operands`, both of which strictly shrink
-        // the visited subtree. Defensive guard: stop on any
-        // non-compound tape kind (every value-expression rule_kind
-        // we care about emits a Rule compound).
-        if !matches!(cur.kind(), TapeKind::Rule | TapeKind::Repeat | TapeKind::Seq | TapeKind::Alt) {
-            return None;
+        // Termination check — stop on any non-compound focus that
+        // didn't already short-circuit above.
+        if cur.kind() != BbnfKind::Compound {
+            // Fall back to the span path for leaf focuses we
+            // didn't explicitly handle.
+            match cur.focus() {
+                BbnfValue::Span(s) => return Some(s),
+                _ => return None,
+            }
         }
     }
 }
@@ -141,55 +138,48 @@ pub(crate) fn unwrap_value_ident_str<'a>(
 /// Recursively unwrap value-expression wrappers down to the
 /// innermost atom view. Used by `lower_map_arrow` to extract the
 /// leaf node for type-suffix and bool-literal detection.
-pub(crate) fn deep_unwrap_value<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-) -> BbnfBootstrapNodeView<'a> {
+pub(crate) fn deep_unwrap_value<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+) -> BbnfView<'a, 'p> {
     let mut cur = node;
     loop {
-        match cur.rule_kind() {
+        match cur.compound_kind() {
             // Top-level value_expr wrapper — peel into the inner
-            // head. Under DTA, `children().next()` picks the
-            // anonymous Seq wrapper rather than the semantic head;
-            // use `value_expr_head` to descend to the first
-            // value-layer rule.
-            BbnfBootstrapRuleKind::value_expr => {
+            // head.
+            Some(BbnfCompoundKind::ValueExpr) => {
                 if let Some(head) = value_expr_head(cur) {
                     cur = head;
                 } else {
                     return cur;
                 }
             }
-            BbnfBootstrapRuleKind::value_or
-            | BbnfBootstrapRuleKind::value_and
-            | BbnfBootstrapRuleKind::value_cmp
-            | BbnfBootstrapRuleKind::value_add
-            | BbnfBootstrapRuleKind::value_mul => {
+            Some(BbnfCompoundKind::ValueOr)
+            | Some(BbnfCompoundKind::ValueAnd)
+            | Some(BbnfCompoundKind::ValueCmp)
+            | Some(BbnfCompoundKind::ValueAdd)
+            | Some(BbnfCompoundKind::ValueMul) => {
                 let operands = collect_chain_operands(cur);
                 if operands.len() != 1 {
                     return cur;
                 }
                 cur = operands.into_iter().next().unwrap();
             }
-            BbnfBootstrapRuleKind::value_unary => {
-                let text = cur.span_text();
+            Some(BbnfCompoundKind::ValueUnary) => {
+                let text = cur.span_text().unwrap_or("");
                 let first = text.as_bytes().first().copied();
                 if first == Some(b'!') || first == Some(b'-') {
                     return cur;
                 }
-                // Under DTA the atom sits one Seq deeper; descend to
-                // the value_atom descendant rather than picking the
-                // anonymous wrapper via `children().next()`.
-                if let Some(atom) =
-                    find_descendant_by_kind(cur, BbnfBootstrapRuleKind::value_atom)
-                        .filter(|v| v.cursor().offset() != cur.cursor().offset())
-                        .or_else(|| cur.children().next())
+                if let Some(atom) = find_descendant_by_compound_kind(cur, BbnfCompoundKind::ValueAtom)
+                    .filter(|v| !same_focus(*v, cur))
+                    .or_else(|| RuntimeView::children(&cur).next())
                 {
                     cur = atom;
                 } else {
                     return cur;
                 }
             }
-            BbnfBootstrapRuleKind::value_atom => {
+            Some(BbnfCompoundKind::ValueAtom) => {
                 // Atoms are leaf-shaped — return as-is. Callers
                 // (`lower_map_arrow`'s suffix / bool detection)
                 // inspect the span text directly.
@@ -212,21 +202,22 @@ pub(crate) fn deep_unwrap_value<'a>(
 /// segments included). The downstream lookup tolerates misses, so
 /// returning a name eagerly is correct — non-host names simply
 /// fail the host-table check.
-pub(crate) fn extract_value_func_name<'a>(
-    node: BbnfBootstrapNodeView<'a>,
+pub(crate) fn extract_value_func_name<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
 ) -> Option<String> {
-    match node.rule_kind() {
-        BbnfBootstrapRuleKind::value_ident | BbnfBootstrapRuleKind::identifier => {
-            Some(node.span_text().to_string())
+    // Leaf-payload Span identifiers map to themselves.
+    if let BbnfValue::Span(s) = node.focus() {
+        return Some(s.to_string());
+    }
+    match node.compound_kind() {
+        Some(BbnfCompoundKind::ValuePath) => {
+            Some(recover_call_path(node.span_text()?.trim_start()))
         }
-        BbnfBootstrapRuleKind::value_path => {
-            Some(recover_call_path(node.span_text().trim_start()))
+        Some(BbnfCompoundKind::ValueFnCall) => {
+            Some(recover_call_path(node.span_text()?.trim_start()))
         }
-        BbnfBootstrapRuleKind::value_fn_call => {
-            Some(recover_call_path(node.span_text().trim_start()))
-        }
-        BbnfBootstrapRuleKind::value_atom => {
-            let trimmed = node.span_text().trim_start();
+        Some(BbnfCompoundKind::ValueAtom) => {
+            let trimmed = node.span_text()?.trim_start();
             let first = *trimmed.as_bytes().first()?;
             if !(first.is_ascii_alphabetic() || first == b'_') {
                 return None;
@@ -261,4 +252,3 @@ pub(crate) fn is_type_name(name: &str) -> bool {
             | "i16"
     )
 }
-

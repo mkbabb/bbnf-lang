@@ -3,14 +3,14 @@
 
 use bbnf_ir::{MapExpr, MapUnaryOp};
 
-use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
-use crate::lower::tape_walk::find_descendant_by_kind;
+use crate::runtime::bbnf::{BbnfCompoundKind, BbnfKind, BbnfValue, BbnfView};
+use crate::runtime::RuntimeView;
 
 use super::super::LowerCtx;
 use super::dispatch_value_expr;
 use super::literals::{parse_float_literal, parse_numeric_literal_text};
-use super::precedence::descend_anonymous_wrappers;
 use super::simple_kinds::lookup_value_env;
+use super::view_walk::find_descendant_by_compound_kind;
 
 // ─── Unary ───────────────────────────────────────────────────────────────────
 
@@ -19,25 +19,15 @@ use super::simple_kinds::lookup_value_env;
 /// inspecting the unary compound's span text. If the leading byte
 /// is `!` or `-`, wrap the atom in a unary op; otherwise the body
 /// is the bare atom.
-pub(super) fn lower_value_unary<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-    ctx: &mut LowerCtx<'a>,
+pub(super) fn lower_value_unary<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+    ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
-    let text = node.span_text();
+    let text = node.span_text().unwrap_or("");
     let first_byte = text.as_bytes().first().copied();
     match first_byte {
         Some(b'!') | Some(b'-') => {
             let atom = first_atom_child(node).unwrap_or(node);
-            // Avoid an infinite recursion if `first_atom_child`
-            // returned the unary compound itself (defensive — the
-            // grammar guarantees a value_atom child).
-            if atom.cursor().offset() == node.cursor().offset() {
-                panic!(
-                    "lower/value_expr.rs: lower_value_unary saw a unary \
-                     compound with no atom child (text = {:?})",
-                    text,
-                );
-            }
             let inner = dispatch_value_expr(atom, ctx);
             let op = if first_byte == Some(b'!') {
                 MapUnaryOp::Not
@@ -52,10 +42,9 @@ pub(super) fn lower_value_unary<'a>(
         _ => {
             // Bare atom — descend through the single child.
             let atom = first_atom_child(node).unwrap_or(node);
-            if atom.cursor().offset() == node.cursor().offset() {
-                // No child compound at all — fall back to atom
-                // dispatch on `node` itself (which classifies the
-                // span text).
+            // No child compound at all — fall back to atom dispatch
+            // on `node` itself (which classifies the span text).
+            if same_focus(atom, node) {
                 lower_value_atom(node, ctx)
             } else {
                 dispatch_value_expr(atom, ctx)
@@ -67,29 +56,44 @@ pub(super) fn lower_value_unary<'a>(
 /// Find the first child compound of a unary view that looks like an
 /// atom (or a transparent wrapper around one). The grammar
 /// guarantees `value_atom` is the sole child compound.
-///
-/// Under DTA the atom sits inside an anonymous Seq wrapper emitted
-/// by the walker for the unary's body; `node.children().next()` may
-/// return that wrapper rather than the `value_atom` compound itself.
-/// Descend to the first `value_atom` descendant to resolve under
-/// both DTA and fn-per-rule shapes uniformly.
-fn first_atom_child<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-) -> Option<BbnfBootstrapNodeView<'a>> {
-    find_descendant_by_kind(node, BbnfBootstrapRuleKind::value_atom)
-        .filter(|v| v.cursor().offset() != node.cursor().offset())
-        .or_else(|| node.children().next())
+fn first_atom_child<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+) -> Option<BbnfView<'a, 'p>> {
+    find_descendant_by_compound_kind(node, BbnfCompoundKind::ValueAtom)
+        .filter(|v| !same_focus(*v, node))
+        .or_else(|| RuntimeView::children(&node).next())
+}
+
+/// Compare two views' focused values for identity. Replaces the
+/// tape-shaped predecessor's `cursor().offset()` equality test —
+/// struct-direct focuses are compared by underlying `BbnfValue`
+/// payload (compound IDs are unique per parse, leaf payloads identify
+/// themselves).
+pub(super) fn same_focus<'a, 'p: 'a>(
+    a: BbnfView<'a, 'p>,
+    b: BbnfView<'a, 'p>,
+) -> bool {
+    match (a.focus(), b.focus()) {
+        (BbnfValue::Compound(x), BbnfValue::Compound(y)) => x == y,
+        (BbnfValue::Span(x), BbnfValue::Span(y)) => {
+            x.as_ptr() == y.as_ptr() && x.len() == y.len()
+        }
+        (BbnfValue::Int(x), BbnfValue::Int(y)) => x == y,
+        (BbnfValue::Float(x), BbnfValue::Float(y)) => x.to_bits() == y.to_bits(),
+        (BbnfValue::Bool(x), BbnfValue::Bool(y)) => x == y,
+        (BbnfValue::Tag(x), BbnfValue::Tag(y)) => x == y,
+        (BbnfValue::Unit, BbnfValue::Unit) => true,
+        _ => false,
+    }
 }
 
 // ─── Atom classification ─────────────────────────────────────────────────────
 
-/// Lower a `value_atom` compound. Under structural mode the atom
-/// rule has its leaf alts (int/float/bool/string/ident/path/input/
-/// fn_call/parenthesised) inlined into a single function with no
-/// per-alt sub-rule pushes — only the inner Repeat compounds (path
-/// segments, input prop chain, function-call arg list) and any
-/// recursive `value_expr` compound (for `(expr)` and fn-call args)
-/// reach the tape.
+/// Lower a `value_atom` compound. Under struct-direct projection the
+/// atom's leaf alts (int/float/bool/string) collapse to their typed
+/// payload directly — `BbnfValue::Int` / `Float` / `Bool` / `Span`.
+/// The compound surfaces only when the atom resolved to a parenthesised
+/// sub-expression or a multi-segment path / fn-call structural body.
 ///
 /// Disambiguation walks the atom's span text from the first
 /// non-whitespace byte:
@@ -104,11 +108,35 @@ fn first_atom_child<'a>(
 ///   - identifier-leading + `(` → function call
 ///   - identifier-leading + `::` → path
 ///   - bare identifier → ident
-pub(super) fn lower_value_atom<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-    ctx: &mut LowerCtx<'a>,
+pub(super) fn lower_value_atom<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+    ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
-    let text = node.span_text();
+    // Leaf-projected payloads: dispatch directly on the typed leaf.
+    match node.focus() {
+        BbnfValue::Int(v) => return MapExpr::IntLit(v),
+        BbnfValue::Float(v) => return MapExpr::FloatLit(v),
+        BbnfValue::Bool(v) => return MapExpr::BoolLit(v),
+        BbnfValue::Span(s) => {
+            return classify_span_atom(s, ctx);
+        }
+        BbnfValue::Compound(_) => {}
+        BbnfValue::Tag(_) | BbnfValue::Unit => {
+            panic!(
+                "lower/value_expr/atom.rs: lower_value_atom on Tag / Unit \
+                 leaf — value-expression atoms never project to these arms"
+            );
+        }
+    }
+
+    // Compound atom — classify by span text.
+    let text = node.span_text().unwrap_or_else(|| {
+        panic!(
+            "lower/value_expr/atom.rs: lower_value_atom on compound focus \
+             with no recoverable span (kind = {:?})",
+            node.compound_kind(),
+        )
+    });
     let trimmed = text.trim_start();
     let first = trimmed.as_bytes().first().copied();
 
@@ -132,31 +160,50 @@ pub(super) fn lower_value_atom<'a>(
             lower_atom_named(node, trimmed, ctx)
         }
         Some(_) | None => panic!(
-            "lower/value_expr.rs: lower_value_atom saw an unexpected \
-             leading byte in atom span {:?} (rule_kind = {:?})",
+            "lower/value_expr/atom.rs: lower_value_atom saw an unexpected \
+             leading byte in atom span {:?} (compound_kind = {:?})",
             text,
-            node.rule_kind(),
+            node.compound_kind(),
         ),
     }
+}
+
+/// Classify a `Span`-shaped atom by its leading byte. The atom may
+/// be a quoted string literal, an `input` chain head, a bare ident,
+/// or a path / fn-call surface (recovered via slice walk).
+fn classify_span_atom<'p>(text: &'p str, ctx: &mut LowerCtx<'p>) -> MapExpr {
+    let trimmed = text.trim_start();
+    let first = trimmed.as_bytes().first().copied();
+    match first {
+        Some(b'"') | Some(b'\'') => {
+            MapExpr::StringLit(intern_string_lit_inner(trimmed, ctx))
+        }
+        _ => lower_bare_ident(trimmed, ctx),
+    }
+}
+
+/// Public entry for lowering a `Span`-payload value-expression leaf
+/// (an identifier, value_ident, or string literal that the typed
+/// projection delivered as `BbnfValue::Span`). Routes through
+/// [`classify_span_atom`] — surfaced for use by the top-level
+/// dispatcher's leaf fast-path in `mod.rs`.
+pub(super) fn lower_bare_ident_or_string<'p>(
+    text: &'p str,
+    ctx: &mut LowerCtx<'p>,
+) -> MapExpr {
+    classify_span_atom(text, ctx)
 }
 
 /// Lower a parenthesised atom: `( value_expr )`. The structural
 /// shape pushes only the inner `value_expr` compound (the parens
 /// consume bytes without pushing). The grammar guarantees exactly
 /// one semantic child compound here.
-///
-/// Under DTA the atom's body is wrapped in an anonymous Seq
-/// compound; `children().next()` may return that wrapper rather
-/// than the `value_expr` record directly. Descend to the first
-/// `value_expr` descendant; the outer `node.rule_kind()` is
-/// `value_atom`, not `value_expr`, so the descent correctly returns
-/// a distinct inner view.
-fn lower_paren_atom<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-    ctx: &mut LowerCtx<'a>,
+fn lower_paren_atom<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+    ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
-    let inner = find_descendant_by_kind(node, BbnfBootstrapRuleKind::value_expr)
-        .or_else(|| node.children().next())
+    let inner = find_descendant_by_compound_kind(node, BbnfCompoundKind::ValueExpr)
+        .or_else(|| RuntimeView::children(&node).next())
         .expect("lower_paren_atom: parenthesised atom is missing its value_expr child");
     dispatch_value_expr(inner, ctx)
 }
@@ -165,10 +212,10 @@ fn lower_paren_atom<'a>(
 /// literal, `input` chain, function call, path, or bare ident.
 /// Disambiguates from the source slice without depending on
 /// per-leaf rule_kind pushes.
-fn lower_atom_named<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-    trimmed: &'a str,
-    ctx: &mut LowerCtx<'a>,
+fn lower_atom_named<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+    trimmed: &'p str,
+    ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
     // Bool literals.
     if trimmed.starts_with("true") && !next_ident_byte(trimmed, 4) {
@@ -237,20 +284,16 @@ pub(super) fn scan_ident_len(text: &str) -> usize {
 /// empty). Each prop-chain iteration consumed `.` then an
 /// identifier; the identifier text comes from the source slice
 /// after the dot.
-pub(super) fn lower_input_chain<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-    trimmed: &'a str,
-    ctx: &mut LowerCtx<'a>,
+pub(super) fn lower_input_chain<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+    trimmed: &'p str,
+    ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
     // The grammar produces `Repeat(.ident)*`. Recover the prop name
     // by scanning the source slice past the `input` keyword: each
     // `.ident` segment yields one prop name; we use the LAST prop
     // (matching the legacy semantics — only the leaf prop is
     // surfaced as a `MapExpr::InputProp`).
-    //
-    // Source-slice walk is cheaper than enumerating the Repeat's
-    // children (which carry no useful payload — the inner ident
-    // scan doesn't push) and equivalent in semantics.
     let after = &trimmed[5..]; // skip "input"
     let mut last_prop: Option<&str> = None;
     let mut rest = after;
@@ -286,10 +329,10 @@ pub(super) fn lower_input_chain<'a>(
 /// `Repeat` (the optional arg list — always pushed; contains
 /// `[value_expr, Repeat([rest_value_exprs])]` when non-empty,
 /// otherwise empty).
-pub(super) fn lower_fn_call_atom<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-    trimmed: &'a str,
-    ctx: &mut LowerCtx<'a>,
+pub(super) fn lower_fn_call_atom<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+    trimmed: &'p str,
+    ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
     // Recover the full path from the source slice. The path is
     // `ident (:: ident)*`; everything up to the opening `(` belongs
@@ -297,9 +340,7 @@ pub(super) fn lower_fn_call_atom<'a>(
     let path_text = recover_call_path(trimmed);
     let name_sid = ctx.strings.intern(&path_text);
 
-    // Walk the atom's children to find the arg list. The path's
-    // `(::ident)*` Repeat contains no Rule pushes, so the only Rule
-    // compounds we encounter are the arg `value_expr` rules.
+    // Walk the atom's children to find the arg list.
     let args: Vec<MapExpr> = collect_fn_call_args(node, ctx);
     MapExpr::FnCall {
         name: name_sid,
@@ -344,106 +385,68 @@ pub(super) fn recover_call_path(trimmed: &str) -> String {
 }
 
 /// Collect a function call's argument expressions. The atom
-/// compound's children are a sequence of Repeat compounds; the arg
-/// list is the trailing Repeat whose own children include
-/// `value_expr` compounds. We scan all Repeat children and gather
-/// any nested compound whose kind is `Rule` (i.e., a `value_expr`
-/// rule push) — that gives us each arg in source order.
+/// compound's children are a sequence of children compounds; the
+/// arg list is the trailing structural sub-tree whose own children
+/// include `value_expr` compounds.
 ///
-/// Under DTA the atom compound's body sits inside an anonymous Seq
-/// wrapper; `node.children()` returns `[Seq]` rather than the
-/// expected Repeat siblings. Descend through anonymous wrappers
-/// first, then apply the Repeat-scan logic on the true body.
-/// Additionally — under DTA a `value_expr` push surfaces as a
-/// compound whose `rule_kind == value_expr`, not just any
-/// `TapeKind::Rule`. Gate on rule_kind to avoid mistaking a nested
-/// anonymous Seq-Rule for an argument.
-fn collect_fn_call_args<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-    ctx: &mut LowerCtx<'a>,
+/// Under struct-direct projection the atom body's compound shape is
+/// determined by the codegen — the arg list lives as a structural
+/// sub-tree of the fn-call compound. Walk all descendant
+/// `value_expr` compounds rooted strictly below the atom (skipping
+/// nested fn-call / closure boundaries).
+fn collect_fn_call_args<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+    ctx: &mut LowerCtx<'p>,
 ) -> Vec<MapExpr> {
-    use crate::runtime::tape::TapeKind;
     let mut args: Vec<MapExpr> = Vec::new();
+    collect_value_expr_args_rec(node, &mut args, ctx, /* skip_self */ true);
+    args
+}
 
-    // Descend through the DTA Seq wrapper to reach the atom body
-    // whose direct children are the path + arg-list Repeats.
-    let body = descend_anonymous_wrappers(node);
-
-    // Arg is any descendant `value_expr` compound — but we must
-    // avoid collecting args from any nested parenthesised
-    // sub-expression or closure body. The arg list lives inside
-    // the trailing Repeat of the fn-call atom; iterate that
-    // Repeat's direct children (not descendants) to avoid
-    // cross-boundary collection.
-    //
-    // The atom may have multiple Repeat children — one for the
-    // path's `(::ident)*` segment list and one for the optional
-    // arg list. Walk every Repeat (direct children of the atom
-    // body) and pull out any nested compound. The path Repeat
-    // contains only inlined ident scans which push nothing; the
-    // arg-list Repeat contains `value_expr` rule compounds.
-    let is_value_expr = |v: &BbnfBootstrapNodeView<'a>| {
-        v.rule_kind() == BbnfBootstrapRuleKind::value_expr
-    };
-    for child in body.children() {
-        if child.kind() == TapeKind::Repeat {
-            for inner in child.children() {
-                match inner.kind() {
-                    TapeKind::Rule => {
-                        // Under DTA a Rule compound may be an
-                        // anonymous Seq-wrapper around the real
-                        // value_expr rather than the value_expr
-                        // itself. Prefer the value_expr descendant
-                        // when the direct child's rule_kind isn't
-                        // already value_expr.
-                        if is_value_expr(&inner) {
-                            args.push(dispatch_value_expr(inner, ctx));
-                        } else if let Some(ve) = find_descendant_by_kind(
-                            inner,
-                            BbnfBootstrapRuleKind::value_expr,
-                        ) {
-                            args.push(dispatch_value_expr(ve, ctx));
-                        } else {
-                            // Optimizer fully inlined — dispatch on
-                            // the compound directly; the handler
-                            // classifies by rule_kind.
-                            args.push(dispatch_value_expr(inner, ctx));
-                        }
-                    }
-                    TapeKind::Repeat => {
-                        // The optional arg list's tail-rest Repeat
-                        // (`(, value_expr)*`) — recurse one level.
-                        for grand in inner.children() {
-                            if grand.kind() == TapeKind::Rule {
-                                if is_value_expr(&grand) {
-                                    args.push(dispatch_value_expr(grand, ctx));
-                                } else if let Some(ve) = find_descendant_by_kind(
-                                    grand,
-                                    BbnfBootstrapRuleKind::value_expr,
-                                ) {
-                                    args.push(dispatch_value_expr(ve, ctx));
-                                } else {
-                                    args.push(dispatch_value_expr(grand, ctx));
-                                }
-                            }
-                        }
-                    }
-                    _ => {}
-                }
+/// Recursive walker collecting top-level `value_expr` compound
+/// arguments under `node`, stopping at nested fn-call / closure /
+/// paren-atom boundaries (those would belong to inner expressions).
+fn collect_value_expr_args_rec<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+    args: &mut Vec<MapExpr>,
+    ctx: &mut LowerCtx<'p>,
+    skip_self: bool,
+) {
+    if !skip_self {
+        if node.compound_kind() == Some(BbnfCompoundKind::ValueExpr) {
+            args.push(dispatch_value_expr(node, ctx));
+            return;
+        }
+    }
+    if node.kind() != BbnfKind::Compound {
+        return;
+    }
+    for child in RuntimeView::children(&node) {
+        let kind = child.compound_kind();
+        match kind {
+            Some(BbnfCompoundKind::ValueExpr) => {
+                args.push(dispatch_value_expr(child, ctx));
+            }
+            Some(BbnfCompoundKind::ValueClosure)
+            | Some(BbnfCompoundKind::ValueFnCall)
+            | Some(BbnfCompoundKind::ValueAtom) => {
+                // Don't descend into nested expression boundaries.
+            }
+            _ => {
+                collect_value_expr_args_rec(child, args, ctx, /* skip_self */ false);
             }
         }
     }
-    args
 }
 
 /// Lower a path atom: `ident::ident::...` with no trailing `(`.
 /// Mirrors the legacy semantics — single-segment paths fall back to
 /// bare-ident resolution; multi-segment paths become a function
 /// call on `MapExpr::Input`.
-pub(super) fn lower_path_atom<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-    trimmed: &'a str,
-    ctx: &mut LowerCtx<'a>,
+pub(super) fn lower_path_atom<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+    trimmed: &'p str,
+    ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
     // The path is fully recoverable from the source slice; the
     // structural-mode tape doesn't push per-segment records.
@@ -468,7 +471,7 @@ pub(super) fn lower_path_atom<'a>(
 /// param bindings shadow ambient names; otherwise the identifier
 /// becomes a one-arg function call on `MapExpr::Input` (the legacy
 /// semantics — bare names are treated as transformer functions).
-pub(super) fn lower_bare_ident<'a>(name: &str, ctx: &mut LowerCtx<'a>) -> MapExpr {
+pub(super) fn lower_bare_ident<'p>(name: &str, ctx: &mut LowerCtx<'p>) -> MapExpr {
     if let Some(bound) = lookup_value_env(name, &ctx.value_env) {
         return bound;
     }
@@ -481,17 +484,21 @@ pub(super) fn lower_bare_ident<'a>(name: &str, ctx: &mut LowerCtx<'a>) -> MapExp
 
 // ─── String literal ──────────────────────────────────────────────────────────
 
-pub(super) fn lower_string_lit<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-    ctx: &mut LowerCtx<'a>,
+pub(super) fn lower_string_lit<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+    ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
-    MapExpr::StringLit(intern_string_lit_inner(node.span_text(), ctx))
+    let text = match node.focus() {
+        BbnfValue::Span(s) => s,
+        _ => node.span_text().unwrap_or(""),
+    };
+    MapExpr::StringLit(intern_string_lit_inner(text, ctx))
 }
 
 /// Strip the surrounding quote characters from a string-literal
 /// span and intern the inner text. The grammar permits `"..."` and
 /// `'...'`; the same delimiter byte appears at both ends.
-fn intern_string_lit_inner<'a>(text: &str, ctx: &mut LowerCtx<'a>) -> bbnf_ir::StringId {
+fn intern_string_lit_inner<'p>(text: &str, ctx: &mut LowerCtx<'p>) -> bbnf_ir::StringId {
     let inner = if text.len() >= 2 {
         &text[1..text.len() - 1]
     } else {

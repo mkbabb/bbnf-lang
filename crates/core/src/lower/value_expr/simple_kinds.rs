@@ -7,55 +7,52 @@ use std::collections::HashMap;
 
 use bbnf_ir::MapExpr;
 
-use crate::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
-use crate::lower::tape_walk::find_descendant_by_kind;
+use crate::runtime::RuntimeView;
+use crate::runtime::bbnf::{BbnfCompoundKind, BbnfValue, BbnfView};
 
 use super::super::LowerCtx;
-use super::atom::{lower_fn_call_atom, lower_input_chain, lower_path_atom};
+use super::atom::{lower_fn_call_atom, lower_input_chain, lower_path_atom, same_focus};
 use super::dispatch_value_expr;
 use super::precedence::{LAYER_OR, fold_value_chain};
+use super::view_walk::find_descendant_by_compound_kind;
 
-// ─── DTA descent helpers ─────────────────────────────────────────────────────
+// ─── value-expression descent helpers ────────────────────────────────────────
 
-/// Outermost-first ordering of value-layer rule kinds used to find
-/// the inner head of a `value_expr` compound under DTA.
+/// Outermost-first ordering of value-layer compound kinds used to
+/// find the inner head of a `value_expr` compound.
 ///
-/// The DTA walker wraps rule bodies in Seq compounds; `node.child(0)`
-/// picks the anonymous wrapper, not the semantic head. A descendant
-/// search against this ordered list returns the outermost semantic
-/// rule in document order. `value_closure` and `value_or` alternate
-/// at the `value_expr` body layer; the remaining precedence-chain
-/// kinds + atom handle optimizer-collapsed shapes where the outer
-/// wrapper was inlined away.
-pub(super) const VALUE_HEAD_KINDS: &[BbnfBootstrapRuleKind] = &[
-    BbnfBootstrapRuleKind::value_closure,
-    BbnfBootstrapRuleKind::value_or,
-    BbnfBootstrapRuleKind::value_and,
-    BbnfBootstrapRuleKind::value_cmp,
-    BbnfBootstrapRuleKind::value_add,
-    BbnfBootstrapRuleKind::value_mul,
-    BbnfBootstrapRuleKind::value_unary,
-    BbnfBootstrapRuleKind::value_atom,
+/// Under struct-direct projection the wrapper structure preserves
+/// rule identity on each compound's [`BbnfCompoundKind`] arm. A
+/// descendant search against this ordered list returns the outermost
+/// semantic rule in document order. `value_closure` and `value_or`
+/// alternate at the `value_expr` body layer; the remaining
+/// precedence-chain kinds + atom handle optimizer-collapsed shapes
+/// where the outer wrapper was inlined away.
+pub(super) const VALUE_HEAD_KINDS: &[BbnfCompoundKind] = &[
+    BbnfCompoundKind::ValueClosure,
+    BbnfCompoundKind::ValueOr,
+    BbnfCompoundKind::ValueAnd,
+    BbnfCompoundKind::ValueCmp,
+    BbnfCompoundKind::ValueAdd,
+    BbnfCompoundKind::ValueMul,
+    BbnfCompoundKind::ValueUnary,
+    BbnfCompoundKind::ValueAtom,
 ];
 
-/// Find the semantic head of a `value_expr` compound under DTA.
+/// Find the semantic head of a `value_expr` compound.
 ///
-/// `find_descendant_by_kind` is called against each value-layer rule
-/// kind in outermost-first priority order. First hit wins; returns
-/// `None` only if none of the value-layer rule kinds surface as
-/// descendants (pathological input — every `value_expr` body must
-/// resolve to at least a `value_atom`).
-pub(super) fn value_expr_head<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-) -> Option<BbnfBootstrapNodeView<'a>> {
+/// `find_descendant_by_compound_kind` is called against each
+/// value-layer compound kind in outermost-first priority order.
+/// First hit wins; returns `None` only if none of the value-layer
+/// compound kinds surface as descendants (pathological input —
+/// every `value_expr` body must resolve to at least a `value_atom`).
+pub(super) fn value_expr_head<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+) -> Option<BbnfView<'a, 'p>> {
     for &kind in VALUE_HEAD_KINDS {
-        if let Some(v) = find_descendant_by_kind(node, kind) {
-            // Skip `node` itself — if `node.rule_kind() == value_expr`
-            // and `find_descendant_by_kind` matches the root (it won't
-            // here because value_expr is not in VALUE_HEAD_KINDS), we
-            // still want to descend. Defensive: only return distinct
-            // views.
-            if v.cursor().offset() != node.cursor().offset() {
+        if let Some(v) = find_descendant_by_compound_kind(node, kind) {
+            // Skip `node` itself — only return distinct views.
+            if !same_focus(v, node) {
                 return Some(v);
             }
         }
@@ -69,11 +66,11 @@ pub(super) fn value_expr_head<'a>(
 /// inspecting the leading byte of the compound's span text. Under
 /// structural mode the closure markers consume bytes without
 /// pushing, so the closure case is identified by the leading `|`.
-pub(super) fn lower_value_expr_or_closure<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-    ctx: &mut LowerCtx<'a>,
+pub(super) fn lower_value_expr_or_closure<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+    ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
-    let text = node.span_text();
+    let text = node.span_text().unwrap_or("");
     if text.as_bytes().first() == Some(&b'|') {
         lower_value_closure(node, ctx)
     } else {
@@ -82,33 +79,36 @@ pub(super) fn lower_value_expr_or_closure<'a>(
     }
 }
 
-// ─── Standalone leaf accessors (when the tape DOES preserve the rule) ───────
+// ─── Standalone leaf accessors (when the optimizer preserves the wrapper) ──
 
 /// Lower a `value_input` rule compound (when preserved). Defers to
 /// the same source-slice walk used for inlined input chains —
 /// behavioural parity with `lower_input_chain`.
-pub(super) fn lower_value_input<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-    ctx: &mut LowerCtx<'a>,
+pub(super) fn lower_value_input<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+    ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
-    lower_input_chain(node, node.span_text().trim_start(), ctx)
+    let span = node.span_text().unwrap_or("").trim_start();
+    lower_input_chain(node, span, ctx)
 }
 
 /// Lower a `value_path` rule compound (when preserved). Same
 /// source-slice walk as the inlined path-atom case.
-pub(super) fn lower_value_path<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-    ctx: &mut LowerCtx<'a>,
+pub(super) fn lower_value_path<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+    ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
-    lower_path_atom(node, node.span_text().trim_start(), ctx)
+    let span = node.span_text().unwrap_or("").trim_start();
+    lower_path_atom(node, span, ctx)
 }
 
 /// Lower a `value_fn_call` rule compound (when preserved).
-pub(super) fn lower_value_fn_call<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-    ctx: &mut LowerCtx<'a>,
+pub(super) fn lower_value_fn_call<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+    ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
-    lower_fn_call_atom(node, node.span_text().trim_start(), ctx)
+    let span = node.span_text().unwrap_or("").trim_start();
+    lower_fn_call_atom(node, span, ctx)
 }
 
 // ─── Closures ────────────────────────────────────────────────────────────────
@@ -121,11 +121,17 @@ pub(super) fn lower_value_fn_call<'a>(
 /// body DOES push a rule compound. Param recovery walks the source
 /// slice between the leading `|` and the matching closing `|`,
 /// stripping `,` separators and whitespace.
-pub(super) fn lower_value_closure<'a>(
-    node: BbnfBootstrapNodeView<'a>,
-    ctx: &mut LowerCtx<'a>,
+pub(super) fn lower_value_closure<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+    ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
-    let text: &'a str = node.span_text();
+    let text: &'p str = node.span_text().unwrap_or_else(|| {
+        panic!(
+            "lower_value_closure: value_closure compound has no recoverable \
+             source span — typed-projection invariants imply at least the \
+             closing `|` and body expression carry source position",
+        )
+    });
     debug_assert!(
         text.as_bytes().first() == Some(&b'|'),
         "lower_value_closure: closure span doesn't start with `|`: {:?}",
@@ -135,34 +141,40 @@ pub(super) fn lower_value_closure<'a>(
     // Find the closing `|` matching the opening one. Closure
     // params are bare identifiers separated by `,`; no nested `|`
     // appears within the param list.
-    let after_open: &'a str = &text[1..];
+    let after_open: &'p str = &text[1..];
     let close_rel = after_open
         .find('|')
         .expect("lower_value_closure: missing closing `|` for closure params");
-    let params_text: &'a str = &after_open[..close_rel];
+    let params_text: &'p str = &after_open[..close_rel];
 
-    // `text` is `&'a str` (the parser input lifetime), so every
-    // sub-slice carries the same lifetime. No unsafe needed.
-    let params: Vec<&'a str> = params_text
+    let params: Vec<&'p str> = params_text
         .split(',')
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
         .collect();
 
-    // The body is the trailing `value_expr` rule compound — it's
-    // the only Rule child this compound contains (the param
-    // identifiers don't push).
-    //
-    // Under DTA the body `value_expr` may sit inside an anonymous
-    // Seq wrapper emitted by the walker; a direct `TapeKind::Rule`
-    // first-match could pick that wrapper (also `TapeKind::Rule`
-    // under the walker's `frame_to_tape_kind(Seq) == Rule` policy)
-    // rather than the real value_expr. Descend to the value_expr
-    // descendant; fall back to the first TapeKind::Rule child for
-    // non-DTA shapes.
-    use crate::runtime::tape::TapeKind;
-    let body = find_descendant_by_kind(node, BbnfBootstrapRuleKind::value_expr)
-        .or_else(|| node.children().find(|c| c.kind() == TapeKind::Rule))
+    // The body is the trailing `value_expr` rule compound. Look it
+    // up by compound-kind descent.
+    let body = find_descendant_by_compound_kind(node, BbnfCompoundKind::ValueExpr)
+        .or_else(|| {
+            // Fallback when the body's `value_expr` wrapper was
+            // inlined away — the body resolves to one of the
+            // chain-layer compound kinds directly.
+            for &kind in VALUE_HEAD_KINDS {
+                if let Some(v) = find_descendant_by_compound_kind(node, kind) {
+                    if !same_focus(v, node) {
+                        return Some(v);
+                    }
+                }
+            }
+            None
+        })
+        .or_else(|| {
+            // Last-resort fallback: pick the first compound child
+            // (defensive against shape-routed empty-wrap collapses).
+            RuntimeView::children(&node)
+                .find(|c| matches!(c.focus(), BbnfValue::Compound(_)))
+        })
         .expect("lower_value_closure: missing body value_expr child");
 
     // Bind each param into the value-environment frame. The first
@@ -170,7 +182,7 @@ pub(super) fn lower_value_closure<'a>(
     // is applied at parse time to the matched span); the remaining
     // params map to `InputProp { prop: <param_name> }` so users can
     // pull additional payloads off composite inputs.
-    let mut frame: HashMap<&'a str, MapExpr> = HashMap::new();
+    let mut frame: HashMap<&'p str, MapExpr> = HashMap::new();
     for (i, name) in params.iter().copied().enumerate() {
         let value = if i == 0 {
             MapExpr::Input

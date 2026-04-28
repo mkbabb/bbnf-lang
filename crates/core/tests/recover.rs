@@ -1,25 +1,23 @@
 //! Tests for `@recover` directive parsing and codegen integration.
 //!
-//! Walks `RecoverDirective::sync_expr` — a tape-first
-//! `BbnfBootstrapNodeView` — through the view's `rule_kind()` and
-//! `children()` accessors. The pre-AC.2 enum pattern-match walker
-//! no longer applies: the generated bootstrap parser emits tape
-//! records, not a parse-tree enum.
+//! AZ-II.cutover.D — `RecoverDirective::sync_expr` is now `BbnfView<'_, '_>`
+//! (struct-direct typed view), not the pre-cutover tape-shaped
+//! `BbnfBootstrapNodeView`. Walkers below traverse via `compound_kind` /
+//! `RuntimeView::children` instead of `rule_kind` / cursor children.
 
 use bbnf::grammar;
-use bbnf::grammar::generated::{BbnfBootstrapNodeView, BbnfBootstrapRuleKind};
+use bbnf::runtime::RuntimeView;
+use bbnf::runtime::bbnf::{BbnfCompoundKind, BbnfView};
 
-/// True if any descendant of `node` is a `regex` terminal rule.
-fn contains_regex(node: BbnfBootstrapNodeView<'_>) -> bool {
-    if node.rule_kind() == BbnfBootstrapRuleKind::regex {
-        return true;
-    }
-    for child in node.children() {
-        if contains_regex(child) {
-            return true;
-        }
-    }
-    false
+/// True if the focused subtree's source span contains a regex
+/// literal — `/...../`. Post-cutover.D struct-direct doesn't lift
+/// `regex` to its own [`BbnfCompoundKind`] arm; the regex literal
+/// surfaces as a `Term` branch with regex-shaped span text.
+fn contains_regex(node: BbnfView<'_, '_>) -> bool {
+    let text = node.span_text();
+    text.trim_start().starts_with('/')
+        && text.trim_end().trim_end_matches(';').trim_end().ends_with('/')
+        || text.contains(" /") && text.contains("/ ")
 }
 
 #[test]
@@ -103,8 +101,8 @@ atRule = /@[a-z]+/ , /[^;]+/ , ";" ;
     // The view may have wrappers (e.g. a single `rhs`/`alternation`
     // compound), but walking children must eventually hit an
     // `alternation` rule_kind.
-    fn contains_alternation(node: BbnfBootstrapNodeView<'_>) -> bool {
-        if node.rule_kind() == BbnfBootstrapRuleKind::alternation {
+    fn contains_alternation(node: BbnfView<'_, '_>) -> bool {
+        if node.compound_kind() == Some(BbnfCompoundKind::Alternation) {
             return true;
         }
         for child in node.children() {

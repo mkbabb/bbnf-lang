@@ -1,8 +1,14 @@
 //! Debug harness: drive `bbnf::grammar::parse` and
 //! `BbnfBootstrap::parse` directly on a grammar file and report
-//! the outcome. Lives in `bbnf-bootstrap` so it reaches `bbnf`
-//! without dragging in the `bbnf` crate's dev-deps (which
-//! currently fail to compile during the tape-first transition).
+//! the outcome.
+//!
+//! AZ-II.cutover.D — `BbnfBootstrap::parse` now returns
+//! `bbnf::runtime::bbnf::BbnfDocument<'_>` per the StructDirect
+//! resolver-arm flip. Tape-cursor accessors retired; we report
+//! the document via `RuntimeView` + `BbnfCompoundKind`.
+
+use bbnf::runtime::RuntimeView;
+use bbnf::runtime::bbnf::{BbnfCompoundKind, BbnfView};
 
 fn main() {
     let path = std::env::args()
@@ -12,13 +18,16 @@ fn main() {
 
     println!("Parsing {} ({} bytes)", path, source.len());
 
-    // Step 1: drive the tape-first bootstrap parser directly.
+    // Step 1: drive the struct-direct bootstrap parser directly.
     match bbnf::grammar::generated::BbnfBootstrap::parse(&source) {
-        Ok(parsed) => {
+        Ok(document) => {
+            let root = document.view();
             println!(
-                "BbnfBootstrap::parse OK — tape has {} records, root_offset={:?}",
-                parsed.tape().len(),
-                parsed.root_offset(),
+                "BbnfBootstrap::parse OK — root kind={:?} compound_kind={:?} \
+                 root_children={}",
+                root.kind(),
+                root.compound_kind(),
+                root.num_children(),
             );
         }
         Err(e) => {
@@ -27,37 +36,23 @@ fn main() {
         }
     }
 
-    // Step 2: dump the tape root's direct children, peeling
-    // grammar_item / directive wrappers to show what each top-
-    // level item's concrete `rule_kind` resolves to.
+    // Step 2: dump the root's direct children, peeling grammar_item /
+    // directive wrappers to show what each top-level item's concrete
+    // `compound_kind` resolves to.
     {
-        let parsed = bbnf::grammar::generated::BbnfBootstrap::parse(&source)
+        let document = bbnf::grammar::generated::BbnfBootstrap::parse(&source)
             .expect("second parse");
-        let root = parsed.view();
-        use bbnf::runtime::tape::TapeKind;
+        let root = document.view();
         println!("--- root children dump ---");
         for (i, item) in root.children().enumerate() {
-            if item.kind() == TapeKind::Repeat {
-                for (j, gc) in item.children().enumerate() {
-                    let peeled = peel(gc);
-                    println!(
-                        "  top[{i}][{j}]: kind={:?} variant_idx={} rule_kind={:?} span={:?} text={:?}",
-                        peeled.kind(),
-                        peeled.variant_idx(),
-                        peeled.rule_kind(),
-                        peeled.span(),
-                        peeled.span_text(),
-                    );
-                }
-            } else {
-                let peeled = peel(item);
-                println!(
-                    "  top[{i}]: kind={:?} variant_idx={} rule_kind={:?}",
-                    peeled.kind(),
-                    peeled.variant_idx(),
-                    peeled.rule_kind(),
-                );
-            }
+            let peeled = peel(item);
+            println!(
+                "  top[{i}]: kind={:?} compound_kind={:?} branch_tag={:?} text={:?}",
+                peeled.kind(),
+                peeled.compound_kind(),
+                peeled.branch_tag(),
+                peeled.span_text(),
+            );
         }
     }
 
@@ -104,12 +99,9 @@ fn main() {
     }
 }
 
-fn peel<'a>(
-    node: bbnf::grammar::generated::BbnfBootstrapNodeView<'a>,
-) -> bbnf::grammar::generated::BbnfBootstrapNodeView<'a> {
-    use bbnf::grammar::generated::BbnfBootstrapRuleKind as K;
-    match node.rule_kind() {
-        K::grammar_item | K::directive => {
+fn peel<'a, 'p>(node: BbnfView<'a, 'p>) -> BbnfView<'a, 'p> {
+    match node.compound_kind() {
+        Some(BbnfCompoundKind::GrammarItem) | Some(BbnfCompoundKind::Directive) => {
             if let Some(c) = node.child(0) {
                 peel(c)
             } else {

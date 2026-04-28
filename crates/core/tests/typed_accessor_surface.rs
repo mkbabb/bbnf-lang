@@ -594,21 +594,15 @@ fn sheets_compile_time_accessors() {
 
 #[test]
 fn bbnf_compile_time_accessors() {
+    use bbnf::runtime::RuntimeView;
     let src = "foo = \"a\" | \"b\" ;\n";
-    let parsed = BbnfBootstrap::parse(src).expect("BBNF parse");
-    let view = parsed.view();
-    let _ = view.cursor();
+    let document = BbnfBootstrap::parse(src).expect("BBNF parse");
+    let view = document.view();
     let _ = view.input();
     let _ = view.kind();
-    let _ = view.span();
-    let _ = view.rule_kind();
+    let _ = RuntimeView::span(&view);
+    let _ = view.compound_kind();
     let _: Vec<_> = view.children().collect();
-
-    fn _require_view_types<'p>(
-        _v: <BbnfBootstrap as bbnf::runtime::Root>::View<'p>,
-        _nv: BbnfBootstrapNodeView<'p>,
-        _kind: BbnfBootstrapRuleKind,
-    ) { }
 }
 
 #[test]

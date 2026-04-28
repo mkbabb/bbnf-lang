@@ -75,14 +75,14 @@ pub use columns::{
 };
 pub use cursor::{BoundedLookahead, ChildIter, ColumnRank, ScanResult, TapeCursor};
 pub use dedup::{columns_range_eq, push_compound_referring, BloomDedup, N_WORDS};
-// AX.W0b.A — tape-emission helper re-exports. Post-W0b the walker
-// interpreter retires; shape emitters are the sole consumers of
-// these helpers (leaf emission, compound close, payload staging,
-// whitespace skip, Pratt-operator lookup).
-pub use driver::{
-    close_compound, emit_leaf, emit_leaf_with_payload, emit_reducer_compound, first_ws_pattern,
-    lookup_precedence, saturating_u16, trim_ascii_ws, trim_with_pattern, DtaError,
-};
+// AZ-II.cutover.A — the nine pub-fn driver helpers
+// (`trim_ascii_ws`, `trim_with_pattern`, `first_ws_pattern`,
+// `saturating_u16`, `emit_leaf`, `emit_leaf_with_payload`,
+// `emit_reducer_compound`, `lookup_precedence`, `close_compound`)
+// retired per `audit/AUDIT-3-DECAY-INVENTORY.md` §6. Driver retains
+// only [`DtaError`] — the error surface emitted `parse()` bodies
+// still consume at the crate boundary.
+pub use driver::DtaError;
 pub use dta::{DtaAssociativity, DtaPrecedenceEntry, DtaRuleId, DtaStateId};
 pub use finaliser::{finalise, STACK_DEPTH_HINT};
 pub use kind::TapeKind;

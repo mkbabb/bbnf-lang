@@ -1,4 +1,4 @@
-use bbnf::runtime::ParseErr;
+use bbnf::runtime::{ParseErr, RuntimeView};
 #[allow(dead_code)]
 mod css_types {
     pub fn parse_hex_color(_s: &str) -> u32 {
@@ -24,7 +24,7 @@ fn test_input(label: &str, input: &str) {
                 "{:40} ok len={} root_kind={:?}",
                 label,
                 input.len(),
-                view.cursor().kind()
+                view.kind()
             );
         }
         Err(ParseErr::Syntax { offset, rule }) => {

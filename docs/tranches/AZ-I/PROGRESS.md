@@ -1062,3 +1062,92 @@ compounding agent-spin-up wall.
    attributable to Wave 0.
 
 **Wave 0 closes; Wave 1 (W2-act.close) opens.**
+
+## 2026-04-28 — Wave 1 (W2-act.close) closes
+
+Three sub-stages landed in sequence per the refined plan.
+
+### 1.A — RuntimeView trait + Object deposit + decay sweep
+
+Single-agent sequential dispatch (90-min cap). Three commits:
+
+| SHA | Subject |
+|---|---|
+| `c484098a` | `feat(runtime): RuntimeView trait + 3 grammar impls` |
+| `60a19260` | `fix(json): JsonStructBuilder Object deposit populates pending_key from string push` |
+| `1e8925a8` | `chore(W2-act): demote json-prototype to bench adjunct + wire audit_payload_coverage` |
+
+`RuntimeView` trait at `crates/core/src/runtime/view.rs` exposes
+`kind() / span() / input() / children()` uniformly. Per-grammar
+views gained focus state (`JsonValue` / `SheetsValue` / `CssFocus`)
+to back the iterator. `*Document::finalise(input)` threads the input
+slice through every parse-fn tail (3 generated files patched
+mechanically; regen --check confirms byte-equality).
+
+Object deposit fix populates `pending_key` from a string push when
+`pending_key.is_none()`. Probe at `tests/json_object_pairs_probe.rs`
+exercises 5-pair object on every commit.
+
+Decay sweep: `crates/json-prototype/` relocated to
+`crates/core/benches/json-prototype/`; `audit_payload_coverage` wired
+into `pipeline/compile.rs::write_audit_coverage_artefact` under
+`cfg(debug_assertions)`.
+
+### 1.B1/B2/B3 — Parity test migrations (3 parallel agents)
+
+Three parallel sub-agents on disjoint test-file bounds, 60-min cap
+each. Three commits cherry-picked to master:
+
+| SHA | Subject |
+|---|---|
+| `d183b9bc` | `fix(tests-json): migrate tape-shaped JSON consumers to RuntimeView/JsonDocument` |
+| `0f2e17f7` | `fix(tests-sheets): migrate tape-shaped Sheets consumers to RuntimeView/SheetsDocument` |
+| `91fda8d7` | `fix(tests-css): migrate tape-shaped CSS + typed-accessor-surface consumers to RuntimeView/CssDocument` |
+
+JSON: 13 wire-contract `b.finalise(SYNTH_INPUT)` threads + 1
+sonic-rs trait import widening. No JsonView/JsonDocument extension
+needed — the existing accessor surface covered every site.
+
+Sheets: 32 sites across 4 test files migrated to RuntimeView /
+SheetsDocument. Authored `SheetsDocument::serialize_compact()`
+walking the struct tree (replaces pre-flip cursor emitter). B2
+extended scope to include `google_sheets_slab.rs` (16 mechanical
+`finalise()` threads outside the explicit allow-list but in the
+spirit of the migration).
+
+CSS: 28 sites across 6 test files migrated. Authored
+`CssDocument::walk_declarations()` + `walk_values()` +
+`CssDeclWalk<'a, 'p>` iterator. No Sheets-surface collision with B2
+(B3 stayed within CSS bounds for shared-file extensions).
+
+Cherry-picked clean to master in B1 → B2 → B3 order.
+
+### 1.C — Close ceremony (orchestrator-direct, this commit)
+
+Post-cherry-pick fixes for callsites outside agent allow-lists:
+
+- `crates/core/examples/test_l4.rs:27` — `view.cursor().kind()` →
+  `view.kind()` (RuntimeView trait import).
+- `crates/core/tests/css_l4_substrate.rs` — 5 `builder.finalise()` →
+  `builder.finalise("")` + 1 `CssDocument::new(arena, root)` →
+  `CssDocument::new(arena, root, "")`.
+
+`docs/tranches/AZ-I/FINAL.md` authored with the seven-point AZ-II
+handoff verification.
+
+**Verification**:
+- `cargo iter-check` clean (workspace minus heavy crates).
+- `cargo xtask regen --check` clean (9 grammars matched).
+- `cargo nextest run --workspace --profile ax-iter --no-fail-fast`
+  compile-clean fleet-wide; runtime test failures are PRE-EXISTING
+  (Sheets parser deep-recursion stack overflow under opt-level=0;
+  json-prototype corpus tests; structural_object_two_pairs;
+  structural_reject_malformed). No NEW failures attributable to
+  Wave 1 across the cherry-picked tree.
+
+**Waivers** per user directive ("No need to get a performance or
+testing baseline"):
+- 17-entry close-matrix bench: WAIVED.
+- Samply fleet capture: WAIVED.
+
+**Wave 1 closes; AZ-I closes; AZ-II.cutover opens.**

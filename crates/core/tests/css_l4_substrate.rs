@@ -39,7 +39,7 @@ fn layout_for(rule_name: &str, kind: LayoutKind) -> StructLayout {
 #[test]
 fn empty_document_finalises() {
     let builder = CssStructBuilder::<'_>::new();
-    let doc = builder.finalise();
+    let doc = builder.finalise("");
     assert!(doc.root().rules.is_empty());
     assert_eq!(doc.arena().rule_slab_count(), 0);
 }
@@ -139,7 +139,7 @@ fn struct_builder_assembles_simple_stylesheet() {
     builder.end_compound(style_handle);
     builder.end_compound(sheet_handle);
 
-    let doc = builder.finalise();
+    let doc = builder.finalise("");
     let rules = doc.rules(doc.root().rules);
     assert_eq!(rules.len(), 1);
     if let CssRule::Style(style) = &rules[0] {
@@ -165,7 +165,7 @@ fn struct_builder_assembles_typed_dimension() {
     // The dimension lands as a pending value (no enclosing frame).
     // Finalise into a placeholder document to verify the dispatch
     // produced a valid CssDimension::Length.
-    let _doc = builder.finalise();
+    let _doc = builder.finalise("");
     // The smoke check: no panics, builder pops cleanly.
 }
 
@@ -183,7 +183,7 @@ fn struct_builder_threads_color_function() {
     builder.push_leaf_with_f64(0.0);
     builder.end_compound(h);
 
-    let _doc = builder.finalise();
+    let _doc = builder.finalise("");
 }
 
 #[test]
@@ -192,7 +192,7 @@ fn document_view_kind_distinguishes_empty() {
     let root = StyleSheet {
         rules: bbnf::runtime::css_l4::CssRuleListId::EMPTY,
     };
-    let doc = CssDocument::new(arena, root);
+    let doc = CssDocument::new(arena, root, "");
     let view = doc.view();
     assert_eq!(
         view.kind(),
@@ -232,7 +232,7 @@ fn document_get_path_query_resolves_string() {
     builder.end_compound(h_decl);
     builder.end_compound(h_style);
     builder.end_compound(h_sheet);
-    let doc = builder.finalise();
+    let doc = builder.finalise("");
 
     // Path: rules[0] (Style).declarations[0] → Declaration { value: ... }
     let segments = [PathSegment::Index(0), PathSegment::Index(0)];

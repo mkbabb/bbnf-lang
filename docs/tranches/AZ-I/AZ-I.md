@@ -155,7 +155,8 @@ same-commit samply capture.
 | **W0** | Research + classifier-unification study + audit baseline | AZ-I open | closed (2026-04-27) |
 | **W1** | `StructRegistry` + `project_types` closure — JSON + CSS L4 + Sheets | W0 | closed (2026-04-27) |
 | **W2** | Direct-to-struct emission — substrate (StructBuilder + JSON runtime + EmitStrategy + 9 per-shape struct-direct emitters) | W1 | closed substrate-only (2026-04-28); activation rolls into **W2-act** |
-| **W2-act** | GESTALT-ACTIVATE — resolver flip activates JSON + Sheets + CSS L4 simultaneously; per-grammar runtime view-API; parity harness recoding; 17-entry bench gate; EmitStrategy hoist to `bbnf-ir`; dead-substrate sweep; W4 FINAL absorbed (per `audit/W2-CLOSE-AUDIT.md`) | W2 substrate | in progress |
+| **W2-act** | GESTALT-ACTIVATE — resolver flip activates JSON + Sheets + CSS L4 simultaneously; per-grammar runtime view-API; parity harness recoding; 17-entry bench gate; EmitStrategy hoist to `bbnf-ir`; dead-substrate sweep; W4 FINAL absorbed (per `audit/W2-CLOSE-AUDIT.md`) | W2 substrate | closed (substrate landed) |
+| **W2-act.close** | A.fix (RuntimeView trait + Object deposit + decay sweep) → B1/B2/B3 (parallel parity-test migrations) → C close ceremony per refined plan at `~/.claude/plans/cozy-forging-chipmunk.md` | W2-act + Wave 0 hygiene | closed (2026-04-28); AZ-II.cutover opens |
 
 **Wave plan refined 2026-04-28** per six-agent audit synthesis at
 `docs/tranches/AZ-I/audit/W2-CLOSE-AUDIT.md`. The original W2.B / W3 /

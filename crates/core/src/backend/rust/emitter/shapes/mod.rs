@@ -81,7 +81,6 @@ pub mod keyword;
 pub mod number;
 pub mod object;
 pub mod pratt;
-pub mod registry_observer;
 pub mod scalar;
 pub mod string;
 pub mod unordered;
@@ -98,10 +97,13 @@ use bbnf_ir::registry::EmitStrategy;
 pub use dispatcher::{
     dispatcher_fn_ident, has_w4_classified, visitor_dispatcher_fn_ident,
 };
-pub use registry_observer::{
-    clear as clear_registry_read_log, drain as drain_registry_read_log,
-    RegistryReadEvent,
-};
+
+// AZ-I.W2-act.A — `registry_observer` deleted per audit/AUDIT-2 §6.C.
+// The sub-module's docstring (lines 31-34 pre-delete) self-documented
+// as removable at AZ-I close once the bridge mode collapses; the
+// `record` write-only sink had no production reader and the
+// `drain` / `clear` accessors were test-only consumers in
+// `tests/emitter_registry_read.rs` (also retired).
 
 /// Sanitise a grammar identifier into a Rust ident fragment.
 ///
@@ -212,29 +214,24 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
             continue;
         }
 
-        // AZ-I.W1.B4 — registry-read on every compound-emission boundary.
+        // AZ-I.W2-act.A — registry-read on every compound-emission
+        // boundary.
         //
         // Each shape-classified non-transparent rule is a compound
         // emission boundary: the matching per-shape emitter writes one
         // `parse_<shape>_<grammar>_<rule>` function whose body opens
-        // and closes a compound record (`begin_compound` / `end_compound`
-        // for Object / Array / Flat / Wrap, or the equivalent
-        // `begin_compound_post` / `end_compound_post_order` pair for
-        // ArgList / Repeat shapes). Every such boundary consults
+        // and closes a compound record. Every such boundary consults
         // [`bbnf_ir::StructRegistry`] for the rule's projected layout;
         // the read fires unconditionally so no `is_some` short-circuit
         // bypasses populated grammars (per
         // `feedback_no-orthogonal-codepaths`).
         //
-        // In W1 the layout flows through the emission state without
-        // changing emitted bytes — bridge mode keeps the existing tape
-        // emission path running in parallel; W2 (JSON + Sheets) and
-        // W3 (CSS L4) sever the tape and route writes into struct
-        // builders shaped by the registered layout. The
-        // [`registry_observer`] sub-module captures the read so the
-        // wire-contract test confirms the consumer fires end-to-end.
+        // The W2-substrate-era `registry_observer::record` sink retired
+        // at AZ-I.W2-act.A close per `audit/AUDIT-2` §6.C — it was a
+        // write-only diagnostic with no production reader. The layout
+        // read itself stays load-bearing: W2 / W3 per-shape emitters
+        // thread it as the struct-builder shape via `_registry_layout`.
         let layout = ir.struct_registry.layout(rule.id);
-        registry_observer::record(rule.id, layout.is_some());
         // Bind the layout reference so it survives to the per-shape
         // emit calls (W2 / W3 thread it as the struct-builder shape).
         // The let-binding prevents the read from being optimised into

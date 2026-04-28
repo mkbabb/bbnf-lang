@@ -181,6 +181,44 @@ preserved per `feedback_pluggable-components`.
 
 **W2 dispatch follows.**
 
+## 2026-04-27 — W2 dispatch (re-shaped)
+
+W2.md's original 2-parallel JSON + Sheets shape collides on shared
+`crates/core/src/backend/rust/emitter/` and `crates/core/src/pipeline/`
+files (per SPEC §Parallelism disjoint-bounds). Additionally the plan
+referenced `crates/core/src/runtime/json/` and `runtime/sheets/`
+sub-modules that do not yet exist — the current `runtime/` is a flat
+tape-keyed surface (`parsed.rs`, `handle.rs`, `path.rs`, `error.rs`).
+Per SPEC §Scope-reveal protocol the wave re-shapes into a sequential
+2-stage flow that preserves W2.md's hard gates (JSON twitter ≥ 1967,
+Sheets parse_simple ≥ 95, parity harnesses green, tape severed on
+the JSON / Sheets hot paths):
+
+- **W2.A solo (90 min cap)** — `StructBuilder` trait at
+  `crates/core/src/runtime/builder.rs`; `JsonValue<'a>` / `JsonObject<'a>`
+  / `JsonArray<'a>` / `JsonPair<'a>` / `JsonNumber` types at new
+  `crates/core/src/runtime/json/`; `JsonStructBuilder` concrete impl;
+  emitter per-grammar mode-switch in `crates/core/src/backend/rust/emitter/`
+  emitting `JsonStructBuilder` calls for JSON; pipeline dispatch
+  selects struct-direct path for JSON; `parse_json(src) -> Result<JsonDocument<'_>, ParseErr>`
+  return-type migration (no Parsed wrapper for JSON); JSON parity
+  harness rewrites (sonic-rs / simdjson OnDemand / serde_json
+  struct-vs-native).
+- **W2.B solo (60 min cap, post-W2.A)** — apply pattern to Sheets:
+  `SheetsValue` / `Cell` / `Formula` types at
+  `crates/core/src/runtime/google_sheets/`; `SheetsStructBuilder`
+  concrete impl; emitter routes Sheets through the existing
+  mode-switch; Sheets parity harness rewrite.
+- **Orchestrator (post-W2.B)** — regen for JSON + google-sheets;
+  workspace nextest verification; bench-gate verification (twitter ≥
+  1967, canada ≥ 1231, citm ≥ 2438, parse_simple ≥ 95) per
+  `make ay-bench-close WAVE=close` close-gate command surface.
+
+Per `feedback_no-deferrals` no carry-forward to W3 / W4 / AZ-II of
+W2's gates. Per `feedback_no-backward-compat` the JSON / Sheets API
+migration is full-replacement; Parsed<JsonGrammar> retires from
+those grammars' surface in this wave.
+
 AZ-I ships direct-to-struct materialisation for the three primary
 data grammars — JSON, CSS L4, and Sheets — via `project_types` +
 `StructRegistry` closure and a single struct-emitting codegen path.

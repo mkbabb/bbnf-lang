@@ -18,6 +18,7 @@
 //! rewrite).
 
 pub mod builder;
+pub mod css_l4;
 pub mod error;
 pub mod google_sheets;
 pub mod handle;
@@ -26,6 +27,18 @@ pub mod parsed;
 pub mod path;
 
 pub use builder::StructBuilder;
+pub use css_l4::{
+    CssAngle, CssAngleUnit, CssArena, CssColor, CssColorFunction, CssColorMix,
+    CssColorPredefined, CssColorSpace, CssColorType, CssDeclListId, CssDimension,
+    CssDocument, CssDocumentKind, CssFlex, CssFrequency, CssFrequencyUnit, CssFunction,
+    CssGlobalKeyword, CssHueMethod, CssKeyframeListId, CssLength, CssLengthUnit,
+    CssMathOperator, CssPathQuery, CssPercentage, CssResolution, CssResolutionUnit,
+    CssRuleListId, CssSelectorListId, CssStructBuilder, CssTime, CssTimeUnit,
+    CssTypedValue, CssValueListId, CssView, GenericAtRule, KeyframeBlock,
+    KeyframesRule, MediaRule, StyleRule, StyleSheet,
+};
+pub use css_l4::value::{Declaration as CssDeclaration, Selector as CssSelector};
+pub use css_l4::value::CssRule;
 pub use error::ParseErr;
 pub use google_sheets::{
     SheetsArena, SheetsCompound, SheetsCompoundId, SheetsCompoundKind, SheetsCompoundView,

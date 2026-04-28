@@ -21,7 +21,11 @@ use ::bbnf::grammar::generated::ebnf::*;
 use ::bbnf::grammar::generated::math::*;
 
 
-use ::bbnf::grammar::generated::bbnf::*;
+// AZ-II.cutover.I (Phase 5) — `BbnfBootstrap::serialize_compact` is
+// a tape-substrate symbol that retired with the StructDirect flip;
+// the BBNF round-trip below routes through `bbnf::runtime::bbnf::
+// serialize_compact_doc` instead. The generated `BbnfBootstrap` ident
+// is therefore unused at test-link time.
 
 
 // CSS pretty grammar (no @import)
@@ -234,40 +238,24 @@ fn math_num() {
 // `input` over the document's covering range and asserts idempotence
 // under reparse.
 //
-// AZ-II.cutover.H Phase 5 — DEFERRED. The bootstrap_parser admits
-// real BBNF source via `bbnf::grammar::bootstrap_parser::parse`, but
-// the serialize_compact path requires a non-naive walker that emits
-// terminator literals (`;`) which are non-Span in the BBNF grammar.
-// The naive `span_range()`-based serializer drops trailing `;` and
-// re-parsing fails. Authoring `BbnfDocument::serialize_compact` /
-// `BbnfBootstrap::serialize_compact_doc` is a deferred follow-up
-// gated on a typed-walker over BbnfDocument that materialises every
-// non-Span literal — out of scope for cutover.H.
+// AZ-II.cutover.I Phase 5 — LANDED. The bootstrap_parser admits real
+// BBNF source via `bbnf::grammar::bootstrap_parser::parse`; the
+// `serialize_compact_doc` walker at
+// `bbnf::runtime::bbnf::serialize_compact_doc` is a typed projection
+// over [`BbnfCompoundKind`] that materialises every non-Span literal
+// (`=`, `;`, `,`, `|`, `->`, `from`, `@import`, …) and re-emits the
+// source byte-stably. The round-trip asserts idempotence: the second
+// parse-and-serialize cycle reproduces the first emission verbatim.
 
-use bbnf::runtime::BbnfDocument;
+use bbnf::runtime::bbnf::serialize_compact_doc;
 
 fn bbnf_emit(input: &str) -> String {
     let doc = bbnf::grammar::bootstrap_parser::parse(input)
         .expect("BBNF grammar parse failed");
-    bbnf_serialize_doc(&doc)
-}
-
-fn bbnf_serialize_doc<'p>(doc: &BbnfDocument<'p>) -> String {
-    // The grammar emits one borrowed Span per source-bearing leaf;
-    // `BbnfView::span_range()` walks every Span descendant and returns
-    // the union of their byte offsets against the document's input
-    // slice. Note the covered slice excludes literal terminators
-    // (`;` / `.`) which are not Span leaves — re-parsing the slice
-    // therefore fails on grammars whose terminators are mandatory.
-    let view = doc.view();
-    match view.span_range() {
-        Some((lo, hi)) => doc.input[lo..hi].to_string(),
-        None => String::new(),
-    }
+    serialize_compact_doc(&doc)
 }
 
 #[test]
-#[ignore = "BBNF serialize_compact_doc deferred to post-cutover.H — see Phase 5 PARTIAL"]
 fn bbnf_rule() {
     let input = "x = /[a-z]+/ ;\ny = \"hello\" ;";
     let e = bbnf_emit(input);

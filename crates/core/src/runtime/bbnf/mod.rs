@@ -38,10 +38,12 @@
 pub mod arena;
 pub mod builder;
 pub mod document;
+pub mod serialize;
 pub mod value;
 pub mod view;
 
 pub use arena::{BbnfArena, BbnfCompound, BbnfCompoundId, BbnfCompoundKind};
 pub use builder::BbnfStructBuilder;
 pub use document::{BbnfDocument, BbnfKind, BbnfPathQuery, BbnfView};
+pub use serialize::serialize_compact_doc;
 pub use value::BbnfValue;

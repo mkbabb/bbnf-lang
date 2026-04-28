@@ -80,6 +80,29 @@ pub fn collect_nonterminal_refs<'a>(view: BbnfView<'a, 'a>, refs: &mut IndexSet<
         Some(BbnfCompoundKind::MappedFactor) | Some(BbnfCompoundKind::Factor) => {
             collect_refs_from_compound(view, refs);
         }
+        // `value_expr` and its sub-grammar form a self-contained value-
+        // expression scope on the right side of a `->` map arrow. The
+        // identifiers therein (host-fn names, parameter binders, type
+        // annotations) belong to the value-expression alphabet, NOT to
+        // grammar-rule references. Bootstrap-parser shape exposes
+        // host-fn idents as Span leaves under `value_fn_call` and the
+        // pre-cutover.H validator mis-classified them as nonterminal
+        // refs, breaking JSON regen-check shape parity.
+        Some(BbnfCompoundKind::ValueExpr)
+        | Some(BbnfCompoundKind::ValueClosure)
+        | Some(BbnfCompoundKind::ValueOr)
+        | Some(BbnfCompoundKind::ValueAnd)
+        | Some(BbnfCompoundKind::ValueCmp)
+        | Some(BbnfCompoundKind::ValueAdd)
+        | Some(BbnfCompoundKind::ValueMul)
+        | Some(BbnfCompoundKind::ValueUnary)
+        | Some(BbnfCompoundKind::ValueAtom)
+        | Some(BbnfCompoundKind::ValuePath)
+        | Some(BbnfCompoundKind::ValueInput)
+        | Some(BbnfCompoundKind::ValueFnCall) => {
+            // value-expression scope — never contributes nonterminal
+            // refs. Skip the entire subtree.
+        }
         // `term = "ε" | identifier , ( "(" , call_arg ... ")" ) ?
         //       | literal | regex | "@{" rhs "}" | "(" rhs ")"
         //       | "[" rhs "]" | "{" rhs "}"`.

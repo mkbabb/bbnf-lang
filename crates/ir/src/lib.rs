@@ -14,6 +14,7 @@
 
 pub mod cost_config;
 pub mod dag;
+pub mod dta;
 pub mod egraph;
 pub mod passes;
 pub mod recognizer;

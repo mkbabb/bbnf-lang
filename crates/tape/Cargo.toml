@@ -15,6 +15,11 @@ dta-replay = []
 [dependencies]
 serde = { version = "1", features = ["derive"], optional = true }
 rayon = { version = "1", optional = true }
+# AZ-II.cutover.A — `tape::dta` is now a re-export over `bbnf_ir::dta`
+# (the four DTA live-substrate types hoisted to the IR per
+# `audit/AUDIT-6-ARCHITECTURE.md` §8.2). Tape gains a regular dep on
+# `bbnf-ir` here; the dep retires alongside the crate at cutover.C.
+bbnf-ir = { path = "../ir" }
 
 [dev-dependencies]
 

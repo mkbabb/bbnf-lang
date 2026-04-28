@@ -178,6 +178,7 @@ fn emit_parse_alt_dispatch_struct_direct(
     let fn_ident = shape_fn_ident("altdispatch", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let rule_id_lit = rule.id;
+    let rule_name_lit = rule_name.to_string();
     let p_lt = format_ident!("p");
     let builder_ty = builder_ty_with_lifetime(strategy, &p_lt);
 
@@ -191,15 +192,27 @@ fn emit_parse_alt_dispatch_struct_direct(
         branches, grammar_suffix, rule, ir,
     );
 
+    // AZ-I.W2-act.recovery — inline `StructLayout` literal mirroring
+    // the per-shape pattern used by `array/struct_direct`,
+    // `flat/struct_direct`, `wrap/struct_direct`,
+    // `keyword/struct_direct`, and `pratt/struct_direct`. The
+    // pre-recovery body emitted a call to `ir_struct_registry_layout`
+    // — a helper that does not exist in `bbnf_ir` or any consumed
+    // crate; the resulting generated code did not compile on CSS L4
+    // (which exercises 6 AltDispatch rules under StructDirect).
+    // `JsonStructBuilder::begin_compound` / `CssStructBuilder::begin_compound`
+    // / `SheetsStructBuilder::begin_compound` consult `(layout.kind,
+    // layout.rule_name)` only; defaults suffice for `fields` /
+    // `rule_type`.
     quote! {
         /// AZ-I.W2.RB — per-grammar AltDispatch-shape parse function,
-        /// **struct-direct body**. Targets [`JsonStructBuilder`] (or
-        /// the future per-grammar concrete builder for AltDispatch-
-        /// admitting grammars).
+        /// **struct-direct body**. Targets the grammar's concrete
+        /// `StructBuilder` (JSON / Sheets / CSS L4 per the resolver's
+        /// `SubstrateBinding`).
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut, unused_assignments, unreachable_code)]
         pub fn #fn_ident<'p>(
-            input: &[u8],
+            input: &'p [u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
@@ -211,11 +224,22 @@ fn emit_parse_alt_dispatch_struct_direct(
                     offset: *p as u32,
                 })?;
 
-            // AZ-I.W2.RB — open the alt compound. Layout is W1.A-
-            // guaranteed for StructDirect.
-            let __layout = ir_struct_registry_layout(#rule_id_lit)
-                .expect("StructDirect requires populated layout for AltDispatch rule");
-            let __handle = builder.begin_compound(__layout);
+            // AZ-I.W2-act.recovery — inline layout literal. The
+            // builder routes `(kind, rule_name)` through its
+            // OpenFrame dispatch; for AltDispatch under CSS L4 the
+            // unmatched-rule-name path collapses to OpenFrame::Wrap,
+            // which is the right semantics for an Alt-of-leaves
+            // (every branch's scalar lands as the wrap's single
+            // child via push_branch_tag + the per-branch leaf push).
+            let __layout: ::bbnf_ir::registry::StructLayout =
+                ::bbnf_ir::registry::StructLayout {
+                    rule_id: #rule_id_lit as ::bbnf_ir::RuleId,
+                    rule_name: ::std::string::String::from(#rule_name_lit),
+                    kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
+                    rule_type: ::bbnf_ir::TypeDesc::Span,
+                    fields: ::std::vec::Vec::new(),
+                };
+            let __handle = builder.begin_compound(&__layout);
 
             #dispatch_arms
 

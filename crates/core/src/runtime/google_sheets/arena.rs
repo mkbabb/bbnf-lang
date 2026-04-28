@@ -100,6 +100,22 @@ pub enum SheetsCompoundKind {
 }
 
 impl SheetsCompoundKind {
+    /// Returns `true` when the compound is a transparent Wrap-shape
+    /// rule (Alt-of-Refs / single-child forwarder). Such compounds
+    /// with exactly one child collapse to the child's value rather
+    /// than allocating a slab entry — preserving the grammar's
+    /// transparent-wrap semantics.
+    pub fn is_transparent_wrap(self) -> bool {
+        matches!(
+            self,
+            Self::Wrap
+                | Self::Primary
+                | Self::Expression
+                | Self::RangeEnd
+                | Self::CellOrRange
+        )
+    }
+
     /// Resolve a kind from the rule name the layout carries. Used by
     /// the builder when admitting a `begin_compound` against an
     /// arbitrary rule; rules unmatched by the kind alphabet collapse

@@ -528,3 +528,205 @@ fn range_ref_parses_with_and_without_sheet_prefix() {
         );
     }
 }
+
+// ─── AZ-I.W2-act.B2 — wire-contract parity ────────────────────────────
+//
+// Two test families:
+//
+// 1. Tape-payload tests above exercise the existing tape-direct parser
+//    (today's GoogleSheetsParser::parse() returns Parsed<...>). These
+//    activate post-orchestrator-regen when the parser flips to
+//    StructDirect.
+//
+// 2. Wire-contract tests below build SheetsDocument values directly
+//    via SheetsStructBuilder against synthetic StructLayouts that
+//    mirror the grammar's typed projections. These prove the
+//    substrate is wired before the regen lands; once the orchestrator
+//    regens, the parse tests above read SheetsDocument and the two
+//    surfaces converge.
+
+mod wire_contract {
+    use bbnf::runtime::{
+        SheetsCompoundKind, SheetsStructBuilder, SheetsValue, StructBuilder,
+    };
+    use bbnf_ir::registry::{LayoutKind, StructLayout};
+    use bbnf_ir::TypeDesc;
+
+    fn synth_layout(rule_id: u32, rule_name: &str, kind: LayoutKind) -> StructLayout {
+        StructLayout {
+            rule_id,
+            rule_name: rule_name.to_string(),
+            kind,
+            rule_type: TypeDesc::Tuple(Vec::new()),
+            fields: Vec::new(),
+        }
+    }
+
+    /// `add_op = "+" -> 0u8 | "-" -> 1u8` projects to a Tag(u8) leaf.
+    /// The struct-direct path lands the discriminator via
+    /// `push_branch_tag(idx)` per the StructBuilder trait contract.
+    #[test]
+    fn add_op_first_branch_maps_to_tag_zero() {
+        let mut b = SheetsStructBuilder::new();
+        b.push_branch_tag(0);
+        let doc = b.finalise();
+        assert_eq!(*doc.root(), SheetsValue::Tag(0));
+    }
+
+    #[test]
+    fn add_op_second_branch_maps_to_tag_one() {
+        let mut b = SheetsStructBuilder::new();
+        b.push_branch_tag(1);
+        let doc = b.finalise();
+        assert_eq!(*doc.root(), SheetsValue::Tag(1));
+    }
+
+    /// Sheets `boolean` collapses both branches onto a Bool leaf; the
+    /// branch-tag discrimination is implicit in the bool value.
+    #[test]
+    fn boolean_true_lands_as_bool_leaf() {
+        let mut b = SheetsStructBuilder::new();
+        b.push_leaf_with_bool(true);
+        let doc = b.finalise();
+        assert_eq!(*doc.root(), SheetsValue::Bool(true));
+    }
+
+    /// `error_literal = "#N/A" -> 0u8 | …` projects to an Error(u8)
+    /// leaf with the variant index.
+    #[test]
+    fn error_literal_n_a_lands_as_error_zero() {
+        let mut b = SheetsStructBuilder::new();
+        b.push_leaf_error(0);
+        let doc = b.finalise();
+        assert_eq!(*doc.root(), SheetsValue::Error(0));
+    }
+
+    #[test]
+    fn error_literal_null_lands_as_error_four() {
+        let mut b = SheetsStructBuilder::new();
+        b.push_leaf_error(4);
+        let doc = b.finalise();
+        assert_eq!(*doc.root(), SheetsValue::Error(4));
+    }
+
+    /// `number = /…/ -> f64` projects to a Number(f64) leaf via
+    /// push_leaf_with_f64.
+    #[test]
+    fn number_42_lands_as_f64_leaf() {
+        let mut b = SheetsStructBuilder::new();
+        b.push_leaf_with_f64(42.0);
+        let doc = b.finalise();
+        assert_eq!(*doc.root(), SheetsValue::Number(42.0));
+    }
+
+    /// Compound-kind preservation across operator-Alt rules — the
+    /// same Tag(0) inside an AddExpr means `+`; the same Tag(0)
+    /// inside a MulExpr means `*`. The structural-kind tag on the
+    /// arena entry disambiguates.
+    #[test]
+    fn compound_kind_preserves_role_for_operator_alt() {
+        let mut b = SheetsStructBuilder::new();
+        let add_layout = synth_layout(0, "add_expr", LayoutKind::Struct);
+        let h = b.begin_compound(&add_layout);
+        b.push_leaf_with_f64(1.0);
+        b.push_branch_tag(0); // `+`
+        b.push_leaf_with_f64(2.0);
+        b.end_compound(h);
+        let doc = b.finalise();
+        match *doc.root() {
+            SheetsValue::Compound(id) => {
+                let view = doc.compound(id);
+                assert_eq!(view.kind, SheetsCompoundKind::AddExpr);
+                assert_eq!(view.children.len(), 3);
+            }
+            ref other => panic!("expected AddExpr Compound, got {:?}", other),
+        }
+    }
+
+    /// `formula = /=?/, expression` — top-level formula compound.
+    /// Children are the optional `=` (no payload, no push) and the
+    /// expression value. Wire-contract pushes a single child.
+    #[test]
+    fn formula_compound_carries_expression_child() {
+        let mut b = SheetsStructBuilder::new();
+        let formula_layout = synth_layout(0, "formula", LayoutKind::Struct);
+        let h = b.begin_compound(&formula_layout);
+        b.push_leaf_with_f64(3.14);
+        b.end_compound(h);
+        let doc = b.finalise();
+        match *doc.root() {
+            SheetsValue::Compound(id) => {
+                let view = doc.compound(id);
+                assert_eq!(view.kind, SheetsCompoundKind::Formula);
+                assert_eq!(view.children.len(), 1);
+                assert_eq!(view.children[0], SheetsValue::Number(3.14));
+            }
+            ref other => panic!("expected Formula Compound, got {:?}", other),
+        }
+    }
+
+    /// Function-call shape: identifier head + arg list.
+    #[test]
+    fn func_call_compound_carries_head_and_args() {
+        let mut b = SheetsStructBuilder::new();
+        let fn_call = synth_layout(0, "func_call", LayoutKind::Struct);
+        let h = b.begin_compound(&fn_call);
+        b.push_leaf_identifier("SUM");
+        let args = synth_layout(0, "func_args", LayoutKind::Struct);
+        let h2 = b.begin_compound(&args);
+        b.push_leaf_with_f64(1.0);
+        b.push_leaf_with_f64(2.0);
+        b.end_compound(h2);
+        b.end_compound(h);
+        let doc = b.finalise();
+        match *doc.root() {
+            SheetsValue::Compound(id) => {
+                let view = doc.compound(id);
+                assert_eq!(view.kind, SheetsCompoundKind::FuncCall);
+                // children: identifier + func_args compound.
+                assert_eq!(view.children.len(), 2);
+                match view.children[0] {
+                    SheetsValue::Identifier(name) => assert_eq!(name, "SUM"),
+                    ref other => panic!("expected Identifier head, got {:?}", other),
+                }
+                match view.children[1] {
+                    SheetsValue::Compound(args_id) => {
+                        let args_view = doc.compound(args_id);
+                        assert_eq!(args_view.kind, SheetsCompoundKind::FuncArgs);
+                        assert_eq!(args_view.children.len(), 2);
+                    }
+                    ref other => panic!("expected func_args Compound, got {:?}", other),
+                }
+            }
+            ref other => panic!("expected func_call Compound, got {:?}", other),
+        }
+    }
+
+    /// Cell-shape: optional sheet prefix + cell ref.
+    #[test]
+    fn cell_compound_carries_prefix_and_cell_ref() {
+        let mut b = SheetsStructBuilder::new();
+        let cell = synth_layout(0, "cell", LayoutKind::Struct);
+        let h = b.begin_compound(&cell);
+        b.push_leaf_sheet_prefix(1, "Sheet1!");
+        b.push_leaf_cell_ref("A1");
+        b.end_compound(h);
+        let doc = b.finalise();
+        match *doc.root() {
+            SheetsValue::Compound(id) => {
+                let view = doc.compound(id);
+                assert_eq!(view.kind, SheetsCompoundKind::Cell);
+                assert_eq!(view.children.len(), 2);
+                match view.children[0] {
+                    SheetsValue::SheetPrefix { tag: 1, text: "Sheet1!" } => {}
+                    ref other => panic!("expected SheetPrefix, got {:?}", other),
+                }
+                match view.children[1] {
+                    SheetsValue::CellRef("A1") => {}
+                    ref other => panic!("expected CellRef, got {:?}", other),
+                }
+            }
+            ref other => panic!("expected cell Compound, got {:?}", other),
+        }
+    }
+}

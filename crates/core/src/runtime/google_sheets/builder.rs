@@ -184,13 +184,13 @@ impl<'p> StructBuilder for SheetsStructBuilder<'p> {
             .stack
             .pop()
             .expect("SheetsStructBuilder::end_compound on empty stack");
-        // Wrap-shape compounds with exactly one child collapse to the
-        // child's value — the wrap layer is transparent. This matches
-        // the grammar's `primary | range_end | cell_or_range` Wrap-Alt
-        // semantics: the dispatched branch's value is the compound's
-        // value.
-        let value = if matches!(frame.kind, SheetsCompoundKind::Wrap) && frame.children.len() == 1
-        {
+        // Transparent-wrap compounds with exactly one child collapse
+        // to the child's value — the wrap layer is structurally
+        // transparent. Matches the grammar's `primary | range_end |
+        // cell_or_range | expression` Wrap-Alt semantics: the
+        // dispatched branch's value is the compound's value, no
+        // arena slab entry needed.
+        let value = if frame.kind.is_transparent_wrap() && frame.children.len() == 1 {
             frame.children[0]
         } else {
             let id = self.arena.push_compound(frame.kind, frame.children);

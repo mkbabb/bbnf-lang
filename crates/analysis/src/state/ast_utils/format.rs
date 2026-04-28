@@ -17,7 +17,7 @@ use bbnf::runtime::bbnf::{BbnfCompoundKind, BbnfView};
 pub fn format_expression_short(node: BbnfView<'_, '_>) -> String {
     // Span leaves — the source slice IS the formatted form.
     if !node.is_compound() {
-        return node.span_text().map(str::to_string).unwrap_or_default();
+        return node.span_text_opt().map(str::to_string).unwrap_or_default();
     }
 
     match node.compound_kind() {
@@ -54,9 +54,9 @@ pub fn format_expression_short(node: BbnfView<'_, '_>) -> String {
             } else {
                 let input = node.input();
                 let mut out = format_expression_short(operands[0]);
-                let mut prev_end = operands[0].byte_span().map(|(_, hi)| hi);
+                let mut prev_end = operands[0].span_range().map(|(_, hi)| hi);
                 for op in operands.iter().skip(1) {
-                    let op_lo = op.byte_span().map(|(lo, _)| lo);
+                    let op_lo = op.span_range().map(|(lo, _)| lo);
                     if let (Some(end), Some(start)) = (prev_end, op_lo) {
                         if end <= start {
                             let gap = &input[end..start];
@@ -71,7 +71,7 @@ pub fn format_expression_short(node: BbnfView<'_, '_>) -> String {
                         out.push(' ');
                     }
                     out.push_str(&format_expression_short(*op));
-                    prev_end = op.byte_span().map(|(_, hi)| hi);
+                    prev_end = op.span_range().map(|(_, hi)| hi);
                 }
                 out
             }
@@ -86,11 +86,11 @@ pub fn format_expression_short(node: BbnfView<'_, '_>) -> String {
             // compound covers contains "->" between the inner factor's
             // end and the compound's end.
             let has_arrow = node
-                .span_text()
+                .span_text_opt()
                 .is_some_and(|s| s.contains("->"));
             if has_arrow {
                 return node
-                    .span_text()
+                    .span_text_opt()
                     .map(|s| s.trim().to_string())
                     .unwrap_or_else(|| span_or_ellipsis(node));
             }
@@ -107,7 +107,7 @@ pub fn format_expression_short(node: BbnfView<'_, '_>) -> String {
                 .children()
                 .filter(|c| c.compound_kind().is_none())
                 .find_map(|c| {
-                    let t = c.span_text()?.trim();
+                    let t = c.span_text_opt()?.trim();
                     if matches!(t, "?" | "?w" | "*" | "+") {
                         Some(t.to_string())
                     } else {
@@ -125,7 +125,7 @@ pub fn format_expression_short(node: BbnfView<'_, '_>) -> String {
 
         Some(BbnfCompoundKind::Closure) => {
             // closure source slice is already `|params| body`.
-            node.span_text()
+            node.span_text_opt()
                 .map(|s| s.trim().to_string())
                 .unwrap_or_else(|| span_or_ellipsis(node))
         }
@@ -164,7 +164,7 @@ pub fn format_expression_short(node: BbnfView<'_, '_>) -> String {
 /// the formatted expression the user typed, so formatting just
 /// returns the recovered slice trimmed.
 pub fn format_value_expr_short(node: BbnfView<'_, '_>) -> String {
-    node.span_text()
+    node.span_text_opt()
         .map(|s| {
             let t = s.trim();
             if t.is_empty() {
@@ -178,7 +178,7 @@ pub fn format_value_expr_short(node: BbnfView<'_, '_>) -> String {
 
 /// Shared fallback: trimmed span_text or "…" placeholder.
 fn span_or_ellipsis(node: BbnfView<'_, '_>) -> String {
-    let text = node.span_text().unwrap_or("").trim();
+    let text = node.span_text_opt().unwrap_or("").trim();
     if text.is_empty() {
         "...".into()
     } else {
@@ -195,12 +195,12 @@ fn format_term_call(node: BbnfView<'_, '_>) -> String {
         Some(c) => c,
         None => return span_or_ellipsis(node),
     };
-    let name = ident.span_text().unwrap_or("").to_string();
+    let name = ident.span_text_opt().unwrap_or("").to_string();
     // Collect call_arg compounds (the optional `( ... )` group).
     let args: Vec<String> = node
         .children()
         .filter(|c| c.compound_kind() == Some(BbnfCompoundKind::CallArg))
-        .map(|c| c.span_text().unwrap_or("").trim().to_string())
+        .map(|c| c.span_text_opt().unwrap_or("").trim().to_string())
         .filter(|s| !s.is_empty())
         .collect();
     if args.is_empty() {

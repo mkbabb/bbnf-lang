@@ -138,7 +138,7 @@ fn format_expression(node: BbnfView<'_, '_>, indent_level: usize) -> String {
     // Span leaves — the source slice IS the formatted form.
     if !node.is_compound() {
         return node
-            .span_text()
+            .span_text_opt()
             .map(str::to_string)
             .unwrap_or_default();
     }
@@ -164,7 +164,7 @@ fn format_expression(node: BbnfView<'_, '_>, indent_level: usize) -> String {
                 .children()
                 .filter(|c| c.compound_kind().is_none())
                 .find_map(|c| {
-                    let t = c.span_text()?.trim();
+                    let t = c.span_text_opt()?.trim();
                     if matches!(t, "?" | "?w" | "*" | "+") {
                         Some(t.to_string())
                     } else {
@@ -185,7 +185,7 @@ fn format_expression(node: BbnfView<'_, '_>, indent_level: usize) -> String {
                 Some(c) => c,
                 None => return span_or_dots(node),
             };
-            let has_arrow = node.span_text().is_some_and(|s| s.contains("->"));
+            let has_arrow = node.span_text_opt().is_some_and(|s| s.contains("->"));
             if !has_arrow {
                 return format_expression(inner, indent_level);
             }
@@ -205,7 +205,7 @@ fn format_expression(node: BbnfView<'_, '_>, indent_level: usize) -> String {
                 ),
                 (Some(v), None) => format!("{} -> {}", inner_str, format_value_expr_short(v)),
                 _ => node
-                    .span_text()
+                    .span_text_opt()
                     .map(|s| s.trim().to_string())
                     .unwrap_or_else(|| span_or_dots(node)),
             }
@@ -220,9 +220,9 @@ fn format_expression(node: BbnfView<'_, '_>, indent_level: usize) -> String {
             } else {
                 let input = node.input();
                 let mut out = format_expression(operands[0], indent_level);
-                let mut prev_end = operands[0].byte_span().map(|(_, hi)| hi);
+                let mut prev_end = operands[0].span_range().map(|(_, hi)| hi);
                 for op in operands.iter().skip(1) {
-                    let op_lo = op.byte_span().map(|(lo, _)| lo);
+                    let op_lo = op.span_range().map(|(lo, _)| lo);
                     if let (Some(end), Some(start)) = (prev_end, op_lo) {
                         if end <= start {
                             let gap = &input[end..start];
@@ -237,7 +237,7 @@ fn format_expression(node: BbnfView<'_, '_>, indent_level: usize) -> String {
                         out.push(' ');
                     }
                     out.push_str(&format_expression(*op, indent_level));
-                    prev_end = op.byte_span().map(|(_, hi)| hi);
+                    prev_end = op.span_range().map(|(_, hi)| hi);
                 }
                 out
             }
@@ -272,7 +272,7 @@ fn format_expression(node: BbnfView<'_, '_>, indent_level: usize) -> String {
         }
 
         Some(BbnfCompoundKind::Closure) => node
-            .span_text()
+            .span_text_opt()
             .map(|s| s.trim().to_string())
             .unwrap_or_else(|| span_or_dots(node)),
 
@@ -287,7 +287,7 @@ fn format_expression(node: BbnfView<'_, '_>, indent_level: usize) -> String {
 
         // CallArg: render the substantive expression.
         Some(BbnfCompoundKind::CallArg) => node
-            .span_text()
+            .span_text_opt()
             .map(|s| s.trim().to_string())
             .unwrap_or_else(|| span_or_dots(node)),
 
@@ -297,7 +297,7 @@ fn format_expression(node: BbnfView<'_, '_>, indent_level: usize) -> String {
 }
 
 fn span_or_dots(node: BbnfView<'_, '_>) -> String {
-    let text = node.span_text().unwrap_or("").trim();
+    let text = node.span_text_opt().unwrap_or("").trim();
     if text.is_empty() {
         "...".into()
     } else {
@@ -311,7 +311,7 @@ fn format_term_call(node: BbnfView<'_, '_>, indent_level: usize) -> String {
         Some(c) => c,
         None => return span_or_dots(node),
     };
-    let name = ident.span_text().unwrap_or("").to_string();
+    let name = ident.span_text_opt().unwrap_or("").to_string();
     let args: Vec<String> = node
         .children()
         .filter(|c| c.compound_kind() == Some(BbnfCompoundKind::CallArg))
@@ -376,7 +376,7 @@ fn find_type_annotation_child<'a, 'p>(node: BbnfView<'a, 'p>) -> Option<BbnfView
     let input = node.input();
     let mut prev_end: Option<usize> = None;
     for c in node.children() {
-        let span = c.byte_span()?;
+        let span = c.span_range()?;
         if let Some(end) = prev_end {
             if end < span.0 {
                 let gap = input[end..span.0].trim_start();

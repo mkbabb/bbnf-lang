@@ -88,7 +88,7 @@ fn collect_spans(
     offset: usize,
     spans: &mut Vec<(usize, usize)>,
 ) {
-    let span = node.byte_span();
+    let span = node.span_range();
     let contains = span.is_some_and(|(lo, hi)| offset >= lo && offset <= hi);
 
     // Span-leaf focus: push and return.

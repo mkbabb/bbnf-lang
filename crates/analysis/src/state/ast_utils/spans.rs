@@ -22,6 +22,6 @@ pub fn compute_expression_end_pub(node: BbnfView<'_, '_>) -> Option<usize> {
 
 /// Compute the end byte offset of a [`BbnfView`] focus.
 pub fn compute_expression_end(node: BbnfView<'_, '_>) -> Option<usize> {
-    let (_lo, hi) = node.byte_span()?;
+    let (_lo, hi) = node.span_range()?;
     Some(hi)
 }

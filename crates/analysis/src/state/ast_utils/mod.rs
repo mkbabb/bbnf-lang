@@ -99,7 +99,7 @@ pub fn is_empty_rhs(node: BbnfView<'_, '_>) -> bool {
                 // Span / leaf with non-empty source slice → modifier
                 // (the only span-emitting non-compound child of
                 // factor is the modifier).
-                c.span_text().is_some_and(|t| !t.trim().is_empty())
+                c.span_text_opt().is_some_and(|t| !t.trim().is_empty())
             });
             match (term, modifier_present) {
                 (Some(t), false) => is_empty_rhs(t),
@@ -225,7 +225,7 @@ pub(crate) fn iter_iteration_views<'a, 'p>(
             // the analysis layer is interested in the substantive
             // operand compounds, not the delimiters.
             if !child.is_compound() {
-                let text = child.span_text().unwrap_or("").trim();
+                let text = child.span_text_opt().unwrap_or("").trim();
                 if text.is_empty() || text == "|" || text == "," {
                     return None;
                 }

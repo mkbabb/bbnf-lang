@@ -126,6 +126,7 @@ impl<'a, 'p: 'a> BbnfView<'a, 'p> {
         self.byte_span()
     }
 
+
     /// Positional child access. Leaves yield `None`; compounds yield
     /// the `i`th child's view, or `None` when `i` is out of range.
     pub fn child(&self, i: usize) -> Option<BbnfView<'a, 'p>> {

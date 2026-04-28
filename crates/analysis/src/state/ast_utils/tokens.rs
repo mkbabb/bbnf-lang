@@ -33,7 +33,7 @@ pub fn collect_semantic_tokens(
             match node.branch_tag() {
                 Some(0) => {
                     // Epsilon keyword.
-                    if let Some((lo, hi)) = node.byte_span() {
+                    if let Some((lo, hi)) = node.span_range() {
                         tokens.push(SemanticTokenInfo {
                             span: (lo, hi),
                             token_type: token_types::KEYWORD,
@@ -43,7 +43,7 @@ pub fn collect_semantic_tokens(
                 Some(1) => {
                     // Identifier with optional call-args.
                     if let Some(ident) = node.child(0) {
-                        if let Some((lo, hi)) = ident.byte_span() {
+                        if let Some((lo, hi)) = ident.span_range() {
                             tokens.push(SemanticTokenInfo {
                                 span: (lo, hi),
                                 token_type: token_types::RULE_REFERENCE,
@@ -151,11 +151,11 @@ pub fn collect_semantic_tokens(
 /// Emit a semantic token for a Span-leaf focus, classified by the
 /// leading source byte.
 fn emit_leaf_token(node: BbnfView<'_, '_>, tokens: &mut Vec<SemanticTokenInfo>) {
-    let span = match node.byte_span() {
+    let span = match node.span_range() {
         Some(s) => s,
         None => return,
     };
-    let text = match node.span_text() {
+    let text = match node.span_text_opt() {
         Some(t) => t.trim(),
         None => return,
     };
@@ -165,7 +165,7 @@ fn emit_leaf_token(node: BbnfView<'_, '_>, tokens: &mut Vec<SemanticTokenInfo>) 
     // Adjust the recorded span to drop leading / trailing whitespace
     // — the analysis layer's existing convention is to point exactly
     // at the printable run.
-    let raw = node.span_text().unwrap_or("");
+    let raw = node.span_text_opt().unwrap_or("");
     let lead_ws = raw.len() - raw.trim_start().len();
     let trail_ws = raw.len() - raw.trim_end().len();
     let tok_lo = span.0 + lead_ws;

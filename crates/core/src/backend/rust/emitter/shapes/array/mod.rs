@@ -80,6 +80,13 @@
 use bbnf_ir::passes::inspect::{single_byte_literal, unwrap_map_ow, unwrap_wrap};
 use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
+use quote::{format_ident, quote};
+
+use super::super::strategy::EmitStrategy;
+use super::dispatcher::{
+    dispatcher_fn_ident, emit_ref_call_tape, shape_fn_ident,
+};
+use super::root_rule_name;
 
 mod element;
 mod list;
@@ -89,29 +96,149 @@ mod wrapped;
 pub use visitor::emit_parse_array_visitor;
 
 /// Emit `pub fn parse_array_<grammar>_<rule>(input, p, state, builder)
-/// -> Result<TapeOffset, DtaError>`.
+/// -> Result<TapeOffset, DtaError>` for [`EmitStrategy::TapeDirect`], or
+/// the matching `JsonStructBuilder`-targeted body for
+/// [`EmitStrategy::StructDirect`].
 ///
-/// Dispatches on rule body structure:
+/// AZ-I.W2.RB — strategy match is at codegen time, not at runtime.
+/// Per `feedback_no-orthogonal-codepaths` ONE function body is emitted
+/// per `(grammar, rule)`; the strategy selects which.
+///
+/// Dispatches on rule body structure (TapeDirect path only):
 ///
 /// - **Shape 1** — body unwraps to `Wrap(open, middle, close)` with
 ///   concrete single-byte open/close literals → [`wrapped::emit_parse_array_wrapped`].
 /// - **Shape 2** — body is a `Repeat` (direct) or `OptionalWhitespace(Repeat)`
 ///   with no delimiter wrap → [`list::emit_parse_array_list`].
 ///
-/// The two variants share the function identity (`parse_array_<grammar>_<rule>`)
-/// and the outer signature; only the body differs per shape.
+/// Struct-direct path emits a uniform body — `begin_compound(&__layout)`
+/// + element loop + `end_compound(handle)` — agnostic to the wrapped /
+/// list distinction (the JsonStructBuilder's Array frame collects items
+/// the same way regardless of which delimiter shape produced them).
 pub fn emit_parse_array(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
+    strategy: &EmitStrategy,
 ) -> TokenStream {
-    let body = unwrap_map_ow(&rule.body);
-    if let Some((open, _middle, close)) = unwrap_wrap(body) {
-        if single_byte_literal(open, ir).is_some()
-            && single_byte_literal(close, ir).is_some()
-        {
-            return wrapped::emit_parse_array_wrapped(grammar_suffix, rule, ir);
+    match strategy {
+        EmitStrategy::StructDirect { .. } => {
+            emit_parse_array_struct_direct(grammar_suffix, rule, ir)
+        }
+        EmitStrategy::TapeDirect => {
+            let body = unwrap_map_ow(&rule.body);
+            if let Some((open, _middle, close)) = unwrap_wrap(body) {
+                if single_byte_literal(open, ir).is_some()
+                    && single_byte_literal(close, ir).is_some()
+                {
+                    return wrapped::emit_parse_array_wrapped(grammar_suffix, rule, ir);
+                }
+            }
+            list::emit_parse_array_list(grammar_suffix, rule, ir)
         }
     }
-    list::emit_parse_array_list(grammar_suffix, rule, ir)
+}
+
+/// AZ-I.W2.RB — struct-direct body for the Array shape.
+///
+/// Emits a `parse_array_<grammar>_<rule>` whose body drives
+/// `JsonStructBuilder` directly: `begin_compound(&__layout)` opens the
+/// array frame, the parse loop dispatches each element via the per-Ref
+/// shape fn, and `end_compound(handle)` closes it. Structural
+/// `[` / `,` / `]` punctuation is consumed but not recorded — the
+/// builder's frame stack is the source of truth for shape.
+///
+/// The `__layout` lookup is asserted (not fall-back). Per the W2-EMITTER-
+/// REWIRE plan §1, `for_grammar` GUARANTEES the layout exists for every
+/// rule when the strategy is `StructDirect`.
+fn emit_parse_array_struct_direct(
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let rule_name = ir.get_string(rule.name);
+    let fn_ident = shape_fn_ident("array", grammar_suffix, rule_name);
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+    let rule_id_lit = rule.id;
+
+    let dispatcher_ident = match root_rule_name(ir) {
+        Some(root) => {
+            let root_disp = dispatcher_fn_ident(grammar_suffix, &root);
+            format_ident!("{}__value", root_disp)
+        }
+        None => return quote! {},
+    };
+
+    // Per-Ref direct value call when classified — same routing as the
+    // tape path; targets are the per-shape struct-direct fns.
+    let value_ref = element::extract_array_value_ref(&rule.body, ir);
+    let value_call = value_ref
+        .and_then(|rid| emit_ref_call_tape(grammar_suffix, rid, ir))
+        .map(|call| quote! { (#call)?; })
+        .unwrap_or_else(|| {
+            quote! {
+                #dispatcher_ident(input, p, state, builder)?;
+            }
+        });
+
+    quote! {
+        /// AZ-I.W2.RB — per-grammar Array-shape parse function,
+        /// **struct-direct body**. Targets [`JsonStructBuilder`].
+        #[inline]
+        #[allow(non_snake_case, clippy::too_many_arguments)]
+        pub fn #fn_ident<'p>(
+            input: &[u8],
+            p: &mut usize,
+            state: &mut #support_mod::ScanState,
+            builder: &mut crate::runtime::JsonStructBuilder<'p>,
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+            use crate::runtime::builder::StructBuilder;
+
+            if input.get(*p).copied() != Some(b'[') {
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+
+            // AZ-I.W2.RB — open the array compound. Layout is W1.A-
+            // guaranteed for StructDirect.
+            let __layout = ir_struct_registry_layout(#rule_id_lit)
+                .expect("StructDirect requires populated layout for Array rule");
+            let __handle = builder.begin_compound(__layout);
+
+            *p += 1;
+            let _ = #support_mod::skip_space(input, p, state);
+
+            if input.get(*p).copied() == Some(b']') {
+                *p += 1;
+                builder.end_compound(__handle);
+                return Ok(());
+            }
+
+            loop {
+                // Element dispatch — per-Ref routing matches tape path.
+                #value_call
+
+                let _ = #support_mod::skip_space(input, p, state);
+                match input.get(*p).copied() {
+                    Some(b',') => {
+                        *p += 1;
+                        let _ = #support_mod::skip_space(input, p, state);
+                    }
+                    Some(b']') => {
+                        *p += 1;
+                        builder.end_compound(__handle);
+                        return Ok(());
+                    }
+                    _ => return Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    }),
+                }
+            }
+        }
+    }
 }

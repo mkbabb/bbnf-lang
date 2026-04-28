@@ -1,0 +1,22 @@
+// AZ-I.W2.RB — AltDispatch struct-direct snapshot.
+//
+// Captures the expected `builder.*` call set the AltDispatch-shape
+// emitter produces under `EmitStrategy::StructDirect`. Per the
+// W2-EMITTER-REWIRE plan §3 hard gates, the struct-direct body emits
+// zero `tape.*` calls; only the typed StructBuilder API is exercised.
+//
+// JSON does not exercise AltDispatch (its `value` rule is `Wrap`); the
+// struct-direct body is reachable when CSS L4 (W3) or Sheets (W2.B)
+// admits AltDispatch under StructDirect.
+//
+// Wire contract (one AltDispatch rule):
+//
+//   let __layout = ir_struct_registry_layout(<rule_id>)
+//       .expect("StructDirect requires populated layout for AltDispatch rule");
+//   let __handle = builder.begin_compound(__layout);
+//   ...per-branch attempts; matched branch fires builder.push_branch_tag(idx)...
+//   builder.end_compound(__handle);
+
+builder.begin_compound(__layout);
+builder.push_branch_tag(idx);
+builder.end_compound(__handle);

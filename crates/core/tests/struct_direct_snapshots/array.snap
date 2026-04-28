@@ -1,0 +1,17 @@
+// AZ-I.W2.RB — Array struct-direct snapshot.
+//
+// Captures the expected `builder.*` call set the Array-shape emitter
+// produces under `EmitStrategy::StructDirect`. Per the W2-EMITTER-
+// REWIRE plan §3 hard gates, the struct-direct body emits zero
+// `tape.*` calls; only the typed StructBuilder API is exercised.
+//
+// Wire contract (one Array rule, e.g. JSON `array`):
+//
+//   let __layout = ir_struct_registry_layout(<rule_id>)
+//       .expect("StructDirect requires populated layout for Array rule");
+//   let __handle = builder.begin_compound(__layout);
+//   ...element dispatch via #value_call (recurses into a per-shape fn)...
+//   builder.end_compound(__handle);
+
+builder.begin_compound(__layout);
+builder.end_compound(__handle);

@@ -38,6 +38,7 @@ use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::super::strategy::EmitStrategy;
 use super::dispatcher::{
     dispatcher_fn_ident, emit_ref_call_tape, emit_ref_call_visitor, shape_fn_ident,
     visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
@@ -45,8 +46,29 @@ use super::dispatcher::{
 use super::root_rule_name;
 
 /// Emit `pub fn parse_object_<grammar>_<rule>(input, p, state, builder)
-/// -> Result<TapeOffset, DtaError>`.
+/// -> Result<TapeOffset, DtaError>` for [`EmitStrategy::TapeDirect`], or
+/// the matching `JsonStructBuilder`-targeted body for
+/// [`EmitStrategy::StructDirect`].
+///
+/// AZ-I.W2.RB — strategy match is at codegen time, not at runtime: the
+/// emitter produces ONE function body per `(grammar, rule)` and selects
+/// it on `strategy`. Per `feedback_no-orthogonal-codepaths` there is no
+/// runtime conditional within a single emitted parse fn.
 pub fn emit_parse_object(
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+    strategy: &EmitStrategy,
+) -> TokenStream {
+    match strategy {
+        EmitStrategy::StructDirect { .. } => {
+            emit_parse_object_struct_direct(grammar_suffix, rule, ir)
+        }
+        EmitStrategy::TapeDirect => emit_parse_object_tape(grammar_suffix, rule, ir),
+    }
+}
+
+fn emit_parse_object_tape(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
@@ -396,6 +418,146 @@ pub fn emit_parse_object(
                 // Continue: next iter. The key-start check above is the
                 // loop's only exit other than EOF/garbage (which the
                 // next iter's `"` check handles).
+            }
+        }
+    }
+}
+
+/// AZ-I.W2.RB — struct-direct body for the Object shape.
+///
+/// Emits a `parse_object_<grammar>_<rule>` whose body drives
+/// `JsonStructBuilder` directly: `begin_compound(&__layout)` opens the
+/// object frame, the parse loop alternates `push_leaf_with_str(key)` /
+/// recursive value calls, and `end_compound(handle)` closes it. The
+/// function takes `&mut crate::runtime::JsonStructBuilder<'p>` instead
+/// of `&mut Tape<()>` and returns `Result<(), DtaError>` (no
+/// TapeOffset — the builder owns the in-flight stack and finalises into
+/// `JsonDocument` at the call boundary in `parse()`).
+///
+/// The `__layout` lookup is asserted (not fall-back). Per the W2-EMITTER-
+/// REWIRE plan §1, `for_grammar` GUARANTEES the layout exists for every
+/// rule when the strategy is `StructDirect`; missing layout is a
+/// W1.A invariant violation, not a runtime case to recover from.
+fn emit_parse_object_struct_direct(
+    grammar_suffix: &str,
+    rule: &IrRule,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let rule_name = ir.get_string(rule.name);
+    let fn_ident = shape_fn_ident("object", grammar_suffix, rule_name);
+    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+    let rule_id_lit = rule.id;
+
+    let dispatcher_ident = match root_rule_name(ir) {
+        Some(root) => {
+            let root_disp = dispatcher_fn_ident(grammar_suffix, &root);
+            format_ident!("{}__value", root_disp)
+        }
+        None => return quote! {},
+    };
+
+    let (string_fn, _string_variant, _pair_variant, value_ref) =
+        resolve_pair_context(grammar_suffix, ir);
+
+    // Per-Ref direct value call (when classified) — same routing as the
+    // tape path; targets are the per-shape struct-direct fns the sibling
+    // emitters land. On struct-direct, all Ref calls take the
+    // JsonStructBuilder argument unchanged from this fn's `builder`.
+    let value_call = value_ref
+        .and_then(|rid| emit_ref_call_tape(grammar_suffix, rid, ir))
+        .map(|call| quote! { (#call)?; })
+        .unwrap_or_else(|| {
+            quote! {
+                #dispatcher_ident(input, p, state, builder)?;
+            }
+        });
+
+    quote! {
+        /// AZ-I.W2.RB — per-grammar Object-shape parse function,
+        /// **struct-direct body**. Targets [`JsonStructBuilder`].
+        ///
+        /// Walker-tape compound emission is replaced by typed
+        /// `begin_compound` / `end_compound` calls against the in-flight
+        /// frame stack. Per-element pushes (string keys + value
+        /// dispatch) land directly on the topmost open frame.
+        #[inline]
+        #[allow(non_snake_case, clippy::too_many_arguments)]
+        pub fn #fn_ident<'p>(
+            input: &[u8],
+            p: &mut usize,
+            state: &mut #support_mod::ScanState,
+            builder: &mut crate::runtime::JsonStructBuilder<'p>,
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+            use crate::runtime::builder::StructBuilder;
+
+            if input.get(*p).copied() != Some(b'{') {
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+
+            // AZ-I.W2.RB — open the object compound. Layout is W1.A-
+            // guaranteed for StructDirect; the .expect asserts the
+            // invariant rather than falling back.
+            let __layout = ir_struct_registry_layout(#rule_id_lit)
+                .expect("StructDirect requires populated layout for Object rule");
+            let __handle = builder.begin_compound(__layout);
+
+            *p += 1;
+            let _ = #support_mod::skip_space(input, p, state);
+
+            if input.get(*p).copied() == Some(b'}') {
+                *p += 1;
+                builder.end_compound(__handle);
+                return Ok(());
+            }
+
+            loop {
+                // Key: string shape fn pushes the decoded slice.
+                if input.get(*p).copied() != Some(b'"') {
+                    return Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                #string_fn(input, p, state, builder)?;
+
+                // Colon.
+                let _ = #support_mod::skip_space(input, p, state);
+                if input.get(*p).copied() != Some(b':') {
+                    return Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p += 1;
+                let _ = #support_mod::skip_space(input, p, state);
+
+                // Value dispatch — same per-Ref routing as the tape body.
+                #value_call
+
+                // Comma / close.
+                let _ = #support_mod::skip_space(input, p, state);
+                match input.get(*p).copied() {
+                    Some(b',') => {
+                        *p += 1;
+                        let _ = #support_mod::skip_space(input, p, state);
+                    }
+                    Some(b'}') => {
+                        *p += 1;
+                        builder.end_compound(__handle);
+                        return Ok(());
+                    }
+                    _ => return Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    }),
+                }
             }
         }
     }

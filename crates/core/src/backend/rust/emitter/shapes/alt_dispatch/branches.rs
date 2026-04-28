@@ -12,6 +12,73 @@ use super::payload::{
     emit_typed_literal_payloads,
 };
 
+/// AZ-I.W2.RB — emit the dispatch body for an AltDispatch rule under
+/// [`super::super::super::strategy::EmitStrategy::StructDirect`].
+///
+/// Each branch attempt routes through the per-Ref struct-direct shape
+/// fn (or — for non-Ref leaf branches — emits a typed `builder.push_*`
+/// for the leaf payload) and records the matched branch tag via
+/// `builder.push_branch_tag(idx)` before the per-shape body fires. No
+/// `tape.*` calls are emitted under this path.
+///
+/// JSON does not exercise AltDispatch (its `value` rule is `Wrap`); this
+/// path is reachable only when CSS L4 (W3) or Sheets (W2.B) flips a
+/// rule with AltDispatch shape into StructDirect. Until then it remains
+/// dead code at codegen but the emission contract holds (zero
+/// `tape.push` per the W2-EMITTER-REWIRE plan §3 hard gate).
+pub(super) fn emit_dispatch_arms_struct_direct(
+    branches: &[AltBranch],
+    grammar_suffix: &str,
+    _rule: &IrRule,
+    ir: &GrammarIR,
+) -> TokenStream {
+    let mut arms: Vec<TokenStream> = Vec::new();
+    for (branch_idx, branch) in branches.iter().enumerate() {
+        let idx_u32 = branch_idx as u32;
+        let inner = unwrap_trivia(&branch.node);
+        let body = match inner {
+            IrNode::Ref(rid) => match emit_ref_call_tape(grammar_suffix, *rid, ir) {
+                Some(call) => quote! {
+                    {
+                        let attempt_p = *p;
+                        match #call {
+                            Ok(_) => {
+                                builder.push_branch_tag(#idx_u32);
+                                break 'try_branches;
+                            }
+                            Err(_) => { *p = attempt_p; }
+                        }
+                    }
+                },
+                None => quote! {},
+            },
+            // Non-Ref leaf branches (Literal / Regex / Seq) — for
+            // struct-direct AltDispatch admission these would emit
+            // typed `push_leaf_with_*` calls. JSON does not admit them
+            // through AltDispatch; emit a no-op skeleton until W2.B /
+            // W3 light up the per-grammar typed-leaf emission.
+            _ => quote! {
+                {
+                    // Non-Ref AltDispatch branch — placeholder for
+                    // W2.B / W3 typed-leaf emission. Falls through so
+                    // the next candidate can try.
+                }
+            },
+        };
+        arms.push(body);
+    }
+    quote! {
+        'try_branches: loop {
+            #(#arms)*
+            return Err(crate::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+            });
+        }
+    }
+}
+
 /// Emit the dispatch body for an AltDispatch rule — collects per-
 /// branch first-byte sets and emits a match over the first byte,
 /// with fallback linear scan for overlapping sets.

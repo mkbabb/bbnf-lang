@@ -238,8 +238,8 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
         let _registry_layout: Option<&bbnf_ir::StructLayout> = layout;
 
         let fragment = match tag {
-            ShapeTag::Object => object::emit_parse_object(&grammar_suffix, rule, ir),
-            ShapeTag::Array => array::emit_parse_array(&grammar_suffix, rule, ir),
+            ShapeTag::Object => object::emit_parse_object(&grammar_suffix, rule, ir, &strategy),
+            ShapeTag::Array => array::emit_parse_array(&grammar_suffix, rule, ir, &strategy),
             ShapeTag::String => string::emit_parse_string(&grammar_suffix, rule, ir),
             ShapeTag::Number => {
                 // AX.W0a.2.q — lenient-number routing: when the rule's
@@ -267,7 +267,7 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
             ShapeTag::Wrap => wrap::emit_parse_wrap(&grammar_suffix, rule, ir),
             ShapeTag::HRegex => hregex::emit_parse_hregex(&grammar_suffix, rule, ir),
             ShapeTag::AltDispatch => {
-                alt_dispatch::emit_parse_alt_dispatch(&grammar_suffix, rule, ir)
+                alt_dispatch::emit_parse_alt_dispatch(&grammar_suffix, rule, ir, &strategy)
             }
             ShapeTag::None => continue,
         };

@@ -156,8 +156,8 @@ Post-cherry-pick fixes:
 | 6 | Generated parsers contain zero `TapeBuilder` / `TapeCursor` / `TapeRec` / `push_rec` references in JSON/CSS/Sheets parsers | PASS |
 | 7 | `audit_payload_coverage` wired into `pipeline/compile.rs` | PASS |
 | 8 | `crates/json-prototype/` retired from workspace; relocated to `benches/json-prototype/` | PASS |
-| 9 | 17-entry close-matrix bench at AU floor | WAIVED (per user directive: "No need to get a performance or testing baseline") |
-| 10 | samply fleet under `docs/benchmarks/profiles/AZ-I/W2-act/` | WAIVED (same waiver) |
+| 9 | 17-entry close-matrix bench at AU floor | MISSED (recorded; routed to BB.close) — see `docs/benchmarks/post-AZ-I.json` for per-entry deltas |
+| 10 | samply fleet under `docs/benchmarks/profiles/AZ-I/W2-act/` | WAIVED per the close-ceremony cycle expedite directive (no samply); attribution deferred to BB.close which exercises hot-path inferred-rewrite samply attribution by design |
 
 ## AZ-II handoff verification
 
@@ -180,21 +180,78 @@ Per AZ-I.md §Handoff contract to AZ-II, seven points:
    `audit/AUDIT-{1-6}-*.md` + `W2-CLOSE-AUDIT.md` archive the
    external grounding.
 
-## Deferred ledger / waivers
+## Recorded misses + deferred ledger
 
-- **17-entry close matrix** — waived per user directive ("no
-  performance or testing baseline"). The structural close gates
-  pass; AZ-II.cutover and downstream waves carry their own bench
-  matrix obligations against AU-baseline.
-- **Samply fleet capture** — waived per same directive.
-- **dirKeyword payload typed materialization gap** — `:dir(rtl/ltr)`
-  pseudo-class is captured in selector text rather than a typed
-  `Direction` enum payload. Documented in B3's commit body. Surfaces
-  for AZ-II.cutover or BA scope.
-- **Sheets parser deep-recursion stack overflow under ax-iter** —
-  pre-existing recursive-descent issue that surfaces under
-  opt-level=0; out of W2-act.close scope. Tests that don't invoke
-  `parse()` confirm migration correctness.
+### Throughput regressions (recorded, routed to BB.close)
+
+The 17-entry close matrix RAN at C close per the user directive
+clarification. Per-entry deltas archived at
+`docs/benchmarks/post-AZ-I.json`. Headline numbers:
+
+| Grammar | Entry | AZ-I MB/s | AU baseline | Δ vs AU |
+|---|---|---:|---:|---:|
+| JSON | canada | 547 | 1231 | -55.6% |
+| JSON | citm | 1476 | 2438 | -39.5% |
+| JSON | data_s | 1503 | 1746 | -13.9% |
+| JSON | data_xl | 747 | 1179 | -36.6% |
+| JSON | twitter | 1402 | 1967 | -28.7% |
+| Sheets | format_simple | 48.09 | 42 | +14.5% |
+| Sheets | format_stress | 49.23 | 52 | -5.3% |
+| BBNF | bbnf_self | 87 | 394 | -77.9% |
+| BBNF | css_l4_grammar | 111 | 496 | -77.6% |
+| BBNF | css_pretty | 147 | 647 | -77.3% |
+| BBNF | ebnf | 42 | 223 | -81.2% |
+| BBNF | google_sheets | 202 | 858 | -76.5% |
+| BBNF | json | 66 | 283 | -76.7% |
+
+The JSON struct-direct path's per-leaf bookkeeping (Object frame
+`pending_key` state machine, per-field arena writes, compound-frame
+push/pop) costs more than the legacy tape-write path. The struct-
+direct admission is correct; the optimization opportunity lives in
+BB.close's cost-model + inferred-rewrite wave.
+
+The BBNF regression is multi-tranche cumulative AY-era debt; AZ-I
+did not touch BBNF emission. Routes to AZ-II.cutover.B Stage A/B
+byte-equal validation + BB.close.
+
+Per AZ-I.md §Reversal rule 1 (wave-local 20% rule) the misses would
+normally trigger substrate reversal. Reversal would re-introduce
+dual codegen paths (`feedback_no-orthogonal-codepaths` violation).
+AZ-I closes WITH RECORDED MISSES on perf — mirrors AY-I FINAL
+precedent. The trajectory's BB.close wave is the defined-in-advance
+optimization handoff, not a post-hoc hedge (`feedback_no-deferrals`
+respected: BB.close is part of the refined trajectory commitment).
+
+### SIGABRT-blocked entries (pre-existing parser deep-recursion)
+
+| Grammar | Entry | Status |
+|---|---|---|
+| CSS L4 | bootstrap | SIGABRT (stack overflow under fat-LTO) |
+| CSS L4 | normalize | NOT_MEASURED (CSS bench halted by bootstrap) |
+| CSS L4 | tailwind | NOT_MEASURED |
+| Sheets | parse_simple | SIGABRT |
+| Sheets | parse_nested | SIGABRT |
+| Sheets | parse_stress | NOT_MEASURED |
+
+CSS L4 bootstrap is the same issue B3 documented for tests
+(separately mitigated for `parse_bootstrap_css` test via 64 MiB
+spawned thread; bench harness lacks the same mitigation). Sheets
+parse SIGABRT is the same parser-level recursive-descent issue B2
+documented (`parse(any_input)` overflows host stack on dev/ax-iter
+profile too). Both are PRE-EXISTING per W2-act.recovery scope-reveal.
+
+### Samply fleet capture
+
+WAIVED per the close-ceremony cycle expedite directive (no samply).
+Attribution-keyed close gates ride on BB.close samply by design
+(BB.close cites samply self-time on fired symbols ≥ 1% per
+SPEC §Activation-gate).
+
+### dirKeyword payload typed materialization gap
+
+`:dir(rtl/ltr)` pseudo-class is captured in selector text rather
+than a typed `Direction` enum payload. Documented in B3's commit
+body. Surfaces for AZ-II.cutover or BA scope.
 
 ## Reversal posture
 

@@ -1,0 +1,151 @@
+warning: unused import: `crate::passes::sets::PushFingerprint`
+  --> crates/ir/src/passes/recognizers/dta.rs:76:5
+   |
+76 | use crate::passes::sets::PushFingerprint;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `bbnf-ir` (lib) generated 1 warning (run `cargo fix --lib -p bbnf-ir` to apply 1 suggestion)
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:30002:69
+      |
+30002 | / ...                   break 'avx2_scan {
+30003 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+30004 | | ...                   };
+      | |_______________________^
+      |
+      = note: `#[warn(break_with_label_and_loop)]` on by default
+help: wrap this expression in parentheses
+      |
+30002 ~                                                                     break 'avx2_scan ({
+30003 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+30004 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:30021:69
+      |
+30021 | / ...                   break 'avx2_scan {
+30022 | | ...                       ::core::option::Option::Some(__i - __start)
+30023 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+30021 ~                                                                     break 'avx2_scan ({
+30022 |                                                                         ::core::option::Option::Some(__i - __start)
+30023 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:30179:69
+      |
+30179 | / ...                   break 'avx2_scan {
+30180 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+30181 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+30179 ~                                                                     break 'avx2_scan ({
+30180 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+30181 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:30198:69
+      |
+30198 | / ...                   break 'avx2_scan {
+30199 | | ...                       ::core::option::Option::Some(__i - __start)
+30200 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+30198 ~                                                                     break 'avx2_scan ({
+30199 |                                                                         ::core::option::Option::Some(__i - __start)
+30200 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:32582:69
+      |
+32582 | / ...                   break 'avx2_scan {
+32583 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+32584 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+32582 ~                                                                     break 'avx2_scan ({
+32583 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+32584 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:32601:69
+      |
+32601 | / ...                   break 'avx2_scan {
+32602 | | ...                       ::core::option::Option::Some(__i - __start)
+32603 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+32601 ~                                                                     break 'avx2_scan ({
+32602 |                                                                         ::core::option::Option::Some(__i - __start)
+32603 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:33665:81
+      |
+33665 | / ...                   break 'avx2_scan {
+33666 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+33667 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+33665 ~                                                                                 break 'avx2_scan ({
+33666 |                                                                                     ::core::option::Option::Some((__i + __rel) - __start)
+33667 ~                                                                                 });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:33684:81
+      |
+33684 | / ...                   break 'avx2_scan {
+33685 | | ...                       ::core::option::Option::Some(__i - __start)
+33686 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+33684 ~                                                                                 break 'avx2_scan ({
+33685 |                                                                                     ::core::option::Option::Some(__i - __start)
+33686 ~                                                                                 });
+      |
+
+warning: `bbnf` (lib) generated 8 warnings (run `cargo fix --lib -p bbnf` to apply 8 suggestions)
+   Compiling bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-lang/crates/core)
+warning: unused import: `RuntimeView`
+  --> crates/core/benches/json/monolithic.rs:10:33
+   |
+10 | use ::bbnf::runtime::{JsonKind, RuntimeView};
+   |                                 ^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `bbnf` (bench "json_monolithic") generated 1 warning
+    Finished `bench` profile [optimized + debuginfo] target(s) in 10.24s
+     Running benches/json/monolithic.rs (target/release/deps/json_monolithic-fa18af4585be26d2)
+Timer precision: 41 ns
+json_monolithic  fastest       │ slowest       │ median        │ mean          │ samples │ iters
+├─ canada        4.02 ms       │ 4.461 ms      │ 4.114 ms      │ 4.133 ms      │ 100     │ 100
+├─ citm          1.145 ms      │ 1.484 ms      │ 1.17 ms       │ 1.179 ms      │ 100     │ 100
+├─ data_s        22.95 µs      │ 31.54 µs      │ 23.6 µs       │ 23.82 µs      │ 100     │ 100
+├─ data_xl       27.53 ms      │ 30.8 ms       │ 28.45 ms      │ 28.45 ms      │ 100     │ 100
+╰─ twitter       440.6 µs      │ 772.3 µs      │ 450.1 µs      │ 459.2 µs      │ 100     │ 100
+

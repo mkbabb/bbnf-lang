@@ -7,14 +7,12 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use divan::black_box;
 
 use ::bbnf::grammar::generated::json::*;
+use ::bbnf::runtime::{JsonKind, RuntimeView};
 
 
 #[path = "../common/timeout.rs"]
 mod timeout;
 use timeout::{bench_with_timeout, limits};
-
-#[path = "../common/validate.rs"]
-mod validate;
 
 fn load(name: &str) -> String {
     let path = format!("../../data/json/{}", name);
@@ -29,10 +27,13 @@ macro_rules! bench {
             {
                 let parsed = JsonParser::parse(&input)
                     .unwrap_or_else(|e| panic!(concat!($file, ": parse failed: {:?}"), e));
-                // Structural sanity: root is compound, tape is non-trivial.
+                // Structural sanity: root is a JSON compound (Object or Array).
                 let view = parsed.view();
-                validate::assert_root_kind_compound(&view.cursor(), $file);
-                validate::assert_record_count_range(parsed.tape(), 1, 10_000_000, $file);
+                assert!(
+                    matches!(view.kind(), JsonKind::Object | JsonKind::Array),
+                    concat!($file, ": root kind {:?} is not a JSON compound"),
+                    view.kind(),
+                );
                 black_box(&parsed);
             }
             bench_with_timeout(

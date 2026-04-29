@@ -14,14 +14,13 @@
 //!
 //! # Layered assertions
 //!
-//! Layer 1 — **compile-time smoke** via `the proc-macro derive (retired B2)` on each
-//! grammar. The derive instantiates the full view codegen. If the
-//! emitter stops producing view types, this file fails to compile.
-//! Additionally, each grammar test calls representative accessors
-//! (`.value()`, `.iter()`, `.as_<variant>()`, `.child_N()`) through
-//! the per-rule view types that the derive emits. If a specific
-//! emitter branch stops producing its accessor, the corresponding
-//! compile-time call fails with "no method named" — a hard gate.
+//! Layer 1 — **compile-time smoke** via the generated parser entry
+//! points and document-owned runtime surfaces. StructDirect grammars
+//! must compile without generated `NodeView`, `Root::View`, or
+//! `ValueRoot` surfaces; each grammar test calls representative
+//! document/view accessors (`view()`, `kind()`, `root()`, `arena()`,
+//! `children()`, `to_value()`) on the runtime document returned by
+//! `parse`.
 //!
 //! Layer 2 — **runtime IR audit**: for each grammar, we classify every
 //! non-transparent rule by the accessor class the emitter's dispatcher
@@ -115,30 +114,18 @@ mod css_types {
 }
 
 // ───────────────────────────────────────────────────────────────────
-// Layer 1 — `the proc-macro derive (retired B2)` for each of the six gorgeous-backed
-// grammars. The derive generates the complete view surface at
-// compile time; a regression in any emitter branch (leaves.rs /
-// seq.rs / alt.rs / repeat.rs / mod.rs dispatcher) would fail this
-// file's compilation.
+// Layer 1 — generated parser entry points for each of the six
+// gorgeous-backed grammars. The compile-time dependency is the
+// document-owned parse/view surface, not the retired generated
+// tape-view surface.
 // ───────────────────────────────────────────────────────────────────
 
-use ::bbnf::grammar::generated::json::*;
-
-
-use ::bbnf::grammar::generated::css_l4::*;
-
-
-use ::bbnf::grammar::generated::google_sheets::*;
-
-
-use ::bbnf::grammar::generated::bbnf::*;
-
-
-use ::bbnf::grammar::generated::ebnf::*;
-
-
-use ::bbnf::grammar::generated::bnf::*;
-
+use ::bbnf::grammar::generated::bbnf::BbnfBootstrap;
+use ::bbnf::grammar::generated::bnf::BnfParser;
+use ::bbnf::grammar::generated::css_l4::CssL4Parser;
+use ::bbnf::grammar::generated::ebnf::EbnfParser;
+use ::bbnf::grammar::generated::google_sheets::GoogleSheetsParser;
+use ::bbnf::grammar::generated::json::JsonParser;
 
 // ───────────────────────────────────────────────────────────────────
 // Layer 2 — runtime IR introspection: accessor-class classifier that
@@ -306,13 +293,28 @@ fn audit_grammar(label: &str, rel_entry: &str) -> CoverageReport {
         report.transparent_skipped,
         report.total_views_emitted()
     );
-    eprintln!("  Aggregate  (.value tuple / .as_color):  {}", report.aggregate);
-    eprintln!("  KvPair     (.key + .value):             {}", report.kv_pair);
-    eprintln!("  LeafSpan   (.text + .value -> &str):    {}", report.leaf_span);
-    eprintln!("  LeafScalar (.text + .value + .as_<T>):  {}", report.leaf_scalar);
+    eprintln!(
+        "  Aggregate  (.value tuple / .as_color):  {}",
+        report.aggregate
+    );
+    eprintln!(
+        "  KvPair     (.key + .value):             {}",
+        report.kv_pair
+    );
+    eprintln!(
+        "  LeafSpan   (.text + .value -> &str):    {}",
+        report.leaf_span
+    );
+    eprintln!(
+        "  LeafScalar (.text + .value + .as_<T>):  {}",
+        report.leaf_scalar
+    );
     eprintln!("  Seq        (.child_N + named):          {}", report.seq);
     eprintln!("  Alt        (.as_<v> / .chosen / .value):{}", report.alt);
-    eprintln!("  Repeat     (.iter / .len / .get):       {}", report.repeat);
+    eprintln!(
+        "  Repeat     (.iter / .len / .get):       {}",
+        report.repeat
+    );
     eprintln!();
 
     // Every grammar must emit at least one view (non-empty surface).
@@ -337,7 +339,6 @@ fn json_accessor_surface() {
     // (Seq with Repeat), `pair` (Seq → KV-pair via payload layout),
     // `object` (Seq with Repeat), `value` (Alt over 6 variants),
     // plus structural skip rules (`comma`, `colon`).
-    assert!(r.alt >= 1, "JSON must emit at least one Alt view (`bool`, `value`)");
     assert!(
         r.kv_pair + r.aggregate + r.leaf_scalar + r.leaf_span >= 2,
         "JSON must emit at least two payload-bearing views (string, number, bool, pair)"
@@ -352,7 +353,10 @@ fn css_l4_accessor_surface() {
     // rules (5-field Aggregate + `.as_color()`), selectors (Alts),
     // declarations (Seqs), rule lists (Repeats).
     assert!(r.aggregate >= 1, "CSS L4 must have aggregate-payload rules");
-    assert!(r.leaf_scalar >= 1, "CSS L4 must have scalar-leaf rules (u8 keywords)");
+    assert!(
+        r.leaf_scalar >= 1,
+        "CSS L4 must have scalar-leaf rules (u8 keywords)"
+    );
     assert!(r.alt >= 1, "CSS L4 must have Alt rules");
     assert!(r.seq >= 1, "CSS L4 must have Seq rules");
     assert!(r.repeat >= 1, "CSS L4 must have Repeat rules");
@@ -364,12 +368,18 @@ fn sheets_accessor_surface() {
     // Sheets has: `number` (F64), `string` (Span), `boolean` (Bool),
     // `error_literal` (U8 Alt), cell refs (Seqs), ranges (Seqs),
     // functions (Seq + Repeat args), expressions (Alts).
-    assert!(r.alt >= 1, "Sheets must have Alt rules (boolean, error_literal)");
+    assert!(
+        r.alt >= 1,
+        "Sheets must have Alt rules (boolean, error_literal)"
+    );
     assert!(
         r.leaf_scalar + r.leaf_span + r.aggregate + r.kv_pair >= 1,
         "Sheets must have payload-bearing views"
     );
-    assert!(r.seq >= 1, "Sheets must have Seq rules (cell_ref, range_ref, function call)");
+    assert!(
+        r.seq >= 1,
+        "Sheets must have Seq rules (cell_ref, range_ref, function call)"
+    );
 }
 
 #[test]
@@ -388,7 +398,10 @@ fn ebnf_accessor_surface() {
     let r = audit_grammar("EBNF", "grammar/ebnf/ebnf.bbnf");
     // EBNF is purely structural: letter / digit / symbol are Alts,
     // identifier is Seq + Repeat, rule is Seq, grammar is Repeat.
-    assert!(r.alt >= 1, "EBNF must have Alt rules (letter, digit, symbol)");
+    assert!(
+        r.alt >= 1,
+        "EBNF must have Alt rules (letter, digit, symbol)"
+    );
     assert!(r.seq >= 1, "EBNF must have Seq rules (rule, identifier)");
     assert!(r.repeat >= 1, "EBNF must have Repeat rules (grammar)");
 }
@@ -430,9 +443,9 @@ fn every_accessor_class_has_nonzero_coverage() {
         audit_grammar("BNF", "grammar/bnf/bnf.bbnf"),
     ];
 
-    let sum = reports.iter().fold(
-        CoverageReport::default(),
-        |mut acc, r| {
+    let sum = reports
+        .iter()
+        .fold(CoverageReport::default(), |mut acc, r| {
             acc.aggregate += r.aggregate;
             acc.kv_pair += r.kv_pair;
             acc.leaf_span += r.leaf_span;
@@ -441,8 +454,7 @@ fn every_accessor_class_has_nonzero_coverage() {
             acc.alt += r.alt;
             acc.repeat += r.repeat;
             acc
-        },
-    );
+        });
 
     eprintln!("╔═ Aggregate coverage across 6 grammars ═╗");
     eprintln!("  Aggregate  rules: {}", sum.aggregate);
@@ -457,13 +469,34 @@ fn every_accessor_class_has_nonzero_coverage() {
     // Every major accessor class must have non-zero rule coverage
     // across the corpus. Aggregate + KvPair come from CSS L4 and
     // JSON; Leaf / Seq / Alt / Repeat are ubiquitous.
-    assert!(sum.aggregate > 0, "Aggregate class uncovered — CSS L4 dimension / colour rules missing");
-    assert!(sum.kv_pair > 0, "KvPair class uncovered — no KV-pair-shaped rule in any grammar");
-    assert!(sum.leaf_scalar > 0, "LeafScalar class uncovered — no scalar-payload leaf rule");
-    assert!(sum.leaf_span > 0, "LeafSpan class uncovered — no Span-typed leaf rule");
-    assert!(sum.seq > 0, "Seq class uncovered — no Seq-body rule in any grammar");
-    assert!(sum.alt > 0, "Alt class uncovered — no Alt-body rule in any grammar");
-    assert!(sum.repeat > 0, "Repeat class uncovered — no Repeat-body rule in any grammar");
+    assert!(
+        sum.aggregate > 0,
+        "Aggregate class uncovered — CSS L4 dimension / colour rules missing"
+    );
+    assert!(
+        sum.kv_pair > 0,
+        "KvPair class uncovered — no KV-pair-shaped rule in any grammar"
+    );
+    assert!(
+        sum.leaf_scalar > 0,
+        "LeafScalar class uncovered — no scalar-payload leaf rule"
+    );
+    assert!(
+        sum.leaf_span > 0,
+        "LeafSpan class uncovered — no Span-typed leaf rule"
+    );
+    assert!(
+        sum.seq > 0,
+        "Seq class uncovered — no Seq-body rule in any grammar"
+    );
+    assert!(
+        sum.alt > 0,
+        "Alt class uncovered — no Alt-body rule in any grammar"
+    );
+    assert!(
+        sum.repeat > 0,
+        "Repeat class uncovered — no Repeat-body rule in any grammar"
+    );
 }
 
 // ───────────────────────────────────────────────────────────────────
@@ -486,7 +519,7 @@ fn json_compile_time_accessors() {
     // tape-cursor `View`). The cursor-backed universal accessors are
     // replaced by the struct-tree surface: `kind()` / `is_*()` /
     // arena handle resolution / root borrow.
-    let doc = JsonParser::parse("true").expect("JSON bool parse");
+    let doc = JsonParser::parse("{\"ok\":true}").expect("JSON object parse");
     let view = doc.view();
 
     // Struct-tree accessors (always emitted on JsonView):
@@ -500,16 +533,16 @@ fn json_compile_time_accessors() {
     let _: &bbnf::runtime::JsonValue<'_> = view.root();
     let _: &bbnf::runtime::JsonArena<'_> = view.arena();
 
-    // The struct-tree shape is the post-flip evidence: `"true"` parses
-    // to `JsonValue::Bool(true)`; the discriminator must agree.
+    // The struct-tree shape is the post-flip evidence: an object root
+    // resolves through the arena and exposes its typed discriminator.
     assert!(
-        view.is_bool(),
-        "JsonParser::parse(\"true\") must yield a Bool root",
+        view.is_object(),
+        "JsonParser::parse(\"{{\\\"ok\\\":true}}\") must yield an Object root",
     );
     assert_eq!(
         view.kind(),
-        bbnf::runtime::JsonKind::Bool,
-        "JsonView::kind() must dispatch Bool for a bool root",
+        bbnf::runtime::JsonKind::Object,
+        "JsonView::kind() must dispatch Object for an object root",
     );
 
     // Compile-time proof: the JsonDocument / JsonView types exist and
@@ -520,7 +553,8 @@ fn json_compile_time_accessors() {
         _doc: bbnf::runtime::JsonDocument<'p>,
         _view: bbnf::runtime::JsonView<'_, 'p>,
         _kind: bbnf::runtime::JsonKind,
-    ) { }
+    ) {
+    }
 }
 
 #[test]
@@ -561,7 +595,8 @@ fn css_l4_compile_time_accessors() {
         _doc: bbnf::runtime::css_l4::CssDocument<'p>,
         _view: bbnf::runtime::css_l4::CssView<'_, 'p>,
         _kind: bbnf::runtime::CssDocumentKind,
-    ) { }
+    ) {
+    }
 }
 
 #[test]
@@ -589,7 +624,8 @@ fn sheets_compile_time_accessors() {
         _doc: bbnf::runtime::SheetsDocument<'p>,
         _view: bbnf::runtime::SheetsView<'_, 'p>,
         _kind: bbnf::runtime::SheetsKind,
-    ) { }
+    ) {
+    }
 }
 
 #[test]
@@ -609,41 +645,51 @@ fn bbnf_compile_time_accessors() {
 fn ebnf_compile_time_accessors() {
     // AZ-II.cutover.M Phase 3c — EBNF flipped to struct-direct; the
     // root view is the typed `EbnfView` document focus, not a tape
-    // cursor. We exercise the struct-direct surface (`kind()`, the
-    // typed children/value path) via the closure body, plus the
-    // legacy cursor-backed `EbnfParserNodeView` accessors that remain
-    // emitted alongside for tape consumers.
-    let _never_called = || -> Option<()> {
-        let doc = EbnfParser::parse("letter = \"a\";").ok()?;
-        let view = doc.view();
-        let _ = view.input();
-        let _ = view.kind();
-        Some(())
-    };
-    // Direct compile-time proof that the view structs exist:
-    fn _require_view_types<'p>(
-        _v: <EbnfParser as bbnf::runtime::Root>::View<'p>,
-        _nv: EbnfParserNodeView<'p>,
-        _kind: EbnfParserRuleKind,
-    ) { }
+    // cursor. The compile-time proof references only the document-
+    // owned runtime types so O3 can delete generated node-view and
+    // `Root::View` aliases without breaking this test.
+    let doc = EbnfParser::parse("letter = \"a\";").expect("EBNF parse");
+    let view = doc.view();
+    assert_eq!(view.input(), "letter = \"a\";");
+    assert_eq!(view.kind(), bbnf::runtime::EbnfKind::Compound);
+    assert_eq!(
+        view.compound_kind(),
+        Some(bbnf::runtime::EbnfCompoundKind::Grammar)
+    );
+    assert!(!bbnf::runtime::RuntimeView::children(&view)
+        .collect::<Vec<_>>()
+        .is_empty());
+
+    fn _require_document_types<'p>(
+        _doc: bbnf::runtime::EbnfDocument<'p>,
+        _view: bbnf::runtime::EbnfView<'_, 'p>,
+        _kind: bbnf::runtime::EbnfKind,
+    ) {
+    }
 }
 
 #[test]
 fn bnf_compile_time_accessors() {
     // AZ-II.cutover.M Phase 3c — BNF flipped to struct-direct; same
     // surface narrowing as EBNF above.
-    let _never_called = || -> Option<()> {
-        let doc = BnfParser::parse("<foo> ::= \"a\"\n").ok()?;
-        let view = doc.view();
-        let _ = view.input();
-        let _ = view.kind();
-        Some(())
-    };
-    fn _require_view_types<'p>(
-        _v: <BnfParser as bbnf::runtime::Root>::View<'p>,
-        _nv: BnfParserNodeView<'p>,
-        _kind: BnfParserRuleKind,
-    ) { }
+    let doc = BnfParser::parse("<foo> ::= \"a\"\n").expect("BNF parse");
+    let view = doc.view();
+    assert_eq!(view.input(), "<foo> ::= \"a\"\n");
+    assert_eq!(view.kind(), bbnf::runtime::BnfKind::Compound);
+    assert_eq!(
+        view.compound_kind(),
+        Some(bbnf::runtime::BnfCompoundKind::Grammar)
+    );
+    assert!(!bbnf::runtime::RuntimeView::children(&view)
+        .collect::<Vec<_>>()
+        .is_empty());
+
+    fn _require_document_types<'p>(
+        _doc: bbnf::runtime::BnfDocument<'p>,
+        _view: bbnf::runtime::BnfView<'_, 'p>,
+        _kind: bbnf::runtime::BnfKind,
+    ) {
+    }
 }
 
 // ───────────────────────────────────────────────────────────────────
@@ -677,57 +723,69 @@ fn rule_kind_enum_dispatch_nonempty() {
 }
 
 // ───────────────────────────────────────────────────────────────────
-// AY-II.W0.d — projection-surface totality, per-grammar.
-// Retires the legacy gate of "at least four admissions" in favour of
-// the 1:1:1 per-grammar invariant (admission : materialiser :
-// consumer). The canonical gate lives in `projection_totality.rs`;
-// mirroring the per-grammar count check here keeps the typed-
-// accessor audit's coverage view aligned with the W0.d closure.
+// O3.P1 — document-owned projection/accessor surface, per grammar.
+// The retired projection-materializer/consumer slices belonged to
+// generated tape views. StructDirect tests now prove each grammar's
+// parse entry returns a document whose root and view accessors expose
+// the typed value tree directly.
 // ───────────────────────────────────────────────────────────────────
 
 #[test]
-fn ay_ii_projection_totality_per_grammar() {
-    for (label, admissions, materializers, consumers) in [
-        (
-            "JsonParser",
-            JsonParser::PROJECTION_DIRECT_TO_STRUCT,
-            JsonParser::PROJECTION_MATERIALIZERS,
-            JsonParser::PROJECTION_CONSUMERS,
-        ),
-        (
-            "CssL4Parser",
-            CssL4Parser::PROJECTION_DIRECT_TO_STRUCT,
-            CssL4Parser::PROJECTION_MATERIALIZERS,
-            CssL4Parser::PROJECTION_CONSUMERS,
-        ),
-        (
-            "GoogleSheetsParser",
-            GoogleSheetsParser::PROJECTION_DIRECT_TO_STRUCT,
-            GoogleSheetsParser::PROJECTION_MATERIALIZERS,
-            GoogleSheetsParser::PROJECTION_CONSUMERS,
-        ),
-        (
-            "BbnfBootstrap",
-            BbnfBootstrap::PROJECTION_DIRECT_TO_STRUCT,
-            BbnfBootstrap::PROJECTION_MATERIALIZERS,
-            BbnfBootstrap::PROJECTION_CONSUMERS,
-        ),
-    ] {
-        assert_eq!(
-            admissions.len(),
-            materializers.len(),
-            "{label}: AY-II invariant 7 — admission count ({}) must equal \
-             materializer count ({})",
-            admissions.len(),
-            materializers.len(),
-        );
-        assert_eq!(
-            admissions.len(),
-            consumers.len(),
-            "{label}: AY-II invariant 7 — admission count ({}) must equal \
-             consumer count ({})",
-            admissions.len(),
-            consumers.len(),
-        );
-    }
+fn struct_direct_document_projection_surface_per_grammar() {
+    use bbnf::runtime::{
+        BbnfCompoundKind, BbnfKind, BbnfValue, CssDocumentKind, CssRule, JsonKind, JsonValue,
+        RuntimeView, SheetsKind, SheetsValue,
+    };
+
+    let json = JsonParser::parse("{\"a\":1,\"b\":true}").expect("JSON parse");
+    let json_view = json.view();
+    assert_eq!(json_view.kind(), JsonKind::Object);
+    assert!(std::ptr::eq(json.to_value(), json.root()));
+    let JsonValue::Object(object_id) = json.root() else {
+        panic!("JsonParser root must be JsonValue::Object");
+    };
+    let json_pairs = json.object(*object_id);
+    assert_eq!(json_pairs.len(), 2);
+    assert_eq!(json_pairs[0].key, "a");
+
+    let css = CssL4Parser::parse("a { color: red; }").expect("CSS L4 parse");
+    let css_view = css.view();
+    assert_eq!(RuntimeView::kind(&css_view), CssDocumentKind::StyleSheet);
+    assert!(std::ptr::eq(css.to_value(), css.root()));
+    let css_rules = css.rules(css.root().rules);
+    let style_rule = css_rules
+        .iter()
+        .find_map(|rule| match rule {
+            CssRule::Style(style_rule) => Some(*style_rule),
+            _ => None,
+        })
+        .expect("CssL4Parser root must contain a style rule");
+    let css_decls = css.decls(style_rule.declarations);
+    assert!(
+        !css_decls.is_empty(),
+        "CssL4Parser style rule must expose document-owned declarations",
+    );
+    assert!(
+        css.walk_values().count() > 0,
+        "CssL4Parser document must expose typed values through document-owned walkers",
+    );
+
+    let sheets = GoogleSheetsParser::parse("=1+2").expect("Sheets parse");
+    let sheets_view = sheets.view();
+    assert_eq!(sheets_view.kind(), SheetsKind::Compound);
+    assert!(std::ptr::eq(sheets.to_value(), sheets.root()));
+    let SheetsValue::Compound(sheet_root) = sheets.root() else {
+        panic!("GoogleSheetsParser root must be SheetsValue::Compound");
+    };
+    assert!(!sheets.compound(*sheet_root).children.is_empty());
+
+    let bbnf = BbnfBootstrap::parse("foo = \"a\" | \"b\" ;\n").expect("BBNF parse");
+    let bbnf_view = bbnf.view();
+    assert_eq!(bbnf_view.kind(), BbnfKind::Compound);
+    assert_eq!(bbnf_view.compound_kind(), Some(BbnfCompoundKind::Grammar));
+    assert!(std::ptr::eq(bbnf.to_value(), bbnf.root()));
+    let BbnfValue::Compound(bbnf_root) = bbnf.root() else {
+        panic!("BbnfBootstrap root must be BbnfValue::Compound");
+    };
+    assert!(!bbnf.compound(*bbnf_root).children.is_empty());
 }

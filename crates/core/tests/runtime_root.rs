@@ -1,135 +1,212 @@
-//! Unit tests for the `bbnf::runtime::{Parsed, Root}` public API.
+//! O3 runtime-root tests for StructDirect document-owned APIs.
 //!
-//! Verifies that:
-//! 1. A grammar marker struct can implement `Root` with a concrete
-//!    GAT view type.
-//! 2. `Parsed::<Grammar>::view(&self)` lends a cursor-backed view
-//!    bound by `&self`.
-//! 3. Multiple views can be requested from the same `Parsed` —
-//!    they are independent snapshots into the same tape.
-//! 4. `Parsed::into_tape` surrenders ownership of the underlying
-//!    tape for callers that no longer want the typed surface.
-//!
-//! Tranche AC.2 prep — the real grammar-generated code will bind
-//! against this API once the emitter rewrite lands. These tests
-//! exercise the API in isolation using a hand-written `Root` impl.
+//! These tests intentionally avoid the legacy `Parsed`, `Root`,
+//! `TapeCursor`, generated `NodeView`, and `ValueRoot` surfaces. O4
+//! owns the remaining TapeDirect public API; StructDirect roots are
+//! proven here through concrete `*Document` roots, typed view kinds,
+//! arena-backed accessors, and the grammar-agnostic `RuntimeView`
+//! traversal surface.
 
-use bbnf::runtime::{Parsed, Root};
-use tape::{Tape, TapeCursor, TapeKind, TapeOffset};
+use ::bbnf::grammar::generated::bbnf::BbnfBootstrap;
+use ::bbnf::grammar::generated::bnf::BnfParser;
+use ::bbnf::grammar::generated::css_l4::CssL4Parser;
+use ::bbnf::grammar::generated::css_pretty::CssPrettyParser;
+use ::bbnf::grammar::generated::csv::CsvParser;
+use ::bbnf::grammar::generated::ebnf::EbnfParser;
+use ::bbnf::grammar::generated::google_sheets::GoogleSheetsParser;
+use ::bbnf::grammar::generated::json::JsonParser;
+use ::bbnf::grammar::generated::math::MathParser;
+use bbnf::runtime::{
+    BbnfCompoundKind, BbnfKind, BbnfValue, BnfCompoundKind, BnfKind, BnfValue, CssDocumentKind,
+    CssPrettyCompoundKind, CssPrettyKind, CssPrettyValue, CssRule, CsvCompoundKind, CsvKind,
+    CsvValue, EbnfCompoundKind, EbnfKind, EbnfValue, JsonKind, JsonValue, MathKind, MathValue,
+    RuntimeView, SheetsCompoundKind, SheetsKind, SheetsValue,
+};
 
-/// Stand-in grammar marker for the tests — no parser, just a type
-/// used to carry the `Root` trait impl.
-struct TestGrammar;
+#[test]
+fn json_root_is_document_owned_object_view() {
+    let input = "{\"a\":1,\"b\":true}";
+    let doc = JsonParser::parse(input).expect("JSON parse");
+    let view = doc.view();
 
-/// Minimal view wrapping a cursor + borrowed input — matches the
-/// shape `generate_views` emits.
-#[derive(Clone, Copy, Debug)]
-struct TestRootView<'p> {
-    cursor: TapeCursor<'p>,
-    input: &'p str,
-}
+    assert_eq!(doc.input(), input);
+    assert!(std::ptr::eq(doc.to_value(), doc.root()));
+    assert_eq!(view.kind(), JsonKind::Object);
+    assert_eq!(RuntimeView::children(&view).count(), 2);
 
-impl<'p> TestRootView<'p> {
-    fn new<R>(tape: &'p Tape<R>, input: &'p str, offset: TapeOffset) -> Self {
-        // Cursor type-erases R via raw cast — this test fixture
-        // builds Tape<()>-bound cursors regardless of grammar.
-        // SAFETY: Tape<R> is layout-identical for all R.
-        let tape_unit: &'p Tape<()> = unsafe {
-            &*(tape as *const Tape<R> as *const Tape<()>)
-        };
-        Self {
-            cursor: TapeCursor::new(tape_unit, offset),
-            input,
-        }
-    }
-
-    fn kind(&self) -> TapeKind {
-        self.cursor.kind()
-    }
-
-    fn span(&self) -> (u32, u32) {
-        self.cursor.span()
-    }
-
-    fn variant_idx(&self) -> u8 {
-        self.cursor.variant_idx()
-    }
-
-    fn span_text(&self) -> &'p str {
-        let (lo, hi) = self.cursor.span();
-        &self.input[lo as usize..hi as usize]
-    }
-}
-
-impl Root for TestGrammar {
-    type View<'p> = TestRootView<'p>;
-
-    fn make_view<'p>(tape: &'p Tape<()>, input: &'p str, root: TapeOffset) -> Self::View<'p> {
-        TestRootView::new(tape, input, root)
-    }
-}
-
-/// Build a parsed result holding a single leaf span record. The
-/// input string is long enough to slice `[0..5]` for the leaf's
-/// own span.
-fn parsed_with_one_leaf() -> Parsed<'static, TestGrammar> {
-    let mut builder: Tape<TestGrammar> = Tape::new();
-    let leaf_off = builder.push_leaf(TapeKind::Span, 0, 5, 7, 0);
-    let tape = builder.finish(leaf_off.0).expect("tape finish");
-    Parsed::new(tape, "hello world", leaf_off)
+    let JsonValue::Object(root_id) = *doc.root() else {
+        panic!("JSON root must be an object");
+    };
+    let pairs = doc.object(root_id);
+    assert_eq!(pairs.len(), 2);
+    assert_eq!(pairs[0].key, "a");
 }
 
 #[test]
-fn view_exposes_root_record_fields() {
-    let parsed = parsed_with_one_leaf();
-    let view = parsed.view();
-    assert_eq!(view.kind(), TapeKind::Span);
-    assert_eq!(view.span(), (0, 5));
-    assert_eq!(view.variant_idx(), 7);
+fn css_l4_root_is_document_owned_stylesheet_view() {
+    let input = "a { color: red; }";
+    let doc = CssL4Parser::parse(input).expect("CSS L4 parse");
+    let view = doc.view();
+
+    assert_eq!(doc.input(), input);
+    assert!(std::ptr::eq(doc.to_value(), doc.root()));
+    assert_eq!(RuntimeView::kind(&view), CssDocumentKind::StyleSheet);
+
+    let rules = doc.rules(doc.root().rules);
+    assert_eq!(RuntimeView::children(&view).count(), rules.len());
+    let style_rule = rules
+        .iter()
+        .find_map(|rule| match rule {
+            CssRule::Style(style_rule) => Some(*style_rule),
+            _ => None,
+        })
+        .expect("CSS L4 root must contain a style rule");
+    let declarations = doc.decls(style_rule.declarations);
+    assert!(
+        !declarations.is_empty(),
+        "CSS L4 style rule must expose document-owned declarations",
+    );
+    assert!(
+        doc.walk_values().count() > 0,
+        "CSS L4 document must expose typed values through document-owned walkers",
+    );
 }
 
 #[test]
-fn multiple_views_are_independent_snapshots() {
-    let parsed = parsed_with_one_leaf();
-    let a = parsed.view();
-    let b = parsed.view();
-    assert_eq!(a.kind(), b.kind());
-    assert_eq!(a.span(), b.span());
-    assert_eq!(a.variant_idx(), b.variant_idx());
+fn sheets_root_is_document_owned_formula_view() {
+    let input = "=1+2";
+    let doc = GoogleSheetsParser::parse(input).expect("Sheets parse");
+    let view = doc.view();
+
+    assert_eq!(doc.input(), input);
+    assert!(std::ptr::eq(doc.to_value(), doc.root()));
+    assert_eq!(view.kind(), SheetsKind::Compound);
+
+    let SheetsValue::Compound(root_id) = *doc.root() else {
+        panic!("Sheets root must be a compound");
+    };
+    let root = doc.compound(root_id);
+    assert_eq!(root.kind, SheetsCompoundKind::Formula);
+    assert_eq!(RuntimeView::children(&view).count(), root.children.len());
+    assert!(!root.children.is_empty());
 }
 
 #[test]
-fn tape_accessor_borrows_underlying_tape() {
-    let parsed = parsed_with_one_leaf();
-    let tape = parsed.tape();
-    assert!(!tape.is_empty());
-    let root_off = parsed.root_offset();
-    let rec = tape.get(root_off);
-    assert_eq!(rec.kind(), TapeKind::Span);
+fn bbnf_root_is_document_owned_grammar_view() {
+    let input = "foo = \"a\" | \"b\" ;\n";
+    let doc = BbnfBootstrap::parse(input).expect("BBNF parse");
+    let view = doc.view();
+
+    assert_eq!(doc.input(), input);
+    assert!(std::ptr::eq(doc.to_value(), doc.root()));
+    assert_eq!(view.kind(), BbnfKind::Compound);
+    assert_eq!(view.compound_kind(), Some(BbnfCompoundKind::Grammar));
+
+    let BbnfValue::Compound(root_id) = *doc.root() else {
+        panic!("BBNF root must be a compound");
+    };
+    let root = doc.compound(root_id);
+    assert_eq!(root.kind, BbnfCompoundKind::Grammar);
+    assert_eq!(RuntimeView::children(&view).count(), root.children.len());
+    assert!(!root.children.is_empty());
 }
 
 #[test]
-fn into_tape_surrenders_ownership() {
-    let parsed = parsed_with_one_leaf();
-    let tape: Tape<TestGrammar> = parsed.into_tape();
-    assert!(!tape.is_empty());
+fn csv_root_is_document_owned_csv_view() {
+    let input = "a,b,c\n1,2,3";
+    let doc = CsvParser::parse(input).expect("CSV parse");
+    let view = doc.view();
+
+    assert_eq!(doc.input(), input);
+    assert!(std::ptr::eq(doc.to_value(), doc.root()));
+    assert_eq!(view.kind(), CsvKind::Compound);
+
+    let CsvValue::Compound(root_id) = *doc.root() else {
+        panic!("CSV root must be a compound");
+    };
+    let root = doc.compound(root_id);
+    assert_eq!(root.kind, CsvCompoundKind::Csv);
+    assert_eq!(RuntimeView::children(&view).count(), root.children.len());
+    assert!(!root.children.is_empty());
 }
 
 #[test]
-fn view_is_copy_and_cheap_to_clone() {
-    let parsed = parsed_with_one_leaf();
-    let view = parsed.view();
-    let view_copy = view;
-    // Both still usable after the move — confirms `Copy`.
-    assert_eq!(view.kind(), view_copy.kind());
+fn math_root_is_document_owned_number_view() {
+    let input = "42";
+    let doc = MathParser::parse(input).expect("Math parse");
+    let view = doc.view();
+
+    assert_eq!(doc.input(), input);
+    assert!(std::ptr::eq(doc.to_value(), doc.root()));
+    assert_eq!(view.kind(), MathKind::Span);
+    assert_eq!(RuntimeView::span(&view), Some("42"));
+
+    let MathValue::Span(text) = *doc.root() else {
+        panic!("Math root must be a span");
+    };
+    assert_eq!(text, "42");
+    assert_eq!(RuntimeView::children(&view).count(), 0);
 }
 
 #[test]
-fn parsed_owns_input_and_lends_slice_to_views() {
-    let parsed = parsed_with_one_leaf();
-    assert_eq!(parsed.input(), "hello world");
-    let view = parsed.view();
-    // `span_text` slices the owned input by the leaf's (lo, hi).
-    // The leaf was pushed with span (0, 5) → "hello".
-    assert_eq!(view.span_text(), "hello");
+fn bnf_root_is_document_owned_grammar_view() {
+    let input = "<expr> ::= <term> | <expr> \"+\" <term>\n";
+    let doc = BnfParser::parse(input).expect("BNF parse");
+    let view = doc.view();
+
+    assert_eq!(doc.input(), input);
+    assert!(std::ptr::eq(doc.to_value(), doc.root()));
+    assert_eq!(view.kind(), BnfKind::Compound);
+    assert_eq!(view.compound_kind(), Some(BnfCompoundKind::Grammar));
+
+    let BnfValue::Compound(root_id) = *doc.root() else {
+        panic!("BNF root must be a compound");
+    };
+    let root = doc.compound(root_id);
+    assert_eq!(root.kind, BnfCompoundKind::Grammar);
+    assert_eq!(RuntimeView::children(&view).count(), root.children.len());
+    assert!(!root.children.is_empty());
+}
+
+#[test]
+fn ebnf_root_is_document_owned_grammar_view() {
+    let input = "digit = \"0\" | \"1\" | \"2\" ;\n";
+    let doc = EbnfParser::parse(input).expect("EBNF parse");
+    let view = doc.view();
+
+    assert_eq!(doc.input(), input);
+    assert!(std::ptr::eq(doc.to_value(), doc.root()));
+    assert_eq!(view.kind(), EbnfKind::Compound);
+    assert_eq!(view.compound_kind(), Some(EbnfCompoundKind::Grammar));
+
+    let EbnfValue::Compound(root_id) = *doc.root() else {
+        panic!("EBNF root must be a compound");
+    };
+    let root = doc.compound(root_id);
+    assert_eq!(root.kind, EbnfCompoundKind::Grammar);
+    assert_eq!(RuntimeView::children(&view).count(), root.children.len());
+    assert!(!root.children.is_empty());
+}
+
+#[test]
+fn css_pretty_root_is_document_owned_stylesheet_view() {
+    let input = "body { color: red; }";
+    let doc = CssPrettyParser::parse(input).expect("CSS Pretty parse");
+    let view = doc.view();
+
+    assert_eq!(doc.input(), input);
+    assert!(std::ptr::eq(doc.to_value(), doc.root()));
+    assert_eq!(view.kind(), CssPrettyKind::Compound);
+    assert_eq!(
+        view.compound_kind(),
+        Some(CssPrettyCompoundKind::Stylesheet)
+    );
+
+    let CssPrettyValue::Compound(root_id) = *doc.root() else {
+        panic!("CSS Pretty root must be a compound");
+    };
+    let root = doc.compound(root_id);
+    assert_eq!(root.kind, CssPrettyCompoundKind::Stylesheet);
+    assert_eq!(RuntimeView::children(&view).count(), root.children.len());
+    assert!(!root.children.is_empty());
 }

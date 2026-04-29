@@ -1,11 +1,14 @@
-//! AX.W0a.2.f — one-shot golden regen helper.
+//! AX.W0a.2.f — one-shot TapeDirect golden regen helper plus O3
+//! StructDirect generated-residue guard.
 //!
 //! Rewrites the shape_dispatch_emission golden files from the live
 //! emitter output. Exists solely so the inline-attr downgrade + array
 //! structural rewrite can propagate into the committed goldens without
 //! hand-transcription. After the goldens are regenerated and
-//! `shape_dispatch_emission` tests pass, this helper can be retained
-//! as a regen utility for subsequent sub-waves.
+//! `shape_dispatch_emission` tests pass, this helper is retained as a
+//! TapeDirect-only legacy utility until O4 removes that surface.
+
+use std::fs;
 
 use bbnf::backend::rust::emitter::shapes::{array, keyword, number, object, scalar, string};
 use bbnf::backend::rust::emitter::EmitStrategy;
@@ -16,8 +19,8 @@ mod fixtures;
 use fixtures::*;
 
 fn format_tokens(ts: &proc_macro2::TokenStream) -> String {
-    let file: syn::File = syn::parse2(ts.clone())
-        .expect("emitter output must parse as a syn::File");
+    let file: syn::File =
+        syn::parse2(ts.clone()).expect("emitter output must parse as a syn::File");
     prettyplease::unparse(&file)
 }
 
@@ -30,8 +33,79 @@ fn golden_path(name: &str) -> std::path::PathBuf {
         .join(name)
 }
 
+fn generated_path(name: &str) -> std::path::PathBuf {
+    let manifest = env!("CARGO_MANIFEST_DIR");
+    std::path::PathBuf::from(manifest)
+        .join("src")
+        .join("grammar")
+        .join("generated")
+        .join(name)
+}
+
 #[test]
-#[ignore = "regen-only — run with `--ignored` to refresh goldens"]
+fn struct_direct_generated_files_have_no_tape_view_residue() {
+    const GENERATED_GRAMMARS: &[&str] = &[
+        "bbnf.rs",
+        "bnf.rs",
+        "css_l4.rs",
+        "css_pretty.rs",
+        "csv.rs",
+        "ebnf.rs",
+        "google_sheets.rs",
+        "json.rs",
+        "math.rs",
+    ];
+    const RESIDUE_PATTERNS: &[&str] = &[
+        "TapeCursor",
+        "crate::runtime::tape",
+        "NodeView",
+        "ValueRoot",
+        "Parsed<",
+        "runtime::Root",
+        "materialize_projection_",
+        "PROJECTION_MATERIALIZERS",
+        "PROJECTION_CONSUMERS",
+    ];
+
+    let mut hits = Vec::new();
+    for grammar in GENERATED_GRAMMARS {
+        let path = generated_path(grammar);
+        let text = fs::read_to_string(&path)
+            .unwrap_or_else(|err| panic!("{}: read failed: {err}", path.display()));
+        for (line_idx, line) in text.lines().enumerate() {
+            let trimmed = line.trim_start();
+            if trimmed.starts_with("//") {
+                continue;
+            }
+            for pattern in RESIDUE_PATTERNS {
+                if line.contains(pattern) {
+                    hits.push(format!(
+                        "{}:{}: `{}` in {}",
+                        path.display(),
+                        line_idx + 1,
+                        pattern,
+                        trimmed,
+                    ));
+                    break;
+                }
+            }
+        }
+    }
+
+    if !hits.is_empty() {
+        let shown = hits.iter().take(20).cloned().collect::<Vec<_>>().join("\n");
+        panic!(
+            "StructDirect generated files still carry tape-backed view residue \
+             ({} hits; first {} shown):\n{}",
+            hits.len(),
+            hits.len().min(20),
+            shown,
+        );
+    }
+}
+
+#[test]
+#[ignore = "TapeDirect regen-only — run with `--ignored` to refresh legacy goldens before O4"]
 fn regen_shape_goldens() {
     let (ir, rules) = build_json_ir();
     // AZ-I.W2.RB — pin TapeDirect for golden regen (the goldens

@@ -836,67 +836,86 @@ impl RustEmitter {
         _analysis: &BackendAnalysis,
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
-        // Tranche AC.2 — view types replace the allocating enum.
-        // `generate_views` emits one `<Rule>View<'tape>` per non-
-        // transparent rule plus the `Root` trait binding.
         let ir_ctx = ctx.ir_ctx();
-        let views = crate::backend::rust::view::generate_views(ir, ir_ctx);
-
-        // AW-IV.W3.5a — direct-to-struct view-layer consumer wiring.
-        //
-        // The AW-III.W6.4 universal binding table lives at
-        // `crates/core/src/backend/rust/view/named_types.rs::BINDINGS`
-        // with a passing parity suite (JSON Value, BBNF AST, Sheets
-        // formula, CSS Color). Pre-W3.5a the view emitter admitted
-        // only hardcoded "Color" | "ColorMix" names via a match in
-        // `view::leaves::emit_aggregate_accessors`; the resolver
-        // shipped but wasn't called on the per-grammar hot path.
-        //
-        // W3.5a threads `resolve_named_type` into the top-level view
-        // emission: for every non-transparent rule whose `TypeDesc`
-        // is `Named(sid)` and whose interned name resolves via the
-        // universal `BINDINGS` table, the direct-to-struct projection
-        // is emitted inline on the view. The mechanism is universal
-        // — JSON Value, BBNF AST, Sheets formula, CSS Color all enter
-        // the fast path via the same resolver call; the shape of the
-        // emitted projection comes from the binding row's
-        // `NamedTypeBinding::fields`.
-        //
-        // The `emit_direct_to_struct_projection` pass walks every
-        // rule, consults the resolver, and emits one `as_<name>()`
-        // shim per admitted rule. The top-level grammar-entry rule
-        // gets additional root-view wiring so downstream consumers
-        // can project the full parse directly without traversing the
-        // tape cursor tree manually.
-        let direct_to_struct =
-            emit_direct_to_struct_projection(ir, ir_ctx.ident.to_string().as_str());
-
-        // AY.W3b.1 — `<Grammar>Value` enum + `impl ValueRoot` + narrow
-        // `impl PathQuery<T>` impls. Emitted per-grammar via
-        // TypeDesc-equivalence-class collapse (one variant per
-        // non-transparent rule today; the collapse map widens in a
-        // follow-on without disturbing consumers).
         let grammar_name_s = ir_ctx.ident.to_string();
-        let value_surface = crate::backend::rust::view::emit_value_surface(
-            ir,
+        let strategy = bbnf_ir::registry::EmitStrategy::for_grammar(
             grammar_name_s.as_str(),
+            &ir.struct_registry,
         );
 
-        // AY.W3b.2 — json-prototype per-shape inline fns. The BEAT-
-        // sonic lever: five `#[inline(always)]` per-shape fns +
-        // the root dispatcher, monomorphised at the
-        // `parsed.to_value()` call site so LLVM inlines the entire
-        // tree-build into a single flat function.
-        let materialize_fns = super::shapes::value_materialize::emit_materialize_fns(
-            ir,
-            grammar_name_s.as_str(),
-        );
+        match strategy {
+            bbnf_ir::registry::EmitStrategy::StructDirect { .. } => {
+                // O3.P1-G1 — StructDirect parse output is the
+                // document-owned runtime surface. Do not emit the
+                // legacy tape-backed node views, generated
+                // `<Grammar>Value` / `ValueRoot` surface, projection
+                // materializers, or their materializer/consumer
+                // metadata for this strategy.
+                TokenStream::new()
+            }
+            bbnf_ir::registry::EmitStrategy::TapeDirect => {
+                // Tranche AC.2 — view types replace the allocating enum.
+                // `generate_views` emits one `<Rule>View<'tape>` per non-
+                // transparent rule plus the `Root` trait binding.
+                let views = crate::backend::rust::view::generate_views(ir, ir_ctx);
 
-        quote! {
-            #views
-            #direct_to_struct
-            #value_surface
-            #materialize_fns
+                // AW-IV.W3.5a — direct-to-struct view-layer consumer wiring.
+                //
+                // The AW-III.W6.4 universal binding table lives at
+                // `crates/core/src/backend/rust/view/named_types.rs::BINDINGS`
+                // with a passing parity suite (JSON Value, BBNF AST, Sheets
+                // formula, CSS Color). Pre-W3.5a the view emitter admitted
+                // only hardcoded "Color" | "ColorMix" names via a match in
+                // `view::leaves::emit_aggregate_accessors`; the resolver
+                // shipped but wasn't called on the per-grammar hot path.
+                //
+                // W3.5a threads `resolve_named_type` into the top-level view
+                // emission: for every non-transparent rule whose `TypeDesc`
+                // is `Named(sid)` and whose interned name resolves via the
+                // universal `BINDINGS` table, the direct-to-struct projection
+                // is emitted inline on the view. The mechanism is universal
+                // — JSON Value, BBNF AST, Sheets formula, CSS Color all enter
+                // the fast path via the same resolver call; the shape of the
+                // emitted projection comes from the binding row's
+                // `NamedTypeBinding::fields`.
+                //
+                // The `emit_direct_to_struct_projection` pass walks every
+                // rule, consults the resolver, and emits one `as_<name>()`
+                // shim per admitted rule. The top-level grammar-entry rule
+                // gets additional root-view wiring so downstream consumers
+                // can project the full parse directly without traversing the
+                // tape cursor tree manually.
+                let direct_to_struct =
+                    emit_direct_to_struct_projection(ir, grammar_name_s.as_str());
+
+                // AY.W3b.1 — `<Grammar>Value` enum + `impl ValueRoot` + narrow
+                // `impl PathQuery<T>` impls. Emitted per-grammar via
+                // TypeDesc-equivalence-class collapse (one variant per
+                // non-transparent rule today; the collapse map widens in a
+                // follow-on without disturbing consumers).
+                let value_surface = crate::backend::rust::view::emit_value_surface(
+                    ir,
+                    grammar_name_s.as_str(),
+                );
+
+                // AY.W3b.2 — json-prototype per-shape inline fns. The BEAT-
+                // sonic lever: five `#[inline(always)]` per-shape fns +
+                // the root dispatcher, monomorphised at the
+                // `parsed.to_value()` call site so LLVM inlines the entire
+                // tree-build into a single flat function.
+                let materialize_fns =
+                    super::shapes::value_materialize::emit_materialize_fns(
+                        ir,
+                        grammar_name_s.as_str(),
+                    );
+
+                quote! {
+                    #views
+                    #direct_to_struct
+                    #value_surface
+                    #materialize_fns
+                }
+            }
         }
     }
 
@@ -1128,6 +1147,72 @@ impl RustEmitter {
                 crate::runtime::Parsed<'_, Self>
             },
         };
+        let projection_associated_consts: TokenStream = match strategy {
+            bbnf_ir::registry::EmitStrategy::StructDirect { .. } => {
+                TokenStream::new()
+            }
+            bbnf_ir::registry::EmitStrategy::TapeDirect => quote! {
+                /// AY.W6.2 — associated-constant accessor for the
+                /// grammar's direct-to-struct projection admission
+                /// list. Alias of the module-scope
+                /// `PROJECTION_DIRECT_TO_STRUCT` slice; downstream
+                /// consumers that coexist with multiple grammars in
+                /// one test binary read via
+                /// `<Grammar>::PROJECTION_DIRECT_TO_STRUCT` to
+                /// disambiguate.
+                pub const PROJECTION_DIRECT_TO_STRUCT: &'static [(&'static str, &'static str)] =
+                    PROJECTION_DIRECT_TO_STRUCT;
+
+                /// AY-II.W0.d — grammar-declared `-> Name` bindings
+                /// per admission. Indexed in lockstep with
+                /// `PROJECTION_DIRECT_TO_STRUCT`; empty string when
+                /// the admission came from a pure layout arm.
+                #[doc(hidden)]
+                pub const PROJECTION_NAMED_BINDINGS: &'static [&'static str] =
+                    PROJECTION_NAMED_BINDINGS;
+
+                /// AY-II.W0.d — materialiser function names per
+                /// admission. Canonical wire-contract evidence that
+                /// every `PROJECTION_DIRECT_TO_STRUCT` entry has a
+                /// matching `materialize_projection_<rule>_<Grammar>`
+                /// fn in the emitter output.
+                #[doc(hidden)]
+                pub const PROJECTION_MATERIALIZERS: &'static [&'static str] =
+                    PROJECTION_MATERIALIZERS;
+
+                /// AY-II.W0.d — production consumer names per
+                /// admission. Each entry identifies the
+                /// `<Grammar>Value::<RuleName>` variant that consumes
+                /// the admitted rule at runtime.
+                #[doc(hidden)]
+                pub const PROJECTION_CONSUMERS: &'static [&'static str] =
+                    PROJECTION_CONSUMERS;
+            },
+        };
+        let parse_docs: TokenStream = match strategy {
+            bbnf_ir::registry::EmitStrategy::StructDirect { .. } => quote! {
+                /// Parse an input string and return the grammar-specific
+                /// document that owns the StructDirect runtime arena.
+            },
+            bbnf_ir::registry::EmitStrategy::TapeDirect => quote! {
+                /// Parse an input string and return a zero-copy
+                /// `Parsed<'_, Self>` that borrows the input directly.
+                ///
+                /// AY-II.W0'.a: `parse()` routes through the shape
+                /// dispatcher against a single `Tape<R>`. The
+                /// hot path here:
+                ///
+                /// 1. Allocate a sized `Tape<R>` — owns both
+                ///    tape + value-frame substrates in one handle.
+                /// 2. Call the shape dispatcher, which decomposes
+                ///    into per-shape bodies inlined at the call
+                ///    site. Every compound / leaf push stamps both
+                ///    column families atomically.
+                /// 3. Finalise via `Tape<R>::finish_fused::<Self>`
+                ///    — returns `Tape<Self>` holding tape +
+                ///    value, handed to `Parsed::new_fused_output` directly.
+            },
+        };
         // AY-II.W0'.a — visitor-generic parse entry retired. The
         // fused parse above IS the visitor lane — every shape
         // emitter's push goes through the fused builder's atomic
@@ -1190,58 +1275,9 @@ impl RustEmitter {
                 pub const GRAMMAR_PROFILE: crate::runtime::tape::GrammarProfile =
                     GRAMMAR_PROFILE;
 
-                /// AY.W6.2 — associated-constant accessor for the
-                /// grammar's direct-to-struct projection admission
-                /// list. Alias of the module-scope
-                /// `PROJECTION_DIRECT_TO_STRUCT` slice; downstream
-                /// consumers that coexist with multiple grammars in
-                /// one test binary read via
-                /// `<Grammar>::PROJECTION_DIRECT_TO_STRUCT` to
-                /// disambiguate.
-                pub const PROJECTION_DIRECT_TO_STRUCT: &'static [(&'static str, &'static str)] =
-                    PROJECTION_DIRECT_TO_STRUCT;
+                #projection_associated_consts
 
-                /// AY-II.W0.d — grammar-declared `-> Name` bindings
-                /// per admission. Indexed in lockstep with
-                /// `PROJECTION_DIRECT_TO_STRUCT`; empty string when
-                /// the admission came from a pure layout arm.
-                #[doc(hidden)]
-                pub const PROJECTION_NAMED_BINDINGS: &'static [&'static str] =
-                    PROJECTION_NAMED_BINDINGS;
-
-                /// AY-II.W0.d — materialiser function names per
-                /// admission. Canonical wire-contract evidence that
-                /// every `PROJECTION_DIRECT_TO_STRUCT` entry has a
-                /// matching `materialize_projection_<rule>_<Grammar>`
-                /// fn in the emitter output.
-                #[doc(hidden)]
-                pub const PROJECTION_MATERIALIZERS: &'static [&'static str] =
-                    PROJECTION_MATERIALIZERS;
-
-                /// AY-II.W0.d — production consumer names per
-                /// admission. Each entry identifies the
-                /// `<Grammar>Value::<RuleName>` variant that consumes
-                /// the admitted rule at runtime.
-                #[doc(hidden)]
-                pub const PROJECTION_CONSUMERS: &'static [&'static str] =
-                    PROJECTION_CONSUMERS;
-
-                /// Parse an input string and return a zero-copy
-                /// `Parsed<'_, Self>` that borrows the input directly.
-                ///
-                /// AY-II.W0'.a: `parse()` routes through the shape
-                /// dispatcher against a single `Tape<R>`. The
-                /// hot path here:
-                ///
-                /// 1. Allocate a sized `Tape<R>` — owns both
-                ///    tape + value-frame substrates in one handle.
-                /// 2. Call the shape dispatcher, which decomposes
-                ///    into per-shape bodies inlined at the call
-                ///    site. Every compound / leaf push stamps both
-                ///    column families atomically.
-                /// 3. Finalise via `Tape<R>::finish_fused::<Self>`
-                ///    — returns `Tape<Self>` holding tape +
-                ///    value, handed to `Parsed::new_fused_output` directly.
+                #parse_docs
                 pub fn parse(
                     input: &str,
                 ) -> ::core::result::Result<

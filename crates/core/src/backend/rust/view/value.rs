@@ -1,5 +1,10 @@
 //! AY-II.W0'.b — projection-consumer wiring for the fused pipeline.
 //!
+//! AZ-II.cutover.O3.P1-V1: this value surface is TapeDirect-only.
+//! StructDirect grammars materialize through document-owned runtime
+//! APIs; they must not keep generated `<Grammar>Value`,
+//! `ValueRoot`, or node-view fallback surfaces.
+//!
 //! Emits three artefacts per grammar:
 //!
 //! 1. `pub enum <Grammar>Value<'p>` — one variant per non-transparent
@@ -87,9 +92,13 @@ enum VariantShape {
 /// Emit the `<Grammar>Value<'p>` enum + `impl ValueRoot` + narrow
 /// `PathQuery` impls for the grammar.
 ///
-/// Returns an empty [`TokenStream`] when the grammar has no
-/// non-transparent rules.
+/// Returns an empty [`TokenStream`] for StructDirect grammars or when
+/// the grammar has no non-transparent rules.
 pub fn emit_value_surface(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
+    if !super::should_emit_tape_direct_surface(ir, grammar_name) {
+        return quote! {};
+    }
+
     let non_transparent: Vec<&IrRule> = ir
         .rules
         .iter()

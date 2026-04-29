@@ -1,5 +1,10 @@
 //! Per-rule tape-view codegen for the Rust backend.
 //!
+//! AZ-II.cutover.O3.P1-V1: this module is now a TapeDirect-only
+//! emitter. StructDirect grammars return concrete runtime documents
+//! and must not receive generated `TapeCursor`, node-view, or
+//! `ValueRoot` compatibility surfaces from this layer.
+//!
 //! Tranche AC.2 landing surface. For every rule in the IR, this
 //! module emits a `<Rule>View<'p>` wrapper struct that holds a
 //! [`crate::runtime::tape::TapeCursor`] plus a borrow of the
@@ -91,6 +96,23 @@ pub use color::{Color, ColorSpace, COLOR_PAYLOAD_BYTES};
 pub use named_types::RustNamedTypes;
 pub use value::{emit_value_surface, variant_entries_for, VariantInfo, VariantInfoShape};
 
+/// Return whether the legacy tape-view/value surface may emit.
+///
+/// O3.P1 carves these producers to TapeDirect. StructDirect parse
+/// outputs expose document-owned projection APIs, so emitting an
+/// empty `NodeView`/`ValueRoot` shim would keep the retired surface
+/// alive.
+pub(crate) fn should_emit_tape_direct_surface(
+    ir: &GrammarIR,
+    grammar_name: &str,
+) -> bool {
+    bbnf_ir::registry::EmitStrategy::for_grammar(
+        grammar_name,
+        &ir.struct_registry,
+    )
+    .is_tape_direct()
+}
+
 /// Generate the full view-type surface for a grammar.
 ///
 /// Returns a `TokenStream` that, when spliced into the generated
@@ -113,6 +135,11 @@ pub use value::{emit_value_surface, variant_entries_for, VariantInfo, VariantInf
 /// convention (the bootstrap enforces this), so this matches the
 /// user's intent without needing a separate annotation.
 pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
+    let grammar_name = ctx.ident.to_string();
+    if !should_emit_tape_direct_surface(ir, grammar_name.as_str()) {
+        return TokenStream::new();
+    }
+
     // Pre-compute the RuleKind enum shape + the per-rule
     // variant_idx dispatch table. RuleKind includes both the
     // rule-level variants AND the heterogeneous-alt sub-variants
@@ -128,7 +155,6 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
     // positions are reserved in the enum but emitted at parse time
     // only when the driver explicitly stamps a coercion idx.
 
-    let grammar_name = ctx.ident.to_string();
     let node_view_ident = format_ident!("{}NodeView", grammar_name);
     let rule_kind_ident = format_ident!("{}RuleKind", grammar_name);
 

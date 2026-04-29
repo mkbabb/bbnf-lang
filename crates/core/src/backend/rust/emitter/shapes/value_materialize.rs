@@ -1,5 +1,10 @@
 //! AY-II.W0'.b — projection materializer emission.
 //!
+//! AZ-II.cutover.O3.P1-M1: these materializers are TapeDirect-only.
+//! StructDirect grammars return document-owned runtime values and
+//! must not emit `materialize_projection_*` functions against
+//! `runtime::tape::Tape`.
+//!
 //! Post-W0'.b the materialize family collapses to a single emission
 //! path: one `materialize_projection_<rule>_<Grammar>` helper per
 //! grammar-derived direct-to-struct admission, called from the
@@ -63,11 +68,17 @@ use super::super::grammar::{
 
 /// Emit the per-admission projection materialise fns for `ir`.
 ///
-/// Returns an empty [`TokenStream`] when the grammar has no
-/// admissions.
+/// Returns an empty [`TokenStream`] for StructDirect grammars or when
+/// the grammar has no admissions.
 pub fn emit_materialize_fns(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
-    let projection_fns = emit_projection_fns(ir, grammar_name);
-    projection_fns
+    if !crate::backend::rust::view::should_emit_tape_direct_surface(
+        ir,
+        grammar_name,
+    ) {
+        return quote! {};
+    }
+
+    emit_projection_fns(ir, grammar_name)
 }
 
 // ════════════════════════════════════════════════════════════════════

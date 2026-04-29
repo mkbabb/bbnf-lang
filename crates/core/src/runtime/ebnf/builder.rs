@@ -9,7 +9,7 @@ use crate::runtime::ebnf::arena::{EbnfArena, EbnfCompound, EbnfCompoundKind};
 use crate::runtime::ebnf::document::EbnfDocument;
 use crate::runtime::ebnf::value::EbnfValue;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct OpenFrame<'p> {
     kind: EbnfCompoundKind,
     branch_tag: Option<u32>,
@@ -19,6 +19,15 @@ struct OpenFrame<'p> {
 #[derive(Debug)]
 pub struct EbnfStructBuilder<'p> {
     arena: EbnfArena<'p>,
+    stack: Vec<OpenFrame<'p>>,
+    root: Option<EbnfValue<'p>>,
+    next_handle: u64,
+}
+
+/// Rollback snapshot for [`EbnfStructBuilder`].
+#[derive(Debug, Clone)]
+pub struct EbnfStructCheckpoint<'p> {
+    compounds: usize,
     stack: Vec<OpenFrame<'p>>,
     root: Option<EbnfValue<'p>>,
     next_handle: u64,
@@ -73,6 +82,26 @@ impl<'p> EbnfStructBuilder<'p> {
 }
 
 impl<'p> StructBuilder for EbnfStructBuilder<'p> {
+    type Checkpoint = EbnfStructCheckpoint<'p>;
+
+    #[inline]
+    fn checkpoint(&self) -> Self::Checkpoint {
+        EbnfStructCheckpoint {
+            compounds: self.arena.compound_count(),
+            stack: self.stack.clone(),
+            root: self.root,
+            next_handle: self.next_handle,
+        }
+    }
+
+    #[inline]
+    fn rollback(&mut self, checkpoint: Self::Checkpoint) {
+        self.arena.truncate(checkpoint.compounds);
+        self.stack = checkpoint.stack;
+        self.root = checkpoint.root;
+        self.next_handle = checkpoint.next_handle;
+    }
+
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
         let kind = EbnfCompoundKind::from_rule_name(layout.rule_name.as_str());
         self.stack.push(OpenFrame { kind, branch_tag: None, children: Vec::new() });

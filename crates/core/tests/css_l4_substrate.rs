@@ -152,6 +152,29 @@ fn struct_builder_assembles_simple_stylesheet() {
 }
 
 #[test]
+fn struct_builder_checkpoint_discards_nested_rule_attempt() {
+    let mut builder = CssStructBuilder::<'static>::new();
+    let sheet_layout = layout_for("stylesheet", LayoutKind::Struct);
+    let style_layout = layout_for("qualifiedRule", LayoutKind::Struct);
+    let decl_layout = layout_for("declaration", LayoutKind::Struct);
+
+    let sheet = builder.begin_compound(&sheet_layout);
+    let checkpoint = builder.checkpoint();
+    let style = builder.begin_compound(&style_layout);
+    let decl = builder.begin_compound(&decl_layout);
+    builder.push_leaf_with_str("color");
+    builder.push_leaf_with_str("red");
+    builder.end_compound(decl);
+    builder.end_compound(style);
+
+    builder.rollback(checkpoint);
+    builder.end_compound(sheet);
+
+    let doc = builder.finalise("");
+    assert!(doc.rules(doc.root().rules).is_empty());
+}
+
+#[test]
 fn struct_builder_assembles_typed_dimension() {
     let mut builder = CssStructBuilder::<'static>::new();
     let length_layout = layout_for("length", LayoutKind::Struct);

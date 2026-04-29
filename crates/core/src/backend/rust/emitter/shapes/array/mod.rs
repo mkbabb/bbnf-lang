@@ -254,37 +254,51 @@ fn emit_parse_array_struct_direct_wrapped(
                     rule_type: ::bbnf_ir::TypeDesc::Span,
                     fields: ::std::vec::Vec::new(),
                 };
+            let __array_checkpoint = builder.checkpoint();
             let __handle = builder.begin_compound(&__layout);
-
-            *p += 1;
-            let _ = #support_mod::skip_space(input, p, state);
-
-            if input.get(*p).copied() == Some(b']') {
+            let __array_result: ::core::result::Result<
+                (),
+                crate::runtime::tape::DtaError,
+            > = (|| {
                 *p += 1;
-                builder.end_compound(__handle);
-                return Ok(crate::runtime::tape::TapeOffset::NONE);
-            }
-
-            loop {
-                // Element dispatch — per-Ref routing matches tape path.
-                #value_call
-
                 let _ = #support_mod::skip_space(input, p, state);
-                match input.get(*p).copied() {
-                    Some(b',') => {
-                        *p += 1;
-                        let _ = #support_mod::skip_space(input, p, state);
+
+                if input.get(*p).copied() == Some(b']') {
+                    *p += 1;
+                    return Ok(());
+                }
+
+                loop {
+                    // Element dispatch — per-Ref routing matches tape path.
+                    #value_call
+
+                    let _ = #support_mod::skip_space(input, p, state);
+                    match input.get(*p).copied() {
+                        Some(b',') => {
+                            *p += 1;
+                            let _ = #support_mod::skip_space(input, p, state);
+                        }
+                        Some(b']') => {
+                            *p += 1;
+                            return Ok(());
+                        }
+                        _ => return Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        }),
                     }
-                    Some(b']') => {
-                        *p += 1;
-                        builder.end_compound(__handle);
-                        return Ok(crate::runtime::tape::TapeOffset::NONE);
-                    }
-                    _ => return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    }),
+                }
+            })();
+
+            match __array_result {
+                Ok(()) => {
+                    builder.end_compound(__handle);
+                    Ok(crate::runtime::tape::TapeOffset::NONE)
+                }
+                Err(__err) => {
+                    builder.rollback(__array_checkpoint);
+                    Err(__err)
                 }
             }
         }
@@ -436,6 +450,7 @@ fn emit_parse_array_struct_direct_list(
                 if input.get(*p).is_none() {
                     break;
                 }
+                let __iter_builder_checkpoint = builder.checkpoint();
                 // Attempt one iteration via a closure so failures
                 // surface as `Err` and unwind to `*p` rollback.
                 let __iter_result: ::core::result::Result<
@@ -452,11 +467,14 @@ fn emit_parse_array_struct_direct_list(
                         // Zero-width iteration guard — terminate
                         // rather than spin.
                         if *p == __iter_save_p {
+                            builder.rollback(__iter_builder_checkpoint);
                             break;
                         }
+                        builder.commit(__iter_builder_checkpoint);
                     }
                     Err(_) => {
                         *p = __iter_save_p;
+                        builder.rollback(__iter_builder_checkpoint);
                         break;
                     }
                 }

@@ -57,7 +57,7 @@ use crate::runtime::json::value::{JsonNumber, JsonPair, JsonValue};
 /// Each frame collects per-shape state (elements, pairs, key, slots)
 /// and is finalised by [`JsonStructBuilder::end_compound`] into a
 /// [`JsonValue`] that lands on the parent frame's pending slot.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum OpenFrame<'p> {
     /// `array` shape — collecting element values.
     Array { items: Vec<JsonValue<'p>> },
@@ -106,6 +106,16 @@ pub struct JsonStructBuilder<'p> {
     /// Monotonic compound handle counter. The handle is opaque to
     /// the emitter — it pairs `begin_compound` with the matching
     /// `end_compound` only.
+    next_handle: u64,
+}
+
+/// Rollback snapshot for [`JsonStructBuilder`].
+#[derive(Debug, Clone)]
+pub struct JsonStructCheckpoint<'p> {
+    arrays: usize,
+    objects: usize,
+    stack: Vec<OpenFrame<'p>>,
+    root: Option<JsonValue<'p>>,
     next_handle: u64,
 }
 
@@ -230,6 +240,27 @@ impl<'p> JsonStructBuilder<'p> {
 }
 
 impl<'p> StructBuilder for JsonStructBuilder<'p> {
+    type Checkpoint = JsonStructCheckpoint<'p>;
+
+    #[inline]
+    fn checkpoint(&self) -> Self::Checkpoint {
+        JsonStructCheckpoint {
+            arrays: self.arena.array_count(),
+            objects: self.arena.object_count(),
+            stack: self.stack.clone(),
+            root: self.root,
+            next_handle: self.next_handle,
+        }
+    }
+
+    #[inline]
+    fn rollback(&mut self, checkpoint: Self::Checkpoint) {
+        self.arena.truncate(checkpoint.arrays, checkpoint.objects);
+        self.stack = checkpoint.stack;
+        self.root = checkpoint.root;
+        self.next_handle = checkpoint.next_handle;
+    }
+
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
         let frame = match (layout.kind, layout.rule_name.as_str()) {
             // The `array` rule: collect `JsonValue` elements.

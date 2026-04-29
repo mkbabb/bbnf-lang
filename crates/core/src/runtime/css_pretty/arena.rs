@@ -125,4 +125,8 @@ impl<'p> CssPrettyArena<'p> {
 
     #[inline]
     pub fn compound_count(&self) -> usize { self.compounds.len() }
+
+    /// Roll back the arena to a prior compound-count snapshot.
+    #[inline]
+    pub fn truncate(&mut self, compounds: usize) { self.compounds.truncate(compounds); }
 }

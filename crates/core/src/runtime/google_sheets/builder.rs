@@ -55,7 +55,7 @@ use crate::runtime::handle::CompoundHandle;
 /// originating rule's structural shape so the finalised
 /// [`crate::runtime::google_sheets::SheetsCompound`] entry preserves
 /// it for downstream consumers.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Frame<'p> {
     /// The compound's structural-kind tag, derived from the layout's
     /// `rule_name` at `begin_compound` time.
@@ -90,6 +90,15 @@ pub struct SheetsStructBuilder<'p> {
     /// Monotonic compound-handle counter. The handle is opaque to
     /// the emitter — it pairs `begin_compound` with the matching
     /// `end_compound` only.
+    next_handle: u64,
+}
+
+/// Rollback snapshot for [`SheetsStructBuilder`].
+#[derive(Debug, Clone)]
+pub struct SheetsStructCheckpoint<'p> {
+    compounds: usize,
+    stack: Vec<Frame<'p>>,
+    root: Option<SheetsValue<'p>>,
     next_handle: u64,
 }
 
@@ -167,6 +176,26 @@ impl<'p> SheetsStructBuilder<'p> {
 }
 
 impl<'p> StructBuilder for SheetsStructBuilder<'p> {
+    type Checkpoint = SheetsStructCheckpoint<'p>;
+
+    #[inline]
+    fn checkpoint(&self) -> Self::Checkpoint {
+        SheetsStructCheckpoint {
+            compounds: self.arena.compound_count(),
+            stack: self.stack.clone(),
+            root: self.root,
+            next_handle: self.next_handle,
+        }
+    }
+
+    #[inline]
+    fn rollback(&mut self, checkpoint: Self::Checkpoint) {
+        self.arena.truncate(checkpoint.compounds);
+        self.stack = checkpoint.stack;
+        self.root = checkpoint.root;
+        self.next_handle = checkpoint.next_handle;
+    }
+
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
         // Layouts emitted by `populate_struct_registry` carry the
         // grammar's rule name verbatim; resolve the structural kind

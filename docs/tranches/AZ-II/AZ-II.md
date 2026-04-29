@@ -24,12 +24,12 @@ landed. The current state is a partial close: direct-to-struct is live
 for 8/9 grammars, while EBNF, `Parsed<R>`, `TapeDirect`, generated
 tape-view residue, and `crates/tape` remain terminal blockers.
 
-The next AZ-II wave is `cutover.O`. It is not a workaround wave and not
-a reduced tape floor. It must first fix the grammar-general
-StructDirect builder transaction gap, then activate EBNF through shared
-alternate/layout inference, delete `Parsed<R>` and `TapeDirect`, delete
-the standalone tape crate, and refresh semantic parity/performance
-truth.
+The active AZ-II wave is `cutover.O`. It is not a workaround wave and
+not a reduced tape floor. O0 tooling preflight and O1 grammar-general
+StructDirect builder transactions have landed. The active resume point
+is O2: activate EBNF through shared alternate/layout inference, then
+delete `Parsed<R>` and `TapeDirect`, delete the standalone tape crate,
+and refresh semantic parity/performance truth.
 
 AZ-III opens only if the EBNF blocker is proven to require new
 grammar-general inference/layout machinery spanning node facts,
@@ -204,7 +204,7 @@ disk as historical record.
 
 | Wave | Headline | Opens after | Status |
 |---|---|---|---|
-| **cutover** | BBNF self-host + tape deletion ([waves/cutover.md](waves/cutover.md)) — original three-stage plan expanded under contact into 14 sub-stages cutover.A through cutover.N | AZ-I.W2-act close (AZ-I FINAL.md committed; seven-point handoff verified) | partial-close (cutover.A→M LANDED; cutover.N halted at usage limit; cutover.O.0 LANDED; terminal hardening resumes at O1 builder transactions before EBNF activation) |
+| **cutover** | BBNF self-host + tape deletion ([waves/cutover.md](waves/cutover.md)) — original three-stage plan expanded under contact into 14 sub-stages cutover.A through cutover.N | AZ-I.W2-act close (AZ-I FINAL.md committed; seven-point handoff verified) | partial-close (cutover.A→M LANDED; cutover.N halted at usage limit; cutover.O.0 and O1 LANDED; terminal hardening resumes at O2 EBNF direct projection) |
 
 The cutover wave's actual trajectory across 14 sub-stages is recorded
 in `docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md` (per-substage
@@ -226,7 +226,7 @@ history). Per-substage scope-reveal reports archived under
 | cutover.K | mapped_factor wrapper + typed-leaf source recovery + per-shape Err frame cleanup | LANDED |
 | cutover.L | keyword-shape Alt-of-Ref handler | LANDED |
 | cutover.M | non-BBNF resolver arms (CSV/Math/BNF/CSS Pretty); AltDispatch struct_direct surgery | LANDED |
-| cutover.N | EBNF activation + Phases 4/5/6 close | dispatched + halted at usage limit; routes to cutover.O, beginning with tooling preflight and StructDirect builder transactions |
+| cutover.N | EBNF activation + Phases 4/5/6 close | dispatched + halted at usage limit; routed to cutover.O; O0/O1 now landed and O2 EBNF direct projection is next |
 
 ### W0 — Research + cutover design + classifier extension
 

@@ -239,12 +239,25 @@ fn emit_parse_alt_dispatch_struct_direct(
                     rule_type: ::bbnf_ir::TypeDesc::Span,
                     fields: ::std::vec::Vec::new(),
                 };
+            let __dispatch_checkpoint = builder.checkpoint();
             let __handle = builder.begin_compound(&__layout);
-
-            #dispatch_arms
-
-            builder.end_compound(__handle);
-            Ok(())
+            let __dispatch_result: ::core::result::Result<
+                (),
+                crate::runtime::tape::DtaError,
+            > = (|| {
+                #dispatch_arms
+                ::core::result::Result::Ok(())
+            })();
+            match __dispatch_result {
+                ::core::result::Result::Ok(()) => {
+                    builder.end_compound(__handle);
+                    Ok(())
+                }
+                ::core::result::Result::Err(__err) => {
+                    builder.rollback(__dispatch_checkpoint);
+                    ::core::result::Result::Err(__err)
+                }
+            }
         }
     }
 }

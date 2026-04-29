@@ -216,10 +216,13 @@ pub(super) fn emit_parse_flat_struct_direct(
             crate::runtime::tape::TapeOffset,
             crate::runtime::tape::DtaError,
         > {
+            use crate::runtime::builder::StructBuilder as _;
+
             // AZ-I.W2.RF — open the Flat compound. The layout literal is
             // built inline from the rule's registered metadata; the
             // grammar's StructBuilder routes (kind, rule_name) to its
             // own concrete OpenFrame variant.
+            let __flat_checkpoint = builder.checkpoint();
             let #layout_var: ::bbnf_ir::registry::StructLayout = #layout_literal;
             let #handle_var = <
                 #builder_ty_elided as crate::runtime::StructBuilder
@@ -245,12 +248,18 @@ pub(super) fn emit_parse_flat_struct_direct(
                 ::core::result::Result::Ok(())
             })();
 
-            <
-                #builder_ty_elided as crate::runtime::StructBuilder
-            >::end_compound(builder, #handle_var);
-
-            __body_result?;
-            ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            match __body_result {
+                ::core::result::Result::Ok(()) => {
+                    <
+                        #builder_ty_elided as crate::runtime::StructBuilder
+                    >::end_compound(builder, #handle_var);
+                    ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                }
+                ::core::result::Result::Err(__err) => {
+                    builder.rollback(__flat_checkpoint);
+                    ::core::result::Result::Err(__err)
+                }
+            }
         }
     }
 }
@@ -460,6 +469,7 @@ fn emit_position_core_struct_direct(
             quote! {
                 {
                     let __neg_save_p = *p;
+                    let __neg_builder_checkpoint = builder.checkpoint();
                     let __neg_result: ::core::result::Result<
                         (),
                         crate::runtime::tape::DtaError,
@@ -468,6 +478,7 @@ fn emit_position_core_struct_direct(
                         Ok(())
                     })();
                     *p = __neg_save_p;
+                    builder.rollback(__neg_builder_checkpoint);
                     if __neg_result.is_ok() {
                         return ::core::result::Result::Err(
                             crate::runtime::tape::DtaError::Syntax {
@@ -501,6 +512,7 @@ fn emit_position_core_struct_direct(
             quote! {
                 {
                     let __minus_save_p = *p;
+                    let __minus_builder_checkpoint = builder.checkpoint();
                     let __minus_excl: ::core::result::Result<
                         (),
                         crate::runtime::tape::DtaError,
@@ -509,6 +521,7 @@ fn emit_position_core_struct_direct(
                         Ok(())
                     })();
                     *p = __minus_save_p;
+                    builder.rollback(__minus_builder_checkpoint);
                     if __minus_excl.is_ok() {
                         return ::core::result::Result::Err(
                             crate::runtime::tape::DtaError::Syntax {
@@ -563,6 +576,7 @@ fn emit_inline_alt_struct_direct(
         arms.push(quote! {
             {
                 let __alt_save_p = *p;
+                let __alt_builder_checkpoint = builder.checkpoint();
                 let __alt_result: ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -571,9 +585,13 @@ fn emit_inline_alt_struct_direct(
                     Ok(())
                 })();
                 match __alt_result {
-                    Ok(()) => break 'try_branches,
+                    Ok(()) => {
+                        builder.commit(__alt_builder_checkpoint);
+                        break 'try_branches;
+                    }
                     Err(_) => {
                         *p = __alt_save_p;
+                        builder.rollback(__alt_builder_checkpoint);
                     }
                 }
             }
@@ -635,6 +653,7 @@ fn emit_inline_repeat_struct_direct(
                 if input.get(*p).is_none() {
                     break;
                 }
+                let __iter_builder_checkpoint = builder.checkpoint();
                 let __iter_result: ::core::result::Result<
                     (),
                     crate::runtime::tape::DtaError,
@@ -645,12 +664,15 @@ fn emit_inline_repeat_struct_direct(
                 match __iter_result {
                     Ok(()) => {
                         if *p == __iter_save_p {
+                            builder.rollback(__iter_builder_checkpoint);
                             break;
                         }
+                        builder.commit(__iter_builder_checkpoint);
                         __iter_count += 1;
                     }
                     Err(_) => {
                         *p = __iter_save_p;
+                        builder.rollback(__iter_builder_checkpoint);
                         break;
                     }
                 }

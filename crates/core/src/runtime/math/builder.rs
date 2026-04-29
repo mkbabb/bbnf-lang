@@ -12,7 +12,7 @@ use crate::runtime::math::document::MathDocument;
 use crate::runtime::math::value::MathValue;
 
 /// One open compound frame on the builder's stack.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct OpenFrame<'p> {
     kind: MathCompoundKind,
     branch_tag: Option<u32>,
@@ -23,6 +23,15 @@ struct OpenFrame<'p> {
 #[derive(Debug)]
 pub struct MathStructBuilder<'p> {
     arena: MathArena<'p>,
+    stack: Vec<OpenFrame<'p>>,
+    root: Option<MathValue<'p>>,
+    next_handle: u64,
+}
+
+/// Rollback snapshot for [`MathStructBuilder`].
+#[derive(Debug, Clone)]
+pub struct MathStructCheckpoint<'p> {
+    compounds: usize,
     stack: Vec<OpenFrame<'p>>,
     root: Option<MathValue<'p>>,
     next_handle: u64,
@@ -83,6 +92,26 @@ impl<'p> MathStructBuilder<'p> {
 }
 
 impl<'p> StructBuilder for MathStructBuilder<'p> {
+    type Checkpoint = MathStructCheckpoint<'p>;
+
+    #[inline]
+    fn checkpoint(&self) -> Self::Checkpoint {
+        MathStructCheckpoint {
+            compounds: self.arena.compound_count(),
+            stack: self.stack.clone(),
+            root: self.root,
+            next_handle: self.next_handle,
+        }
+    }
+
+    #[inline]
+    fn rollback(&mut self, checkpoint: Self::Checkpoint) {
+        self.arena.truncate(checkpoint.compounds);
+        self.stack = checkpoint.stack;
+        self.root = checkpoint.root;
+        self.next_handle = checkpoint.next_handle;
+    }
+
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
         let kind = MathCompoundKind::from_rule_name(layout.rule_name.as_str());
         self.stack.push(OpenFrame {

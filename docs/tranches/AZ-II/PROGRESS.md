@@ -1,6 +1,6 @@
 # AZ-II — Progress Log
 
-**Status**: partial close; `cutover.O.0` landed, O1 next.
+**Status**: partial close; `cutover.O.0` and `cutover.O.1` landed, O2 next.
 Implemented-state record:
 [`PROGRESS-SNAPSHOT-2026-04-29.md`](PROGRESS-SNAPSHOT-2026-04-29.md).
 Live terminal sequence: `cutover.O.0` through `cutover.O.7`.
@@ -91,7 +91,7 @@ The cutover wave runs in three sequential sub-stages:
 | W0 | superseded (2026-04-28) | Folded into cutover.A (substrate hoist + BBNF runtime + decay sweep) |
 | W1 | superseded (2026-04-28) | Folded into cutover.B (Stage A + Stage B byte-equal cycle) |
 | W2 | superseded (2026-04-28) | Folded into cutover.C (`crates/tape/` deletion + recode + FINAL) |
-| cutover | partial-close (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; cutover.O.0 tooling preflight landed; O1 builder transactions next) | 8/9 grammars StructDirect; terminal hardening routes through cutover.O.1-O.7 with builder transactions before EBNF activation ([waves/cutover.md](waves/cutover.md)) |
+| cutover | partial-close (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; cutover.O.0 tooling preflight and O1 builder transactions landed; O2 EBNF direct projection next) | 8/9 grammars StructDirect; terminal hardening routes through cutover.O.2-O.7 after transactional StructDirect rollback support ([waves/cutover.md](waves/cutover.md)) |
 
 ## 2026-04-28 — cutover.G partial close
 
@@ -323,7 +323,7 @@ cross-crate refs).
 | Substage | Scope | Estimated cap |
 |---|---|---|
 | cutover.O.0 | Tooling preflight: stale bench aliases, IAI CI, profiling scripts, release pin | LANDED |
-| cutover.O.1 | StructDirect builder transaction ABI across speculative branches | 120 min |
+| cutover.O.1 | StructDirect builder transaction ABI across speculative branches | LANDED |
 | cutover.O.2 | EBNF diagnosis + generic AltFacts/layout-routing repair | 120 min |
 | cutover.O.3 | Generated tape-view / `ValueRoot` residue purge for StructDirect | 90 min |
 | cutover.O.4 | `Parsed<R>` deletion and `TapeDirect` fallback removal | 90 min |
@@ -389,3 +389,28 @@ close evidence:
 No performance or testing baseline was collected in O0 per user
 instruction. O6 still owns JSON sonic-rs parity, CSS lightningcss typed
 parity, and the 17-entry post-AZ-II close matrix.
+
+## 2026-04-29 — cutover.O.1 StructDirect builder transactions
+
+O1 landed the grammar-general speculative builder ABI required before
+EBNF activation:
+
+- `StructBuilder` now exposes `checkpoint`, `rollback`, and `commit`
+  through an associated checkpoint type.
+- All grammar-specific StructDirect builders capture open-frame stack,
+  root, arena cursors, next-handle state, and pending CSS value state
+  where applicable; rollback truncates arenas and restores the builder
+  to the exact speculative entry point.
+- StructDirect emitters now wrap speculative alternate, repeat,
+  minus/negate, ref-led keyword, AltDispatch, array, arglist, unordered,
+  flat, and wrap paths in checkpoint/commit/rollback transactions.
+- The generated fleet was refreshed through canonical `cargo xtask
+  regen`; `cargo xtask regen --check` is clean across all 9 grammars.
+- Focused wire-contract tests cover JSON rollback of completed roots
+  and open frames plus CSS rollback of nested rule attempts.
+
+Validation: `cargo check -p bbnf --lib --profile ax-iter`; focused
+JSON and CSS StructDirect checkpoint tests; `cargo xtask regen --check`;
+`git diff --check`. No performance or close-matrix baseline was
+collected in O1 per instruction; O6 still owns semantic/parity
+throughput truth.

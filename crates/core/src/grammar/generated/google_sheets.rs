@@ -2944,6 +2944,8 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 2u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("boolean"),
@@ -2992,9 +2994,9 @@ mod __googlesheetsparser_emit_impl {
             ::core::result::Result::Err(e) => {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
-                > as crate::runtime::StructBuilder>::end_compound(
+                > as crate::runtime::StructBuilder>::rollback(
                     builder,
-                    __wrap_handle,
+                    __wrap_checkpoint,
                 );
                 ::core::result::Result::Err(e)
             }
@@ -3031,6 +3033,8 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __error_literal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("error_literal"),
@@ -3062,6 +3066,7 @@ mod __googlesheetsparser_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -3080,14 +3085,19 @@ mod __googlesheetsparser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -3105,6 +3115,7 @@ mod __googlesheetsparser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -3124,14 +3135,19 @@ mod __googlesheetsparser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -3150,14 +3166,19 @@ mod __googlesheetsparser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -3177,9 +3198,13 @@ mod __googlesheetsparser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -3192,14 +3217,19 @@ mod __googlesheetsparser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -3219,14 +3249,19 @@ mod __googlesheetsparser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -3246,14 +3281,19 @@ mod __googlesheetsparser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -3273,14 +3313,19 @@ mod __googlesheetsparser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -3300,14 +3345,19 @@ mod __googlesheetsparser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -3327,9 +3377,13 @@ mod __googlesheetsparser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -3342,14 +3396,21 @@ mod __googlesheetsparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __error_literal_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __error_literal_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -3375,6 +3436,8 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 4u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("sheet_prefix"),
@@ -3423,9 +3486,9 @@ mod __googlesheetsparser_emit_impl {
             ::core::result::Result::Err(e) => {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
-                > as crate::runtime::StructBuilder>::end_compound(
+                > as crate::runtime::StructBuilder>::rollback(
                     builder,
-                    __wrap_handle,
+                    __wrap_checkpoint,
                 );
                 ::core::result::Result::Err(e)
             }
@@ -3844,6 +3907,8 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __cell_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 11u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("cell"),
@@ -3867,6 +3932,7 @@ mod __googlesheetsparser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -3889,12 +3955,15 @@ mod __googlesheetsparser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -3920,11 +3989,21 @@ mod __googlesheetsparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __cell_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __cell_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -3957,6 +4036,8 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __func_open_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 12u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("func_open"),
@@ -3996,11 +4077,21 @@ mod __googlesheetsparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __func_open_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __func_open_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -4033,6 +4124,8 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __range_ref_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 13u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("range_ref"),
@@ -4059,6 +4152,7 @@ mod __googlesheetsparser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -4081,12 +4175,15 @@ mod __googlesheetsparser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -4104,6 +4201,7 @@ mod __googlesheetsparser_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -4124,14 +4222,19 @@ mod __googlesheetsparser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -4154,14 +4257,19 @@ mod __googlesheetsparser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -4184,9 +4292,13 @@ mod __googlesheetsparser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -4213,6 +4325,7 @@ mod __googlesheetsparser_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -4233,14 +4346,19 @@ mod __googlesheetsparser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -4263,14 +4381,19 @@ mod __googlesheetsparser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -4293,9 +4416,13 @@ mod __googlesheetsparser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -4308,11 +4435,21 @@ mod __googlesheetsparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __range_ref_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __range_ref_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -4338,6 +4475,8 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 14u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("cell_or_range"),
@@ -4361,6 +4500,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_flat_GoogleSheetsParser_range_ref(
                         input,
                         p,
@@ -4369,22 +4509,27 @@ mod __googlesheetsparser_emit_impl {
                     ) {
                         ::core::result::Result::Ok(_) => {
                             __wrap_branch_idx = 0u32;
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_flat_GoogleSheetsParser_cell(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
                             __wrap_branch_idx = 1u32;
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
@@ -4415,9 +4560,9 @@ mod __googlesheetsparser_emit_impl {
             ::core::result::Result::Err(e) => {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
-                > as crate::runtime::StructBuilder>::end_compound(
+                > as crate::runtime::StructBuilder>::rollback(
                     builder,
-                    __wrap_handle,
+                    __wrap_checkpoint,
                 );
                 ::core::result::Result::Err(e)
             }
@@ -4724,6 +4869,8 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __unary_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 17u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("unary_expr"),
@@ -4750,6 +4897,7 @@ mod __googlesheetsparser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -4776,12 +4924,15 @@ mod __googlesheetsparser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -4807,11 +4958,21 @@ mod __googlesheetsparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __unary_expr_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __unary_expr_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -4844,6 +5005,8 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __paren_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 18u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("paren_expr"),
@@ -4897,11 +5060,21 @@ mod __googlesheetsparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __paren_expr_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __paren_expr_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -4934,6 +5107,8 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __arg_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 19u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("arg"),
@@ -4957,6 +5132,7 @@ mod __googlesheetsparser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -4979,12 +5155,15 @@ mod __googlesheetsparser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -5000,11 +5179,18 @@ mod __googlesheetsparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __arg_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __arg_handle);
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -5037,6 +5223,8 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __func_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 20u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("func_args"),
@@ -5063,6 +5251,7 @@ mod __googlesheetsparser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -5085,6 +5274,7 @@ mod __googlesheetsparser_emit_impl {
                                     if input.get(*p).is_none() {
                                         break;
                                     }
+                                    let __iter_builder_checkpoint = builder.checkpoint();
                                     let __iter_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -5114,12 +5304,15 @@ mod __googlesheetsparser_emit_impl {
                                     match __iter_result {
                                         Ok(()) => {
                                             if *p == __iter_save_p {
+                                                builder.rollback(__iter_builder_checkpoint);
                                                 break;
                                             }
+                                            builder.commit(__iter_builder_checkpoint);
                                             __iter_count += 1;
                                         }
                                         Err(_) => {
                                             *p = __iter_save_p;
+                                            builder.rollback(__iter_builder_checkpoint);
                                             break;
                                         }
                                     }
@@ -5137,12 +5330,15 @@ mod __googlesheetsparser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -5158,11 +5354,21 @@ mod __googlesheetsparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __func_args_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __func_args_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -5195,6 +5401,8 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __let_binding_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 21u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("let_binding"),
@@ -5246,11 +5454,21 @@ mod __googlesheetsparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __let_binding_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __let_binding_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -5283,6 +5501,8 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __lambda_params_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 22u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("lambda_params"),
@@ -5309,6 +5529,7 @@ mod __googlesheetsparser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -5336,6 +5557,7 @@ mod __googlesheetsparser_emit_impl {
                                     if input.get(*p).is_none() {
                                         break;
                                     }
+                                    let __iter_builder_checkpoint = builder.checkpoint();
                                     let __iter_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -5365,12 +5587,15 @@ mod __googlesheetsparser_emit_impl {
                                     match __iter_result {
                                         Ok(()) => {
                                             if *p == __iter_save_p {
+                                                builder.rollback(__iter_builder_checkpoint);
                                                 break;
                                             }
+                                            builder.commit(__iter_builder_checkpoint);
                                             __iter_count += 1;
                                         }
                                         Err(_) => {
                                             *p = __iter_save_p;
+                                            builder.rollback(__iter_builder_checkpoint);
                                             break;
                                         }
                                     }
@@ -5388,12 +5613,15 @@ mod __googlesheetsparser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -5409,14 +5637,21 @@ mod __googlesheetsparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __lambda_params_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __lambda_params_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
@@ -5719,6 +5954,8 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __array_literal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 25u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("array_literal"),
@@ -5772,14 +6009,21 @@ mod __googlesheetsparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __array_literal_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __array_literal_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
@@ -6207,6 +6451,9 @@ mod __googlesheetsparser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -6231,11 +6478,23 @@ mod __googlesheetsparser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RC — per-grammar Scalar-shape parse
     /// function (transparent-Ref body, struct-direct
@@ -6286,6 +6545,9 @@ mod __googlesheetsparser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -6328,11 +6590,23 @@ mod __googlesheetsparser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -6365,6 +6639,8 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __let_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 32u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("let_args"),
@@ -6388,6 +6664,7 @@ mod __googlesheetsparser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -6430,12 +6707,15 @@ mod __googlesheetsparser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -6461,11 +6741,21 @@ mod __googlesheetsparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __let_args_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __let_args_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -6494,6 +6784,9 @@ mod __googlesheetsparser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -6518,11 +6811,23 @@ mod __googlesheetsparser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -6548,6 +6853,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -6556,6 +6862,7 @@ mod __googlesheetsparser_emit_impl {
             match first {
                 34u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_string_GoogleSheetsParser_string(
                         input,
                         p,
@@ -6563,15 +6870,18 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 35u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_flat_GoogleSheetsParser_error_literal(
                         input,
                         p,
@@ -6579,15 +6889,18 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 40u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_flat_GoogleSheetsParser_paren_expr(
                         input,
                         p,
@@ -6595,15 +6908,18 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 46u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6611,15 +6927,18 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 48u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6627,15 +6946,18 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 49u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6643,15 +6965,18 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 50u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6659,15 +6984,18 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 51u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6675,15 +7003,18 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 52u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6691,15 +7022,18 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 53u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6707,15 +7041,18 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 54u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6723,15 +7060,18 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 55u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6739,15 +7079,18 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 56u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6755,15 +7098,18 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 57u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_hregex_GoogleSheetsParser_number(
                         input,
                         p,
@@ -6771,15 +7117,18 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 70u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_wrap_GoogleSheetsParser_boolean(
                         input,
                         p,
@@ -6787,16 +7136,19 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 76u8 => {
                     {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_arglist_GoogleSheetsParser_let_call(
                             input,
                             p,
@@ -6804,15 +7156,18 @@ mod __googlesheetsparser_emit_impl {
                             builder,
                         ) {
                             ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_arglist_GoogleSheetsParser_lambda_call(
                             input,
                             p,
@@ -6820,16 +7175,19 @@ mod __googlesheetsparser_emit_impl {
                             builder,
                         ) {
                             ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                 }
                 84u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_wrap_GoogleSheetsParser_boolean(
                         input,
                         p,
@@ -6837,15 +7195,18 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 102u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_wrap_GoogleSheetsParser_boolean(
                         input,
                         p,
@@ -6853,16 +7214,19 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 108u8 => {
                     {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_arglist_GoogleSheetsParser_let_call(
                             input,
                             p,
@@ -6870,15 +7234,18 @@ mod __googlesheetsparser_emit_impl {
                             builder,
                         ) {
                             ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_arglist_GoogleSheetsParser_lambda_call(
                             input,
                             p,
@@ -6886,16 +7253,19 @@ mod __googlesheetsparser_emit_impl {
                             builder,
                         ) {
                             ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                 }
                 116u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_wrap_GoogleSheetsParser_boolean(
                         input,
                         p,
@@ -6903,15 +7273,18 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 123u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_flat_GoogleSheetsParser_array_literal(
                         input,
                         p,
@@ -6919,10 +7292,12 @@ mod __googlesheetsparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
@@ -6930,6 +7305,7 @@ mod __googlesheetsparser_emit_impl {
             }
             {
                 let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
                 match parse_arglist_GoogleSheetsParser_func_call(
                     input,
                     p,
@@ -6937,15 +7313,18 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                 ) {
                     ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
                         break 'try_branches;
                     }
                     ::core::result::Result::Err(_) => {
                         *p = attempt_p;
+                        builder.rollback(attempt_builder);
                     }
                 }
             }
             {
                 let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
                 match parse_wrap_GoogleSheetsParser_cell_or_range(
                     input,
                     p,
@@ -6953,15 +7332,18 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                 ) {
                     ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
                         break 'try_branches;
                     }
                     ::core::result::Result::Err(_) => {
                         *p = attempt_p;
+                        builder.rollback(attempt_builder);
                     }
                 }
             }
             {
                 let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
                 match parse_hregex_GoogleSheetsParser_identifier(
                     input,
                     p,
@@ -6969,10 +7351,12 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                 ) {
                     ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
                         break 'try_branches;
                     }
                     ::core::result::Result::Err(_) => {
                         *p = attempt_p;
+                        builder.rollback(attempt_builder);
                     }
                 }
             }
@@ -7015,6 +7399,8 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __postfix_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 35u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("postfix_expr"),
@@ -7051,6 +7437,7 @@ mod __googlesheetsparser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -7070,12 +7457,15 @@ mod __googlesheetsparser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -7091,14 +7481,21 @@ mod __googlesheetsparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __postfix_expr_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __postfix_expr_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -7131,6 +7528,8 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __formula_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 36u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("formula"),
@@ -7172,11 +7571,21 @@ mod __googlesheetsparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __formula_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __formula_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AY-II.W0.e — Grammar-activated structural-scan policy table.
     ///

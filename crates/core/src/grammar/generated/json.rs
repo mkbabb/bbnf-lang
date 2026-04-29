@@ -1477,37 +1477,49 @@ mod __jsonparser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __array_checkpoint = builder.checkpoint();
         let __handle = builder.begin_compound(&__layout);
-        *p += 1;
-        let _ = __shape_support_JsonParser::skip_space(input, p, state);
-        if input.get(*p).copied() == Some(b']') {
+        let __array_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
             *p += 1;
-            builder.end_compound(__handle);
-            return Ok(crate::runtime::tape::TapeOffset::NONE);
-        }
-        loop {
-            ({
-                let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                parse_wrap_JsonParser_value(input, p, state, builder)
-            })?;
             let _ = __shape_support_JsonParser::skip_space(input, p, state);
-            match input.get(*p).copied() {
-                Some(b',') => {
-                    *p += 1;
+            if input.get(*p).copied() == Some(b']') {
+                *p += 1;
+                return Ok(());
+            }
+            loop {
+                ({
                     let _ = __shape_support_JsonParser::skip_space(input, p, state);
+                    parse_wrap_JsonParser_value(input, p, state, builder)
+                })?;
+                let _ = __shape_support_JsonParser::skip_space(input, p, state);
+                match input.get(*p).copied() {
+                    Some(b',') => {
+                        *p += 1;
+                        let _ = __shape_support_JsonParser::skip_space(input, p, state);
+                    }
+                    Some(b']') => {
+                        *p += 1;
+                        return Ok(());
+                    }
+                    _ => {
+                        return Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
                 }
-                Some(b']') => {
-                    *p += 1;
-                    builder.end_compound(__handle);
-                    return Ok(crate::runtime::tape::TapeOffset::NONE);
-                }
-                _ => {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
+            }
+        })();
+        match __array_result {
+            Ok(()) => {
+                builder.end_compound(__handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            Err(__err) => {
+                builder.rollback(__array_checkpoint);
+                Err(__err)
             }
         }
     }
@@ -1542,6 +1554,8 @@ mod __jsonparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __pair_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 6u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("pair"),
@@ -1582,11 +1596,21 @@ mod __jsonparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::json::JsonStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __pair_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::json::JsonStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __pair_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -1612,6 +1636,7 @@ mod __jsonparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_JsonParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -1620,149 +1645,189 @@ mod __jsonparser_emit_impl {
             match first {
                 34u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_string_JsonParser_string(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 45u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 48u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 49u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 50u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 51u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 52u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 53u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 54u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 55u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 56u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 57u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 91u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_array_JsonParser_array(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 102u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_keyword_JsonParser_bool(
                         input,
                         p,
@@ -1771,15 +1836,18 @@ mod __jsonparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 110u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_keyword_JsonParser_null(
                         input,
                         p,
@@ -1788,15 +1856,18 @@ mod __jsonparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 116u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_keyword_JsonParser_bool(
                         input,
                         p,
@@ -1805,21 +1876,26 @@ mod __jsonparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 123u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_object_JsonParser_object(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }

@@ -41,12 +41,17 @@ pub(super) fn emit_dispatch_arms_struct_direct(
                 Some(call) => quote! {
                     {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match #call {
                             Ok(_) => {
                                 builder.push_branch_tag(#idx_u32);
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
-                            Err(_) => { *p = attempt_p; }
+                            Err(_) => {
+                                *p = attempt_p;
+                                builder.rollback(attempt_builder);
+                            }
                         }
                     }
                 },

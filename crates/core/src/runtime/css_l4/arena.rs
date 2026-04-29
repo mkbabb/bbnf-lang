@@ -370,4 +370,23 @@ impl<'p> CssArena<'p> {
     pub fn color_count(&self) -> usize {
         self.colors.len()
     }
+
+    /// Roll back every slab to a prior count snapshot.
+    #[inline]
+    pub fn truncate(
+        &mut self,
+        rules: usize,
+        decls: usize,
+        selectors: usize,
+        values: usize,
+        keyframes: usize,
+        colors: usize,
+    ) {
+        self.rules.truncate(rules);
+        self.decls.truncate(decls);
+        self.selectors.truncate(selectors);
+        self.values.truncate(values);
+        self.keyframes.truncate(keyframes);
+        self.colors.truncate(colors);
+    }
 }

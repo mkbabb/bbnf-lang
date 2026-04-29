@@ -725,39 +725,56 @@ fn emit_parse_unordered_struct_direct(
                     rule_type: ::bbnf_ir::TypeDesc::Span,
                     fields: ::std::vec::Vec::new(),
                 };
+            let __unordered_checkpoint = <
+                #builder_ty as crate::runtime::StructBuilder
+            >::checkpoint(builder);
             let __handle = <
                 #builder_ty as crate::runtime::StructBuilder
             >::begin_compound(builder, &__layout);
-            let _ = #support_mod::skip_space(input, p, state);
-
-            let mut __iters: u32 = 0;
-            'unordered: loop {
-                let __byte = match input.get(*p).copied() {
-                    Some(b) => b,
-                    None => break 'unordered,
-                };
-                match __byte {
-                    #(#branch_arms)*
-                    _ => break 'unordered,
-                }
+            let __unordered_result: ::core::result::Result<
+                (),
+                crate::runtime::tape::DtaError,
+            > = (|| {
                 let _ = #support_mod::skip_space(input, p, state);
-            }
 
-            if __iters < #iters_lo_lit {
-                <
-                    #builder_ty as crate::runtime::StructBuilder
-                >::end_compound(builder, __handle);
-                return Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                });
-            }
+                let mut __iters: u32 = 0;
+                'unordered: loop {
+                    let __byte = match input.get(*p).copied() {
+                        Some(b) => b,
+                        None => break 'unordered,
+                    };
+                    match __byte {
+                        #(#branch_arms)*
+                        _ => break 'unordered,
+                    }
+                    let _ = #support_mod::skip_space(input, p, state);
+                }
 
-            <
-                #builder_ty as crate::runtime::StructBuilder
-            >::end_compound(builder, __handle);
-            Ok(crate::runtime::tape::TapeOffset::NONE)
+                if __iters < #iters_lo_lit {
+                    return Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+
+                ::core::result::Result::Ok(())
+            })();
+
+            match __unordered_result {
+                ::core::result::Result::Ok(()) => {
+                    <
+                        #builder_ty as crate::runtime::StructBuilder
+                    >::end_compound(builder, __handle);
+                    Ok(crate::runtime::tape::TapeOffset::NONE)
+                }
+                ::core::result::Result::Err(__err) => {
+                    <
+                        #builder_ty as crate::runtime::StructBuilder
+                    >::rollback(builder, __unordered_checkpoint);
+                    ::core::result::Result::Err(__err)
+                }
+            }
         }
     }
 }

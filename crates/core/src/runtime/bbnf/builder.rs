@@ -24,7 +24,7 @@ use crate::runtime::builder::StructBuilder;
 use crate::runtime::handle::CompoundHandle;
 
 /// One open compound frame on the builder's stack.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct OpenFrame<'p> {
     kind: BbnfCompoundKind,
     branch_tag: Option<u32>,
@@ -45,6 +45,15 @@ pub struct BbnfStructBuilder<'p> {
     /// against an empty stack) finalises.
     root: Option<BbnfValue<'p>>,
     /// Monotonic compound handle counter.
+    next_handle: u64,
+}
+
+/// Rollback snapshot for [`BbnfStructBuilder`].
+#[derive(Debug, Clone)]
+pub struct BbnfStructCheckpoint<'p> {
+    compounds: usize,
+    stack: Vec<OpenFrame<'p>>,
+    root: Option<BbnfValue<'p>>,
     next_handle: u64,
 }
 
@@ -112,6 +121,26 @@ impl<'p> BbnfStructBuilder<'p> {
 }
 
 impl<'p> StructBuilder for BbnfStructBuilder<'p> {
+    type Checkpoint = BbnfStructCheckpoint<'p>;
+
+    #[inline]
+    fn checkpoint(&self) -> Self::Checkpoint {
+        BbnfStructCheckpoint {
+            compounds: self.arena.compound_count(),
+            stack: self.stack.clone(),
+            root: self.root,
+            next_handle: self.next_handle,
+        }
+    }
+
+    #[inline]
+    fn rollback(&mut self, checkpoint: Self::Checkpoint) {
+        self.arena.truncate(checkpoint.compounds);
+        self.stack = checkpoint.stack;
+        self.root = checkpoint.root;
+        self.next_handle = checkpoint.next_handle;
+    }
+
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
         let kind = BbnfCompoundKind::from_rule_name(layout.rule_name.as_str());
         self.stack.push(OpenFrame {

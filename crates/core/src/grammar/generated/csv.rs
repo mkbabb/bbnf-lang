@@ -702,6 +702,8 @@ mod __csvparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __escaped_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 1u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("escaped"),
@@ -754,11 +756,21 @@ mod __csvparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::csv::CsvStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __escaped_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::csv::CsvStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __escaped_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -791,6 +803,8 @@ mod __csvparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __record_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 2u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("record"),
@@ -807,6 +821,7 @@ mod __csvparser_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -822,14 +837,19 @@ mod __csvparser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -840,9 +860,13 @@ mod __csvparser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -864,6 +888,7 @@ mod __csvparser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -881,6 +906,7 @@ mod __csvparser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -896,14 +922,19 @@ mod __csvparser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -914,9 +945,13 @@ mod __csvparser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -931,12 +966,15 @@ mod __csvparser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -952,11 +990,21 @@ mod __csvparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::csv::CsvStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __record_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::csv::CsvStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __record_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -989,6 +1037,8 @@ mod __csvparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __csv_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("csv"),
@@ -1015,6 +1065,7 @@ mod __csvparser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -1042,12 +1093,15 @@ mod __csvparser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -1063,11 +1117,18 @@ mod __csvparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::csv::CsvStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __csv_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::csv::CsvStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __csv_handle);
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AW-V.W4-fix — visitor-path HRegex-shape parse function.
     ///

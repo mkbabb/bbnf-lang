@@ -306,12 +306,15 @@ pub(super) fn emit_parse_keyword_struct_direct(
                                             && input[*p..*p + #len] == [#(#byte_lits),*]
                                         {
                                             let __ref_save_p = *p;
+                                            let __ref_builder_checkpoint = builder.checkpoint();
                                             match (#ref_call) {
                                                 ::core::result::Result::Ok(__off) => {
+                                                    builder.commit(__ref_builder_checkpoint);
                                                     return ::core::result::Result::Ok(__off);
                                                 }
                                                 ::core::result::Result::Err(_) => {
                                                     *p = __ref_save_p;
+                                                    builder.rollback(__ref_builder_checkpoint);
                                                 }
                                             }
                                         }

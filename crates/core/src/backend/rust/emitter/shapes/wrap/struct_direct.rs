@@ -151,13 +151,16 @@ fn emit_struct_branch_attempt(call: &TokenStream, branch_idx: u32) -> TokenStrea
     quote! {
         {
             let attempt_p = *p;
+            let attempt_builder = builder.checkpoint();
             match #call {
                 ::core::result::Result::Ok(_) => {
                     __wrap_branch_idx = #branch_idx;
+                    builder.commit(attempt_builder);
                     break 'try_branches;
                 }
                 ::core::result::Result::Err(_) => {
                     *p = attempt_p;
+                    builder.rollback(attempt_builder);
                 }
             }
         }
@@ -269,6 +272,8 @@ pub(super) fn emit_parse_wrap_struct_direct(
             crate::runtime::tape::TapeOffset,
             crate::runtime::tape::DtaError,
         > {
+            use crate::runtime::builder::StructBuilder as _;
+
             #dispatch
         }
     }
@@ -327,6 +332,7 @@ fn emit_alt_struct_dispatch(
         // built inline from the rule's registered metadata; the
         // builder routes any name not in (array | object | pair) to
         // OpenFrame::Wrap per the JsonStructBuilder dispatch.
+        let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = #layout_literal;
         let __wrap_handle = <
             #builder_ty_e as crate::runtime::StructBuilder
@@ -379,7 +385,7 @@ fn emit_alt_struct_dispatch(
             ::core::result::Result::Err(e) => {
                 <
                     #builder_ty_e as crate::runtime::StructBuilder
-                >::end_compound(builder, __wrap_handle);
+                >::rollback(builder, __wrap_checkpoint);
                 ::core::result::Result::Err(e)
             }
         }
@@ -469,12 +475,15 @@ fn emit_struct_branch_attempt_transparent(call: &TokenStream) -> TokenStream {
     quote! {
         {
             let attempt_p = *p;
+            let attempt_builder = builder.checkpoint();
             match #call {
                 ::core::result::Result::Ok(_) => {
+                    builder.commit(attempt_builder);
                     break 'try_branches;
                 }
                 ::core::result::Result::Err(_) => {
                     *p = attempt_p;
+                    builder.rollback(attempt_builder);
                 }
             }
         }

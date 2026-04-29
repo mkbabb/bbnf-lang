@@ -52,7 +52,7 @@ use crate::runtime::handle::CompoundHandle;
 /// Each frame collects per-shape state and finalises by
 /// [`CssStructBuilder::end_compound`] into the matching typed value
 /// (or directly onto the enclosing aggregate's slot).
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum OpenFrame<'p> {
     /// `stylesheet` — collecting [`CssRule`] entries.
     StyleSheet { rules: Vec<CssRule<'p>> },
@@ -150,6 +150,21 @@ pub struct CssStructBuilder<'p> {
     /// open frame to land on (e.g. a number literal pushed during a
     /// dimension's intermediate state). Drained by the next compound
     /// finalisation.
+    pending_value: Option<CssTypedValue<'p>>,
+}
+
+/// Rollback snapshot for [`CssStructBuilder`].
+#[derive(Debug, Clone)]
+pub struct CssStructCheckpoint<'p> {
+    rules: usize,
+    decls: usize,
+    selectors: usize,
+    values: usize,
+    keyframes: usize,
+    colors: usize,
+    stack: Vec<OpenFrame<'p>>,
+    root: Option<StyleSheet>,
+    next_handle: u64,
     pending_value: Option<CssTypedValue<'p>>,
 }
 
@@ -274,6 +289,40 @@ impl<'p> CssStructBuilder<'p> {
 }
 
 impl<'p> StructBuilder for CssStructBuilder<'p> {
+    type Checkpoint = CssStructCheckpoint<'p>;
+
+    #[inline]
+    fn checkpoint(&self) -> Self::Checkpoint {
+        CssStructCheckpoint {
+            rules: self.arena.rule_slab_count(),
+            decls: self.arena.decl_slab_count(),
+            selectors: self.arena.selector_slab_count(),
+            values: self.arena.value_slab_count(),
+            keyframes: self.arena.keyframe_slab_count(),
+            colors: self.arena.color_count(),
+            stack: self.stack.clone(),
+            root: self.root,
+            next_handle: self.next_handle,
+            pending_value: self.pending_value,
+        }
+    }
+
+    #[inline]
+    fn rollback(&mut self, checkpoint: Self::Checkpoint) {
+        self.arena.truncate(
+            checkpoint.rules,
+            checkpoint.decls,
+            checkpoint.selectors,
+            checkpoint.values,
+            checkpoint.keyframes,
+            checkpoint.colors,
+        );
+        self.stack = checkpoint.stack;
+        self.root = checkpoint.root;
+        self.next_handle = checkpoint.next_handle;
+        self.pending_value = checkpoint.pending_value;
+    }
+
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
         let frame = match (layout.kind, layout.rule_name.as_str()) {
             // Aggregate top-level rules.

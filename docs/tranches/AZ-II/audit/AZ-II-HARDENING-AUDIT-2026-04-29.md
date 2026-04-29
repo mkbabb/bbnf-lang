@@ -27,11 +27,12 @@ The current implementation is a partial close:
   profiling scripts, IAI CI, and some docs have drifted from the actual
   bench feature matrix.
 
-This is not an AZ-III by default. The next work should be AZ-II
-`cutover.O`, a terminal hardening wave. Open AZ-III only if `cutover.O`
-proves that EBNF requires a new grammar-general inference/layout
-substrate that cannot land inside AZ-II without hiding a larger
-architectural transposition.
+This is not an AZ-III by default. The active work is AZ-II
+`cutover.O`, a terminal hardening wave. O0 tooling preflight and O1
+StructDirect builder transactions have landed; the active gate is O2
+EBNF direct projection. Open AZ-III only if `cutover.O` proves that EBNF
+requires a new grammar-general inference/layout substrate that cannot
+land inside AZ-II without hiding a larger architectural transposition.
 
 ## P0 Gates
 
@@ -63,8 +64,13 @@ Required close:
 4. Add a wire-contract test that forces a failed branch to mutate the
    builder and then proves finalise is clean after rollback.
 
-Until this lands, CSS, BBNF, and EBNF correctness under StructDirect is
-not fully trustworthy.
+Disposition: LANDED in cutover.O.1. `StructBuilder` has
+checkpoint/rollback/commit support; grammar-specific builders restore
+arena cursors, open-frame stacks, roots, next handles, and CSS pending
+value state; speculative StructDirect emitter paths are transactionally
+wired. Focused JSON and CSS wire-contract tests cover failed-branch
+rollback. The remaining correctness blocker is O2 EBNF layout/type
+projection, not builder-state leakage.
 
 ### EBNF Direct Projection
 
@@ -196,10 +202,11 @@ Primary references used for this direction:
 
 `cutover.O` should stay inside AZ-II and close these gates in order:
 
-1. **O0 - Tooling preflight.** Fix stale bench aliases/scripts/IAI CI or
-   mark them noncanonical before using them for close evidence.
-2. **O1 - Builder transactions.** Land the shared speculative builder
-   ABI and wire every StructDirect speculative emission site.
+1. **O0 - Tooling preflight.** LANDED: stale bench aliases/scripts/IAI
+   CI were fixed or marked noncanonical before using them for close
+   evidence.
+2. **O1 - Builder transactions.** LANDED: shared speculative builder
+   ABI is wired through StructDirect speculative emission sites.
 3. **O2 - EBNF generalization.** Introduce shared alternate/layout
    obligations and flip EBNF to `EbnfDocument`.
 4. **O3 - Generated view purge.** Stop emitting tape-backed view and

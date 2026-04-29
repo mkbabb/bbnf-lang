@@ -19,6 +19,9 @@ architecture. The implemented-state read-of-record is the AZ-II
 progress snapshot; the immediate path is AZ-II `cutover.O`, aligned by
 `docs/tranches/AZ-II/waves/cutover.md` and
 `docs/tranches/AZ-II/audit/AZ-II-HARDENING-AUDIT-2026-04-29.md`.
+As of the post-snapshot hardening work, O0 tooling preflight and O1
+StructDirect builder transactions are landed; O2 EBNF direct projection
+is the active gate.
 AZ-III opens only if `cutover.O` proves a new grammar-general
 inference/layout substrate is required; it must not carry forward tape
 deletion, `Parsed<R>` deletion, stale benches, or parity gaps as
@@ -608,9 +611,10 @@ CSV, Math, BNF, and CSS Pretty; and an eight-of-nine StructDirect
 fleet with EBNF still on TapeDirect.
 
 The remaining close path is AZ-II `cutover.O`, not a new tranche by
-default. Required order: O0 tooling preflight; O1 grammar-general
-StructDirect builder transactions; O2 EBNF direct projection through
-shared alternate/layout facts; O3 generated tape-view purge; O4
+default. O0 tooling preflight and O1 grammar-general StructDirect
+builder transactions are landed. Remaining required order: O2 EBNF
+direct projection through shared alternate/layout facts; O3 generated
+tape-view purge; O4
 `Parsed<R>` / `TapeDirect` deletion; O5 `crates/tape` deletion; O6
 semantic/performance close; O7 FINAL conversion. AZ-III opens only if
 O2 proves EBNF needs new grammar-general inference/layout substrate

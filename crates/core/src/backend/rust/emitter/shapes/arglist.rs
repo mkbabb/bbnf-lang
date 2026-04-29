@@ -849,6 +849,9 @@ fn emit_parse_arglist_struct_direct(
                     rule_type: ::bbnf_ir::TypeDesc::Span,
                     fields: ::std::vec::Vec::new(),
                 };
+            let __arglist_checkpoint = <
+                #builder_ty as crate::runtime::StructBuilder
+            >::checkpoint(builder);
             let __handle = <
                 #builder_ty as crate::runtime::StructBuilder
             >::begin_compound(builder, &__layout);
@@ -861,11 +864,20 @@ fn emit_parse_arglist_struct_direct(
                 #body_emission
                 ::core::result::Result::Ok(())
             })();
-            <
-                #builder_ty as crate::runtime::StructBuilder
-            >::end_compound(builder, __handle);
-            __body_result?;
-            Ok(crate::runtime::tape::TapeOffset::NONE)
+            match __body_result {
+                ::core::result::Result::Ok(()) => {
+                    <
+                        #builder_ty as crate::runtime::StructBuilder
+                    >::end_compound(builder, __handle);
+                    Ok(crate::runtime::tape::TapeOffset::NONE)
+                }
+                ::core::result::Result::Err(__err) => {
+                    <
+                        #builder_ty as crate::runtime::StructBuilder
+                    >::rollback(builder, __arglist_checkpoint);
+                    ::core::result::Result::Err(__err)
+                }
+            }
         }
     }
 }

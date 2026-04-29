@@ -35,10 +35,10 @@
 //! Every compound record pushes one `begin_compound` / `end_compound`
 //! pair. Every Alt sub-variant boundary pushes one `push_branch_tag`.
 //!
-//! The trait is `?Sized` such that emitters can take `&mut dyn StructBuilder`
-//! when polymorphism is wanted, but the typical generated parse fn
-//! takes a concrete `&mut JsonStructBuilder<'_>` so LLVM monomorphises
-//! and inlines the trait calls.
+//! Speculative parse sites call `checkpoint` before trying a branch and
+//! `rollback` on failure. Checkpoints are concrete-builder values so
+//! each grammar can snapshot only its mutable stack/root state plus arena
+//! slab lengths; rollback must not clone full arenas on the hot path.
 
 use bbnf_ir::registry::StructLayout;
 
@@ -64,6 +64,22 @@ use crate::runtime::handle::CompoundHandle;
 /// shape. Per `feedback_pluggable-components`, the discriminator is
 /// data; concrete builders query it.
 pub trait StructBuilder {
+    /// Concrete snapshot used to restore builder state when a speculative
+    /// parse attempt mutates the builder but then fails.
+    type Checkpoint;
+
+    /// Capture a rollback point before a speculative branch/repeat/guard.
+    fn checkpoint(&self) -> Self::Checkpoint;
+
+    /// Restore a previously captured checkpoint.
+    fn rollback(&mut self, checkpoint: Self::Checkpoint);
+
+    /// Mark a checkpoint as successfully consumed. Most builders have
+    /// nothing to do here, but keeping the method explicit lets emitted
+    /// code state branch intent symmetrically.
+    #[inline]
+    fn commit(&mut self, _checkpoint: Self::Checkpoint) {}
+
     /// Open a compound. Returns a [`CompoundHandle`] that the matching
     /// [`Self::end_compound`] receives. `layout` describes the typed
     /// shape the emitter believes it is building; concrete

@@ -170,6 +170,55 @@ fn wire_contract_array_of_scalars_collects_in_order() {
 }
 
 #[test]
+fn wire_contract_checkpoint_discards_completed_root_attempt() {
+    let mut b = JsonStructBuilder::new();
+    let layout = synth_layout(1, "array", LayoutKind::Struct);
+    let checkpoint = b.checkpoint();
+
+    let h = b.begin_compound(&layout);
+    b.push_leaf_with_f64(1.0);
+    b.end_compound(h);
+    b.rollback(checkpoint);
+
+    b.push_leaf_with_bool(true);
+    let doc = b.finalise(SYNTH_INPUT);
+    assert!(matches!(doc.root, JsonValue::Bool(true)));
+}
+
+#[test]
+fn wire_contract_checkpoint_restores_open_frame() {
+    let mut b = JsonStructBuilder::new();
+    let array_layout = synth_layout(1, "array", LayoutKind::Struct);
+    let object_layout = synth_layout(2, "object", LayoutKind::Struct);
+    let pair_layout = synth_layout(3, "pair", LayoutKind::Struct);
+
+    let arr = b.begin_compound(&array_layout);
+    b.push_leaf_with_f64(1.0);
+    let checkpoint = b.checkpoint();
+    let obj = b.begin_compound(&object_layout);
+    let pair = b.begin_compound(&pair_layout);
+    b.push_leaf_with_str("stale");
+    b.push_leaf_with_f64(99.0);
+    b.end_compound(pair);
+    b.end_compound(obj);
+
+    b.rollback(checkpoint);
+    b.push_leaf_with_bool(false);
+    b.end_compound(arr);
+
+    let doc = b.finalise(SYNTH_INPUT);
+    match doc.root {
+        JsonValue::Array(id) => {
+            let items = doc.array(id);
+            assert_eq!(items.len(), 2);
+            assert!(matches!(items[0], JsonValue::Number(JsonNumber::Float(v)) if v == 1.0));
+            assert!(matches!(items[1], JsonValue::Bool(false)));
+        }
+        other => panic!("unexpected root variant: {:?}", other),
+    }
+}
+
+#[test]
 fn wire_contract_empty_object_resolves_to_empty_slice() {
     let mut b = JsonStructBuilder::new();
     let layout = synth_layout(1, "object", LayoutKind::Struct);

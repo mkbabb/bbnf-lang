@@ -9,7 +9,7 @@ use crate::runtime::css_pretty::arena::{CssPrettyArena, CssPrettyCompound, CssPr
 use crate::runtime::css_pretty::document::CssPrettyDocument;
 use crate::runtime::css_pretty::value::CssPrettyValue;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct OpenFrame<'p> {
     kind: CssPrettyCompoundKind,
     branch_tag: Option<u32>,
@@ -19,6 +19,15 @@ struct OpenFrame<'p> {
 #[derive(Debug)]
 pub struct CssPrettyStructBuilder<'p> {
     arena: CssPrettyArena<'p>,
+    stack: Vec<OpenFrame<'p>>,
+    root: Option<CssPrettyValue<'p>>,
+    next_handle: u64,
+}
+
+/// Rollback snapshot for [`CssPrettyStructBuilder`].
+#[derive(Debug, Clone)]
+pub struct CssPrettyStructCheckpoint<'p> {
+    compounds: usize,
     stack: Vec<OpenFrame<'p>>,
     root: Option<CssPrettyValue<'p>>,
     next_handle: u64,
@@ -73,6 +82,26 @@ impl<'p> CssPrettyStructBuilder<'p> {
 }
 
 impl<'p> StructBuilder for CssPrettyStructBuilder<'p> {
+    type Checkpoint = CssPrettyStructCheckpoint<'p>;
+
+    #[inline]
+    fn checkpoint(&self) -> Self::Checkpoint {
+        CssPrettyStructCheckpoint {
+            compounds: self.arena.compound_count(),
+            stack: self.stack.clone(),
+            root: self.root,
+            next_handle: self.next_handle,
+        }
+    }
+
+    #[inline]
+    fn rollback(&mut self, checkpoint: Self::Checkpoint) {
+        self.arena.truncate(checkpoint.compounds);
+        self.stack = checkpoint.stack;
+        self.root = checkpoint.root;
+        self.next_handle = checkpoint.next_handle;
+    }
+
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
         let kind = CssPrettyCompoundKind::from_rule_name(layout.rule_name.as_str());
         self.stack.push(OpenFrame { kind, branch_tag: None, children: Vec::new() });

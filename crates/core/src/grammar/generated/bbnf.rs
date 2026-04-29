@@ -2577,6 +2577,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __string_lit_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("string_lit"),
@@ -2635,11 +2637,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __string_lit_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __string_lit_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar HRegex-shape parse function,
     /// **struct-direct body**.
@@ -2979,130 +2991,147 @@ mod __bbnfbootstrap_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __dispatch_checkpoint = builder.checkpoint();
         let __handle = builder.begin_compound(&__layout);
-        'try_branches: loop {
-            {
-                let at = *p;
-                let end = at + 2usize;
-                if input.len() >= end && input[at..end] == [117u8, 56u8] {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(0u32);
-                    break 'try_branches;
-                }
-            }
-            {
-                let at = *p;
-                let end = at + 3usize;
-                if input.len() >= end && input[at..end] == [117u8, 49u8, 54u8] {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(1u32);
-                    break 'try_branches;
-                }
-            }
-            {
-                let at = *p;
-                let end = at + 3usize;
-                if input.len() >= end && input[at..end] == [117u8, 51u8, 50u8] {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(2u32);
-                    break 'try_branches;
-                }
-            }
-            {
-                let at = *p;
-                let end = at + 3usize;
-                if input.len() >= end && input[at..end] == [117u8, 54u8, 52u8] {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(3u32);
-                    break 'try_branches;
-                }
-            }
-            {
-                let at = *p;
-                let end = at + 3usize;
-                if input.len() >= end && input[at..end] == [105u8, 51u8, 50u8] {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(4u32);
-                    break 'try_branches;
-                }
-            }
-            {
-                let at = *p;
-                let end = at + 3usize;
-                if input.len() >= end && input[at..end] == [105u8, 54u8, 52u8] {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(5u32);
-                    break 'try_branches;
-                }
-            }
-            {
-                let at = *p;
-                let end = at + 3usize;
-                if input.len() >= end && input[at..end] == [102u8, 51u8, 50u8] {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(6u32);
-                    break 'try_branches;
-                }
-            }
-            {
-                let at = *p;
-                let end = at + 3usize;
-                if input.len() >= end && input[at..end] == [102u8, 54u8, 52u8] {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(7u32);
-                    break 'try_branches;
-                }
-            }
-            {
-                let at = *p;
-                let end = at + 4usize;
-                if input.len() >= end && input[at..end] == [98u8, 111u8, 111u8, 108u8] {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(8u32);
-                    break 'try_branches;
-                }
-            }
-            {
-                let at = *p;
-                let end = at + 5usize;
-                if input.len() >= end
-                    && input[at..end] == [117u8, 115u8, 105u8, 122u8, 101u8]
+        let __dispatch_result: ::core::result::Result<
+            (),
+            crate::runtime::tape::DtaError,
+        > = (|| {
+            'try_branches: loop {
                 {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(9u32);
-                    break 'try_branches;
+                    let at = *p;
+                    let end = at + 2usize;
+                    if input.len() >= end && input[at..end] == [117u8, 56u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(0u32);
+                        break 'try_branches;
+                    }
                 }
-            }
-            {
-                if let ::core::option::Option::Some(match_len) = __regex_scan_BbnfBootstrap(
-                    "[_a-zA-Z][_a-zA-Z0-9]*",
-                    input,
-                    *p,
-                ) {
-                    *p += match_len as usize;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(10u32);
-                    break 'try_branches;
+                {
+                    let at = *p;
+                    let end = at + 3usize;
+                    if input.len() >= end && input[at..end] == [117u8, 49u8, 54u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(1u32);
+                        break 'try_branches;
+                    }
                 }
+                {
+                    let at = *p;
+                    let end = at + 3usize;
+                    if input.len() >= end && input[at..end] == [117u8, 51u8, 50u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(2u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 3usize;
+                    if input.len() >= end && input[at..end] == [117u8, 54u8, 52u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(3u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 3usize;
+                    if input.len() >= end && input[at..end] == [105u8, 51u8, 50u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(4u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 3usize;
+                    if input.len() >= end && input[at..end] == [105u8, 54u8, 52u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(5u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 3usize;
+                    if input.len() >= end && input[at..end] == [102u8, 51u8, 50u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(6u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 3usize;
+                    if input.len() >= end && input[at..end] == [102u8, 54u8, 52u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(7u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 4usize;
+                    if input.len() >= end
+                        && input[at..end] == [98u8, 111u8, 111u8, 108u8]
+                    {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(8u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 5usize;
+                    if input.len() >= end
+                        && input[at..end] == [117u8, 115u8, 105u8, 122u8, 101u8]
+                    {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(9u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    if let ::core::option::Option::Some(match_len) = __regex_scan_BbnfBootstrap(
+                        "[_a-zA-Z][_a-zA-Z0-9]*",
+                        input,
+                        *p,
+                    ) {
+                        *p += match_len as usize;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(10u32);
+                        break 'try_branches;
+                    }
+                }
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
+            ::core::result::Result::Ok(())
+        })();
+        match __dispatch_result {
+            ::core::result::Result::Ok(()) => {
+                builder.end_compound(__handle);
+                Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__dispatch_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        builder.end_compound(__handle);
-        Ok(())
     }
     /// AZ-I.W2-act.B3 — per-grammar HRegex-shape parse function,
     /// **struct-direct body**.
@@ -3254,6 +3283,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __regex_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 11u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("regex"),
@@ -3309,11 +3340,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __regex_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __regex_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -3346,6 +3387,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __big_comment_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 12u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("big_comment"),
@@ -3410,11 +3453,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __big_comment_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __big_comment_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -3447,6 +3500,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __comment_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 13u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("comment"),
@@ -3491,11 +3546,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __comment_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __comment_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -3702,6 +3767,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __import_path_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 16u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("import_path"),
@@ -3760,11 +3827,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __import_path_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __import_path_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
@@ -3924,6 +4001,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __value_input_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 18u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_input"),
@@ -3964,6 +4043,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -3996,12 +4076,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -4017,11 +4100,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __value_input_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __value_input_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -4054,6 +4147,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __type_annotation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 19u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("type_annotation"),
@@ -4091,14 +4186,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __type_annotation_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __type_annotation_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RC — per-grammar Scalar-shape parse
     /// function (transparent-Ref body, struct-direct
@@ -4153,6 +4255,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __import_items_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 21u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("import_items"),
@@ -4202,6 +4306,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -4244,12 +4349,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -4278,14 +4386,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __import_items_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __import_items_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -4318,6 +4433,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __pretty_hint_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 22u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("pretty_hint"),
@@ -4350,6 +4467,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -4394,12 +4512,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -4415,11 +4536,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __pretty_hint_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __pretty_hint_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -4452,6 +4583,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __token_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 23u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("token_directive"),
@@ -4502,6 +4635,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -4509,6 +4643,7 @@ mod __bbnfbootstrap_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -4526,14 +4661,19 @@ mod __bbnfbootstrap_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -4551,9 +4691,13 @@ mod __bbnfbootstrap_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -4568,12 +4712,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -4589,14 +4736,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __token_directive_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __token_directive_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -4629,6 +4783,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __debug_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 24u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("debug_directive"),
@@ -4665,6 +4821,7 @@ mod __bbnfbootstrap_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -4682,14 +4839,19 @@ mod __bbnfbootstrap_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -4710,9 +4872,13 @@ mod __bbnfbootstrap_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -4735,6 +4901,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -4742,6 +4909,7 @@ mod __bbnfbootstrap_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -4759,14 +4927,19 @@ mod __bbnfbootstrap_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -4784,9 +4957,13 @@ mod __bbnfbootstrap_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -4801,12 +4978,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -4822,14 +5002,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __debug_directive_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __debug_directive_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -4862,6 +5049,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __host_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 25u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("host_directive"),
@@ -4912,6 +5101,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -4964,12 +5154,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -4994,6 +5187,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -5001,6 +5195,7 @@ mod __bbnfbootstrap_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -5018,14 +5213,19 @@ mod __bbnfbootstrap_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -5043,9 +5243,13 @@ mod __bbnfbootstrap_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -5060,12 +5264,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -5081,14 +5288,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __host_directive_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __host_directive_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -5121,6 +5335,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __ws_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 26u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("ws_directive"),
@@ -5169,6 +5385,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -5176,6 +5393,7 @@ mod __bbnfbootstrap_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -5193,14 +5411,19 @@ mod __bbnfbootstrap_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -5218,9 +5441,13 @@ mod __bbnfbootstrap_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -5235,12 +5462,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -5256,14 +5486,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __ws_directive_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __ws_directive_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
@@ -5928,6 +6165,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __value_closure_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 32u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_closure"),
@@ -5972,6 +6211,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -6014,12 +6254,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -6053,14 +6296,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __value_closure_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __value_closure_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -6089,6 +6339,9 @@ mod __bbnfbootstrap_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::bbnf::BbnfStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::bbnf::BbnfStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -6185,11 +6438,23 @@ mod __bbnfbootstrap_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -6215,6 +6480,7 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -6223,6 +6489,7 @@ mod __bbnfbootstrap_emit_impl {
             match first {
                 124u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_flat_BbnfBootstrap_value_closure(
                         input,
                         p,
@@ -6230,10 +6497,12 @@ mod __bbnfbootstrap_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
@@ -6241,12 +6510,15 @@ mod __bbnfbootstrap_emit_impl {
             }
             {
                 let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
                 match parse_pratt_BbnfBootstrap_value_or(input, p, state, builder) {
                     ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
                         break 'try_branches;
                     }
                     ::core::result::Result::Err(_) => {
                         *p = attempt_p;
+                        builder.rollback(attempt_builder);
                     }
                 }
             }
@@ -6289,134 +6561,199 @@ mod __bbnfbootstrap_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __dispatch_checkpoint = builder.checkpoint();
         let __handle = builder.begin_compound(&__layout);
-        'try_branches: loop {
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_hregex_BbnfBootstrap_int_lit(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(0u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_hregex_BbnfBootstrap_float_lit(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(1u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let __first = __shape_support_BbnfBootstrap::skip_space(
+        let __dispatch_result: ::core::result::Result<
+            (),
+            crate::runtime::tape::DtaError,
+        > = (|| {
+            'try_branches: loop {
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
                             input,
                             p,
                             state,
+                        );
+                        parse_hregex_BbnfBootstrap_int_lit(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(0u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        parse_hregex_BbnfBootstrap_float_lit(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(1u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let __first = __shape_support_BbnfBootstrap::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_BbnfBootstrap_bool_lit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            builder,
                         )
-                        .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_BbnfBootstrap_bool_lit(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                    )
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(2u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(2u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
                     }
                 }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_flat_BbnfBootstrap_string_lit(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(3u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_arglist_BbnfBootstrap_value_fn_call(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(4u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        parse_flat_BbnfBootstrap_string_lit(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(3u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
                     }
                 }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_flat_BbnfBootstrap_value_input(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(5u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_pratt_BbnfBootstrap_value_path(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(6u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        parse_arglist_BbnfBootstrap_value_fn_call(
+                            input,
+                            p,
+                            state,
+                            builder,
+                        )
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(4u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
                     }
                 }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        parse_flat_BbnfBootstrap_value_input(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(5u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        parse_pratt_BbnfBootstrap_value_path(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(6u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
+            ::core::result::Result::Ok(())
+        })();
+        match __dispatch_result {
+            ::core::result::Result::Ok(()) => {
+                builder.end_compound(__handle);
+                Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__dispatch_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        builder.end_compound(__handle);
-        Ok(())
     }
     /// AZ-I.W2.RB — per-grammar AltDispatch-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -6449,31 +6786,58 @@ mod __bbnfbootstrap_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __dispatch_checkpoint = builder.checkpoint();
         let __handle = builder.begin_compound(&__layout);
-        'try_branches: loop {
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_altdispatch_BbnfBootstrap_value_atom(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(1u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
+        let __dispatch_result: ::core::result::Result<
+            (),
+            crate::runtime::tape::DtaError,
+        > = (|| {
+            'try_branches: loop {
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        parse_altdispatch_BbnfBootstrap_value_atom(
+                            input,
+                            p,
+                            state,
+                            builder,
+                        )
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(1u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
                     }
                 }
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
+            ::core::result::Result::Ok(())
+        })();
+        match __dispatch_result {
+            ::core::result::Result::Ok(()) => {
+                builder.end_compound(__handle);
+                Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__dispatch_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        builder.end_compound(__handle);
-        Ok(())
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -6506,6 +6870,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __import_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 37u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("import_directive"),
@@ -6542,6 +6908,7 @@ mod __bbnfbootstrap_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -6607,14 +6974,19 @@ mod __bbnfbootstrap_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -6635,9 +7007,13 @@ mod __bbnfbootstrap_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -6660,6 +7036,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -6667,6 +7044,7 @@ mod __bbnfbootstrap_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -6684,14 +7062,19 @@ mod __bbnfbootstrap_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -6709,9 +7092,13 @@ mod __bbnfbootstrap_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -6726,12 +7113,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -6747,14 +7137,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __import_directive_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __import_directive_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -6787,6 +7184,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __pretty_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 38u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("pretty_directive"),
@@ -6823,6 +7222,7 @@ mod __bbnfbootstrap_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -6840,14 +7240,19 @@ mod __bbnfbootstrap_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -6868,9 +7273,13 @@ mod __bbnfbootstrap_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -6893,6 +7302,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -6925,12 +7335,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -6955,6 +7368,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -6962,6 +7376,7 @@ mod __bbnfbootstrap_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -6979,14 +7394,19 @@ mod __bbnfbootstrap_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -7004,9 +7424,13 @@ mod __bbnfbootstrap_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -7021,12 +7445,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -7042,14 +7469,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __pretty_directive_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __pretty_directive_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -7082,6 +7516,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __alternation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 39u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("alternation"),
@@ -7108,6 +7544,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -7145,6 +7582,7 @@ mod __bbnfbootstrap_emit_impl {
                                     if input.get(*p).is_none() {
                                         break;
                                     }
+                                    let __iter_builder_checkpoint = builder.checkpoint();
                                     let __iter_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -7164,12 +7602,15 @@ mod __bbnfbootstrap_emit_impl {
                                     match __iter_result {
                                         Ok(()) => {
                                             if *p == __iter_save_p {
+                                                builder.rollback(__iter_builder_checkpoint);
                                                 break;
                                             }
+                                            builder.commit(__iter_builder_checkpoint);
                                             __iter_count += 1;
                                         }
                                         Err(_) => {
                                             *p = __iter_save_p;
+                                            builder.rollback(__iter_builder_checkpoint);
                                             break;
                                         }
                                     }
@@ -7187,12 +7628,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -7208,11 +7652,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __alternation_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __alternation_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -7245,6 +7699,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __call_arg_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 40u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("call_arg"),
@@ -7268,6 +7724,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -7305,6 +7762,7 @@ mod __bbnfbootstrap_emit_impl {
                                     if input.get(*p).is_none() {
                                         break;
                                     }
+                                    let __iter_builder_checkpoint = builder.checkpoint();
                                     let __iter_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -7324,12 +7782,15 @@ mod __bbnfbootstrap_emit_impl {
                                     match __iter_result {
                                         Ok(()) => {
                                             if *p == __iter_save_p {
+                                                builder.rollback(__iter_builder_checkpoint);
                                                 break;
                                             }
+                                            builder.commit(__iter_builder_checkpoint);
                                             __iter_count += 1;
                                         }
                                         Err(_) => {
                                             *p = __iter_save_p;
+                                            builder.rollback(__iter_builder_checkpoint);
                                             break;
                                         }
                                     }
@@ -7347,12 +7808,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -7368,11 +7832,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __call_arg_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __call_arg_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -7405,6 +7879,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __concatenation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 41u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("concatenation"),
@@ -7431,6 +7907,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -7468,6 +7945,7 @@ mod __bbnfbootstrap_emit_impl {
                                     if input.get(*p).is_none() {
                                         break;
                                     }
+                                    let __iter_builder_checkpoint = builder.checkpoint();
                                     let __iter_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -7487,12 +7965,15 @@ mod __bbnfbootstrap_emit_impl {
                                     match __iter_result {
                                         Ok(()) => {
                                             if *p == __iter_save_p {
+                                                builder.rollback(__iter_builder_checkpoint);
                                                 break;
                                             }
+                                            builder.commit(__iter_builder_checkpoint);
                                             __iter_count += 1;
                                         }
                                         Err(_) => {
                                             *p = __iter_save_p;
+                                            builder.rollback(__iter_builder_checkpoint);
                                             break;
                                         }
                                     }
@@ -7510,12 +7991,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -7531,14 +8015,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __concatenation_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __concatenation_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -7571,6 +8062,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __closure_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 42u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("closure"),
@@ -7612,6 +8105,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -7654,12 +8148,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -7695,11 +8192,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __closure_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __closure_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RB — per-grammar AltDispatch-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -7732,82 +8239,107 @@ mod __bbnfbootstrap_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __dispatch_checkpoint = builder.checkpoint();
         let __handle = builder.begin_compound(&__layout);
-        'try_branches: loop {
-            {
-                let at = *p;
-                let end = at + 2usize;
-                if input.len() >= end && input[at..end] == [206u8, 181u8] {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(0u32);
-                    break 'try_branches;
-                }
-            }
-            {
-                let at = *p;
-                let end = at + 7usize;
-                if input.len() >= end
-                    && input[at..end]
-                        == [101u8, 112u8, 115u8, 105u8, 108u8, 111u8, 110u8]
+        let __dispatch_result: ::core::result::Result<
+            (),
+            crate::runtime::tape::DtaError,
+        > = (|| {
+            'try_branches: loop {
                 {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(1u32);
-                    break 'try_branches;
+                    let at = *p;
+                    let end = at + 2usize;
+                    if input.len() >= end && input[at..end] == [206u8, 181u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(0u32);
+                        break 'try_branches;
+                    }
                 }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let __first = __shape_support_BbnfBootstrap::skip_space(
+                {
+                    let at = *p;
+                    let end = at + 7usize;
+                    if input.len() >= end
+                        && input[at..end]
+                            == [101u8, 112u8, 115u8, 105u8, 108u8, 111u8, 110u8]
+                    {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(1u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let __first = __shape_support_BbnfBootstrap::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_BbnfBootstrap_literal(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            builder,
+                        )
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(3u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
                             input,
                             p,
                             state,
-                        )
-                        .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_BbnfBootstrap_literal(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                    )
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(3u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
+                        );
+                        parse_flat_BbnfBootstrap_regex(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(4u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
                     }
                 }
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-                    parse_flat_BbnfBootstrap_regex(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(4u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
+            ::core::result::Result::Ok(())
+        })();
+        match __dispatch_result {
+            ::core::result::Result::Ok(()) => {
+                builder.end_compound(__handle);
+                Ok(())
             }
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__dispatch_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        builder.end_compound(__handle);
-        Ok(())
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
@@ -7963,6 +8495,7 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -7971,12 +8504,15 @@ mod __bbnfbootstrap_emit_impl {
             match first {
                 124u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_flat_BbnfBootstrap_closure(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
@@ -7984,12 +8520,15 @@ mod __bbnfbootstrap_emit_impl {
             }
             {
                 let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
                 match parse_flat_BbnfBootstrap_alternation(input, p, state, builder) {
                     ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
                         break 'try_branches;
                     }
                     ::core::result::Result::Err(_) => {
                         *p = attempt_p;
+                        builder.rollback(attempt_builder);
                     }
                 }
             }
@@ -8032,6 +8571,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 46u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("factor"),
@@ -8055,6 +8596,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -8077,12 +8619,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -8115,6 +8660,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -8141,12 +8687,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -8171,6 +8720,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -8193,12 +8743,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -8214,11 +8767,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __factor_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __factor_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -8251,6 +8814,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __mapped_factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 47u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mapped_factor"),
@@ -8283,6 +8848,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -8330,6 +8896,7 @@ mod __bbnfbootstrap_emit_impl {
                                     if input.get(*p).is_none() {
                                         break;
                                     }
+                                    let __iter_builder_checkpoint = builder.checkpoint();
                                     let __iter_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -8352,12 +8919,15 @@ mod __bbnfbootstrap_emit_impl {
                                     match __iter_result {
                                         Ok(()) => {
                                             if *p == __iter_save_p {
+                                                builder.rollback(__iter_builder_checkpoint);
                                                 break;
                                             }
+                                            builder.commit(__iter_builder_checkpoint);
                                             __iter_count += 1;
                                         }
                                         Err(_) => {
                                             *p = __iter_save_p;
+                                            builder.rollback(__iter_builder_checkpoint);
                                             break;
                                         }
                                     }
@@ -8375,12 +8945,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -8396,14 +8969,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __mapped_factor_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __mapped_factor_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -8436,6 +9016,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __rule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 48u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("rule"),
@@ -8480,6 +9062,7 @@ mod __bbnfbootstrap_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -8497,14 +9080,19 @@ mod __bbnfbootstrap_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -8522,9 +9110,13 @@ mod __bbnfbootstrap_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -8537,11 +9129,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __rule_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __rule_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -8574,6 +9176,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __recover_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 49u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("recover_directive"),
@@ -8633,6 +9237,7 @@ mod __bbnfbootstrap_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -8640,6 +9245,7 @@ mod __bbnfbootstrap_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -8657,14 +9263,19 @@ mod __bbnfbootstrap_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -8682,9 +9293,13 @@ mod __bbnfbootstrap_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -8699,12 +9314,15 @@ mod __bbnfbootstrap_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -8720,14 +9338,21 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::bbnf::BbnfStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __recover_directive_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::bbnf::BbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __recover_directive_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -8760,6 +9385,7 @@ mod __bbnfbootstrap_emit_impl {
                         == [64u8, 114u8, 101u8, 99u8, 111u8, 118u8, 101u8, 114u8]
                 {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_BbnfBootstrap::skip_space(
                             input,
@@ -8774,10 +9400,12 @@ mod __bbnfbootstrap_emit_impl {
                         )
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -8786,6 +9414,7 @@ mod __bbnfbootstrap_emit_impl {
                         == [64u8, 105u8, 109u8, 112u8, 111u8, 114u8, 116u8]
                 {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_BbnfBootstrap::skip_space(
                             input,
@@ -8800,10 +9429,12 @@ mod __bbnfbootstrap_emit_impl {
                         )
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -8812,6 +9443,7 @@ mod __bbnfbootstrap_emit_impl {
                         == [64u8, 112u8, 114u8, 101u8, 116u8, 116u8, 121u8]
                 {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_BbnfBootstrap::skip_space(
                             input,
@@ -8826,10 +9458,12 @@ mod __bbnfbootstrap_emit_impl {
                         )
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -8838,6 +9472,7 @@ mod __bbnfbootstrap_emit_impl {
                         == [64u8, 116u8, 111u8, 107u8, 101u8, 110u8]
                 {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_BbnfBootstrap::skip_space(
                             input,
@@ -8852,10 +9487,12 @@ mod __bbnfbootstrap_emit_impl {
                         )
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -8863,6 +9500,7 @@ mod __bbnfbootstrap_emit_impl {
                     && input[*p..*p + 6usize] == [64u8, 100u8, 101u8, 98u8, 117u8, 103u8]
                 {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_BbnfBootstrap::skip_space(
                             input,
@@ -8877,10 +9515,12 @@ mod __bbnfbootstrap_emit_impl {
                         )
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -8888,6 +9528,7 @@ mod __bbnfbootstrap_emit_impl {
                     && input[*p..*p + 5usize] == [64u8, 104u8, 111u8, 115u8, 116u8]
                 {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_BbnfBootstrap::skip_space(
                             input,
@@ -8897,10 +9538,12 @@ mod __bbnfbootstrap_emit_impl {
                         parse_flat_BbnfBootstrap_host_directive(input, p, state, builder)
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -8908,6 +9551,7 @@ mod __bbnfbootstrap_emit_impl {
                     && input[*p..*p + 3usize] == [64u8, 119u8, 115u8]
                 {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_BbnfBootstrap::skip_space(
                             input,
@@ -8917,10 +9561,12 @@ mod __bbnfbootstrap_emit_impl {
                         parse_flat_BbnfBootstrap_ws_directive(input, p, state, builder)
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -8963,6 +9609,8 @@ mod __bbnfbootstrap_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 51u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("grammar_item"),
@@ -8985,6 +9633,7 @@ mod __bbnfbootstrap_emit_impl {
                     47u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_BbnfBootstrap_comment(
                                 input,
                                 p,
@@ -8993,15 +9642,18 @@ mod __bbnfbootstrap_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_BbnfBootstrap_big_comment(
                                 input,
                                 p,
@@ -9010,10 +9662,12 @@ mod __bbnfbootstrap_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -9022,6 +9676,7 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_keyword_BbnfBootstrap_directive(
                         input,
                         p,
@@ -9031,22 +9686,27 @@ mod __bbnfbootstrap_emit_impl {
                     ) {
                         ::core::result::Result::Ok(_) => {
                             __wrap_branch_idx = 2u32;
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_flat_BbnfBootstrap_rule(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
                             __wrap_branch_idx = 3u32;
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
@@ -9077,9 +9737,9 @@ mod __bbnfbootstrap_emit_impl {
             ::core::result::Result::Err(e) => {
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     '_,
-                > as crate::runtime::StructBuilder>::end_compound(
+                > as crate::runtime::StructBuilder>::rollback(
                     builder,
-                    __wrap_handle,
+                    __wrap_checkpoint,
                 );
                 ::core::result::Result::Err(e)
             }
@@ -9118,6 +9778,7 @@ mod __bbnfbootstrap_emit_impl {
             if input.get(*p).is_none() {
                 break;
             }
+            let __iter_builder_checkpoint = builder.checkpoint();
             let __iter_result: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
@@ -9133,11 +9794,14 @@ mod __bbnfbootstrap_emit_impl {
             match __iter_result {
                 Ok(()) => {
                     if *p == __iter_save_p {
+                        builder.rollback(__iter_builder_checkpoint);
                         break;
                     }
+                    builder.commit(__iter_builder_checkpoint);
                 }
                 Err(_) => {
                     *p = __iter_save_p;
+                    builder.rollback(__iter_builder_checkpoint);
                     break;
                 }
             }

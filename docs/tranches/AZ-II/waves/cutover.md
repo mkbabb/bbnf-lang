@@ -12,15 +12,20 @@ full BBNF fixture corpus; `crates/tape/` deleted; `cargo build -p bbnf
 + `docs/benchmarks/post-AZ-II.json` archived.
 **Status**: PARTIAL CLOSE — substrate canonical; 8/9 grammars
 StructDirect; BBNF self-parity 56/56; reproducibility CI gate green;
-cutover.O.0 tooling preflight landed; remaining work resumes at O1
-builder transactions before EBNF activation, tape deletion, bench
-refresh, and FINAL CLOSE conversion.
+cutover.O.0 tooling preflight and O1 builder transactions landed;
+remaining work resumes at O2 EBNF activation before tape deletion,
+bench refresh, and FINAL CLOSE conversion.
 
 **2026-04-29 hardening amendment**: cutover.O must begin with the
 grammar-general StructDirect builder transaction gap. EBNF activation
 is blocked not only by alternate layout depth but also by the fact that
 speculative StructDirect branches can mutate builder state without a
 matching rollback.
+
+**2026-04-29 O1 addendum**: O0 and O1 are landed. The active resume
+point is O2 EBNF direct projection, now with grammar-general
+StructDirect checkpoint/rollback/commit support available to every
+speculative emitter path.
 
 **Trajectory snapshot**: see [`../PROGRESS-SNAPSHOT-2026-04-29.md`](../PROGRESS-SNAPSHOT-2026-04-29.md)
 for per-substage commit-by-commit detail across cutover.A through
@@ -169,9 +174,9 @@ Required order:
 1. **O0 tooling preflight** — LANDED: repair or explicitly de-canonicalize stale
    bench/profiling/IAI command surfaces before they are used as close
    evidence.
-2. **O1 transactional builder ABI** — add grammar-general
-   checkpoint/rollback/commit support to `StructBuilder` and wire every
-   speculative StructDirect emitter path.
+2. **O1 transactional builder ABI** — LANDED: grammar-general
+   checkpoint/rollback/commit support exists on `StructBuilder` and is
+   wired through every speculative StructDirect emitter path.
 3. **O2 EBNF direct projection** — model large literal alternates
    through shared layout/type facts and require `EbnfParser::parse ->
    EbnfDocument`.

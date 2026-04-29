@@ -1359,6 +1359,8 @@ mod __cssprettyparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __important_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 0u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("important"),
@@ -1420,11 +1422,21 @@ mod __cssprettyparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_pretty::CssPrettyStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __important_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __important_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -1457,6 +1469,8 @@ mod __cssprettyparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __importRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 1u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("importRule"),
@@ -1514,6 +1528,7 @@ mod __cssprettyparser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -1563,12 +1578,15 @@ mod __cssprettyparser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -1596,11 +1614,21 @@ mod __cssprettyparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_pretty::CssPrettyStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __importRule_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __importRule_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -1633,6 +1661,8 @@ mod __cssprettyparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __declaration_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 2u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("declaration"),
@@ -1722,6 +1752,7 @@ mod __cssprettyparser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -1751,6 +1782,7 @@ mod __cssprettyparser_emit_impl {
                                     if input.get(*p).is_none() {
                                         break;
                                     }
+                                    let __iter_builder_checkpoint = builder.checkpoint();
                                     let __iter_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -1800,12 +1832,15 @@ mod __cssprettyparser_emit_impl {
                                     match __iter_result {
                                         Ok(()) => {
                                             if *p == __iter_save_p {
+                                                builder.rollback(__iter_builder_checkpoint);
                                                 break;
                                             }
+                                            builder.commit(__iter_builder_checkpoint);
                                             __iter_count += 1;
                                         }
                                         Err(_) => {
                                             *p = __iter_save_p;
+                                            builder.rollback(__iter_builder_checkpoint);
                                             break;
                                         }
                                     }
@@ -1823,12 +1858,15 @@ mod __cssprettyparser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -1853,6 +1891,7 @@ mod __cssprettyparser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -1875,12 +1914,15 @@ mod __cssprettyparser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -1905,6 +1947,7 @@ mod __cssprettyparser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -1924,12 +1967,15 @@ mod __cssprettyparser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -1962,11 +2008,21 @@ mod __cssprettyparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_pretty::CssPrettyStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __declaration_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __declaration_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -1999,6 +2055,8 @@ mod __cssprettyparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __genericAtRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("genericAtRule"),
@@ -2069,14 +2127,21 @@ mod __cssprettyparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_pretty::CssPrettyStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __genericAtRule_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __genericAtRule_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -2109,6 +2174,8 @@ mod __cssprettyparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __qualifiedRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 4u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("qualifiedRule"),
@@ -2166,14 +2233,21 @@ mod __cssprettyparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_pretty::CssPrettyStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __qualifiedRule_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __qualifiedRule_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -2206,6 +2280,8 @@ mod __cssprettyparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __mediaRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 5u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mediaRule"),
@@ -2260,11 +2336,21 @@ mod __cssprettyparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_pretty::CssPrettyStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __mediaRule_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __mediaRule_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -2297,6 +2383,8 @@ mod __cssprettyparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __supportsRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 6u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("supportsRule"),
@@ -2352,14 +2440,21 @@ mod __cssprettyparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_pretty::CssPrettyStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __supportsRule_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __supportsRule_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -2392,6 +2487,8 @@ mod __cssprettyparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __fontFaceRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 7u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("fontFaceRule"),
@@ -2450,14 +2547,21 @@ mod __cssprettyparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_pretty::CssPrettyStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __fontFaceRule_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __fontFaceRule_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -2503,6 +2607,7 @@ mod __cssprettyparser_emit_impl {
             123u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [123u8] {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssPrettyParser::skip_space(
                             input,
@@ -2512,10 +2617,12 @@ mod __cssprettyparser_emit_impl {
                         parse_flat_CssPrettyParser_ruleBlock(input, p, state, builder)
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -2565,6 +2672,8 @@ mod __cssprettyparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __ruleBlock_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 9u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("ruleBlock"),
@@ -2646,11 +2755,21 @@ mod __cssprettyparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_pretty::CssPrettyStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __ruleBlock_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __ruleBlock_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -2683,6 +2802,8 @@ mod __cssprettyparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __blockContent_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 10u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("blockContent"),
@@ -2709,6 +2830,7 @@ mod __cssprettyparser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -2731,6 +2853,7 @@ mod __cssprettyparser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -2751,14 +2874,19 @@ mod __cssprettyparser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -2774,9 +2902,13 @@ mod __cssprettyparser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -2791,12 +2923,15 @@ mod __cssprettyparser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -2812,14 +2947,21 @@ mod __cssprettyparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_pretty::CssPrettyStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __blockContent_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __blockContent_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -2845,6 +2987,7 @@ mod __cssprettyparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_CssPrettyParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -2854,6 +2997,7 @@ mod __cssprettyparser_emit_impl {
                 64u8 => {
                     {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_flat_CssPrettyParser_mediaRule(
                             input,
                             p,
@@ -2861,15 +3005,18 @@ mod __cssprettyparser_emit_impl {
                             builder,
                         ) {
                             ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_flat_CssPrettyParser_supportsRule(
                             input,
                             p,
@@ -2877,15 +3024,18 @@ mod __cssprettyparser_emit_impl {
                             builder,
                         ) {
                             ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_flat_CssPrettyParser_fontFaceRule(
                             input,
                             p,
@@ -2893,15 +3043,18 @@ mod __cssprettyparser_emit_impl {
                             builder,
                         ) {
                             ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_flat_CssPrettyParser_importRule(
                             input,
                             p,
@@ -2909,15 +3062,18 @@ mod __cssprettyparser_emit_impl {
                             builder,
                         ) {
                             ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_flat_CssPrettyParser_genericAtRule(
                             input,
                             p,
@@ -2925,10 +3081,12 @@ mod __cssprettyparser_emit_impl {
                             builder,
                         ) {
                             ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
@@ -2967,6 +3125,7 @@ mod __cssprettyparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_CssPrettyParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -2975,12 +3134,15 @@ mod __cssprettyparser_emit_impl {
             match first {
                 64u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_wrap_CssPrettyParser_atRule(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
@@ -2988,6 +3150,7 @@ mod __cssprettyparser_emit_impl {
             }
             {
                 let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
                 match parse_flat_CssPrettyParser_qualifiedRule(
                     input,
                     p,
@@ -2995,10 +3158,12 @@ mod __cssprettyparser_emit_impl {
                     builder,
                 ) {
                     ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
                         break 'try_branches;
                     }
                     ::core::result::Result::Err(_) => {
                         *p = attempt_p;
+                        builder.rollback(attempt_builder);
                     }
                 }
             }
@@ -3041,6 +3206,8 @@ mod __cssprettyparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __ruleList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 13u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("ruleList"),
@@ -3064,6 +3231,7 @@ mod __cssprettyparser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -3096,12 +3264,15 @@ mod __cssprettyparser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -3117,11 +3288,21 @@ mod __cssprettyparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_pretty::CssPrettyStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __ruleList_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __ruleList_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -3154,6 +3335,8 @@ mod __cssprettyparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __stylesheet_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 14u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("stylesheet"),
@@ -3211,11 +3394,21 @@ mod __cssprettyparser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_pretty::CssPrettyStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __stylesheet_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_pretty::CssPrettyStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __stylesheet_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AW-V.W4-fix — visitor-path Flat-shape parse function.
     ///

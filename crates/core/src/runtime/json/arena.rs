@@ -176,4 +176,11 @@ impl<'p> JsonArena<'p> {
     pub fn object_count(&self) -> usize {
         self.objects.len()
     }
+
+    /// Roll back the arena to a prior slab-count snapshot.
+    #[inline]
+    pub fn truncate(&mut self, arrays: usize, objects: usize) {
+        self.arrays.truncate(arrays);
+        self.objects.truncate(objects);
+    }
 }

@@ -11,6 +11,10 @@ cutover.N halt: cutover.N landed no code commits. Post-snapshot
 hardening amendments may refine the order of cutover.O, but they do not
 change the implemented progress recorded here.
 
+Post-snapshot hardening addendum: cutover.O.0 tooling preflight and
+cutover.O.1 StructDirect builder transactions have since landed. The
+active resume point is cutover.O.2 EBNF direct projection.
+
 This document supplements:
 - `docs/tranches/AZ-II/AZ-II.md` (parent plan)
 - `docs/tranches/AZ-II/PROGRESS.md` (rolling dated execution log)
@@ -91,8 +95,8 @@ terminal AZ-II wave and must close these gates in sequence:
 
 | Substage | Scope | Required outcome |
 |---|---|---|
-| O0 | Tooling preflight | stale bench aliases, IAI CI, profiling scripts, and release pin repaired or explicitly de-canonicalized before close evidence is collected |
-| O1 | StructDirect builder transactions | grammar-general checkpoint/rollback/commit support wired through speculative alternate/repeat/minus/negate emitter paths |
+| O0 | Tooling preflight | LANDED — stale bench aliases, IAI CI, profiling scripts, and release pin repaired or explicitly de-canonicalized before close evidence is collected |
+| O1 | StructDirect builder transactions | LANDED — grammar-general checkpoint/rollback/commit support wired through speculative alternate/repeat/minus/negate emitter paths and runtime builders |
 | O2 | EBNF direct projection | high-branch literal alternates modeled through shared layout/type facts; `EbnfParser::parse -> EbnfDocument` |
 | O3 | Generated view purge | tape-backed `TapeCursor`, node-view, and `ValueRoot` residue removed from StructDirect generated output unless consumed through a document API |
 | O4 | `Parsed<R>` / `TapeDirect` deletion | `Parsed<R>` removed as a production parser result; `TapeDirect` fallback semantics removed |
@@ -219,10 +223,10 @@ candidate structural roots:
    (potential `u8` overflow at idx=52? unlikely but worth verifying)
 
 The fix when it lands will be **structural and generic** — applying to
-any grammar with high-branch-count Alt-of-literal patterns. cutover.N is
-diagnosing this; halted at organizational usage limit. cutover.O will
-resume once usage resets, but O1 builder transactions must land before
-O2 EBNF activation.
+any grammar with high-branch-count Alt-of-literal patterns. cutover.N
+halted at organizational usage limit with no code commits. cutover.O.1
+has now landed the builder transaction prerequisite, so the next active
+gate is O2 EBNF activation.
 
 ## Trajectory progress estimate
 
@@ -235,8 +239,9 @@ O2 EBNF activation.
 
 ## Trajectory follow-on
 
-- **cutover.O** (next): terminal hardening sequence O0-O7: tooling
-  preflight, builder transactions, EBNF projection, generated view purge,
+- **cutover.O** (active): terminal hardening sequence O0-O7: tooling
+  preflight and builder transactions have landed; EBNF projection,
+  generated view purge,
   `Parsed<R>` / `TapeDirect` deletion, tape crate deletion, semantic/perf
   close, and FINAL conversion.
 - **AZ-II FINAL CLOSE**: convert `docs/tranches/AZ-II/FINAL.md` from

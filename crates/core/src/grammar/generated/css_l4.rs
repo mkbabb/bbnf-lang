@@ -4909,216 +4909,231 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __dispatch_checkpoint = builder.checkpoint();
         let __handle = builder.begin_compound(&__layout);
-        'try_branches: loop {
-            {
-                let at = *p;
-                let end = at + 6usize;
-                if input.len() >= end
-                    && input[at..end] == [118u8, 105u8, 111u8, 108u8, 101u8, 116u8]
+        let __dispatch_result: ::core::result::Result<
+            (),
+            crate::runtime::tape::DtaError,
+        > = (|| {
+            'try_branches: loop {
                 {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(0u32);
-                    break 'try_branches;
+                    let at = *p;
+                    let end = at + 6usize;
+                    if input.len() >= end
+                        && input[at..end] == [118u8, 105u8, 111u8, 108u8, 101u8, 116u8]
+                    {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(0u32);
+                        break 'try_branches;
+                    }
                 }
-            }
-            {
-                let at = *p;
-                let end = at + 5usize;
-                if input.len() >= end
-                    && input[at..end] == [107u8, 104u8, 97u8, 107u8, 105u8]
                 {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(1u32);
-                    break 'try_branches;
-                }
-            }
-            {
-                let save_p = *p;
-                let attempt: ::core::result::Result<(), ()> = (|| {
+                    let at = *p;
+                    let end = at + 5usize;
+                    if input.len() >= end
+                        && input[at..end] == [107u8, 104u8, 97u8, 107u8, 105u8]
                     {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [102u8] {
-                            return ::core::result::Result::Err(());
-                        }
                         *p = end;
-                    }
-                    Ok(())
-                })();
-                match attempt {
-                    Ok(()) => {
                         builder.push_leaf_with_unit();
-                        builder.push_branch_tag(6u32);
+                        builder.push_branch_tag(1u32);
                         break 'try_branches;
                     }
-                    Err(()) => {
-                        *p = save_p;
+                }
+                {
+                    let save_p = *p;
+                    let attempt: ::core::result::Result<(), ()> = (|| {
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [102u8] {
+                                return ::core::result::Result::Err(());
+                            }
+                            *p = end;
+                        }
+                        Ok(())
+                    })();
+                    match attempt {
+                        Ok(()) => {
+                            builder.push_leaf_with_unit();
+                            builder.push_branch_tag(6u32);
+                            break 'try_branches;
+                        }
+                        Err(()) => {
+                            *p = save_p;
+                        }
                     }
                 }
-            }
-            {
-                let save_p = *p;
-                let attempt: ::core::result::Result<(), ()> = (|| {
-                    {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [104u8] {
-                            return ::core::result::Result::Err(());
+                {
+                    let save_p = *p;
+                    let attempt: ::core::result::Result<(), ()> = (|| {
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [104u8] {
+                                return ::core::result::Result::Err(());
+                            }
+                            *p = end;
                         }
-                        *p = end;
-                    }
-                    {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [111u8] {
-                            return ::core::result::Result::Err(());
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [111u8] {
+                                return ::core::result::Result::Err(());
+                            }
+                            *p = end;
                         }
-                        *p = end;
-                    }
-                    Ok(())
-                })();
-                match attempt {
-                    Ok(()) => {
-                        builder.push_leaf_with_unit();
-                        builder.push_branch_tag(8u32);
-                        break 'try_branches;
-                    }
-                    Err(()) => {
-                        *p = save_p;
+                        Ok(())
+                    })();
+                    match attempt {
+                        Ok(()) => {
+                            builder.push_leaf_with_unit();
+                            builder.push_branch_tag(8u32);
+                            break 'try_branches;
+                        }
+                        Err(()) => {
+                            *p = save_p;
+                        }
                     }
                 }
-            }
-            {
-                let save_p = *p;
-                let attempt: ::core::result::Result<(), ()> = (|| {
-                    {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [110u8] {
-                            return ::core::result::Result::Err(());
+                {
+                    let save_p = *p;
+                    let attempt: ::core::result::Result<(), ()> = (|| {
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [110u8] {
+                                return ::core::result::Result::Err(());
+                            }
+                            *p = end;
                         }
-                        *p = end;
-                    }
-                    {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [97u8] {
-                            return ::core::result::Result::Err(());
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [97u8] {
+                                return ::core::result::Result::Err(());
+                            }
+                            *p = end;
                         }
-                        *p = end;
-                    }
-                    {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [118u8] {
-                            return ::core::result::Result::Err(());
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [118u8] {
+                                return ::core::result::Result::Err(());
+                            }
+                            *p = end;
                         }
-                        *p = end;
-                    }
-                    Ok(())
-                })();
-                match attempt {
-                    Ok(()) => {
-                        builder.push_leaf_with_unit();
-                        builder.push_branch_tag(12u32);
-                        break 'try_branches;
-                    }
-                    Err(()) => {
-                        *p = save_p;
+                        Ok(())
+                    })();
+                    match attempt {
+                        Ok(()) => {
+                            builder.push_leaf_with_unit();
+                            builder.push_branch_tag(12u32);
+                            break 'try_branches;
+                        }
+                        Err(()) => {
+                            *p = save_p;
+                        }
                     }
                 }
-            }
-            {
-                let save_p = *p;
-                let attempt: ::core::result::Result<(), ()> = (|| {
-                    {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [116u8] {
-                            return ::core::result::Result::Err(());
+                {
+                    let save_p = *p;
+                    let attempt: ::core::result::Result<(), ()> = (|| {
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [116u8] {
+                                return ::core::result::Result::Err(());
+                            }
+                            *p = end;
                         }
-                        *p = end;
-                    }
-                    Ok(())
-                })();
-                match attempt {
-                    Ok(()) => {
-                        builder.push_leaf_with_unit();
-                        builder.push_branch_tag(17u32);
-                        break 'try_branches;
-                    }
-                    Err(()) => {
-                        *p = save_p;
+                        Ok(())
+                    })();
+                    match attempt {
+                        Ok(()) => {
+                            builder.push_leaf_with_unit();
+                            builder.push_branch_tag(17u32);
+                            break 'try_branches;
+                        }
+                        Err(()) => {
+                            *p = save_p;
+                        }
                     }
                 }
-            }
-            {
-                let save_p = *p;
-                let attempt: ::core::result::Result<(), ()> = (|| {
-                    {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [121u8] {
-                            return ::core::result::Result::Err(());
+                {
+                    let save_p = *p;
+                    let attempt: ::core::result::Result<(), ()> = (|| {
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [121u8] {
+                                return ::core::result::Result::Err(());
+                            }
+                            *p = end;
                         }
-                        *p = end;
-                    }
-                    {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [101u8] {
-                            return ::core::result::Result::Err(());
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [101u8] {
+                                return ::core::result::Result::Err(());
+                            }
+                            *p = end;
                         }
-                        *p = end;
-                    }
-                    {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [108u8] {
-                            return ::core::result::Result::Err(());
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [108u8] {
+                                return ::core::result::Result::Err(());
+                            }
+                            *p = end;
                         }
-                        *p = end;
-                    }
-                    {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [108u8] {
-                            return ::core::result::Result::Err(());
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [108u8] {
+                                return ::core::result::Result::Err(());
+                            }
+                            *p = end;
                         }
-                        *p = end;
-                    }
-                    {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [111u8] {
-                            return ::core::result::Result::Err(());
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [111u8] {
+                                return ::core::result::Result::Err(());
+                            }
+                            *p = end;
                         }
-                        *p = end;
-                    }
-                    Ok(())
-                })();
-                match attempt {
-                    Ok(()) => {
-                        builder.push_leaf_with_unit();
-                        builder.push_branch_tag(19u32);
-                        break 'try_branches;
-                    }
-                    Err(()) => {
-                        *p = save_p;
+                        Ok(())
+                    })();
+                    match attempt {
+                        Ok(()) => {
+                            builder.push_leaf_with_unit();
+                            builder.push_branch_tag(19u32);
+                            break 'try_branches;
+                        }
+                        Err(()) => {
+                            *p = save_p;
+                        }
                     }
                 }
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
+            ::core::result::Result::Ok(())
+        })();
+        match __dispatch_result {
+            ::core::result::Result::Ok(()) => {
+                builder.end_compound(__handle);
+                Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__dispatch_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        builder.end_compound(__handle);
-        Ok(())
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -5151,6 +5166,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __hex_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 3u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("hex"),
@@ -5194,11 +5211,18 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __hex_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __hex_handle);
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -5911,6 +5935,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __containerLengthUnit_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 11u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("containerLengthUnit"),
@@ -5954,6 +5980,7 @@ mod __cssl4parser_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -5971,6 +5998,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -5988,14 +6016,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -6013,9 +6046,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -6028,14 +6065,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -6053,14 +6095,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -6078,14 +6125,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -6103,14 +6155,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -6128,9 +6185,13 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -6143,14 +6204,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __containerLengthUnit_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __containerLengthUnit_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -8413,6 +8481,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __importantSuffix_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 34u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("importantSuffix"),
@@ -8439,6 +8509,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -8483,12 +8554,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -8504,14 +8578,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __importantSuffix_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __importantSuffix_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar HRegex-shape parse function,
     /// **struct-direct body**.
@@ -9292,6 +9373,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __bgProps_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 41u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("bgProps"),
@@ -9416,6 +9499,7 @@ mod __cssl4parser_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -9443,6 +9527,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -9466,14 +9551,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -9497,14 +9587,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -9525,14 +9620,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -9553,14 +9653,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -9581,14 +9686,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -9608,14 +9718,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -9635,14 +9750,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -9662,9 +9782,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -9677,14 +9801,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -9702,9 +9831,13 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -9717,11 +9850,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __bgProps_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __bgProps_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -10269,72 +10412,89 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __dispatch_checkpoint = builder.checkpoint();
         let __handle = builder.begin_compound(&__layout);
-        'try_branches: loop {
-            {
-                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
-                    "[-+]?\\d*n\\s*[+-]\\s*\\d+",
-                    input,
-                    *p,
-                ) {
-                    *p += match_len as usize;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(0u32);
-                    break 'try_branches;
+        let __dispatch_result: ::core::result::Result<
+            (),
+            crate::runtime::tape::DtaError,
+        > = (|| {
+            'try_branches: loop {
+                {
+                    if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                        "[-+]?\\d*n\\s*[+-]\\s*\\d+",
+                        input,
+                        *p,
+                    ) {
+                        *p += match_len as usize;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(0u32);
+                        break 'try_branches;
+                    }
                 }
-            }
-            {
-                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
-                    "[-+]?\\d*n",
-                    input,
-                    *p,
-                ) {
-                    *p += match_len as usize;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(1u32);
-                    break 'try_branches;
+                {
+                    if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                        "[-+]?\\d*n",
+                        input,
+                        *p,
+                    ) {
+                        *p += match_len as usize;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(1u32);
+                        break 'try_branches;
+                    }
                 }
-            }
-            {
-                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
-                    "[-+]?\\d+",
-                    input,
-                    *p,
-                ) {
-                    *p += match_len as usize;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(2u32);
-                    break 'try_branches;
+                {
+                    if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                        "[-+]?\\d+",
+                        input,
+                        *p,
+                    ) {
+                        *p += match_len as usize;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(2u32);
+                        break 'try_branches;
+                    }
                 }
-            }
-            {
-                let at = *p;
-                let end = at + 4usize;
-                if input.len() >= end && input[at..end] == [101u8, 118u8, 101u8, 110u8] {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(3u32);
-                    break 'try_branches;
+                {
+                    let at = *p;
+                    let end = at + 4usize;
+                    if input.len() >= end
+                        && input[at..end] == [101u8, 118u8, 101u8, 110u8]
+                    {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(3u32);
+                        break 'try_branches;
+                    }
                 }
-            }
-            {
-                let at = *p;
-                let end = at + 3usize;
-                if input.len() >= end && input[at..end] == [111u8, 100u8, 100u8] {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(4u32);
-                    break 'try_branches;
+                {
+                    let at = *p;
+                    let end = at + 3usize;
+                    if input.len() >= end && input[at..end] == [111u8, 100u8, 100u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(4u32);
+                        break 'try_branches;
+                    }
                 }
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
+            ::core::result::Result::Ok(())
+        })();
+        match __dispatch_result {
+            ::core::result::Result::Ok(()) => {
+                builder.end_compound(__handle);
+                Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__dispatch_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        builder.end_compound(__handle);
-        Ok(())
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -10360,6 +10520,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 49u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("combinator"),
@@ -10408,9 +10570,9 @@ mod __cssl4parser_emit_impl {
             ::core::result::Result::Err(e) => {
                 <crate::runtime::css_l4::CssStructBuilder<
                     '_,
-                > as crate::runtime::StructBuilder>::end_compound(
+                > as crate::runtime::StructBuilder>::rollback(
                     builder,
-                    __wrap_handle,
+                    __wrap_checkpoint,
                 );
                 ::core::result::Result::Err(e)
             }
@@ -10447,6 +10609,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __nthFunctionName_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 50u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("nthFunctionName"),
@@ -10514,6 +10678,7 @@ mod __cssl4parser_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -10534,14 +10699,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -10561,14 +10731,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -10626,6 +10801,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -10646,14 +10822,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -10673,9 +10854,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -10688,9 +10873,13 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -10703,14 +10892,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __nthFunctionName_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __nthFunctionName_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -10813,48 +11009,65 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __dispatch_checkpoint = builder.checkpoint();
         let __handle = builder.begin_compound(&__layout);
-        'try_branches: loop {
-            {
-                let at = *p;
-                let end = at + 4usize;
-                if input.len() >= end && input[at..end] == [102u8, 114u8, 111u8, 109u8] {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(0u32);
-                    break 'try_branches;
+        let __dispatch_result: ::core::result::Result<
+            (),
+            crate::runtime::tape::DtaError,
+        > = (|| {
+            'try_branches: loop {
+                {
+                    let at = *p;
+                    let end = at + 4usize;
+                    if input.len() >= end
+                        && input[at..end] == [102u8, 114u8, 111u8, 109u8]
+                    {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(0u32);
+                        break 'try_branches;
+                    }
                 }
-            }
-            {
-                let at = *p;
-                let end = at + 2usize;
-                if input.len() >= end && input[at..end] == [116u8, 111u8] {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(1u32);
-                    break 'try_branches;
+                {
+                    let at = *p;
+                    let end = at + 2usize;
+                    if input.len() >= end && input[at..end] == [116u8, 111u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(1u32);
+                        break 'try_branches;
+                    }
                 }
-            }
-            {
-                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
-                    "\\d+%",
-                    input,
-                    *p,
-                ) {
-                    *p += match_len as usize;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(2u32);
-                    break 'try_branches;
+                {
+                    if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                        "\\d+%",
+                        input,
+                        *p,
+                    ) {
+                        *p += match_len as usize;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(2u32);
+                        break 'try_branches;
+                    }
                 }
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
+            ::core::result::Result::Ok(())
+        })();
+        match __dispatch_result {
+            ::core::result::Result::Ok(()) => {
+                builder.end_compound(__handle);
+                Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__dispatch_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        builder.end_compound(__handle);
-        Ok(())
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -10887,6 +11100,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __percentage_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 53u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("percentage"),
@@ -10936,11 +11151,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __percentage_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __percentage_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -10973,6 +11198,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __funcBody_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 54u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("funcBody"),
@@ -10996,6 +11223,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -11003,6 +11231,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -11038,14 +11267,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -11061,14 +11295,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -11091,9 +11330,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -11108,12 +11351,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -11129,11 +11375,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __funcBody_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __funcBody_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -11162,6 +11418,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -11200,11 +11459,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -11230,6 +11501,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 56u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("relativeLengthUnit"),
@@ -11252,6 +11525,7 @@ mod __cssl4parser_emit_impl {
                     99u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_keyword_CssL4Parser_fontLengthUnit(
                                 input,
                                 p,
@@ -11261,15 +11535,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_containerLengthUnit(
                                 input,
                                 p,
@@ -11278,16 +11555,19 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                     }
                     100u8 => {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_keyword_CssL4Parser_viewportLengthUnit(
                             input,
                             p,
@@ -11297,15 +11577,18 @@ mod __cssl4parser_emit_impl {
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 1u32;
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     101u8 => {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_keyword_CssL4Parser_fontLengthUnit(
                             input,
                             p,
@@ -11315,15 +11598,18 @@ mod __cssl4parser_emit_impl {
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 0u32;
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     105u8 => {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_keyword_CssL4Parser_fontLengthUnit(
                             input,
                             p,
@@ -11333,16 +11619,19 @@ mod __cssl4parser_emit_impl {
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 0u32;
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     108u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_keyword_CssL4Parser_fontLengthUnit(
                                 input,
                                 p,
@@ -11352,15 +11641,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_keyword_CssL4Parser_viewportLengthUnit(
                                 input,
                                 p,
@@ -11370,16 +11662,19 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                     }
                     114u8 => {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_keyword_CssL4Parser_fontLengthUnit(
                             input,
                             p,
@@ -11389,15 +11684,18 @@ mod __cssl4parser_emit_impl {
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 0u32;
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     115u8 => {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_keyword_CssL4Parser_viewportLengthUnit(
                             input,
                             p,
@@ -11407,15 +11705,18 @@ mod __cssl4parser_emit_impl {
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 1u32;
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     118u8 => {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_keyword_CssL4Parser_viewportLengthUnit(
                             input,
                             p,
@@ -11425,10 +11726,12 @@ mod __cssl4parser_emit_impl {
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 1u32;
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
@@ -11461,9 +11764,9 @@ mod __cssl4parser_emit_impl {
             ::core::result::Result::Err(e) => {
                 <crate::runtime::css_l4::CssStructBuilder<
                     '_,
-                > as crate::runtime::StructBuilder>::end_compound(
+                > as crate::runtime::StructBuilder>::rollback(
                     builder,
-                    __wrap_handle,
+                    __wrap_checkpoint,
                 );
                 ::core::result::Result::Err(e)
             }
@@ -11500,6 +11803,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __angle_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 57u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("angle"),
@@ -11546,11 +11851,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __angle_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __angle_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -11583,6 +11898,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __time_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 58u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("time"),
@@ -11623,11 +11940,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __time_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __time_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -11660,6 +11987,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __frequency_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 59u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("frequency"),
@@ -11709,11 +12038,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __frequency_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __frequency_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -11746,6 +12085,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __resolution_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 60u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("resolution"),
@@ -11795,11 +12136,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __resolution_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __resolution_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -11832,6 +12183,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __flex_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 61u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("flex"),
@@ -11872,11 +12225,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __flex_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __flex_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -11909,6 +12272,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __customPropertyDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 62u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("customPropertyDecl"),
@@ -11989,6 +12354,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -12008,12 +12374,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -12029,14 +12398,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __customPropertyDecl_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __customPropertyDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -12069,6 +12445,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __genericDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 63u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("genericDecl"),
@@ -12153,6 +12531,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -12172,12 +12551,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -12194,11 +12576,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __genericDecl_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __genericDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -12231,6 +12623,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __nsPrefix_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 64u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("nsPrefix"),
@@ -12247,6 +12641,7 @@ mod __cssl4parser_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -12264,14 +12659,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -12292,9 +12692,13 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -12319,11 +12723,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __nsPrefix_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __nsPrefix_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -12356,6 +12770,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __classSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 65u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("classSelector"),
@@ -12391,14 +12807,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __classSelector_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __classSelector_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -12427,6 +12850,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -12495,11 +12921,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -12528,6 +12966,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -12575,11 +13016,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -12612,6 +13065,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __simplePseudoElement_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 68u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("simplePseudoElement"),
@@ -12647,14 +13102,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __simplePseudoElement_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __simplePseudoElement_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -12683,6 +13145,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -12749,11 +13214,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -12786,6 +13263,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __simplePseudoClass_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 70u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("simplePseudoClass"),
@@ -12821,14 +13300,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __simplePseudoClass_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __simplePseudoClass_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -12857,6 +13343,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -12901,11 +13390,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -12938,6 +13439,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __keyframeSel_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 72u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("keyframeSel"),
@@ -12970,6 +13473,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -13007,12 +13511,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -13028,11 +13535,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __keyframeSel_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __keyframeSel_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -13061,6 +13578,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -13093,11 +13613,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -13130,6 +13662,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __mediaFeature_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 74u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mediaFeature"),
@@ -13178,6 +13712,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -13232,12 +13767,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -13265,14 +13803,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __mediaFeature_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __mediaFeature_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -13305,6 +13850,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __wqName_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 75u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("wqName"),
@@ -13328,6 +13875,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -13345,12 +13893,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -13372,11 +13923,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __wqName_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __wqName_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -13409,6 +13970,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __attrSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 76u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("attrSelector"),
@@ -13443,6 +14006,7 @@ mod __cssl4parser_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -13486,14 +14050,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -13514,14 +14083,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -13552,14 +14126,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -13590,9 +14169,13 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -13615,6 +14198,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -13654,6 +14238,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -13669,14 +14254,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -13697,9 +14287,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -13724,6 +14318,7 @@ mod __cssl4parser_emit_impl {
                                     if input.get(*p).is_none() {
                                         break;
                                     }
+                                    let __iter_builder_checkpoint = builder.checkpoint();
                                     let __iter_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -13748,12 +14343,15 @@ mod __cssl4parser_emit_impl {
                                     match __iter_result {
                                         Ok(()) => {
                                             if *p == __iter_save_p {
+                                                builder.rollback(__iter_builder_checkpoint);
                                                 break;
                                             }
+                                            builder.commit(__iter_builder_checkpoint);
                                             __iter_count += 1;
                                         }
                                         Err(_) => {
                                             *p = __iter_save_p;
+                                            builder.rollback(__iter_builder_checkpoint);
                                             break;
                                         }
                                     }
@@ -13771,12 +14369,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -13804,14 +14405,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __attrSelector_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __attrSelector_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -13840,6 +14448,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -13903,11 +14514,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -13936,6 +14559,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -13999,11 +14625,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -14036,6 +14674,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __length_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 79u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("length"),
@@ -14065,6 +14705,7 @@ mod __cssl4parser_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -14089,14 +14730,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -14117,9 +14763,13 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -14132,11 +14782,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __length_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __length_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -14169,6 +14829,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __mediaNot_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 80u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mediaNot"),
@@ -14216,11 +14878,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __mediaNot_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __mediaNot_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -14253,6 +14925,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __mediaAnd_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 81u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mediaAnd"),
@@ -14295,6 +14969,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -14343,12 +15018,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -14364,11 +15042,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __mediaAnd_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __mediaAnd_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -14401,6 +15089,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __mediaOr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 82u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mediaOr"),
@@ -14443,6 +15133,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -14489,12 +15180,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -14510,11 +15204,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __mediaOr_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __mediaOr_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -14540,6 +15244,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -14550,39 +15255,49 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
                 match parse_flat_CssL4Parser_mediaNot(input, p, state, builder) {
                     ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
                         break 'try_branches;
                     }
                     ::core::result::Result::Err(_) => {
                         *p = attempt_p;
+                        builder.rollback(attempt_builder);
                     }
                 }
             }
             {
                 let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
                 match parse_flat_CssL4Parser_mediaAnd(input, p, state, builder) {
                     ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
                         break 'try_branches;
                     }
                     ::core::result::Result::Err(_) => {
                         *p = attempt_p;
+                        builder.rollback(attempt_builder);
                     }
                 }
             }
             {
                 let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
                 match parse_flat_CssL4Parser_mediaOr(input, p, state, builder) {
                     ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
                         break 'try_branches;
                     }
                     ::core::result::Result::Err(_) => {
                         *p = attempt_p;
+                        builder.rollback(attempt_builder);
                     }
                 }
             }
             {
                 let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
                 match parse_keyword_CssL4Parser_mediaInParens(
                     input,
                     p,
@@ -14591,10 +15306,12 @@ mod __cssl4parser_emit_impl {
                     builder,
                 ) {
                     ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
                         break 'try_branches;
                     }
                     ::core::result::Result::Err(_) => {
                         *p = attempt_p;
+                        builder.rollback(attempt_builder);
                     }
                 }
             }
@@ -14634,15 +15351,18 @@ mod __cssl4parser_emit_impl {
             40u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [40u8] {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_flat_CssL4Parser_mediaFeature(input, p, state, builder)
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -14699,31 +15419,49 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __dispatch_checkpoint = builder.checkpoint();
         let __handle = builder.begin_compound(&__layout);
-        'try_branches: loop {
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_wqName(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(0u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
+        let __dispatch_result: ::core::result::Result<
+            (),
+            crate::runtime::tape::DtaError,
+        > = (|| {
+            'try_branches: loop {
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_flat_CssL4Parser_wqName(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(0u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
                     }
                 }
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
+            ::core::result::Result::Ok(())
+        })();
+        match __dispatch_result {
+            ::core::result::Result::Ok(()) => {
+                builder.end_compound(__handle);
+                Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__dispatch_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        builder.end_compound(__handle);
-        Ok(())
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -14752,6 +15490,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -14854,11 +15595,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -14884,6 +15637,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 87u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("valueUnit"),
@@ -14906,6 +15661,7 @@ mod __cssl4parser_emit_impl {
                     43u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_length(
                                 input,
                                 p,
@@ -14914,15 +15670,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_angle(
                                 input,
                                 p,
@@ -14931,27 +15690,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_time(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_frequency(
                                 input,
                                 p,
@@ -14960,15 +15725,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_resolution(
                                 input,
                                 p,
@@ -14977,27 +15745,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_flex(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -15006,15 +15780,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -15023,10 +15800,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 7u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -15034,6 +15813,7 @@ mod __cssl4parser_emit_impl {
                     45u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_length(
                                 input,
                                 p,
@@ -15042,15 +15822,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_angle(
                                 input,
                                 p,
@@ -15059,27 +15842,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_time(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_frequency(
                                 input,
                                 p,
@@ -15088,15 +15877,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_resolution(
                                 input,
                                 p,
@@ -15105,27 +15897,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_flex(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -15134,15 +15932,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -15151,10 +15952,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 7u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -15162,6 +15965,7 @@ mod __cssl4parser_emit_impl {
                     46u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_length(
                                 input,
                                 p,
@@ -15170,15 +15974,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_angle(
                                 input,
                                 p,
@@ -15187,27 +15994,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_time(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_frequency(
                                 input,
                                 p,
@@ -15216,15 +16029,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_resolution(
                                 input,
                                 p,
@@ -15233,27 +16049,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_flex(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -15262,15 +16084,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -15279,10 +16104,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 7u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -15290,6 +16117,7 @@ mod __cssl4parser_emit_impl {
                     48u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_length(
                                 input,
                                 p,
@@ -15298,15 +16126,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_angle(
                                 input,
                                 p,
@@ -15315,27 +16146,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_time(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_frequency(
                                 input,
                                 p,
@@ -15344,15 +16181,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_resolution(
                                 input,
                                 p,
@@ -15361,27 +16201,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_flex(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -15390,15 +16236,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -15407,10 +16256,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 7u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -15418,6 +16269,7 @@ mod __cssl4parser_emit_impl {
                     49u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_length(
                                 input,
                                 p,
@@ -15426,15 +16278,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_angle(
                                 input,
                                 p,
@@ -15443,27 +16298,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_time(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_frequency(
                                 input,
                                 p,
@@ -15472,15 +16333,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_resolution(
                                 input,
                                 p,
@@ -15489,27 +16353,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_flex(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -15518,15 +16388,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -15535,10 +16408,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 7u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -15546,6 +16421,7 @@ mod __cssl4parser_emit_impl {
                     50u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_length(
                                 input,
                                 p,
@@ -15554,15 +16430,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_angle(
                                 input,
                                 p,
@@ -15571,27 +16450,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_time(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_frequency(
                                 input,
                                 p,
@@ -15600,15 +16485,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_resolution(
                                 input,
                                 p,
@@ -15617,27 +16505,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_flex(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -15646,15 +16540,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -15663,10 +16560,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 7u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -15674,6 +16573,7 @@ mod __cssl4parser_emit_impl {
                     51u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_length(
                                 input,
                                 p,
@@ -15682,15 +16582,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_angle(
                                 input,
                                 p,
@@ -15699,27 +16602,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_time(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_frequency(
                                 input,
                                 p,
@@ -15728,15 +16637,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_resolution(
                                 input,
                                 p,
@@ -15745,27 +16657,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_flex(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -15774,15 +16692,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -15791,10 +16712,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 7u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -15802,6 +16725,7 @@ mod __cssl4parser_emit_impl {
                     52u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_length(
                                 input,
                                 p,
@@ -15810,15 +16734,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_angle(
                                 input,
                                 p,
@@ -15827,27 +16754,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_time(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_frequency(
                                 input,
                                 p,
@@ -15856,15 +16789,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_resolution(
                                 input,
                                 p,
@@ -15873,27 +16809,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_flex(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -15902,15 +16844,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -15919,10 +16864,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 7u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -15930,6 +16877,7 @@ mod __cssl4parser_emit_impl {
                     53u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_length(
                                 input,
                                 p,
@@ -15938,15 +16886,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_angle(
                                 input,
                                 p,
@@ -15955,27 +16906,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_time(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_frequency(
                                 input,
                                 p,
@@ -15984,15 +16941,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_resolution(
                                 input,
                                 p,
@@ -16001,27 +16961,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_flex(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -16030,15 +16996,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -16047,10 +17016,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 7u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -16058,6 +17029,7 @@ mod __cssl4parser_emit_impl {
                     54u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_length(
                                 input,
                                 p,
@@ -16066,15 +17038,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_angle(
                                 input,
                                 p,
@@ -16083,27 +17058,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_time(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_frequency(
                                 input,
                                 p,
@@ -16112,15 +17093,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_resolution(
                                 input,
                                 p,
@@ -16129,27 +17113,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_flex(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -16158,15 +17148,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -16175,10 +17168,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 7u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -16186,6 +17181,7 @@ mod __cssl4parser_emit_impl {
                     55u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_length(
                                 input,
                                 p,
@@ -16194,15 +17190,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_angle(
                                 input,
                                 p,
@@ -16211,27 +17210,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_time(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_frequency(
                                 input,
                                 p,
@@ -16240,15 +17245,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_resolution(
                                 input,
                                 p,
@@ -16257,27 +17265,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_flex(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -16286,15 +17300,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -16303,10 +17320,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 7u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -16314,6 +17333,7 @@ mod __cssl4parser_emit_impl {
                     56u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_length(
                                 input,
                                 p,
@@ -16322,15 +17342,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_angle(
                                 input,
                                 p,
@@ -16339,27 +17362,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_time(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_frequency(
                                 input,
                                 p,
@@ -16368,15 +17397,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_resolution(
                                 input,
                                 p,
@@ -16385,27 +17417,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_flex(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -16414,15 +17452,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -16431,10 +17472,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 7u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -16442,6 +17485,7 @@ mod __cssl4parser_emit_impl {
                     57u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_length(
                                 input,
                                 p,
@@ -16450,15 +17494,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_angle(
                                 input,
                                 p,
@@ -16467,27 +17514,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_time(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_frequency(
                                 input,
                                 p,
@@ -16496,15 +17549,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_resolution(
                                 input,
                                 p,
@@ -16513,27 +17569,33 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_flex(input, p, state, builder) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -16542,15 +17604,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -16559,10 +17624,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 7u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -16596,9 +17663,9 @@ mod __cssl4parser_emit_impl {
             ::core::result::Result::Err(e) => {
                 <crate::runtime::css_l4::CssStructBuilder<
                     '_,
-                > as crate::runtime::StructBuilder>::end_compound(
+                > as crate::runtime::StructBuilder>::rollback(
                     builder,
-                    __wrap_handle,
+                    __wrap_checkpoint,
                 );
                 ::core::result::Result::Err(e)
             }
@@ -16635,6 +17702,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __mediaQuery_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 88u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mediaQuery"),
@@ -16661,6 +17730,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -16687,12 +17757,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -16717,6 +17790,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -16743,12 +17817,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -16773,6 +17850,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -16821,12 +17899,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -16842,11 +17923,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __mediaQuery_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __mediaQuery_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -16875,6 +17966,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -16916,11 +18010,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -16949,6 +18055,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -16992,11 +18101,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -17025,6 +18146,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -17066,11 +18190,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -17099,6 +18235,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -17140,11 +18279,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -17177,6 +18328,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __nthPseudo_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 93u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("nthPseudo"),
@@ -17239,6 +18392,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -17271,12 +18425,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -17304,11 +18461,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __nthPseudo_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __nthPseudo_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -17341,6 +18508,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __relativeSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 94u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("relativeSelector"),
@@ -17367,6 +18536,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -17379,12 +18549,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -17406,14 +18579,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __relativeSelector_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __relativeSelector_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -17446,6 +18626,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __relativeSelectorList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 95u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("relativeSelectorList"),
@@ -17478,6 +18660,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -17515,12 +18698,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -17536,14 +18722,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __relativeSelectorList_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __relativeSelectorList_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -17576,6 +18769,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __selectorList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 96u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("selectorList"),
@@ -17608,6 +18803,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -17645,12 +18841,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -17666,14 +18865,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __selectorList_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __selectorList_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -17709,6 +18915,7 @@ mod __cssl4parser_emit_impl {
                         ]
                 {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_highlightPseudo(
@@ -17719,10 +18926,12 @@ mod __cssl4parser_emit_impl {
                         )
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -17731,15 +18940,18 @@ mod __cssl4parser_emit_impl {
                         == [58u8, 58u8, 115u8, 108u8, 111u8, 116u8, 116u8, 101u8, 100u8]
                 {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_slottedPseudo(input, p, state, builder)
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -17747,20 +18959,24 @@ mod __cssl4parser_emit_impl {
                     && input[*p..*p + 6usize] == [58u8, 58u8, 112u8, 97u8, 114u8, 116u8]
                 {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_partPseudo(input, p, state, builder)
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
                 if input.len() >= *p + 2usize && input[*p..*p + 2usize] == [58u8, 58u8] {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_flat_CssL4Parser_simplePseudoElement(
@@ -17771,10 +18987,12 @@ mod __cssl4parser_emit_impl {
                         )
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -17820,6 +19038,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -17864,11 +19085,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -17901,6 +19134,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __complexSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 99u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("complexSelector"),
@@ -17938,6 +19173,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -17963,12 +19199,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -17984,14 +19223,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __complexSelector_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __complexSelector_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -18024,15 +19270,18 @@ mod __cssl4parser_emit_impl {
                         == [58u8, 119u8, 104u8, 101u8, 114u8, 101u8]
                 {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_wherePseudo(input, p, state, builder)
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -18040,15 +19289,18 @@ mod __cssl4parser_emit_impl {
                     && input[*p..*p + 5usize] == [58u8, 108u8, 97u8, 110u8, 103u8]
                 {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_langPseudo(input, p, state, builder)
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -18056,15 +19308,18 @@ mod __cssl4parser_emit_impl {
                     && input[*p..*p + 4usize] == [58u8, 110u8, 111u8, 116u8]
                 {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_notPseudo(input, p, state, builder)
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -18072,15 +19327,18 @@ mod __cssl4parser_emit_impl {
                     && input[*p..*p + 4usize] == [58u8, 104u8, 97u8, 115u8]
                 {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_hasPseudo(input, p, state, builder)
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -18088,15 +19346,18 @@ mod __cssl4parser_emit_impl {
                     && input[*p..*p + 4usize] == [58u8, 100u8, 105u8, 114u8]
                 {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_dirPseudo(input, p, state, builder)
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -18104,34 +19365,41 @@ mod __cssl4parser_emit_impl {
                     && input[*p..*p + 3usize] == [58u8, 105u8, 115u8]
                 {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_isPseudo(input, p, state, builder)
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [58u8] {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_flat_CssL4Parser_nthPseudo(input, p, state, builder)
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [58u8] {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_flat_CssL4Parser_simplePseudoClass(
@@ -18142,10 +19410,12 @@ mod __cssl4parser_emit_impl {
                         )
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -18190,79 +19460,128 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __unordered_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
-        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-        let mut __iters: u32 = 0;
-        'unordered: loop {
-            let __byte = match input.get(*p).copied() {
-                Some(b) => b,
-                None => break 'unordered,
-            };
-            match __byte {
-                91 => {
-                    let _ = ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_flat_CssL4Parser_attrSelector(input, p, state, builder)
-                    })?;
-                    __iters += 1;
-                }
-                42 | 45 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77
-                | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 92
-                | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105 | 106 | 107 | 108
-                | 109 | 110 | 111 | 112 | 113 | 114 | 115 | 116 | 117 | 118 | 119 | 120
-                | 121 | 122 => {
-                    let _ = ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_altdispatch_CssL4Parser_typeSelector(
-                            input,
-                            p,
-                            state,
-                            builder,
-                        )
-                    })?;
-                    __iters += 1;
-                }
-                46 => {
-                    let _ = ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_flat_CssL4Parser_classSelector(input, p, state, builder)
-                    })?;
-                    __iters += 1;
-                }
-                35 => {
-                    let _ = ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_hregex_CssL4Parser_hash(input, p, state, builder)
-                    })?;
-                    __iters += 1;
-                }
-                58 => {
-                    let _ = ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                        parse_wrap_CssL4Parser_colonSelector(input, p, state, builder)
-                    })?;
-                    __iters += 1;
-                }
-                _ => break 'unordered,
-            }
+        let __unordered_result: ::core::result::Result<
+            (),
+            crate::runtime::tape::DtaError,
+        > = (|| {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+            let mut __iters: u32 = 0;
+            'unordered: loop {
+                let __byte = match input.get(*p).copied() {
+                    Some(b) => b,
+                    None => break 'unordered,
+                };
+                match __byte {
+                    91 => {
+                        let _ = ({
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            parse_flat_CssL4Parser_attrSelector(input, p, state, builder)
+                        })?;
+                        __iters += 1;
+                    }
+                    42 | 45 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
+                    | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90
+                    | 92 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105 | 106
+                    | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115 | 116 | 117
+                    | 118 | 119 | 120 | 121 | 122 => {
+                        let _ = ({
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            parse_altdispatch_CssL4Parser_typeSelector(
+                                input,
+                                p,
+                                state,
+                                builder,
+                            )
+                        })?;
+                        __iters += 1;
+                    }
+                    46 => {
+                        let _ = ({
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            parse_flat_CssL4Parser_classSelector(
+                                input,
+                                p,
+                                state,
+                                builder,
+                            )
+                        })?;
+                        __iters += 1;
+                    }
+                    35 => {
+                        let _ = ({
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            parse_hregex_CssL4Parser_hash(input, p, state, builder)
+                        })?;
+                        __iters += 1;
+                    }
+                    58 => {
+                        let _ = ({
+                            let _ = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            parse_wrap_CssL4Parser_colonSelector(
+                                input,
+                                p,
+                                state,
+                                builder,
+                            )
+                        })?;
+                        __iters += 1;
+                    }
+                    _ => break 'unordered,
+                }
+                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+            }
+            if __iters < 1 {
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            ::core::result::Result::Ok(())
+        })();
+        match __unordered_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __unordered_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
         }
-        if __iters < 1 {
-            <crate::runtime::css_l4::CssStructBuilder<
-                'p,
-            > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
-        }
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -18288,6 +19607,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -18297,6 +19617,7 @@ mod __cssl4parser_emit_impl {
                 58u8 => {
                     {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_keyword_CssL4Parser_pseudoElement(
                             input,
                             p,
@@ -18305,15 +19626,18 @@ mod __cssl4parser_emit_impl {
                             builder,
                         ) {
                             ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_keyword_CssL4Parser_pseudoClass(
                             input,
                             p,
@@ -18322,10 +19646,12 @@ mod __cssl4parser_emit_impl {
                             builder,
                         ) {
                             ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
@@ -18621,6 +19947,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -18662,11 +19991,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -18695,6 +20036,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -18761,11 +20105,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -18794,6 +20150,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -18860,11 +20219,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -18893,6 +20264,9 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __arglist_checkpoint = <crate::runtime::css_l4::CssStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::checkpoint(builder);
         let __handle = <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
@@ -18962,11 +20336,23 @@ mod __cssl4parser_emit_impl {
             *p = end;
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        __body_result?;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+                Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    'p,
+                > as crate::runtime::StructBuilder>::rollback(
+                    builder,
+                    __arglist_checkpoint,
+                );
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
@@ -19126,143 +20512,182 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __dispatch_checkpoint = builder.checkpoint();
         let __handle = builder.begin_compound(&__layout);
-        'try_branches: loop {
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_arglist_CssL4Parser_calcFunction(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(0u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_arglist_CssL4Parser_minFunction(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(1u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
+        let __dispatch_result: ::core::result::Result<
+            (),
+            crate::runtime::tape::DtaError,
+        > = (|| {
+            'try_branches: loop {
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_arglist_CssL4Parser_calcFunction(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(0u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
                     }
                 }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_arglist_CssL4Parser_maxFunction(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(2u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_arglist_CssL4Parser_clampFunction(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(3u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_arglist_CssL4Parser_minFunction(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(1u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
                     }
                 }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_wrap_CssL4Parser_valueUnit(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(4u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let __first = __shape_support_CssL4Parser::skip_space(
-                            input,
-                            p,
-                            state,
-                        )
-                        .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_number_CssL4Parser_number(input, p, __first, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(5u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_arglist_CssL4Parser_maxFunction(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(2u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
                     }
                 }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_arglist_CssL4Parser_varFunction(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(7u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_arglist_CssL4Parser_envFunction(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(8u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_arglist_CssL4Parser_clampFunction(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(3u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
                     }
                 }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_wrap_CssL4Parser_valueUnit(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(4u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let __first = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_number_CssL4Parser_number(input, p, __first, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(5u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_arglist_CssL4Parser_varFunction(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(7u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_arglist_CssL4Parser_envFunction(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(8u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
+            ::core::result::Result::Ok(())
+        })();
+        match __dispatch_result {
+            ::core::result::Result::Ok(()) => {
+                builder.end_compound(__handle);
+                Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__dispatch_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        builder.end_compound(__handle);
-        Ok(())
     }
     /// AZ-I.W2.RB — per-grammar AltDispatch-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -19295,251 +20720,315 @@ mod __cssl4parser_emit_impl {
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
+        let __dispatch_checkpoint = builder.checkpoint();
         let __handle = builder.begin_compound(&__layout);
-        'try_branches: loop {
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_arglist_CssL4Parser_varFunction(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(0u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_arglist_CssL4Parser_calcFunction(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(1u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
+        let __dispatch_result: ::core::result::Result<
+            (),
+            crate::runtime::tape::DtaError,
+        > = (|| {
+            'try_branches: loop {
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_arglist_CssL4Parser_varFunction(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(0u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
                     }
                 }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_arglist_CssL4Parser_urlFunction(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(2u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_arglist_CssL4Parser_colorFn(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(3u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_arglist_CssL4Parser_calcFunction(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(1u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
                     }
                 }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_arglist_CssL4Parser_genericFunction(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(4u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_wrap_CssL4Parser_valueUnit(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(5u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_arglist_CssL4Parser_urlFunction(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(2u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
                     }
                 }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_arglist_CssL4Parser_colorFn(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(3u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_arglist_CssL4Parser_genericFunction(
                             input,
                             p,
                             state,
+                            builder,
                         )
-                        .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_number_CssL4Parser_number(input, p, __first, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(6u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_altdispatch_CssL4Parser_namedColor(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(7u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(4u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
                     }
                 }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_wrap_CssL4Parser_valueUnit(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(5u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let __first = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_number_CssL4Parser_number(input, p, __first, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(6u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_altdispatch_CssL4Parser_namedColor(
                             input,
                             p,
                             state,
+                            builder,
                         )
-                        .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_globalKeyword(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                    )
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(8u32);
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(7u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let __first = __shape_support_CssL4Parser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_globalKeyword(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            builder,
+                        )
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(8u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_hregex_CssL4Parser_dashIdent(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(9u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_hregex_CssL4Parser_ident(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(10u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [44u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(11u32);
                         break 'try_branches;
                     }
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
                 }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_hregex_CssL4Parser_dashIdent(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(9u32);
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [47u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(12u32);
                         break 'try_branches;
                     }
-                    Err(_) => {
-                        *p = attempt_p;
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_flat_CssL4Parser_hex(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(13u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
                     }
                 }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_hregex_CssL4Parser_ident(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(10u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() >= end && input[at..end] == [44u8] {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(11u32);
-                    break 'try_branches;
-                }
-            }
-            {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() >= end && input[at..end] == [47u8] {
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    builder.push_branch_tag(12u32);
-                    break 'try_branches;
-                }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_flat_CssL4Parser_hex(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(13u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                        parse_hregex_CssL4Parser_cssString(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(14u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
                     }
                 }
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-                    parse_hregex_CssL4Parser_cssString(input, p, state, builder)
-                } {
-                    Ok(_) => {
-                        builder.push_branch_tag(14u32);
-                        break 'try_branches;
-                    }
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
+            ::core::result::Result::Ok(())
+        })();
+        match __dispatch_result {
+            ::core::result::Result::Ok(()) => {
+                builder.end_compound(__handle);
+                Ok(())
             }
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__dispatch_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        builder.end_compound(__handle);
-        Ok(())
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -19572,6 +21061,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __colorDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 112u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("colorDecl"),
@@ -19631,6 +21122,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -19663,12 +21155,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -19699,6 +21194,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -19718,12 +21214,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -19739,11 +21238,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __colorDecl_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __colorDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -19776,6 +21285,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __sizeDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 113u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("sizeDecl"),
@@ -19832,6 +21343,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -19864,12 +21376,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -19900,6 +21415,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -19919,12 +21435,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -19940,11 +21459,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __sizeDecl_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __sizeDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -19977,6 +21506,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __spacingDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 114u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("spacingDecl"),
@@ -20036,6 +21567,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -20068,12 +21600,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -20104,6 +21639,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -20123,12 +21659,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -20144,11 +21683,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __spacingDecl_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __spacingDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -20181,6 +21730,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __fontDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 115u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("fontDecl"),
@@ -20237,6 +21788,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -20249,6 +21801,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -20273,14 +21826,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -20301,9 +21859,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -20323,12 +21885,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -20359,6 +21924,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -20378,12 +21944,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -20399,11 +21968,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __fontDecl_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __fontDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -20436,6 +22015,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __bgDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 116u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("bgDecl"),
@@ -20479,6 +22060,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -20511,12 +22093,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -20547,6 +22132,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -20566,12 +22152,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -20587,11 +22176,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __bgDecl_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __bgDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -20624,6 +22223,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __transformDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 117u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("transformDecl"),
@@ -20683,6 +22284,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -20715,12 +22317,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -20751,6 +22356,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -20770,12 +22376,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -20791,14 +22400,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __transformDecl_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __transformDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -20831,6 +22447,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __transitionDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 118u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("transitionDecl"),
@@ -20890,6 +22508,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -20922,12 +22541,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -20958,6 +22580,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -20977,12 +22600,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -20998,14 +22624,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __transitionDecl_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __transitionDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -21038,6 +22671,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __listTableDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 119u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("listTableDecl"),
@@ -21097,6 +22732,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -21129,12 +22765,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -21165,6 +22804,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -21184,12 +22824,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -21205,14 +22848,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __listTableDecl_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __listTableDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -21245,6 +22895,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __displayDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 120u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("displayDecl"),
@@ -21299,6 +22951,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -21311,6 +22964,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -21335,14 +22989,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -21363,9 +23022,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -21385,12 +23048,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -21421,6 +23087,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -21440,12 +23107,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -21461,11 +23131,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __displayDecl_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __displayDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -21498,6 +23178,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __positionDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 121u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("positionDecl"),
@@ -21553,6 +23235,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -21565,6 +23248,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -21589,14 +23273,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -21617,9 +23306,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -21639,12 +23332,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -21675,6 +23371,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -21694,12 +23391,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -21715,14 +23415,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __positionDecl_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __positionDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -21755,6 +23462,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __overflowDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 122u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("overflowDecl"),
@@ -21870,6 +23579,7 @@ mod __cssl4parser_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -21887,6 +23597,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -21904,14 +23615,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -21929,9 +23645,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -21944,22 +23664,31 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
                         > = (|| { Ok(()) })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -21995,6 +23724,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -22007,6 +23737,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -22031,14 +23762,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -22059,9 +23795,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -22081,12 +23821,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -22117,6 +23860,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -22136,12 +23880,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -22157,14 +23904,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __overflowDecl_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __overflowDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -22197,6 +23951,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __visibilityDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 123u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("visibilityDecl"),
@@ -22255,6 +24011,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -22267,6 +24024,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -22291,14 +24049,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -22319,9 +24082,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -22341,12 +24108,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -22377,6 +24147,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -22396,12 +24167,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -22417,14 +24191,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __visibilityDecl_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __visibilityDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -22457,6 +24238,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __flexDirDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 124u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("flexDirDecl"),
@@ -22515,6 +24298,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -22527,6 +24311,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -22551,14 +24336,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -22579,9 +24369,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -22601,12 +24395,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -22637,6 +24434,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -22656,12 +24454,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -22677,11 +24478,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __flexDirDecl_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __flexDirDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -22714,6 +24525,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __flexWrapDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 125u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("flexWrapDecl"),
@@ -22769,6 +24582,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -22781,6 +24595,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -22805,14 +24620,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -22833,9 +24653,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -22855,12 +24679,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -22891,6 +24718,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -22910,12 +24738,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -22931,14 +24762,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __flexWrapDecl_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __flexWrapDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -22971,6 +24809,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __alignDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 126u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("alignDecl"),
@@ -22990,6 +24830,7 @@ mod __cssl4parser_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -23013,14 +24854,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -23108,6 +24954,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -23127,14 +24974,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -23154,9 +25006,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -23169,14 +25025,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -23244,6 +25105,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -23264,14 +25126,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -23291,14 +25158,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -23318,9 +25190,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -23333,9 +25209,13 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -23371,6 +25251,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -23383,6 +25264,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -23407,14 +25289,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -23435,9 +25322,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -23457,12 +25348,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -23493,6 +25387,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -23512,12 +25407,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -23533,11 +25431,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __alignDecl_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __alignDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -23570,6 +25478,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __flexNumDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 127u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("flexNumDecl"),
@@ -23589,6 +25499,7 @@ mod __cssl4parser_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -23609,14 +25520,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -23636,14 +25552,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -23701,6 +25622,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -23721,14 +25643,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -23748,9 +25675,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -23763,9 +25694,13 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -23801,6 +25736,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -23833,12 +25769,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -23869,6 +25808,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -23888,12 +25828,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -23909,11 +25852,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __flexNumDecl_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __flexNumDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -23946,6 +25899,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __fontSizeDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 128u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("fontSizeDecl"),
@@ -24001,6 +25956,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -24033,12 +25989,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -24069,6 +26028,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -24088,12 +26048,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -24109,14 +26072,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __fontSizeDecl_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __fontSizeDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -24149,6 +26119,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __fontWeightDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 129u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("fontWeightDecl"),
@@ -24207,6 +26179,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -24219,6 +26192,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -24243,14 +26217,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -24271,9 +26250,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -24293,12 +26276,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -24329,6 +26315,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -24348,12 +26335,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -24369,14 +26359,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __fontWeightDecl_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __fontWeightDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -24409,6 +26406,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __lineHeightDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 130u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("lineHeightDecl"),
@@ -24467,6 +26466,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -24499,12 +26499,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -24535,6 +26538,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -24554,12 +26558,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -24575,14 +26582,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __lineHeightDecl_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __lineHeightDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -24615,6 +26629,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __borderWidthDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 131u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("borderWidthDecl"),
@@ -24718,6 +26734,7 @@ mod __cssl4parser_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -24741,14 +26758,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -24772,14 +26794,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -24803,14 +26830,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -24833,14 +26865,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -24860,9 +26897,13 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -24898,6 +26939,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -24910,6 +26952,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -24934,14 +26977,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -24962,9 +27010,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -24984,12 +27036,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -25020,6 +27075,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -25039,12 +27095,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -25060,14 +27119,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __borderWidthDecl_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __borderWidthDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -25100,6 +27166,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __borderStyleDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 132u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("borderStyleDecl"),
@@ -25203,6 +27271,7 @@ mod __cssl4parser_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -25226,14 +27295,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -25257,14 +27331,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -25288,14 +27367,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -25318,14 +27402,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -25345,9 +27434,13 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -25383,6 +27476,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -25395,6 +27489,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -25419,14 +27514,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -25447,9 +27547,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -25469,12 +27573,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -25505,6 +27612,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -25524,12 +27632,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -25545,14 +27656,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __borderStyleDecl_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __borderStyleDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -25585,6 +27703,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __borderRadiusDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 133u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("borderRadiusDecl"),
@@ -25688,6 +27808,7 @@ mod __cssl4parser_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -25708,14 +27829,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -25763,6 +27889,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -25786,14 +27913,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -25817,9 +27949,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -25832,14 +27968,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -25917,6 +28058,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -25940,14 +28082,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -25971,9 +28118,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -25986,9 +28137,13 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -26024,6 +28179,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -26056,12 +28212,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -26092,6 +28251,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -26111,12 +28271,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -26132,14 +28295,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __borderRadiusDecl_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __borderRadiusDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -26172,6 +28342,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __opacityDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 134u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("opacityDecl"),
@@ -26226,6 +28398,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -26258,12 +28431,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -26294,6 +28470,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -26313,12 +28490,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -26334,11 +28514,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __opacityDecl_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __opacityDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -26371,6 +28561,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __textAlignDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 135u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("textAlignDecl"),
@@ -26429,6 +28621,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -26441,6 +28634,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -26465,14 +28659,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -26493,9 +28692,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -26515,12 +28718,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -26551,6 +28757,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -26570,12 +28777,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -26591,14 +28801,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __textAlignDecl_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __textAlignDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -26631,6 +28848,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __boxSizingDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 136u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("boxSizingDecl"),
@@ -26689,6 +28908,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -26701,6 +28921,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -26725,14 +28946,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -26753,9 +28979,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -26775,12 +29005,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -26811,6 +29044,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -26830,12 +29064,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -26851,14 +29088,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __boxSizingDecl_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __boxSizingDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -26891,6 +29135,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __cursorDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 137u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("cursorDecl"),
@@ -26945,6 +29191,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -26957,6 +29204,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -26981,14 +29229,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -27009,9 +29262,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -27031,12 +29288,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -27067,6 +29327,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -27086,12 +29347,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -27107,11 +29371,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __cursorDecl_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __cursorDecl_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -27137,6 +29411,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 138u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("declaration"),
@@ -27158,6 +29434,7 @@ mod __cssl4parser_emit_impl {
                 match first {
                     45u8 => {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_flat_CssL4Parser_customPropertyDecl(
                             input,
                             p,
@@ -27166,16 +29443,19 @@ mod __cssl4parser_emit_impl {
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 0u32;
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     97u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_colorDecl(
                                 input,
                                 p,
@@ -27184,15 +29464,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_transitionDecl(
                                 input,
                                 p,
@@ -27201,15 +29484,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 7u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_alignDecl(
                                 input,
                                 p,
@@ -27218,10 +29504,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 15u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -27229,6 +29517,7 @@ mod __cssl4parser_emit_impl {
                     98u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_colorDecl(
                                 input,
                                 p,
@@ -27237,15 +29526,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_sizeDecl(
                                 input,
                                 p,
@@ -27254,15 +29546,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_spacingDecl(
                                 input,
                                 p,
@@ -27271,15 +29566,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_bgDecl(
                                 input,
                                 p,
@@ -27288,15 +29586,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 5u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_transformDecl(
                                 input,
                                 p,
@@ -27305,15 +29606,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_listTableDecl(
                                 input,
                                 p,
@@ -27322,15 +29626,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 8u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_borderWidthDecl(
                                 input,
                                 p,
@@ -27339,15 +29646,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 20u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_borderStyleDecl(
                                 input,
                                 p,
@@ -27356,15 +29666,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 21u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_borderRadiusDecl(
                                 input,
                                 p,
@@ -27373,15 +29686,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 22u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_boxSizingDecl(
                                 input,
                                 p,
@@ -27390,10 +29706,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 25u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -27401,6 +29719,7 @@ mod __cssl4parser_emit_impl {
                     99u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_colorDecl(
                                 input,
                                 p,
@@ -27409,15 +29728,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_spacingDecl(
                                 input,
                                 p,
@@ -27426,15 +29748,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_listTableDecl(
                                 input,
                                 p,
@@ -27443,15 +29768,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 8u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_cursorDecl(
                                 input,
                                 p,
@@ -27460,16 +29788,19 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 26u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                     }
                     100u8 => {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_flat_CssL4Parser_displayDecl(
                             input,
                             p,
@@ -27478,15 +29809,18 @@ mod __cssl4parser_emit_impl {
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 9u32;
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     101u8 => {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_flat_CssL4Parser_listTableDecl(
                             input,
                             p,
@@ -27495,16 +29829,19 @@ mod __cssl4parser_emit_impl {
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 8u32;
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     102u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_sizeDecl(
                                 input,
                                 p,
@@ -27513,15 +29850,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_fontDecl(
                                 input,
                                 p,
@@ -27530,15 +29870,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_flexDirDecl(
                                 input,
                                 p,
@@ -27547,15 +29890,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 13u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_flexWrapDecl(
                                 input,
                                 p,
@@ -27564,15 +29910,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 14u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_flexNumDecl(
                                 input,
                                 p,
@@ -27581,15 +29930,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 16u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_fontSizeDecl(
                                 input,
                                 p,
@@ -27598,15 +29950,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 17u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_fontWeightDecl(
                                 input,
                                 p,
@@ -27615,16 +29970,19 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 18u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                     }
                     103u8 => {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_flat_CssL4Parser_spacingDecl(
                             input,
                             p,
@@ -27633,16 +29991,19 @@ mod __cssl4parser_emit_impl {
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 3u32;
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     104u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_sizeDecl(
                                 input,
                                 p,
@@ -27651,15 +30012,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_fontDecl(
                                 input,
                                 p,
@@ -27668,10 +30032,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -27679,6 +30045,7 @@ mod __cssl4parser_emit_impl {
                     105u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_sizeDecl(
                                 input,
                                 p,
@@ -27687,15 +30054,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_spacingDecl(
                                 input,
                                 p,
@@ -27704,16 +30074,19 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                     }
                     106u8 => {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_flat_CssL4Parser_alignDecl(
                             input,
                             p,
@@ -27722,16 +30095,19 @@ mod __cssl4parser_emit_impl {
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 15u32;
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     108u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_spacingDecl(
                                 input,
                                 p,
@@ -27740,15 +30116,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_fontDecl(
                                 input,
                                 p,
@@ -27757,15 +30136,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_listTableDecl(
                                 input,
                                 p,
@@ -27774,15 +30156,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 8u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_lineHeightDecl(
                                 input,
                                 p,
@@ -27791,10 +30176,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 19u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -27802,6 +30189,7 @@ mod __cssl4parser_emit_impl {
                     109u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_sizeDecl(
                                 input,
                                 p,
@@ -27810,15 +30198,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_spacingDecl(
                                 input,
                                 p,
@@ -27827,10 +30218,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -27838,6 +30231,7 @@ mod __cssl4parser_emit_impl {
                     111u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_colorDecl(
                                 input,
                                 p,
@@ -27846,15 +30240,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_fontDecl(
                                 input,
                                 p,
@@ -27863,15 +30260,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_overflowDecl(
                                 input,
                                 p,
@@ -27880,15 +30280,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 11u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_flexNumDecl(
                                 input,
                                 p,
@@ -27897,15 +30300,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 16u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_opacityDecl(
                                 input,
                                 p,
@@ -27914,10 +30320,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 23u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -27925,6 +30333,7 @@ mod __cssl4parser_emit_impl {
                     112u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_spacingDecl(
                                 input,
                                 p,
@@ -27933,15 +30342,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_transformDecl(
                                 input,
                                 p,
@@ -27950,15 +30362,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_positionDecl(
                                 input,
                                 p,
@@ -27967,16 +30382,19 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 10u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                     }
                     114u8 => {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_flat_CssL4Parser_spacingDecl(
                             input,
                             p,
@@ -27985,16 +30403,19 @@ mod __cssl4parser_emit_impl {
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 3u32;
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     116u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_colorDecl(
                                 input,
                                 p,
@@ -28003,15 +30424,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_spacingDecl(
                                 input,
                                 p,
@@ -28020,15 +30444,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 3u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_fontDecl(
                                 input,
                                 p,
@@ -28037,15 +30464,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_transformDecl(
                                 input,
                                 p,
@@ -28054,15 +30484,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 6u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_transitionDecl(
                                 input,
                                 p,
@@ -28071,15 +30504,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 7u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_listTableDecl(
                                 input,
                                 p,
@@ -28088,15 +30524,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 8u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_textAlignDecl(
                                 input,
                                 p,
@@ -28105,10 +30544,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 24u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -28116,6 +30557,7 @@ mod __cssl4parser_emit_impl {
                     118u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_listTableDecl(
                                 input,
                                 p,
@@ -28124,15 +30566,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 8u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_visibilityDecl(
                                 input,
                                 p,
@@ -28141,10 +30586,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 12u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -28152,6 +30599,7 @@ mod __cssl4parser_emit_impl {
                     119u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_sizeDecl(
                                 input,
                                 p,
@@ -28160,15 +30608,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 2u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_fontDecl(
                                 input,
                                 p,
@@ -28177,16 +30628,19 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 4u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                     }
                     122u8 => {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_flat_CssL4Parser_flexNumDecl(
                             input,
                             p,
@@ -28195,10 +30649,12 @@ mod __cssl4parser_emit_impl {
                         ) {
                             ::core::result::Result::Ok(_) => {
                                 __wrap_branch_idx = 16u32;
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
@@ -28206,13 +30662,16 @@ mod __cssl4parser_emit_impl {
                 }
                 {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_flat_CssL4Parser_genericDecl(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
                             __wrap_branch_idx = 27u32;
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
@@ -28243,9 +30702,9 @@ mod __cssl4parser_emit_impl {
             ::core::result::Result::Err(e) => {
                 <crate::runtime::css_l4::CssStructBuilder<
                     '_,
-                > as crate::runtime::StructBuilder>::end_compound(
+                > as crate::runtime::StructBuilder>::rollback(
                     builder,
-                    __wrap_handle,
+                    __wrap_checkpoint,
                 );
                 ::core::result::Result::Err(e)
             }
@@ -28282,6 +30741,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __keyframesRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 139u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("keyframesRule"),
@@ -28349,6 +30810,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -28401,6 +30863,7 @@ mod __cssl4parser_emit_impl {
                                     if input.get(*p).is_none() {
                                         break;
                                     }
+                                    let __iter_builder_checkpoint = builder.checkpoint();
                                     let __iter_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -28428,12 +30891,15 @@ mod __cssl4parser_emit_impl {
                                     match __iter_result {
                                         Ok(()) => {
                                             if *p == __iter_save_p {
+                                                builder.rollback(__iter_builder_checkpoint);
                                                 break;
                                             }
+                                            builder.commit(__iter_builder_checkpoint);
                                             __iter_count += 1;
                                         }
                                         Err(_) => {
                                             *p = __iter_save_p;
+                                            builder.rollback(__iter_builder_checkpoint);
                                             break;
                                         }
                                     }
@@ -28471,12 +30937,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -28505,14 +30974,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __keyframesRule_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __keyframesRule_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -28558,15 +31034,18 @@ mod __cssl4parser_emit_impl {
             123u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [123u8] {
                     let __ref_save_p = *p;
+                    let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_flat_CssL4Parser_ruleBlock(input, p, state, builder)
                     }) {
                         ::core::result::Result::Ok(__off) => {
+                            builder.commit(__ref_builder_checkpoint);
                             return ::core::result::Result::Ok(__off);
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
+                            builder.rollback(__ref_builder_checkpoint);
                         }
                     }
                 }
@@ -28616,6 +31095,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __genericAtRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 141u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("genericAtRule"),
@@ -28683,14 +31164,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __genericAtRule_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __genericAtRule_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -28723,6 +31211,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __ruleBlock_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 142u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("ruleBlock"),
@@ -28772,11 +31262,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __ruleBlock_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __ruleBlock_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -28809,6 +31309,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __qualifiedRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 143u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("qualifiedRule"),
@@ -28842,14 +31344,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __qualifiedRule_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __qualifiedRule_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -28882,6 +31391,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __mediaRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 144u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mediaRule"),
@@ -28929,11 +31440,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __mediaRule_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __mediaRule_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -28959,6 +31480,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -28967,18 +31489,22 @@ mod __cssl4parser_emit_impl {
             match first {
                 44u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_flat_CssL4Parser_mediaRule(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 64u8 => {
                     {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_flat_CssL4Parser_mediaRule(
                             input,
                             p,
@@ -28986,15 +31512,18 @@ mod __cssl4parser_emit_impl {
                             builder,
                         ) {
                             ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                     {
                         let attempt_p = *p;
+                        let attempt_builder = builder.checkpoint();
                         match parse_flat_CssL4Parser_genericAtRule(
                             input,
                             p,
@@ -29002,77 +31531,97 @@ mod __cssl4parser_emit_impl {
                             builder,
                         ) {
                             ::core::result::Result::Ok(_) => {
+                                builder.commit(attempt_builder);
                                 break 'try_branches;
                             }
                             ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
+                                builder.rollback(attempt_builder);
                             }
                         }
                     }
                 }
                 97u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_flat_CssL4Parser_mediaRule(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 110u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_flat_CssL4Parser_mediaRule(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 111u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_flat_CssL4Parser_mediaRule(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 112u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_flat_CssL4Parser_mediaRule(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 115u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_flat_CssL4Parser_mediaRule(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
                 123u8 => {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match parse_flat_CssL4Parser_mediaRule(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
+                            builder.commit(attempt_builder);
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
@@ -29080,12 +31629,15 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
                 match parse_flat_CssL4Parser_keyframesRule(input, p, state, builder) {
                     ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
                         break 'try_branches;
                     }
                     ::core::result::Result::Err(_) => {
                         *p = attempt_p;
+                        builder.rollback(attempt_builder);
                     }
                 }
             }
@@ -29121,6 +31673,7 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -29131,23 +31684,29 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
                 match parse_flat_CssL4Parser_qualifiedRule(input, p, state, builder) {
                     ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
                         break 'try_branches;
                     }
                     ::core::result::Result::Err(_) => {
                         *p = attempt_p;
+                        builder.rollback(attempt_builder);
                     }
                 }
             }
             {
                 let attempt_p = *p;
+                let attempt_builder = builder.checkpoint();
                 match parse_wrap_CssL4Parser_atRule(input, p, state, builder) {
                     ::core::result::Result::Ok(_) => {
+                        builder.commit(attempt_builder);
                         break 'try_branches;
                     }
                     ::core::result::Result::Err(_) => {
                         *p = attempt_p;
+                        builder.rollback(attempt_builder);
                     }
                 }
             }
@@ -29190,6 +31749,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __blockContent_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 147u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("blockContent"),
@@ -29216,6 +31777,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -29228,6 +31790,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -29243,14 +31806,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -29266,9 +31834,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -29288,12 +31860,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -29309,14 +31884,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __blockContent_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __blockContent_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -29349,6 +31931,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let __ruleList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 148u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("ruleList"),
@@ -29372,6 +31956,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -29399,12 +31984,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -29420,11 +32008,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __ruleList_handle);
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __ruleList_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RC — per-grammar Scalar-shape parse
     /// function (transparent-Ref body, struct-direct
@@ -29472,6 +32070,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 150u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__pattern_90b9f441ae92fa6c"),
@@ -29494,6 +32094,7 @@ mod __cssl4parser_emit_impl {
                     43u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -29502,15 +32103,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -29519,10 +32123,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -29530,6 +32136,7 @@ mod __cssl4parser_emit_impl {
                     45u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -29538,15 +32145,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -29555,10 +32165,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -29566,6 +32178,7 @@ mod __cssl4parser_emit_impl {
                     46u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -29574,15 +32187,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -29591,10 +32207,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -29602,6 +32220,7 @@ mod __cssl4parser_emit_impl {
                     48u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -29610,15 +32229,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -29627,10 +32249,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -29638,6 +32262,7 @@ mod __cssl4parser_emit_impl {
                     49u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -29646,15 +32271,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -29663,10 +32291,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -29674,6 +32304,7 @@ mod __cssl4parser_emit_impl {
                     50u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -29682,15 +32313,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -29699,10 +32333,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -29710,6 +32346,7 @@ mod __cssl4parser_emit_impl {
                     51u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -29718,15 +32355,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -29735,10 +32375,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -29746,6 +32388,7 @@ mod __cssl4parser_emit_impl {
                     52u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -29754,15 +32397,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -29771,10 +32417,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -29782,6 +32430,7 @@ mod __cssl4parser_emit_impl {
                     53u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -29790,15 +32439,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -29807,10 +32459,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -29818,6 +32472,7 @@ mod __cssl4parser_emit_impl {
                     54u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -29826,15 +32481,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -29843,10 +32501,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -29854,6 +32514,7 @@ mod __cssl4parser_emit_impl {
                     55u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -29862,15 +32523,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -29879,10 +32543,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -29890,6 +32556,7 @@ mod __cssl4parser_emit_impl {
                     56u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -29898,15 +32565,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -29915,10 +32585,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -29926,6 +32598,7 @@ mod __cssl4parser_emit_impl {
                     57u8 => {
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_flat_CssL4Parser_percentage(
                                 input,
                                 p,
@@ -29934,15 +32607,18 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 0u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
                         {
                             let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
                             match parse_number_CssL4Parser_number(
                                 input,
                                 p,
@@ -29951,10 +32627,12 @@ mod __cssl4parser_emit_impl {
                             ) {
                                 ::core::result::Result::Ok(_) => {
                                     __wrap_branch_idx = 1u32;
+                                    builder.commit(attempt_builder);
                                     break 'try_branches;
                                 }
                                 ::core::result::Result::Err(_) => {
                                     *p = attempt_p;
+                                    builder.rollback(attempt_builder);
                                 }
                             }
                         }
@@ -29988,9 +32666,9 @@ mod __cssl4parser_emit_impl {
             ::core::result::Result::Err(e) => {
                 <crate::runtime::css_l4::CssStructBuilder<
                     '_,
-                > as crate::runtime::StructBuilder>::end_compound(
+                > as crate::runtime::StructBuilder>::rollback(
                     builder,
-                    __wrap_handle,
+                    __wrap_checkpoint,
                 );
                 ::core::result::Result::Err(e)
             }
@@ -30027,6 +32705,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____calcFunction_cont_151_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 151u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__calcFunction_cont_151"),
@@ -30074,14 +32754,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____calcFunction_cont_151_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____calcFunction_cont_151_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -30114,6 +32801,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____minFunction_cont_152_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 152u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__minFunction_cont_152"),
@@ -30158,6 +32847,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -30185,12 +32875,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -30218,14 +32911,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____minFunction_cont_152_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____minFunction_cont_152_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -30258,6 +32958,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____maxFunction_cont_153_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 153u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__maxFunction_cont_153"),
@@ -30302,6 +33004,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -30329,12 +33032,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -30362,14 +33068,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____maxFunction_cont_153_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____maxFunction_cont_153_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -30402,6 +33115,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____clampFunction_cont_154_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 154u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__clampFunction_cont_154"),
@@ -30485,14 +33200,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____clampFunction_cont_154_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____clampFunction_cont_154_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -30525,6 +33247,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____varFunction_cont_155_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 155u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__varFunction_cont_155"),
@@ -30580,6 +33304,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -30607,12 +33332,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -30640,14 +33368,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____varFunction_cont_155_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____varFunction_cont_155_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -30680,6 +33415,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____envFunction_cont_156_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 156u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__envFunction_cont_156"),
@@ -30735,6 +33472,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -30762,12 +33500,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -30795,14 +33536,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____envFunction_cont_156_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____envFunction_cont_156_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -30835,6 +33583,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____varFunction_cont_157_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 157u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__varFunction_cont_157"),
@@ -30890,6 +33640,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -30917,12 +33668,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -30950,14 +33704,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____varFunction_cont_157_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____varFunction_cont_157_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -30990,6 +33751,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____calcFunction_cont_158_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 158u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__calcFunction_cont_158"),
@@ -31037,14 +33800,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____calcFunction_cont_158_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____calcFunction_cont_158_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -31077,6 +33847,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____urlFunction_cont_159_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 159u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__urlFunction_cont_159"),
@@ -31108,6 +33880,7 @@ mod __cssl4parser_emit_impl {
                 'try_branches: loop {
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -31123,14 +33896,19 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
                     {
                         let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -31153,9 +33931,13 @@ mod __cssl4parser_emit_impl {
                             Ok(())
                         })();
                         match __alt_result {
-                            Ok(()) => break 'try_branches,
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
                             Err(_) => {
                                 *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
                         }
                     }
@@ -31180,14 +33962,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____urlFunction_cont_159_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____urlFunction_cont_159_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -31220,6 +34009,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____genericFunction_cont_160_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 160u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__genericFunction_cont_160"),
@@ -31267,14 +34058,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____genericFunction_cont_160_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____genericFunction_cont_160_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -31307,6 +34105,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____colorDecl_cont_161_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 161u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__colorDecl_cont_161"),
@@ -31347,6 +34147,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -31379,12 +34180,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -31415,6 +34219,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -31434,12 +34239,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -31455,14 +34263,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____colorDecl_cont_161_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____colorDecl_cont_161_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -31495,6 +34310,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____sizeDecl_cont_162_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 162u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__sizeDecl_cont_162"),
@@ -31535,6 +34352,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -31567,12 +34385,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -31603,6 +34424,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -31622,12 +34444,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -31643,14 +34468,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____sizeDecl_cont_162_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____sizeDecl_cont_162_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -31683,6 +34515,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____spacingDecl_cont_163_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 163u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__spacingDecl_cont_163"),
@@ -31723,6 +34557,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -31755,12 +34590,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -31791,6 +34629,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -31810,12 +34649,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -31831,14 +34673,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____spacingDecl_cont_163_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____spacingDecl_cont_163_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -31871,6 +34720,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____fontDecl_cont_164_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 164u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__fontDecl_cont_164"),
@@ -31911,6 +34762,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -31923,6 +34775,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -31947,14 +34800,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -31975,9 +34833,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -31997,12 +34859,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -32033,6 +34898,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -32052,12 +34918,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -32073,14 +34942,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____fontDecl_cont_164_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____fontDecl_cont_164_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -32113,6 +34989,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____bgDecl_cont_165_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 165u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__bgDecl_cont_165"),
@@ -32153,6 +35031,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -32185,12 +35064,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -32221,6 +35103,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -32240,12 +35123,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -32261,14 +35147,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____bgDecl_cont_165_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____bgDecl_cont_165_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -32301,6 +35194,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____transformDecl_cont_166_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 166u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__transformDecl_cont_166"),
@@ -32341,6 +35236,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -32373,12 +35269,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -32409,6 +35308,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -32428,12 +35328,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -32449,14 +35352,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____transformDecl_cont_166_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____transformDecl_cont_166_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -32489,6 +35399,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____transitionDecl_cont_167_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 167u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__transitionDecl_cont_167"),
@@ -32529,6 +35441,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -32561,12 +35474,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -32597,6 +35513,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -32616,12 +35533,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -32637,14 +35557,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____transitionDecl_cont_167_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____transitionDecl_cont_167_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -32677,6 +35604,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____listTableDecl_cont_168_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 168u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__listTableDecl_cont_168"),
@@ -32717,6 +35646,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -32749,12 +35679,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -32785,6 +35718,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -32804,12 +35738,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -32825,14 +35762,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____listTableDecl_cont_168_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____listTableDecl_cont_168_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -32865,6 +35809,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____displayDecl_cont_169_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 169u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__displayDecl_cont_169"),
@@ -32905,6 +35851,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -32917,6 +35864,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -32941,14 +35889,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -32969,9 +35922,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -32991,12 +35948,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -33027,6 +35987,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -33046,12 +36007,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -33067,14 +36031,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____displayDecl_cont_169_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____displayDecl_cont_169_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -33107,6 +36078,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____positionDecl_cont_170_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 170u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__positionDecl_cont_170"),
@@ -33147,6 +36120,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -33159,6 +36133,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -33183,14 +36158,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -33211,9 +36191,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -33233,12 +36217,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -33269,6 +36256,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -33288,12 +36276,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -33309,14 +36300,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____positionDecl_cont_170_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____positionDecl_cont_170_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -33349,6 +36347,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____overflowDecl_cont_171_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 171u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__overflowDecl_cont_171"),
@@ -33389,6 +36389,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -33401,6 +36402,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -33425,14 +36427,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -33453,9 +36460,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -33475,12 +36486,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -33511,6 +36525,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -33530,12 +36545,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -33551,14 +36569,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____overflowDecl_cont_171_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____overflowDecl_cont_171_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -33591,6 +36616,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____visibilityDecl_cont_172_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 172u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__visibilityDecl_cont_172"),
@@ -33631,6 +36658,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -33643,6 +36671,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -33667,14 +36696,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -33695,9 +36729,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -33717,12 +36755,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -33753,6 +36794,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -33772,12 +36814,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -33793,14 +36838,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____visibilityDecl_cont_172_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____visibilityDecl_cont_172_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -33833,6 +36885,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____flexDirDecl_cont_173_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 173u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__flexDirDecl_cont_173"),
@@ -33873,6 +36927,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -33885,6 +36940,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -33909,14 +36965,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -33937,9 +36998,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -33959,12 +37024,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -33995,6 +37063,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -34014,12 +37083,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -34035,14 +37107,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____flexDirDecl_cont_173_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____flexDirDecl_cont_173_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -34075,6 +37154,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____flexWrapDecl_cont_174_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 174u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__flexWrapDecl_cont_174"),
@@ -34115,6 +37196,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -34127,6 +37209,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -34151,14 +37234,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -34179,9 +37267,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -34201,12 +37293,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -34237,6 +37332,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -34256,12 +37352,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -34277,14 +37376,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____flexWrapDecl_cont_174_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____flexWrapDecl_cont_174_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -34317,6 +37423,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____alignDecl_cont_175_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 175u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__alignDecl_cont_175"),
@@ -34357,6 +37465,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -34369,6 +37478,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -34393,14 +37503,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -34421,9 +37536,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -34443,12 +37562,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -34479,6 +37601,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -34498,12 +37621,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -34519,14 +37645,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____alignDecl_cont_175_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____alignDecl_cont_175_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -34559,6 +37692,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____flexNumDecl_cont_176_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 176u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__flexNumDecl_cont_176"),
@@ -34599,6 +37734,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -34631,12 +37767,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -34667,6 +37806,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -34686,12 +37826,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -34707,14 +37850,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____flexNumDecl_cont_176_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____flexNumDecl_cont_176_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -34747,6 +37897,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____fontSizeDecl_cont_177_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 177u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__fontSizeDecl_cont_177"),
@@ -34787,6 +37939,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -34819,12 +37972,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -34855,6 +38011,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -34874,12 +38031,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -34895,14 +38055,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____fontSizeDecl_cont_177_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____fontSizeDecl_cont_177_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -34935,6 +38102,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____fontWeightDecl_cont_178_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 178u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__fontWeightDecl_cont_178"),
@@ -34975,6 +38144,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -34987,6 +38157,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -35011,14 +38182,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -35039,9 +38215,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -35061,12 +38241,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -35097,6 +38280,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -35116,12 +38300,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -35137,14 +38324,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____fontWeightDecl_cont_178_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____fontWeightDecl_cont_178_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -35177,6 +38371,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____lineHeightDecl_cont_179_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 179u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__lineHeightDecl_cont_179"),
@@ -35217,6 +38413,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -35249,12 +38446,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -35285,6 +38485,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -35304,12 +38505,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -35325,14 +38529,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____lineHeightDecl_cont_179_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____lineHeightDecl_cont_179_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -35365,6 +38576,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____borderWidthDecl_cont_180_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 180u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__borderWidthDecl_cont_180"),
@@ -35405,6 +38618,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -35417,6 +38631,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -35441,14 +38656,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -35469,9 +38689,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -35491,12 +38715,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -35527,6 +38754,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -35546,12 +38774,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -35567,14 +38798,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____borderWidthDecl_cont_180_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____borderWidthDecl_cont_180_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -35607,6 +38845,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____borderStyleDecl_cont_181_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 181u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__borderStyleDecl_cont_181"),
@@ -35647,6 +38887,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -35659,6 +38900,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -35683,14 +38925,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -35711,9 +38958,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -35733,12 +38984,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -35769,6 +39023,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -35788,12 +39043,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -35809,14 +39067,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____borderStyleDecl_cont_181_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____borderStyleDecl_cont_181_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -35849,6 +39114,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____borderRadiusDecl_cont_182_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 182u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__borderRadiusDecl_cont_182"),
@@ -35889,6 +39156,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -35921,12 +39189,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -35957,6 +39228,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -35976,12 +39248,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -35997,14 +39272,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____borderRadiusDecl_cont_182_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____borderRadiusDecl_cont_182_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -36037,6 +39319,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____opacityDecl_cont_183_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 183u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__opacityDecl_cont_183"),
@@ -36077,6 +39361,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -36109,12 +39394,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -36145,6 +39433,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -36164,12 +39453,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -36185,14 +39477,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____opacityDecl_cont_183_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____opacityDecl_cont_183_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -36225,6 +39524,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____textAlignDecl_cont_184_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 184u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__textAlignDecl_cont_184"),
@@ -36265,6 +39566,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -36277,6 +39579,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -36301,14 +39604,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -36329,9 +39637,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -36351,12 +39663,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -36387,6 +39702,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -36406,12 +39722,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -36427,14 +39746,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____textAlignDecl_cont_184_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____textAlignDecl_cont_184_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -36467,6 +39793,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____boxSizingDecl_cont_185_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 185u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__boxSizingDecl_cont_185"),
@@ -36507,6 +39835,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -36519,6 +39848,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -36543,14 +39873,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -36571,9 +39906,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -36593,12 +39932,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -36629,6 +39971,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -36648,12 +39991,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -36669,14 +40015,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____boxSizingDecl_cont_185_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____boxSizingDecl_cont_185_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -36709,6 +40062,8 @@ mod __cssl4parser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
         let ____cursorDecl_cont_186_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 186u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("__cursorDecl_cont_186"),
@@ -36749,6 +40104,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -36761,6 +40117,7 @@ mod __cssl4parser_emit_impl {
                             'try_branches: loop {
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -36785,14 +40142,19 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
                                 {
                                     let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
                                         crate::runtime::tape::DtaError,
@@ -36813,9 +40175,13 @@ mod __cssl4parser_emit_impl {
                                         Ok(())
                                     })();
                                     match __alt_result {
-                                        Ok(()) => break 'try_branches,
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
                                             *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -36835,12 +40201,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -36871,6 +40240,7 @@ mod __cssl4parser_emit_impl {
                         if input.get(*p).is_none() {
                             break;
                         }
+                        let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
@@ -36890,12 +40260,15 @@ mod __cssl4parser_emit_impl {
                         match __iter_result {
                             Ok(()) => {
                                 if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
                                     break;
                                 }
+                                builder.commit(__iter_builder_checkpoint);
                                 __iter_count += 1;
                             }
                             Err(_) => {
                                 *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
                                 break;
                             }
                         }
@@ -36911,14 +40284,21 @@ mod __cssl4parser_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
-        <crate::runtime::css_l4::CssStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            ____cursorDecl_cont_186_handle,
-        );
-        __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::css_l4::CssStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    ____cursorDecl_cont_186_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
+        }
     }
     /// AY-II.W0.e — Grammar-activated structural-scan policy table.
     ///

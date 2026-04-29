@@ -157,6 +157,9 @@ rhythms.
 - **Sub-agents commit frequently** inside their worktrees at every
   natural milestone (phase sub-item, artefact landing, invariant
   restoration), per `README.md` §Code discipline.
+- **Commit subjects have no arbitrary length cap.** They must be
+  precise, granular, and filler-free; split the diff when the subject
+  has to describe unrelated changes.
 - **Orchestrator commits to master at wave boundaries**, via cherry-
   pick-then-dispatch. Master clean before every wave dispatch is the
   hard invariant; orchestrator commits *during* a wave (on master)
@@ -325,10 +328,11 @@ against this three-tier discipline.
 
 When execution reveals the plan's scope was under-estimated:
 
-1. **Default: re-plan with more agents.** Dispatch additional
-   sub-agents on disjoint file bounds; split the wave. Carry
-   plan-declared intentional unworkability across wave boundaries
-   if the plan supports it.
+1. **Default: write the re-plan, then deploy more agents.** Create
+   or amend the per-wave spec before further implementation;
+   dispatch additional sub-agents on disjoint file bounds; split
+   the wave. Carry plan-declared intentional unworkability across
+   wave boundaries if the plan supports it.
 2. **Escalate to user only** for hard environmental blockers:
    compiler bug, authorization boundary, irrecoverable state.
 3. **Never retreat to additive shadow-surfaces** (e.g.,
@@ -336,12 +340,12 @@ When execution reveals the plan's scope was under-estimated:
    `Unsupported` branches, or "substrate only" landings that
    leave the consumer unwired. These are architectural debt
    dressed as pragmatism.
-4. **Mid-tranche plan pivots open a new letter.** If the scope
-   shift is too large for the current tranche to absorb without
-   silent deferral, close the current tranche on what landed and
-   author `{NEXT_LETTER}.md`. `SYNTHESIS.md` records AR
-   (audit-driven replan kept under AR/) and AS (mid-stream re-
-   plan of AR-audit leftovers) as the anti-examples.
+4. **Scale is not a deferral excuse.** Multi-week architectural work
+   with many consumers stays in the current tranche when it is the
+   root fix for that tranche's hard gate and can be specified as
+   complete waves. Open a new letter only when the thesis changes or
+   the current tranche must honestly close on a different achieved
+   state.
 
 ### Multi-pass tranche split (LETTER-I / LETTER-II / … / LETTER-N)
 
@@ -414,8 +418,10 @@ dispatches a **research + plan + redress triumvirate**:
    the halted agent's probe tests. Produces a root-cause
    attribution document under `docs/tranches/{LETTER}/audit/`.
 2. **Plan agent** — authors a concrete fix plan: file-level
-   diffs, ordered change set, declared invariant impact.
-3. **Redress agent** — executes the plan on a fresh worktree.
+   diffs, ordered change set, declared invariant impact, and any
+   required new/amended wave spec.
+3. **Redress agent** — executes the plan on a fresh worktree after
+   the plan's wave spec exists.
 
 The relinquish is not a deferral; the triumvirate is the
 resumption. Halting is the correct move when iteration is not

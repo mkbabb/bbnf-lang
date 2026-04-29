@@ -93,6 +93,8 @@ not a claim.}
 - Use `/commit` or `git commit` with messages citing
   `{LETTER}.{WAVE}.{AGENT_TAG}`.
 - Commit at every natural milestone, not at wave end.
+- Subject lines have no arbitrary character cap; make them exact,
+  granular, and free of filler.
 - NEVER commit `crates/core/src/grammar/generated.rs` unless
   your sub-phase owns the regen window. Orchestrator regens
   after cherry-pick when multiple agents' emitter changes

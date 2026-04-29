@@ -63,9 +63,12 @@ first-class work items, not "upstream" deferrals.
   §Scope-reveal protocol are not deferrals.
 - **Execute the plan, not around it.** The plan declares intent;
   contact reveals scope. The default response to scope-reveal-
-  under-contact is re-plan-with-more-agents — dispatch more
-  sub-agents, split into sub-waves, carry plan-declared intentional
-  unworkability across waves. Placeholder arms, single-probe stubs,
+  under-contact is written re-plan before more implementation:
+  create or amend per-wave specs, dispatch more sub-agents, split
+  into sub-waves, carry plan-declared intentional unworkability
+  across waves. Large, multi-week architectural work with many
+  consumers is valid when it is the root fix and has a fully formed
+  wave plan before deployment. Placeholder arms, single-probe stubs,
   `Unsupported` branches, "substrate only" landings that leave the
   consumer unwired, and additive shadow-surfaces beside a partial
   replacement are architectural debt dressed as pragmatism. Escalate
@@ -125,7 +128,9 @@ first-class work items, not "upstream" deferrals.
 - **Commit frequently with `/commit`.** Each natural milestone
   (phase sub-item, artefact landing, invariant restoration) gets its
   own commit. Do not batch unrelated changes; every agent commits at
-  milestones, not at tranche end.
+  milestones, not at tranche end. Commit subjects have no arbitrary
+  character cap; make them as long as needed to name the exact change,
+  but keep them granular and free of filler.
 
 ## Orchestration
 
@@ -205,8 +210,11 @@ returning no commit automatically triggers a
 blocker (all relevant sources, saved artefacts, prior tranche lineage,
 `cargo expand` output), one to author a concrete fix plan (file-level
 diffs, ordered change set, root-cause attribution), one to execute.
-The halted agent's probe tests are the triumvirate's starting point.
-No user prompt is required.
+When the plan agent discovers that the fix is larger than the current
+wave file, the plan deliverable includes the new or amended wave spec;
+redress does not deploy until that spec exists. The halted agent's
+probe tests are the triumvirate's starting point. No user prompt is
+required.
 
 **Agent-claim hardening.** Agent results are not trusted at face
 value. Key findings — benchmark numbers, feature-wiring claims,

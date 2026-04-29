@@ -12,6 +12,11 @@ projection, generated view purge, `Parsed<R>` / `TapeDirect` deletion,
 `crates/tape` deletion, semantic/perf refresh, and FINAL conversion.
 Wave fan-out language is now capped at up to 10 parallel
 worktree-isolated agents with disjoint file bounds.
+Commit-message guidance no longer imposes a 72-character subject cap;
+subjects are as long as needed, granular, and filler-free.
+Scope-reveal protocol now requires written wave creation/amendment
+before deployment; large multi-week root fixes stay in-tranche when
+they are fully specified and own their consumers.
 
 ## 2026-04-28 — AZ-I W0/W1/W2-substrate close
 

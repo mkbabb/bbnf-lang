@@ -113,6 +113,7 @@ harnesses. This plan finds no such requirement.
 |---|---|---|
 | O3.P1-G1 - Type-definition emission gate | `crates/core/src/backend/rust/emitter/grammar.rs` | Gate `generate_views`, `emit_value_surface`, and `emit_materialize_fns` by `EmitStrategy`. StructDirect grammars must not emit tape-backed view, `ValueRoot`, or tape materializer surfaces. |
 | O3.P1-V1 - Backend view carve | Exact list in the file-owner ledger below. | Delete or isolate tape-view generation so StructDirect output has no `<Grammar>NodeView`, `TapeCursor`, or `ValueRoot` production surface. No generated shim may preserve node-view names. |
+| O3.P1-SP1 - Generated scan-policy doc carve | `crates/core/src/backend/rust/emitter/shapes/dispatcher/scan_policy.rs` | Remove generated `TapeCursor` doc links from StructDirect output without changing scan-policy runtime ownership. |
 | O3.P1-SER1 - Tape-first serializer carve | `crates/core/src/generate/mod.rs`, `crates/core/src/generate/serialize/mod.rs`, `crates/core/src/generate/serialize/serialize.rs` | Gate `#[parser(serialize)]` NodeView serializer generation by `EmitStrategy`; StructDirect must not emit `serialize_*` methods over `<Grammar>NodeView<'_>`. |
 | O3.P1-M1 - Value materializer deletion | `crates/core/src/backend/rust/emitter/shapes/value_materialize.rs` | Stop emitting `materialize_projection_*` against `runtime::tape::Tape` for StructDirect grammars. Retain only any tape-direct path still needed before O4/O5, with strategy gating. |
 | O3.P1-D1 - Document-owned runtime projection proof | Exact list in the file-owner ledger below. | Ensure public parse results expose document-owned root/accessor surfaces directly from runtime arenas, with no `Parsed<R>`, node-view, or generated tape-view adapter. |
@@ -134,6 +135,10 @@ O3.P1-V1:
 - `crates/core/src/backend/rust/view/repeat.rs`
 - `crates/core/src/backend/rust/view/seq.rs`
 - `crates/core/src/backend/rust/view/value.rs`
+
+O3.P1-SP1:
+
+- `crates/core/src/backend/rust/emitter/shapes/dispatcher/scan_policy.rs`
 
 O3.P1-SER1:
 
@@ -191,7 +196,7 @@ O3.P1-R1:
 | Failure | Owner | Verification |
 |---|---|---|
 | `bbnf::projection_totality projection_totality_runtime_call_count` | O3.P1-T1, after O3.P1-G1/V1/M1/D1 | `cargo nextest run -p bbnf --test projection_totality --cargo-profile ax-iter projection_totality_runtime_call_count -- --nocapture` |
-| Generated `TapeCursor` / node-view hits in StructDirect output | O3.P1-G1 + O3.P1-V1 + O3.P1-SER1 + O3.P1-R1 | `rg -n 'TapeCursor|[A-Za-z0-9_]+NodeView|ValueRoot|materialize_projection_|PROJECTION_MATERIALIZERS|PROJECTION_CONSUMERS' crates/core/src/grammar/generated/{json,css_l4,google_sheets,bbnf,csv,math,bnf,css_pretty,ebnf}.rs` returns zero production hits, excluding historical comments only if the scan artifact records them separately. General `crate::runtime::tape` and `Parsed<` residue is classified under O4/O5 unless it preserves generated view compatibility. |
+| Generated `TapeCursor` / node-view hits in StructDirect output | O3.P1-G1 + O3.P1-V1 + O3.P1-SP1 + O3.P1-SER1 + O3.P1-R1 | `rg -n 'TapeCursor|[A-Za-z0-9_]+NodeView|ValueRoot|materialize_projection_|PROJECTION_MATERIALIZERS|PROJECTION_CONSUMERS' crates/core/src/grammar/generated/{json,css_l4,google_sheets,bbnf,csv,math,bnf,css_pretty,ebnf}.rs` returns zero hits. General `crate::runtime::tape` and `Parsed<` residue is classified under O4/O5 unless it preserves generated view compatibility. |
 | Generated `ValueRoot` / `materialize_projection_*` hits in StructDirect output | O3.P1-G1 + O3.P1-M1 + O3.P1-R1 | `rg -n 'ValueRoot|materialize_projection_|PROJECTION_MATERIALIZERS|PROJECTION_CONSUMERS' crates/core/src/grammar/generated/{json,css_l4,google_sheets,bbnf,csv,math,bnf,css_pretty,ebnf}.rs` returns zero production hits for StructDirect grammars. |
 | Tests still importing generated node views after O3 | O3.P1-T1, with O3.J1-P1 for JSON-specific accessor accounting | `rg -n 'NodeView|from_cursor|TapeCursor|Parsed<' crates/core/tests/projection_totality.rs crates/core/tests/typed_accessor_surface.rs crates/core/tests/runtime_root.rs crates/core/tests/regen_shape_goldens.rs` returns no live StructDirect dependency. |
 
@@ -217,7 +222,15 @@ O3.P1-R1:
    StructDirect callers consume document-owned runtime APIs, not a
    generated view compatibility surface.
 
-3. **O3.P1-SER1 tape-first serializer carve**
+3. **O3.P1-SP1 generated scan-policy doc carve**
+
+   Remove generated `TapeCursor` doc links from
+   `STRUCTURAL_SCAN_POLICY` comments. The runtime scan-policy table
+   can continue to use tape substrate types until O4/O5; O3's close
+   gate is that generated StructDirect files no longer advertise or
+   preserve generated view compatibility through docs or APIs.
+
+4. **O3.P1-SER1 tape-first serializer carve**
 
    Gate `crates/core/src/generate/serialize` at the call site in
    `generate_all`. The generator is explicitly tape-first and takes
@@ -225,7 +238,7 @@ O3.P1-R1:
    skip it rather than reconstitute a compatibility node-view surface.
    Document-owned serializers live in runtime modules when needed.
 
-4. **O3.P1-M1 materializer deletion**
+5. **O3.P1-M1 materializer deletion**
 
    Delete StructDirect emission of `materialize_projection_*` and the
    `ValueRoot` dispatcher relationship that calls those helpers. If the
@@ -233,7 +246,7 @@ O3.P1-R1:
    name and call site must make that ownership explicit. Do not leave
    a generated no-op materializer set in StructDirect output.
 
-5. **O3.P1-D1 document projection surfaces**
+6. **O3.P1-D1 document projection surfaces**
 
    Confirm every StructDirect runtime document exposes root and typed
    projection/accessor surfaces from the concrete arena/value graph.
@@ -241,7 +254,7 @@ O3.P1-R1:
    of `<Grammar>Value::*Projection`, replace it with assertions against
    concrete document APIs and typed values.
 
-6. **O3.P1-T1 test rewrite**
+7. **O3.P1-T1 test rewrite**
 
    Keep structural admission tests only for codegen facts that still
    exist after O3. The runtime-call-count test should become a
@@ -260,7 +273,7 @@ O3.P1-R1:
    StructDirect `PROJECTION_MATERIALIZERS`, `PROJECTION_CONSUMERS`,
    `ValueRoot`, or node-view APIs.
 
-7. **O3.P1-R1 orchestrator regen and scan**
+8. **O3.P1-R1 orchestrator regen and scan**
 
    After source commits are accepted, the orchestrator runs one
    canonical regen and records the residue scan in
@@ -309,13 +322,12 @@ StructDirect generated residue scan:
 } > docs/benchmarks/AZ-II/cutover/O3-generated-view-scan.txt
 ```
 
-Close condition: the scan artifact records zero production hits for
-StructDirect generated view/serializer/materializer output. General
-`crate::runtime::tape` and `Parsed<` residue remains O4/O5-owned unless
-it preserves a generated view compatibility surface. If historical
-comments remain during the transition, the artifact must classify them
-separately and O3 must delete them before close unless the comments are
-in non-generated historical docs.
+Close condition: the scan artifact records zero hits for StructDirect
+generated view/serializer/materializer output, including generated
+comments. General `crate::runtime::tape` and `Parsed<` residue remains
+O4/O5-owned unless it preserves a generated view compatibility surface.
+Historical generated comments are not an O3 close exception; they must be
+deleted at the producer before close.
 
 Workspace confirmation after O3 integration:
 
@@ -342,7 +354,7 @@ owns the generated residue purge: StructDirect grammars must not emit
 `materialize_projection_*`, `PROJECTION_MATERIALIZERS`, or
 `PROJECTION_CONSUMERS`.
 
-Files touched: exactly the O3.P1-G1, O3.P1-V1, O3.P1-SER1,
+Files touched: exactly the O3.P1-G1, O3.P1-V1, O3.P1-SP1, O3.P1-SER1,
 O3.P1-M1, O3.P1-D1, O3.P1-T1, and O3.P1-R1 files listed in
 `docs/tranches/AZ-II/audit/O3a-P1-plan.md` under "Exact
 File-Owner Ledger". No generated tape-view shim, empty node-view type,

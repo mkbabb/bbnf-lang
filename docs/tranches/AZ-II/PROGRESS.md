@@ -87,7 +87,7 @@ The cutover wave runs in three sequential sub-stages:
 | W0 | superseded (2026-04-28) | Folded into cutover.A (substrate hoist + BBNF runtime + decay sweep) |
 | W1 | superseded (2026-04-28) | Folded into cutover.B (Stage A + Stage B byte-equal cycle) |
 | W2 | superseded (2026-04-28) | Folded into cutover.C (`crates/tape/` deletion + recode + FINAL) |
-| cutover | partial-close (cutover.A through cutover.H Phase 1 LANDED; tape deletion + non-BBNF regen-fleet activation deferred) | BBNF self-host substrate canonical; tape deletion routes to follow-on tranche ([waves/cutover.md](waves/cutover.md)) |
+| cutover | partial-close (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; EBNF activation + Parsed<R> deletion + tape deletion + bench refresh deferred) | 8/9 grammars StructDirect; tape deletion + EBNF activation routes through cutover.N follow-on ([waves/cutover.md](waves/cutover.md)) |
 
 ## 2026-04-28 — cutover.G partial close
 
@@ -185,11 +185,139 @@ half (full regen-fleet activation, tape deletion, bench refresh,
 codegen self-host) routes to a follow-on tranche under explicit
 scope.
 
-Master HEAD at AZ-II close: tracked in cutover.H worktree;
-cherry-picks gated on orchestrator review.
+Master HEAD at cutover.H Phase 1 close: cherry-picked to master
+at `1513328e` then `ee568213` (PARTIAL CLOSE FINAL.md authored).
+
+## 2026-04-28 — cutover.I.5 + K Phases 0/1/2 + L Phase 3a + M Phase 3b/c/d
+
+Five additional substages landed, advancing the trajectory toward
+full close:
+
+### cutover.I Phase 5 (`98008086` `c7e5999b`)
+
+`BbnfBootstrap::serialize_compact_doc(doc: &BbnfDocument<'_>) -> String`
+authored at `crates/core/src/runtime/bbnf/serialize.rs` (~430 LOC).
+Typed walker over `BbnfDocument` keyed on `BbnfCompoundKind`; each
+compound shape (Rule, Alternation, Concatenation, MappedFactor,
+Closure, ImportDirective, PrettyDirective, …) emits its required
+structural literals (`=`, `;`, `,`, `|`, `->`, `from`, `@import`,
+…) in grammar order. `bbnf_rule` test in `serialize_roundtrip.rs`
+un-ignored; idempotence verified — 19/19 serialize_roundtrip +
+1/1 bbnf_bootstrap_reproducibility tests pass.
+
+Phase 2 (non-BBNF resolver-arm fleet activation) DEFERRED on two
+blockers diagnosed mid-dispatch:
+1. JSON regen reproducibility — `bool` rule resolves to
+   `TypeDesc::Span` instead of `TypeDesc::Bool`; cutover.K Phase 1
+   surfaced this is a downstream symptom of cutover.G's
+   bootstrap_parser dropping typed-leaf source text.
+2. Per-shape Err open-compound frame leak — `flat`/`array`/`object`
+   struct_direct emitters return `Err(...)` without closing open
+   `begin_compound` frames; cutover.K Phase 2 fixed structurally.
+
+PARTIAL close report at `docs/tranches/AZ-II/audit/cutover.I-PARTIAL.md`.
+
+### cutover.K Phase 0 (`a09173dc`)
+
+`bootstrap_parser.rs::parse_mapped_factor` wraps the mapping target
+in an anonymous compound starting at `->`. `lower_mapped_factor`
+discriminates the mapping by `c.span_text().starts_with("->")`;
+without the wrapper, the arrow leaf and the value_expr are
+siblings of `factor` and neither child satisfies the prefix test,
+so the Map IR node was silently skipped (regression introduced in
+cutover.G when the hand-written bootstrap parser replaced the
+codegen-emitted parse_that-shaped tape).
+
+### cutover.K Phase 1 (`cbf77e06`)
+
+Typed-leaf source-text recovery in value-expression chain via
+structural compound kinds + new `fold_typed_leaf_descendant`
+walker. The reproducibility CI gate at
+`crates/core/tests/bbnf_bootstrap_reproducibility.rs` extended
+to `json_regen_is_idempotent` — closes the gap that hid the
+TypeDesc::Bool regression (Blocker 1 from cutover.I PARTIAL).
+
+### cutover.K Phase 2 (`7d283a8f`)
+
+Per-shape Err paths close open compound frames via uniform IIFE
+wrappers across `shapes/{flat,wrap,pratt,arglist}/struct_direct.rs`
+— uniform fix per `feedback_no-orthogonal-codepaths`. Resolves
+Blocker 2 from cutover.I PARTIAL.
+
+### cutover.L Phase 3a (`b770fae7`)
+
+Keyword-shape struct_direct emitter at
+`crates/core/src/backend/rust/emitter/shapes/keyword/struct_direct.rs`
+handles Alt-of-Ref branches under StructDirect — Ref branches
+prefix-check + delegate to the target shape fn (CSS L4
+`pseudoClass` / `pseudoElement`). Per-rule emission gate at
+`shapes/mod.rs` admits Wrap- and Keyword-classified transparent
+rules under both substrate strategies.
+
+### cutover.M Phase 3b/c/d (`a29a1265` `43f0795b`)
+
+Resolver arms for CSV / Math / BNF / CSS Pretty flip to StructDirect
+at `crates/ir/src/registry/strategy.rs::for_grammar`. AltDispatch
+struct_direct emitter at
+`crates/core/src/backend/rust/emitter/shapes/alt_dispatch/branches.rs::emit_dispatch_arms_struct_direct`
+extended: Alt-of-Literal / Alt-of-Regex / Alt-of-Seq branches now
+emit byte-comparison + `push_leaf_with_unit()` + `push_branch_tag(idx)`
+triples (pre-cutover.M these arms emitted empty placeholders that
+collapsed BBNF `type_name` and CSS L4 pseudo-class arms into no-op
+loops). All 9 grammars regen onto matching substrate; 8 of 9
+return concrete `Document` types directly.
+
+EBNF activation deferred — `letter`/`digit`/`symbol` Alt-of-many-
+literal AltDispatch rules expose layout-routing depth (the
+per-letter pushes don't yet route through `EbnfStructBuilder`'s
+expected layout) beyond cutover.M's 300-min cap.
+
+`docs/tranches/AZ-II/FINAL.md` updated — PARTIAL CLOSE manifest
+reflects 8/9 fleet activation.
+`docs/benchmarks/post-AZ-II.json` description updated to recap
+cutover.A through cutover.M trajectory.
+
+Workspace test posture at cutover.M close: 1514 / 1642 pass.
+Net +85 tests fixed since cutover.D close.
+
+## 2026-04-28 — cutover.N halt + comprehensive PROGRESS-SNAPSHOT
+
+cutover.N dispatched at master `43f0795b` to close the remaining
+phases — EBNF activation diagnosis + repair, Parsed<R> deletion,
+tape migration / deletion, bench refresh + AZ-II FINAL terminal
+close. Halted at organizational usage limit; no commits landed.
+
+A comprehensive trajectory-state document was authored at
+`docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md` (288 LOC,
+master `1d9a80bb`) capturing the full 14-substage trajectory
+(cutover.A through cutover.N), agent dispatch history, hard-gate
+readout, BA handoff verification, substrate inventory, and the
+remaining work routed through cutover.O.
+
+The trajectory's ~85% complete by structural milestones; ~70%
+complete by LOC churn (tape migration is the long pole at ~10k
+cross-crate refs).
 
 ## Handoff
 
 - Opens on: AZ-I close (seven-point handoff contract verified).
-- Closes into: BA (pointer queries on struct tree).
+- Closes into: BA (pointer queries on struct tree); BA opens on
+  AZ-II FINAL CLOSE (currently PARTIAL pending cutover.O).
 - BB opens on AZ-II close independently of BA's progress.
+- BB.scaffold.A/B/C already landed at master `26f95469`/`4bb49ef2`/
+  `9b20ded1`/`a4ca2b2f` (e-graph ruler + IR rewrites substrate);
+  BB.close gates on AZ-II FINAL CLOSE.
+
+## Trajectory follow-on
+
+| Substage | Scope | Estimated cap |
+|---|---|---|
+| cutover.O | Resume EBNF diagnosis (Alt-of-many-literal layout-routing depth) | 120 min |
+| cutover.O continued | Parsed<R> deletion (option b — per-grammar Document direct) | 90 min |
+| cutover.O continued | tape migration into `crates/core/src/runtime/tape/` + crate deletion | 120 min |
+| cutover.O continued | 17-entry close matrix bench refresh + post-AZ-II.json terminal | 60 min |
+| cutover.O continued | AZ-II FINAL.md PARTIAL → FINAL CLOSE conversion | 30 min |
+
+Total estimated: ~7 hours sequential under fan-out (or 1 dispatch
+wave at 300-min cap if EBNF activation is structural-quick;
+2 waves if EBNF requires substrate extension).

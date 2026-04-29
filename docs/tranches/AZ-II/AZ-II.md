@@ -182,7 +182,29 @@ disk as historical record.
 
 | Wave | Headline | Opens after | Status |
 |---|---|---|---|
-| **cutover** | BBNF self-host + tape deletion ([waves/cutover.md](waves/cutover.md)) — three sequential sub-stages: cutover.A (substrate hoist + BBNF runtime + resolver-arm + decay sweep) → cutover.B (Stage A + Stage B byte-equal cycle) → cutover.C (`crates/tape/` deletion + recode + FINAL) | AZ-I.W2-act close (AZ-I FINAL.md committed; seven-point handoff verified) | planned |
+| **cutover** | BBNF self-host + tape deletion ([waves/cutover.md](waves/cutover.md)) — original three-stage plan expanded under contact into 14 sub-stages cutover.A through cutover.N | AZ-I.W2-act close (AZ-I FINAL.md committed; seven-point handoff verified) | partial-close (cutover.A→M LANDED; cutover.N halted at usage limit; EBNF activation + Parsed<R> deletion + tape deletion + bench refresh deferred to cutover.O) |
+
+The cutover wave's actual trajectory across 14 sub-stages is recorded
+in `docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md` (per-substage
+commit SHAs, hard-gate readout, BA handoff verification, agent dispatch
+history). Per-substage scope-reveal reports archived under
+`docs/tranches/AZ-II/audit/cutover.{C,E,F,G,I}-PARTIAL.md`.
+
+| Sub-stage | Headline | Status |
+|---|---|---|
+| cutover.A | BBNF substrate + resolver-arm + decay sweep | LANDED |
+| cutover.B | Stage A/B byte-equal + permanent CI gate | LANDED |
+| cutover.C | scope-reveal — 700 BbnfBootstrapNodeView refs surface | DIAGNOSTIC |
+| cutover.D | 4 parallel agents migrate BBNF consumers | LANDED |
+| cutover.E | non-BBNF substrates authored; Discovery 1 emitter regression surfaces | SUBSTRATE LANDED |
+| cutover.F | 3 emitter bug classes diagnosed + fixed | LANDED |
+| cutover.G | hand-crafted bootstrap_parser breaks chicken-and-egg | LANDED |
+| cutover.H | BBNF resolver-arm re-flip + transparent emitter fix + PARTIAL FINAL.md | LANDED |
+| cutover.I.5 | `BbnfBootstrap::serialize_compact_doc` + bbnf_rule un-ignore | LANDED |
+| cutover.K | mapped_factor wrapper + typed-leaf source recovery + per-shape Err frame cleanup | LANDED |
+| cutover.L | keyword-shape Alt-of-Ref handler | LANDED |
+| cutover.M | non-BBNF resolver arms (CSV/Math/BNF/CSS Pretty); AltDispatch struct_direct surgery | LANDED |
+| cutover.N | EBNF activation + Phases 4/5/6 close | dispatched + halted at usage limit; routes to cutover.O |
 
 ### W0 — Research + cutover design + classifier extension
 

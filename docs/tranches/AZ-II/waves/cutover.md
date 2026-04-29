@@ -2,18 +2,36 @@
 
 **Opens after**: AZ-I.W2-act close (AZ-I FINAL.md committed; AZ-II
 seven-point handoff contract verified).
-**Agents**: 3 (sequential).
+**Agents (planned)**: 3 sequential. **Agents (actual)**: 14 sequential
+sub-stages (cutover.A through cutover.N) over multiple sessions; 13
+LANDED at master, cutover.N halted at organizational usage limit.
 **Hard gate**: BBNF self-parses through a `project_types`-derived
 `BbnfDocument` struct graph; Stage A / Stage B byte-equal across the
 full BBNF fixture corpus; `crates/tape/` deleted; `cargo build -p bbnf
 --no-default-features` succeeds without `crates/tape/`; AZ-II FINAL.md
 + `docs/benchmarks/post-AZ-II.json` archived.
-**Status**: planned
+**Status**: PARTIAL CLOSE — substrate canonical; 8/9 grammars
+StructDirect; BBNF self-parity 56/56; reproducibility CI gate green;
+remaining work (EBNF activation + tape deletion + bench refresh +
+FINAL CLOSE conversion) routed to cutover.O.
+
+**Trajectory snapshot**: see [`../PROGRESS-SNAPSHOT-2026-04-29.md`](../PROGRESS-SNAPSHOT-2026-04-29.md)
+for per-substage commit-by-commit detail across cutover.A through
+cutover.N, agent dispatch history with caps + outcomes, hard-gate
+readout, BA handoff verification, and trajectory progress estimate.
+
+**Per-substage scope-reveal reports**: archived under
+[`../audit/cutover.{C,E,F,G,I}-PARTIAL.md`](../audit/) — the cutover
+wave's scope expanded under contact from 3 sub-stages to 14, with
+each scope-reveal report documenting the discovered work, blocker
+diagnosis, and follow-on substage routing.
 
 AZ-II.cutover collapses the original AZ-II.W0 / W1 / W2 three-wave
 plan into one cutover wave per `docs/tranches/AZ-I/audit/W2-CLOSE-AUDIT.md`
 §9. The W2 substrate established the per-shape struct-direct pattern;
-AZ-II reuses it for BBNF unchanged.
+AZ-II reuses it for BBNF unchanged. The actual 14-substage trajectory
+documents the contact-discovered work below the original 3-stage
+scope.
 
 ## Scope
 

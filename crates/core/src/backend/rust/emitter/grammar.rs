@@ -23,10 +23,10 @@ use bbnf_ir::passes::NamedTypeResolver;
 use super::dfa_codegen;
 use super::{RustEmitCtx, RustEmitter};
 
-/// AY.W6.2 — grammar-derived direct-to-struct admission.
+/// AY.W6.2 — grammar-derived direct-to-struct admission planning.
 ///
 /// Walks every non-transparent rule and admits it to the direct-to-
-/// struct projection surface whenever grammar-derived type-inference
+/// struct projection plan whenever grammar-derived type-inference
 /// facts prove the rule's child sequence projects cleanly onto a
 /// fixed-layout scalar tuple. The admission driver is
 /// [`GrammarIR::payload_layouts`] — populated upstream by
@@ -44,167 +44,12 @@ use super::{RustEmitCtx, RustEmitter};
 /// - scalar-Alt rules (Sheets `add_op` / `mul_op` / `unary_prefix` /
 ///   `compare_op` / `boolean`, CSS L4 `*Unit`s, …).
 ///
-/// All four admission arms are unified in the IR layout pass; the
-/// emitter here consumes the resulting
-/// [`PayloadLayout`] directly. There is no grammar-name dispatch; no
-/// hand-enumerated binding table; no per-grammar branch. The
-/// admission fact is the grammar-derived layout.
-///
-/// # Emitted artefacts per grammar
-///
-/// 1. A `pub struct <Grammar><RuleCamel>Projection { field_<i>: <Ty>,
-///    … }` per admitted rule. Field types mirror the layout's
-///    [`PayloadField::ty`] in declaration order; field offsets map
-///    to the layout's byte offsets. The struct is `Copy + Clone +
-///    Debug`; zero-copy for `Span` via a `(u32, u32)` pair
-///    representation and owned for non-Span scalars.
-/// 2. A `PROJECTION_DIRECT_TO_STRUCT` const listing
-///    `(rule_name, struct_name)` per admission. `struct_name` is
-///    always the synthesised `<Grammar><RuleCamel>Projection` struct
-///    emitted alongside this const; the grammar-declared `-> Name`
-///    binding rides on the parallel `PROJECTION_NAMED_BINDINGS` slice
-///    and on the struct's `NAMED_BINDING` associated const. Downstream
-///    consumers consult the list for introspection + wire-contract
-///    tests.
-/// 3. Per-admission marker functions: `__grammar_projection_<rule>()`
-///    returning the `(rule_name, field_count, named_binding)` triple.
-///    One marker per admission; the legacy resolver-shim surface
-///    retired at AY-II.W0.d (every admission now emits a runnable
-///    materialiser, not just a marker).
-fn emit_direct_to_struct_projection(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
-    let resolver = RustNamedTypes::from_ir(ir);
-    let admissions = collect_projection_admissions(ir, &resolver);
-    let grammar_prefix = to_upper_camel(grammar_name);
-
-    // `PROJECTION_DIRECT_TO_STRUCT` entries. Post-AY-II.W0.d the
-    // projection label ALWAYS names the synthesised struct
-    // `<Grammar><RuleCamel>Projection` — no resolver-bound name dispatch.
-    // Downstream consumers introspect via the rule-name key; the grammar-
-    // declared `-> Name` binding (when present) rides on
-    // `PROJECTION_NAMED_BINDINGS` below.
-    let entries: Vec<TokenStream> = admissions
-        .iter()
-        .map(|a| {
-            let rule_lit = proc_macro2::Literal::string(&a.rule_name);
-            let struct_ident = a.struct_ident(&grammar_prefix);
-            let struct_name = struct_ident.to_string();
-            let bind_lit = proc_macro2::Literal::string(&struct_name);
-            quote! { (#rule_lit, #bind_lit) }
-        })
-        .collect();
-    let count = entries.len();
-
-    // AY-II.W0.d — parallel metadata slice: grammar-declared `-> Name`
-    // bindings, indexed in lockstep with `PROJECTION_DIRECT_TO_STRUCT`.
-    // An entry of `""` signals "no named binding" (the admission came
-    // from the pure scalar-tuple / KV-pair / bare-Span / scalar-Alt arm);
-    // an entry like `"Color"` records that the grammar author spelt
-    // `-> Color`. Readable by the typed-accessor surface tests + any
-    // downstream consumer wanting the semantic-type hint.
-    let named_binding_entries: Vec<TokenStream> = admissions
-        .iter()
-        .map(|a| {
-            let bind_lit = proc_macro2::Literal::string(
-                a.named_binding.as_deref().unwrap_or(""),
-            );
-            quote! { #bind_lit }
-        })
-        .collect();
-
-    // AY-II.W0.d — parallel slice: materialiser function names,
-    // indexed in lockstep with `PROJECTION_DIRECT_TO_STRUCT`. Canonical
-    // evidence that every admission has a matching
-    // `materialize_projection_<rule>_<Grammar>` fn emitted by
-    // `shapes/value_materialize.rs`. The test surface asserts
-    // `PROJECTION_DIRECT_TO_STRUCT.len() == PROJECTION_MATERIALIZERS.len()`
-    // per grammar; a regression that drops the materialiser for any
-    // admission surfaces as a length mismatch.
-    let materializer_entries: Vec<TokenStream> = admissions
-        .iter()
-        .map(|a| {
-            let fn_name = format!(
-                "materialize_projection_{}_{}",
-                sanitise_ident(&a.rule_name),
-                grammar_name,
-            );
-            let fn_lit = proc_macro2::Literal::string(&fn_name);
-            quote! { #fn_lit }
-        })
-        .collect();
-
-    // AY-II.W0.d — parallel slice: consumer surface names. Every
-    // admitted rule participates in the grammar's `<Grammar>Value`
-    // enum via a variant whose name matches the rule name (per
-    // `view/value.rs::collect_variant_classes`). The slice records
-    // the fully-qualified consumer `<Grammar>Value::<RuleName>`
-    // identifier — the wire-contract totality test reflects on both
-    // the const length AND the matching `<Grammar>Value` variant
-    // existence, catching both "admission without consumer" and
-    // "consumer without admission" regressions.
-    let consumer_entries: Vec<TokenStream> = admissions
-        .iter()
-        .map(|a| {
-            let consumer_name = format!("{}Value::{}", grammar_name, a.rule_name);
-            let consumer_lit = proc_macro2::Literal::string(&consumer_name);
-            quote! { #consumer_lit }
-        })
-        .collect();
-
-    let struct_defs = emit_projection_structs(grammar_name, &admissions);
-    let projection_markers = emit_grammar_projection_markers(&admissions);
-
-    // `PROJECTION_DIRECT_TO_STRUCT` emits unconditionally — every grammar
-    // carries the const (length 0 when no rule admitted), so downstream
-    // consumers (wire-contract tests, `<Grammar>::PROJECTION_DIRECT_TO_STRUCT`
-    // associated-const aliasing) never hit a "missing item" resolution
-    // error. The per-admission struct / marker streams are inherently
-    // empty when admissions is empty; they emit nothing.
-    quote! {
-        #struct_defs
-
-        /// AY-II.W0.d — per-grammar direct-to-struct projection
-        /// admissions, derived from `ir.payload_layouts` + the
-        /// `RustNamedTypes` resolver.
-        ///
-        /// Each `(rule_name, struct_name)` pair identifies a
-        /// non-transparent rule whose projection admits direct-to-
-        /// struct storage. `struct_name` is ALWAYS the synthesised
-        /// `<Grammar><RuleCamel>Projection` struct emitted alongside
-        /// this const — no resolver-bound name dispatch.
-        pub const PROJECTION_DIRECT_TO_STRUCT: &[(&str, &str); #count] = &[
-            #(#entries),*
-        ];
-
-        /// AY-II.W0.d — grammar-declared `-> Name` bindings, indexed in
-        /// lockstep with `PROJECTION_DIRECT_TO_STRUCT`. Empty string for
-        /// admissions that did not spell a named type.
-        #[doc(hidden)]
-        pub const PROJECTION_NAMED_BINDINGS: &[&str; #count] = &[
-            #(#named_binding_entries),*
-        ];
-
-        /// AY-II.W0.d — canonical evidence that every admission has a
-        /// matching `materialize_projection_<rule>_<Grammar>` fn.
-        /// Indexed in lockstep with `PROJECTION_DIRECT_TO_STRUCT`; the
-        /// wire-contract totality test asserts both slices share the
-        /// same length per grammar.
-        #[doc(hidden)]
-        pub const PROJECTION_MATERIALIZERS: &[&str; #count] = &[
-            #(#materializer_entries),*
-        ];
-
-        /// AY-II.W0.d — canonical evidence that every admission has a
-        /// matching `<Grammar>Value::<RuleName>` enum variant
-        /// (production consumer). Indexed in lockstep with
-        /// `PROJECTION_DIRECT_TO_STRUCT`.
-        #[doc(hidden)]
-        pub const PROJECTION_CONSUMERS: &[&str; #count] = &[
-            #(#consumer_entries),*
-        ];
-
-        #projection_markers
-    }
-}
+/// All admission arms are unified in the IR layout pass; this module
+/// keeps only the shared plan consumed by the remaining TapeDirect
+/// cleanup targets. O4 stops emitting the historical projection
+/// structs, marker functions, and `PROJECTION_*` metadata from the
+/// grammar impl path; production parsers return StructDirect
+/// documents directly.
 
 /// AY-II.W0.d — grammar-derived field kind for a projection struct.
 ///
@@ -253,19 +98,14 @@ pub(crate) struct ProjectionFieldPlan {
 ///
 /// Every admission carries a grammar-derived [`ProjectionFieldPlan`]
 /// whose fields are emitted 1:1 into the synthesised
-/// `<Grammar><RuleCamel>Projection` struct, the matching
-/// `materialize_projection_<rule>_<Grammar>` fn, and the
-/// `PROJECTION_DIRECT_TO_STRUCT` entry. The `named_binding` slot
-/// carries the grammar-declared `-> Name` label (`"Color"`, `"String"`,
-/// …) when a `TypeDesc::Named(sid)` drove the admission; it is
-/// metadata only, never a dispatch predicate.
+/// `<Grammar><RuleCamel>Projection` struct identity and the matching
+/// field plan. The grammar-declared `-> Name` label is consumed only
+/// while deciding whether resolver-backed tuple projection is valid;
+/// it is no longer stored as emitted metadata.
 #[derive(Clone, Debug)]
 pub(crate) struct ProjectionAdmission {
     /// Grammar rule name (matches `ir.get_string(rule.name)`).
     rule_name: String,
-    /// Grammar-declared type binding for a `-> Name` annotation;
-    /// `None` when the admission came from the plain layout arm.
-    named_binding: Option<String>,
     /// Field plan — scalar offsets for packed-buffer fields, child
     /// indices for cursor-backed fields.
     plan: ProjectionFieldPlan,
@@ -280,11 +120,6 @@ impl ProjectionAdmission {
     /// Borrow the field plan.
     pub(crate) fn plan(&self) -> &ProjectionFieldPlan {
         &self.plan
-    }
-
-    /// Grammar-declared `-> Name` binding or empty string.
-    pub(crate) fn named_binding_str(&self) -> &str {
-        self.named_binding.as_deref().unwrap_or("")
     }
 
     /// Synthesised projection struct name — `<Grammar><RuleCamel>Projection`.
@@ -332,20 +167,7 @@ pub(crate) fn collect_projection_admissions(
         if let Some(layout) = ir.payload_layouts.get(&rule.id) {
             if !layout.fields.is_empty() {
                 let plan = plan_from_payload_layout(layout);
-                let named_binding = type_desc
-                    .and_then(|td| match td {
-                        TypeDesc::Named(sid)
-                            if resolver.resolve_named(*sid).is_some() =>
-                        {
-                            Some(ir.get_string(*sid).to_string())
-                        }
-                        _ => None,
-                    });
-                admissions.push(ProjectionAdmission {
-                    rule_name,
-                    named_binding,
-                    plan,
-                });
+                admissions.push(ProjectionAdmission { rule_name, plan });
                 continue;
             }
         }
@@ -364,12 +186,7 @@ pub(crate) fn collect_projection_admissions(
             if let Some(TypeDesc::Tuple(fields)) = resolver.resolve_named(*sid) {
                 if !fields.is_empty() {
                     let plan = plan_from_resolver_tuple(&fields);
-                    let binding_name = ir.get_string(*sid).to_string();
-                    admissions.push(ProjectionAdmission {
-                        rule_name,
-                        named_binding: Some(binding_name),
-                        plan,
-                    });
+                    admissions.push(ProjectionAdmission { rule_name, plan });
                     continue;
                 }
             }
@@ -434,211 +251,6 @@ fn plan_from_resolver_tuple(fields: &[TypeDesc]) -> ProjectionFieldPlan {
     }
 }
 
-/// AY-II.W0.d — emit the `pub struct <Grammar><RuleCamel>Projection`
-/// definitions for every admission. Post-W0.d a struct is emitted
-/// uniformly for every rule in `collect_projection_admissions`: both
-/// scalar-packed layout admissions and resolver-backed rich admissions
-/// emit through this one path. Rich admissions (cursor-child fields
-/// present) gain a `'p` lifetime parameter and lose the `Copy` marker;
-/// packed admissions stay plain-data.
-fn emit_projection_structs(
-    grammar_name: &str,
-    admissions: &[ProjectionAdmission],
-) -> TokenStream {
-    let mut structs: Vec<TokenStream> = Vec::new();
-    let grammar_prefix = to_upper_camel(grammar_name);
-    let grammar_node_view = format_ident!("{}NodeView", grammar_name);
-    for admission in admissions {
-        let struct_ident = admission.struct_ident(&grammar_prefix);
-        let rule_name_lit = proc_macro2::Literal::string(&admission.rule_name);
-        let named_binding_lit = proc_macro2::Literal::string(
-            admission.named_binding_str(),
-        );
-        let plan = admission.plan();
-        let total_bytes_lit = proc_macro2::Literal::u8_unsuffixed(plan.packed_bytes);
-        let field_count_lit = proc_macro2::Literal::usize_unsuffixed(plan.fields.len());
-        let fields: Vec<TokenStream> = plan
-            .fields
-            .iter()
-            .enumerate()
-            .map(|(idx, kind)| emit_projection_field(idx, kind, &grammar_node_view))
-            .collect();
-
-        // Rich projections with cursor children carry a lifetime;
-        // Copy cannot coexist with `NodeView<'p>` field types, so the
-        // derive list splits by kind. Packed-only admissions retain
-        // the legacy `Copy + Clone + Debug` triple.
-        let (decl_generics, impl_generics, derive_attrs) = if plan.has_cursor_fields {
-            (
-                quote! { <'p> },
-                quote! { <'p> },
-                quote! {
-                    #[derive(::core::clone::Clone, ::core::fmt::Debug)]
-                },
-            )
-        } else {
-            (
-                quote! {},
-                quote! {},
-                quote! {
-                    #[derive(
-                        ::core::marker::Copy,
-                        ::core::clone::Clone,
-                        ::core::fmt::Debug,
-                    )]
-                },
-            )
-        };
-        let impl_target = if plan.has_cursor_fields {
-            quote! { #struct_ident<'p> }
-        } else {
-            quote! { #struct_ident }
-        };
-
-        structs.push(quote! {
-            /// AY-II.W0.d — grammar-derived direct-to-struct projection.
-            ///
-            /// Emitted storage for a rule whose child sequence projects
-            /// onto a fixed-layout tuple. Packed admissions read every
-            /// field from `Tape::payload_bytes` at scalar offsets; rich
-            /// (resolver-backed) admissions mix scalar payload reads with
-            /// per-child cursor handles — the materialiser walks
-            /// `view.child(i)` at the admitted `CHILD_INDICES` to
-            /// populate cursor fields.
-            ///
-            /// `NAMED_BINDING` is `""` when the admission came from a
-            /// pure layout arm; non-empty when the grammar author spelt
-            /// a `-> Name` annotation. Consumers that want a semantic-
-            /// type hint (e.g. CSS `"Color"`) read this const.
-            #derive_attrs
-            #[doc(hidden)]
-            pub struct #struct_ident #decl_generics {
-                #(#fields),*
-            }
-
-            impl #impl_generics #impl_target {
-                /// Grammar-declared rule that projects into this
-                /// struct. Matches the `rule_name` entry in
-                /// `PROJECTION_DIRECT_TO_STRUCT`.
-                #[doc(hidden)]
-                pub const RULE_NAME: &'static str = #rule_name_lit;
-
-                /// Grammar-declared `-> Name` binding; empty string
-                /// when the admission came from a pure layout arm.
-                #[doc(hidden)]
-                pub const NAMED_BINDING: &'static str = #named_binding_lit;
-
-                /// Number of fields (scalar + cursor) the layout pass
-                /// admitted for this projection.
-                #[doc(hidden)]
-                pub const FIELD_COUNT: usize = #field_count_lit;
-
-                /// Total bytes the projection's packed portion occupies
-                /// in the aggregate payload buffer; `0` when every
-                /// field is a cursor handle.
-                #[doc(hidden)]
-                pub const TOTAL_BYTES: u8 = #total_bytes_lit;
-            }
-        });
-    }
-    quote! { #(#structs)* }
-}
-
-/// AY-II.W0.d — emit one field of a grammar-derived projection struct.
-///
-/// Scalar kinds map to their Rust primitive (`Span` projects to a
-/// `(u32, u32)` pair so packed-only structs stay `Copy`). Cursor kinds
-/// map to the grammar's `<Grammar>NodeView<'p>` handle, opting the
-/// containing struct out of `Copy` in exchange for full child access.
-fn emit_projection_field(
-    idx: usize,
-    kind: &ProjectionFieldKind,
-    node_view_ident: &syn::Ident,
-) -> TokenStream {
-    let field_ident = format_ident!("field_{}", idx);
-    match kind {
-        ProjectionFieldKind::Scalar { ty, offset } => {
-            let offset_lit = proc_macro2::Literal::u8_unsuffixed(*offset);
-            let ty_tokens = projection_field_type(ty);
-            quote! {
-                /// Grammar-declared scalar field at packed-buffer offset
-                #[doc = concat!("`", stringify!(#offset_lit), "` (bytes).")]
-                pub #field_ident: #ty_tokens
-            }
-        }
-        ProjectionFieldKind::CursorChild { child_idx, .. } => {
-            let child_idx_lit = proc_macro2::Literal::usize_unsuffixed(*child_idx);
-            quote! {
-                /// Grammar-declared compound child at cursor position
-                #[doc = concat!("`", stringify!(#child_idx_lit), "` (child index).")]
-                pub #field_ident: #node_view_ident<'p>
-            }
-        }
-    }
-}
-
-/// AY.W6.2 — Rust backend type for a layout field.
-///
-/// Span projects to `(u32, u32)` (offset + length) so the struct is
-/// `Copy` without a lifetime; every other scalar maps to its
-/// natural Rust primitive via [`TypeDesc::rust_ident`].
-fn projection_field_type(ty: &TypeDesc) -> TokenStream {
-    match ty {
-        TypeDesc::Span => quote! { (u32, u32) },
-        other => {
-            let ident = other
-                .rust_ident()
-                .expect(
-                    "AY.W6.2: grammar-derived projection field type \
-                     must map to a Rust scalar via TypeDesc::rust_ident",
-                );
-            let ty_ident = format_ident!("{}", ident);
-            quote! { #ty_ident }
-        }
-    }
-}
-
-/// AY-II.W0.d — emit `__grammar_projection_<rule>` markers for every
-/// admitted rule. One marker per admission — the resolver-backed arm
-/// (Named + resolver hit) and the pure layout arm share identical
-/// marker shape. The returned `(rule_name, field_count,
-/// named_binding)` triple lets the `cargo expand` hard gate verify
-/// admission without re-inspecting the IR.
-fn emit_grammar_projection_markers(
-    admissions: &[ProjectionAdmission],
-) -> TokenStream {
-    let markers: Vec<TokenStream> = admissions
-        .iter()
-        .map(|a| {
-            let fn_ident = format_ident!(
-                "__grammar_projection_{}",
-                sanitise_ident(&a.rule_name),
-            );
-            let rule_lit = proc_macro2::Literal::string(&a.rule_name);
-            let count_lit = proc_macro2::Literal::usize_unsuffixed(
-                a.plan.fields.len(),
-            );
-            let binding_lit = proc_macro2::Literal::string(
-                a.named_binding_str(),
-            );
-            quote! {
-                /// AY-II.W0.d marker — structural evidence that the
-                /// layout pass + resolver admitted this rule for
-                /// direct-to-struct projection. The returned
-                /// `(rule_name, field_count, named_binding)` triple
-                /// exposes the admitted shape to the `cargo expand`
-                /// hard gate without requiring a runtime compilation.
-                #[doc(hidden)]
-                #[inline(always)]
-                pub fn #fn_ident() -> (&'static str, usize, &'static str) {
-                    (#rule_lit, #count_lit, #binding_lit)
-                }
-            }
-        })
-        .collect();
-    quote! { #(#markers)* }
-}
-
 /// AY.W6.2 — upper-camel-case a rule/grammar name for ident
 /// synthesis. Preserves existing upper-case starts; title-cases
 /// lower-case first chars.
@@ -656,27 +268,6 @@ fn to_upper_camel(name: &str) -> String {
         } else {
             out.push(ch);
         }
-    }
-    out
-}
-
-/// AY.W6.2 — sanitise a rule name into a lowercase Rust ident slug.
-/// Non-alphanumeric characters become underscores; leading digits are
-/// prefixed with `r_` so the resulting ident is valid.
-fn sanitise_ident(name: &str) -> String {
-    let mut out = String::with_capacity(name.len());
-    for (idx, ch) in name.chars().enumerate() {
-        if ch.is_ascii_alphanumeric() {
-            if idx == 0 && ch.is_ascii_digit() {
-                out.push_str("r_");
-            }
-            out.extend(ch.to_lowercase());
-        } else {
-            out.push('_');
-        }
-    }
-    if out.is_empty() {
-        out.push('_');
     }
     out
 }
@@ -843,80 +434,16 @@ impl RustEmitter {
             &ir.struct_registry,
         );
 
-        match strategy {
-            bbnf_ir::registry::EmitStrategy::StructDirect { .. } => {
-                // O3.P1-G1 — StructDirect parse output is the
-                // document-owned runtime surface. Do not emit the
-                // legacy tape-backed node views, generated
-                // `<Grammar>Value` / `ValueRoot` surface, projection
-                // materializers, or their materializer/consumer
-                // metadata for this strategy.
-                TokenStream::new()
-            }
-            bbnf_ir::registry::EmitStrategy::TapeDirect => {
-                // Tranche AC.2 — view types replace the allocating enum.
-                // `generate_views` emits one `<Rule>View<'tape>` per non-
-                // transparent rule plus the `Root` trait binding.
-                let views = crate::backend::rust::view::generate_views(ir, ir_ctx);
+        let bbnf_ir::registry::EmitStrategy::StructDirect { .. } = strategy else {
+            unreachable!("EmitStrategy::for_grammar no longer selects TapeDirect")
+        };
 
-                // AW-IV.W3.5a — direct-to-struct view-layer consumer wiring.
-                //
-                // The AW-III.W6.4 universal binding table lives at
-                // `crates/core/src/backend/rust/view/named_types.rs::BINDINGS`
-                // with a passing parity suite (JSON Value, BBNF AST, Sheets
-                // formula, CSS Color). Pre-W3.5a the view emitter admitted
-                // only hardcoded "Color" | "ColorMix" names via a match in
-                // `view::leaves::emit_aggregate_accessors`; the resolver
-                // shipped but wasn't called on the per-grammar hot path.
-                //
-                // W3.5a threads `resolve_named_type` into the top-level view
-                // emission: for every non-transparent rule whose `TypeDesc`
-                // is `Named(sid)` and whose interned name resolves via the
-                // universal `BINDINGS` table, the direct-to-struct projection
-                // is emitted inline on the view. The mechanism is universal
-                // — JSON Value, BBNF AST, Sheets formula, CSS Color all enter
-                // the fast path via the same resolver call; the shape of the
-                // emitted projection comes from the binding row's
-                // `NamedTypeBinding::fields`.
-                //
-                // The `emit_direct_to_struct_projection` pass walks every
-                // rule, consults the resolver, and emits one `as_<name>()`
-                // shim per admitted rule. The top-level grammar-entry rule
-                // gets additional root-view wiring so downstream consumers
-                // can project the full parse directly without traversing the
-                // tape cursor tree manually.
-                let direct_to_struct =
-                    emit_direct_to_struct_projection(ir, grammar_name_s.as_str());
-
-                // AY.W3b.1 — `<Grammar>Value` enum + `impl ValueRoot` + narrow
-                // `impl PathQuery<T>` impls. Emitted per-grammar via
-                // TypeDesc-equivalence-class collapse (one variant per
-                // non-transparent rule today; the collapse map widens in a
-                // follow-on without disturbing consumers).
-                let value_surface = crate::backend::rust::view::emit_value_surface(
-                    ir,
-                    grammar_name_s.as_str(),
-                );
-
-                // AY.W3b.2 — json-prototype per-shape inline fns. The BEAT-
-                // sonic lever: five `#[inline(always)]` per-shape fns +
-                // the root dispatcher, monomorphised at the
-                // `parsed.to_value()` call site so LLVM inlines the entire
-                // tree-build into a single flat function.
-                let materialize_fns =
-                    super::shapes::value_materialize::emit_materialize_fns(
-                        ir,
-                        grammar_name_s.as_str(),
-                    );
-
-                quote! {
-                    #views
-                    #direct_to_struct
-                    #value_surface
-                    #materialize_fns
-                }
-            }
-        }
+        // O3.P1-G1 / O4 — StructDirect parse output is the
+        // document-owned runtime surface. Do not emit the legacy
+        // tape-backed node views, generated `<Grammar>Value` /
+        // `ValueRoot` surface, projection materializers, or their
+        // materializer/consumer metadata.
+        TokenStream::new()
     }
 
     pub(super) fn emit_grammar_impl(
@@ -1077,39 +604,19 @@ impl RustEmitter {
         // on JSON twitter) is gone from the hot path entirely.
         let _ = rule_functions;
 
-        // AY-II.W0'.a — parse() routes through the shape dispatcher
-        // against a single `Tape<R>` that owns both the tape
-        // column family and the paired value-frame arena. Every shape
-        // emitter's `begin_compound` / `end_compound` / `push_leaf_*`
-        // call stamps BOTH column families atomically inside the fused
-        // builder, and `builder.finish_fused::<Self>(root_off.0)` hands
-        // back one `Tape<Self>` holding the finalised `Tape` +
-        // the grammar-bound `Tape<R><Self>`.
-        // `Parsed::new_fused_output` consumes the fused output directly
-        // — no second finish call, no separate value allocation.
         let _ = visitor_dispatcher_ident;
 
-        // AZ-I.W2.RA — codegen-time substrate selection.
-        //
-        // `EmitStrategy::for_grammar` resolves the (grammar_ident,
-        // registry-population) pair to one of:
-        //
-        // - `EmitStrategy::StructDirect { rust: SubstrateBinding { .. }, .. }`
-        //   — JSON's typed struct-builder body (W2 activation target).
-        //   The `rust` SubstrateBinding carries the codegen-time
-        //   builder/document paths spliced into the parse-fn body.
-        // - `EmitStrategy::TapeDirect` — the legacy fused `Tape<()>`
-        //   body. Default for every grammar pre-W2.
-        //
-        // The `parse_body` match below picks the matching emission
-        // template exactly once per `emit_grammar_impl` invocation.
-        // Per `feedback_no-orthogonal-codepaths` the strategy decision
-        // happens here, at codegen time — there is no runtime
-        // conditional inside the emitted parse fn body.
+        // AZ-II.cutover.O4 — codegen-time substrate selection is
+        // fail-closed. `EmitStrategy::for_grammar` must return a
+        // StructDirect binding for every production grammar; unknown
+        // grammars and empty registries panic before emission.
         let strategy = bbnf_ir::registry::EmitStrategy::for_grammar(
             ident.to_string().as_str(),
             &ir.struct_registry,
         );
+        let bbnf_ir::registry::EmitStrategy::StructDirect { rust, .. } = strategy else {
+            unreachable!("EmitStrategy::for_grammar no longer selects TapeDirect")
+        };
         let parse_body: TokenStream = {
             let dispatcher = shape_dispatcher_ident
                 .as_ref()
@@ -1118,100 +625,25 @@ impl RustEmitter {
                 "__shape_support_{}",
                 super::shapes::sanitise_grammar(ident.to_string().as_str()),
             );
-            match strategy {
-                bbnf_ir::registry::EmitStrategy::StructDirect { rust, .. } => {
-                    emit_parse_body_struct_direct(
-                        dispatcher,
-                        &support_mod_ident,
-                        rust.builder_path,
-                        rust.document_path,
-                    )
-                }
-                bbnf_ir::registry::EmitStrategy::TapeDirect => {
-                    emit_parse_body_tape_direct(dispatcher, &support_mod_ident)
-                }
-            }
+            emit_parse_body_struct_direct(
+                dispatcher,
+                &support_mod_ident,
+                rust.builder_path,
+                rust.document_path,
+            )
         };
-        // The parse() return type follows the strategy: tape-direct
-        // returns `Parsed<'_, Self>`; struct-direct returns the
-        // grammar-specific document type (`JsonDocument<'_>` for JSON).
-        // Both paths wrap in `Result<_, ParseErr>`.
-        let parse_return_type: TokenStream = match strategy {
-            bbnf_ir::registry::EmitStrategy::StructDirect { rust, .. } => {
-                let path: syn::Path = syn::parse_str(rust.document_path).expect(
-                    "EmitStrategy::StructDirect.rust.document_path must parse as a Rust path",
-                );
-                quote! { #path<'_> }
-            }
-            bbnf_ir::registry::EmitStrategy::TapeDirect => quote! {
-                crate::runtime::Parsed<'_, Self>
-            },
+        // Every production parser returns the grammar-specific
+        // document type (`JsonDocument<'_>` for JSON). The result is
+        // still wrapped in `Result<_, ParseErr>`.
+        let parse_return_type: TokenStream = {
+            let path: syn::Path = syn::parse_str(rust.document_path)
+                .expect("EmitStrategy::StructDirect.rust.document_path must parse as a Rust path");
+            quote! { #path<'_> }
         };
-        let projection_associated_consts: TokenStream = match strategy {
-            bbnf_ir::registry::EmitStrategy::StructDirect { .. } => {
-                TokenStream::new()
-            }
-            bbnf_ir::registry::EmitStrategy::TapeDirect => quote! {
-                /// AY.W6.2 — associated-constant accessor for the
-                /// grammar's direct-to-struct projection admission
-                /// list. Alias of the module-scope
-                /// `PROJECTION_DIRECT_TO_STRUCT` slice; downstream
-                /// consumers that coexist with multiple grammars in
-                /// one test binary read via
-                /// `<Grammar>::PROJECTION_DIRECT_TO_STRUCT` to
-                /// disambiguate.
-                pub const PROJECTION_DIRECT_TO_STRUCT: &'static [(&'static str, &'static str)] =
-                    PROJECTION_DIRECT_TO_STRUCT;
-
-                /// AY-II.W0.d — grammar-declared `-> Name` bindings
-                /// per admission. Indexed in lockstep with
-                /// `PROJECTION_DIRECT_TO_STRUCT`; empty string when
-                /// the admission came from a pure layout arm.
-                #[doc(hidden)]
-                pub const PROJECTION_NAMED_BINDINGS: &'static [&'static str] =
-                    PROJECTION_NAMED_BINDINGS;
-
-                /// AY-II.W0.d — materialiser function names per
-                /// admission. Canonical wire-contract evidence that
-                /// every `PROJECTION_DIRECT_TO_STRUCT` entry has a
-                /// matching `materialize_projection_<rule>_<Grammar>`
-                /// fn in the emitter output.
-                #[doc(hidden)]
-                pub const PROJECTION_MATERIALIZERS: &'static [&'static str] =
-                    PROJECTION_MATERIALIZERS;
-
-                /// AY-II.W0.d — production consumer names per
-                /// admission. Each entry identifies the
-                /// `<Grammar>Value::<RuleName>` variant that consumes
-                /// the admitted rule at runtime.
-                #[doc(hidden)]
-                pub const PROJECTION_CONSUMERS: &'static [&'static str] =
-                    PROJECTION_CONSUMERS;
-            },
-        };
-        let parse_docs: TokenStream = match strategy {
-            bbnf_ir::registry::EmitStrategy::StructDirect { .. } => quote! {
-                /// Parse an input string and return the grammar-specific
-                /// document that owns the StructDirect runtime arena.
-            },
-            bbnf_ir::registry::EmitStrategy::TapeDirect => quote! {
-                /// Parse an input string and return a zero-copy
-                /// `Parsed<'_, Self>` that borrows the input directly.
-                ///
-                /// AY-II.W0'.a: `parse()` routes through the shape
-                /// dispatcher against a single `Tape<R>`. The
-                /// hot path here:
-                ///
-                /// 1. Allocate a sized `Tape<R>` — owns both
-                ///    tape + value-frame substrates in one handle.
-                /// 2. Call the shape dispatcher, which decomposes
-                ///    into per-shape bodies inlined at the call
-                ///    site. Every compound / leaf push stamps both
-                ///    column families atomically.
-                /// 3. Finalise via `Tape<R>::finish_fused::<Self>`
-                ///    — returns `Tape<Self>` holding tape +
-                ///    value, handed to `Parsed::new_fused_output` directly.
-            },
+        let projection_associated_consts: TokenStream = TokenStream::new();
+        let parse_docs: TokenStream = quote! {
+            /// Parse an input string and return the grammar-specific
+            /// document that owns the StructDirect runtime arena.
         };
         // AY-II.W0'.a — visitor-generic parse entry retired. The
         // fused parse above IS the visitor lane — every shape
@@ -1288,102 +720,6 @@ impl RustEmitter {
                 }
             }
         }
-    }
-}
-
-/// AZ-I.W2.RA — emit the legacy fused-tape `parse()` body.
-///
-/// The body builds a `Tape<()>` substrate, drives the shape
-/// dispatcher against `(&__input_bytes, &mut pos, &mut state, &mut tape)`,
-/// finalises via `Tape::finish` + grammar-binding transmute, and
-/// returns `Parsed<Self>`.
-///
-/// This is the pre-AZ-I.W2 default body for every grammar; remains
-/// the default for BBNF / BNF / EBNF / CSV / math throughout AZ-I,
-/// and for CSS / Sheets until W3 / W2.B activates them.
-fn emit_parse_body_tape_direct(
-    dispatcher: &syn::Ident,
-    support_mod_ident: &syn::Ident,
-) -> TokenStream {
-    quote! {
-        let __input_bytes = input.as_bytes();
-        // AY.W1-fix — `ScanState::new()` constructs the per-parse
-        // SIMD scratch (whitespace bitmap cache only). AY.W1.3's
-        // eager `scan_structural` call retired here after
-        // AYW1-twitter-regression-diag identified the O(N) scan
-        // cost as ~50% of twitter parse self-time for negligible
-        // probe benefit. The substrate stays in the tape crate
-        // awaiting AY.W4's regex-scan specialisation. Tape capacity
-        // falls back to the per-grammar density estimate via
-        // `GRAMMAR_PROFILE.capacity_for`.
-        let mut state = #support_mod_ident::ScanState::new();
-        // B5.W1 — single unified [`Tape<()>`] allocation. The
-        // substrate owns both the structural columns and the paired
-        // value-frame arena; every `begin_compound` / `end_compound`
-        // / `push_leaf_*` writes to both in lockstep, and
-        // `finish(root)` returns the finalised [`Tape<()>`] with
-        // sib_skip / span_hi / child_off back-patched.
-        let mut tape = crate::runtime::tape::Tape::<()>::with_capacity(
-            GRAMMAR_PROFILE.capacity_for(input.len()),
-        );
-        let root_off = {
-            let mut pos: usize = 0;
-            let off = #dispatcher(
-                __input_bytes,
-                &mut pos,
-                &mut state,
-                &mut tape,
-            )
-            .map_err(|e| match e {
-                crate::runtime::tape::DtaError::Syntax { offset, .. } => {
-                    crate::runtime::ParseErr::Syntax {
-                        offset,
-                        rule: None,
-                    }
-                }
-                crate::runtime::tape::DtaError::UnexpectedEnd { offset } => {
-                    crate::runtime::ParseErr::Syntax {
-                        offset,
-                        rule: None,
-                    }
-                }
-                crate::runtime::tape::DtaError::InvalidState { .. } => {
-                    crate::runtime::ParseErr::Syntax {
-                        offset: 0,
-                        rule: None,
-                    }
-                }
-            })?;
-            // Trailing whitespace.
-            let _ = #support_mod_ident::skip_space(
-                __input_bytes, &mut pos, &mut state,
-            );
-            if pos != input.len() {
-                return Err(crate::runtime::ParseErr::Syntax {
-                    offset: pos as u32,
-                    rule: None,
-                });
-            }
-            off
-        };
-        // B5.W1 — `Tape::finish(root)` runs Stage-C finalisation
-        // + stamps the root offset on the substrate. The substrate
-        // is parse-time grammar-agnostic (`Tape<()>`); at finish
-        // time we re-bind the phantom `R` from `()` to `Self` so
-        // projection-time consumers (`Parsed::to_value`) see the
-        // grammar-bound substrate. Layout-identical transmute is
-        // sound because `R` is `PhantomData<fn() -> R>`.
-        let tape: crate::runtime::tape::Tape<()> = tape
-            .finish(root_off.0)
-            .map_err(crate::runtime::ParseErr::Tape)?;
-        let tape: crate::runtime::tape::Tape<Self> =
-            // SAFETY: `Tape<R>` is layout-identical for all `R` (the
-            // marker is `PhantomData<fn() -> R>`, a ZST). `()` and
-            // `Self` differ only in the phantom binding.
-            unsafe { ::core::mem::transmute(tape) };
-        ::core::result::Result::Ok(
-            crate::runtime::Parsed::new(tape, input, root_off),
-        )
     }
 }
 

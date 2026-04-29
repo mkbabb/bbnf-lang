@@ -126,7 +126,7 @@ codegen still compiles.
 - Commits `63cacbe2`, `d3977825`, `19a2669a`, `82a88696`,
   `ec7a0fa1`.
 - `docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md`.
-- `docs/tranches/AZ-II/waves/cutover.md`.
+- `docs/tranches/AZ-II/waves/cutover/README.md`.
 
 ## Dependencies
 

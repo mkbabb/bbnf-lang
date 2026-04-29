@@ -25,7 +25,7 @@
 | `docs/benchmarks/post-AZ-II.json` | create |
 | `docs/benchmarks/post-AY-AZ-II-close-*.txt` | create |
 | `docs/tranches/AZ-II/PROGRESS.md` | modify |
-| `docs/tranches/AZ-II/waves/cutover.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/README.md` | modify |
 
 **Do NOT touch**: source-code tape deletion, generated parser
 substantial rewrites, BBNF runtime substrate, resolver arms.
@@ -69,7 +69,7 @@ Mechanism: update AZ-II progress and cutover docs to route consumer
 migration to cutover.D and substrate expansion to later waves.
 
 Files touched: `docs/tranches/AZ-II/PROGRESS.md`,
-`docs/tranches/AZ-II/waves/cutover.md`.
+`docs/tranches/AZ-II/waves/cutover/README.md`.
 
 Sub-gate: no document says tape deletion is complete.
 

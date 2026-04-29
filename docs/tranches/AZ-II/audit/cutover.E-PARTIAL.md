@@ -179,12 +179,12 @@ Strictly gated on Phases 1 + 2 complete. Cannot land in cutover.E.
 
 ### Phase 4 — tape-shaped consumer recode
 
-The cutover.md's §10 mentions `crates/gorgeous/src/**` (@debug
+The cutover/README.md's §10 mentions `crates/gorgeous/src/**` (@debug
 directive lowerer), `crates/lsp/src/**` (semantic tokens / hover),
 `crates/analysis/src/**` (LSP analysis paths). cutover.E audit found
 **zero** tape imports in these crates today (`grep -r "tape::\|use tape" crates/{gorgeous,lsp,analysis}`
 returns nothing). They consume only via `bbnf::runtime::*` re-exports.
-The Phase 4 work in cutover.md was already complete in prior tranches
+The Phase 4 work in cutover/README.md was already complete in prior tranches
 or was a phantom. cutover.F may verify and close this as a no-op.
 
 ### Phase 5 — bbnf_rule re-author
@@ -202,7 +202,7 @@ in the 17-entry matrix would all fail. Once Phase 1+2+5 close, the
 post-AZ-II bench archive lands and FINAL.md cites the actual
 benchmark deltas.
 
-## Hard-gate readout (cutover.md §"Hard gate")
+## Hard-gate readout (cutover/README.md §"Hard gate")
 
 | # | Gate | Status | Evidence |
 |---|---|---|---|
@@ -283,14 +283,14 @@ repair.
 ## Decay reclaim
 
 cutover.E adds substrate; no retirements. ~2900 LOC of new code; net
-zero deletions. The decay reclaim from cutover.md §12 falls out of
+zero deletions. The decay reclaim from cutover/README.md §12 falls out of
 Phase 3 (`crates/tape/` deletion at cutover.F) — ~10000 LOC of tape
 crate surface plus any per-grammar generated tape consumers eligible
 for deletion post-regen.
 
 ## Archaeology
 
-cutover.E supersedes the original cutover.md framing of cutover.E as
+cutover.E supersedes the original cutover/README.md framing of cutover.E as
 "final-substage of cutover.D" — cutover.D's exit state has BBNF
 parse-path breakage that the cutover.E brief did not anticipate.
 This document records the correction; cutover.F is the canonical

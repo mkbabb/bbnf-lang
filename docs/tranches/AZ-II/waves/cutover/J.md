@@ -19,8 +19,8 @@
 
 | File | Access |
 |---|---|
-| `docs/tranches/AZ-II/waves/cutover.J.md` | create |
-| `docs/tranches/AZ-II/waves/cutover.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/J.md` | create |
+| `docs/tranches/AZ-II/waves/cutover/README.md` | modify |
 | `docs/tranches/AZ-II/AZ-II.md` | modify |
 
 **Do NOT touch**: source code, generated parser files, benchmark
@@ -35,7 +35,7 @@ Mechanism: record that cutover.J halted with no code commits and that
 the partial mapped-factor investigation was carried forward rather than
 landed.
 
-Files touched: `docs/tranches/AZ-II/waves/cutover.J.md`.
+Files touched: `docs/tranches/AZ-II/waves/cutover/J.md`.
 
 Sub-gate: the parent cutover index links J as a halted no-code record
 rather than omitting the label.
@@ -47,7 +47,7 @@ cutover.K mapped-factor/typed-leaf/Err-frame repair, cutover.L
 keyword Alt-of-Ref repair, cutover.M non-BBNF resolver activation,
 and cutover.O terminal hardening.
 
-Files touched: `docs/tranches/AZ-II/waves/cutover.J.md`,
+Files touched: `docs/tranches/AZ-II/waves/cutover/J.md`,
 `docs/tranches/AZ-II/AZ-II.md`.
 
 Sub-gate: no active gate points to cutover.J as a remaining
@@ -55,7 +55,7 @@ implementation owner.
 
 ## Hard gate
 
-1. `docs/tranches/AZ-II/waves/cutover.md` includes `cutover.J.md` in
+1. `docs/tranches/AZ-II/waves/cutover/README.md` includes `J.md` in
    the historical A-O agency spec list.
 2. `docs/tranches/AZ-II/AZ-II.md` includes J in the historical
    agency-spec set and names it as a halted no-code attempt, not a

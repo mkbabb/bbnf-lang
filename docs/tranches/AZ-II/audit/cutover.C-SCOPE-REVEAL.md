@@ -70,7 +70,7 @@ function at line 28396 internally:
 - The 8 grammars' `Root for <Grammar>` impls (e.g. line 18131 in bbnf.rs's regen output) require `&Tape<()>` parameters per `crate::runtime::Root::make_view` — the trait surface itself binds `Tape<()>` into the view-construction protocol
 - `crates/core/src/runtime/parsed.rs::Parsed<'p, R>` carries `tape: Tape<R>` as a field (line 84) — `Parsed` is referenced at hundreds of sites; deleting tape requires re-architecting `Parsed`
 
-These cross-grammar couplings were not visible in the cutover.md
+These cross-grammar couplings were not visible in the cutover/README.md
 plan's "structural cutover deletes tape on Commit 4" framing.
 Per `feedback_no-orthogonal-codepaths` no shrunken-tape-retained-
 for-some-grammars floor is permitted; per `feedback_no-workarounds`
@@ -78,7 +78,7 @@ no temporary tape-keeps-but-renames-itself shim is permitted.
 
 ## Sub-gate readout
 
-cutover.md's cutover.C sub-gate enumerates 7 closure conditions:
+cutover/README.md's cutover.C sub-gate enumerates 7 closure conditions:
 
 | # | Condition | Status | Evidence |
 |---|---|---|---|
@@ -90,7 +90,7 @@ cutover.md's cutover.C sub-gate enumerates 7 closure conditions:
 | 6 | Workspace nextest 0 failures | NOT VERIFIED | Cap consumed by scope analysis; bench in-flight |
 | 7 | 17-entry matrix at AZ-I baseline | DEFERRED | Bench in flight; substrate same as cutover.A baseline so numbers expected to match AZ-I close |
 
-## Hard-gate readout (cutover.md §"Hard gate")
+## Hard-gate readout (cutover/README.md §"Hard gate")
 
 | # | Gate | Status |
 |---|---|---|
@@ -122,7 +122,7 @@ the discovered scope. Two paths align with repository discipline:
 
 ### Path A — cutover.D (consumer migration sub-stage)
 
-Open `docs/tranches/AZ-II/waves/cutover.D.md` as a new sub-stage
+Open `docs/tranches/AZ-II/waves/cutover/D.md` as a new sub-stage
 between cutover.B and the original cutover.C, scoped to:
 
 1. **Migrate `host.rs`** (619 LOC) from `&Parsed<BbnfBootstrap>` +
@@ -173,14 +173,14 @@ reverted to maintain a clean working tree for the orchestrator.
 1. **Cherry-pick this scope-reveal report** + the accompanying
    `FINAL.md` + `PROGRESS.md` close entry as the AZ-II.cutover.C
    close commits.
-2. **Open `cutover.D.md`** authoring follow-on Path A above.
+2. **Open `cutover/D.md`** authoring follow-on Path A above.
 3. **Land bench JSON when available** (in-flight at relinquishment;
    captures cutover.A baseline state — same as AZ-I close since
    neither cutover.B nor cutover.C lands runtime substrate that
    touches the parse hot path).
 4. **Block BA.W0** pending cutover.D close — handoff contract
    items 1, 2, 4, 5 not yet met.
-5. **Consider re-evaluating cutover.md's tape deletion sub-gate**
+5. **Consider re-evaluating cutover/README.md's tape deletion sub-gate**
    — Discovery 2 reveals `crates/tape/` is consumed by 8 non-BBNF
    grammars' generated parsers and by `Parsed<R>` itself. Tape
    deletion requires either (a) migrating all 9 grammars off

@@ -7,7 +7,7 @@
 **2026-04-29 supersession note**: this file is historical evidence for
 the cutover.I halt. Later cutover.K/L/M closed much of the Phase 2
 fleet activation path, and the live remaining work is now cutover.O in
-`../waves/cutover.md`, beginning with builder transactions before EBNF
+`../waves/cutover/README.md`, beginning with builder transactions before EBNF
 activation. Do not dispatch from this file's "Next-tranche scope"
 section.
 
@@ -82,7 +82,7 @@ Decay reclaim: 0 LOC (Phase 5 is additive — substrate authored, no deletions).
 
 Workspace test posture: 19/19 serialize_roundtrip + 1/1 bbnf_bootstrap_reproducibility green. The cutover.H +16 net-improved test count carries forward; cutover.I.5 adds +1 (bbnf_rule un-ignored).
 
-## Hard-gate ledger updates per `waves/cutover.md` §Hard gate
+## Hard-gate ledger updates per `waves/cutover/README.md` §Hard gate
 
 | # | Gate | cutover.I.5 status | Notes |
 |---|---|---|---|

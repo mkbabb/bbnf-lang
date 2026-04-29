@@ -9,7 +9,7 @@ escape design.
 proc-macro retirement and uses `bbnf-derive` language for what is now
 the `cargo xtask regen` checked-in-source path. Use
 `PROGRESS-SNAPSHOT-2026-04-29.md` as the implemented-state record, and
-use `AZ-II.md`, `waves/cutover.md`, `PROGRESS.md`, and
+use `AZ-II.md`, `waves/cutover/README.md`, `PROGRESS.md`, and
 `audit/AZ-II-HARDENING-AUDIT-2026-04-29.md` as the aligned live execution
 canon for cutover.O.
 

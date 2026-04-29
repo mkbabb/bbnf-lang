@@ -29,12 +29,12 @@
 |---|---|
 | `docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt` | create |
 | `docs/benchmarks/post-AY-az-ii-doc-baseline-json.txt` | create |
-| `docs/tranches/AZ-II/waves/cutover.O3.md` | modify |
-| `docs/tranches/AZ-II/waves/cutover.O4.md` | modify |
-| `docs/tranches/AZ-II/waves/cutover.O5.md` | modify |
-| `docs/tranches/AZ-II/waves/cutover.O6.md` | modify |
-| `docs/tranches/AZ-II/waves/cutover.O7.md` | modify |
-| `docs/tranches/AZ-II/waves/cutover.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/O3.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/O4.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/O5.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/O6.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/O7.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/README.md` | modify |
 | `docs/tranches/AZ-II/PROGRESS.md` | modify |
 | `docs/tranches/AZ-II/audit/AZ-II-HARDENING-AUDIT-2026-04-29.md` | modify |
 
@@ -156,14 +156,14 @@ child wave specs.
 Mechanism: update O3-O7 specs with the cohort outcomes so every failure
 has a wave owner before implementation continues.
 
-Files touched: `docs/tranches/AZ-II/waves/cutover.O3.md`,
-`docs/tranches/AZ-II/waves/cutover.O4.md`,
-`docs/tranches/AZ-II/waves/cutover.O5.md`,
-`docs/tranches/AZ-II/waves/cutover.O6.md`,
-`docs/tranches/AZ-II/waves/cutover.O7.md`,
-`docs/tranches/AZ-II/waves/cutover.md`.
+Files touched: `docs/tranches/AZ-II/waves/cutover/O3.md`,
+`docs/tranches/AZ-II/waves/cutover/O4.md`,
+`docs/tranches/AZ-II/waves/cutover/O5.md`,
+`docs/tranches/AZ-II/waves/cutover/O6.md`,
+`docs/tranches/AZ-II/waves/cutover/O7.md`,
+`docs/tranches/AZ-II/waves/cutover/README.md`.
 
-Sub-gate: `rg 'UNASSIGNED|TBD|owner gap' docs/tranches/AZ-II/waves/cutover.O*.md`
+Sub-gate: `rg 'UNASSIGNED|TBD|owner gap' docs/tranches/AZ-II/waves/cutover/O*.md`
 returns no active failure owner gaps.
 
 ### AZ-II.cutover.O3a.10 Progress Boundary

@@ -5,8 +5,8 @@
 Implemented-state record:
 [`PROGRESS-SNAPSHOT-2026-04-29.md`](PROGRESS-SNAPSHOT-2026-04-29.md).
 Live terminal sequence: `cutover.O.0` through `cutover.O.7`, specified
-for dispatch at [`waves/cutover.O0.md`](waves/cutover.O0.md) through
-[`waves/cutover.O7.md`](waves/cutover.O7.md).
+for dispatch at [`waves/cutover/O0.md`](waves/cutover/O0.md) through
+[`waves/cutover/O7.md`](waves/cutover/O7.md).
 `cutover.O3a` is the active failure-baseline and triumvirate redress
 prelude inserted before O3 implementation continues.
 
@@ -68,8 +68,10 @@ single **AZ-II.cutover** wave per `docs/tranches/AZ-I/audit/W2-CLOSE-AUDIT.md`
 further substrate work; Stage A / Stage B is two regen invocations
 rather than a wave's worth of ceremony; tape deletion is mechanical
 once `crates/tape/` has zero remaining consumers. Wave doc lands at
-`docs/tranches/AZ-II/waves/cutover.md`. The W0 / W1 / W2 wave docs
-carry supersede notices and stay on disk as historical record.
+`docs/tranches/AZ-II/waves/cutover/README.md`. The W0 / W1 / W2 wave docs
+carry supersede notices at `docs/tranches/AZ-II/waves/{W0,W1,W2}.md`
+and stay on disk as historical record. Cutover substage specs live in
+`docs/tranches/AZ-II/waves/cutover/`.
 
 The cutover wave runs in three sequential sub-stages:
 
@@ -96,7 +98,7 @@ The cutover wave runs in three sequential sub-stages:
 | W0 | superseded (2026-04-28) | Folded into cutover.A (substrate hoist + BBNF runtime + decay sweep) |
 | W1 | superseded (2026-04-28) | Folded into cutover.B (Stage A + Stage B byte-equal cycle) |
 | W2 | superseded (2026-04-28) | Folded into cutover.C (`crates/tape/` deletion + recode + FINAL) |
-| cutover | partial-close (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; [O0](waves/cutover.O0.md) tooling preflight, [O1](waves/cutover.O1.md) builder transactions, and [O2](waves/cutover.O2.md) EBNF direct projection landed; [O3](waves/cutover.O3.md) generated view purge next) | 9/9 grammars StructDirect; terminal hardening routes through [cutover.O3-O7](waves/cutover.md) after transactional StructDirect rollback support and EBNF activation |
+| cutover | partial-close (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; [O0](waves/cutover/O0.md) tooling preflight, [O1](waves/cutover/O1.md) builder transactions, and [O2](waves/cutover/O2.md) EBNF direct projection landed; [O3](waves/cutover/O3.md) generated view purge next) | 9/9 grammars StructDirect; terminal hardening routes through [cutover.O3-O7](waves/cutover/README.md) after transactional StructDirect rollback support and EBNF activation |
 
 ## 2026-04-28 — cutover.G partial close
 
@@ -328,15 +330,15 @@ cross-crate refs).
 
 | Substage | Scope | Estimated cap |
 |---|---|---|
-| [cutover.O.0](waves/cutover.O0.md) | Tooling preflight: stale bench aliases, IAI CI, profiling scripts, release pin | LANDED |
-| [cutover.O.1](waves/cutover.O1.md) | StructDirect builder transaction ABI across speculative branches | LANDED |
-| [cutover.O.2](waves/cutover.O2.md) | EBNF diagnosis + generic AltDispatch structural-Seq repair | LANDED |
-| [cutover.O.3a](waves/cutover.O3a.md) | Failure baseline + research/plan/redress cohort dispatch | in_progress |
-| [cutover.O.3](waves/cutover.O3.md) | Generated tape-view / `ValueRoot` residue purge for StructDirect | 90 min |
-| [cutover.O.4](waves/cutover.O4.md) | `Parsed<R>` deletion and `TapeDirect` fallback removal | 90 min |
-| [cutover.O.5](waves/cutover.O5.md) | `crates/tape` deletion after relocating non-tape scan/index primitives | 120 min |
-| [cutover.O.6](waves/cutover.O6.md) | 17-entry close matrix + JSON sonic-rs / CSS lightningcss parity refresh | 90 min |
-| [cutover.O.7](waves/cutover.O7.md) | AZ-II FINAL.md PARTIAL -> FINAL CLOSE conversion | 30 min |
+| [cutover.O.0](waves/cutover/O0.md) | Tooling preflight: stale bench aliases, IAI CI, profiling scripts, release pin | LANDED |
+| [cutover.O.1](waves/cutover/O1.md) | StructDirect builder transaction ABI across speculative branches | LANDED |
+| [cutover.O.2](waves/cutover/O2.md) | EBNF diagnosis + generic AltDispatch structural-Seq repair | LANDED |
+| [cutover.O.3a](waves/cutover/O3a.md) | Failure baseline + research/plan/redress cohort dispatch | in_progress |
+| [cutover.O.3](waves/cutover/O3.md) | Generated tape-view / `ValueRoot` residue purge for StructDirect | 90 min |
+| [cutover.O.4](waves/cutover/O4.md) | `Parsed<R>` deletion and `TapeDirect` fallback removal | 90 min |
+| [cutover.O.5](waves/cutover/O5.md) | `crates/tape` deletion after relocating non-tape scan/index primitives | 120 min |
+| [cutover.O.6](waves/cutover/O6.md) | 17-entry close matrix + JSON sonic-rs / CSS lightningcss parity refresh | 90 min |
+| [cutover.O.7](waves/cutover/O7.md) | AZ-II FINAL.md PARTIAL -> FINAL CLOSE conversion | 30 min |
 
 Remaining estimate after O2: ~7 hours sequential under fan-out. If a
 later gate requires a new grammar-general inference/layout substrate,

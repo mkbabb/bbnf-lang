@@ -17,7 +17,7 @@ partially closed, not terminally closed: direct-to-struct is live for
 generated tape-view residue, and `crates/tape` still blocking the
 gestalt architecture. The implemented-state read-of-record is the AZ-II
 progress snapshot; the immediate path is AZ-II `cutover.O`, aligned by
-`docs/tranches/AZ-II/waves/cutover.md` and
+`docs/tranches/AZ-II/waves/cutover/README.md` and
 `docs/tranches/AZ-II/audit/AZ-II-HARDENING-AUDIT-2026-04-29.md`.
 As of the post-snapshot hardening work, O0 tooling preflight, O1
 StructDirect builder transactions, and O2 EBNF direct projection are

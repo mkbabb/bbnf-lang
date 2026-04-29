@@ -33,7 +33,7 @@ residue from StructDirect output, then delete `Parsed<R>` and
 `TapeDirect`, delete the standalone tape crate, and refresh semantic
 parity/performance truth.
 Each O substage is now specified as a dispatchable wave under
-`waves/cutover.O0.md` through `waves/cutover.O7.md`, with up to 10
+`waves/cutover/O0.md` through `waves/cutover/O7.md`, with up to 10
 parallel sibling worktree agents and explicit file bounds.
 `cutover.O3a.md` is the inserted failure-baseline and triumvirate
 redress prelude before O3 implementation continues.
@@ -211,7 +211,7 @@ disk as historical record.
 
 | Wave | Headline | Opens after | Status |
 |---|---|---|---|
-| **cutover** | BBNF self-host + tape deletion ([waves/cutover.md](waves/cutover.md)) — original three-stage plan expanded under contact into 14 sub-stages cutover.A through cutover.N, then O0-O7 child specs | AZ-I.W2-act close (AZ-I FINAL.md committed; seven-point handoff verified) | partial-close (cutover.A→M LANDED; cutover.N halted at usage limit; [O0](waves/cutover.O0.md)/[O1](waves/cutover.O1.md)/[O2](waves/cutover.O2.md) LANDED; terminal hardening resumes at [O3 generated view purge](waves/cutover.O3.md)) |
+| **cutover** | BBNF self-host + tape deletion ([waves/cutover/README.md](waves/cutover/README.md)) — original three-stage plan expanded under contact into 14 sub-stages cutover.A through cutover.N, then O0-O7 child specs | AZ-I.W2-act close (AZ-I FINAL.md committed; seven-point handoff verified) | partial-close (cutover.A→M LANDED; cutover.N halted at usage limit; [O0](waves/cutover/O0.md)/[O1](waves/cutover/O1.md)/[O2](waves/cutover/O2.md) LANDED; terminal hardening resumes at [O3 generated view purge](waves/cutover/O3.md)) |
 
 The cutover wave's actual trajectory across 14 sub-stages is recorded
 in `docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md` (per-substage
@@ -219,7 +219,8 @@ commit SHAs, hard-gate readout, BA handoff verification, agent dispatch
 history). Per-substage scope-reveal reports archived under
 `docs/tranches/AZ-II/audit/cutover.{C,E,F,G,I}-PARTIAL.md`.
 Historical agency specs for the substages live beside the active O
-specs at `waves/cutover.{A,B,C,D,E,F,G,H,I,J,K,L,M,N,O}.md`.
+specs under `waves/cutover/`: `A.md` through `O.md`, plus `O0.md`
+through `O7.md` and the inserted `O3a.md`.
 cutover.J is a halted no-code record; its mapped-factor diagnosis
 resumed and landed in K rather than under a retroactive J label.
 
@@ -242,15 +243,15 @@ resumed and landed in K rather than under a retroactive J label.
 
 | O spec | Headline | Status |
 |---|---|---|
-| [cutover.O0](waves/cutover.O0.md) | Tooling preflight | LANDED |
-| [cutover.O1](waves/cutover.O1.md) | StructDirect builder transactions | LANDED |
-| [cutover.O2](waves/cutover.O2.md) | EBNF direct projection | LANDED |
-| [cutover.O3a](waves/cutover.O3a.md) | Failure baseline + triumvirate redress | in_progress |
-| [cutover.O3](waves/cutover.O3.md) | Generated view purge | in_progress |
-| [cutover.O4](waves/cutover.O4.md) | `Parsed<R>` / `TapeDirect` deletion | planned |
-| [cutover.O5](waves/cutover.O5.md) | `crates/tape` deletion | planned |
-| [cutover.O6](waves/cutover.O6.md) | Semantic/performance close | planned |
-| [cutover.O7](waves/cutover.O7.md) | FINAL conversion | planned |
+| [cutover.O0](waves/cutover/O0.md) | Tooling preflight | LANDED |
+| [cutover.O1](waves/cutover/O1.md) | StructDirect builder transactions | LANDED |
+| [cutover.O2](waves/cutover/O2.md) | EBNF direct projection | LANDED |
+| [cutover.O3a](waves/cutover/O3a.md) | Failure baseline + triumvirate redress | in_progress |
+| [cutover.O3](waves/cutover/O3.md) | Generated view purge | in_progress |
+| [cutover.O4](waves/cutover/O4.md) | `Parsed<R>` / `TapeDirect` deletion | planned |
+| [cutover.O5](waves/cutover/O5.md) | `crates/tape` deletion | planned |
+| [cutover.O6](waves/cutover/O6.md) | Semantic/performance close | planned |
+| [cutover.O7](waves/cutover/O7.md) | FINAL conversion | planned |
 
 ### W0 — Research + cutover design + classifier extension
 

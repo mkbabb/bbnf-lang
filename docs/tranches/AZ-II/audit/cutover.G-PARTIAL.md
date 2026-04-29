@@ -214,7 +214,7 @@ decision is downstream policy. Routing the consumer entry points
 back through `generated::BbnfBootstrap::parse` post-Phase 1.c
 fix is a 2-line edit at the two call sites.
 
-## Hard-gate readout (cutover.md §"Hard gate")
+## Hard-gate readout (cutover/README.md §"Hard gate")
 
 | # | Gate | Status | Evidence |
 |---|---|---|---|

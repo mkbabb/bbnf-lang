@@ -214,7 +214,7 @@ The chicken-and-egg break paths cutover.G can take:
 cutover.F recommends path **1** (hand-craft) — minimal scope, no
 new bypass infrastructure to retire later.
 
-## Hard-gate readout (cutover.md §"Hard gate")
+## Hard-gate readout (cutover/README.md §"Hard gate")
 
 | # | Gate | Status | Evidence |
 |---|---|---|---|
@@ -243,7 +243,7 @@ new bypass infrastructure to retire later.
 
 cutover.F adds emitter infrastructure; no retirements. Net LOC delta
 across the wave: **+525 LOC** (emitter fixes), **0 LOC** retirements.
-The decay reclaim from cutover.md §12 falls out of Phase 3
+The decay reclaim from cutover/README.md §12 falls out of Phase 3
 (`crates/tape/` deletion) which is gated on Phase 1 + 2 close;
 cutover.G or later.
 

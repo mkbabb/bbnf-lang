@@ -32,24 +32,24 @@ resume point is O3 generated view purge, now with EBNF on
 StructDirect and grammar-general StructDirect checkpoint/rollback/
 commit support available to every speculative emitter path.
 
-**Trajectory snapshot**: see [`../PROGRESS-SNAPSHOT-2026-04-29.md`](../PROGRESS-SNAPSHOT-2026-04-29.md)
+**Trajectory snapshot**: see [`../PROGRESS-SNAPSHOT-2026-04-29.md`](../../PROGRESS-SNAPSHOT-2026-04-29.md)
 for per-substage commit-by-commit detail across cutover.A through
 cutover.N, agent dispatch history with caps + outcomes, hard-gate
 readout, BA handoff verification, and trajectory progress estimate.
 
 **Per-substage scope-reveal reports**: archived under
-[`../audit/cutover.{C,E,F,G,I}-PARTIAL.md`](../audit/) — the cutover
+[`../audit/cutover.{C,E,F,G,I}-PARTIAL.md`](../../audit/) — the cutover
 wave's scope expanded under contact from 3 sub-stages to 14, with
 each scope-reveal report documenting the discovered work, blocker
 diagnosis, and follow-on substage routing.
 
 **Historical agency specs**: every cutover substage now has its own
 wave-spec record for provenance and future audit:
-[`A`](cutover.A.md), [`B`](cutover.B.md), [`C`](cutover.C.md),
-[`D`](cutover.D.md), [`E`](cutover.E.md), [`F`](cutover.F.md),
-[`G`](cutover.G.md), [`H`](cutover.H.md), [`I`](cutover.I.md),
-[`J`](cutover.J.md), [`K`](cutover.K.md), [`L`](cutover.L.md),
-[`M`](cutover.M.md), [`N`](cutover.N.md), and [`O`](cutover.O.md).
+[`A`](A.md), [`B`](B.md), [`C`](C.md),
+[`D`](D.md), [`E`](E.md), [`F`](F.md),
+[`G`](G.md), [`H`](H.md), [`I`](I.md),
+[`J`](J.md), [`K`](K.md), [`L`](L.md),
+[`M`](M.md), [`N`](N.md), and [`O`](O.md).
 cutover.J is an explicit halted no-code record: its mapped-factor
 diagnosis resumed and landed in K rather than receiving a retroactive J
 implementation. The original embedded A/B/C sections below remain as
@@ -185,50 +185,50 @@ sibling repo source); BB scaffold (BB.W0 owns its own files).
 
 Serial O substages with maximal fan-out inside each substage where file
 ownership is disjoint. Every O substage is specified as its own
-dispatchable wave file under `waves/cutover.O*.md`; each permits up to
+dispatchable wave file under `waves/cutover/O*.md`; each permits up to
 10 parallel agents in sibling fully-contained worktrees. This is the
 terminal AZ-II wave, not an AZ-III deferral surface.
 
 Required order:
 
-1. **[O0 tooling preflight](cutover.O0.md)** — LANDED: repair or
+1. **[O0 tooling preflight](O0.md)** — LANDED: repair or
    explicitly de-canonicalize stale bench/profiling/IAI command
    surfaces before they are used as close evidence.
-2. **[O1 transactional builder ABI](cutover.O1.md)** — LANDED: grammar-general
+2. **[O1 transactional builder ABI](O1.md)** — LANDED: grammar-general
    checkpoint/rollback/commit support exists on `StructBuilder` and is
    wired through every speculative StructDirect emitter path.
-3. **[O2 EBNF direct projection](cutover.O2.md)** — LANDED: large literal alternates
+3. **[O2 EBNF direct projection](O2.md)** — LANDED: large literal alternates
    and structural `Seq` branches project through StructDirect;
    `EbnfParser::parse -> EbnfDocument`.
-4. **[O3a failure baseline and triumvirate redress](cutover.O3a.md)** —
+4. **[O3a failure baseline and triumvirate redress](O3a.md)** —
    in_progress: assign all 84 test failures and the failed JSON bench
    baseline to research/plan/redress cohorts before implementation
    resumes.
-5. **[O3 generated view purge](cutover.O3.md)** — in_progress: remove tape-backed `TapeCursor`,
+5. **[O3 generated view purge](O3.md)** — in_progress: remove tape-backed `TapeCursor`,
    node-view, and `ValueRoot` residue from StructDirect generated output
    unless it is consumed through a document API.
-6. **[O4 Parsed/TapeDirect deletion](cutover.O4.md)** — delete `Parsed<R>` as a
+6. **[O4 Parsed/TapeDirect deletion](O4.md)** — delete `Parsed<R>` as a
    production parser result and remove `TapeDirect` fallback semantics.
-7. **[O5 tape crate deletion](cutover.O5.md)** — delete `crates/tape` after relocating
+7. **[O5 tape crate deletion](O5.md)** — delete `crates/tape` after relocating
    only genuinely non-tape scan/index primitives to their natural owner.
-8. **[O6 semantic/perf close](cutover.O6.md)** — refresh JSON `sonic-rs` parity, CSS
+8. **[O6 semantic/perf close](O6.md)** — refresh JSON `sonic-rs` parity, CSS
    `lightningcss` typed parity, and the 17-entry close matrix.
-9. **[O7 final conversion](cutover.O7.md)** — convert AZ-II FINAL from
+9. **[O7 final conversion](O7.md)** — convert AZ-II FINAL from
    PARTIAL CLOSE to terminal close after the gates above pass.
 
 Child wave specs:
 
 | Spec | Status | Dispatch shape |
 |---|---|---|
-| [`cutover.O0.md`](cutover.O0.md) | complete | up to 10 parallel worktree-isolated lanes; no perf baseline |
-| [`cutover.O1.md`](cutover.O1.md) | complete | up to 10 parallel worktree-isolated lanes; orchestrator-owned regen |
-| [`cutover.O2.md`](cutover.O2.md) | complete | up to 10 parallel worktree-isolated lanes; orchestrator-owned regen |
-| [`cutover.O3a.md`](cutover.O3a.md) | in_progress | up to 10 parallel worktree-isolated lanes; failure cohort triumvirates |
-| [`cutover.O3.md`](cutover.O3.md) | in_progress | up to 10 parallel worktree-isolated lanes; generated view purge |
-| [`cutover.O4.md`](cutover.O4.md) | planned | up to 10 parallel worktree-isolated lanes; return-model deletion |
-| [`cutover.O5.md`](cutover.O5.md) | planned | up to 10 parallel worktree-isolated lanes; tape crate deletion |
-| [`cutover.O6.md`](cutover.O6.md) | planned | up to 10 parallel worktree-isolated lanes; sequential bench execution |
-| [`cutover.O7.md`](cutover.O7.md) | planned | up to 10 parallel worktree-isolated lanes; close-doc reconciliation |
+| [`O0.md`](O0.md) | complete | up to 10 parallel worktree-isolated lanes; no perf baseline |
+| [`O1.md`](O1.md) | complete | up to 10 parallel worktree-isolated lanes; orchestrator-owned regen |
+| [`O2.md`](O2.md) | complete | up to 10 parallel worktree-isolated lanes; orchestrator-owned regen |
+| [`O3a.md`](O3a.md) | in_progress | up to 10 parallel worktree-isolated lanes; failure cohort triumvirates |
+| [`O3.md`](O3.md) | in_progress | up to 10 parallel worktree-isolated lanes; generated view purge |
+| [`O4.md`](O4.md) | planned | up to 10 parallel worktree-isolated lanes; return-model deletion |
+| [`O5.md`](O5.md) | planned | up to 10 parallel worktree-isolated lanes; tape crate deletion |
+| [`O6.md`](O6.md) | planned | up to 10 parallel worktree-isolated lanes; sequential bench execution |
+| [`O7.md`](O7.md) | planned | up to 10 parallel worktree-isolated lanes; close-doc reconciliation |
 
 Hard gates:
 

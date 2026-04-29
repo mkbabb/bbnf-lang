@@ -22,7 +22,7 @@
 | `docs/benchmarks/AZ-II/cutover/stage-a-bbnf.rs` | create |
 | `docs/benchmarks/AZ-II/cutover/stage-b-bbnf.rs` | create |
 | `docs/tranches/AZ-II/PROGRESS.md` | modify |
-| `docs/tranches/AZ-II/waves/cutover.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/README.md` | modify |
 
 **Do NOT touch**: BBNF runtime substrate, BBNF consumer migration,
 `crates/tape/` deletion, non-BBNF resolver arms. Deployment invariant:
@@ -84,7 +84,7 @@ passes.
 Mechanism: update AZ-II progress and cutover docs with the landed gate.
 
 Files touched: `docs/tranches/AZ-II/PROGRESS.md`,
-`docs/tranches/AZ-II/waves/cutover.md`.
+`docs/tranches/AZ-II/waves/cutover/README.md`.
 
 Sub-gate: cutover.C opens only after the reproducibility gate is green.
 

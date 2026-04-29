@@ -22,16 +22,16 @@
 
 | File | Access |
 |---|---|
-| `docs/tranches/AZ-II/waves/cutover.O0.md` | modify |
-| `docs/tranches/AZ-II/waves/cutover.O1.md` | modify |
-| `docs/tranches/AZ-II/waves/cutover.O2.md` | modify |
-| `docs/tranches/AZ-II/waves/cutover.O3a.md` | modify |
-| `docs/tranches/AZ-II/waves/cutover.O3.md` | modify |
-| `docs/tranches/AZ-II/waves/cutover.O4.md` | modify |
-| `docs/tranches/AZ-II/waves/cutover.O5.md` | modify |
-| `docs/tranches/AZ-II/waves/cutover.O6.md` | modify |
-| `docs/tranches/AZ-II/waves/cutover.O7.md` | modify |
-| `docs/tranches/AZ-II/waves/cutover.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/O0.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/O1.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/O2.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/O3a.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/O3.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/O4.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/O5.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/O6.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/O7.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover/README.md` | modify |
 | `docs/tranches/AZ-II/AZ-II.md` | modify |
 | `docs/tranches/AZ-II/FINAL.md` | modify |
 | `docs/tranches/AZ-II/PROGRESS.md` | modify |
@@ -45,75 +45,75 @@ master, regen windows, and cross-child status reconciliation.
 
 ### AZ-II.cutover.O.1 O0 Tooling Preflight
 
-Mechanism: dispatch per `cutover.O0.md`.
+Mechanism: dispatch per `O0.md`.
 
-Files touched: `docs/tranches/AZ-II/waves/cutover.O0.md`.
+Files touched: `docs/tranches/AZ-II/waves/cutover/O0.md`.
 
 Sub-gate: proof-command surfaces are repaired or de-canonicalized.
 
 ### AZ-II.cutover.O.2 O1 Builder Transactions
 
-Mechanism: dispatch per `cutover.O1.md`.
+Mechanism: dispatch per `O1.md`.
 
-Files touched: `docs/tranches/AZ-II/waves/cutover.O1.md`.
+Files touched: `docs/tranches/AZ-II/waves/cutover/O1.md`.
 
 Sub-gate: speculative StructDirect mutation is transactional.
 
 ### AZ-II.cutover.O.3 O2 EBNF Direct Projection
 
-Mechanism: dispatch per `cutover.O2.md`.
+Mechanism: dispatch per `O2.md`.
 
-Files touched: `docs/tranches/AZ-II/waves/cutover.O2.md`.
+Files touched: `docs/tranches/AZ-II/waves/cutover/O2.md`.
 
 Sub-gate: `EbnfParser::parse` returns `EbnfDocument`.
 
 ### AZ-II.cutover.O.4 O3a Failure Baseline and Triumvirate Redress
 
-Mechanism: dispatch per `cutover.O3a.md`.
+Mechanism: dispatch per `O3a.md`.
 
-Files touched: `docs/tranches/AZ-II/waves/cutover.O3a.md`.
+Files touched: `docs/tranches/AZ-II/waves/cutover/O3a.md`.
 
 Sub-gate: all current failures are assigned to research/plan/redress
 cohorts with wave owners.
 
 ### AZ-II.cutover.O.5 O3 Generated View Purge
 
-Mechanism: dispatch per `cutover.O3.md`.
+Mechanism: dispatch per `O3.md`.
 
-Files touched: `docs/tranches/AZ-II/waves/cutover.O3.md`.
+Files touched: `docs/tranches/AZ-II/waves/cutover/O3.md`.
 
 Sub-gate: StructDirect generated output carries no tape-backed view
 surface.
 
 ### AZ-II.cutover.O.6 O4 Parsed/TapeDirect Deletion
 
-Mechanism: dispatch per `cutover.O4.md`.
+Mechanism: dispatch per `O4.md`.
 
-Files touched: `docs/tranches/AZ-II/waves/cutover.O4.md`.
+Files touched: `docs/tranches/AZ-II/waves/cutover/O4.md`.
 
 Sub-gate: production `Parsed<R>` and `TapeDirect` are absent.
 
 ### AZ-II.cutover.O.7 O5 Tape Crate Deletion
 
-Mechanism: dispatch per `cutover.O5.md`.
+Mechanism: dispatch per `O5.md`.
 
-Files touched: `docs/tranches/AZ-II/waves/cutover.O5.md`.
+Files touched: `docs/tranches/AZ-II/waves/cutover/O5.md`.
 
 Sub-gate: `crates/tape` is absent and no production tape symbols remain.
 
 ### AZ-II.cutover.O.8 O6 Semantic and Performance Close
 
-Mechanism: dispatch per `cutover.O6.md`.
+Mechanism: dispatch per `O6.md`.
 
-Files touched: `docs/tranches/AZ-II/waves/cutover.O6.md`.
+Files touched: `docs/tranches/AZ-II/waves/cutover/O6.md`.
 
 Sub-gate: semantic parity and close-matrix artifacts are refreshed.
 
 ### AZ-II.cutover.O.9 O7 Final Conversion
 
-Mechanism: dispatch per `cutover.O7.md`.
+Mechanism: dispatch per `O7.md`.
 
-Files touched: `docs/tranches/AZ-II/waves/cutover.O7.md`.
+Files touched: `docs/tranches/AZ-II/waves/cutover/O7.md`.
 
 Sub-gate: AZ-II FINAL is terminal and cites O0-O6 evidence.
 
@@ -129,15 +129,15 @@ Sub-gate: AZ-II FINAL is terminal and cites O0-O6 evidence.
 
 ## Verification artefacts
 
-- `docs/tranches/AZ-II/waves/cutover.O0.md`.
-- `docs/tranches/AZ-II/waves/cutover.O1.md`.
-- `docs/tranches/AZ-II/waves/cutover.O2.md`.
-- `docs/tranches/AZ-II/waves/cutover.O3a.md`.
-- `docs/tranches/AZ-II/waves/cutover.O3.md`.
-- `docs/tranches/AZ-II/waves/cutover.O4.md`.
-- `docs/tranches/AZ-II/waves/cutover.O5.md`.
-- `docs/tranches/AZ-II/waves/cutover.O6.md`.
-- `docs/tranches/AZ-II/waves/cutover.O7.md`.
+- `docs/tranches/AZ-II/waves/cutover/O0.md`.
+- `docs/tranches/AZ-II/waves/cutover/O1.md`.
+- `docs/tranches/AZ-II/waves/cutover/O2.md`.
+- `docs/tranches/AZ-II/waves/cutover/O3a.md`.
+- `docs/tranches/AZ-II/waves/cutover/O3.md`.
+- `docs/tranches/AZ-II/waves/cutover/O4.md`.
+- `docs/tranches/AZ-II/waves/cutover/O5.md`.
+- `docs/tranches/AZ-II/waves/cutover/O6.md`.
+- `docs/tranches/AZ-II/waves/cutover/O7.md`.
 
 ## Dependencies
 

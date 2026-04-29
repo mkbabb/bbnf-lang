@@ -438,6 +438,10 @@ fn lower_map_arrow<'a>(
     });
 
     let map_expr = lower_value_expr(value_expr, ctx);
+    let return_type = return_type.or_else(|| match &map_expr {
+        MapExpr::BoolLit(_) => Some(TypeDesc::Bool),
+        _ => None,
+    });
 
     ctx.fns.push(FnDescriptor::Expr {
         expr: map_expr,

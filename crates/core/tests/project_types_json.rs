@@ -42,7 +42,7 @@ use bbnf::pipeline::{
     CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
 };
 use bbnf_ir::passes::{GrammarAuditTag, audit_payload_coverage};
-use bbnf_ir::{GrammarIR, StructLayout};
+use bbnf_ir::{GrammarIR, StructLayout, TypeDesc};
 
 /// Resolve the JSON grammar path from `CARGO_MANIFEST_DIR`. The crate
 /// manifest lives at `crates/core/`, so `../../grammar/json/json.bbnf`
@@ -337,6 +337,39 @@ fn bool_rule_layout_has_two_branch_tags() {
             field.is_branch_tag(),
             "AZ-I.W1.B1: `bool` branch field is not BranchTag \
              (source: {:?})",
+            field.source
+        );
+    }
+}
+
+#[test]
+fn bool_rule_projects_bool_payload_type() {
+    let ir = compile_json_ir();
+    let bool_rule = ir
+        .rules
+        .iter()
+        .find(|rule| ir.get_string(rule.name) == "bool")
+        .expect("JSON bool rule survives lowering");
+    let bool_ty = ir
+        .types
+        .iter()
+        .find_map(|(rule_id, ty)| (*rule_id == bool_rule.id).then_some(ty));
+    assert!(
+        matches!(bool_ty, Some(TypeDesc::Bool)),
+        "JSON bool rule must project TypeDesc::Bool, got {bool_ty:?}"
+    );
+
+    let layout = require_layout(&ir, "bool");
+    assert_eq!(
+        layout.rule_type,
+        TypeDesc::Bool,
+        "JSON bool StructLayout must carry TypeDesc::Bool"
+    );
+    for field in &layout.fields {
+        assert_eq!(
+            field.type_desc,
+            TypeDesc::Bool,
+            "JSON bool branch {:?} must carry TypeDesc::Bool",
             field.source
         );
     }

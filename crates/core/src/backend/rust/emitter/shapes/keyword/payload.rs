@@ -127,6 +127,30 @@ pub(super) fn alt_branch_payload_value(
         .and_then(|fd| payload_from_fn(fd, ir))
 }
 
+/// Return the boolean literal carried by a branch-level `-> true` /
+/// `-> false` mapping.
+pub(super) fn alt_branch_bool_payload(
+    branch: &bbnf_ir::AltBranch,
+    ir: &GrammarIR,
+) -> Option<bool> {
+    fn find_map_fn(node: &IrNode) -> Option<u32> {
+        match node {
+            IrNode::Map { fn_id, .. } => Some(*fn_id),
+            IrNode::OptionalWhitespace(inner) => find_map_fn(inner),
+            _ => None,
+        }
+    }
+    let fid = find_map_fn(&branch.node)?;
+    let fn_desc = ir.fns.get(fid as usize)?;
+    let bbnf_ir::FnDescriptor::Expr { expr, .. } = fn_desc else {
+        return None;
+    };
+    match expr {
+        bbnf_ir::MapExpr::BoolLit(value) => Some(*value),
+        _ => None,
+    }
+}
+
 /// Extract a `u32` payload value from a `FnDescriptor` when possible.
 ///
 /// Handles the simple cases W3.2 admits (single-literal + 2-branch

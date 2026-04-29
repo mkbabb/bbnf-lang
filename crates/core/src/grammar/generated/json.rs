@@ -1082,7 +1082,7 @@ mod __jsonparser_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_leaf_with_bool(false);
                     return ::core::result::Result::Ok(
                         crate::runtime::tape::TapeOffset::NONE,
                     );
@@ -1100,7 +1100,7 @@ mod __jsonparser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_leaf_with_bool(true);
                     return ::core::result::Result::Ok(
                         crate::runtime::tape::TapeOffset::NONE,
                     );

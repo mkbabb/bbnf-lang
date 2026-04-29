@@ -22,7 +22,9 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::payload::{alt_branch_payload_value, leading_literal_bytes};
+use super::payload::{
+    alt_branch_bool_payload, alt_branch_payload_value, leading_literal_bytes,
+};
 use super::unwrap_trivia;
 use super::super::dispatcher::{emit_ref_call_tape, shape_fn_ident};
 use super::super::substrate::{builder_ty_elided, builder_ty_with_lifetime};
@@ -47,8 +49,15 @@ fn rule_type_desc(rule: &IrRule, ir: &GrammarIR) -> Option<TypeDesc> {
 /// the branch payload.
 fn struct_direct_leaf_emit_for(
     rule_ty: Option<&TypeDesc>,
+    branch_bool_payload: Option<bool>,
     branch_payload: Option<&TokenStream>,
 ) -> TokenStream {
+    if let Some(value) = branch_bool_payload {
+        return quote! {
+            builder.push_leaf_with_bool(#value);
+        };
+    }
+
     match (rule_ty, branch_payload) {
         // `bool` rule branches carry `Some(0u32)` / `Some(1u32)` per
         // `payload_from_fn`; convert to the matching `bool` literal.
@@ -118,7 +127,7 @@ pub(super) fn emit_parse_keyword_struct_direct(
                     quote! { #lit }
                 })
                 .collect();
-            let leaf_emit = struct_direct_leaf_emit_for(rule_ty.as_ref(), None);
+            let leaf_emit = struct_direct_leaf_emit_for(rule_ty.as_ref(), None, None);
             quote! {
                 /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
                 /// (single-literal body).
@@ -249,9 +258,12 @@ pub(super) fn emit_parse_keyword_struct_direct(
                                 .collect();
                             match kind {
                                 BranchKind::Literal => {
+                                    let bool_payload =
+                                        alt_branch_bool_payload(branch, ir);
                                     let payload = alt_branch_payload_value(branch, ir);
                                     let leaf_emit = struct_direct_leaf_emit_for(
                                         rule_ty.as_ref(),
+                                        bool_payload,
                                         payload.as_ref(),
                                     );
                                     quote! {

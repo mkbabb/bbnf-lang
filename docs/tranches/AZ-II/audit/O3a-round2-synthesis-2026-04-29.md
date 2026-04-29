@@ -63,7 +63,9 @@ A1 splits live product failures from historical prototype surface:
 ## Wave Amendments Applied
 
 - `O3.md`: O3.13 owns P1 projection-totality close and generated
-  residue purge.
+  residue purge. A local source scan additionally routed
+  `crates/core/tests/named_type_preservation.rs` into O3 because it
+  mirrors the retired materializer/consumer totality assertion.
 - `O5.md`: O5.12 owns `json-prototype` archive/deletion and Gorgeous
   JIT deletion.
 - `O6.md`: O6.16 owns live A1 verification and bootstrap-parser proof.

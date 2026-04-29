@@ -175,14 +175,10 @@ pub fn emit_structural_scan_policy(
         /// One entry per non-transparent rule, derived at codegen from
         /// CSP-inferred FIRST-set facts intersected with the grammar's
         /// mined `structural_alphabet` + `structural_digraph_mask`.
-        /// Consumed at emission time by `emit_path_query_impls` in
-        /// `backend::rust::view::value`, which inlines the matching
-        /// cursor primitive in `__path_walk`'s per-`rule_kind()`
-        /// dispatch:
-        /// [`crate::runtime::tape::TapeCursor::object_key_seek`] /
-        /// [`crate::runtime::tape::TapeCursor::bounded_lookahead`] /
-        /// [`crate::runtime::tape::TapeCursor::scan_structural_bounded`]
-        /// per the entry's `activation` bitmap.
+        /// Consumed at emission time by document/path-query code that
+        /// inlines the matching structural seek, bounded lookahead, or
+        /// bounded structural scan path per the entry's `activation`
+        /// bitmap.
         ///
         /// No runtime flag; no hand-routed grammar specialisation.
         /// AY-II.W0'.c retires the `#[allow(dead_code)]` that

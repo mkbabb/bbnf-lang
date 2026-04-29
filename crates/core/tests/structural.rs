@@ -204,11 +204,10 @@ fn structural_object_two_pairs() {
     assert!(matches!(pairs[1].value, JsonValue::String("hello")));
 
     let total = count_reachable(&view, view.root());
-    assert!(
-        total >= 5,
-        "expected at least 5 nodes for '{}', got {}",
-        input,
-        total
+    assert_eq!(
+        total, 3,
+        "StructDirect exposes the object root plus two scalar values; \
+         pair/key reachability is asserted through the object pair slice"
     );
 
     // Verify expected leaves appear in the tree. Pre-flip these were

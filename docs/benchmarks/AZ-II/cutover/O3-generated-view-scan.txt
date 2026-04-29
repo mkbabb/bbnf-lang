@@ -1,0 +1,41 @@
+AZ-II.cutover.O3 generated-view residue scan
+Date: 2026-04-29
+
+Files scanned:
+crates/core/src/grammar/generated/{json,css_l4,google_sheets,bbnf,csv,math,bnf,css_pretty,ebnf}.rs
+
+O3 residue command:
+rg -n 'TapeCursor|[A-Za-z0-9_]+NodeView|ValueRoot|materialize_projection_|PROJECTION_MATERIALIZERS|PROJECTION_CONSUMERS' crates/core/src/grammar/generated/{json,css_l4,google_sheets,bbnf,csv,math,bnf,css_pretty,ebnf}.rs
+
+O3 residue result:
+NO HITS
+
+Serializer-specific command:
+rg -n 'serialize_[A-Za-z0-9_]+.*NodeView|serialize_compact.*NodeView|__dispatch_serialize.*NodeView' crates/core/src/grammar/generated/{json,css_l4,google_sheets,bbnf,csv,math,bnf,css_pretty,ebnf}.rs
+
+Serializer-specific result:
+NO HITS
+
+O4/O5-owned residue command:
+rg -c 'crate::runtime::tape' crates/core/src/grammar/generated/{json,css_l4,google_sheets,bbnf,csv,math,bnf,css_pretty,ebnf}.rs
+
+O4/O5-owned residue result:
+crates/core/src/grammar/generated/math.rs:28
+crates/core/src/grammar/generated/csv.rs:94
+crates/core/src/grammar/generated/bnf.rs:145
+crates/core/src/grammar/generated/json.rs:159
+crates/core/src/grammar/generated/css_pretty.rs:324
+crates/core/src/grammar/generated/ebnf.rs:395
+crates/core/src/grammar/generated/google_sheets.rs:737
+crates/core/src/grammar/generated/bbnf.rs:1084
+crates/core/src/grammar/generated/css_l4.rs:6545
+total: 9511
+
+Parsed return-model command:
+rg -c 'Parsed<' crates/core/src/grammar/generated/{json,css_l4,google_sheets,bbnf,csv,math,bnf,css_pretty,ebnf}.rs
+
+Parsed return-model result:
+NO HITS
+
+Classification:
+O3 generated view, node-view serializer, ValueRoot, and projection materializer/consumer residue is zero. Remaining generated `crate::runtime::tape` references are the O4/O5 return-model/tape-substrate deletion surface and are not O3 generated-view compatibility residue.

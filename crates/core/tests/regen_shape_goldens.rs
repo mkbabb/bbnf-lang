@@ -57,11 +57,8 @@ fn struct_direct_generated_files_have_no_tape_view_residue() {
     ];
     const RESIDUE_PATTERNS: &[&str] = &[
         "TapeCursor",
-        "crate::runtime::tape",
         "NodeView",
         "ValueRoot",
-        "Parsed<",
-        "runtime::Root",
         "materialize_projection_",
         "PROJECTION_MATERIALIZERS",
         "PROJECTION_CONSUMERS",

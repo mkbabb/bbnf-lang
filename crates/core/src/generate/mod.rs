@@ -60,7 +60,21 @@ pub fn generate_all(
     }
 
     // Generate Serializer-based methods when `#[parser(serialize)]` is set.
-    if parser_attrs.serialize {
+    //
+    // O3.P1-SER1: this generator is explicitly tape-first; every
+    // emitted method accepts `<Grammar>NodeView<'_>`. StructDirect
+    // grammars own serialization through runtime document APIs, so
+    // they must not reintroduce a generated node-view surface here.
+    let serialize_strategy = bbnf_ir::registry::EmitStrategy::for_grammar(
+        ident.to_string().as_str(),
+        &ir.struct_registry,
+    );
+    if parser_attrs.serialize
+        && matches!(
+            serialize_strategy,
+            bbnf_ir::registry::EmitStrategy::TapeDirect
+        )
+    {
         let ser_tokens = serialize::generate_serialize_methods(ir, &ir_ctx);
         emitter.extra_impl_methods.extend(ser_tokens);
     }

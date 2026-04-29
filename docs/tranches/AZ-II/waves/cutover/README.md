@@ -16,9 +16,10 @@ full BBNF fixture corpus; `crates/tape/` deleted; `cargo build -p bbnf
 + `docs/benchmarks/post-AZ-II.json` archived.
 **Status**: interim manifest routed through cutover.O — substrate canonical; 9/9 grammars
 StructDirect after O2; BBNF self-parity 56/56; reproducibility CI gate
-green; cutover.O.0 tooling preflight, O1 builder transactions, and O2
-EBNF direct projection landed; O3a failure-baseline triage is closed as
-routed evidence; current work is O3 generated view purge.
+green; cutover.O.0 tooling preflight, O1 builder transactions, O2
+EBNF direct projection, O3a failure-baseline triage, and O3 generated
+view purge have landed; current work is O4 `Parsed<R>` / `TapeDirect`
+deletion.
 
 **2026-04-29 hardening amendment**: cutover.O must begin with the
 grammar-general StructDirect builder transaction gap. EBNF activation
@@ -26,14 +27,21 @@ is blocked not only by alternate layout depth but also by the fact that
 speculative StructDirect branches can mutate builder state without a
 matching rollback.
 
-**2026-04-29 O3a addendum**: O0, O1, and O2 are landed. O3a closed the
-failure-cohort routing as evidence, with J1/C1/S1/P1/A1 triad artifacts
-under `docs/tranches/AZ-II/audit/`. O3 is now unblocked for generated
-view purge: P1 closes inside O3 with no O3b required. A1 routes
-analysis/LSP repair, `json-prototype` archive/deletion, Gorgeous JIT
-deletion, and bootstrap-parser proof into O5/O6/O7. EBNF is on
-StructDirect and grammar-general StructDirect checkpoint/rollback/
-commit support is available to every speculative emitter path.
+**2026-04-29 O3a addendum**: O0, O1, and O2 landed before O3a.
+O3a closed the failure-cohort routing as evidence, with J1/C1/S1/P1/A1
+triad artifacts under `docs/tranches/AZ-II/audit/`. P1 closed inside O3
+with no O3b required. A1 routes analysis/LSP repair, `json-prototype`
+archive/deletion, Gorgeous JIT deletion, and bootstrap-parser proof
+into O5/O6/O7. EBNF is on StructDirect and grammar-general StructDirect
+checkpoint/rollback/commit support is available to every speculative
+emitter path.
+
+**2026-04-29 O3 close addendum**: O3 landed at `6a7e0f06`. The
+generated StructDirect fleet has zero `TapeCursor`, generated
+`NodeView`, `ValueRoot`, `materialize_projection_*`,
+`PROJECTION_MATERIALIZERS`, `PROJECTION_CONSUMERS`, or node-view
+serializer residue. Remaining generated `crate::runtime::tape`
+references are O4/O5-owned return-model/tape-substrate deletion work.
 
 **Trajectory snapshot**: see [`../PROGRESS-SNAPSHOT-2026-04-29.md`](../../PROGRESS-SNAPSHOT-2026-04-29.md)
 for per-substage commit-by-commit detail across cutover.A through
@@ -206,10 +214,10 @@ Required order:
 4. **[O3a failure baseline and triumvirate redress](O3a.md)** —
    complete_with_misses: all 84 test failures and the failed JSON bench
    baseline have research/plan/redress cohort routing.
-5. **[O3 generated view purge](O3.md)** — in_progress: remove tape-backed `TapeCursor`,
+5. **[O3 generated view purge](O3.md)** — LANDED: remove tape-backed `TapeCursor`,
    node-view, and `ValueRoot` residue from StructDirect generated output
    unless it is consumed through a document API.
-6. **[O4 Parsed/TapeDirect deletion](O4.md)** — delete `Parsed<R>` as a
+6. **[O4 Parsed/TapeDirect deletion](O4.md)** — next active: delete `Parsed<R>` as a
    production parser result and remove `TapeDirect` fallback semantics.
 7. **[O5 tape crate deletion](O5.md)** — delete `crates/tape` after relocating
    only genuinely non-tape scan/index primitives to their natural owner.
@@ -231,8 +239,8 @@ Child wave specs:
 | [`O3a-S1.md`](O3a-S1.md) | complete_with_misses | Sheets triad closed; S1-E1/S1-R1/S1-SER1 source owners block O6 Sheets truth |
 | [`O3a-P1.md`](O3a-P1.md) | complete_with_misses | P1 triad closed; projection totality closes inside O3, no O3b required |
 | [`O3a-A1.md`](O3a-A1.md) | complete_with_misses | A1 triad closed; live repairs/archive/JIT/bootstrap gates routed to O5/O6/O7 |
-| [`O3.md`](O3.md) | in_progress | up to 10 parallel worktree-isolated lanes; generated view purge |
-| [`O4.md`](O4.md) | planned | up to 10 parallel worktree-isolated lanes; return-model deletion |
+| [`O3.md`](O3.md) | complete | up to 10 parallel worktree-isolated lanes; generated view purge |
+| [`O4.md`](O4.md) | next active | up to 10 parallel worktree-isolated lanes; return-model deletion |
 | [`O5.md`](O5.md) | planned | up to 10 parallel worktree-isolated lanes; tape crate deletion |
 | [`O6.md`](O6.md) | planned | up to 10 parallel worktree-isolated lanes; sequential bench execution |
 | [`O7.md`](O7.md) | planned | up to 10 parallel worktree-isolated lanes; close-doc reconciliation |

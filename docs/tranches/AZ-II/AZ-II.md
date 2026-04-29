@@ -21,17 +21,16 @@ AZ-II remains open. The implemented progress read-of-record is
 cutover.A through cutover.M landed, cutover.N was dispatched and
 halted at organizational usage limit, and no cutover.N code commits
 landed. The current state is an interim manifest: direct-to-struct is live
-for 9/9 grammars after O2, while `Parsed<R>`, `TapeDirect`,
-generated tape-view residue, and `crates/tape` remain terminal
-blockers.
+for 9/9 grammars after O2, and O3 has removed generated tape-view
+residue. `Parsed<R>`, `TapeDirect`, remaining tape-substrate
+references, and `crates/tape` remain terminal blockers.
 
 The active AZ-II wave is `cutover.O`. It is not a workaround wave and
 not a reduced tape floor. O0 tooling preflight, O1 grammar-general
-StructDirect builder transactions, and O2 EBNF direct projection have
-landed. O3a has routed the post-O2 failure-baseline cohorts and
-child-wave ownership. The active resume point is O3: purge generated
-tape-view residue from StructDirect output using P1's no-O3b owner
-ledger. O4 deletes `Parsed<R>` and `TapeDirect`, O5 deletes the
+StructDirect builder transactions, O2 EBNF direct projection, O3a
+failure routing, and O3 generated-view purge have landed. The active
+resume point is O4: delete `Parsed<R>` and `TapeDirect`, including the
+JSON bool branch payload route from J1. O5 deletes the
 standalone tape crate and A1 archive/JIT surfaces, O6 refreshes
 semantic parity/performance truth plus bootstrap proof, and O7 converts
 the interim manifest to terminal close.
@@ -39,7 +38,7 @@ Each O substage is now specified as a dispatchable wave under
 `waves/cutover/O0.md` through `waves/cutover/O7.md`, with up to 10
 parallel sibling worktree agents and explicit file bounds.
 `cutover.O3a.md` is the inserted failure-baseline and triumvirate
-redress prelude before O3 implementation continues. Its child specs
+redress prelude that fed O3 and the later O waves. Its child specs
 (`O3a-J1`, `O3a-C1`, `O3a-S1`, `O3a-P1`, `O3a-A1`) own all 84
 post-O2 failed tests and the failed JSON bench timeout, and are now
 `complete_with_misses` routed into O3/O4/O5/O6/O7.
@@ -217,7 +216,7 @@ disk as historical record.
 
 | Wave | Headline | Opens after | Status |
 |---|---|---|---|
-| **cutover** | BBNF self-host + tape deletion ([waves/cutover/README.md](waves/cutover/README.md)) — original three-stage plan expanded under contact into 14 sub-stages cutover.A through cutover.N, then O0-O7 plus O3a child specs | AZ-I.W2-act close (AZ-I FINAL.md committed; seven-point handoff verified) | interim manifest (cutover.A→M LANDED; cutover.N halted at usage limit; [O0](waves/cutover/O0.md)/[O1](waves/cutover/O1.md)/[O2](waves/cutover/O2.md) LANDED; terminal hardening active at [O3a failure-baseline triage](waves/cutover/O3a.md); [O3 generated view purge](waves/cutover/O3.md) blocked until O3a close) |
+| **cutover** | BBNF self-host + tape deletion ([waves/cutover/README.md](waves/cutover/README.md)) — original three-stage plan expanded under contact into 14 sub-stages cutover.A through cutover.N, then O0-O7 plus O3a child specs | AZ-I.W2-act close (AZ-I FINAL.md committed; seven-point handoff verified) | interim manifest (cutover.A→M LANDED; cutover.N halted at usage limit; [O0](waves/cutover/O0.md)/[O1](waves/cutover/O1.md)/[O2](waves/cutover/O2.md)/[O3a](waves/cutover/O3a.md)/[O3](waves/cutover/O3.md) LANDED; terminal hardening active at [O4 Parsed/TapeDirect deletion](waves/cutover/O4.md)) |
 
 The cutover wave's actual trajectory across 14 sub-stages is recorded
 in `docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md` (per-substage
@@ -247,21 +246,21 @@ resumed and landed in K rather than under a retroactive J label.
 | cutover.K | mapped_factor wrapper + typed-leaf source recovery + per-shape Err frame cleanup | LANDED |
 | cutover.L | keyword-shape Alt-of-Ref handler | LANDED |
 | cutover.M | non-BBNF resolver arms (CSV/Math/BNF/CSS Pretty); AltDispatch struct_direct surgery | LANDED |
-| cutover.N | EBNF activation + Phases 4/5/6 close | dispatched + halted at usage limit; routed to cutover.O; O0/O1/O2 now landed, O3a is active, and O3 generated view purge is blocked until O3a close |
+| cutover.N | EBNF activation + Phases 4/5/6 close | dispatched + halted at usage limit; routed to cutover.O; O0/O1/O2/O3a/O3 now landed and O4 is active next |
 
 | O spec | Headline | Status |
 |---|---|---|
 | [cutover.O0](waves/cutover/O0.md) | Tooling preflight | LANDED |
 | [cutover.O1](waves/cutover/O1.md) | StructDirect builder transactions | LANDED |
 | [cutover.O2](waves/cutover/O2.md) | EBNF direct projection | LANDED |
-| [cutover.O3a](waves/cutover/O3a.md) | Failure baseline + triumvirate redress | in_progress |
-| [cutover.O3a-J1](waves/cutover/O3a-J1.md) | JSON materialization/parity/throughput cohort | planned |
-| [cutover.O3a-C1](waves/cutover/O3a-C1.md) | CSS admission/payload/parity cohort | planned |
-| [cutover.O3a-S1](waves/cutover/O3a-S1.md) | Sheets payload/serialization cohort | planned |
-| [cutover.O3a-P1](waves/cutover/O3a-P1.md) | Projection totality/generated-view cohort | planned |
-| [cutover.O3a-A1](waves/cutover/O3a-A1.md) | Analysis/LSP/prototype/bootstrap disposition cohort | planned |
-| [cutover.O3](waves/cutover/O3.md) | Generated view purge | blocked |
-| [cutover.O4](waves/cutover/O4.md) | `Parsed<R>` / `TapeDirect` deletion | planned |
+| [cutover.O3a](waves/cutover/O3a.md) | Failure baseline + triumvirate redress | complete_with_misses |
+| [cutover.O3a-J1](waves/cutover/O3a-J1.md) | JSON materialization/parity/throughput cohort | complete_with_misses |
+| [cutover.O3a-C1](waves/cutover/O3a-C1.md) | CSS admission/payload/parity cohort | complete_with_misses |
+| [cutover.O3a-S1](waves/cutover/O3a-S1.md) | Sheets payload/serialization cohort | complete_with_misses |
+| [cutover.O3a-P1](waves/cutover/O3a-P1.md) | Projection totality/generated-view cohort | complete_with_misses |
+| [cutover.O3a-A1](waves/cutover/O3a-A1.md) | Analysis/LSP/prototype/bootstrap disposition cohort | complete_with_misses |
+| [cutover.O3](waves/cutover/O3.md) | Generated view purge | LANDED |
+| [cutover.O4](waves/cutover/O4.md) | `Parsed<R>` / `TapeDirect` deletion | next active |
 | [cutover.O5](waves/cutover/O5.md) | `crates/tape` deletion | planned |
 | [cutover.O6](waves/cutover/O6.md) | Semantic/performance close | planned |
 | [cutover.O7](waves/cutover/O7.md) | FINAL conversion | planned |

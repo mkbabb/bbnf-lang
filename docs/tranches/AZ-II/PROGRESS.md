@@ -1,17 +1,19 @@
 # AZ-II — Progress Log
 
 **Status**: interim manifest routed through cutover.O; `cutover.O.0`,
-`cutover.O.1`, and `cutover.O.2` landed; O3a J1/C1/S1/P1/A1 triads
-integrated as routed evidence; O3 generated view purge is active.
+`cutover.O.1`, `cutover.O.2`, and `cutover.O.3` landed; O3a
+J1/C1/S1/P1/A1 triads integrated as routed evidence; O4
+`Parsed<R>` / `TapeDirect` deletion is the next active substage.
 Implemented-state record:
 [`PROGRESS-SNAPSHOT-2026-04-29.md`](PROGRESS-SNAPSHOT-2026-04-29.md).
 Live terminal sequence: `cutover.O.0` through `cutover.O.7`, specified
 for dispatch at [`waves/cutover/O0.md`](waves/cutover/O0.md) through
 [`waves/cutover/O7.md`](waves/cutover/O7.md).
 `cutover.O3a` is the closed failure-baseline and triumvirate redress
-prelude inserted before O3 implementation continues. O3 is unblocked by
-P1's no-O3b disposition; A1's archive/delete/live-product/bootstrap
-disposition is routed into O5/O6/O7.
+prelude inserted before generated-view purge. O3 is closed at
+`6a7e0f06`; P1 required no O3b, and A1's
+archive/delete/live-product/bootstrap disposition remains routed into
+O5/O6/O7.
 
 **Date**: 2026-04-23
 
@@ -101,7 +103,7 @@ The cutover wave runs in three sequential sub-stages:
 | W0 | superseded (2026-04-28) | Folded into cutover.A (substrate hoist + BBNF runtime + decay sweep) |
 | W1 | superseded (2026-04-28) | Folded into cutover.B (Stage A + Stage B byte-equal cycle) |
 | W2 | superseded (2026-04-28) | Folded into cutover.C (`crates/tape/` deletion + recode + FINAL) |
-| cutover | interim-manifest (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; [O0](waves/cutover/O0.md) tooling preflight, [O1](waves/cutover/O1.md) builder transactions, and [O2](waves/cutover/O2.md) EBNF direct projection landed; [O3a](waves/cutover/O3a.md) routed closed; [O3](waves/cutover/O3.md) active) | 9/9 grammars StructDirect; terminal hardening routes through [cutover.O3a-O7](waves/cutover/README.md) after transactional StructDirect rollback support, EBNF activation, and routed O3a failure-cohort ownership |
+| cutover | interim-manifest (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; [O0](waves/cutover/O0.md) tooling preflight, [O1](waves/cutover/O1.md) builder transactions, [O2](waves/cutover/O2.md) EBNF direct projection, [O3a](waves/cutover/O3a.md) failure routing, and [O3](waves/cutover/O3.md) generated-view purge landed) | 9/9 grammars StructDirect; generated view residue is zero; terminal hardening now routes through [cutover.O4-O7](waves/cutover/README.md) for return-model deletion, tape deletion, semantic/perf truth, and close conversion |
 
 ## 2026-04-28 — cutover.G partial close
 
@@ -342,14 +344,13 @@ cross-crate refs).
 | [cutover.O.3a-S1](waves/cutover/O3a-S1.md) | Sheets branch payload and serialization cohort | complete_with_misses — S1-E1/S1-R1/S1-SER1 block O6 Sheets truth until green |
 | [cutover.O.3a-P1](waves/cutover/O3a-P1.md) | Projection totality and generated-view residue cohort | complete_with_misses — closes inside O3, no O3b required |
 | [cutover.O.3a-A1](waves/cutover/O3a-A1.md) | Analysis/LSP/prototype/bootstrap disposition cohort | complete_with_misses — live repairs and archive/delete/bootstrap gates routed to O5/O6/O7 |
-| [cutover.O.3](waves/cutover/O3.md) | Generated tape-view / `ValueRoot` residue purge for StructDirect | in_progress |
-| [cutover.O.4](waves/cutover/O4.md) | `Parsed<R>` deletion and `TapeDirect` fallback removal | 90 min |
+| [cutover.O.3](waves/cutover/O3.md) | Generated tape-view / `ValueRoot` residue purge for StructDirect | LANDED — `6a7e0f06`, zero-hit O3 scan, 32-test focused gate green |
+| [cutover.O.4](waves/cutover/O4.md) | `Parsed<R>` deletion and `TapeDirect` fallback removal | next active — 90 min |
 | [cutover.O.5](waves/cutover/O5.md) | `crates/tape` deletion after relocating non-tape scan/index primitives | 120 min |
 | [cutover.O.6](waves/cutover/O6.md) | 17-entry close matrix + JSON sonic-rs / CSS lightningcss parity refresh | 90 min |
 | [cutover.O.7](waves/cutover/O7.md) | AZ-II FINAL.md interim manifest -> terminal close conversion | 30 min |
 
-Remaining estimate after O2: O3a adds planning/redress fan-out before
-the earlier ~7 hour sequential O3-O7 terminal path. If a later gate
+Remaining estimate after O3: O4-O7 remain the terminal path. If a later gate
 requires a new grammar-general inference/layout substrate, author
 AZ-III for that substrate only; do not move tape deletion,
 `Parsed<R>` deletion, stale benches, or parity gaps into AZ-III.
@@ -363,13 +364,12 @@ the last 1200 commits, and current implementation wiring.
 Integrated findings:
 
 - AZ-II is interim, not terminal: 9/9 grammars are StructDirect after
-  O2; generated tape-view residue, `Parsed<R>`, `TapeDirect`, and
-  `crates/tape` remain.
+  O2; O3 closed generated tape-view residue, while `Parsed<R>`,
+  `TapeDirect`, and `crates/tape` remain.
 - StructDirect speculative branches needed grammar-general builder
   transactions before EBNF/CSS/BBNF correctness claims were reliable;
   O1 landed that prerequisite.
-- `Parsed<R>`, `TapeDirect`, generated tape views, and `crates/tape`
-  remain live blockers.
+- `Parsed<R>`, `TapeDirect`, and `crates/tape` remain live blockers.
 - BBNF's hand-written `bootstrap_parser.rs` is a bridge, not the final
   canonical self-hosting parser.
 - CSP/egraph/type-inference facts are underwired: egraph facts are not
@@ -541,7 +541,46 @@ Round 2 integration:
   AZ-II; `bootstrap_parser.rs` remains only as a bounded bridge until
   O6 proves generated self-host or blocks O7.
 
-Current instruction: O3 implementation may resume under
-`waves/cutover/O3.md` with P1's file-owner ledger. O5/O6/O7 must
-consume A1 before claiming tape deletion, semantic close, or terminal
-close.
+## 2026-04-29 — cutover.O3 generated view purge
+
+O3 closed the StructDirect generated-view residue surface without
+creating a compatibility shim or an O3b child wave.
+
+Implementation:
+
+- `6a7e0f06` gates the tape-first serializer generator to
+  `EmitStrategy::TapeDirect`; StructDirect grammars no longer emit
+  `serialize_*`, `serialize_compact`, or `__dispatch_serialize` APIs
+  over `<Grammar>NodeView<'_>`.
+- Generated scan-policy documentation now uses substrate-neutral
+  wording, so generated StructDirect files do not retain `TapeCursor`
+  links as documentation residue.
+- `regen_shape_goldens` now asserts the O3-owned residue class:
+  `TapeCursor`, generated `NodeView`, `ValueRoot`,
+  `materialize_projection_*`, `PROJECTION_MATERIALIZERS`, and
+  `PROJECTION_CONSUMERS`. General `crate::runtime::tape` references
+  are classified under O4/O5.
+- `structural_object_two_pairs` now asserts the document-owned JSON
+  object shape: object root plus two scalar values; object keys remain
+  `JsonPair::key` and are verified through the pair slice.
+
+Evidence:
+
+- `docs/benchmarks/AZ-II/cutover/O3-generated-view-scan.txt` records
+  zero O3 residue hits and zero node-view serializer hits across the
+  nine generated grammars.
+- The same artifact records 9511 generated `crate::runtime::tape`
+  references as O4/O5 return-model/tape-substrate work and zero
+  generated `Parsed<` hits.
+- `cargo xtask regen --check` is clean across all 9 grammars.
+- Focused O3 gate:
+  `cargo nextest run -p bbnf --test projection_totality --test named_type_preservation --test typed_accessor_surface --test runtime_root --test regen_shape_goldens --cargo-profile ax-iter --no-fail-fast -- --nocapture`
+  ran 32 tests: 32 passed, 1 skipped.
+- O3.J1-P1 sub-gate:
+  `cargo nextest run -p bbnf --test typed_accessor_surface --test structural --cargo-profile ax-iter --no-fail-fast json_accessor_surface structural_object_two_pairs -- --nocapture`
+  ran 2 tests: 2 passed.
+
+Next instruction: open O4 under `waves/cutover/O4.md`. O4 owns
+`Parsed<R>` and `TapeDirect` deletion plus the JSON bool branch payload
+route from J1. O5/O6/O7 must still consume A1 before claiming tape
+deletion, semantic close, or terminal close.

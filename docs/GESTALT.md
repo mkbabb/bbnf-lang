@@ -13,17 +13,17 @@ retirement, substrate restoration, regen-content skipping, and
 cross-repo bench/test modernization. AZ-I closed structurally but
 recorded unresolved performance and parser-stack risks. AZ-II is an
 interim manifest, not terminally closed: direct-to-struct is live for
-9/9 grammars after cutover.O2, with `Parsed<R>`, `TapeDirect`,
-generated tape-view residue, and `crates/tape` still blocking the
-gestalt architecture. The implemented-state read-of-record is the AZ-II
+9/9 grammars after cutover.O2, O3 has purged generated tape-view
+residue, and `Parsed<R>`, `TapeDirect`, remaining tape-substrate
+references, and `crates/tape` still block the gestalt architecture.
+The implemented-state read-of-record is the AZ-II
 progress snapshot; the immediate path is AZ-II `cutover.O`, aligned by
 `docs/tranches/AZ-II/waves/cutover/README.md` and
 `docs/tranches/AZ-II/audit/AZ-II-HARDENING-AUDIT-2026-04-29.md`.
 As of the post-snapshot hardening work, O0 tooling preflight, O1
-StructDirect builder transactions, and O2 EBNF direct projection are
-landed; O3a failure-baseline child-wave routing is the active gate, and
-O3 generated view purge is blocked until O3a closes P1 and cohort
-ownership.
+StructDirect builder transactions, O2 EBNF direct projection, O3a
+failure-baseline child-wave routing, and O3 generated view purge are
+landed; O4 `Parsed<R>` / `TapeDirect` deletion is the next active gate.
 AZ-III opens only if `cutover.O` proves a new grammar-general
 inference/layout substrate is required; it must not carry forward tape
 deletion, `Parsed<R>` deletion, stale benches, or parity gaps as
@@ -615,13 +615,12 @@ after O2 flipped EBNF to `EbnfDocument`.
 
 The remaining close path is AZ-II `cutover.O`, not a new tranche by
 default. O0 tooling preflight, O1 grammar-general StructDirect builder
-transactions, and O2 EBNF direct projection are landed. Remaining
-required order: O3a failure-baseline child-wave routing; O3 generated
-tape-view purge; O4
+transactions, O2 EBNF direct projection, O3a failure routing, and O3
+generated tape-view purge are landed. Remaining required order: O4
 `Parsed<R>` / `TapeDirect` deletion; O5 `crates/tape` deletion; O6
-semantic/performance close; O7 FINAL conversion. AZ-III opens only if
-a later O gate proves a new grammar-general inference/layout substrate
-is required beyond `AltFacts` plus transactional builders.
+semantic/performance close; O7 FINAL conversion. AZ-III opens only if a
+later O gate proves a new grammar-general inference/layout substrate is
+required beyond `AltFacts` plus transactional builders.
 
 Both AZ-I and AZ-II share reversal criteria: wave-local 20% miss
 reverts own substrate; parity-recovery precedence reverts any

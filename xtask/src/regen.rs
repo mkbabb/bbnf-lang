@@ -419,7 +419,6 @@ fn file_header(ident: &str) -> String {
          )]\n\
          \n\
          use crate::runtime::tape::*;\n\
-         use crate::runtime::{{Parsed, ParseErr, Root}};\n\
          use ::parse_that::*;\n\
          \n",
     )

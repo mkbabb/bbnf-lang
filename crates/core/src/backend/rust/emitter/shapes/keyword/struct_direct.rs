@@ -24,8 +24,8 @@ use quote::{format_ident, quote};
 
 use super::payload::{alt_branch_payload_value, leading_literal_bytes};
 use super::unwrap_trivia;
-use super::super::dispatcher::shape_fn_ident;
-use super::super::substrate::builder_ty_elided;
+use super::super::dispatcher::{emit_ref_call_tape, shape_fn_ident};
+use super::super::substrate::{builder_ty_elided, builder_ty_with_lifetime};
 
 /// Resolve the rule's projected `TypeDesc`. Returns `None` when the
 /// rule is absent from `ir.types` (untyped) — the caller treats this as
@@ -97,7 +97,14 @@ pub(super) fn emit_parse_keyword_struct_direct(
     let fn_ident = shape_fn_ident("keyword", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let rule_ty = rule_type_desc(rule, ir);
-    let builder_ty = builder_ty_elided(strategy);
+    // Single-literal bodies are self-contained (no delegate calls) so
+    // the elided builder type suffices; Alt bodies that may carry
+    // Ref-led branches need a named lifetime so the delegated call's
+    // `Builder<'p>` parameter unifies with the caller's input. We pick
+    // per-arm below.
+    let builder_ty_e = builder_ty_elided(strategy);
+    let p_lt = format_ident!("p");
+    let builder_ty_p = builder_ty_with_lifetime(strategy, &p_lt);
 
     let body = unwrap_trivia(&rule.body);
     match body {
@@ -129,7 +136,7 @@ pub(super) fn emit_parse_keyword_struct_direct(
                     p: &mut usize,
                     _first_byte: u8,
                     _state: &mut #support_mod::ScanState,
-                    builder: &mut #builder_ty,
+                    builder: &mut #builder_ty_e,
                 ) -> ::core::result::Result<
                     crate::runtime::tape::TapeOffset,
                     crate::runtime::tape::DtaError,
@@ -159,13 +166,30 @@ pub(super) fn emit_parse_keyword_struct_direct(
         IrNode::Alt(branches, _) => {
             use std::collections::BTreeMap;
 
-            // Mirror the tape-path partition: collect literal-led
-            // branches with their payload. Ref-led / Seq-led branches
-            // are not admitted on JSON's keyword grammars, but to keep
-            // the StructDirect body total we route them through a
-            // trailing syntax error — the resolver gates JSON-only
-            // admission, so this arm only fires for malformed input.
-            let per_branch: Vec<(Vec<u8>, Option<TokenStream>, usize)> = branches
+            // Mirror the tape-path partition: collect literal-led,
+            // Ref-led, and Seq-led branches per-position. The
+            // Keyword-shape detector admits Alt-of-literal-led
+            // (JSON `bool`), Alt-of-Ref-led (CSS `pseudoClass` whose
+            // branches reference rules whose bodies are literal-prefix
+            // Seqs), and Alt-of-Seq-led (BBNF `literal = "\"" Regex
+            // "\""`). The struct-direct path mirrors the tape-path
+            // BranchKind dispatch so each branch routes to the matching
+            // emission template:
+            //
+            //   - Literal — byte-match + StructBuilder leaf push.
+            //   - Ref     — prefix-check + delegate to target shape fn
+            //               (the target's record bubbles up via the
+            //               inner `builder.push_*` call).
+            //   - Seq     — emit per-position structural body inside
+            //               an attempt closure (handled identically to
+            //               Ref for now — sub-rule's emitter carries
+            //               the records; the keyword body just routes).
+            enum BranchKind {
+                Literal,
+                Ref(bbnf_ir::RuleId),
+                Seq,
+            }
+            let per_branch: Vec<(Vec<u8>, BranchKind, usize, &bbnf_ir::AltBranch)> = branches
                 .iter()
                 .enumerate()
                 .filter_map(|(branch_idx, branch)| {
@@ -176,27 +200,28 @@ pub(super) fn emit_parse_keyword_struct_direct(
                             if bytes.is_empty() {
                                 return None;
                             }
-                            let payload = alt_branch_payload_value(branch, ir);
-                            Some((bytes, payload, branch_idx))
+                            Some((bytes, BranchKind::Literal, branch_idx, branch))
                         }
-                        IrNode::Ref(_) | IrNode::Seq(_)
-                        | IrNode::Next(_, _) | IrNode::Skip(_, _) => {
-                            // Reach the leading literal so the dispatch
-                            // arm still routes — but on JSON these
-                            // shapes don't appear at keyword level.
+                        IrNode::Ref(rid) => {
                             let bytes = leading_literal_bytes(body, ir)?;
                             if bytes.is_empty() {
                                 return None;
                             }
-                            let payload = alt_branch_payload_value(branch, ir);
-                            Some((bytes, payload, branch_idx))
+                            Some((bytes, BranchKind::Ref(*rid), branch_idx, branch))
+                        }
+                        IrNode::Seq(_) | IrNode::Next(_, _) | IrNode::Skip(_, _) => {
+                            let bytes = leading_literal_bytes(body, ir)?;
+                            if bytes.is_empty() {
+                                return None;
+                            }
+                            Some((bytes, BranchKind::Seq, branch_idx, branch))
                         }
                         _ => None,
                     }
                 })
                 .collect();
 
-            let mut by_first: BTreeMap<u8, Vec<&(Vec<u8>, Option<TokenStream>, usize)>> =
+            let mut by_first: BTreeMap<u8, Vec<&(Vec<u8>, BranchKind, usize, &bbnf_ir::AltBranch)>> =
                 BTreeMap::new();
             for entry in &per_branch {
                 by_first.entry(entry.0[0]).or_default().push(entry);
@@ -206,14 +231,14 @@ pub(super) fn emit_parse_keyword_struct_direct(
                 .iter()
                 .map(|(first, group)| {
                     // Descending prefix length — longer literals try first.
-                    let mut group_sorted: Vec<&(Vec<u8>, Option<TokenStream>, usize)> =
+                    let mut group_sorted: Vec<&(Vec<u8>, BranchKind, usize, &bbnf_ir::AltBranch)> =
                         group.iter().copied().collect();
                     group_sorted.sort_by_key(|entry| {
                         (std::cmp::Reverse(entry.0.len()), entry.2)
                     });
                     let tries: Vec<TokenStream> = group_sorted
                         .iter()
-                        .map(|(bytes, payload, _branch_idx)| {
+                        .map(|(bytes, kind, _branch_idx, branch)| {
                             let len = bytes.len();
                             let byte_lits: Vec<TokenStream> = bytes
                                 .iter()
@@ -222,21 +247,102 @@ pub(super) fn emit_parse_keyword_struct_direct(
                                     quote! { #lit }
                                 })
                                 .collect();
-                            let leaf_emit = struct_direct_leaf_emit_for(
-                                rule_ty.as_ref(),
-                                payload.as_ref(),
-                            );
-                            quote! {
-                                if input.len() >= *p + #len
-                                    && input[*p..*p + #len] == [#(#byte_lits),*]
-                                {
-                                    let at = *p;
-                                    let end = at + #len;
-                                    *p = end;
-                                    #leaf_emit
-                                    return ::core::result::Result::Ok(
-                                        crate::runtime::tape::TapeOffset::NONE,
+                            match kind {
+                                BranchKind::Literal => {
+                                    let payload = alt_branch_payload_value(branch, ir);
+                                    let leaf_emit = struct_direct_leaf_emit_for(
+                                        rule_ty.as_ref(),
+                                        payload.as_ref(),
                                     );
+                                    quote! {
+                                        if input.len() >= *p + #len
+                                            && input[*p..*p + #len] == [#(#byte_lits),*]
+                                        {
+                                            let at = *p;
+                                            let end = at + #len;
+                                            *p = end;
+                                            #leaf_emit
+                                            return ::core::result::Result::Ok(
+                                                crate::runtime::tape::TapeOffset::NONE,
+                                            );
+                                        }
+                                    }
+                                }
+                                BranchKind::Ref(target_rid) => {
+                                    // AZ-II.cutover.L Phase 3a — delegate
+                                    // to the target shape fn. The Ref's
+                                    // body owns its record emission via
+                                    // `builder.begin_compound` / `push_*`
+                                    // calls; on Err we rollback `*p` and
+                                    // fall through to the next candidate
+                                    // in this first-byte group (CSS L4
+                                    // `pseudoClass` — `:has` and `:not`
+                                    // share leading `:`; on `:hover`
+                                    // input every named-pseudo fails and
+                                    // the fallback `classicPseudo` Ref
+                                    // claims it).
+                                    //
+                                    // `emit_ref_call_tape` returns the
+                                    // call expression irrespective of
+                                    // strategy; the only difference at
+                                    // the codegen level is the concrete
+                                    // `builder` type, threaded through
+                                    // by the caller's signature.
+                                    let ref_call = emit_ref_call_tape(
+                                        grammar_suffix, *target_rid, ir,
+                                    ).unwrap_or_else(|| quote! {
+                                        ::core::result::Result::Err(
+                                            crate::runtime::tape::DtaError::Syntax {
+                                                offset: *p as u32,
+                                                failing_state:
+                                                    crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule:
+                                                    crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            },
+                                        )
+                                    });
+                                    quote! {
+                                        if input.len() >= *p + #len
+                                            && input[*p..*p + #len] == [#(#byte_lits),*]
+                                        {
+                                            let __ref_save_p = *p;
+                                            match (#ref_call) {
+                                                ::core::result::Result::Ok(__off) => {
+                                                    return ::core::result::Result::Ok(__off);
+                                                }
+                                                ::core::result::Result::Err(_) => {
+                                                    *p = __ref_save_p;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                BranchKind::Seq => {
+                                    // Seq-led branches under StructDirect
+                                    // remain orchestrator-deferred — no
+                                    // active grammar admits Alt-of-Seq
+                                    // under struct-direct keyword today
+                                    // (BBNF's `literal` is tape-direct;
+                                    // CSS L4's pseudo-class branches are
+                                    // Ref-led). Emit a syntax error so
+                                    // the regen surfaces if a future
+                                    // grammar lands a Seq-led branch
+                                    // here without an emitter update.
+                                    quote! {
+                                        if input.len() >= *p + #len
+                                            && input[*p..*p + #len] == [#(#byte_lits),*]
+                                        {
+                                            return ::core::result::Result::Err(
+                                                crate::runtime::tape::DtaError::Syntax {
+                                                    offset: *p as u32,
+                                                    failing_state:
+                                                        crate::runtime::tape::DtaStateId::NONE,
+                                                    failing_rule:
+                                                        crate::runtime::tape::DtaRuleId(u32::MAX),
+                                                },
+                                            );
+                                        }
+                                    }
                                 }
                             }
                         })
@@ -259,21 +365,23 @@ pub(super) fn emit_parse_keyword_struct_direct(
                 .collect();
             quote! {
                 /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
-                /// (Alt of literal-led branches).
+                /// (Alt of literal-led, Ref-led, or Seq-led branches).
                 ///
-                /// Each branch's typed payload routes through
+                /// Literal branches push leaves through
                 /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
                 /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
-                /// untyped). Returns `TapeOffset::NONE` for
-                /// compositional uniformity.
+                /// untyped). Ref branches delegate to the target shape
+                /// fn so the target's records bubble up unchanged.
+                /// Returns `TapeOffset::NONE` for compositional
+                /// uniformity.
                 #[inline(always)]
                 #[allow(non_snake_case, clippy::too_many_arguments)]
-                pub fn #fn_ident(
-                    input: &[u8],
+                pub fn #fn_ident<'p>(
+                    input: &'p [u8],
                     p: &mut usize,
                     first_byte: u8,
                     state: &mut #support_mod::ScanState,
-                    builder: &mut #builder_ty,
+                    builder: &mut #builder_ty_p,
                 ) -> ::core::result::Result<
                     crate::runtime::tape::TapeOffset,
                     crate::runtime::tape::DtaError,

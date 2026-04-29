@@ -209,20 +209,42 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
         // transparent rules fail to link when the per-shape fn isn't
         // emitted.
         //
-        // For Wrap-classified transparent rules under StructDirect,
-        // emit a transparency-aware body (no outer compound — the
-        // chosen branch's record bubbles through the alias). For
-        // every other transparent rule, retain the unconditional
-        // skip: TapeDirect's `wrap_can_elide_compound` path already
-        // handles Wrap; non-Wrap transparent rules under both
-        // strategies are handled by dispatcher inlining at root, or
-        // surface as pre-existing call-link drift on the on-disk
-        // generated trees (cutover.H Phase 2 captures the wider
-        // regen-fleet hardening).
+        // AZ-II.cutover.L Phase 3a — uniform transparent-rule emission
+        // for Wrap and Keyword classifications under both substrate
+        // strategies.
+        //
+        // The Ref-call resolver at `dispatcher::ref_call::emit_ref_call_*`
+        // emits calls via `parse_<shape>_<grammar>_<name>` based on the
+        // target's classified shape, regardless of whether the target is
+        // transparent. Cross-rule references to transparent rules
+        // therefore fail to link when the per-shape fn isn't emitted.
+        //
+        // - **Wrap** transparent rules: TapeDirect's
+        //   `wrap_can_elide_compound` returns true and the regular Wrap
+        //   emitter emits an elided-compound body. StructDirect emits
+        //   `emit_alt_struct_dispatch_transparent` (also no outer
+        //   compound). CSS Pretty's `ruleItem = qualifiedRule | atRule`
+        //   and `atRule = mediaRule | … | genericAtRule` are the
+        //   canonical TapeDirect cases.
+        //
+        // - **Keyword** transparent rules: CSS L4's `pseudoClass = isPseudo
+        //   | … | classicPseudo` (transparent, Alt-of-Ref-led, classifies
+        //   as Keyword via the `leading_literal` traversal). The
+        //   Keyword-shape Ref-led emission template (added in this
+        //   phase) carries dispatch + delegate to each named-pseudo
+        //   sub-rule.
+        //
+        // Other transparent shapes (Object / Array / Flat / Pratt /
+        // Unordered / ArgList / String / Number / Scalar) are not
+        // expected to appear cyclically with Alt-of-Ref bodies in any
+        // active grammar; if a future grammar lands such a rule the
+        // missing per-shape fn will surface as a regen-time link error,
+        // which the corresponding transparent-aware emitter will
+        // address.
         if rule.meta.is_transparent {
-            let is_wrap_under_structdirect = strategy.is_struct_direct()
-                && matches!(ir.shape_assignments.get(rule.id), ShapeTag::Wrap);
-            if !is_wrap_under_structdirect {
+            let tag = ir.shape_assignments.get(rule.id);
+            let emit_transparent = matches!(tag, ShapeTag::Wrap | ShapeTag::Keyword);
+            if !emit_transparent {
                 continue;
             }
         }

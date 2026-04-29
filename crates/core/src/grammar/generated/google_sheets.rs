@@ -61,11 +61,11 @@ mod __googlesheetsparser_emit_impl {
     /// Mined literal-led Alt branches, sorted lexicographically.
     /// Binary search dispatches in O(log N) compares; LLVM lowers
     /// the fixed-size table to a balanced compare tree.
-    static __PHF_GoogleSheetsParser_10_KW: [&[u8]; 4usize] = [b"<", b"=", b">", b">="];
+    static __PHF_GoogleSheetsParser_7_KW: [&[u8]; 4usize] = [b"<", b"=", b">", b">="];
     /// Per-entry branch discriminant — parallel to [`#kw_ident`].
     /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
     /// branch with discriminant `#idx_ident[i]`.
-    static __PHF_GoogleSheetsParser_10_IDX: [u8; 4usize] = [0, 4, 3, 1];
+    static __PHF_GoogleSheetsParser_7_IDX: [u8; 4usize] = [0, 4, 3, 1];
     /// AW-III.W6.2 — dispatch the mined keyword table for rule
     /// `#rule_id`.
     ///
@@ -75,41 +75,190 @@ mod __googlesheetsparser_emit_impl {
     /// scan to a single binary search.
     #[allow(dead_code)]
     #[inline]
-    fn __phf_GoogleSheetsParser_dispatch_10(bytes: &[u8]) -> ::core::option::Option<u8> {
-        match __PHF_GoogleSheetsParser_10_KW.binary_search(&bytes) {
+    fn __phf_GoogleSheetsParser_dispatch_7(bytes: &[u8]) -> ::core::option::Option<u8> {
+        match __PHF_GoogleSheetsParser_7_KW.binary_search(&bytes) {
             ::core::result::Result::Ok(idx) => {
-                ::core::option::Option::Some(__PHF_GoogleSheetsParser_10_IDX[idx])
+                ::core::option::Option::Some(__PHF_GoogleSheetsParser_7_IDX[idx])
             }
             ::core::result::Result::Err(_) => ::core::option::Option::None,
         }
     }
-    /// AW-III.W6.2 — PHF keyword table.
+    /// AX.W0a.2.l — per-rule dense Pratt precedence LUT.
     ///
-    /// Mined literal-led Alt branches, sorted lexicographically.
-    /// Binary search dispatches in O(log N) compares; LLVM lowers
-    /// the fixed-size table to a balanced compare tree.
-    static __PHF_GoogleSheetsParser_21_KW: [&[u8]; 3usize] = [b"#", b"(", b"{"];
-    /// Per-entry branch discriminant — parallel to [`#kw_ident`].
-    /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
-    /// branch with discriminant `#idx_ident[i]`.
-    static __PHF_GoogleSheetsParser_21_IDX: [u8; 3usize] = [8, 10, 9];
-    /// AW-III.W6.2 — dispatch the mined keyword table for rule
-    /// `#rule_id`.
+    /// One byte per dispatch byte for this Pratt rule's
+    /// operator alphabet. Consulted inline by the rule's
+    /// emitted `parse_pratt_*` body. See `bbnf::backend::
+    /// rust::emitter::precedence` for the bit layout.
+    pub const PRECEDENCE_LUT_mul_expr: [u8; 256] = [
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 4u8, 0u8, 0u8, 0u8, 2u8, 3u8, 0u8, 3u8, 0u8, 2u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 17u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+    ];
+    /// AX.W0a.2.l — per-rule sparse Pratt metadata slice.
     ///
-    /// Returns `Some(branch_idx)` when `bytes` matches a mined
-    /// keyword, `None` otherwise. Called from the walker's
-    /// AltLinear / ClassifyByte arm to short-circuit the branch
-    /// scan to a single binary search.
-    #[allow(dead_code)]
-    #[inline]
-    fn __phf_GoogleSheetsParser_dispatch_21(bytes: &[u8]) -> ::core::option::Option<u8> {
-        match __PHF_GoogleSheetsParser_21_KW.binary_search(&bytes) {
-            ::core::result::Result::Ok(idx) => {
-                ::core::option::Option::Some(__PHF_GoogleSheetsParser_21_IDX[idx])
-            }
-            ::core::result::Result::Err(_) => ::core::option::Option::None,
-        }
-    }
+    /// One entry per mined operator for this rule.
+    /// Consulted by the rule's emitted `parse_pratt_*`
+    /// body when the LUT byte's bit-7 two-byte flag is
+    /// set, to resolve the second byte + discriminant.
+    pub const PRECEDENCE_ENTRIES_mul_expr: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
+        crate::runtime::tape::DtaPrecedenceEntry {
+            byte: 38u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 4u8,
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(26u32),
+            op_discriminant: 0u8,
+        },
+        crate::runtime::tape::DtaPrecedenceEntry {
+            byte: 43u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 3u8,
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
+            op_discriminant: 0u8,
+        },
+        crate::runtime::tape::DtaPrecedenceEntry {
+            byte: 45u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 3u8,
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
+            op_discriminant: 1u8,
+        },
+        crate::runtime::tape::DtaPrecedenceEntry {
+            byte: 42u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 2u8,
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(9u32),
+            op_discriminant: 0u8,
+        },
+        crate::runtime::tape::DtaPrecedenceEntry {
+            byte: 47u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 2u8,
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(9u32),
+            op_discriminant: 1u8,
+        },
+        crate::runtime::tape::DtaPrecedenceEntry {
+            byte: 94u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 1u8,
+            associativity: crate::runtime::tape::DtaAssociativity::Right,
+            op_rule: crate::runtime::tape::DtaRuleId(28u32),
+            op_discriminant: 0u8,
+        },
+    ];
+    /// AX.W0a.2.l — per-rule dense Pratt precedence LUT.
+    ///
+    /// One byte per dispatch byte for this Pratt rule's
+    /// operator alphabet. Consulted inline by the rule's
+    /// emitted `parse_pratt_*` body. See `bbnf::backend::
+    /// rust::emitter::precedence` for the bit layout.
+    pub const PRECEDENCE_LUT_array_row: [u8; 256] = [
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 1u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 2u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+    ];
+    /// AX.W0a.2.l — per-rule sparse Pratt metadata slice.
+    ///
+    /// One entry per mined operator for this rule.
+    /// Consulted by the rule's emitted `parse_pratt_*`
+    /// body when the LUT byte's bit-7 two-byte flag is
+    /// set, to resolve the second byte + discriminant.
+    pub const PRECEDENCE_ENTRIES_array_row: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
+        crate::runtime::tape::DtaPrecedenceEntry {
+            byte: 59u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 2u8,
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(24u32),
+            op_discriminant: 0u8,
+        },
+        crate::runtime::tape::DtaPrecedenceEntry {
+            byte: 44u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 1u8,
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(23u32),
+            op_discriminant: 0u8,
+        },
+    ];
+    /// AX.W0a.2.l — per-rule dense Pratt precedence LUT.
+    ///
+    /// One byte per dispatch byte for this Pratt rule's
+    /// operator alphabet. Consulted inline by the rule's
+    /// emitted `parse_pratt_*` body. See `bbnf::backend::
+    /// rust::emitter::precedence` for the bit layout.
+    pub const PRECEDENCE_LUT_array_rows: [u8; 256] = [
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 1u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 2u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
+    ];
+    /// AX.W0a.2.l — per-rule sparse Pratt metadata slice.
+    ///
+    /// One entry per mined operator for this rule.
+    /// Consulted by the rule's emitted `parse_pratt_*`
+    /// body when the LUT byte's bit-7 two-byte flag is
+    /// set, to resolve the second byte + discriminant.
+    pub const PRECEDENCE_ENTRIES_array_rows: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
+        crate::runtime::tape::DtaPrecedenceEntry {
+            byte: 59u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 2u8,
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(24u32),
+            op_discriminant: 0u8,
+        },
+        crate::runtime::tape::DtaPrecedenceEntry {
+            byte: 44u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 1u8,
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(23u32),
+            op_discriminant: 0u8,
+        },
+    ];
     /// AX.W0a.2.l — per-rule dense Pratt precedence LUT.
     ///
     /// One byte per dispatch byte for this Pratt rule's
@@ -146,7 +295,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 4u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(12u32),
+            op_rule: crate::runtime::tape::DtaRuleId(26u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -154,7 +303,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(13u32),
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -162,7 +311,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(13u32),
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 1u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -170,7 +319,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(15u32),
+            op_rule: crate::runtime::tape::DtaRuleId(9u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -178,7 +327,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(15u32),
+            op_rule: crate::runtime::tape::DtaRuleId(9u32),
             op_discriminant: 1u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -186,7 +335,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Right,
-            op_rule: crate::runtime::tape::DtaRuleId(17u32),
+            op_rule: crate::runtime::tape::DtaRuleId(28u32),
             op_discriminant: 0u8,
         },
     ];
@@ -226,7 +375,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 4u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(12u32),
+            op_rule: crate::runtime::tape::DtaRuleId(26u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -234,7 +383,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(13u32),
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -242,7 +391,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(13u32),
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 1u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -250,7 +399,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(15u32),
+            op_rule: crate::runtime::tape::DtaRuleId(9u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -258,7 +407,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(15u32),
+            op_rule: crate::runtime::tape::DtaRuleId(9u32),
             op_discriminant: 1u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -266,87 +415,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Right,
-            op_rule: crate::runtime::tape::DtaRuleId(17u32),
-            op_discriminant: 0u8,
-        },
-    ];
-    /// AX.W0a.2.l — per-rule dense Pratt precedence LUT.
-    ///
-    /// One byte per dispatch byte for this Pratt rule's
-    /// operator alphabet. Consulted inline by the rule's
-    /// emitted `parse_pratt_*` body. See `bbnf::backend::
-    /// rust::emitter::precedence` for the bit layout.
-    pub const PRECEDENCE_LUT_mul_expr: [u8; 256] = [
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 4u8, 0u8, 0u8, 0u8, 2u8, 3u8, 0u8, 3u8, 0u8, 2u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 17u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-    ];
-    /// AX.W0a.2.l — per-rule sparse Pratt metadata slice.
-    ///
-    /// One entry per mined operator for this rule.
-    /// Consulted by the rule's emitted `parse_pratt_*`
-    /// body when the LUT byte's bit-7 two-byte flag is
-    /// set, to resolve the second byte + discriminant.
-    pub const PRECEDENCE_ENTRIES_mul_expr: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
-        crate::runtime::tape::DtaPrecedenceEntry {
-            byte: 38u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 4u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(12u32),
-            op_discriminant: 0u8,
-        },
-        crate::runtime::tape::DtaPrecedenceEntry {
-            byte: 43u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 3u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(13u32),
-            op_discriminant: 0u8,
-        },
-        crate::runtime::tape::DtaPrecedenceEntry {
-            byte: 45u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 3u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(13u32),
-            op_discriminant: 1u8,
-        },
-        crate::runtime::tape::DtaPrecedenceEntry {
-            byte: 42u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 2u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(15u32),
-            op_discriminant: 0u8,
-        },
-        crate::runtime::tape::DtaPrecedenceEntry {
-            byte: 47u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 2u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(15u32),
-            op_discriminant: 1u8,
-        },
-        crate::runtime::tape::DtaPrecedenceEntry {
-            byte: 94u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Right,
-            op_rule: crate::runtime::tape::DtaRuleId(17u32),
+            op_rule: crate::runtime::tape::DtaRuleId(28u32),
             op_discriminant: 0u8,
         },
     ];
@@ -386,7 +455,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 4u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(12u32),
+            op_rule: crate::runtime::tape::DtaRuleId(26u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -394,7 +463,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(13u32),
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -402,7 +471,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(13u32),
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 1u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -410,7 +479,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(15u32),
+            op_rule: crate::runtime::tape::DtaRuleId(9u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -418,7 +487,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(15u32),
+            op_rule: crate::runtime::tape::DtaRuleId(9u32),
             op_discriminant: 1u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -426,7 +495,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Right,
-            op_rule: crate::runtime::tape::DtaRuleId(17u32),
+            op_rule: crate::runtime::tape::DtaRuleId(28u32),
             op_discriminant: 0u8,
         },
     ];
@@ -467,7 +536,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::Some(62u8),
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(10u32),
+            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -475,7 +544,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::Some(61u8),
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(10u32),
+            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 1u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -483,7 +552,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::Some(61u8),
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(10u32),
+            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 2u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -491,7 +560,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(10u32),
+            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 3u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -499,7 +568,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(10u32),
+            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 4u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -507,88 +576,8 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(10u32),
+            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 5u8,
-        },
-    ];
-    /// AX.W0a.2.l — per-rule dense Pratt precedence LUT.
-    ///
-    /// One byte per dispatch byte for this Pratt rule's
-    /// operator alphabet. Consulted inline by the rule's
-    /// emitted `parse_pratt_*` body. See `bbnf::backend::
-    /// rust::emitter::precedence` for the bit layout.
-    pub const PRECEDENCE_LUT_array_row: [u8; 256] = [
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 1u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-    ];
-    /// AX.W0a.2.l — per-rule sparse Pratt metadata slice.
-    ///
-    /// One entry per mined operator for this rule.
-    /// Consulted by the rule's emitted `parse_pratt_*`
-    /// body when the LUT byte's bit-7 two-byte flag is
-    /// set, to resolve the second byte + discriminant.
-    pub const PRECEDENCE_ENTRIES_array_row: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
-        crate::runtime::tape::DtaPrecedenceEntry {
-            byte: 44u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(32u32),
-            op_discriminant: 0u8,
-        },
-    ];
-    /// AX.W0a.2.l — per-rule dense Pratt precedence LUT.
-    ///
-    /// One byte per dispatch byte for this Pratt rule's
-    /// operator alphabet. Consulted inline by the rule's
-    /// emitted `parse_pratt_*` body. See `bbnf::backend::
-    /// rust::emitter::precedence` for the bit layout.
-    pub const PRECEDENCE_LUT_array_rows: [u8; 256] = [
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 1u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
-    ];
-    /// AX.W0a.2.l — per-rule sparse Pratt metadata slice.
-    ///
-    /// One entry per mined operator for this rule.
-    /// Consulted by the rule's emitted `parse_pratt_*`
-    /// body when the LUT byte's bit-7 two-byte flag is
-    /// set, to resolve the second byte + discriminant.
-    pub const PRECEDENCE_ENTRIES_array_rows: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
-        crate::runtime::tape::DtaPrecedenceEntry {
-            byte: 59u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(33u32),
-            op_discriminant: 0u8,
         },
     ];
     /// AW-III.W6.5 — aggregate dense Pratt precedence LUT.
@@ -602,7 +591,7 @@ mod __googlesheetsparser_emit_impl {
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 4u8, 0u8, 0u8, 0u8, 2u8, 3u8, 1u8, 3u8, 0u8, 2u8,
-        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 1u8, 1u8, 1u8, 1u8, 0u8,
+        0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 2u8, 1u8, 1u8, 1u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 17u8, 0u8,
         0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8,
@@ -626,7 +615,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 4u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(12u32),
+            op_rule: crate::runtime::tape::DtaRuleId(26u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -634,7 +623,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(13u32),
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -642,7 +631,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(13u32),
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 1u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -650,7 +639,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(15u32),
+            op_rule: crate::runtime::tape::DtaRuleId(9u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -658,7 +647,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(15u32),
+            op_rule: crate::runtime::tape::DtaRuleId(9u32),
             op_discriminant: 1u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -666,7 +655,39 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Right,
-            op_rule: crate::runtime::tape::DtaRuleId(17u32),
+            op_rule: crate::runtime::tape::DtaRuleId(28u32),
+            op_discriminant: 0u8,
+        },
+        crate::runtime::tape::DtaPrecedenceEntry {
+            byte: 59u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 2u8,
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(24u32),
+            op_discriminant: 0u8,
+        },
+        crate::runtime::tape::DtaPrecedenceEntry {
+            byte: 44u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 1u8,
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(23u32),
+            op_discriminant: 0u8,
+        },
+        crate::runtime::tape::DtaPrecedenceEntry {
+            byte: 59u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 2u8,
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(24u32),
+            op_discriminant: 0u8,
+        },
+        crate::runtime::tape::DtaPrecedenceEntry {
+            byte: 44u8,
+            second_byte: ::core::option::Option::None,
+            precedence: 1u8,
+            associativity: crate::runtime::tape::DtaAssociativity::Left,
+            op_rule: crate::runtime::tape::DtaRuleId(23u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -674,7 +695,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 4u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(12u32),
+            op_rule: crate::runtime::tape::DtaRuleId(26u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -682,7 +703,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(13u32),
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -690,7 +711,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(13u32),
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 1u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -698,7 +719,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(15u32),
+            op_rule: crate::runtime::tape::DtaRuleId(9u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -706,7 +727,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(15u32),
+            op_rule: crate::runtime::tape::DtaRuleId(9u32),
             op_discriminant: 1u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -714,7 +735,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Right,
-            op_rule: crate::runtime::tape::DtaRuleId(17u32),
+            op_rule: crate::runtime::tape::DtaRuleId(28u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -722,7 +743,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 4u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(12u32),
+            op_rule: crate::runtime::tape::DtaRuleId(26u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -730,7 +751,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(13u32),
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -738,7 +759,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(13u32),
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 1u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -746,7 +767,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(15u32),
+            op_rule: crate::runtime::tape::DtaRuleId(9u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -754,7 +775,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(15u32),
+            op_rule: crate::runtime::tape::DtaRuleId(9u32),
             op_discriminant: 1u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -762,7 +783,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Right,
-            op_rule: crate::runtime::tape::DtaRuleId(17u32),
+            op_rule: crate::runtime::tape::DtaRuleId(28u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -770,7 +791,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 4u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(12u32),
+            op_rule: crate::runtime::tape::DtaRuleId(26u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -778,7 +799,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(13u32),
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -786,7 +807,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 3u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(13u32),
+            op_rule: crate::runtime::tape::DtaRuleId(10u32),
             op_discriminant: 1u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -794,7 +815,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(15u32),
+            op_rule: crate::runtime::tape::DtaRuleId(9u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -802,7 +823,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 2u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(15u32),
+            op_rule: crate::runtime::tape::DtaRuleId(9u32),
             op_discriminant: 1u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -810,7 +831,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Right,
-            op_rule: crate::runtime::tape::DtaRuleId(17u32),
+            op_rule: crate::runtime::tape::DtaRuleId(28u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -818,7 +839,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::Some(62u8),
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(10u32),
+            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 0u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -826,7 +847,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::Some(61u8),
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(10u32),
+            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 1u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -834,7 +855,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::Some(61u8),
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(10u32),
+            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 2u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -842,7 +863,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(10u32),
+            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 3u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -850,7 +871,7 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(10u32),
+            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 4u8,
         },
         crate::runtime::tape::DtaPrecedenceEntry {
@@ -858,30 +879,14 @@ mod __googlesheetsparser_emit_impl {
             second_byte: ::core::option::Option::None,
             precedence: 1u8,
             associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(10u32),
+            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 5u8,
-        },
-        crate::runtime::tape::DtaPrecedenceEntry {
-            byte: 44u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(32u32),
-            op_discriminant: 0u8,
-        },
-        crate::runtime::tape::DtaPrecedenceEntry {
-            byte: 59u8,
-            second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(33u32),
-            op_discriminant: 0u8,
         },
     ];
     /// AW-III.W6.5 — total mined operator count for this
     /// grammar. Non-zero iff the lift admitted ≥ 1 chain OR the
     /// shape classifier admitted ≥ 1 single-rung Pratt rule.
-    pub const PRECEDENCE_OPERATOR_COUNT: usize = 32usize;
+    pub const PRECEDENCE_OPERATOR_COUNT: usize = 34usize;
     static __DTA_REGEX_0: &str = "(\\d+\\.?\\d*|\\.\\d+)([eE][+-]?\\d+)?";
     static __DTA_REGEX_1: &str = "\"([^\"]|\"\")*\"";
     static __DTA_REGEX_2: &str = "[tT][rR][uU][eE]";
@@ -889,12 +894,12 @@ mod __googlesheetsparser_emit_impl {
     static __DTA_REGEX_20: &str = "'(?:[^']|'')*'!";
     static __DTA_REGEX_21: &str = "[A-Za-z_]\\w*!";
     static __DTA_REGEX_23: &str = "\\$?[A-Za-z]{1,3}\\$?\\d+";
-    static __DTA_REGEX_31: &str = "\\$?[A-Za-z]{1,3}";
-    static __DTA_REGEX_32: &str = "\\$?\\d+";
-    static __DTA_REGEX_43: &str = "[A-Za-z_][A-Za-z0-9_.]*";
-    static __DTA_REGEX_148: &str = "[lL][eE][tT]\\(";
-    static __DTA_REGEX_163: &str = "[lL][aA][mM][bB][dD][aA]\\(";
-    static __DTA_REGEX_195: &str = "=?";
+    static __DTA_REGEX_24: &str = "[A-Za-z_][A-Za-z0-9_.]*";
+    static __DTA_REGEX_54: &str = "\\$?[A-Za-z]{1,3}";
+    static __DTA_REGEX_55: &str = "\\$?\\d+";
+    static __DTA_REGEX_146: &str = "[lL][aA][mM][bB][dD][aA]\\(";
+    static __DTA_REGEX_171: &str = "[lL][eE][tT]\\(";
+    static __DTA_REGEX_182: &str = "=?";
     /// AY.W4.3 — first-byte → admissible-pattern bitmap LUT.
     ///
     /// Each entry holds a u32 bitmap; bit `i` set means pattern
@@ -904,12 +909,12 @@ mod __googlesheetsparser_emit_impl {
     #[allow(dead_code)]
     pub(crate) const __REGEX_FIRST_BYTE_LUT_GoogleSheetsParser: [u32; 256] = [
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 2, 0, 448, 0, 0, 16, 0, 0, 0, 0, 0, 0, 1, 0, 257, 257, 257,
-        257, 257, 257, 257, 257, 257, 257, 0, 0, 0, 4096, 0, 0, 0, 736, 736, 736, 736,
-        736, 744, 736, 736, 736, 736, 736, 3808, 736, 736, 736, 736, 736, 736, 736, 740,
-        736, 736, 736, 736, 736, 736, 0, 0, 0, 0, 544, 0, 736, 736, 736, 736, 736, 744,
-        736, 736, 736, 736, 736, 3808, 736, 736, 736, 736, 736, 736, 736, 740, 736, 736,
-        736, 736, 736, 736, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 2, 0, 832, 0, 0, 16, 0, 0, 0, 0, 0, 0, 1, 0, 513, 513, 513,
+        513, 513, 513, 513, 513, 513, 513, 0, 0, 0, 4096, 0, 0, 0, 480, 480, 480, 480,
+        480, 488, 480, 480, 480, 480, 480, 3552, 480, 480, 480, 480, 480, 480, 480, 484,
+        480, 480, 480, 480, 480, 480, 0, 0, 0, 0, 160, 0, 480, 480, 480, 480, 480, 488,
+        480, 480, 480, 480, 480, 3552, 480, 480, 480, 480, 480, 480, 480, 484, 480, 480,
+        480, 480, 480, 480, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1678,8 +1683,8 @@ mod __googlesheetsparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_31.as_ptr())
-            || pattern == __DTA_REGEX_31
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_24.as_ptr())
+            || pattern == __DTA_REGEX_24
         {
             if let Some(&__byte) = input.get(pos) {
                 if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 7) & 1
@@ -1690,6 +1695,88 @@ mod __googlesheetsparser_emit_impl {
             }
             if input.len() >= 64 * 1024 {
                 let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[7];
+                if (__lb_lo | __lb_hi) != 0 {
+                    let __scan_end = (pos + 256).min(input.len());
+                    let __slice = &input[pos..__scan_end];
+                    let mut __found = false;
+                    for &__b in __slice {
+                        let __test = if __b < 64 {
+                            (__lb_lo >> __b) & 1
+                        } else if __b < 128 {
+                            (__lb_hi >> (__b - 64)) & 1
+                        } else {
+                            0
+                        };
+                        if __test != 0 {
+                            __found = true;
+                            break;
+                        }
+                    }
+                    if !__found && __scan_end == input.len() {
+                        return ::core::option::Option::None;
+                    }
+                }
+            }
+            return '__dfa: {
+                let mut __dfa_state: u32 = 0;
+                let mut __dfa_p: usize = pos;
+                let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::None;
+                loop {
+                    let b = match input.get(__dfa_p) {
+                        ::core::option::Option::Some(&b) => b,
+                        ::core::option::Option::None => break,
+                    };
+                    match __dfa_state {
+                        0 => {
+                            match b {
+                                65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
+                                | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
+                                | 89 | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104
+                                | 105 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114
+                                | 115 | 116 | 117 | 118 | 119 | 120 | 121 | 122 => {
+                                    __dfa_state = 1;
+                                }
+                                _ => break,
+                            }
+                        }
+                        1 => {
+                            match b {
+                                46 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 65
+                                | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77
+                                | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89
+                                | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
+                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
+                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 1,
+                                _ => break,
+                            }
+                        }
+                        _ => unsafe { ::core::hint::unreachable_unchecked() }
+                    }
+                    __dfa_p += 1;
+                    match __dfa_state {
+                        1 => {
+                            __dfa_last_match = ::core::option::Option::Some(
+                                __dfa_p as u32,
+                            );
+                        }
+                        _ => {}
+                    }
+                }
+                break '__dfa __dfa_last_match.map(|end| end - pos as u32);
+            };
+        }
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_54.as_ptr())
+            || pattern == __DTA_REGEX_54
+        {
+            if let Some(&__byte) = input.get(pos) {
+                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 8) & 1
+                    == 0
+                {
+                    return ::core::option::Option::None;
+                }
+            }
+            if input.len() >= 64 * 1024 {
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[8];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -1783,18 +1870,18 @@ mod __googlesheetsparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_32.as_ptr())
-            || pattern == __DTA_REGEX_32
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_55.as_ptr())
+            || pattern == __DTA_REGEX_55
         {
             if let Some(&__byte) = input.get(pos) {
-                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 8) & 1
+                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 9) & 1
                     == 0
                 {
                     return ::core::option::Option::None;
                 }
             }
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[8];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[9];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -1867,90 +1954,8 @@ mod __googlesheetsparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_43.as_ptr())
-            || pattern == __DTA_REGEX_43
-        {
-            if let Some(&__byte) = input.get(pos) {
-                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 9) & 1
-                    == 0
-                {
-                    return ::core::option::Option::None;
-                }
-            }
-            if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[9];
-                if (__lb_lo | __lb_hi) != 0 {
-                    let __scan_end = (pos + 256).min(input.len());
-                    let __slice = &input[pos..__scan_end];
-                    let mut __found = false;
-                    for &__b in __slice {
-                        let __test = if __b < 64 {
-                            (__lb_lo >> __b) & 1
-                        } else if __b < 128 {
-                            (__lb_hi >> (__b - 64)) & 1
-                        } else {
-                            0
-                        };
-                        if __test != 0 {
-                            __found = true;
-                            break;
-                        }
-                    }
-                    if !__found && __scan_end == input.len() {
-                        return ::core::option::Option::None;
-                    }
-                }
-            }
-            return '__dfa: {
-                let mut __dfa_state: u32 = 0;
-                let mut __dfa_p: usize = pos;
-                let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::None;
-                loop {
-                    let b = match input.get(__dfa_p) {
-                        ::core::option::Option::Some(&b) => b,
-                        ::core::option::Option::None => break,
-                    };
-                    match __dfa_state {
-                        0 => {
-                            match b {
-                                65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
-                                | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
-                                | 89 | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104
-                                | 105 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114
-                                | 115 | 116 | 117 | 118 | 119 | 120 | 121 | 122 => {
-                                    __dfa_state = 1;
-                                }
-                                _ => break,
-                            }
-                        }
-                        1 => {
-                            match b {
-                                46 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 65
-                                | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77
-                                | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89
-                                | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
-                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
-                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 1,
-                                _ => break,
-                            }
-                        }
-                        _ => unsafe { ::core::hint::unreachable_unchecked() }
-                    }
-                    __dfa_p += 1;
-                    match __dfa_state {
-                        1 => {
-                            __dfa_last_match = ::core::option::Option::Some(
-                                __dfa_p as u32,
-                            );
-                        }
-                        _ => {}
-                    }
-                }
-                break '__dfa __dfa_last_match.map(|end| end - pos as u32);
-            };
-        }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_148.as_ptr())
-            || pattern == __DTA_REGEX_148
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_146.as_ptr())
+            || pattern == __DTA_REGEX_146
         {
             if let Some(&__byte) = input.get(pos) {
                 if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 10) & 1
@@ -1961,94 +1966,6 @@ mod __googlesheetsparser_emit_impl {
             }
             if input.len() >= 64 * 1024 {
                 let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[10];
-                if (__lb_lo | __lb_hi) != 0 {
-                    let __scan_end = (pos + 256).min(input.len());
-                    let __slice = &input[pos..__scan_end];
-                    let mut __found = false;
-                    for &__b in __slice {
-                        let __test = if __b < 64 {
-                            (__lb_lo >> __b) & 1
-                        } else if __b < 128 {
-                            (__lb_hi >> (__b - 64)) & 1
-                        } else {
-                            0
-                        };
-                        if __test != 0 {
-                            __found = true;
-                            break;
-                        }
-                    }
-                    if !__found && __scan_end == input.len() {
-                        return ::core::option::Option::None;
-                    }
-                }
-            }
-            return '__dfa: {
-                let mut __dfa_state: u32 = 0;
-                let mut __dfa_p: usize = pos;
-                let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::None;
-                loop {
-                    let b = match input.get(__dfa_p) {
-                        ::core::option::Option::Some(&b) => b,
-                        ::core::option::Option::None => break,
-                    };
-                    match __dfa_state {
-                        0 => {
-                            match b {
-                                76 | 108 => __dfa_state = 3,
-                                _ => break,
-                            }
-                        }
-                        1 => {
-                            match b {
-                                _ => break,
-                            }
-                        }
-                        2 => {
-                            match b {
-                                40 => __dfa_state = 1,
-                                _ => break,
-                            }
-                        }
-                        3 => {
-                            match b {
-                                69 | 101 => __dfa_state = 4,
-                                _ => break,
-                            }
-                        }
-                        4 => {
-                            match b {
-                                84 | 116 => __dfa_state = 2,
-                                _ => break,
-                            }
-                        }
-                        _ => unsafe { ::core::hint::unreachable_unchecked() }
-                    }
-                    __dfa_p += 1;
-                    match __dfa_state {
-                        1 => {
-                            __dfa_last_match = ::core::option::Option::Some(
-                                __dfa_p as u32,
-                            );
-                        }
-                        _ => {}
-                    }
-                }
-                break '__dfa __dfa_last_match.map(|end| end - pos as u32);
-            };
-        }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_163.as_ptr())
-            || pattern == __DTA_REGEX_163
-        {
-            if let Some(&__byte) = input.get(pos) {
-                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 11) & 1
-                    == 0
-                {
-                    return ::core::option::Option::None;
-                }
-            }
-            if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[11];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -2143,8 +2060,96 @@ mod __googlesheetsparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_195.as_ptr())
-            || pattern == __DTA_REGEX_195
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_171.as_ptr())
+            || pattern == __DTA_REGEX_171
+        {
+            if let Some(&__byte) = input.get(pos) {
+                if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 11) & 1
+                    == 0
+                {
+                    return ::core::option::Option::None;
+                }
+            }
+            if input.len() >= 64 * 1024 {
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_GoogleSheetsParser[11];
+                if (__lb_lo | __lb_hi) != 0 {
+                    let __scan_end = (pos + 256).min(input.len());
+                    let __slice = &input[pos..__scan_end];
+                    let mut __found = false;
+                    for &__b in __slice {
+                        let __test = if __b < 64 {
+                            (__lb_lo >> __b) & 1
+                        } else if __b < 128 {
+                            (__lb_hi >> (__b - 64)) & 1
+                        } else {
+                            0
+                        };
+                        if __test != 0 {
+                            __found = true;
+                            break;
+                        }
+                    }
+                    if !__found && __scan_end == input.len() {
+                        return ::core::option::Option::None;
+                    }
+                }
+            }
+            return '__dfa: {
+                let mut __dfa_state: u32 = 0;
+                let mut __dfa_p: usize = pos;
+                let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::None;
+                loop {
+                    let b = match input.get(__dfa_p) {
+                        ::core::option::Option::Some(&b) => b,
+                        ::core::option::Option::None => break,
+                    };
+                    match __dfa_state {
+                        0 => {
+                            match b {
+                                76 | 108 => __dfa_state = 3,
+                                _ => break,
+                            }
+                        }
+                        1 => {
+                            match b {
+                                _ => break,
+                            }
+                        }
+                        2 => {
+                            match b {
+                                40 => __dfa_state = 1,
+                                _ => break,
+                            }
+                        }
+                        3 => {
+                            match b {
+                                69 | 101 => __dfa_state = 4,
+                                _ => break,
+                            }
+                        }
+                        4 => {
+                            match b {
+                                84 | 116 => __dfa_state = 2,
+                                _ => break,
+                            }
+                        }
+                        _ => unsafe { ::core::hint::unreachable_unchecked() }
+                    }
+                    __dfa_p += 1;
+                    match __dfa_state {
+                        1 => {
+                            __dfa_last_match = ::core::option::Option::Some(
+                                __dfa_p as u32,
+                            );
+                        }
+                        _ => {}
+                    }
+                }
+                break '__dfa __dfa_last_match.map(|end| end - pos as u32);
+            };
+        }
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_182.as_ptr())
+            || pattern == __DTA_REGEX_182
         {
             if let Some(&__byte) = input.get(pos) {
                 if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 12) & 1
@@ -2950,30 +2955,50 @@ mod __googlesheetsparser_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
-        let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
-            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                offset: *p as u32,
-            })?;
-        'try_branches: loop {
-            match first {
-                _ => {}
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
+                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                    offset: *p as u32,
+                })?;
+            'try_branches: loop {
+                match first {
+                    _ => {}
+                }
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            <crate::runtime::google_sheets::SheetsStructBuilder<
-                '_,
-            > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
-            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
+            ::core::result::Result::Ok(())
+        })();
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_branch_tag(
+                    builder,
+                    __wrap_branch_idx,
+                );
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __wrap_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(e) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __wrap_handle,
+                );
+                ::core::result::Result::Err(e)
+            }
         }
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::push_branch_tag(builder, __wrap_branch_idx);
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -3019,27 +3044,311 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__error_literal_layout,
         );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
-            let at = *p;
-            let end = at + 1usize;
-            if input.len() < end || input[at..end] != [35u8] {
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: at as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                });
+            {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [35u8] {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
             }
-            *p = end;
-        }
-        {
-            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
-        }
+            {
+                'try_branches: loop {
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 3usize;
+                            if input.len() < end || input[at..end] != [78u8, 47u8, 65u8]
+                            {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => break 'try_branches,
+                            Err(_) => {
+                                *p = __alt_save_p;
+                            }
+                        }
+                    }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [78u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            'try_branches: loop {
+                                {
+                                    let __alt_save_p = *p;
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::tape::DtaError,
+                                    > = (|| {
+                                        let at = *p;
+                                        let end = at + 4usize;
+                                        if input.len() < end
+                                            || input[at..end] != [85u8, 76u8, 76u8, 33u8]
+                                        {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: at as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
+                                        }
+                                        *p = end;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = __alt_save_p;
+                                        }
+                                    }
+                                }
+                                {
+                                    let __alt_save_p = *p;
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::tape::DtaError,
+                                    > = (|| {
+                                        let at = *p;
+                                        let end = at + 3usize;
+                                        if input.len() < end || input[at..end] != [85u8, 77u8, 33u8]
+                                        {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: at as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
+                                        }
+                                        *p = end;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = __alt_save_p;
+                                        }
+                                    }
+                                }
+                                {
+                                    let __alt_save_p = *p;
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::tape::DtaError,
+                                    > = (|| {
+                                        let at = *p;
+                                        let end = at + 4usize;
+                                        if input.len() < end
+                                            || input[at..end] != [65u8, 77u8, 69u8, 63u8]
+                                        {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: at as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
+                                        }
+                                        *p = end;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => break 'try_branches,
+                                        Err(_) => {
+                                            *p = __alt_save_p;
+                                        }
+                                    }
+                                }
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: *p as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => break 'try_branches,
+                            Err(_) => {
+                                *p = __alt_save_p;
+                            }
+                        }
+                    }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 6usize;
+                            if input.len() < end
+                                || input[at..end] != [86u8, 65u8, 76u8, 85u8, 69u8, 33u8]
+                            {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => break 'try_branches,
+                            Err(_) => {
+                                *p = __alt_save_p;
+                            }
+                        }
+                    }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 6usize;
+                            if input.len() < end
+                                || input[at..end] != [68u8, 73u8, 86u8, 47u8, 48u8, 33u8]
+                            {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => break 'try_branches,
+                            Err(_) => {
+                                *p = __alt_save_p;
+                            }
+                        }
+                    }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 6usize;
+                            if input.len() < end
+                                || input[at..end] != [69u8, 82u8, 82u8, 79u8, 82u8, 33u8]
+                            {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => break 'try_branches,
+                            Err(_) => {
+                                *p = __alt_save_p;
+                            }
+                        }
+                    }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 6usize;
+                            if input.len() < end
+                                || input[at..end] != [83u8, 80u8, 73u8, 76u8, 76u8, 33u8]
+                            {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => break 'try_branches,
+                            Err(_) => {
+                                *p = __alt_save_p;
+                            }
+                        }
+                    }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 4usize;
+                            if input.len() < end
+                                || input[at..end] != [82u8, 69u8, 70u8, 33u8]
+                            {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => break 'try_branches,
+                            Err(_) => {
+                                *p = __alt_save_p;
+                            }
+                        }
+                    }
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+            }
+            ::core::result::Result::Ok(())
+        })();
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::end_compound(
             builder,
             __error_literal_handle,
         );
+        __body_result?;
         ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
@@ -3077,30 +3386,50 @@ mod __googlesheetsparser_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
-        let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
-            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                offset: *p as u32,
-            })?;
-        'try_branches: loop {
-            match first {
-                _ => {}
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
+                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                    offset: *p as u32,
+                })?;
+            'try_branches: loop {
+                match first {
+                    _ => {}
+                }
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            <crate::runtime::google_sheets::SheetsStructBuilder<
-                '_,
-            > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
-            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
+            ::core::result::Result::Ok(())
+        })();
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_branch_tag(
+                    builder,
+                    __wrap_branch_idx,
+                );
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __wrap_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(e) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __wrap_handle,
+                );
+                ::core::result::Result::Err(e)
+            }
         }
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::push_branch_tag(builder, __wrap_branch_idx);
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AZ-I.W2-act.B3 — per-grammar HRegex-shape parse function,
     /// **struct-direct body**.
@@ -3144,215 +3473,6 @@ mod __googlesheetsparser_emit_impl {
                 .unwrap_or(""),
         );
         Ok(crate::runtime::tape::TapeOffset::NONE)
-    }
-    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
-    /// **struct-direct body**. Targets the grammar's concrete
-    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
-    /// resolver's `SubstrateBinding`).
-    ///
-    /// Walker-tape compound emission is replaced by typed
-    /// `begin_compound` / `end_compound` calls against the in-flight
-    /// frame stack. Per-position pushes (string keys, recursive
-    /// value calls, byte literals) land directly on the topmost
-    /// open frame.
-    ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge (Flat → Wrap → Flat through
-    /// the grammar's `__value` discriminant). LLVM's inliner
-    /// collapses plain `#[inline]` candidates only when
-    /// profitable and bails cleanly on detected recursion.
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_cell<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let __cell_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 6u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("cell"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __cell_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__cell_layout);
-        {
-            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
-        }
-        {
-            let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_hregex_GoogleSheetsParser_cell_ref(input, p, state, builder)
-            })?;
-        }
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __cell_handle);
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
-    }
-    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
-    /// **struct-direct body**. Targets the grammar's concrete
-    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
-    /// resolver's `SubstrateBinding`).
-    ///
-    /// Walker-tape compound emission is replaced by typed
-    /// `begin_compound` / `end_compound` calls against the in-flight
-    /// frame stack. Per-position pushes (string keys, recursive
-    /// value calls, byte literals) land directly on the topmost
-    /// open frame.
-    ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge (Flat → Wrap → Flat through
-    /// the grammar's `__value` discriminant). LLVM's inliner
-    /// collapses plain `#[inline]` candidates only when
-    /// profitable and bails cleanly on detected recursion.
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_range_ref<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let __range_ref_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 7u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("range_ref"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __range_ref_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(
-            builder,
-            &__range_ref_layout,
-        );
-        {
-            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
-        }
-        {
-            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
-        }
-        {
-            let at = *p;
-            let end = at + 1usize;
-            if input.len() < end || input[at..end] != [58u8] {
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: at as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                });
-            }
-            *p = end;
-        }
-        {
-            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
-        }
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __range_ref_handle);
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
-    }
-    /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
-    ///
-    /// Opens a Wrap frame on the builder, dispatches to the matched
-    /// branch's shape fn (which carries its own
-    /// begin_compound/end_compound for compound branches and the
-    /// matching push_leaf_with_* for scalar branches), stamps the
-    /// chosen branch index via push_branch_tag, then closes the
-    /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
-    /// forward-the-single-child semantics.
-    ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_GoogleSheetsParser_cell_or_range<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 8u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("cell_or_range"),
-            kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __wrap_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
-        let mut __wrap_branch_idx: u32 = 0;
-        let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
-            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                offset: *p as u32,
-            })?;
-        'try_branches: loop {
-            match first {
-                _ => {}
-            }
-            {
-                let attempt_p = *p;
-                match parse_flat_GoogleSheetsParser_range_ref(input, p, state, builder) {
-                    ::core::result::Result::Ok(_) => {
-                        __wrap_branch_idx = 0u32;
-                        break 'try_branches;
-                    }
-                    ::core::result::Result::Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                match parse_flat_GoogleSheetsParser_cell(input, p, state, builder) {
-                    ::core::result::Result::Ok(_) => {
-                        __wrap_branch_idx = 1u32;
-                        break 'try_branches;
-                    }
-                    ::core::result::Result::Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            <crate::runtime::google_sheets::SheetsStructBuilder<
-                '_,
-            > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
-            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
-        }
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::push_branch_tag(builder, __wrap_branch_idx);
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AZ-I.W2-act.B3 — per-grammar HRegex-shape parse function,
     /// **struct-direct body**.
@@ -3398,21 +3518,23 @@ mod __googlesheetsparser_emit_impl {
         Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
-    /// (Alt of literal-led branches).
+    /// (Alt of literal-led, Ref-led, or Seq-led branches).
     ///
-    /// Each branch's typed payload routes through
+    /// Literal branches push leaves through
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
-    /// untyped). Returns `TapeOffset::NONE` for
-    /// compositional uniformity.
+    /// untyped). Ref branches delegate to the target shape
+    /// fn so the target's records bubble up unchanged.
+    /// Returns `TapeOffset::NONE` for compositional
+    /// uniformity.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_GoogleSheetsParser_compare_op(
-        input: &[u8],
+    pub fn parse_keyword_GoogleSheetsParser_compare_op<'p>(
+        input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'_>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -3422,13 +3544,11 @@ mod __googlesheetsparser_emit_impl {
         match first_byte {
             60u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [60u8] {
-                    let at = *p;
-                    let end = at + 1usize;
-                    *p = end;
-                    builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [60u8] {
                     let at = *p;
@@ -3495,269 +3615,24 @@ mod __googlesheetsparser_emit_impl {
             }
         }
     }
-    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
-    /// function, **struct-direct body**. Targets the grammar's
-    /// concrete `StructBuilder`.
-    ///
-    /// Opens a compound for the rule (e.g. `add_expr` →
-    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
-    /// stamps operator branch tags inline, closes the compound.
-    /// Children land in the order
-    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
-    /// rule's structural alphabet is preserved verbatim;
-    /// associativity-honouring binary-tree reduction is a
-    /// consumer-side projection (the runtime exposes
-    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
-    ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
-    /// with sibling shape fns under struct-direct mode.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge through the value dispatcher.
-    #[inline]
-    #[allow(
-        non_snake_case,
-        clippy::too_many_arguments,
-        unused_variables,
-        unused_mut,
-        unused_assignments
-    )]
-    pub fn parse_pratt_GoogleSheetsParser_comparison_expr<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        let __comparison_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 11u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("comparison_expr"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __comparison_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(
-            builder,
-            &__comparison_expr_layout,
-        );
-        let _ = ({
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            parse_pratt_GoogleSheetsParser_concat_expr(input, p, state, builder)
-        })?;
-        loop {
-            let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let mut lut_byte: u8 = PRECEDENCE_LUT_comparison_expr[op_byte as usize];
-            if lut_byte == 0 {
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                op_byte = input.get(*p).copied().unwrap_or(0);
-                lut_byte = PRECEDENCE_LUT_comparison_expr[op_byte as usize];
-            }
-            if lut_byte == 0 {
-                break;
-            }
-            let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
-            let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
-                let mut found_disc: u8 = 0u8;
-                let mut matched: bool = false;
-                for e in PRECEDENCE_ENTRIES_comparison_expr.iter() {
-                    if e.byte == op_byte && e.second_byte.is_none() {
-                        found_disc = e.op_discriminant;
-                        matched = true;
-                        break;
-                    }
-                }
-                (1u32, found_disc, matched)
-            } else {
-                let mut found_disc: u8 = 0u8;
-                let mut matched_two_byte: bool = false;
-                let mut matched_single: bool = false;
-                for e in PRECEDENCE_ENTRIES_comparison_expr.iter() {
-                    if e.byte == op_byte && e.second_byte == second_byte {
-                        found_disc = e.op_discriminant;
-                        matched_two_byte = e.second_byte.is_some();
-                        break;
-                    }
-                }
-                if !matched_two_byte {
-                    for e in PRECEDENCE_ENTRIES_comparison_expr.iter() {
-                        if e.byte == op_byte && e.second_byte.is_none() {
-                            found_disc = e.op_discriminant;
-                            matched_single = true;
-                            break;
-                        }
-                    }
-                }
-                let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc, matched_two_byte || matched_single)
-            };
-            if !op_matched {
-                break;
-            }
-            <crate::runtime::google_sheets::SheetsStructBuilder<
-                '_,
-            > as crate::runtime::StructBuilder>::push_branch_tag(
-                builder,
-                op_discriminant as u32,
-            );
-            *p = (*p).saturating_add(op_width as usize);
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_pratt_GoogleSheetsParser_concat_expr(input, p, state, builder)
-            })?;
-        }
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __comparison_expr_handle,
-        );
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
-    }
-    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
-    /// function, **struct-direct body**. Targets the grammar's
-    /// concrete `StructBuilder`.
-    ///
-    /// Opens a compound for the rule (e.g. `add_expr` →
-    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
-    /// stamps operator branch tags inline, closes the compound.
-    /// Children land in the order
-    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
-    /// rule's structural alphabet is preserved verbatim;
-    /// associativity-honouring binary-tree reduction is a
-    /// consumer-side projection (the runtime exposes
-    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
-    ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
-    /// with sibling shape fns under struct-direct mode.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge through the value dispatcher.
-    #[inline]
-    #[allow(
-        non_snake_case,
-        clippy::too_many_arguments,
-        unused_variables,
-        unused_mut,
-        unused_assignments
-    )]
-    pub fn parse_pratt_GoogleSheetsParser_concat_expr<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        let __concat_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 12u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("concat_expr"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __concat_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(
-            builder,
-            &__concat_expr_layout,
-        );
-        let _ = ({
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            parse_pratt_GoogleSheetsParser_add_expr(input, p, state, builder)
-        })?;
-        loop {
-            let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let mut lut_byte: u8 = PRECEDENCE_LUT_concat_expr[op_byte as usize];
-            if lut_byte == 0 {
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                op_byte = input.get(*p).copied().unwrap_or(0);
-                lut_byte = PRECEDENCE_LUT_concat_expr[op_byte as usize];
-            }
-            if lut_byte == 0 {
-                break;
-            }
-            let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
-            let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
-                let mut found_disc: u8 = 0u8;
-                let mut matched: bool = false;
-                for e in PRECEDENCE_ENTRIES_concat_expr.iter() {
-                    if e.byte == op_byte && e.second_byte.is_none() {
-                        found_disc = e.op_discriminant;
-                        matched = true;
-                        break;
-                    }
-                }
-                (1u32, found_disc, matched)
-            } else {
-                let mut found_disc: u8 = 0u8;
-                let mut matched_two_byte: bool = false;
-                let mut matched_single: bool = false;
-                for e in PRECEDENCE_ENTRIES_concat_expr.iter() {
-                    if e.byte == op_byte && e.second_byte == second_byte {
-                        found_disc = e.op_discriminant;
-                        matched_two_byte = e.second_byte.is_some();
-                        break;
-                    }
-                }
-                if !matched_two_byte {
-                    for e in PRECEDENCE_ENTRIES_concat_expr.iter() {
-                        if e.byte == op_byte && e.second_byte.is_none() {
-                            found_disc = e.op_discriminant;
-                            matched_single = true;
-                            break;
-                        }
-                    }
-                }
-                let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc, matched_two_byte || matched_single)
-            };
-            if !op_matched {
-                break;
-            }
-            <crate::runtime::google_sheets::SheetsStructBuilder<
-                '_,
-            > as crate::runtime::StructBuilder>::push_branch_tag(
-                builder,
-                op_discriminant as u32,
-            );
-            *p = (*p).saturating_add(op_width as usize);
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_pratt_GoogleSheetsParser_add_expr(input, p, state, builder)
-            })?;
-        }
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __concat_expr_handle);
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
-    }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
-    /// (Alt of literal-led branches).
+    /// (Alt of literal-led, Ref-led, or Seq-led branches).
     ///
-    /// Each branch's typed payload routes through
+    /// Literal branches push leaves through
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
-    /// untyped). Returns `TapeOffset::NONE` for
-    /// compositional uniformity.
+    /// untyped). Ref branches delegate to the target shape
+    /// fn so the target's records bubble up unchanged.
+    /// Returns `TapeOffset::NONE` for compositional
+    /// uniformity.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_GoogleSheetsParser_add_op(
-        input: &[u8],
+    pub fn parse_keyword_GoogleSheetsParser_unary_prefix<'p>(
+        input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'_>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -3806,141 +3681,24 @@ mod __googlesheetsparser_emit_impl {
             }
         }
     }
-    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
-    /// function, **struct-direct body**. Targets the grammar's
-    /// concrete `StructBuilder`.
-    ///
-    /// Opens a compound for the rule (e.g. `add_expr` →
-    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
-    /// stamps operator branch tags inline, closes the compound.
-    /// Children land in the order
-    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
-    /// rule's structural alphabet is preserved verbatim;
-    /// associativity-honouring binary-tree reduction is a
-    /// consumer-side projection (the runtime exposes
-    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
-    ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
-    /// with sibling shape fns under struct-direct mode.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge through the value dispatcher.
-    #[inline]
-    #[allow(
-        non_snake_case,
-        clippy::too_many_arguments,
-        unused_variables,
-        unused_mut,
-        unused_assignments
-    )]
-    pub fn parse_pratt_GoogleSheetsParser_add_expr<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        let __add_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 14u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("add_expr"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __add_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__add_expr_layout);
-        let _ = ({
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            parse_pratt_GoogleSheetsParser_mul_expr(input, p, state, builder)
-        })?;
-        loop {
-            let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let mut lut_byte: u8 = PRECEDENCE_LUT_add_expr[op_byte as usize];
-            if lut_byte == 0 {
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                op_byte = input.get(*p).copied().unwrap_or(0);
-                lut_byte = PRECEDENCE_LUT_add_expr[op_byte as usize];
-            }
-            if lut_byte == 0 {
-                break;
-            }
-            let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
-            let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
-                let mut found_disc: u8 = 0u8;
-                let mut matched: bool = false;
-                for e in PRECEDENCE_ENTRIES_add_expr.iter() {
-                    if e.byte == op_byte && e.second_byte.is_none() {
-                        found_disc = e.op_discriminant;
-                        matched = true;
-                        break;
-                    }
-                }
-                (1u32, found_disc, matched)
-            } else {
-                let mut found_disc: u8 = 0u8;
-                let mut matched_two_byte: bool = false;
-                let mut matched_single: bool = false;
-                for e in PRECEDENCE_ENTRIES_add_expr.iter() {
-                    if e.byte == op_byte && e.second_byte == second_byte {
-                        found_disc = e.op_discriminant;
-                        matched_two_byte = e.second_byte.is_some();
-                        break;
-                    }
-                }
-                if !matched_two_byte {
-                    for e in PRECEDENCE_ENTRIES_add_expr.iter() {
-                        if e.byte == op_byte && e.second_byte.is_none() {
-                            found_disc = e.op_discriminant;
-                            matched_single = true;
-                            break;
-                        }
-                    }
-                }
-                let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc, matched_two_byte || matched_single)
-            };
-            if !op_matched {
-                break;
-            }
-            <crate::runtime::google_sheets::SheetsStructBuilder<
-                '_,
-            > as crate::runtime::StructBuilder>::push_branch_tag(
-                builder,
-                op_discriminant as u32,
-            );
-            *p = (*p).saturating_add(op_width as usize);
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_pratt_GoogleSheetsParser_mul_expr(input, p, state, builder)
-            })?;
-        }
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __add_expr_handle);
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
-    }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
-    /// (Alt of literal-led branches).
+    /// (Alt of literal-led, Ref-led, or Seq-led branches).
     ///
-    /// Each branch's typed payload routes through
+    /// Literal branches push leaves through
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
-    /// untyped). Returns `TapeOffset::NONE` for
-    /// compositional uniformity.
+    /// untyped). Ref branches delegate to the target shape
+    /// fn so the target's records bubble up unchanged.
+    /// Returns `TapeOffset::NONE` for compositional
+    /// uniformity.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_GoogleSheetsParser_mul_op(
-        input: &[u8],
+    pub fn parse_keyword_GoogleSheetsParser_mul_op<'p>(
+        input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'_>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -3989,260 +3747,24 @@ mod __googlesheetsparser_emit_impl {
             }
         }
     }
-    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
-    /// function, **struct-direct body**. Targets the grammar's
-    /// concrete `StructBuilder`.
-    ///
-    /// Opens a compound for the rule (e.g. `add_expr` →
-    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
-    /// stamps operator branch tags inline, closes the compound.
-    /// Children land in the order
-    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
-    /// rule's structural alphabet is preserved verbatim;
-    /// associativity-honouring binary-tree reduction is a
-    /// consumer-side projection (the runtime exposes
-    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
-    ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
-    /// with sibling shape fns under struct-direct mode.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge through the value dispatcher.
-    #[inline]
-    #[allow(
-        non_snake_case,
-        clippy::too_many_arguments,
-        unused_variables,
-        unused_mut,
-        unused_assignments
-    )]
-    pub fn parse_pratt_GoogleSheetsParser_mul_expr<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        let __mul_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 16u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("mul_expr"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __mul_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__mul_expr_layout);
-        let _ = ({
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            parse_pratt_GoogleSheetsParser_exp_expr(input, p, state, builder)
-        })?;
-        loop {
-            let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let mut lut_byte: u8 = PRECEDENCE_LUT_mul_expr[op_byte as usize];
-            if lut_byte == 0 {
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                op_byte = input.get(*p).copied().unwrap_or(0);
-                lut_byte = PRECEDENCE_LUT_mul_expr[op_byte as usize];
-            }
-            if lut_byte == 0 {
-                break;
-            }
-            let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
-            let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
-                let mut found_disc: u8 = 0u8;
-                let mut matched: bool = false;
-                for e in PRECEDENCE_ENTRIES_mul_expr.iter() {
-                    if e.byte == op_byte && e.second_byte.is_none() {
-                        found_disc = e.op_discriminant;
-                        matched = true;
-                        break;
-                    }
-                }
-                (1u32, found_disc, matched)
-            } else {
-                let mut found_disc: u8 = 0u8;
-                let mut matched_two_byte: bool = false;
-                let mut matched_single: bool = false;
-                for e in PRECEDENCE_ENTRIES_mul_expr.iter() {
-                    if e.byte == op_byte && e.second_byte == second_byte {
-                        found_disc = e.op_discriminant;
-                        matched_two_byte = e.second_byte.is_some();
-                        break;
-                    }
-                }
-                if !matched_two_byte {
-                    for e in PRECEDENCE_ENTRIES_mul_expr.iter() {
-                        if e.byte == op_byte && e.second_byte.is_none() {
-                            found_disc = e.op_discriminant;
-                            matched_single = true;
-                            break;
-                        }
-                    }
-                }
-                let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc, matched_two_byte || matched_single)
-            };
-            if !op_matched {
-                break;
-            }
-            <crate::runtime::google_sheets::SheetsStructBuilder<
-                '_,
-            > as crate::runtime::StructBuilder>::push_branch_tag(
-                builder,
-                op_discriminant as u32,
-            );
-            *p = (*p).saturating_add(op_width as usize);
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_pratt_GoogleSheetsParser_exp_expr(input, p, state, builder)
-            })?;
-        }
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __mul_expr_handle);
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
-    }
-    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
-    /// function, **struct-direct body**. Targets the grammar's
-    /// concrete `StructBuilder`.
-    ///
-    /// Opens a compound for the rule (e.g. `add_expr` →
-    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
-    /// stamps operator branch tags inline, closes the compound.
-    /// Children land in the order
-    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
-    /// rule's structural alphabet is preserved verbatim;
-    /// associativity-honouring binary-tree reduction is a
-    /// consumer-side projection (the runtime exposes
-    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
-    ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
-    /// with sibling shape fns under struct-direct mode.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge through the value dispatcher.
-    #[inline]
-    #[allow(
-        non_snake_case,
-        clippy::too_many_arguments,
-        unused_variables,
-        unused_mut,
-        unused_assignments
-    )]
-    pub fn parse_pratt_GoogleSheetsParser_exp_expr<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        let __exp_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 17u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("exp_expr"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __exp_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__exp_expr_layout);
-        let _ = ({
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            parse_flat_GoogleSheetsParser_unary_expr(input, p, state, builder)
-        })?;
-        loop {
-            let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let mut lut_byte: u8 = PRECEDENCE_LUT_exp_expr[op_byte as usize];
-            if lut_byte == 0 {
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                op_byte = input.get(*p).copied().unwrap_or(0);
-                lut_byte = PRECEDENCE_LUT_exp_expr[op_byte as usize];
-            }
-            if lut_byte == 0 {
-                break;
-            }
-            let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
-            let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
-                let mut found_disc: u8 = 0u8;
-                let mut matched: bool = false;
-                for e in PRECEDENCE_ENTRIES_exp_expr.iter() {
-                    if e.byte == op_byte && e.second_byte.is_none() {
-                        found_disc = e.op_discriminant;
-                        matched = true;
-                        break;
-                    }
-                }
-                (1u32, found_disc, matched)
-            } else {
-                let mut found_disc: u8 = 0u8;
-                let mut matched_two_byte: bool = false;
-                let mut matched_single: bool = false;
-                for e in PRECEDENCE_ENTRIES_exp_expr.iter() {
-                    if e.byte == op_byte && e.second_byte == second_byte {
-                        found_disc = e.op_discriminant;
-                        matched_two_byte = e.second_byte.is_some();
-                        break;
-                    }
-                }
-                if !matched_two_byte {
-                    for e in PRECEDENCE_ENTRIES_exp_expr.iter() {
-                        if e.byte == op_byte && e.second_byte.is_none() {
-                            found_disc = e.op_discriminant;
-                            matched_single = true;
-                            break;
-                        }
-                    }
-                }
-                let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc, matched_two_byte || matched_single)
-            };
-            if !op_matched {
-                break;
-            }
-            <crate::runtime::google_sheets::SheetsStructBuilder<
-                '_,
-            > as crate::runtime::StructBuilder>::push_branch_tag(
-                builder,
-                op_discriminant as u32,
-            );
-            *p = (*p).saturating_add(op_width as usize);
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_flat_GoogleSheetsParser_unary_expr(input, p, state, builder)
-            })?;
-        }
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __exp_expr_handle);
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
-    }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
-    /// (Alt of literal-led branches).
+    /// (Alt of literal-led, Ref-led, or Seq-led branches).
     ///
-    /// Each branch's typed payload routes through
+    /// Literal branches push leaves through
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
-    /// untyped). Returns `TapeOffset::NONE` for
-    /// compositional uniformity.
+    /// untyped). Ref branches delegate to the target shape
+    /// fn so the target's records bubble up unchanged.
+    /// Returns `TapeOffset::NONE` for compositional
+    /// uniformity.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_GoogleSheetsParser_unary_prefix(
-        input: &[u8],
+    pub fn parse_keyword_GoogleSheetsParser_add_op<'p>(
+        input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'_>,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -4313,7 +3835,7 @@ mod __googlesheetsparser_emit_impl {
     /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_unary_expr<'p>(
+    pub fn parse_flat_GoogleSheetsParser_cell<'p>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
@@ -4322,679 +3844,86 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let __unary_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 19u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("unary_expr"),
+        let __cell_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 11u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("cell"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
             fields: ::std::vec::Vec::new(),
         };
-        let __unary_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+        let __cell_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::begin_compound(
-            builder,
-            &__unary_expr_layout,
-        );
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__cell_layout);
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
-            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
-        }
-        {
-            let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_flat_GoogleSheetsParser_postfix_expr(input, p, state, builder)
-            })?;
-        }
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __unary_expr_handle);
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
-    }
-    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
-    /// **struct-direct body**. Targets the grammar's concrete
-    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
-    /// resolver's `SubstrateBinding`).
-    ///
-    /// Walker-tape compound emission is replaced by typed
-    /// `begin_compound` / `end_compound` calls against the in-flight
-    /// frame stack. Per-position pushes (string keys, recursive
-    /// value calls, byte literals) land directly on the topmost
-    /// open frame.
-    ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge (Flat → Wrap → Flat through
-    /// the grammar's `__value` discriminant). LLVM's inliner
-    /// collapses plain `#[inline]` candidates only when
-    /// profitable and bails cleanly on detected recursion.
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_postfix_expr<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let __postfix_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 20u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("postfix_expr"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __postfix_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(
-            builder,
-            &__postfix_expr_layout,
-        );
-        {
-            let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_wrap_GoogleSheetsParser_primary(input, p, state, builder)
-            })?;
-        }
-        {
-            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
-        }
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(
-            builder,
-            __postfix_expr_handle,
-        );
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
-    }
-    /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
-    ///
-    /// Opens a Wrap frame on the builder, dispatches to the matched
-    /// branch's shape fn (which carries its own
-    /// begin_compound/end_compound for compound branches and the
-    /// matching push_leaf_with_* for scalar branches), stamps the
-    /// chosen branch index via push_branch_tag, then closes the
-    /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
-    /// forward-the-single-child semantics.
-    ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_GoogleSheetsParser_primary<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 21u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("primary"),
-            kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __wrap_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
-        let mut __wrap_branch_idx: u32 = 0;
-        let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
-            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                offset: *p as u32,
-            })?;
-        'try_branches: loop {
-            match first {
-                34u8 => {
-                    let attempt_p = *p;
-                    match parse_string_GoogleSheetsParser_string(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 7u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                35u8 => {
-                    let attempt_p = *p;
-                    match parse_flat_GoogleSheetsParser_error_literal(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 8u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                40u8 => {
-                    let attempt_p = *p;
-                    match parse_flat_GoogleSheetsParser_paren_expr(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 10u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                46u8 => {
-                    let attempt_p = *p;
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 3u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                48u8 => {
-                    let attempt_p = *p;
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 3u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                49u8 => {
-                    let attempt_p = *p;
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 3u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                50u8 => {
-                    let attempt_p = *p;
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 3u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                51u8 => {
-                    let attempt_p = *p;
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 3u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                52u8 => {
-                    let attempt_p = *p;
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 3u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                53u8 => {
-                    let attempt_p = *p;
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 3u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                54u8 => {
-                    let attempt_p = *p;
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 3u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                55u8 => {
-                    let attempt_p = *p;
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 3u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                56u8 => {
-                    let attempt_p = *p;
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 3u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                57u8 => {
-                    let attempt_p = *p;
-                    match parse_hregex_GoogleSheetsParser_number(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 3u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                70u8 => {
-                    let attempt_p = *p;
-                    match parse_wrap_GoogleSheetsParser_boolean(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 4u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                76u8 => {
-                    {
-                        let attempt_p = *p;
-                        match parse_arglist_GoogleSheetsParser_let_call(
-                            input,
-                            p,
-                            state,
-                            builder,
-                        ) {
-                            ::core::result::Result::Ok(_) => {
-                                __wrap_branch_idx = 0u32;
-                                break 'try_branches;
-                            }
-                            ::core::result::Result::Err(_) => {
-                                *p = attempt_p;
-                            }
-                        }
-                    }
-                    {
-                        let attempt_p = *p;
-                        match parse_arglist_GoogleSheetsParser_lambda_call(
-                            input,
-                            p,
-                            state,
-                            builder,
-                        ) {
-                            ::core::result::Result::Ok(_) => {
-                                __wrap_branch_idx = 1u32;
-                                break 'try_branches;
-                            }
-                            ::core::result::Result::Err(_) => {
-                                *p = attempt_p;
-                            }
-                        }
-                    }
-                }
-                84u8 => {
-                    let attempt_p = *p;
-                    match parse_wrap_GoogleSheetsParser_boolean(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 4u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                102u8 => {
-                    let attempt_p = *p;
-                    match parse_wrap_GoogleSheetsParser_boolean(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 4u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                108u8 => {
-                    {
-                        let attempt_p = *p;
-                        match parse_arglist_GoogleSheetsParser_let_call(
-                            input,
-                            p,
-                            state,
-                            builder,
-                        ) {
-                            ::core::result::Result::Ok(_) => {
-                                __wrap_branch_idx = 0u32;
-                                break 'try_branches;
-                            }
-                            ::core::result::Result::Err(_) => {
-                                *p = attempt_p;
-                            }
-                        }
-                    }
-                    {
-                        let attempt_p = *p;
-                        match parse_arglist_GoogleSheetsParser_lambda_call(
-                            input,
-                            p,
-                            state,
-                            builder,
-                        ) {
-                            ::core::result::Result::Ok(_) => {
-                                __wrap_branch_idx = 1u32;
-                                break 'try_branches;
-                            }
-                            ::core::result::Result::Err(_) => {
-                                *p = attempt_p;
-                            }
-                        }
-                    }
-                }
-                116u8 => {
-                    let attempt_p = *p;
-                    match parse_wrap_GoogleSheetsParser_boolean(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 4u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                123u8 => {
-                    let attempt_p = *p;
-                    match parse_flat_GoogleSheetsParser_array_literal(
-                        input,
-                        p,
-                        state,
-                        builder,
-                    ) {
-                        ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 9u32;
-                            break 'try_branches;
-                        }
-                        ::core::result::Result::Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                _ => {}
-            }
             {
-                let attempt_p = *p;
-                match parse_arglist_GoogleSheetsParser_func_call(
-                    input,
-                    p,
-                    state,
-                    builder,
-                ) {
-                    ::core::result::Result::Ok(_) => {
-                        __wrap_branch_idx = 2u32;
-                        break 'try_branches;
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 1u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let _ = ({
+                                let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_wrap_GoogleSheetsParser_sheet_prefix(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                )
+                            })?;
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    break;
+                                }
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                break;
+                            }
+                        }
                     }
-                    ::core::result::Result::Err(_) => {
-                        *p = attempt_p;
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
                     }
                 }
             }
             {
-                let attempt_p = *p;
-                match parse_wrap_GoogleSheetsParser_cell_or_range(
-                    input,
-                    p,
-                    state,
-                    builder,
-                ) {
-                    ::core::result::Result::Ok(_) => {
-                        __wrap_branch_idx = 5u32;
-                        break 'try_branches;
-                    }
-                    ::core::result::Result::Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_hregex_GoogleSheetsParser_cell_ref(input, p, state, builder)
+                })?;
             }
-            {
-                let attempt_p = *p;
-                match parse_hregex_GoogleSheetsParser_identifier(
-                    input,
-                    p,
-                    state,
-                    builder,
-                ) {
-                    ::core::result::Result::Ok(_) => {
-                        __wrap_branch_idx = 6u32;
-                        break 'try_branches;
-                    }
-                    ::core::result::Result::Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            <crate::runtime::google_sheets::SheetsStructBuilder<
-                '_,
-            > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
-            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
-        }
+            ::core::result::Result::Ok(())
+        })();
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::push_branch_tag(builder, __wrap_branch_idx);
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
-    }
-    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
-    /// **struct-direct body**. Targets the grammar's concrete
-    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
-    /// resolver's `SubstrateBinding`).
-    ///
-    /// Walker-tape compound emission is replaced by typed
-    /// `begin_compound` / `end_compound` calls against the in-flight
-    /// frame stack. Per-position pushes (string keys, recursive
-    /// value calls, byte literals) land directly on the topmost
-    /// open frame.
-    ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge (Flat → Wrap → Flat through
-    /// the grammar's `__value` discriminant). LLVM's inliner
-    /// collapses plain `#[inline]` candidates only when
-    /// profitable and bails cleanly on detected recursion.
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_paren_expr<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let __paren_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 22u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("paren_expr"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __paren_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(
-            builder,
-            &__paren_expr_layout,
-        );
-        {
-            let at = *p;
-            let end = at + 1usize;
-            if input.len() < end || input[at..end] != [40u8] {
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: at as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                });
-            }
-            *p = end;
-        }
-        {
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
-            })?;
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        }
-        {
-            let at = *p;
-            let end = at + 1usize;
-            if input.len() < end || input[at..end] != [41u8] {
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: at as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                });
-            }
-            *p = end;
-        }
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __paren_expr_handle);
+        > as crate::runtime::StructBuilder>::end_compound(builder, __cell_handle);
+        __body_result?;
         ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
@@ -5029,7 +3958,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let __func_open_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 23u32 as ::bbnf_ir::RuleId,
+            rule_id: 12u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("func_open"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -5041,27 +3970,937 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__func_open_layout,
         );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
-            let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_hregex_GoogleSheetsParser_identifier(input, p, state, builder)
-            })?;
-        }
+            {
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_hregex_GoogleSheetsParser_identifier(input, p, state, builder)
+                })?;
+            }
+            {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [40u8] {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+            }
+            ::core::result::Result::Ok(())
+        })();
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __func_open_handle);
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_GoogleSheetsParser_range_ref<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let __range_ref_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 13u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("range_ref"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __range_ref_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__range_ref_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
-            let at = *p;
-            let end = at + 1usize;
-            if input.len() < end || input[at..end] != [40u8] {
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 1u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let _ = ({
+                                let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_wrap_GoogleSheetsParser_sheet_prefix(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                )
+                            })?;
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    break;
+                                }
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                }
+            }
+            {
+                'try_branches: loop {
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let _ = ({
+                                let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_hregex_GoogleSheetsParser_cell_ref(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                )
+                            })?;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => break 'try_branches,
+                            Err(_) => {
+                                *p = __alt_save_p;
+                            }
+                        }
+                    }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_GoogleSheetsParser(
+                                    "\\$?[A-Za-z]{1,3}",
+                                    input,
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    });
+                                };
+                                *p += match_len as usize;
+                            }
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => break 'try_branches,
+                            Err(_) => {
+                                *p = __alt_save_p;
+                            }
+                        }
+                    }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_GoogleSheetsParser(
+                                    "\\$?\\d+",
+                                    input,
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    });
+                                };
+                                *p += match_len as usize;
+                            }
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => break 'try_branches,
+                            Err(_) => {
+                                *p = __alt_save_p;
+                            }
+                        }
+                    }
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [58u8] {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+            }
+            {
+                'try_branches: loop {
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let _ = ({
+                                let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_hregex_GoogleSheetsParser_cell_ref(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                )
+                            })?;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => break 'try_branches,
+                            Err(_) => {
+                                *p = __alt_save_p;
+                            }
+                        }
+                    }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_GoogleSheetsParser(
+                                    "\\$?[A-Za-z]{1,3}",
+                                    input,
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    });
+                                };
+                                *p += match_len as usize;
+                            }
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => break 'try_branches,
+                            Err(_) => {
+                                *p = __alt_save_p;
+                            }
+                        }
+                    }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_GoogleSheetsParser(
+                                    "\\$?\\d+",
+                                    input,
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    });
+                                };
+                                *p += match_len as usize;
+                            }
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => break 'try_branches,
+                            Err(_) => {
+                                *p = __alt_save_p;
+                            }
+                        }
+                    }
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+            }
+            ::core::result::Result::Ok(())
+        })();
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __range_ref_handle);
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
+    ///
+    /// Opens a Wrap frame on the builder, dispatches to the matched
+    /// branch's shape fn (which carries its own
+    /// begin_compound/end_compound for compound branches and the
+    /// matching push_leaf_with_* for scalar branches), stamps the
+    /// chosen branch index via push_branch_tag, then closes the
+    /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
+    /// forward-the-single-child semantics.
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_wrap_GoogleSheetsParser_cell_or_range<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 14u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("cell_or_range"),
+            kind: ::bbnf_ir::registry::LayoutKind::UntaggedEnum,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __wrap_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
+        let mut __wrap_branch_idx: u32 = 0;
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
+                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                    offset: *p as u32,
+                })?;
+            'try_branches: loop {
+                match first {
+                    _ => {}
+                }
+                {
+                    let attempt_p = *p;
+                    match parse_flat_GoogleSheetsParser_range_ref(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 0u32;
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    match parse_flat_GoogleSheetsParser_cell(input, p, state, builder) {
+                        ::core::result::Result::Ok(_) => {
+                            __wrap_branch_idx = 1u32;
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: at as u32,
+                    offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
-            *p = end;
+            ::core::result::Result::Ok(())
+        })();
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_branch_tag(
+                    builder,
+                    __wrap_branch_idx,
+                );
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __wrap_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(e) => {
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __wrap_handle,
+                );
+                ::core::result::Result::Err(e)
+            }
         }
+    }
+    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
+    /// function, **struct-direct body**. Targets the grammar's
+    /// concrete `StructBuilder`.
+    ///
+    /// Opens a compound for the rule (e.g. `add_expr` →
+    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
+    /// stamps operator branch tags inline, closes the compound.
+    /// Children land in the order
+    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
+    /// rule's structural alphabet is preserved verbatim;
+    /// associativity-honouring binary-tree reduction is a
+    /// consumer-side projection (the runtime exposes
+    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge through the value dispatcher.
+    #[inline]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut,
+        unused_assignments
+    )]
+    pub fn parse_pratt_GoogleSheetsParser_comparison_expr<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+        let __comparison_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 15u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("comparison_expr"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __comparison_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__comparison_expr_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            let _ = ({
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                parse_pratt_GoogleSheetsParser_concat_expr(input, p, state, builder)
+            })?;
+            loop {
+                let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+                let mut lut_byte: u8 = PRECEDENCE_LUT_comparison_expr[op_byte as usize];
+                if lut_byte == 0 {
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    op_byte = input.get(*p).copied().unwrap_or(0);
+                    lut_byte = PRECEDENCE_LUT_comparison_expr[op_byte as usize];
+                }
+                if lut_byte == 0 {
+                    break;
+                }
+                let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
+                let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
+                let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
+                    let mut found_disc: u8 = 0u8;
+                    let mut matched: bool = false;
+                    for e in PRECEDENCE_ENTRIES_comparison_expr.iter() {
+                        if e.byte == op_byte && e.second_byte.is_none() {
+                            found_disc = e.op_discriminant;
+                            matched = true;
+                            break;
+                        }
+                    }
+                    (1u32, found_disc, matched)
+                } else {
+                    let mut found_disc: u8 = 0u8;
+                    let mut matched_two_byte: bool = false;
+                    let mut matched_single: bool = false;
+                    for e in PRECEDENCE_ENTRIES_comparison_expr.iter() {
+                        if e.byte == op_byte && e.second_byte == second_byte {
+                            found_disc = e.op_discriminant;
+                            matched_two_byte = e.second_byte.is_some();
+                            break;
+                        }
+                    }
+                    if !matched_two_byte {
+                        for e in PRECEDENCE_ENTRIES_comparison_expr.iter() {
+                            if e.byte == op_byte && e.second_byte.is_none() {
+                                found_disc = e.op_discriminant;
+                                matched_single = true;
+                                break;
+                            }
+                        }
+                    }
+                    let width = if matched_two_byte { 2u32 } else { 1u32 };
+                    (width, found_disc, matched_two_byte || matched_single)
+                };
+                if !op_matched {
+                    break;
+                }
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_branch_tag(
+                    builder,
+                    op_discriminant as u32,
+                );
+                *p = (*p).saturating_add(op_width as usize);
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_pratt_GoogleSheetsParser_concat_expr(input, p, state, builder)
+                })?;
+            }
+            ::core::result::Result::Ok(())
+        })();
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __func_open_handle);
+        > as crate::runtime::StructBuilder>::end_compound(
+            builder,
+            __comparison_expr_handle,
+        );
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
+    /// function, **struct-direct body**. Targets the grammar's
+    /// concrete `StructBuilder`.
+    ///
+    /// Opens a compound for the rule (e.g. `add_expr` →
+    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
+    /// stamps operator branch tags inline, closes the compound.
+    /// Children land in the order
+    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
+    /// rule's structural alphabet is preserved verbatim;
+    /// associativity-honouring binary-tree reduction is a
+    /// consumer-side projection (the runtime exposes
+    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge through the value dispatcher.
+    #[inline]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut,
+        unused_assignments
+    )]
+    pub fn parse_pratt_GoogleSheetsParser_mul_expr<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+        let __mul_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 16u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("mul_expr"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __mul_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__mul_expr_layout);
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            let _ = ({
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                parse_pratt_GoogleSheetsParser_exp_expr(input, p, state, builder)
+            })?;
+            loop {
+                let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+                let mut lut_byte: u8 = PRECEDENCE_LUT_mul_expr[op_byte as usize];
+                if lut_byte == 0 {
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    op_byte = input.get(*p).copied().unwrap_or(0);
+                    lut_byte = PRECEDENCE_LUT_mul_expr[op_byte as usize];
+                }
+                if lut_byte == 0 {
+                    break;
+                }
+                let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
+                let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
+                let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
+                    let mut found_disc: u8 = 0u8;
+                    let mut matched: bool = false;
+                    for e in PRECEDENCE_ENTRIES_mul_expr.iter() {
+                        if e.byte == op_byte && e.second_byte.is_none() {
+                            found_disc = e.op_discriminant;
+                            matched = true;
+                            break;
+                        }
+                    }
+                    (1u32, found_disc, matched)
+                } else {
+                    let mut found_disc: u8 = 0u8;
+                    let mut matched_two_byte: bool = false;
+                    let mut matched_single: bool = false;
+                    for e in PRECEDENCE_ENTRIES_mul_expr.iter() {
+                        if e.byte == op_byte && e.second_byte == second_byte {
+                            found_disc = e.op_discriminant;
+                            matched_two_byte = e.second_byte.is_some();
+                            break;
+                        }
+                    }
+                    if !matched_two_byte {
+                        for e in PRECEDENCE_ENTRIES_mul_expr.iter() {
+                            if e.byte == op_byte && e.second_byte.is_none() {
+                                found_disc = e.op_discriminant;
+                                matched_single = true;
+                                break;
+                            }
+                        }
+                    }
+                    let width = if matched_two_byte { 2u32 } else { 1u32 };
+                    (width, found_disc, matched_two_byte || matched_single)
+                };
+                if !op_matched {
+                    break;
+                }
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_branch_tag(
+                    builder,
+                    op_discriminant as u32,
+                );
+                *p = (*p).saturating_add(op_width as usize);
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_pratt_GoogleSheetsParser_exp_expr(input, p, state, builder)
+                })?;
+            }
+            ::core::result::Result::Ok(())
+        })();
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __mul_expr_handle);
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_GoogleSheetsParser_unary_expr<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let __unary_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 17u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("unary_expr"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __unary_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__unary_expr_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let _ = ({
+                                let __first = __shape_support_GoogleSheetsParser::skip_space(
+                                        input,
+                                        p,
+                                        state,
+                                    )
+                                    .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                        offset: *p as u32,
+                                    })?;
+                                parse_keyword_GoogleSheetsParser_unary_prefix(
+                                    input,
+                                    p,
+                                    __first,
+                                    state,
+                                    builder,
+                                )
+                            })?;
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    break;
+                                }
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                }
+            }
+            {
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_flat_GoogleSheetsParser_postfix_expr(input, p, state, builder)
+                })?;
+            }
+            ::core::result::Result::Ok(())
+        })();
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __unary_expr_handle);
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_GoogleSheetsParser_paren_expr<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let __paren_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 18u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("paren_expr"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __paren_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__paren_expr_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [40u8] {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+            }
+            {
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_scalar_GoogleSheetsParser_expression(input, p, state, builder)
+                })?;
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+            }
+            {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [41u8] {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+            }
+            ::core::result::Result::Ok(())
+        })();
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __paren_expr_handle);
+        __body_result?;
         ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
@@ -5096,7 +4935,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let __arg_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 24u32 as ::bbnf_ir::RuleId,
+            rule_id: 19u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("arg"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -5105,12 +4944,66 @@ mod __googlesheetsparser_emit_impl {
         let __arg_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__arg_layout);
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
-            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
-        }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 1u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let _ = ({
+                                let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_scalar_GoogleSheetsParser_expression(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                )
+                            })?;
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    break;
+                                }
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                }
+            }
+            ::core::result::Result::Ok(())
+        })();
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __arg_handle);
+        __body_result?;
         ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
@@ -5145,7 +5038,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let __func_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 25u32 as ::bbnf_ir::RuleId,
+            rule_id: 20u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("func_args"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -5157,82 +5050,119 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__func_args_layout,
         );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
-            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
-        }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let _ = ({
+                                let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_flat_GoogleSheetsParser_arg(input, p, state, builder)
+                            })?;
+                            {
+                                let mut __iter_count: u32 = 0;
+                                loop {
+                                    if __iter_count >= 1u32 {
+                                        break;
+                                    }
+                                    let __iter_save_p = *p;
+                                    if input.get(*p).is_none() {
+                                        break;
+                                    }
+                                    let __iter_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::tape::DtaError,
+                                    > = (|| {
+                                        let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                            input,
+                                            p,
+                                            state,
+                                        );
+                                        let at = *p;
+                                        let end = at + 1usize;
+                                        if input.len() < end || input[at..end] != [44u8] {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: at as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
+                                        }
+                                        *p = end;
+                                        let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                            input,
+                                            p,
+                                            state,
+                                        );
+                                        Ok(())
+                                    })();
+                                    match __iter_result {
+                                        Ok(()) => {
+                                            if *p == __iter_save_p {
+                                                break;
+                                            }
+                                            __iter_count += 1;
+                                        }
+                                        Err(_) => {
+                                            *p = __iter_save_p;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if __iter_count < 0u32 {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        offset: *p as u32,
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    });
+                                }
+                            }
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    break;
+                                }
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 1u32 {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                }
+            }
+            ::core::result::Result::Ok(())
+        })();
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __func_args_handle);
+        __body_result?;
         ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
-    }
-    /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
-    /// **struct-direct body**.
-    ///
-    /// Opens a compound on the grammar's StructBuilder
-    /// (`begin_compound(&__layout)`), walks the head + parens +
-    /// arg positions, and closes via `end_compound(handle)`. The
-    /// builder routes the (LayoutKind, rule_name) to its concrete
-    /// Function frame variant (CSS L4 — calc / min / max / clamp
-    /// / var / env / url / gradient / transform / etc.).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_GoogleSheetsParser_func_call<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 26u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("func_call"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __handle = <crate::runtime::google_sheets::SheetsStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
-        let _ = ({
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            parse_flat_GoogleSheetsParser_func_open(input, p, state, builder)
-        })?;
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        loop {
-            let __save = *p;
-            let __res: ::core::result::Result<(), crate::runtime::tape::DtaError> = (|| {
-                let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
-                    parse_flat_GoogleSheetsParser_func_args(input, p, state, builder)
-                })?;
-                Ok(())
-            })();
-            if __res.is_err() {
-                *p = __save;
-                break;
-            }
-        }
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        let at = *p;
-        let end = at + 1usize;
-        if input.len() < end || input[at..end] != [41u8] {
-            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                offset: at as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
-        }
-        *p = end;
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -5266,7 +5196,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let __let_binding_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 27u32 as ::bbnf_ir::RuleId,
+            rule_id: 21u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("let_binding"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -5278,143 +5208,49 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__let_binding_layout,
         );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
-            let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
-            })?;
-        }
-        {
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            let at = *p;
-            let end = at + 1usize;
-            if input.len() < end || input[at..end] != [44u8] {
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: at as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                });
+            {
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_scalar_GoogleSheetsParser_expression(input, p, state, builder)
+                })?;
             }
-            *p = end;
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        }
-        {
-            let _ = ({
+            {
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
-            })?;
-        }
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [44u8] {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+            }
+            {
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_scalar_GoogleSheetsParser_expression(input, p, state, builder)
+                })?;
+            }
+            ::core::result::Result::Ok(())
+        })();
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __let_binding_handle);
+        __body_result?;
         ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
-    }
-    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
-    /// **struct-direct body**. Targets the grammar's concrete
-    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
-    /// resolver's `SubstrateBinding`).
-    ///
-    /// Walker-tape compound emission is replaced by typed
-    /// `begin_compound` / `end_compound` calls against the in-flight
-    /// frame stack. Per-position pushes (string keys, recursive
-    /// value calls, byte literals) land directly on the topmost
-    /// open frame.
-    ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
-    /// with sibling shape fns under struct-direct mode; the
-    /// offset is unused by struct-direct callers.
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
-    /// cross-shape recursive edge (Flat → Wrap → Flat through
-    /// the grammar's `__value` discriminant). LLVM's inliner
-    /// collapses plain `#[inline]` candidates only when
-    /// profitable and bails cleanly on detected recursion.
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_GoogleSheetsParser_let_args<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let __let_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 28u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("let_args"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __let_args_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__let_args_layout);
-        {
-            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
-        }
-        {
-            let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
-            })?;
-        }
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __let_args_handle);
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
-    }
-    /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
-    /// **struct-direct body**.
-    ///
-    /// Opens a compound on the grammar's StructBuilder
-    /// (`begin_compound(&__layout)`), walks the head + parens +
-    /// arg positions, and closes via `end_compound(handle)`. The
-    /// builder routes the (LayoutKind, rule_name) to its concrete
-    /// Function frame variant (CSS L4 — calc / min / max / clamp
-    /// / var / env / url / gradient / transform / etc.).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_GoogleSheetsParser_let_call<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 29u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("let_call"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __handle = <crate::runtime::google_sheets::SheetsStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
-        let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        let _ = ({
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            parse_flat_GoogleSheetsParser_let_args(input, p, state, builder)
-        })?;
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        let at = *p;
-        let end = at + 1usize;
-        if input.len() < end || input[at..end] != [41u8] {
-            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                offset: at as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
-        }
-        *p = end;
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -5448,7 +5284,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let __lambda_params_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 30u32 as ::bbnf_ir::RuleId,
+            rule_id: 22u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("lambda_params"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -5460,68 +5296,127 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__lambda_params_layout,
         );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
-            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
-        }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let _ = ({
+                                let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_scalar_GoogleSheetsParser_expression(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                )
+                            })?;
+                            {
+                                let mut __iter_count: u32 = 0;
+                                loop {
+                                    if __iter_count >= 1u32 {
+                                        break;
+                                    }
+                                    let __iter_save_p = *p;
+                                    if input.get(*p).is_none() {
+                                        break;
+                                    }
+                                    let __iter_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::tape::DtaError,
+                                    > = (|| {
+                                        let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                            input,
+                                            p,
+                                            state,
+                                        );
+                                        let at = *p;
+                                        let end = at + 1usize;
+                                        if input.len() < end || input[at..end] != [44u8] {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: at as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
+                                        }
+                                        *p = end;
+                                        let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                            input,
+                                            p,
+                                            state,
+                                        );
+                                        Ok(())
+                                    })();
+                                    match __iter_result {
+                                        Ok(()) => {
+                                            if *p == __iter_save_p {
+                                                break;
+                                            }
+                                            __iter_count += 1;
+                                        }
+                                        Err(_) => {
+                                            *p = __iter_save_p;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if __iter_count < 0u32 {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        offset: *p as u32,
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    });
+                                }
+                            }
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    break;
+                                }
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 1u32 {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                }
+            }
+            ::core::result::Result::Ok(())
+        })();
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::end_compound(
             builder,
             __lambda_params_handle,
         );
+        __body_result?;
         ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
-    }
-    /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
-    /// **struct-direct body**.
-    ///
-    /// Opens a compound on the grammar's StructBuilder
-    /// (`begin_compound(&__layout)`), walks the head + parens +
-    /// arg positions, and closes via `end_compound(handle)`. The
-    /// builder routes the (LayoutKind, rule_name) to its concrete
-    /// Function frame variant (CSS L4 — calc / min / max / clamp
-    /// / var / env / url / gradient / transform / etc.).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_arglist_GoogleSheetsParser_lambda_call<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_GoogleSheetsParser::ScanState,
-        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 31u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("lambda_call"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __handle = <crate::runtime::google_sheets::SheetsStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
-        let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        let _ = ({
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            parse_flat_GoogleSheetsParser_lambda_params(input, p, state, builder)
-        })?;
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        let at = *p;
-        let end = at + 1usize;
-        if input.len() < end || input[at..end] != [41u8] {
-            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                offset: at as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
-        }
-        *p = end;
-        <crate::runtime::google_sheets::SheetsStructBuilder<
-            'p,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-        Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
@@ -5561,7 +5456,7 @@ mod __googlesheetsparser_emit_impl {
     > {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __array_row_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 32u32 as ::bbnf_ir::RuleId,
+            rule_id: 23u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("array_row"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -5573,76 +5468,89 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__array_row_layout,
         );
-        let _ = ({
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
-        })?;
-        loop {
-            let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let mut lut_byte: u8 = PRECEDENCE_LUT_array_row[op_byte as usize];
-            if lut_byte == 0 {
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                op_byte = input.get(*p).copied().unwrap_or(0);
-                lut_byte = PRECEDENCE_LUT_array_row[op_byte as usize];
-            }
-            if lut_byte == 0 {
-                break;
-            }
-            let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
-            let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
-                let mut found_disc: u8 = 0u8;
-                let mut matched: bool = false;
-                for e in PRECEDENCE_ENTRIES_array_row.iter() {
-                    if e.byte == op_byte && e.second_byte.is_none() {
-                        found_disc = e.op_discriminant;
-                        matched = true;
-                        break;
-                    }
+                parse_scalar_GoogleSheetsParser_expression(input, p, state, builder)
+            })?;
+            loop {
+                let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+                let mut lut_byte: u8 = PRECEDENCE_LUT_array_row[op_byte as usize];
+                if lut_byte == 0 {
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    op_byte = input.get(*p).copied().unwrap_or(0);
+                    lut_byte = PRECEDENCE_LUT_array_row[op_byte as usize];
                 }
-                (1u32, found_disc, matched)
-            } else {
-                let mut found_disc: u8 = 0u8;
-                let mut matched_two_byte: bool = false;
-                let mut matched_single: bool = false;
-                for e in PRECEDENCE_ENTRIES_array_row.iter() {
-                    if e.byte == op_byte && e.second_byte == second_byte {
-                        found_disc = e.op_discriminant;
-                        matched_two_byte = e.second_byte.is_some();
-                        break;
-                    }
+                if lut_byte == 0 {
+                    break;
                 }
-                if !matched_two_byte {
+                let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
+                let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
+                let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
+                    let mut found_disc: u8 = 0u8;
+                    let mut matched: bool = false;
                     for e in PRECEDENCE_ENTRIES_array_row.iter() {
                         if e.byte == op_byte && e.second_byte.is_none() {
                             found_disc = e.op_discriminant;
-                            matched_single = true;
+                            matched = true;
                             break;
                         }
                     }
+                    (1u32, found_disc, matched)
+                } else {
+                    let mut found_disc: u8 = 0u8;
+                    let mut matched_two_byte: bool = false;
+                    let mut matched_single: bool = false;
+                    for e in PRECEDENCE_ENTRIES_array_row.iter() {
+                        if e.byte == op_byte && e.second_byte == second_byte {
+                            found_disc = e.op_discriminant;
+                            matched_two_byte = e.second_byte.is_some();
+                            break;
+                        }
+                    }
+                    if !matched_two_byte {
+                        for e in PRECEDENCE_ENTRIES_array_row.iter() {
+                            if e.byte == op_byte && e.second_byte.is_none() {
+                                found_disc = e.op_discriminant;
+                                matched_single = true;
+                                break;
+                            }
+                        }
+                    }
+                    let width = if matched_two_byte { 2u32 } else { 1u32 };
+                    (width, found_disc, matched_two_byte || matched_single)
+                };
+                if !op_matched {
+                    break;
                 }
-                let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc, matched_two_byte || matched_single)
-            };
-            if !op_matched {
-                break;
-            }
-            <crate::runtime::google_sheets::SheetsStructBuilder<
-                '_,
-            > as crate::runtime::StructBuilder>::push_branch_tag(
-                builder,
-                op_discriminant as u32,
-            );
-            *p = (*p).saturating_add(op_width as usize);
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            let _ = ({
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_branch_tag(
+                    builder,
+                    op_discriminant as u32,
+                );
+                *p = (*p).saturating_add(op_width as usize);
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
-            })?;
-        }
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_scalar_GoogleSheetsParser_expression(input, p, state, builder)
+                })?;
+            }
+            ::core::result::Result::Ok(())
+        })();
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __array_row_handle);
+        __body_result?;
         ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
@@ -5683,7 +5591,7 @@ mod __googlesheetsparser_emit_impl {
     > {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __array_rows_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 33u32 as ::bbnf_ir::RuleId,
+            rule_id: 24u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("array_rows"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -5695,76 +5603,89 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__array_rows_layout,
         );
-        let _ = ({
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            parse_pratt_GoogleSheetsParser_array_row(input, p, state, builder)
-        })?;
-        loop {
-            let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
-            let mut lut_byte: u8 = PRECEDENCE_LUT_array_rows[op_byte as usize];
-            if lut_byte == 0 {
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                op_byte = input.get(*p).copied().unwrap_or(0);
-                lut_byte = PRECEDENCE_LUT_array_rows[op_byte as usize];
-            }
-            if lut_byte == 0 {
-                break;
-            }
-            let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
-            let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
-            let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
-                let mut found_disc: u8 = 0u8;
-                let mut matched: bool = false;
-                for e in PRECEDENCE_ENTRIES_array_rows.iter() {
-                    if e.byte == op_byte && e.second_byte.is_none() {
-                        found_disc = e.op_discriminant;
-                        matched = true;
-                        break;
-                    }
-                }
-                (1u32, found_disc, matched)
-            } else {
-                let mut found_disc: u8 = 0u8;
-                let mut matched_two_byte: bool = false;
-                let mut matched_single: bool = false;
-                for e in PRECEDENCE_ENTRIES_array_rows.iter() {
-                    if e.byte == op_byte && e.second_byte == second_byte {
-                        found_disc = e.op_discriminant;
-                        matched_two_byte = e.second_byte.is_some();
-                        break;
-                    }
-                }
-                if !matched_two_byte {
-                    for e in PRECEDENCE_ENTRIES_array_rows.iter() {
-                        if e.byte == op_byte && e.second_byte.is_none() {
-                            found_disc = e.op_discriminant;
-                            matched_single = true;
-                            break;
-                        }
-                    }
-                }
-                let width = if matched_two_byte { 2u32 } else { 1u32 };
-                (width, found_disc, matched_two_byte || matched_single)
-            };
-            if !op_matched {
-                break;
-            }
-            <crate::runtime::google_sheets::SheetsStructBuilder<
-                '_,
-            > as crate::runtime::StructBuilder>::push_branch_tag(
-                builder,
-                op_discriminant as u32,
-            );
-            *p = (*p).saturating_add(op_width as usize);
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_pratt_GoogleSheetsParser_array_row(input, p, state, builder)
             })?;
-        }
+            loop {
+                let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+                let mut lut_byte: u8 = PRECEDENCE_LUT_array_rows[op_byte as usize];
+                if lut_byte == 0 {
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    op_byte = input.get(*p).copied().unwrap_or(0);
+                    lut_byte = PRECEDENCE_LUT_array_rows[op_byte as usize];
+                }
+                if lut_byte == 0 {
+                    break;
+                }
+                let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
+                let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
+                let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
+                    let mut found_disc: u8 = 0u8;
+                    let mut matched: bool = false;
+                    for e in PRECEDENCE_ENTRIES_array_rows.iter() {
+                        if e.byte == op_byte && e.second_byte.is_none() {
+                            found_disc = e.op_discriminant;
+                            matched = true;
+                            break;
+                        }
+                    }
+                    (1u32, found_disc, matched)
+                } else {
+                    let mut found_disc: u8 = 0u8;
+                    let mut matched_two_byte: bool = false;
+                    let mut matched_single: bool = false;
+                    for e in PRECEDENCE_ENTRIES_array_rows.iter() {
+                        if e.byte == op_byte && e.second_byte == second_byte {
+                            found_disc = e.op_discriminant;
+                            matched_two_byte = e.second_byte.is_some();
+                            break;
+                        }
+                    }
+                    if !matched_two_byte {
+                        for e in PRECEDENCE_ENTRIES_array_rows.iter() {
+                            if e.byte == op_byte && e.second_byte.is_none() {
+                                found_disc = e.op_discriminant;
+                                matched_single = true;
+                                break;
+                            }
+                        }
+                    }
+                    let width = if matched_two_byte { 2u32 } else { 1u32 };
+                    (width, found_disc, matched_two_byte || matched_single)
+                };
+                if !op_matched {
+                    break;
+                }
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_branch_tag(
+                    builder,
+                    op_discriminant as u32,
+                );
+                *p = (*p).saturating_add(op_width as usize);
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_pratt_GoogleSheetsParser_array_row(input, p, state, builder)
+                })?;
+            }
+            ::core::result::Result::Ok(())
+        })();
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __array_rows_handle);
+        __body_result?;
         ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
@@ -5799,7 +5720,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let __array_literal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 34u32 as ::bbnf_ir::RuleId,
+            rule_id: 25u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("array_literal"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -5811,44 +5732,1372 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__array_literal_layout,
         );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
-            let at = *p;
-            let end = at + 1usize;
-            if input.len() < end || input[at..end] != [123u8] {
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: at as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                });
+            {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [123u8] {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
             }
-            *p = end;
-        }
-        {
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            let _ = ({
+            {
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_pratt_GoogleSheetsParser_array_rows(input, p, state, builder)
-            })?;
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-        }
-        {
-            let at = *p;
-            let end = at + 1usize;
-            if input.len() < end || input[at..end] != [125u8] {
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: at as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                });
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_pratt_GoogleSheetsParser_array_rows(input, p, state, builder)
+                })?;
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             }
-            *p = end;
-        }
+            {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [125u8] {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+            }
+            ::core::result::Result::Ok(())
+        })();
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::end_compound(
             builder,
             __array_literal_handle,
         );
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
+    /// function, **struct-direct body**. Targets the grammar's
+    /// concrete `StructBuilder`.
+    ///
+    /// Opens a compound for the rule (e.g. `add_expr` →
+    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
+    /// stamps operator branch tags inline, closes the compound.
+    /// Children land in the order
+    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
+    /// rule's structural alphabet is preserved verbatim;
+    /// associativity-honouring binary-tree reduction is a
+    /// consumer-side projection (the runtime exposes
+    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge through the value dispatcher.
+    #[inline]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut,
+        unused_assignments
+    )]
+    pub fn parse_pratt_GoogleSheetsParser_concat_expr<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+        let __concat_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 26u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("concat_expr"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __concat_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__concat_expr_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            let _ = ({
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                parse_pratt_GoogleSheetsParser_add_expr(input, p, state, builder)
+            })?;
+            loop {
+                let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+                let mut lut_byte: u8 = PRECEDENCE_LUT_concat_expr[op_byte as usize];
+                if lut_byte == 0 {
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    op_byte = input.get(*p).copied().unwrap_or(0);
+                    lut_byte = PRECEDENCE_LUT_concat_expr[op_byte as usize];
+                }
+                if lut_byte == 0 {
+                    break;
+                }
+                let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
+                let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
+                let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
+                    let mut found_disc: u8 = 0u8;
+                    let mut matched: bool = false;
+                    for e in PRECEDENCE_ENTRIES_concat_expr.iter() {
+                        if e.byte == op_byte && e.second_byte.is_none() {
+                            found_disc = e.op_discriminant;
+                            matched = true;
+                            break;
+                        }
+                    }
+                    (1u32, found_disc, matched)
+                } else {
+                    let mut found_disc: u8 = 0u8;
+                    let mut matched_two_byte: bool = false;
+                    let mut matched_single: bool = false;
+                    for e in PRECEDENCE_ENTRIES_concat_expr.iter() {
+                        if e.byte == op_byte && e.second_byte == second_byte {
+                            found_disc = e.op_discriminant;
+                            matched_two_byte = e.second_byte.is_some();
+                            break;
+                        }
+                    }
+                    if !matched_two_byte {
+                        for e in PRECEDENCE_ENTRIES_concat_expr.iter() {
+                            if e.byte == op_byte && e.second_byte.is_none() {
+                                found_disc = e.op_discriminant;
+                                matched_single = true;
+                                break;
+                            }
+                        }
+                    }
+                    let width = if matched_two_byte { 2u32 } else { 1u32 };
+                    (width, found_disc, matched_two_byte || matched_single)
+                };
+                if !op_matched {
+                    break;
+                }
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_branch_tag(
+                    builder,
+                    op_discriminant as u32,
+                );
+                *p = (*p).saturating_add(op_width as usize);
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_pratt_GoogleSheetsParser_add_expr(input, p, state, builder)
+                })?;
+            }
+            ::core::result::Result::Ok(())
+        })();
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __concat_expr_handle);
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
+    /// function, **struct-direct body**. Targets the grammar's
+    /// concrete `StructBuilder`.
+    ///
+    /// Opens a compound for the rule (e.g. `add_expr` →
+    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
+    /// stamps operator branch tags inline, closes the compound.
+    /// Children land in the order
+    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
+    /// rule's structural alphabet is preserved verbatim;
+    /// associativity-honouring binary-tree reduction is a
+    /// consumer-side projection (the runtime exposes
+    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge through the value dispatcher.
+    #[inline]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut,
+        unused_assignments
+    )]
+    pub fn parse_pratt_GoogleSheetsParser_add_expr<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+        let __add_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 27u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("add_expr"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __add_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__add_expr_layout);
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            let _ = ({
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                parse_pratt_GoogleSheetsParser_mul_expr(input, p, state, builder)
+            })?;
+            loop {
+                let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+                let mut lut_byte: u8 = PRECEDENCE_LUT_add_expr[op_byte as usize];
+                if lut_byte == 0 {
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    op_byte = input.get(*p).copied().unwrap_or(0);
+                    lut_byte = PRECEDENCE_LUT_add_expr[op_byte as usize];
+                }
+                if lut_byte == 0 {
+                    break;
+                }
+                let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
+                let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
+                let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
+                    let mut found_disc: u8 = 0u8;
+                    let mut matched: bool = false;
+                    for e in PRECEDENCE_ENTRIES_add_expr.iter() {
+                        if e.byte == op_byte && e.second_byte.is_none() {
+                            found_disc = e.op_discriminant;
+                            matched = true;
+                            break;
+                        }
+                    }
+                    (1u32, found_disc, matched)
+                } else {
+                    let mut found_disc: u8 = 0u8;
+                    let mut matched_two_byte: bool = false;
+                    let mut matched_single: bool = false;
+                    for e in PRECEDENCE_ENTRIES_add_expr.iter() {
+                        if e.byte == op_byte && e.second_byte == second_byte {
+                            found_disc = e.op_discriminant;
+                            matched_two_byte = e.second_byte.is_some();
+                            break;
+                        }
+                    }
+                    if !matched_two_byte {
+                        for e in PRECEDENCE_ENTRIES_add_expr.iter() {
+                            if e.byte == op_byte && e.second_byte.is_none() {
+                                found_disc = e.op_discriminant;
+                                matched_single = true;
+                                break;
+                            }
+                        }
+                    }
+                    let width = if matched_two_byte { 2u32 } else { 1u32 };
+                    (width, found_disc, matched_two_byte || matched_single)
+                };
+                if !op_matched {
+                    break;
+                }
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_branch_tag(
+                    builder,
+                    op_discriminant as u32,
+                );
+                *p = (*p).saturating_add(op_width as usize);
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_pratt_GoogleSheetsParser_mul_expr(input, p, state, builder)
+                })?;
+            }
+            ::core::result::Result::Ok(())
+        })();
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __add_expr_handle);
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
+    /// function, **struct-direct body**. Targets the grammar's
+    /// concrete `StructBuilder`.
+    ///
+    /// Opens a compound for the rule (e.g. `add_expr` →
+    /// `SheetsCompoundKind::AddExpr`), dispatches operands +
+    /// stamps operator branch tags inline, closes the compound.
+    /// Children land in the order
+    /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
+    /// rule's structural alphabet is preserved verbatim;
+    /// associativity-honouring binary-tree reduction is a
+    /// consumer-side projection (the runtime exposes
+    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge through the value dispatcher.
+    #[inline]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut,
+        unused_assignments
+    )]
+    pub fn parse_pratt_GoogleSheetsParser_exp_expr<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+        let __exp_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 28u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("exp_expr"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __exp_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__exp_expr_layout);
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            let _ = ({
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                parse_flat_GoogleSheetsParser_unary_expr(input, p, state, builder)
+            })?;
+            loop {
+                let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+                let mut lut_byte: u8 = PRECEDENCE_LUT_exp_expr[op_byte as usize];
+                if lut_byte == 0 {
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    op_byte = input.get(*p).copied().unwrap_or(0);
+                    lut_byte = PRECEDENCE_LUT_exp_expr[op_byte as usize];
+                }
+                if lut_byte == 0 {
+                    break;
+                }
+                let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
+                let second_byte: ::core::option::Option<u8> = input.get(*p + 1).copied();
+                let (op_width, op_discriminant, op_matched) = if two_byte == 0 {
+                    let mut found_disc: u8 = 0u8;
+                    let mut matched: bool = false;
+                    for e in PRECEDENCE_ENTRIES_exp_expr.iter() {
+                        if e.byte == op_byte && e.second_byte.is_none() {
+                            found_disc = e.op_discriminant;
+                            matched = true;
+                            break;
+                        }
+                    }
+                    (1u32, found_disc, matched)
+                } else {
+                    let mut found_disc: u8 = 0u8;
+                    let mut matched_two_byte: bool = false;
+                    let mut matched_single: bool = false;
+                    for e in PRECEDENCE_ENTRIES_exp_expr.iter() {
+                        if e.byte == op_byte && e.second_byte == second_byte {
+                            found_disc = e.op_discriminant;
+                            matched_two_byte = e.second_byte.is_some();
+                            break;
+                        }
+                    }
+                    if !matched_two_byte {
+                        for e in PRECEDENCE_ENTRIES_exp_expr.iter() {
+                            if e.byte == op_byte && e.second_byte.is_none() {
+                                found_disc = e.op_discriminant;
+                                matched_single = true;
+                                break;
+                            }
+                        }
+                    }
+                    let width = if matched_two_byte { 2u32 } else { 1u32 };
+                    (width, found_disc, matched_two_byte || matched_single)
+                };
+                if !op_matched {
+                    break;
+                }
+                <crate::runtime::google_sheets::SheetsStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::push_branch_tag(
+                    builder,
+                    op_discriminant as u32,
+                );
+                *p = (*p).saturating_add(op_width as usize);
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_flat_GoogleSheetsParser_unary_expr(input, p, state, builder)
+                })?;
+            }
+            ::core::result::Result::Ok(())
+        })();
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __exp_expr_handle);
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
+    /// **struct-direct body**.
+    ///
+    /// Opens a compound on the grammar's StructBuilder
+    /// (`begin_compound(&__layout)`), walks the head + parens +
+    /// arg positions, and closes via `end_compound(handle)`. The
+    /// builder routes the (LayoutKind, rule_name) to its concrete
+    /// Function frame variant (CSS L4 — calc / min / max / clamp
+    /// / var / env / url / gradient / transform / etc.).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_arglist_GoogleSheetsParser_lambda_call<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 29u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("lambda_call"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+            let _ = ({
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                parse_flat_GoogleSheetsParser_lambda_params(input, p, state, builder)
+            })?;
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [41u8] {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            ::core::result::Result::Ok(())
+        })();
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+        __body_result?;
+        Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2.RC — per-grammar Scalar-shape parse
+    /// function (transparent-Ref body, struct-direct
+    /// substrate). Delegates to the target's
+    /// strategy-resolved shape fn; the inner call
+    /// expression names `builder` against the
+    /// concrete struct-builder.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_scalar_GoogleSheetsParser_expression<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        {
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+            parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
+        }
+    }
+    /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
+    /// **struct-direct body**.
+    ///
+    /// Opens a compound on the grammar's StructBuilder
+    /// (`begin_compound(&__layout)`), walks the head + parens +
+    /// arg positions, and closes via `end_compound(handle)`. The
+    /// builder routes the (LayoutKind, rule_name) to its concrete
+    /// Function frame variant (CSS L4 — calc / min / max / clamp
+    /// / var / env / url / gradient / transform / etc.).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_arglist_GoogleSheetsParser_func_call<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 31u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("func_call"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            let _ = ({
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                parse_flat_GoogleSheetsParser_func_open(input, p, state, builder)
+            })?;
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+            loop {
+                let __save = *p;
+                let __res: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+                {
+                    let _ = ({
+                        let _ = __shape_support_GoogleSheetsParser::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        parse_flat_GoogleSheetsParser_func_args(input, p, state, builder)
+                    })?;
+                    Ok(())
+                })();
+                if __res.is_err() {
+                    *p = __save;
+                    break;
+                }
+            }
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [41u8] {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            ::core::result::Result::Ok(())
+        })();
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+        __body_result?;
+        Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_GoogleSheetsParser_let_args<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let __let_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 32u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("let_args"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __let_args_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__let_args_layout);
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let _ = ({
+                                let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_flat_GoogleSheetsParser_let_binding(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                )
+                            })?;
+                            let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [44u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    break;
+                                }
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                }
+            }
+            {
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_scalar_GoogleSheetsParser_expression(input, p, state, builder)
+                })?;
+            }
+            ::core::result::Result::Ok(())
+        })();
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __let_args_handle);
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
+    /// **struct-direct body**.
+    ///
+    /// Opens a compound on the grammar's StructBuilder
+    /// (`begin_compound(&__layout)`), walks the head + parens +
+    /// arg positions, and closes via `end_compound(handle)`. The
+    /// builder routes the (LayoutKind, rule_name) to its concrete
+    /// Function frame variant (CSS L4 — calc / min / max / clamp
+    /// / var / env / url / gradient / transform / etc.).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_arglist_GoogleSheetsParser_let_call<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 33u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("let_call"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+            let _ = ({
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+                parse_flat_GoogleSheetsParser_let_args(input, p, state, builder)
+            })?;
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
+            let at = *p;
+            let end = at + 1usize;
+            if input.len() < end || input[at..end] != [41u8] {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: at as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p = end;
+            ::core::result::Result::Ok(())
+        })();
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
+        __body_result?;
+        Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
+    ///
+    /// Opens a Wrap frame on the builder, dispatches to the matched
+    /// branch's shape fn (which carries its own
+    /// begin_compound/end_compound for compound branches and the
+    /// matching push_leaf_with_* for scalar branches), stamps the
+    /// chosen branch index via push_branch_tag, then closes the
+    /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
+    /// forward-the-single-child semantics.
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_wrap_GoogleSheetsParser_primary<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
+            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                offset: *p as u32,
+            })?;
+        'try_branches: loop {
+            match first {
+                34u8 => {
+                    let attempt_p = *p;
+                    match parse_string_GoogleSheetsParser_string(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                35u8 => {
+                    let attempt_p = *p;
+                    match parse_flat_GoogleSheetsParser_error_literal(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                40u8 => {
+                    let attempt_p = *p;
+                    match parse_flat_GoogleSheetsParser_paren_expr(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                46u8 => {
+                    let attempt_p = *p;
+                    match parse_hregex_GoogleSheetsParser_number(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                48u8 => {
+                    let attempt_p = *p;
+                    match parse_hregex_GoogleSheetsParser_number(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                49u8 => {
+                    let attempt_p = *p;
+                    match parse_hregex_GoogleSheetsParser_number(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                50u8 => {
+                    let attempt_p = *p;
+                    match parse_hregex_GoogleSheetsParser_number(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                51u8 => {
+                    let attempt_p = *p;
+                    match parse_hregex_GoogleSheetsParser_number(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                52u8 => {
+                    let attempt_p = *p;
+                    match parse_hregex_GoogleSheetsParser_number(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                53u8 => {
+                    let attempt_p = *p;
+                    match parse_hregex_GoogleSheetsParser_number(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                54u8 => {
+                    let attempt_p = *p;
+                    match parse_hregex_GoogleSheetsParser_number(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                55u8 => {
+                    let attempt_p = *p;
+                    match parse_hregex_GoogleSheetsParser_number(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                56u8 => {
+                    let attempt_p = *p;
+                    match parse_hregex_GoogleSheetsParser_number(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                57u8 => {
+                    let attempt_p = *p;
+                    match parse_hregex_GoogleSheetsParser_number(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                70u8 => {
+                    let attempt_p = *p;
+                    match parse_wrap_GoogleSheetsParser_boolean(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                76u8 => {
+                    {
+                        let attempt_p = *p;
+                        match parse_arglist_GoogleSheetsParser_let_call(
+                            input,
+                            p,
+                            state,
+                            builder,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        match parse_arglist_GoogleSheetsParser_lambda_call(
+                            input,
+                            p,
+                            state,
+                            builder,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                            }
+                        }
+                    }
+                }
+                84u8 => {
+                    let attempt_p = *p;
+                    match parse_wrap_GoogleSheetsParser_boolean(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                102u8 => {
+                    let attempt_p = *p;
+                    match parse_wrap_GoogleSheetsParser_boolean(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                108u8 => {
+                    {
+                        let attempt_p = *p;
+                        match parse_arglist_GoogleSheetsParser_let_call(
+                            input,
+                            p,
+                            state,
+                            builder,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                            }
+                        }
+                    }
+                    {
+                        let attempt_p = *p;
+                        match parse_arglist_GoogleSheetsParser_lambda_call(
+                            input,
+                            p,
+                            state,
+                            builder,
+                        ) {
+                            ::core::result::Result::Ok(_) => {
+                                break 'try_branches;
+                            }
+                            ::core::result::Result::Err(_) => {
+                                *p = attempt_p;
+                            }
+                        }
+                    }
+                }
+                116u8 => {
+                    let attempt_p = *p;
+                    match parse_wrap_GoogleSheetsParser_boolean(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                123u8 => {
+                    let attempt_p = *p;
+                    match parse_flat_GoogleSheetsParser_array_literal(
+                        input,
+                        p,
+                        state,
+                        builder,
+                    ) {
+                        ::core::result::Result::Ok(_) => {
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                _ => {}
+            }
+            {
+                let attempt_p = *p;
+                match parse_arglist_GoogleSheetsParser_func_call(
+                    input,
+                    p,
+                    state,
+                    builder,
+                ) {
+                    ::core::result::Result::Ok(_) => {
+                        break 'try_branches;
+                    }
+                    ::core::result::Result::Err(_) => {
+                        *p = attempt_p;
+                    }
+                }
+            }
+            {
+                let attempt_p = *p;
+                match parse_wrap_GoogleSheetsParser_cell_or_range(
+                    input,
+                    p,
+                    state,
+                    builder,
+                ) {
+                    ::core::result::Result::Ok(_) => {
+                        break 'try_branches;
+                    }
+                    ::core::result::Result::Err(_) => {
+                        *p = attempt_p;
+                    }
+                }
+            }
+            {
+                let attempt_p = *p;
+                match parse_hregex_GoogleSheetsParser_identifier(
+                    input,
+                    p,
+                    state,
+                    builder,
+                ) {
+                    ::core::result::Result::Ok(_) => {
+                        break 'try_branches;
+                    }
+                    ::core::result::Result::Err(_) => {
+                        *p = attempt_p;
+                    }
+                }
+            }
+            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+            });
+        }
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_GoogleSheetsParser_postfix_expr<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_GoogleSheetsParser::ScanState,
+        builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let __postfix_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 35u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("postfix_expr"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __postfix_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__postfix_expr_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            {
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_wrap_GoogleSheetsParser_primary(input, p, state, builder)
+                })?;
+            }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [37u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    break;
+                                }
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                }
+            }
+            ::core::result::Result::Ok(())
+        })();
+        <crate::runtime::google_sheets::SheetsStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(
+            builder,
+            __postfix_expr_handle,
+        );
+        __body_result?;
         ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
@@ -5883,7 +7132,7 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let __formula_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 35u32 as ::bbnf_ir::RuleId,
+            rule_id: 36u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("formula"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -5892,18 +7141,41 @@ mod __googlesheetsparser_emit_impl {
         let __formula_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__formula_layout);
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
-            let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
-        }
-        {
-            let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-                parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
-            })?;
-        }
+            {
+                {
+                    let __scan_start = *p;
+                    let Some(match_len) = __regex_scan_GoogleSheetsParser(
+                        "=?",
+                        input,
+                        *p,
+                    ) else {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: __scan_start as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    };
+                    *p += match_len as usize;
+                }
+            }
+            {
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_scalar_GoogleSheetsParser_expression(input, p, state, builder)
+                })?;
+            }
+            ::core::result::Result::Ok(())
+        })();
         <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __formula_handle);
+        __body_result?;
         ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AY-II.W0.e — Grammar-activated structural-scan policy table.
@@ -5959,12 +7231,12 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 6u32,
             alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 7u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 8u32,
@@ -5974,22 +7246,22 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 9u32,
             alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 10u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 11u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 12u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 13u32,
@@ -5998,13 +7270,13 @@ mod __googlesheetsparser_emit_impl {
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 14u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 15u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 16u32,
@@ -6023,28 +7295,28 @@ mod __googlesheetsparser_emit_impl {
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 19u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 20u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 21u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 22u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 23u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 24u32,
@@ -6053,23 +7325,23 @@ mod __googlesheetsparser_emit_impl {
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 25u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
-        },
-        crate::runtime::tape::ScanPolicyEntry {
-            rule_id: 26u32,
             alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
             activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
         crate::runtime::tape::ScanPolicyEntry {
+            rule_id: 26u32,
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
+        },
+        crate::runtime::tape::ScanPolicyEntry {
             rule_id: 27u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 28u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 29u32,
@@ -6079,12 +7351,12 @@ mod __googlesheetsparser_emit_impl {
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 30u32,
             alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 31u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Empty,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 32u32,
@@ -6093,16 +7365,16 @@ mod __googlesheetsparser_emit_impl {
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 33u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Digraph,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(14),
-        },
-        crate::runtime::tape::ScanPolicyEntry {
-            rule_id: 34u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Empty,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 35u32,
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
+        },
+        crate::runtime::tape::ScanPolicyEntry {
+            rule_id: 36u32,
             alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
             activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
@@ -6211,43 +7483,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -6374,43 +7639,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -6539,43 +7797,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -6626,12 +7877,20 @@ mod __googlesheetsparser_emit_impl {
         /// written for this record (e.g. an alternative branch
         /// path that never set any fields).
         #[inline]
-        pub fn value(&self) -> (bool) {
+        pub fn value(&self) -> ((u32, u32)) {
             let tape = self.cursor.tape();
             let rec = self.cursor.record();
-            match tape.payload_bytes(rec, 1usize) {
-                Some(__bytes) => (__bytes[0usize] != 0),
-                None => (false),
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
             }
         }
     }
@@ -6696,43 +7955,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -6771,33 +8023,32 @@ mod __googlesheetsparser_emit_impl {
         }
     }
     impl<'p> error_literalView<'p> {
-        /// The key as source text (the Span matched by the first
-        /// child of the original Seq).
-        #[inline]
-        pub fn key(&self) -> &'p str {
-            self.span_text()
-        }
-        /// Alias for `.key()` — the source text of the key Span.
+        /// The source text matched by this rule.
         #[inline]
         pub fn text(&self) -> &'p str {
             self.span_text()
         }
-        /// The key Span as `(lo, hi)` byte offsets.
-        #[inline]
-        pub fn key_span(&self) -> (u32, u32) {
-            self.span()
-        }
-        /// The value scalar decoded from the aggregate payload.
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
         ///
-        /// Returns the zero-initialized value if no payload was
-        /// written for this record.
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
         #[inline]
-        pub fn value(&self) -> u8 {
+        pub fn value(&self) -> ((u32, u32)) {
             let tape = self.cursor.tape();
             let rec = self.cursor.record();
-            match tape.payload_bytes(rec, 1usize) {
-                Some(__bytes) => __bytes[0usize],
-                None => 0_u8,
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
             }
         }
     }
@@ -6862,43 +8113,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -6949,12 +8193,20 @@ mod __googlesheetsparser_emit_impl {
         /// written for this record (e.g. an alternative branch
         /// path that never set any fields).
         #[inline]
-        pub fn value(&self) -> (u8) {
+        pub fn value(&self) -> ((u32, u32)) {
             let tape = self.cursor.tape();
             let rec = self.cursor.record();
-            match tape.payload_bytes(rec, 1usize) {
-                Some(__bytes) => (__bytes[0usize]),
-                None => (0_u8),
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
             }
         }
     }
@@ -7019,43 +8271,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -7094,6 +8339,792 @@ mod __googlesheetsparser_emit_impl {
         }
     }
     impl<'p> cell_refView<'p> {
+        /// The source text matched by this rule.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
+            }
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct identifierView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> identifierView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
+            match self.variant_idx() {
+                0u8 => GoogleSheetsParserRuleKind::number,
+                1u8 => GoogleSheetsParserRuleKind::string,
+                2u8 => GoogleSheetsParserRuleKind::boolean,
+                3u8 => GoogleSheetsParserRuleKind::error_literal,
+                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
+                5u8 => GoogleSheetsParserRuleKind::cell_ref,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
+                16u8 => GoogleSheetsParserRuleKind::mul_expr,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
+                _ => GoogleSheetsParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(
+            &self,
+            i: usize,
+        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(i)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> identifierView<'p> {
+        /// The source text matched by this leaf rule.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// Get the sub-span value as a string slice.
+        ///
+        /// Payload-first: reads the packed (lo, hi) u32 pair from
+        /// the tape payload buffer in O(1). Falls back to the
+        /// record's own span text if no payload is present.
+        #[inline]
+        pub fn value(&self) -> &'p str {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            if let Some((lo, hi)) = tape.payload_Span(rec) {
+                return &self.input[lo as usize..hi as usize];
+            }
+            self.span_text()
+        }
+        /// Alias for backward compatibility. Prefer `.value()`.
+        #[inline]
+        pub fn as_span(&self) -> &'p str {
+            self.value()
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct compare_opView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> compare_opView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
+            match self.variant_idx() {
+                0u8 => GoogleSheetsParserRuleKind::number,
+                1u8 => GoogleSheetsParserRuleKind::string,
+                2u8 => GoogleSheetsParserRuleKind::boolean,
+                3u8 => GoogleSheetsParserRuleKind::error_literal,
+                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
+                5u8 => GoogleSheetsParserRuleKind::cell_ref,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
+                16u8 => GoogleSheetsParserRuleKind::mul_expr,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
+                _ => GoogleSheetsParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(
+            &self,
+            i: usize,
+        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(i)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> compare_opView<'p> {
+        /// The source text matched by this rule.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
+            }
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct unary_prefixView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> unary_prefixView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
+            match self.variant_idx() {
+                0u8 => GoogleSheetsParserRuleKind::number,
+                1u8 => GoogleSheetsParserRuleKind::string,
+                2u8 => GoogleSheetsParserRuleKind::boolean,
+                3u8 => GoogleSheetsParserRuleKind::error_literal,
+                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
+                5u8 => GoogleSheetsParserRuleKind::cell_ref,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
+                16u8 => GoogleSheetsParserRuleKind::mul_expr,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
+                _ => GoogleSheetsParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(
+            &self,
+            i: usize,
+        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(i)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> unary_prefixView<'p> {
+        /// The source text matched by this rule.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
+            }
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct mul_opView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> mul_opView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
+            match self.variant_idx() {
+                0u8 => GoogleSheetsParserRuleKind::number,
+                1u8 => GoogleSheetsParserRuleKind::string,
+                2u8 => GoogleSheetsParserRuleKind::boolean,
+                3u8 => GoogleSheetsParserRuleKind::error_literal,
+                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
+                5u8 => GoogleSheetsParserRuleKind::cell_ref,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
+                16u8 => GoogleSheetsParserRuleKind::mul_expr,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
+                _ => GoogleSheetsParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(
+            &self,
+            i: usize,
+        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(i)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> mul_opView<'p> {
+        /// The source text matched by this rule.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
+            }
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct add_opView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> add_opView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
+            match self.variant_idx() {
+                0u8 => GoogleSheetsParserRuleKind::number,
+                1u8 => GoogleSheetsParserRuleKind::string,
+                2u8 => GoogleSheetsParserRuleKind::boolean,
+                3u8 => GoogleSheetsParserRuleKind::error_literal,
+                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
+                5u8 => GoogleSheetsParserRuleKind::cell_ref,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
+                16u8 => GoogleSheetsParserRuleKind::mul_expr,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
+                _ => GoogleSheetsParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(
+            &self,
+            i: usize,
+        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(i)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> add_opView<'p> {
         /// The source text matched by this rule.
         #[inline]
         pub fn text(&self) -> &'p str {
@@ -7184,43 +9215,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -7284,6 +9308,171 @@ mod __googlesheetsparser_emit_impl {
     }
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
+    pub struct func_openView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> func_openView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
+            match self.variant_idx() {
+                0u8 => GoogleSheetsParserRuleKind::number,
+                1u8 => GoogleSheetsParserRuleKind::string,
+                2u8 => GoogleSheetsParserRuleKind::boolean,
+                3u8 => GoogleSheetsParserRuleKind::error_literal,
+                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
+                5u8 => GoogleSheetsParserRuleKind::cell_ref,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
+                16u8 => GoogleSheetsParserRuleKind::mul_expr,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
+                _ => GoogleSheetsParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(
+            &self,
+            i: usize,
+        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(i)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> func_openView<'p> {
+        /// The key as source text (the Span matched by the first
+        /// child of the original Seq).
+        #[inline]
+        pub fn key(&self) -> &'p str {
+            self.span_text()
+        }
+        /// Alias for `.key()` — the source text of the key Span.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The key Span as `(lo, hi)` byte offsets.
+        #[inline]
+        pub fn key_span(&self) -> (u32, u32) {
+            self.span()
+        }
+        /// The value scalar decoded from the aggregate payload.
+        ///
+        /// Returns the zero-initialized value if no payload was
+        /// written for this record.
+        #[inline]
+        pub fn value(&self) -> (u32, u32) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    let __raw = u64::from_le_bytes(
+                        <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                            .expect("kv_pair slice is 8 bytes"),
+                    );
+                    (__raw as u32, (__raw >> 32) as u32)
+                }
+                None => (0_u32, 0_u32),
+            }
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
     pub struct range_refView<'p> {
         cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
@@ -7343,43 +9532,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -7513,43 +9695,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -7625,321 +9800,47 @@ mod __googlesheetsparser_emit_impl {
                 .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
         }
     }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct identifierView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
+    /// Typed value enum — payload-eligible branches carry typed
+    /// values directly; non-eligible branches wrap a cursor view.
+    #[derive(Clone, Debug)]
+    pub enum cell_or_rangeValue<'p> {
+        range_ref(&'p str),
+        cell(&'p str),
     }
-    impl<'p> identifierView<'p> {
+    impl<'p> cell_or_rangeView<'p> {
+        /// Decode the chosen branch's value. Payload-eligible
+        /// branches return typed scalars/aggregates; other
+        /// branches return cursor-wrapped sub-views.
         #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
-            match self.variant_idx() {
-                0u8 => GoogleSheetsParserRuleKind::number,
-                1u8 => GoogleSheetsParserRuleKind::string,
-                2u8 => GoogleSheetsParserRuleKind::boolean,
-                3u8 => GoogleSheetsParserRuleKind::error_literal,
-                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
-                5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
-                16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
-                _ => GoogleSheetsParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(
-            &self,
-            i: usize,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(i)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> identifierView<'p> {
-        /// The source text matched by this leaf rule.
-        #[inline]
-        pub fn text(&self) -> &'p str {
-            self.span_text()
-        }
-        /// Get the sub-span value as a string slice.
-        ///
-        /// Payload-first: reads the packed (lo, hi) u32 pair from
-        /// the tape payload buffer in O(1). Falls back to the
-        /// record's own span text if no payload is present.
-        #[inline]
-        pub fn value(&self) -> &'p str {
-            let tape = self.cursor.tape();
-            let rec = self.cursor.record();
-            if let Some((lo, hi)) = tape.payload_Span(rec) {
-                return &self.input[lo as usize..hi as usize];
-            }
-            self.span_text()
-        }
-        /// Alias for backward compatibility. Prefer `.value()`.
-        #[inline]
-        pub fn as_span(&self) -> &'p str {
-            self.value()
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct compare_opView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> compare_opView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
-            match self.variant_idx() {
-                0u8 => GoogleSheetsParserRuleKind::number,
-                1u8 => GoogleSheetsParserRuleKind::string,
-                2u8 => GoogleSheetsParserRuleKind::boolean,
-                3u8 => GoogleSheetsParserRuleKind::error_literal,
-                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
-                5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
-                16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
-                _ => GoogleSheetsParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(
-            &self,
-            i: usize,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(i)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> compare_opView<'p> {
-        /// The source text matched by this rule.
-        #[inline]
-        pub fn text(&self) -> &'p str {
-            self.span_text()
-        }
-        /// The packed scalar fields decoded from the tape's
-        /// aggregate payload buffer.
-        ///
-        /// Returns the layout-zeroed tuple if no payload was
-        /// written for this record (e.g. an alternative branch
-        /// path that never set any fields).
-        #[inline]
-        pub fn value(&self) -> (u8) {
-            let tape = self.cursor.tape();
-            let rec = self.cursor.record();
-            match tape.payload_bytes(rec, 1usize) {
-                Some(__bytes) => (__bytes[0usize]),
-                None => (0_u8),
+        pub fn value(&self) -> ::core::option::Option<cell_or_rangeValue<'p>> {
+            match self.cursor.meta_idx() {
+                0u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(cell_or_rangeValue::range_ref(__value))
+                }
+                1u8 => {
+                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
+                    let __rec = __cursor.record();
+                    let __tape = __cursor.tape();
+                    let __value = match __tape.payload_Span(__rec) {
+                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
+                        None => {
+                            let (lo, hi) = __cursor.span();
+                            &self.input[lo as usize..hi as usize]
+                        }
+                    };
+                    Some(cell_or_rangeValue::cell(__value))
+                }
+                _ => None,
             }
         }
     }
@@ -8004,43 +9905,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -8090,618 +9984,6 @@ mod __googlesheetsparser_emit_impl {
         #[inline]
         pub fn num_children(&self) -> usize {
             1usize
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct concat_exprView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> concat_exprView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
-            match self.variant_idx() {
-                0u8 => GoogleSheetsParserRuleKind::number,
-                1u8 => GoogleSheetsParserRuleKind::string,
-                2u8 => GoogleSheetsParserRuleKind::boolean,
-                3u8 => GoogleSheetsParserRuleKind::error_literal,
-                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
-                5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
-                16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
-                _ => GoogleSheetsParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(
-            &self,
-            i: usize,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(i)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> concat_exprView<'p> {
-        ///Child at position 0 as a typed view.
-        #[inline]
-        pub fn child_0(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(0usize)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        /// The number of typed child positions in this Seq.
-        #[inline]
-        pub fn num_children(&self) -> usize {
-            1usize
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct add_opView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> add_opView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
-            match self.variant_idx() {
-                0u8 => GoogleSheetsParserRuleKind::number,
-                1u8 => GoogleSheetsParserRuleKind::string,
-                2u8 => GoogleSheetsParserRuleKind::boolean,
-                3u8 => GoogleSheetsParserRuleKind::error_literal,
-                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
-                5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
-                16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
-                _ => GoogleSheetsParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(
-            &self,
-            i: usize,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(i)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> add_opView<'p> {
-        /// The source text matched by this rule.
-        #[inline]
-        pub fn text(&self) -> &'p str {
-            self.span_text()
-        }
-        /// The packed scalar fields decoded from the tape's
-        /// aggregate payload buffer.
-        ///
-        /// Returns the layout-zeroed tuple if no payload was
-        /// written for this record (e.g. an alternative branch
-        /// path that never set any fields).
-        #[inline]
-        pub fn value(&self) -> (u8) {
-            let tape = self.cursor.tape();
-            let rec = self.cursor.record();
-            match tape.payload_bytes(rec, 1usize) {
-                Some(__bytes) => (__bytes[0usize]),
-                None => (0_u8),
-            }
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct add_exprView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> add_exprView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
-            match self.variant_idx() {
-                0u8 => GoogleSheetsParserRuleKind::number,
-                1u8 => GoogleSheetsParserRuleKind::string,
-                2u8 => GoogleSheetsParserRuleKind::boolean,
-                3u8 => GoogleSheetsParserRuleKind::error_literal,
-                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
-                5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
-                16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
-                _ => GoogleSheetsParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(
-            &self,
-            i: usize,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(i)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> add_exprView<'p> {
-        ///Child at position 0 as a typed view.
-        #[inline]
-        pub fn child_0(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(0usize)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        /// The number of typed child positions in this Seq.
-        #[inline]
-        pub fn num_children(&self) -> usize {
-            1usize
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct mul_opView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> mul_opView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
-            match self.variant_idx() {
-                0u8 => GoogleSheetsParserRuleKind::number,
-                1u8 => GoogleSheetsParserRuleKind::string,
-                2u8 => GoogleSheetsParserRuleKind::boolean,
-                3u8 => GoogleSheetsParserRuleKind::error_literal,
-                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
-                5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
-                16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
-                _ => GoogleSheetsParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(
-            &self,
-            i: usize,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(i)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> mul_opView<'p> {
-        /// The source text matched by this rule.
-        #[inline]
-        pub fn text(&self) -> &'p str {
-            self.span_text()
-        }
-        /// The packed scalar fields decoded from the tape's
-        /// aggregate payload buffer.
-        ///
-        /// Returns the layout-zeroed tuple if no payload was
-        /// written for this record (e.g. an alternative branch
-        /// path that never set any fields).
-        #[inline]
-        pub fn value(&self) -> (u8) {
-            let tape = self.cursor.tape();
-            let rec = self.cursor.record();
-            match tape.payload_bytes(rec, 1usize) {
-                Some(__bytes) => (__bytes[0usize]),
-                None => (0_u8),
-            }
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -8765,43 +10047,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -8851,312 +10126,6 @@ mod __googlesheetsparser_emit_impl {
         #[inline]
         pub fn num_children(&self) -> usize {
             1usize
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct exp_exprView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> exp_exprView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
-            match self.variant_idx() {
-                0u8 => GoogleSheetsParserRuleKind::number,
-                1u8 => GoogleSheetsParserRuleKind::string,
-                2u8 => GoogleSheetsParserRuleKind::boolean,
-                3u8 => GoogleSheetsParserRuleKind::error_literal,
-                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
-                5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
-                16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
-                _ => GoogleSheetsParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(
-            &self,
-            i: usize,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(i)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> exp_exprView<'p> {
-        ///Child at position 0 as a typed view.
-        #[inline]
-        pub fn child_0(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(0usize)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        /// The number of typed child positions in this Seq.
-        #[inline]
-        pub fn num_children(&self) -> usize {
-            1usize
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct unary_prefixView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> unary_prefixView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
-            match self.variant_idx() {
-                0u8 => GoogleSheetsParserRuleKind::number,
-                1u8 => GoogleSheetsParserRuleKind::string,
-                2u8 => GoogleSheetsParserRuleKind::boolean,
-                3u8 => GoogleSheetsParserRuleKind::error_literal,
-                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
-                5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
-                16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
-                _ => GoogleSheetsParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(
-            &self,
-            i: usize,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(i)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> unary_prefixView<'p> {
-        /// The source text matched by this rule.
-        #[inline]
-        pub fn text(&self) -> &'p str {
-            self.span_text()
-        }
-        /// The packed scalar fields decoded from the tape's
-        /// aggregate payload buffer.
-        ///
-        /// Returns the layout-zeroed tuple if no payload was
-        /// written for this record (e.g. an alternative branch
-        /// path that never set any fields).
-        #[inline]
-        pub fn value(&self) -> (u8) {
-            let tape = self.cursor.tape();
-            let rec = self.cursor.record();
-            match tape.payload_bytes(rec, 1usize) {
-                Some(__bytes) => (__bytes[0usize]),
-                None => (0_u8),
-            }
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -9220,43 +10189,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -9324,672 +10286,6 @@ mod __googlesheetsparser_emit_impl {
     }
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
-    pub struct postfix_exprView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> postfix_exprView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
-            match self.variant_idx() {
-                0u8 => GoogleSheetsParserRuleKind::number,
-                1u8 => GoogleSheetsParserRuleKind::string,
-                2u8 => GoogleSheetsParserRuleKind::boolean,
-                3u8 => GoogleSheetsParserRuleKind::error_literal,
-                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
-                5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
-                16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
-                _ => GoogleSheetsParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(
-            &self,
-            i: usize,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(i)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> postfix_exprView<'p> {
-        ///Child at position 0 as a typed view.
-        #[inline]
-        pub fn child_0(&self) -> ::core::option::Option<primaryView<'p>> {
-            self.cursor.child(0usize).map(|c| primaryView::from_cursor(c, self.input))
-        }
-        ///The `primary` child as a typed view.
-        #[inline]
-        pub fn primary(&self) -> ::core::option::Option<primaryView<'p>> {
-            self.cursor.child(0usize).map(|c| primaryView::from_cursor(c, self.input))
-        }
-        ///Child at position 1 as a typed view.
-        #[inline]
-        pub fn child_1(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(1usize)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        /// The number of typed child positions in this Seq.
-        #[inline]
-        pub fn num_children(&self) -> usize {
-            2usize
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct primaryView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> primaryView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
-            match self.variant_idx() {
-                0u8 => GoogleSheetsParserRuleKind::number,
-                1u8 => GoogleSheetsParserRuleKind::string,
-                2u8 => GoogleSheetsParserRuleKind::boolean,
-                3u8 => GoogleSheetsParserRuleKind::error_literal,
-                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
-                5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
-                16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
-                _ => GoogleSheetsParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(
-            &self,
-            i: usize,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(i)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> primaryView<'p> {
-        ///If variant `let_call` (branch 0) was chosen, return its child view.
-        #[inline]
-        pub fn as_let_call(&self) -> ::core::option::Option<let_callView<'p>> {
-            if self.cursor.meta_idx() == 0u8 {
-                self.cursor.child(0).map(|c| let_callView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `let_call` (branch 0) was chosen.
-        #[inline]
-        pub fn is_let_call(&self) -> bool {
-            self.cursor.meta_idx() == 0u8
-        }
-        ///If variant `lambda_call` (branch 1) was chosen, return its child view.
-        #[inline]
-        pub fn as_lambda_call(&self) -> ::core::option::Option<lambda_callView<'p>> {
-            if self.cursor.meta_idx() == 1u8 {
-                self.cursor.child(0).map(|c| lambda_callView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `lambda_call` (branch 1) was chosen.
-        #[inline]
-        pub fn is_lambda_call(&self) -> bool {
-            self.cursor.meta_idx() == 1u8
-        }
-        ///If variant `func_call` (branch 2) was chosen, return its child view.
-        #[inline]
-        pub fn as_func_call(&self) -> ::core::option::Option<func_callView<'p>> {
-            if self.cursor.meta_idx() == 2u8 {
-                self.cursor.child(0).map(|c| func_callView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `func_call` (branch 2) was chosen.
-        #[inline]
-        pub fn is_func_call(&self) -> bool {
-            self.cursor.meta_idx() == 2u8
-        }
-        ///If variant `number` (branch 3) was chosen, return its child view.
-        #[inline]
-        pub fn as_number(&self) -> ::core::option::Option<numberView<'p>> {
-            if self.cursor.meta_idx() == 3u8 {
-                self.cursor.child(0).map(|c| numberView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `number` (branch 3) was chosen.
-        #[inline]
-        pub fn is_number(&self) -> bool {
-            self.cursor.meta_idx() == 3u8
-        }
-        ///If variant `boolean` (branch 4) was chosen, return its child view.
-        #[inline]
-        pub fn as_boolean(&self) -> ::core::option::Option<booleanView<'p>> {
-            if self.cursor.meta_idx() == 4u8 {
-                self.cursor.child(0).map(|c| booleanView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `boolean` (branch 4) was chosen.
-        #[inline]
-        pub fn is_boolean(&self) -> bool {
-            self.cursor.meta_idx() == 4u8
-        }
-        ///If variant `cell_or_range` (branch 5) was chosen, return its child view.
-        #[inline]
-        pub fn as_cell_or_range(&self) -> ::core::option::Option<cell_or_rangeView<'p>> {
-            if self.cursor.meta_idx() == 5u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| cell_or_rangeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `cell_or_range` (branch 5) was chosen.
-        #[inline]
-        pub fn is_cell_or_range(&self) -> bool {
-            self.cursor.meta_idx() == 5u8
-        }
-        ///If variant `identifier` (branch 6) was chosen, return its child view.
-        #[inline]
-        pub fn as_identifier(&self) -> ::core::option::Option<identifierView<'p>> {
-            if self.cursor.meta_idx() == 6u8 {
-                self.cursor.child(0).map(|c| identifierView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `identifier` (branch 6) was chosen.
-        #[inline]
-        pub fn is_identifier(&self) -> bool {
-            self.cursor.meta_idx() == 6u8
-        }
-        ///If variant `string` (branch 7) was chosen, return its child view.
-        #[inline]
-        pub fn as_string(&self) -> ::core::option::Option<stringView<'p>> {
-            if self.cursor.meta_idx() == 7u8 {
-                self.cursor.child(0).map(|c| stringView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `string` (branch 7) was chosen.
-        #[inline]
-        pub fn is_string(&self) -> bool {
-            self.cursor.meta_idx() == 7u8
-        }
-        ///If variant `error_literal` (branch 8) was chosen, return its child view.
-        #[inline]
-        pub fn as_error_literal(&self) -> ::core::option::Option<error_literalView<'p>> {
-            if self.cursor.meta_idx() == 8u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| error_literalView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `error_literal` (branch 8) was chosen.
-        #[inline]
-        pub fn is_error_literal(&self) -> bool {
-            self.cursor.meta_idx() == 8u8
-        }
-        ///If variant `array_literal` (branch 9) was chosen, return its child view.
-        #[inline]
-        pub fn as_array_literal(&self) -> ::core::option::Option<array_literalView<'p>> {
-            if self.cursor.meta_idx() == 9u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| array_literalView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `array_literal` (branch 9) was chosen.
-        #[inline]
-        pub fn is_array_literal(&self) -> bool {
-            self.cursor.meta_idx() == 9u8
-        }
-        ///If variant `paren_expr` (branch 10) was chosen, return its child view.
-        #[inline]
-        pub fn as_paren_expr(&self) -> ::core::option::Option<paren_exprView<'p>> {
-            if self.cursor.meta_idx() == 10u8 {
-                self.cursor.child(0).map(|c| paren_exprView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `paren_expr` (branch 10) was chosen.
-        #[inline]
-        pub fn is_paren_expr(&self) -> bool {
-            self.cursor.meta_idx() == 10u8
-        }
-        ///If sub-variant `primary_0` was chosen (branch 3), return its child view.
-        #[inline]
-        pub fn as_primary_0(
-            &self,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            if self.cursor.meta_idx() == 3u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        #[inline]
-        pub fn is_primary_0(&self) -> bool {
-            self.cursor.meta_idx() == 3u8
-        }
-        ///If sub-variant `primary_1` was chosen (branch 4), return its child view.
-        #[inline]
-        pub fn as_primary_1(
-            &self,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            if self.cursor.meta_idx() == 4u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        #[inline]
-        pub fn is_primary_1(&self) -> bool {
-            self.cursor.meta_idx() == 4u8
-        }
-        ///If sub-variant `primary_2` was chosen (branch 6), return its child view.
-        #[inline]
-        pub fn as_primary_2(
-            &self,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            if self.cursor.meta_idx() == 6u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        #[inline]
-        pub fn is_primary_2(&self) -> bool {
-            self.cursor.meta_idx() == 6u8
-        }
-        ///If sub-variant `primary_2_sv1` was chosen (branch 7), return its child view.
-        #[inline]
-        pub fn as_primary_2_sv1(
-            &self,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            if self.cursor.meta_idx() == 7u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        #[inline]
-        pub fn is_primary_2_sv1(&self) -> bool {
-            self.cursor.meta_idx() == 7u8
-        }
-        /// The chosen branch's child as a generic node view,
-        /// regardless of which variant was selected.
-        #[inline]
-        pub fn chosen(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(0)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-    }
-    /// Typed value enum — payload-eligible branches carry typed
-    /// values directly; non-eligible branches wrap a cursor view.
-    #[derive(Clone, Debug)]
-    pub enum primaryValue<'p> {
-        let_call(GoogleSheetsParserNodeView<'p>),
-        lambda_call(GoogleSheetsParserNodeView<'p>),
-        func_call(GoogleSheetsParserNodeView<'p>),
-        number(f64),
-        boolean((bool)),
-        cell_or_range(GoogleSheetsParserNodeView<'p>),
-        identifier(&'p str),
-        string(((u32, u32))),
-        error_literal((u8)),
-        array_literal(GoogleSheetsParserNodeView<'p>),
-        paren_expr(GoogleSheetsParserNodeView<'p>),
-    }
-    impl<'p> primaryView<'p> {
-        /// Decode the chosen branch's value. Payload-eligible
-        /// branches return typed scalars/aggregates; other
-        /// branches return cursor-wrapped sub-views.
-        #[inline]
-        pub fn value(&self) -> ::core::option::Option<primaryValue<'p>> {
-            match self.cursor.meta_idx() {
-                0u8 => {
-                    let __child = self.cursor.child(0)?;
-                    Some(
-                        primaryValue::let_call(
-                            GoogleSheetsParserNodeView::from_cursor(__child, self.input),
-                        ),
-                    )
-                }
-                1u8 => {
-                    let __child = self.cursor.child(0)?;
-                    Some(
-                        primaryValue::lambda_call(
-                            GoogleSheetsParserNodeView::from_cursor(__child, self.input),
-                        ),
-                    )
-                }
-                2u8 => {
-                    let __child = self.cursor.child(0)?;
-                    Some(
-                        primaryValue::func_call(
-                            GoogleSheetsParserNodeView::from_cursor(__child, self.input),
-                        ),
-                    )
-                }
-                3u8 => {
-                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
-                    let __rec = __cursor.record();
-                    let __tape = __cursor.tape();
-                    let __value = __tape
-                        .payload_f64(__rec)
-                        .unwrap_or(<f64 as ::core::default::Default>::default());
-                    Some(primaryValue::number(__value))
-                }
-                4u8 => {
-                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
-                    let __rec = __cursor.record();
-                    let __tape = __cursor.tape();
-                    let __value = match __tape.payload_bytes(__rec, 1usize) {
-                        Some(__bytes) => (__bytes[0usize] != 0),
-                        None => (false),
-                    };
-                    Some(primaryValue::boolean(__value))
-                }
-                5u8 => {
-                    let __child = self.cursor.child(0)?;
-                    Some(
-                        primaryValue::cell_or_range(
-                            GoogleSheetsParserNodeView::from_cursor(__child, self.input),
-                        ),
-                    )
-                }
-                6u8 => {
-                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
-                    let __rec = __cursor.record();
-                    let __tape = __cursor.tape();
-                    let __value = match __tape.payload_Span(__rec) {
-                        Some((lo, hi)) => &self.input[lo as usize..hi as usize],
-                        None => {
-                            let (lo, hi) = __cursor.span();
-                            &self.input[lo as usize..hi as usize]
-                        }
-                    };
-                    Some(primaryValue::identifier(__value))
-                }
-                7u8 => {
-                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
-                    let __rec = __cursor.record();
-                    let __tape = __cursor.tape();
-                    let __value = match __tape.payload_bytes(__rec, 8usize) {
-                        Some(__bytes) => {
-                            ({
-                                let __raw = u64::from_le_bytes(
-                                    <[u8; 8]>::try_from(&__bytes[0usize..8usize]).unwrap(),
-                                );
-                                (__raw as u32, (__raw >> 32) as u32)
-                            })
-                        }
-                        None => ((0_u32, 0_u32)),
-                    };
-                    Some(primaryValue::string(__value))
-                }
-                8u8 => {
-                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
-                    let __rec = __cursor.record();
-                    let __tape = __cursor.tape();
-                    let __value = match __tape.payload_bytes(__rec, 1usize) {
-                        Some(__bytes) => (__bytes[0usize]),
-                        None => (0_u8),
-                    };
-                    Some(primaryValue::error_literal(__value))
-                }
-                9u8 => {
-                    let __child = self.cursor.child(0)?;
-                    Some(
-                        primaryValue::array_literal(
-                            GoogleSheetsParserNodeView::from_cursor(__child, self.input),
-                        ),
-                    )
-                }
-                10u8 => {
-                    let __child = self.cursor.child(0)?;
-                    Some(
-                        primaryValue::paren_expr(
-                            GoogleSheetsParserNodeView::from_cursor(__child, self.input),
-                        ),
-                    )
-                }
-                _ => None,
-            }
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
     pub struct paren_exprView<'p> {
         cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
@@ -10049,43 +10345,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -10142,178 +10431,6 @@ mod __googlesheetsparser_emit_impl {
         #[inline]
         pub fn num_children(&self) -> usize {
             2usize
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct func_openView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> func_openView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
-            match self.variant_idx() {
-                0u8 => GoogleSheetsParserRuleKind::number,
-                1u8 => GoogleSheetsParserRuleKind::string,
-                2u8 => GoogleSheetsParserRuleKind::boolean,
-                3u8 => GoogleSheetsParserRuleKind::error_literal,
-                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
-                5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
-                16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
-                _ => GoogleSheetsParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(
-            &self,
-            i: usize,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(i)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> func_openView<'p> {
-        /// The key as source text (the Span matched by the first
-        /// child of the original Seq).
-        #[inline]
-        pub fn key(&self) -> &'p str {
-            self.span_text()
-        }
-        /// Alias for `.key()` — the source text of the key Span.
-        #[inline]
-        pub fn text(&self) -> &'p str {
-            self.span_text()
-        }
-        /// The key Span as `(lo, hi)` byte offsets.
-        #[inline]
-        pub fn key_span(&self) -> (u32, u32) {
-            self.span()
-        }
-        /// The value scalar decoded from the aggregate payload.
-        ///
-        /// Returns the zero-initialized value if no payload was
-        /// written for this record.
-        #[inline]
-        pub fn value(&self) -> (u32, u32) {
-            let tape = self.cursor.tape();
-            let rec = self.cursor.record();
-            match tape.payload_bytes(rec, 8usize) {
-                Some(__bytes) => {
-                    let __raw = u64::from_le_bytes(
-                        <[u8; 8]>::try_from(&__bytes[0usize..8usize])
-                            .expect("kv_pair slice is 8 bytes"),
-                    );
-                    (__raw as u32, (__raw >> 32) as u32)
-                }
-                None => (0_u32, 0_u32),
-            }
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -10377,43 +10494,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -10456,11 +10566,9 @@ mod __googlesheetsparser_emit_impl {
         #[inline]
         pub fn iter(
             &self,
-        ) -> impl ::core::iter::Iterator<Item = comparison_exprView<'p>> + 'p {
+        ) -> impl ::core::iter::Iterator<Item = expressionView<'p>> + 'p {
             let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| comparison_exprView::from_cursor(c, input))
+            self.cursor.children().map(move |c| expressionView::from_cursor(c, input))
         }
         /// The number of elements in this repetition.
         #[inline]
@@ -10474,8 +10582,8 @@ mod __googlesheetsparser_emit_impl {
         }
         /// The i-th element as a typed view, if present.
         #[inline]
-        pub fn get(&self, i: usize) -> ::core::option::Option<comparison_exprView<'p>> {
-            self.cursor.child(i).map(|c| comparison_exprView::from_cursor(c, self.input))
+        pub fn get(&self, i: usize) -> ::core::option::Option<expressionView<'p>> {
+            self.cursor.child(i).map(|c| expressionView::from_cursor(c, self.input))
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -10539,43 +10647,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -10634,165 +10735,6 @@ mod __googlesheetsparser_emit_impl {
         #[inline]
         pub fn get(&self, i: usize) -> ::core::option::Option<argView<'p>> {
             self.cursor.child(i).map(|c| argView::from_cursor(c, self.input))
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct func_callView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> func_callView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
-            match self.variant_idx() {
-                0u8 => GoogleSheetsParserRuleKind::number,
-                1u8 => GoogleSheetsParserRuleKind::string,
-                2u8 => GoogleSheetsParserRuleKind::boolean,
-                3u8 => GoogleSheetsParserRuleKind::error_literal,
-                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
-                5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
-                16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
-                _ => GoogleSheetsParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(
-            &self,
-            i: usize,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(i)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> func_callView<'p> {
-        ///Child at position 0 as a typed view.
-        #[inline]
-        pub fn child_0(&self) -> ::core::option::Option<func_openView<'p>> {
-            self.cursor.child(0usize).map(|c| func_openView::from_cursor(c, self.input))
-        }
-        ///The `func_open` child as a typed view.
-        #[inline]
-        pub fn func_open(&self) -> ::core::option::Option<func_openView<'p>> {
-            self.cursor.child(0usize).map(|c| func_openView::from_cursor(c, self.input))
-        }
-        ///Child at position 1 as a typed view.
-        #[inline]
-        pub fn child_1(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(1usize)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        /// The number of typed child positions in this Seq.
-        #[inline]
-        pub fn num_children(&self) -> usize {
-            2usize
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -10856,43 +10798,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -10933,347 +10868,18 @@ mod __googlesheetsparser_emit_impl {
     impl<'p> let_bindingView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
-        pub fn child_0(&self) -> ::core::option::Option<comparison_exprView<'p>> {
-            self.cursor
-                .child(0usize)
-                .map(|c| comparison_exprView::from_cursor(c, self.input))
+        pub fn child_0(&self) -> ::core::option::Option<expressionView<'p>> {
+            self.cursor.child(0usize).map(|c| expressionView::from_cursor(c, self.input))
         }
-        ///The `comparison_expr` child as a typed view.
+        ///The `expression` child as a typed view.
         #[inline]
-        pub fn comparison_expr(
-            &self,
-        ) -> ::core::option::Option<comparison_exprView<'p>> {
-            self.cursor
-                .child(0usize)
-                .map(|c| comparison_exprView::from_cursor(c, self.input))
+        pub fn expression(&self) -> ::core::option::Option<expressionView<'p>> {
+            self.cursor.child(0usize).map(|c| expressionView::from_cursor(c, self.input))
         }
         ///Child at position 1 as a typed view.
         #[inline]
-        pub fn child_1(&self) -> ::core::option::Option<comparison_exprView<'p>> {
-            self.cursor
-                .child(1usize)
-                .map(|c| comparison_exprView::from_cursor(c, self.input))
-        }
-        /// The number of typed child positions in this Seq.
-        #[inline]
-        pub fn num_children(&self) -> usize {
-            2usize
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct let_argsView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> let_argsView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
-            match self.variant_idx() {
-                0u8 => GoogleSheetsParserRuleKind::number,
-                1u8 => GoogleSheetsParserRuleKind::string,
-                2u8 => GoogleSheetsParserRuleKind::boolean,
-                3u8 => GoogleSheetsParserRuleKind::error_literal,
-                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
-                5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
-                16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
-                _ => GoogleSheetsParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(
-            &self,
-            i: usize,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(i)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> let_argsView<'p> {
-        ///Child at position 0 as a typed view.
-        #[inline]
-        pub fn child_0(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(0usize)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        ///Child at position 1 as a typed view.
-        #[inline]
-        pub fn child_1(&self) -> ::core::option::Option<comparison_exprView<'p>> {
-            self.cursor
-                .child(1usize)
-                .map(|c| comparison_exprView::from_cursor(c, self.input))
-        }
-        ///The `comparison_expr` child as a typed view.
-        #[inline]
-        pub fn comparison_expr(
-            &self,
-        ) -> ::core::option::Option<comparison_exprView<'p>> {
-            self.cursor
-                .child(1usize)
-                .map(|c| comparison_exprView::from_cursor(c, self.input))
-        }
-        /// The number of typed child positions in this Seq.
-        #[inline]
-        pub fn num_children(&self) -> usize {
-            2usize
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct let_callView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> let_callView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
-            match self.variant_idx() {
-                0u8 => GoogleSheetsParserRuleKind::number,
-                1u8 => GoogleSheetsParserRuleKind::string,
-                2u8 => GoogleSheetsParserRuleKind::boolean,
-                3u8 => GoogleSheetsParserRuleKind::error_literal,
-                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
-                5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
-                16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
-                _ => GoogleSheetsParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(
-            &self,
-            i: usize,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(i)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> let_callView<'p> {
-        ///Child at position 0 as a typed view.
-        #[inline]
-        pub fn child_0(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(0usize)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        ///Child at position 1 as a typed view.
-        #[inline]
-        pub fn child_1(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(1usize)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        pub fn child_1(&self) -> ::core::option::Option<expressionView<'p>> {
+            self.cursor.child(1usize).map(|c| expressionView::from_cursor(c, self.input))
         }
         /// The number of typed child positions in this Seq.
         #[inline]
@@ -11342,43 +10948,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -11421,11 +11020,9 @@ mod __googlesheetsparser_emit_impl {
         #[inline]
         pub fn iter(
             &self,
-        ) -> impl ::core::iter::Iterator<Item = comparison_exprView<'p>> + 'p {
+        ) -> impl ::core::iter::Iterator<Item = expressionView<'p>> + 'p {
             let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| comparison_exprView::from_cursor(c, input))
+            self.cursor.children().map(move |c| expressionView::from_cursor(c, input))
         }
         /// The number of elements in this repetition.
         #[inline]
@@ -11439,164 +11036,8 @@ mod __googlesheetsparser_emit_impl {
         }
         /// The i-th element as a typed view, if present.
         #[inline]
-        pub fn get(&self, i: usize) -> ::core::option::Option<comparison_exprView<'p>> {
-            self.cursor.child(i).map(|c| comparison_exprView::from_cursor(c, self.input))
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct lambda_callView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> lambda_callView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
-            match self.variant_idx() {
-                0u8 => GoogleSheetsParserRuleKind::number,
-                1u8 => GoogleSheetsParserRuleKind::string,
-                2u8 => GoogleSheetsParserRuleKind::boolean,
-                3u8 => GoogleSheetsParserRuleKind::error_literal,
-                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
-                5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
-                16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
-                _ => GoogleSheetsParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(
-            &self,
-            i: usize,
-        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(i)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> lambda_callView<'p> {
-        ///Child at position 0 as a typed view.
-        #[inline]
-        pub fn child_0(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(0usize)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        ///Child at position 1 as a typed view.
-        #[inline]
-        pub fn child_1(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
-            self.cursor
-                .child(1usize)
-                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
-        }
-        /// The number of typed child positions in this Seq.
-        #[inline]
-        pub fn num_children(&self) -> usize {
-            2usize
+        pub fn get(&self, i: usize) -> ::core::option::Option<expressionView<'p>> {
+            self.cursor.child(i).map(|c| expressionView::from_cursor(c, self.input))
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -11660,43 +11101,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -11737,19 +11171,13 @@ mod __googlesheetsparser_emit_impl {
     impl<'p> array_rowView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
-        pub fn child_0(&self) -> ::core::option::Option<comparison_exprView<'p>> {
-            self.cursor
-                .child(0usize)
-                .map(|c| comparison_exprView::from_cursor(c, self.input))
+        pub fn child_0(&self) -> ::core::option::Option<expressionView<'p>> {
+            self.cursor.child(0usize).map(|c| expressionView::from_cursor(c, self.input))
         }
-        ///The `comparison_expr` child as a typed view.
+        ///The `expression` child as a typed view.
         #[inline]
-        pub fn comparison_expr(
-            &self,
-        ) -> ::core::option::Option<comparison_exprView<'p>> {
-            self.cursor
-                .child(0usize)
-                .map(|c| comparison_exprView::from_cursor(c, self.input))
+        pub fn expression(&self) -> ::core::option::Option<expressionView<'p>> {
+            self.cursor.child(0usize).map(|c| expressionView::from_cursor(c, self.input))
         }
         ///Child at position 1 as a typed view.
         #[inline]
@@ -11825,43 +11253,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -11984,43 +11405,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -12059,6 +11473,1318 @@ mod __googlesheetsparser_emit_impl {
         }
     }
     impl<'p> array_literalView<'p> {
+        ///Child at position 0 as a typed view.
+        #[inline]
+        pub fn child_0(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(0usize)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        ///Child at position 1 as a typed view.
+        #[inline]
+        pub fn child_1(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(1usize)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        /// The number of typed child positions in this Seq.
+        #[inline]
+        pub fn num_children(&self) -> usize {
+            2usize
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct concat_exprView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> concat_exprView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
+            match self.variant_idx() {
+                0u8 => GoogleSheetsParserRuleKind::number,
+                1u8 => GoogleSheetsParserRuleKind::string,
+                2u8 => GoogleSheetsParserRuleKind::boolean,
+                3u8 => GoogleSheetsParserRuleKind::error_literal,
+                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
+                5u8 => GoogleSheetsParserRuleKind::cell_ref,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
+                16u8 => GoogleSheetsParserRuleKind::mul_expr,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
+                _ => GoogleSheetsParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(
+            &self,
+            i: usize,
+        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(i)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> concat_exprView<'p> {
+        ///Child at position 0 as a typed view.
+        #[inline]
+        pub fn child_0(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(0usize)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        /// The number of typed child positions in this Seq.
+        #[inline]
+        pub fn num_children(&self) -> usize {
+            1usize
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct add_exprView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> add_exprView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
+            match self.variant_idx() {
+                0u8 => GoogleSheetsParserRuleKind::number,
+                1u8 => GoogleSheetsParserRuleKind::string,
+                2u8 => GoogleSheetsParserRuleKind::boolean,
+                3u8 => GoogleSheetsParserRuleKind::error_literal,
+                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
+                5u8 => GoogleSheetsParserRuleKind::cell_ref,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
+                16u8 => GoogleSheetsParserRuleKind::mul_expr,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
+                _ => GoogleSheetsParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(
+            &self,
+            i: usize,
+        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(i)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> add_exprView<'p> {
+        ///Child at position 0 as a typed view.
+        #[inline]
+        pub fn child_0(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(0usize)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        /// The number of typed child positions in this Seq.
+        #[inline]
+        pub fn num_children(&self) -> usize {
+            1usize
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct exp_exprView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> exp_exprView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
+            match self.variant_idx() {
+                0u8 => GoogleSheetsParserRuleKind::number,
+                1u8 => GoogleSheetsParserRuleKind::string,
+                2u8 => GoogleSheetsParserRuleKind::boolean,
+                3u8 => GoogleSheetsParserRuleKind::error_literal,
+                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
+                5u8 => GoogleSheetsParserRuleKind::cell_ref,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
+                16u8 => GoogleSheetsParserRuleKind::mul_expr,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
+                _ => GoogleSheetsParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(
+            &self,
+            i: usize,
+        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(i)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> exp_exprView<'p> {
+        ///Child at position 0 as a typed view.
+        #[inline]
+        pub fn child_0(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(0usize)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        /// The number of typed child positions in this Seq.
+        #[inline]
+        pub fn num_children(&self) -> usize {
+            1usize
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct lambda_callView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> lambda_callView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
+            match self.variant_idx() {
+                0u8 => GoogleSheetsParserRuleKind::number,
+                1u8 => GoogleSheetsParserRuleKind::string,
+                2u8 => GoogleSheetsParserRuleKind::boolean,
+                3u8 => GoogleSheetsParserRuleKind::error_literal,
+                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
+                5u8 => GoogleSheetsParserRuleKind::cell_ref,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
+                16u8 => GoogleSheetsParserRuleKind::mul_expr,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
+                _ => GoogleSheetsParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(
+            &self,
+            i: usize,
+        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(i)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> lambda_callView<'p> {
+        ///Child at position 0 as a typed view.
+        #[inline]
+        pub fn child_0(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(0usize)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        ///Child at position 1 as a typed view.
+        #[inline]
+        pub fn child_1(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(1usize)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        /// The number of typed child positions in this Seq.
+        #[inline]
+        pub fn num_children(&self) -> usize {
+            2usize
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct expressionView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> expressionView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
+            match self.variant_idx() {
+                0u8 => GoogleSheetsParserRuleKind::number,
+                1u8 => GoogleSheetsParserRuleKind::string,
+                2u8 => GoogleSheetsParserRuleKind::boolean,
+                3u8 => GoogleSheetsParserRuleKind::error_literal,
+                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
+                5u8 => GoogleSheetsParserRuleKind::cell_ref,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
+                16u8 => GoogleSheetsParserRuleKind::mul_expr,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
+                _ => GoogleSheetsParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(
+            &self,
+            i: usize,
+        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(i)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> expressionView<'p> {
+        /// The source text matched by this leaf rule.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct func_callView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> func_callView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
+            match self.variant_idx() {
+                0u8 => GoogleSheetsParserRuleKind::number,
+                1u8 => GoogleSheetsParserRuleKind::string,
+                2u8 => GoogleSheetsParserRuleKind::boolean,
+                3u8 => GoogleSheetsParserRuleKind::error_literal,
+                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
+                5u8 => GoogleSheetsParserRuleKind::cell_ref,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
+                16u8 => GoogleSheetsParserRuleKind::mul_expr,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
+                _ => GoogleSheetsParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(
+            &self,
+            i: usize,
+        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(i)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> func_callView<'p> {
+        ///Child at position 0 as a typed view.
+        #[inline]
+        pub fn child_0(&self) -> ::core::option::Option<func_openView<'p>> {
+            self.cursor.child(0usize).map(|c| func_openView::from_cursor(c, self.input))
+        }
+        ///The `func_open` child as a typed view.
+        #[inline]
+        pub fn func_open(&self) -> ::core::option::Option<func_openView<'p>> {
+            self.cursor.child(0usize).map(|c| func_openView::from_cursor(c, self.input))
+        }
+        ///Child at position 1 as a typed view.
+        #[inline]
+        pub fn child_1(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(1usize)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        /// The number of typed child positions in this Seq.
+        #[inline]
+        pub fn num_children(&self) -> usize {
+            2usize
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct let_argsView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> let_argsView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
+            match self.variant_idx() {
+                0u8 => GoogleSheetsParserRuleKind::number,
+                1u8 => GoogleSheetsParserRuleKind::string,
+                2u8 => GoogleSheetsParserRuleKind::boolean,
+                3u8 => GoogleSheetsParserRuleKind::error_literal,
+                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
+                5u8 => GoogleSheetsParserRuleKind::cell_ref,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
+                16u8 => GoogleSheetsParserRuleKind::mul_expr,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
+                _ => GoogleSheetsParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(
+            &self,
+            i: usize,
+        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(i)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> let_argsView<'p> {
+        ///Child at position 0 as a typed view.
+        #[inline]
+        pub fn child_0(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(0usize)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        ///Child at position 1 as a typed view.
+        #[inline]
+        pub fn child_1(&self) -> ::core::option::Option<expressionView<'p>> {
+            self.cursor.child(1usize).map(|c| expressionView::from_cursor(c, self.input))
+        }
+        ///The `expression` child as a typed view.
+        #[inline]
+        pub fn expression(&self) -> ::core::option::Option<expressionView<'p>> {
+            self.cursor.child(1usize).map(|c| expressionView::from_cursor(c, self.input))
+        }
+        /// The number of typed child positions in this Seq.
+        #[inline]
+        pub fn num_children(&self) -> usize {
+            2usize
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct let_callView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> let_callView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
+            match self.variant_idx() {
+                0u8 => GoogleSheetsParserRuleKind::number,
+                1u8 => GoogleSheetsParserRuleKind::string,
+                2u8 => GoogleSheetsParserRuleKind::boolean,
+                3u8 => GoogleSheetsParserRuleKind::error_literal,
+                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
+                5u8 => GoogleSheetsParserRuleKind::cell_ref,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
+                16u8 => GoogleSheetsParserRuleKind::mul_expr,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
+                _ => GoogleSheetsParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(
+            &self,
+            i: usize,
+        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(i)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> let_callView<'p> {
+        ///Child at position 0 as a typed view.
+        #[inline]
+        pub fn child_0(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(0usize)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        ///Child at position 1 as a typed view.
+        #[inline]
+        pub fn child_1(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(1usize)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        /// The number of typed child positions in this Seq.
+        #[inline]
+        pub fn num_children(&self) -> usize {
+            2usize
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct postfix_exprView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> postfix_exprView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> GoogleSheetsParserRuleKind {
+            match self.variant_idx() {
+                0u8 => GoogleSheetsParserRuleKind::number,
+                1u8 => GoogleSheetsParserRuleKind::string,
+                2u8 => GoogleSheetsParserRuleKind::boolean,
+                3u8 => GoogleSheetsParserRuleKind::error_literal,
+                4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
+                5u8 => GoogleSheetsParserRuleKind::cell_ref,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
+                16u8 => GoogleSheetsParserRuleKind::mul_expr,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
+                _ => GoogleSheetsParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = GoogleSheetsParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| GoogleSheetsParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(
+            &self,
+            i: usize,
+        ) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
+            self.cursor
+                .child(i)
+                .map(|c| GoogleSheetsParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> postfix_exprView<'p> {
         ///Child at position 0 as a typed view.
         #[inline]
         pub fn child_0(&self) -> ::core::option::Option<GoogleSheetsParserNodeView<'p>> {
@@ -12140,43 +12866,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -12224,19 +12943,13 @@ mod __googlesheetsparser_emit_impl {
         }
         ///Child at position 1 as a typed view.
         #[inline]
-        pub fn child_1(&self) -> ::core::option::Option<comparison_exprView<'p>> {
-            self.cursor
-                .child(1usize)
-                .map(|c| comparison_exprView::from_cursor(c, self.input))
+        pub fn child_1(&self) -> ::core::option::Option<expressionView<'p>> {
+            self.cursor.child(1usize).map(|c| expressionView::from_cursor(c, self.input))
         }
-        ///The `comparison_expr` child as a typed view.
+        ///The `expression` child as a typed view.
         #[inline]
-        pub fn comparison_expr(
-            &self,
-        ) -> ::core::option::Option<comparison_exprView<'p>> {
-            self.cursor
-                .child(1usize)
-                .map(|c| comparison_exprView::from_cursor(c, self.input))
+        pub fn expression(&self) -> ::core::option::Option<expressionView<'p>> {
+            self.cursor.child(1usize).map(|c| expressionView::from_cursor(c, self.input))
         }
         /// The number of typed child positions in this Seq.
         #[inline]
@@ -12265,43 +12978,36 @@ mod __googlesheetsparser_emit_impl {
         error_literal,
         sheet_prefix,
         cell_ref,
-        cell,
-        range_ref,
-        cell_or_range,
         identifier,
         compare_op,
-        comparison_expr,
-        concat_expr,
-        add_op,
-        add_expr,
-        mul_op,
-        mul_expr,
-        exp_expr,
         unary_prefix,
-        unary_expr,
-        postfix_expr,
-        primary,
-        paren_expr,
+        mul_op,
+        add_op,
+        cell,
         func_open,
+        range_ref,
+        cell_or_range,
+        comparison_expr,
+        mul_expr,
+        unary_expr,
+        paren_expr,
         arg,
         func_args,
-        func_call,
         let_binding,
-        let_args,
-        let_call,
         lambda_params,
-        lambda_call,
         array_row,
         array_rows,
         array_literal,
+        concat_expr,
+        add_expr,
+        exp_expr,
+        lambda_call,
+        expression,
+        func_call,
+        let_args,
+        let_call,
+        postfix_expr,
         formula,
-        error_literal_0,
-        error_literal_1,
-        compare_op_0,
-        compare_op_1,
-        primary_0,
-        primary_1,
-        primary_2,
         /// Fallback for records whose variant_idx is not a
         /// known rule- or sub-variant discriminator.
         Unknown,
@@ -12361,43 +13067,36 @@ mod __googlesheetsparser_emit_impl {
                 3u8 => GoogleSheetsParserRuleKind::error_literal,
                 4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
                 5u8 => GoogleSheetsParserRuleKind::cell_ref,
-                6u8 => GoogleSheetsParserRuleKind::cell,
-                7u8 => GoogleSheetsParserRuleKind::range_ref,
-                8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-                9u8 => GoogleSheetsParserRuleKind::identifier,
-                10u8 => GoogleSheetsParserRuleKind::compare_op,
-                11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-                12u8 => GoogleSheetsParserRuleKind::concat_expr,
-                13u8 => GoogleSheetsParserRuleKind::add_op,
-                14u8 => GoogleSheetsParserRuleKind::add_expr,
-                15u8 => GoogleSheetsParserRuleKind::mul_op,
+                6u8 => GoogleSheetsParserRuleKind::identifier,
+                7u8 => GoogleSheetsParserRuleKind::compare_op,
+                8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+                9u8 => GoogleSheetsParserRuleKind::mul_op,
+                10u8 => GoogleSheetsParserRuleKind::add_op,
+                11u8 => GoogleSheetsParserRuleKind::cell,
+                12u8 => GoogleSheetsParserRuleKind::func_open,
+                13u8 => GoogleSheetsParserRuleKind::range_ref,
+                14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+                15u8 => GoogleSheetsParserRuleKind::comparison_expr,
                 16u8 => GoogleSheetsParserRuleKind::mul_expr,
-                17u8 => GoogleSheetsParserRuleKind::exp_expr,
-                18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-                19u8 => GoogleSheetsParserRuleKind::unary_expr,
-                20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-                21u8 => GoogleSheetsParserRuleKind::primary,
-                22u8 => GoogleSheetsParserRuleKind::paren_expr,
-                23u8 => GoogleSheetsParserRuleKind::func_open,
-                24u8 => GoogleSheetsParserRuleKind::arg,
-                25u8 => GoogleSheetsParserRuleKind::func_args,
-                26u8 => GoogleSheetsParserRuleKind::func_call,
-                27u8 => GoogleSheetsParserRuleKind::let_binding,
-                28u8 => GoogleSheetsParserRuleKind::let_args,
-                29u8 => GoogleSheetsParserRuleKind::let_call,
-                30u8 => GoogleSheetsParserRuleKind::lambda_params,
-                31u8 => GoogleSheetsParserRuleKind::lambda_call,
-                32u8 => GoogleSheetsParserRuleKind::array_row,
-                33u8 => GoogleSheetsParserRuleKind::array_rows,
-                34u8 => GoogleSheetsParserRuleKind::array_literal,
-                35u8 => GoogleSheetsParserRuleKind::formula,
-                36u8 => GoogleSheetsParserRuleKind::error_literal_0,
-                37u8 => GoogleSheetsParserRuleKind::error_literal_1,
-                38u8 => GoogleSheetsParserRuleKind::compare_op_0,
-                39u8 => GoogleSheetsParserRuleKind::compare_op_1,
-                40u8 => GoogleSheetsParserRuleKind::primary_0,
-                41u8 => GoogleSheetsParserRuleKind::primary_1,
-                42u8 => GoogleSheetsParserRuleKind::primary_2,
+                17u8 => GoogleSheetsParserRuleKind::unary_expr,
+                18u8 => GoogleSheetsParserRuleKind::paren_expr,
+                19u8 => GoogleSheetsParserRuleKind::arg,
+                20u8 => GoogleSheetsParserRuleKind::func_args,
+                21u8 => GoogleSheetsParserRuleKind::let_binding,
+                22u8 => GoogleSheetsParserRuleKind::lambda_params,
+                23u8 => GoogleSheetsParserRuleKind::array_row,
+                24u8 => GoogleSheetsParserRuleKind::array_rows,
+                25u8 => GoogleSheetsParserRuleKind::array_literal,
+                26u8 => GoogleSheetsParserRuleKind::concat_expr,
+                27u8 => GoogleSheetsParserRuleKind::add_expr,
+                28u8 => GoogleSheetsParserRuleKind::exp_expr,
+                29u8 => GoogleSheetsParserRuleKind::lambda_call,
+                30u8 => GoogleSheetsParserRuleKind::expression,
+                31u8 => GoogleSheetsParserRuleKind::func_call,
+                32u8 => GoogleSheetsParserRuleKind::let_args,
+                33u8 => GoogleSheetsParserRuleKind::let_call,
+                35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+                36u8 => GoogleSheetsParserRuleKind::formula,
                 _ => GoogleSheetsParserRuleKind::Unknown,
             }
         }
@@ -12513,7 +13212,7 @@ mod __googlesheetsparser_emit_impl {
     pub struct GoogleSheetsParserBooleanProjection {
         /// Grammar-declared scalar field at packed-buffer offset
         #[doc = concat!("`", stringify!(0), "` (bytes).")]
-        pub field_0: bool,
+        pub field_0: (u32, u32),
     }
     impl GoogleSheetsParserBooleanProjection {
         /// Grammar-declared rule that projects into this
@@ -12533,7 +13232,7 @@ mod __googlesheetsparser_emit_impl {
         /// in the aggregate payload buffer; `0` when every
         /// field is a cursor handle.
         #[doc(hidden)]
-        pub const TOTAL_BYTES: u8 = 1;
+        pub const TOTAL_BYTES: u8 = 8;
     }
     /// AY-II.W0.d — grammar-derived direct-to-struct projection.
     ///
@@ -12554,7 +13253,7 @@ mod __googlesheetsparser_emit_impl {
     pub struct GoogleSheetsParserErrorLiteralProjection {
         /// Grammar-declared scalar field at packed-buffer offset
         #[doc = concat!("`", stringify!(0), "` (bytes).")]
-        pub field_0: u8,
+        pub field_0: (u32, u32),
     }
     impl GoogleSheetsParserErrorLiteralProjection {
         /// Grammar-declared rule that projects into this
@@ -12574,7 +13273,7 @@ mod __googlesheetsparser_emit_impl {
         /// in the aggregate payload buffer; `0` when every
         /// field is a cursor handle.
         #[doc(hidden)]
-        pub const TOTAL_BYTES: u8 = 1;
+        pub const TOTAL_BYTES: u8 = 8;
     }
     /// AY-II.W0.d — grammar-derived direct-to-struct projection.
     ///
@@ -12595,7 +13294,7 @@ mod __googlesheetsparser_emit_impl {
     pub struct GoogleSheetsParserSheetPrefixProjection {
         /// Grammar-declared scalar field at packed-buffer offset
         #[doc = concat!("`", stringify!(0), "` (bytes).")]
-        pub field_0: u8,
+        pub field_0: (u32, u32),
     }
     impl GoogleSheetsParserSheetPrefixProjection {
         /// Grammar-declared rule that projects into this
@@ -12615,7 +13314,7 @@ mod __googlesheetsparser_emit_impl {
         /// in the aggregate payload buffer; `0` when every
         /// field is a cursor handle.
         #[doc(hidden)]
-        pub const TOTAL_BYTES: u8 = 1;
+        pub const TOTAL_BYTES: u8 = 8;
     }
     /// AY-II.W0.d — grammar-derived direct-to-struct projection.
     ///
@@ -12677,7 +13376,7 @@ mod __googlesheetsparser_emit_impl {
     pub struct GoogleSheetsParserCompareOpProjection {
         /// Grammar-declared scalar field at packed-buffer offset
         #[doc = concat!("`", stringify!(0), "` (bytes).")]
-        pub field_0: u8,
+        pub field_0: (u32, u32),
     }
     impl GoogleSheetsParserCompareOpProjection {
         /// Grammar-declared rule that projects into this
@@ -12697,89 +13396,7 @@ mod __googlesheetsparser_emit_impl {
         /// in the aggregate payload buffer; `0` when every
         /// field is a cursor handle.
         #[doc(hidden)]
-        pub const TOTAL_BYTES: u8 = 1;
-    }
-    /// AY-II.W0.d — grammar-derived direct-to-struct projection.
-    ///
-    /// Emitted storage for a rule whose child sequence projects
-    /// onto a fixed-layout tuple. Packed admissions read every
-    /// field from `Tape::payload_bytes` at scalar offsets; rich
-    /// (resolver-backed) admissions mix scalar payload reads with
-    /// per-child cursor handles — the materialiser walks
-    /// `view.child(i)` at the admitted `CHILD_INDICES` to
-    /// populate cursor fields.
-    ///
-    /// `NAMED_BINDING` is `""` when the admission came from a
-    /// pure layout arm; non-empty when the grammar author spelt
-    /// a `-> Name` annotation. Consumers that want a semantic-
-    /// type hint (e.g. CSS `"Color"`) read this const.
-    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
-    #[doc(hidden)]
-    pub struct GoogleSheetsParserAddOpProjection {
-        /// Grammar-declared scalar field at packed-buffer offset
-        #[doc = concat!("`", stringify!(0), "` (bytes).")]
-        pub field_0: u8,
-    }
-    impl GoogleSheetsParserAddOpProjection {
-        /// Grammar-declared rule that projects into this
-        /// struct. Matches the `rule_name` entry in
-        /// `PROJECTION_DIRECT_TO_STRUCT`.
-        #[doc(hidden)]
-        pub const RULE_NAME: &'static str = "add_op";
-        /// Grammar-declared `-> Name` binding; empty string
-        /// when the admission came from a pure layout arm.
-        #[doc(hidden)]
-        pub const NAMED_BINDING: &'static str = "";
-        /// Number of fields (scalar + cursor) the layout pass
-        /// admitted for this projection.
-        #[doc(hidden)]
-        pub const FIELD_COUNT: usize = 1;
-        /// Total bytes the projection's packed portion occupies
-        /// in the aggregate payload buffer; `0` when every
-        /// field is a cursor handle.
-        #[doc(hidden)]
-        pub const TOTAL_BYTES: u8 = 1;
-    }
-    /// AY-II.W0.d — grammar-derived direct-to-struct projection.
-    ///
-    /// Emitted storage for a rule whose child sequence projects
-    /// onto a fixed-layout tuple. Packed admissions read every
-    /// field from `Tape::payload_bytes` at scalar offsets; rich
-    /// (resolver-backed) admissions mix scalar payload reads with
-    /// per-child cursor handles — the materialiser walks
-    /// `view.child(i)` at the admitted `CHILD_INDICES` to
-    /// populate cursor fields.
-    ///
-    /// `NAMED_BINDING` is `""` when the admission came from a
-    /// pure layout arm; non-empty when the grammar author spelt
-    /// a `-> Name` annotation. Consumers that want a semantic-
-    /// type hint (e.g. CSS `"Color"`) read this const.
-    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
-    #[doc(hidden)]
-    pub struct GoogleSheetsParserMulOpProjection {
-        /// Grammar-declared scalar field at packed-buffer offset
-        #[doc = concat!("`", stringify!(0), "` (bytes).")]
-        pub field_0: u8,
-    }
-    impl GoogleSheetsParserMulOpProjection {
-        /// Grammar-declared rule that projects into this
-        /// struct. Matches the `rule_name` entry in
-        /// `PROJECTION_DIRECT_TO_STRUCT`.
-        #[doc(hidden)]
-        pub const RULE_NAME: &'static str = "mul_op";
-        /// Grammar-declared `-> Name` binding; empty string
-        /// when the admission came from a pure layout arm.
-        #[doc(hidden)]
-        pub const NAMED_BINDING: &'static str = "";
-        /// Number of fields (scalar + cursor) the layout pass
-        /// admitted for this projection.
-        #[doc(hidden)]
-        pub const FIELD_COUNT: usize = 1;
-        /// Total bytes the projection's packed portion occupies
-        /// in the aggregate payload buffer; `0` when every
-        /// field is a cursor handle.
-        #[doc(hidden)]
-        pub const TOTAL_BYTES: u8 = 1;
+        pub const TOTAL_BYTES: u8 = 8;
     }
     /// AY-II.W0.d — grammar-derived direct-to-struct projection.
     ///
@@ -12800,7 +13417,7 @@ mod __googlesheetsparser_emit_impl {
     pub struct GoogleSheetsParserUnaryPrefixProjection {
         /// Grammar-declared scalar field at packed-buffer offset
         #[doc = concat!("`", stringify!(0), "` (bytes).")]
-        pub field_0: u8,
+        pub field_0: (u32, u32),
     }
     impl GoogleSheetsParserUnaryPrefixProjection {
         /// Grammar-declared rule that projects into this
@@ -12820,7 +13437,89 @@ mod __googlesheetsparser_emit_impl {
         /// in the aggregate payload buffer; `0` when every
         /// field is a cursor handle.
         #[doc(hidden)]
-        pub const TOTAL_BYTES: u8 = 1;
+        pub const TOTAL_BYTES: u8 = 8;
+    }
+    /// AY-II.W0.d — grammar-derived direct-to-struct projection.
+    ///
+    /// Emitted storage for a rule whose child sequence projects
+    /// onto a fixed-layout tuple. Packed admissions read every
+    /// field from `Tape::payload_bytes` at scalar offsets; rich
+    /// (resolver-backed) admissions mix scalar payload reads with
+    /// per-child cursor handles — the materialiser walks
+    /// `view.child(i)` at the admitted `CHILD_INDICES` to
+    /// populate cursor fields.
+    ///
+    /// `NAMED_BINDING` is `""` when the admission came from a
+    /// pure layout arm; non-empty when the grammar author spelt
+    /// a `-> Name` annotation. Consumers that want a semantic-
+    /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
+    #[doc(hidden)]
+    pub struct GoogleSheetsParserMulOpProjection {
+        /// Grammar-declared scalar field at packed-buffer offset
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
+        pub field_0: (u32, u32),
+    }
+    impl GoogleSheetsParserMulOpProjection {
+        /// Grammar-declared rule that projects into this
+        /// struct. Matches the `rule_name` entry in
+        /// `PROJECTION_DIRECT_TO_STRUCT`.
+        #[doc(hidden)]
+        pub const RULE_NAME: &'static str = "mul_op";
+        /// Grammar-declared `-> Name` binding; empty string
+        /// when the admission came from a pure layout arm.
+        #[doc(hidden)]
+        pub const NAMED_BINDING: &'static str = "";
+        /// Number of fields (scalar + cursor) the layout pass
+        /// admitted for this projection.
+        #[doc(hidden)]
+        pub const FIELD_COUNT: usize = 1;
+        /// Total bytes the projection's packed portion occupies
+        /// in the aggregate payload buffer; `0` when every
+        /// field is a cursor handle.
+        #[doc(hidden)]
+        pub const TOTAL_BYTES: u8 = 8;
+    }
+    /// AY-II.W0.d — grammar-derived direct-to-struct projection.
+    ///
+    /// Emitted storage for a rule whose child sequence projects
+    /// onto a fixed-layout tuple. Packed admissions read every
+    /// field from `Tape::payload_bytes` at scalar offsets; rich
+    /// (resolver-backed) admissions mix scalar payload reads with
+    /// per-child cursor handles — the materialiser walks
+    /// `view.child(i)` at the admitted `CHILD_INDICES` to
+    /// populate cursor fields.
+    ///
+    /// `NAMED_BINDING` is `""` when the admission came from a
+    /// pure layout arm; non-empty when the grammar author spelt
+    /// a `-> Name` annotation. Consumers that want a semantic-
+    /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
+    #[doc(hidden)]
+    pub struct GoogleSheetsParserAddOpProjection {
+        /// Grammar-declared scalar field at packed-buffer offset
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
+        pub field_0: (u32, u32),
+    }
+    impl GoogleSheetsParserAddOpProjection {
+        /// Grammar-declared rule that projects into this
+        /// struct. Matches the `rule_name` entry in
+        /// `PROJECTION_DIRECT_TO_STRUCT`.
+        #[doc(hidden)]
+        pub const RULE_NAME: &'static str = "add_op";
+        /// Grammar-declared `-> Name` binding; empty string
+        /// when the admission came from a pure layout arm.
+        #[doc(hidden)]
+        pub const NAMED_BINDING: &'static str = "";
+        /// Number of fields (scalar + cursor) the layout pass
+        /// admitted for this projection.
+        #[doc(hidden)]
+        pub const FIELD_COUNT: usize = 1;
+        /// Total bytes the projection's packed portion occupies
+        /// in the aggregate payload buffer; `0` when every
+        /// field is a cursor handle.
+        #[doc(hidden)]
+        pub const TOTAL_BYTES: u8 = 8;
     }
     /// AY-II.W0.d — grammar-derived direct-to-struct projection.
     ///
@@ -12879,9 +13578,9 @@ mod __googlesheetsparser_emit_impl {
         ("sheet_prefix", "GoogleSheetsParserSheetPrefixProjection"),
         ("cell_ref", "GoogleSheetsParserCellRefProjection"),
         ("compare_op", "GoogleSheetsParserCompareOpProjection"),
-        ("add_op", "GoogleSheetsParserAddOpProjection"),
-        ("mul_op", "GoogleSheetsParserMulOpProjection"),
         ("unary_prefix", "GoogleSheetsParserUnaryPrefixProjection"),
+        ("mul_op", "GoogleSheetsParserMulOpProjection"),
+        ("add_op", "GoogleSheetsParserAddOpProjection"),
         ("func_open", "GoogleSheetsParserFuncOpenProjection"),
     ];
     /// AY-II.W0.d — grammar-declared `-> Name` bindings, indexed in
@@ -12913,9 +13612,9 @@ mod __googlesheetsparser_emit_impl {
         "materialize_projection_sheet_prefix_GoogleSheetsParser",
         "materialize_projection_cell_ref_GoogleSheetsParser",
         "materialize_projection_compare_op_GoogleSheetsParser",
-        "materialize_projection_add_op_GoogleSheetsParser",
-        "materialize_projection_mul_op_GoogleSheetsParser",
         "materialize_projection_unary_prefix_GoogleSheetsParser",
+        "materialize_projection_mul_op_GoogleSheetsParser",
+        "materialize_projection_add_op_GoogleSheetsParser",
         "materialize_projection_func_open_GoogleSheetsParser",
     ];
     /// AY-II.W0.d — canonical evidence that every admission has a
@@ -12930,9 +13629,9 @@ mod __googlesheetsparser_emit_impl {
         "GoogleSheetsParserValue::sheet_prefix",
         "GoogleSheetsParserValue::cell_ref",
         "GoogleSheetsParserValue::compare_op",
-        "GoogleSheetsParserValue::add_op",
-        "GoogleSheetsParserValue::mul_op",
         "GoogleSheetsParserValue::unary_prefix",
+        "GoogleSheetsParserValue::mul_op",
+        "GoogleSheetsParserValue::add_op",
         "GoogleSheetsParserValue::func_open",
     ];
     /// AY-II.W0.d marker — structural evidence that the
@@ -13009,8 +13708,8 @@ mod __googlesheetsparser_emit_impl {
     /// hard gate without requiring a runtime compilation.
     #[doc(hidden)]
     #[inline(always)]
-    pub fn __grammar_projection_add_op() -> (&'static str, usize, &'static str) {
-        ("add_op", 1, "")
+    pub fn __grammar_projection_unary_prefix() -> (&'static str, usize, &'static str) {
+        ("unary_prefix", 1, "")
     }
     /// AY-II.W0.d marker — structural evidence that the
     /// layout pass + resolver admitted this rule for
@@ -13031,8 +13730,8 @@ mod __googlesheetsparser_emit_impl {
     /// hard gate without requiring a runtime compilation.
     #[doc(hidden)]
     #[inline(always)]
-    pub fn __grammar_projection_unary_prefix() -> (&'static str, usize, &'static str) {
-        ("unary_prefix", 1, "")
+    pub fn __grammar_projection_add_op() -> (&'static str, usize, &'static str) {
+        ("add_op", 1, "")
     }
     /// AY-II.W0.d marker — structural evidence that the
     /// layout pass + resolver admitted this rule for
@@ -13058,35 +13757,35 @@ mod __googlesheetsparser_emit_impl {
         error_literal(GoogleSheetsParserErrorLiteralProjection),
         sheet_prefix(GoogleSheetsParserSheetPrefixProjection),
         cell_ref(GoogleSheetsParserCellRefProjection),
-        cell(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
-        range_ref(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
-        cell_or_range(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
         identifier(&'p str),
         compare_op(GoogleSheetsParserCompareOpProjection),
-        comparison_expr(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
-        concat_expr(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
-        add_op(GoogleSheetsParserAddOpProjection),
-        add_expr(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
-        mul_op(GoogleSheetsParserMulOpProjection),
-        mul_expr(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
-        exp_expr(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
         unary_prefix(GoogleSheetsParserUnaryPrefixProjection),
-        unary_expr(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
-        postfix_expr(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
-        primary(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
-        paren_expr(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
+        mul_op(GoogleSheetsParserMulOpProjection),
+        add_op(GoogleSheetsParserAddOpProjection),
+        cell(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
         func_open(GoogleSheetsParserFuncOpenProjection),
+        range_ref(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
+        cell_or_range(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
+        comparison_expr(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
+        mul_expr(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
+        unary_expr(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
+        paren_expr(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
         arg(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
         func_args(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
-        func_call(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
         let_binding(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
-        let_args(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
-        let_call(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
         lambda_params(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
-        lambda_call(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
         array_row(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
         array_rows(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
         array_literal(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
+        concat_expr(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
+        add_expr(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
+        exp_expr(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
+        lambda_call(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
+        expression(GoogleSheetsParserNodeView<'p>),
+        func_call(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
+        let_args(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
+        let_call(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
+        postfix_expr(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
         formula(::std::vec::Vec<GoogleSheetsParserValue<'p>>),
         /// Fallback for records whose `variant_idx` is not a
         /// known rule discriminator (recovered records, stray
@@ -13127,36 +13826,36 @@ mod __googlesheetsparser_emit_impl {
             3u8 => GoogleSheetsParserRuleKind::error_literal,
             4u8 => GoogleSheetsParserRuleKind::sheet_prefix,
             5u8 => GoogleSheetsParserRuleKind::cell_ref,
-            6u8 => GoogleSheetsParserRuleKind::cell,
-            7u8 => GoogleSheetsParserRuleKind::range_ref,
-            8u8 => GoogleSheetsParserRuleKind::cell_or_range,
-            9u8 => GoogleSheetsParserRuleKind::identifier,
-            10u8 => GoogleSheetsParserRuleKind::compare_op,
-            11u8 => GoogleSheetsParserRuleKind::comparison_expr,
-            12u8 => GoogleSheetsParserRuleKind::concat_expr,
-            13u8 => GoogleSheetsParserRuleKind::add_op,
-            14u8 => GoogleSheetsParserRuleKind::add_expr,
-            15u8 => GoogleSheetsParserRuleKind::mul_op,
+            6u8 => GoogleSheetsParserRuleKind::identifier,
+            7u8 => GoogleSheetsParserRuleKind::compare_op,
+            8u8 => GoogleSheetsParserRuleKind::unary_prefix,
+            9u8 => GoogleSheetsParserRuleKind::mul_op,
+            10u8 => GoogleSheetsParserRuleKind::add_op,
+            11u8 => GoogleSheetsParserRuleKind::cell,
+            12u8 => GoogleSheetsParserRuleKind::func_open,
+            13u8 => GoogleSheetsParserRuleKind::range_ref,
+            14u8 => GoogleSheetsParserRuleKind::cell_or_range,
+            15u8 => GoogleSheetsParserRuleKind::comparison_expr,
             16u8 => GoogleSheetsParserRuleKind::mul_expr,
-            17u8 => GoogleSheetsParserRuleKind::exp_expr,
-            18u8 => GoogleSheetsParserRuleKind::unary_prefix,
-            19u8 => GoogleSheetsParserRuleKind::unary_expr,
-            20u8 => GoogleSheetsParserRuleKind::postfix_expr,
-            21u8 => GoogleSheetsParserRuleKind::primary,
-            22u8 => GoogleSheetsParserRuleKind::paren_expr,
-            23u8 => GoogleSheetsParserRuleKind::func_open,
-            24u8 => GoogleSheetsParserRuleKind::arg,
-            25u8 => GoogleSheetsParserRuleKind::func_args,
-            26u8 => GoogleSheetsParserRuleKind::func_call,
-            27u8 => GoogleSheetsParserRuleKind::let_binding,
-            28u8 => GoogleSheetsParserRuleKind::let_args,
-            29u8 => GoogleSheetsParserRuleKind::let_call,
-            30u8 => GoogleSheetsParserRuleKind::lambda_params,
-            31u8 => GoogleSheetsParserRuleKind::lambda_call,
-            32u8 => GoogleSheetsParserRuleKind::array_row,
-            33u8 => GoogleSheetsParserRuleKind::array_rows,
-            34u8 => GoogleSheetsParserRuleKind::array_literal,
-            35u8 => GoogleSheetsParserRuleKind::formula,
+            17u8 => GoogleSheetsParserRuleKind::unary_expr,
+            18u8 => GoogleSheetsParserRuleKind::paren_expr,
+            19u8 => GoogleSheetsParserRuleKind::arg,
+            20u8 => GoogleSheetsParserRuleKind::func_args,
+            21u8 => GoogleSheetsParserRuleKind::let_binding,
+            22u8 => GoogleSheetsParserRuleKind::lambda_params,
+            23u8 => GoogleSheetsParserRuleKind::array_row,
+            24u8 => GoogleSheetsParserRuleKind::array_rows,
+            25u8 => GoogleSheetsParserRuleKind::array_literal,
+            26u8 => GoogleSheetsParserRuleKind::concat_expr,
+            27u8 => GoogleSheetsParserRuleKind::add_expr,
+            28u8 => GoogleSheetsParserRuleKind::exp_expr,
+            29u8 => GoogleSheetsParserRuleKind::lambda_call,
+            30u8 => GoogleSheetsParserRuleKind::expression,
+            31u8 => GoogleSheetsParserRuleKind::func_call,
+            32u8 => GoogleSheetsParserRuleKind::let_args,
+            33u8 => GoogleSheetsParserRuleKind::let_call,
+            35u8 => GoogleSheetsParserRuleKind::postfix_expr,
+            36u8 => GoogleSheetsParserRuleKind::formula,
             _ => GoogleSheetsParserRuleKind::Unknown,
         }
     }
@@ -13333,6 +14032,74 @@ mod __googlesheetsparser_emit_impl {
                     });
                 GoogleSheetsParserValue::cell_ref(proj)
             }
+            GoogleSheetsParserRuleKind::identifier => {
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
+                GoogleSheetsParserValue::identifier(span)
+            }
+            GoogleSheetsParserRuleKind::compare_op => {
+                let proj = materialize_projection_compare_op_GoogleSheetsParser(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "compare_op", offset,
+                        );
+                    });
+                GoogleSheetsParserValue::compare_op(proj)
+            }
+            GoogleSheetsParserRuleKind::unary_prefix => {
+                let proj = materialize_projection_unary_prefix_GoogleSheetsParser(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "unary_prefix", offset,
+                        );
+                    });
+                GoogleSheetsParserValue::unary_prefix(proj)
+            }
+            GoogleSheetsParserRuleKind::mul_op => {
+                let proj = materialize_projection_mul_op_GoogleSheetsParser(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "mul_op", offset,
+                        );
+                    });
+                GoogleSheetsParserValue::mul_op(proj)
+            }
+            GoogleSheetsParserRuleKind::add_op => {
+                let proj = materialize_projection_add_op_GoogleSheetsParser(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "add_op", offset,
+                        );
+                    });
+                GoogleSheetsParserValue::add_op(proj)
+            }
             GoogleSheetsParserRuleKind::cell => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
                 let __cur = crate::runtime::tape::TapeCursor::new(
@@ -13348,6 +14115,22 @@ mod __googlesheetsparser_emit_impl {
                     );
                 }
                 GoogleSheetsParserValue::cell(children)
+            }
+            GoogleSheetsParserRuleKind::func_open => {
+                let proj = materialize_projection_func_open_GoogleSheetsParser(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "func_open", offset,
+                        );
+                    });
+                GoogleSheetsParserValue::func_open(proj)
             }
             GoogleSheetsParserRuleKind::range_ref => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
@@ -13381,26 +14164,6 @@ mod __googlesheetsparser_emit_impl {
                 }
                 GoogleSheetsParserValue::cell_or_range(children)
             }
-            GoogleSheetsParserRuleKind::identifier => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                GoogleSheetsParserValue::identifier(span)
-            }
-            GoogleSheetsParserRuleKind::compare_op => {
-                let proj = materialize_projection_compare_op_GoogleSheetsParser(
-                        output,
-                        input,
-                        offset,
-                    )
-                    .unwrap_or_else(|| {
-                        ::core::panic!(
-                            "AY-II.W0'.b: materializer for admitted rule `{}` \
-                                 returned None at frame offset {}; admission \
-                                 invariant violated",
-                            "compare_op", offset,
-                        );
-                    });
-                GoogleSheetsParserValue::compare_op(proj)
-            }
             GoogleSheetsParserRuleKind::comparison_expr => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
                 let __cur = crate::runtime::tape::TapeCursor::new(
@@ -13416,70 +14179,6 @@ mod __googlesheetsparser_emit_impl {
                     );
                 }
                 GoogleSheetsParserValue::comparison_expr(children)
-            }
-            GoogleSheetsParserRuleKind::concat_expr => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = crate::runtime::tape::TapeCursor::new(
-                    __tape,
-                    crate::runtime::tape::TapeOffset(offset),
-                );
-                for __child in __cur.children() {
-                    project_push_children_GoogleSheetsParser(
-                        output,
-                        input,
-                        __child.offset().0,
-                        &mut children,
-                    );
-                }
-                GoogleSheetsParserValue::concat_expr(children)
-            }
-            GoogleSheetsParserRuleKind::add_op => {
-                let proj = materialize_projection_add_op_GoogleSheetsParser(
-                        output,
-                        input,
-                        offset,
-                    )
-                    .unwrap_or_else(|| {
-                        ::core::panic!(
-                            "AY-II.W0'.b: materializer for admitted rule `{}` \
-                                 returned None at frame offset {}; admission \
-                                 invariant violated",
-                            "add_op", offset,
-                        );
-                    });
-                GoogleSheetsParserValue::add_op(proj)
-            }
-            GoogleSheetsParserRuleKind::add_expr => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = crate::runtime::tape::TapeCursor::new(
-                    __tape,
-                    crate::runtime::tape::TapeOffset(offset),
-                );
-                for __child in __cur.children() {
-                    project_push_children_GoogleSheetsParser(
-                        output,
-                        input,
-                        __child.offset().0,
-                        &mut children,
-                    );
-                }
-                GoogleSheetsParserValue::add_expr(children)
-            }
-            GoogleSheetsParserRuleKind::mul_op => {
-                let proj = materialize_projection_mul_op_GoogleSheetsParser(
-                        output,
-                        input,
-                        offset,
-                    )
-                    .unwrap_or_else(|| {
-                        ::core::panic!(
-                            "AY-II.W0'.b: materializer for admitted rule `{}` \
-                                 returned None at frame offset {}; admission \
-                                 invariant violated",
-                            "mul_op", offset,
-                        );
-                    });
-                GoogleSheetsParserValue::mul_op(proj)
             }
             GoogleSheetsParserRuleKind::mul_expr => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
@@ -13497,38 +14196,6 @@ mod __googlesheetsparser_emit_impl {
                 }
                 GoogleSheetsParserValue::mul_expr(children)
             }
-            GoogleSheetsParserRuleKind::exp_expr => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = crate::runtime::tape::TapeCursor::new(
-                    __tape,
-                    crate::runtime::tape::TapeOffset(offset),
-                );
-                for __child in __cur.children() {
-                    project_push_children_GoogleSheetsParser(
-                        output,
-                        input,
-                        __child.offset().0,
-                        &mut children,
-                    );
-                }
-                GoogleSheetsParserValue::exp_expr(children)
-            }
-            GoogleSheetsParserRuleKind::unary_prefix => {
-                let proj = materialize_projection_unary_prefix_GoogleSheetsParser(
-                        output,
-                        input,
-                        offset,
-                    )
-                    .unwrap_or_else(|| {
-                        ::core::panic!(
-                            "AY-II.W0'.b: materializer for admitted rule `{}` \
-                                 returned None at frame offset {}; admission \
-                                 invariant violated",
-                            "unary_prefix", offset,
-                        );
-                    });
-                GoogleSheetsParserValue::unary_prefix(proj)
-            }
             GoogleSheetsParserRuleKind::unary_expr => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
                 let __cur = crate::runtime::tape::TapeCursor::new(
@@ -13545,38 +14212,6 @@ mod __googlesheetsparser_emit_impl {
                 }
                 GoogleSheetsParserValue::unary_expr(children)
             }
-            GoogleSheetsParserRuleKind::postfix_expr => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = crate::runtime::tape::TapeCursor::new(
-                    __tape,
-                    crate::runtime::tape::TapeOffset(offset),
-                );
-                for __child in __cur.children() {
-                    project_push_children_GoogleSheetsParser(
-                        output,
-                        input,
-                        __child.offset().0,
-                        &mut children,
-                    );
-                }
-                GoogleSheetsParserValue::postfix_expr(children)
-            }
-            GoogleSheetsParserRuleKind::primary => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = crate::runtime::tape::TapeCursor::new(
-                    __tape,
-                    crate::runtime::tape::TapeOffset(offset),
-                );
-                for __child in __cur.children() {
-                    project_push_children_GoogleSheetsParser(
-                        output,
-                        input,
-                        __child.offset().0,
-                        &mut children,
-                    );
-                }
-                GoogleSheetsParserValue::primary(children)
-            }
             GoogleSheetsParserRuleKind::paren_expr => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
                 let __cur = crate::runtime::tape::TapeCursor::new(
@@ -13592,22 +14227,6 @@ mod __googlesheetsparser_emit_impl {
                     );
                 }
                 GoogleSheetsParserValue::paren_expr(children)
-            }
-            GoogleSheetsParserRuleKind::func_open => {
-                let proj = materialize_projection_func_open_GoogleSheetsParser(
-                        output,
-                        input,
-                        offset,
-                    )
-                    .unwrap_or_else(|| {
-                        ::core::panic!(
-                            "AY-II.W0'.b: materializer for admitted rule `{}` \
-                                 returned None at frame offset {}; admission \
-                                 invariant violated",
-                            "func_open", offset,
-                        );
-                    });
-                GoogleSheetsParserValue::func_open(proj)
             }
             GoogleSheetsParserRuleKind::arg => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
@@ -13641,22 +14260,6 @@ mod __googlesheetsparser_emit_impl {
                 }
                 GoogleSheetsParserValue::func_args(children)
             }
-            GoogleSheetsParserRuleKind::func_call => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = crate::runtime::tape::TapeCursor::new(
-                    __tape,
-                    crate::runtime::tape::TapeOffset(offset),
-                );
-                for __child in __cur.children() {
-                    project_push_children_GoogleSheetsParser(
-                        output,
-                        input,
-                        __child.offset().0,
-                        &mut children,
-                    );
-                }
-                GoogleSheetsParserValue::func_call(children)
-            }
             GoogleSheetsParserRuleKind::let_binding => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
                 let __cur = crate::runtime::tape::TapeCursor::new(
@@ -13673,38 +14276,6 @@ mod __googlesheetsparser_emit_impl {
                 }
                 GoogleSheetsParserValue::let_binding(children)
             }
-            GoogleSheetsParserRuleKind::let_args => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = crate::runtime::tape::TapeCursor::new(
-                    __tape,
-                    crate::runtime::tape::TapeOffset(offset),
-                );
-                for __child in __cur.children() {
-                    project_push_children_GoogleSheetsParser(
-                        output,
-                        input,
-                        __child.offset().0,
-                        &mut children,
-                    );
-                }
-                GoogleSheetsParserValue::let_args(children)
-            }
-            GoogleSheetsParserRuleKind::let_call => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = crate::runtime::tape::TapeCursor::new(
-                    __tape,
-                    crate::runtime::tape::TapeOffset(offset),
-                );
-                for __child in __cur.children() {
-                    project_push_children_GoogleSheetsParser(
-                        output,
-                        input,
-                        __child.offset().0,
-                        &mut children,
-                    );
-                }
-                GoogleSheetsParserValue::let_call(children)
-            }
             GoogleSheetsParserRuleKind::lambda_params => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
                 let __cur = crate::runtime::tape::TapeCursor::new(
@@ -13720,22 +14291,6 @@ mod __googlesheetsparser_emit_impl {
                     );
                 }
                 GoogleSheetsParserValue::lambda_params(children)
-            }
-            GoogleSheetsParserRuleKind::lambda_call => {
-                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = crate::runtime::tape::TapeCursor::new(
-                    __tape,
-                    crate::runtime::tape::TapeOffset(offset),
-                );
-                for __child in __cur.children() {
-                    project_push_children_GoogleSheetsParser(
-                        output,
-                        input,
-                        __child.offset().0,
-                        &mut children,
-                    );
-                }
-                GoogleSheetsParserValue::lambda_call(children)
             }
             GoogleSheetsParserRuleKind::array_row => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
@@ -13784,6 +14339,141 @@ mod __googlesheetsparser_emit_impl {
                     );
                 }
                 GoogleSheetsParserValue::array_literal(children)
+            }
+            GoogleSheetsParserRuleKind::concat_expr => {
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                GoogleSheetsParserValue::concat_expr(children)
+            }
+            GoogleSheetsParserRuleKind::add_expr => {
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                GoogleSheetsParserValue::add_expr(children)
+            }
+            GoogleSheetsParserRuleKind::exp_expr => {
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                GoogleSheetsParserValue::exp_expr(children)
+            }
+            GoogleSheetsParserRuleKind::lambda_call => {
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                GoogleSheetsParserValue::lambda_call(children)
+            }
+            GoogleSheetsParserRuleKind::expression => {
+                ::core::panic!(
+                    "AY-II.W0'.b: Cursor-shape variant projection not yet \
+                     available; tape record offset {}",
+                    offset,
+                );
+            }
+            GoogleSheetsParserRuleKind::func_call => {
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                GoogleSheetsParserValue::func_call(children)
+            }
+            GoogleSheetsParserRuleKind::let_args => {
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                GoogleSheetsParserValue::let_args(children)
+            }
+            GoogleSheetsParserRuleKind::let_call => {
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                GoogleSheetsParserValue::let_call(children)
+            }
+            GoogleSheetsParserRuleKind::postfix_expr => {
+                let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_GoogleSheetsParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                GoogleSheetsParserValue::postfix_expr(children)
             }
             GoogleSheetsParserRuleKind::formula => {
                 let mut children: ::std::vec::Vec<GoogleSheetsParserValue<'p>> = ::std::vec::Vec::new();
@@ -13897,13 +14587,12 @@ mod __googlesheetsparser_emit_impl {
             match seg {
                 crate::runtime::PathSegment::Field(key) => {
                     match cur.rule_kind() {
-                        GoogleSheetsParserRuleKind::concat_expr
-                        | GoogleSheetsParserRuleKind::add_expr
-                        | GoogleSheetsParserRuleKind::mul_expr
-                        | GoogleSheetsParserRuleKind::exp_expr
+                        GoogleSheetsParserRuleKind::mul_expr
                         | GoogleSheetsParserRuleKind::unary_expr
-                        | GoogleSheetsParserRuleKind::postfix_expr
-                        | GoogleSheetsParserRuleKind::primary => {
+                        | GoogleSheetsParserRuleKind::concat_expr
+                        | GoogleSheetsParserRuleKind::add_expr
+                        | GoogleSheetsParserRuleKind::exp_expr
+                        | GoogleSheetsParserRuleKind::postfix_expr => {
                             let parent = cur.cursor();
                             let (_, parent_end) = parent.span();
                             let mut iter = parent.bounded_lookahead(parent_end);
@@ -13946,25 +14635,25 @@ mod __googlesheetsparser_emit_impl {
                         }
                         GoogleSheetsParserRuleKind::error_literal
                         | GoogleSheetsParserRuleKind::sheet_prefix
+                        | GoogleSheetsParserRuleKind::compare_op
+                        | GoogleSheetsParserRuleKind::unary_prefix
+                        | GoogleSheetsParserRuleKind::mul_op
+                        | GoogleSheetsParserRuleKind::add_op
                         | GoogleSheetsParserRuleKind::cell
+                        | GoogleSheetsParserRuleKind::func_open
                         | GoogleSheetsParserRuleKind::range_ref
                         | GoogleSheetsParserRuleKind::cell_or_range
-                        | GoogleSheetsParserRuleKind::compare_op
                         | GoogleSheetsParserRuleKind::comparison_expr
-                        | GoogleSheetsParserRuleKind::add_op
-                        | GoogleSheetsParserRuleKind::mul_op
-                        | GoogleSheetsParserRuleKind::unary_prefix
                         | GoogleSheetsParserRuleKind::paren_expr
-                        | GoogleSheetsParserRuleKind::func_open
                         | GoogleSheetsParserRuleKind::arg
                         | GoogleSheetsParserRuleKind::func_args
-                        | GoogleSheetsParserRuleKind::func_call
                         | GoogleSheetsParserRuleKind::let_binding
-                        | GoogleSheetsParserRuleKind::let_args
                         | GoogleSheetsParserRuleKind::lambda_params
                         | GoogleSheetsParserRuleKind::array_row
                         | GoogleSheetsParserRuleKind::array_rows
                         | GoogleSheetsParserRuleKind::array_literal
+                        | GoogleSheetsParserRuleKind::func_call
+                        | GoogleSheetsParserRuleKind::let_args
                         | GoogleSheetsParserRuleKind::formula => {
                             let parent = cur.cursor();
                             let (_, parent_end) = parent.span();
@@ -14046,20 +14735,19 @@ mod __googlesheetsparser_emit_impl {
                     match cur.rule_kind() {
                         GoogleSheetsParserRuleKind::compare_op
                         | GoogleSheetsParserRuleKind::comparison_expr
-                        | GoogleSheetsParserRuleKind::concat_expr
-                        | GoogleSheetsParserRuleKind::add_expr
                         | GoogleSheetsParserRuleKind::mul_expr
-                        | GoogleSheetsParserRuleKind::exp_expr
                         | GoogleSheetsParserRuleKind::unary_expr
-                        | GoogleSheetsParserRuleKind::postfix_expr
-                        | GoogleSheetsParserRuleKind::primary
                         | GoogleSheetsParserRuleKind::arg
                         | GoogleSheetsParserRuleKind::func_args
                         | GoogleSheetsParserRuleKind::let_binding
-                        | GoogleSheetsParserRuleKind::let_args
                         | GoogleSheetsParserRuleKind::lambda_params
                         | GoogleSheetsParserRuleKind::array_row
-                        | GoogleSheetsParserRuleKind::array_rows => {
+                        | GoogleSheetsParserRuleKind::array_rows
+                        | GoogleSheetsParserRuleKind::concat_expr
+                        | GoogleSheetsParserRuleKind::add_expr
+                        | GoogleSheetsParserRuleKind::exp_expr
+                        | GoogleSheetsParserRuleKind::let_args
+                        | GoogleSheetsParserRuleKind::postfix_expr => {
                             let parent = cur.cursor();
                             let (_, parent_end) = parent.span();
                             let scan = parent.scan_structural_bounded(parent_end);
@@ -14197,14 +14885,9 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::option::Option<GoogleSheetsParserBooleanProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output;
-        let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
-        let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
-        let field_0: bool = {
-            let __b = *__bytes.get(0)?;
-            let _ = 1;
-            __b != 0
-        };
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(GoogleSheetsParserBooleanProjection {
             field_0,
         })
@@ -14231,14 +14914,9 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::option::Option<GoogleSheetsParserErrorLiteralProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output;
-        let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
-        let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
-        let field_0: u8 = {
-            let __b = *__bytes.get(0)?;
-            let _ = 1;
-            __b as u8
-        };
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(GoogleSheetsParserErrorLiteralProjection {
             field_0,
         })
@@ -14265,14 +14943,9 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::option::Option<GoogleSheetsParserSheetPrefixProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output;
-        let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
-        let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
-        let field_0: u8 = {
-            let __b = *__bytes.get(0)?;
-            let _ = 1;
-            __b as u8
-        };
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(GoogleSheetsParserSheetPrefixProjection {
             field_0,
         })
@@ -14328,83 +15001,10 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::option::Option<GoogleSheetsParserCompareOpProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output;
-        let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
-        let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
-        let field_0: u8 = {
-            let __b = *__bytes.get(0)?;
-            let _ = 1;
-            __b as u8
-        };
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(GoogleSheetsParserCompareOpProjection {
-            field_0,
-        })
-    }
-    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
-    /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
-    /// slab and constructs the matching projection struct;
-    /// returns `None` when the slab's frame is absent or the
-    /// tape's aggregate buffer is too short.
-    ///
-    /// Routed from `project_frame_<Grammar>` per admission.
-    /// `#[inline]` so LLVM folds the body into the dispatcher at
-    /// monomorphisation time. Emitted 1:1 per
-    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
-    /// totality is admission : materialiser : consumer at
-    /// 1:1:1 per grammar with runtime call-count truth.
-    #[inline]
-    #[doc(hidden)]
-    pub fn materialize_projection_add_op_GoogleSheetsParser<'p>(
-        output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
-        input: &'p str,
-        offset: u32,
-    ) -> ::core::option::Option<GoogleSheetsParserAddOpProjection> {
-        let _ = input;
-        let frame = output.frame(offset)?;
-        let __tape = output;
-        let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
-        let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
-        let field_0: u8 = {
-            let __b = *__bytes.get(0)?;
-            let _ = 1;
-            __b as u8
-        };
-        ::core::option::Option::Some(GoogleSheetsParserAddOpProjection {
-            field_0,
-        })
-    }
-    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
-    /// helper. Reads the admitted rule's frame from the
-    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
-    /// slab and constructs the matching projection struct;
-    /// returns `None` when the slab's frame is absent or the
-    /// tape's aggregate buffer is too short.
-    ///
-    /// Routed from `project_frame_<Grammar>` per admission.
-    /// `#[inline]` so LLVM folds the body into the dispatcher at
-    /// monomorphisation time. Emitted 1:1 per
-    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
-    /// totality is admission : materialiser : consumer at
-    /// 1:1:1 per grammar with runtime call-count truth.
-    #[inline]
-    #[doc(hidden)]
-    pub fn materialize_projection_mul_op_GoogleSheetsParser<'p>(
-        output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
-        input: &'p str,
-        offset: u32,
-    ) -> ::core::option::Option<GoogleSheetsParserMulOpProjection> {
-        let _ = input;
-        let frame = output.frame(offset)?;
-        let __tape = output;
-        let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
-        let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
-        let field_0: u8 = {
-            let __b = *__bytes.get(0)?;
-            let _ = 1;
-            __b as u8
-        };
-        ::core::option::Option::Some(GoogleSheetsParserMulOpProjection {
             field_0,
         })
     }
@@ -14430,15 +15030,68 @@ mod __googlesheetsparser_emit_impl {
     ) -> ::core::option::Option<GoogleSheetsParserUnaryPrefixProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output;
-        let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
-        let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
-        let field_0: u8 = {
-            let __b = *__bytes.get(0)?;
-            let _ = 1;
-            __b as u8
-        };
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(GoogleSheetsParserUnaryPrefixProjection {
+            field_0,
+        })
+    }
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
+    ///
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
+    #[inline]
+    #[doc(hidden)]
+    pub fn materialize_projection_mul_op_GoogleSheetsParser<'p>(
+        output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
+        input: &'p str,
+        offset: u32,
+    ) -> ::core::option::Option<GoogleSheetsParserMulOpProjection> {
+        let _ = input;
+        let frame = output.frame(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
+        ::core::option::Option::Some(GoogleSheetsParserMulOpProjection {
+            field_0,
+        })
+    }
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
+    ///
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
+    #[inline]
+    #[doc(hidden)]
+    pub fn materialize_projection_add_op_GoogleSheetsParser<'p>(
+        output: &crate::runtime::tape::Tape<GoogleSheetsParser>,
+        input: &'p str,
+        offset: u32,
+    ) -> ::core::option::Option<GoogleSheetsParserAddOpProjection> {
+        let _ = input;
+        let frame = output.frame(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
+        ::core::option::Option::Some(GoogleSheetsParserAddOpProjection {
             field_0,
         })
     }
@@ -15364,6 +16017,356 @@ mod __googlesheetsparser_emit_impl {
                 Some(__builder.finish())
             })
         }
+        fn __identifier_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    let __start = state.offset;
+                    if ::parse_that::scan_ident(
+                            state,
+                            &::parse_that::DEFAULT_IDENT_CONFIG,
+                        )
+                        .is_none()
+                    {
+                        return false;
+                    }
+                    let __matched = &state.src[__start..state.offset];
+                    if !__matched.is_empty() {
+                        __builder.text(__matched);
+                    }
+                };
+                true
+            }
+        }
+        pub fn identifier_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__identifier_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __compare_op_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    if !{
+                        let __pretty_cp15 = state.offset;
+                        let __pretty_bcp16 = __builder.checkpoint();
+                        let __ok = (|| -> bool {
+                            {
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b'<')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b'<');
+                                };
+                                {
+                                    let __byte = match state.src_bytes.get(state.offset) {
+                                        Some(&b) => b,
+                                        None => return false,
+                                    };
+                                    match __byte {
+                                        b'>' => {
+                                            {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b'>')
+                                                {
+                                                    return false;
+                                                }
+                                                state.offset += 1;
+                                                __builder.char(b'>');
+                                            };
+                                        }
+                                        b'=' => {
+                                            {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b'=')
+                                                {
+                                                    return false;
+                                                }
+                                                state.offset += 1;
+                                                __builder.char(b'=');
+                                            };
+                                        }
+                                        _ => {
+                                            return false;
+                                        }
+                                    }
+                                };
+                            };
+                            true
+                        })();
+                        if !__ok {
+                            state.offset = __pretty_cp15;
+                            __builder.restore(__pretty_bcp16);
+                        }
+                        __ok
+                    } {
+                        {
+                            if !{
+                                let __pretty_cp14 = state.offset;
+                                let __ok = (|| -> bool {
+                                    {
+                                        let __s = ">=";
+                                        let __bytes = __s.as_bytes();
+                                        let __slc = match state.src_bytes.get(state.offset..) {
+                                            Some(s) if s.len() >= 2usize => s,
+                                            _ => return false,
+                                        };
+                                        if &__slc[..2usize] != __bytes {
+                                            return false;
+                                        }
+                                        __builder
+                                            .text(&state.src[state.offset..state.offset + 2usize]);
+                                        state.offset += 2usize;
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp14;
+                                }
+                                __ok
+                            } {
+                                {
+                                    if !{
+                                        let __pretty_cp13 = state.offset;
+                                        let __ok = (|| -> bool {
+                                            {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b'<')
+                                                {
+                                                    return false;
+                                                }
+                                                state.offset += 1;
+                                                __builder.char(b'<');
+                                            };
+                                            true
+                                        })();
+                                        if !__ok {
+                                            state.offset = __pretty_cp13;
+                                        }
+                                        __ok
+                                    } {
+                                        {
+                                            if !{
+                                                let __pretty_cp12 = state.offset;
+                                                let __ok = (|| -> bool {
+                                                    {
+                                                        if state.src_bytes.get(state.offset).copied() != Some(b'>')
+                                                        {
+                                                            return false;
+                                                        }
+                                                        state.offset += 1;
+                                                        __builder.char(b'>');
+                                                    };
+                                                    true
+                                                })();
+                                                if !__ok {
+                                                    state.offset = __pretty_cp12;
+                                                }
+                                                __ok
+                                            } {
+                                                {
+                                                    if !{
+                                                        let __pretty_cp11 = state.offset;
+                                                        let __ok = (|| -> bool {
+                                                            {
+                                                                if state.src_bytes.get(state.offset).copied() != Some(b'=')
+                                                                {
+                                                                    return false;
+                                                                }
+                                                                state.offset += 1;
+                                                                __builder.char(b'=');
+                                                            };
+                                                            true
+                                                        })();
+                                                        if !__ok {
+                                                            state.offset = __pretty_cp11;
+                                                        }
+                                                        __ok
+                                                    } {
+                                                        return false;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+                true
+            }
+        }
+        pub fn compare_op_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__compare_op_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __unary_prefix_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    let __byte = match state.src_bytes.get(state.offset) {
+                        Some(&b) => b,
+                        None => return false,
+                    };
+                    match __byte {
+                        b'+' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'+')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'+');
+                            };
+                        }
+                        b'-' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'-')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'-');
+                            };
+                        }
+                        _ => {
+                            return false;
+                        }
+                    }
+                };
+                true
+            }
+        }
+        pub fn unary_prefix_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__unary_prefix_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __mul_op_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    let __byte = match state.src_bytes.get(state.offset) {
+                        Some(&b) => b,
+                        None => return false,
+                    };
+                    match __byte {
+                        b'*' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'*');
+                            };
+                        }
+                        b'/' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'/');
+                            };
+                        }
+                        _ => {
+                            return false;
+                        }
+                    }
+                };
+                true
+            }
+        }
+        pub fn mul_op_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__mul_op_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __add_op_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    let __byte = match state.src_bytes.get(state.offset) {
+                        Some(&b) => b,
+                        None => return false,
+                    };
+                    match __byte {
+                        b'+' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'+')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'+');
+                            };
+                        }
+                        b'-' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'-')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'-');
+                            };
+                        }
+                        _ => {
+                            return false;
+                        }
+                    }
+                };
+                true
+            }
+        }
+        pub fn add_op_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__add_op_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
         fn __cell_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -15372,8 +16375,8 @@ mod __googlesheetsparser_emit_impl {
                 {
                     {
                         let _ = {
-                            let __pretty_cp11 = state.offset;
-                            let __pretty_bcp12 = __builder.checkpoint();
+                            let __pretty_cp17 = state.offset;
+                            let __pretty_bcp18 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 if !Self::__sheet_prefix_prettify(state, __builder) {
                                     return false;
@@ -15381,8 +16384,8 @@ mod __googlesheetsparser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp11;
-                                __builder.restore(__pretty_bcp12);
+                                state.offset = __pretty_cp17;
+                                __builder.restore(__pretty_bcp18);
                             }
                             __ok
                         };
@@ -15479,6 +16482,49 @@ mod __googlesheetsparser_emit_impl {
                 Some(__builder.finish())
             })
         }
+        fn __func_open_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    {
+                        let __start = state.offset;
+                        if ::parse_that::scan_ident(
+                                state,
+                                &::parse_that::DEFAULT_IDENT_CONFIG,
+                            )
+                            .is_none()
+                        {
+                            return false;
+                        }
+                        let __matched = &state.src[__start..state.offset];
+                        if !__matched.is_empty() {
+                            __builder.text(__matched);
+                        }
+                    };
+                    {
+                        if state.src_bytes.get(state.offset).copied() != Some(b'(') {
+                            return false;
+                        }
+                        state.offset += 1;
+                        __builder.char(b'(');
+                    };
+                };
+                true
+            }
+        }
+        pub fn func_open_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__func_open_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
         fn __range_ref_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -15487,8 +16533,8 @@ mod __googlesheetsparser_emit_impl {
                 {
                     {
                         let _ = {
-                            let __pretty_cp13 = state.offset;
-                            let __pretty_bcp14 = __builder.checkpoint();
+                            let __pretty_cp19 = state.offset;
+                            let __pretty_bcp20 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 if !Self::__sheet_prefix_prettify(state, __builder) {
                                     return false;
@@ -15496,8 +16542,8 @@ mod __googlesheetsparser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp13;
-                                __builder.restore(__pretty_bcp14);
+                                state.offset = __pretty_cp19;
+                                __builder.restore(__pretty_bcp20);
                             }
                             __ok
                         };
@@ -15505,7 +16551,7 @@ mod __googlesheetsparser_emit_impl {
                     };
                     {
                         if !{
-                            let __pretty_cp17 = state.offset;
+                            let __pretty_cp23 = state.offset;
                             let __ok = (|| -> bool {
                                 {
                                     let __start = state.offset;
@@ -15586,13 +16632,13 @@ mod __googlesheetsparser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp17;
+                                state.offset = __pretty_cp23;
                             }
                             __ok
                         } {
                             {
                                 if !{
-                                    let __pretty_cp16 = state.offset;
+                                    let __pretty_cp22 = state.offset;
                                     let __ok = (|| -> bool {
                                         {
                                             let __start = state.offset;
@@ -15654,13 +16700,13 @@ mod __googlesheetsparser_emit_impl {
                                         true
                                     })();
                                     if !__ok {
-                                        state.offset = __pretty_cp16;
+                                        state.offset = __pretty_cp22;
                                     }
                                     __ok
                                 } {
                                     {
                                         if !{
-                                            let __pretty_cp15 = state.offset;
+                                            let __pretty_cp21 = state.offset;
                                             let __ok = (|| -> bool {
                                                 {
                                                     let __start = state.offset;
@@ -15709,7 +16755,7 @@ mod __googlesheetsparser_emit_impl {
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp15;
+                                                state.offset = __pretty_cp21;
                                             }
                                             __ok
                                         } {
@@ -15729,7 +16775,7 @@ mod __googlesheetsparser_emit_impl {
                     };
                     {
                         if !{
-                            let __pretty_cp20 = state.offset;
+                            let __pretty_cp26 = state.offset;
                             let __ok = (|| -> bool {
                                 {
                                     let __start = state.offset;
@@ -15810,13 +16856,13 @@ mod __googlesheetsparser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp20;
+                                state.offset = __pretty_cp26;
                             }
                             __ok
                         } {
                             {
                                 if !{
-                                    let __pretty_cp19 = state.offset;
+                                    let __pretty_cp25 = state.offset;
                                     let __ok = (|| -> bool {
                                         {
                                             let __start = state.offset;
@@ -15878,13 +16924,13 @@ mod __googlesheetsparser_emit_impl {
                                         true
                                     })();
                                     if !__ok {
-                                        state.offset = __pretty_cp19;
+                                        state.offset = __pretty_cp25;
                                     }
                                     __ok
                                 } {
                                     {
                                         if !{
-                                            let __pretty_cp18 = state.offset;
+                                            let __pretty_cp24 = state.offset;
                                             let __ok = (|| -> bool {
                                                 {
                                                     let __start = state.offset;
@@ -15933,7 +16979,7 @@ mod __googlesheetsparser_emit_impl {
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp18;
+                                                state.offset = __pretty_cp24;
                                             }
                                             __ok
                                         } {
@@ -15966,8 +17012,8 @@ mod __googlesheetsparser_emit_impl {
             {
                 {
                     if !{
-                        let __pretty_cp21 = state.offset;
-                        let __pretty_bcp22 = __builder.checkpoint();
+                        let __pretty_cp27 = state.offset;
+                        let __pretty_bcp28 = __builder.checkpoint();
                         let __ok = (|| -> bool {
                             if !Self::__range_ref_prettify(state, __builder) {
                                 return false;
@@ -15975,8 +17021,8 @@ mod __googlesheetsparser_emit_impl {
                             true
                         })();
                         if !__ok {
-                            state.offset = __pretty_cp21;
-                            __builder.restore(__pretty_bcp22);
+                            state.offset = __pretty_cp27;
+                            __builder.restore(__pretty_bcp28);
                         }
                         __ok
                     } {
@@ -15994,241 +17040,6 @@ mod __googlesheetsparser_emit_impl {
                     state.src.len().saturating_mul(2),
                 );
                 if !Self::__cell_or_range_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __identifier_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    let __start = state.offset;
-                    if {
-                        let __start = state.offset;
-                        let __result: Option<()> = (|| {
-                            {
-                                let __b = *state.src_bytes.get(state.offset)?;
-                                if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                    || (__b >= b'a' && __b <= b'z')))
-                                {
-                                    return None;
-                                }
-                                state.offset += 1;
-                            }
-                            {
-                                let __end = state.src_bytes.len();
-                                let mut __pos = state.offset;
-                                while __pos < __end {
-                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                    if (__b == b'.' || (__b >= b'0' && __b <= b'9')
-                                        || (__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                        || (__b >= b'a' && __b <= b'z'))
-                                    {
-                                        __pos += 1;
-                                    } else {
-                                        break;
-                                    }
-                                }
-                                state.offset = __pos;
-                            }
-                            Some(())
-                        })();
-                        if __result.is_some() && state.offset > __start {
-                            Some(
-                                ::parse_that::Span::new(__start, state.offset, state.src),
-                            )
-                        } else {
-                            state.offset = __start;
-                            None
-                        }
-                    }
-                        .is_none()
-                    {
-                        return false;
-                    }
-                    let __matched = &state.src[__start..state.offset];
-                    if !__matched.is_empty() {
-                        __builder.text(__matched);
-                    }
-                };
-                true
-            }
-        }
-        pub fn identifier_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__identifier_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __compare_op_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    if !{
-                        let __pretty_cp27 = state.offset;
-                        let __pretty_bcp28 = __builder.checkpoint();
-                        let __ok = (|| -> bool {
-                            {
-                                {
-                                    if state.src_bytes.get(state.offset).copied() != Some(b'<')
-                                    {
-                                        return false;
-                                    }
-                                    state.offset += 1;
-                                    __builder.char(b'<');
-                                };
-                                {
-                                    let __byte = match state.src_bytes.get(state.offset) {
-                                        Some(&b) => b,
-                                        None => return false,
-                                    };
-                                    match __byte {
-                                        b'>' => {
-                                            {
-                                                if state.src_bytes.get(state.offset).copied() != Some(b'>')
-                                                {
-                                                    return false;
-                                                }
-                                                state.offset += 1;
-                                                __builder.char(b'>');
-                                            };
-                                        }
-                                        b'=' => {
-                                            {
-                                                if state.src_bytes.get(state.offset).copied() != Some(b'=')
-                                                {
-                                                    return false;
-                                                }
-                                                state.offset += 1;
-                                                __builder.char(b'=');
-                                            };
-                                        }
-                                        _ => {
-                                            return false;
-                                        }
-                                    }
-                                };
-                            };
-                            true
-                        })();
-                        if !__ok {
-                            state.offset = __pretty_cp27;
-                            __builder.restore(__pretty_bcp28);
-                        }
-                        __ok
-                    } {
-                        {
-                            if !{
-                                let __pretty_cp26 = state.offset;
-                                let __ok = (|| -> bool {
-                                    {
-                                        let __s = ">=";
-                                        let __bytes = __s.as_bytes();
-                                        let __slc = match state.src_bytes.get(state.offset..) {
-                                            Some(s) if s.len() >= 2usize => s,
-                                            _ => return false,
-                                        };
-                                        if &__slc[..2usize] != __bytes {
-                                            return false;
-                                        }
-                                        __builder
-                                            .text(&state.src[state.offset..state.offset + 2usize]);
-                                        state.offset += 2usize;
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp26;
-                                }
-                                __ok
-                            } {
-                                {
-                                    if !{
-                                        let __pretty_cp25 = state.offset;
-                                        let __ok = (|| -> bool {
-                                            {
-                                                if state.src_bytes.get(state.offset).copied() != Some(b'<')
-                                                {
-                                                    return false;
-                                                }
-                                                state.offset += 1;
-                                                __builder.char(b'<');
-                                            };
-                                            true
-                                        })();
-                                        if !__ok {
-                                            state.offset = __pretty_cp25;
-                                        }
-                                        __ok
-                                    } {
-                                        {
-                                            if !{
-                                                let __pretty_cp24 = state.offset;
-                                                let __ok = (|| -> bool {
-                                                    {
-                                                        if state.src_bytes.get(state.offset).copied() != Some(b'>')
-                                                        {
-                                                            return false;
-                                                        }
-                                                        state.offset += 1;
-                                                        __builder.char(b'>');
-                                                    };
-                                                    true
-                                                })();
-                                                if !__ok {
-                                                    state.offset = __pretty_cp24;
-                                                }
-                                                __ok
-                                            } {
-                                                {
-                                                    if !{
-                                                        let __pretty_cp23 = state.offset;
-                                                        let __ok = (|| -> bool {
-                                                            {
-                                                                if state.src_bytes.get(state.offset).copied() != Some(b'=')
-                                                                {
-                                                                    return false;
-                                                                }
-                                                                state.offset += 1;
-                                                                __builder.char(b'=');
-                                                            };
-                                                            true
-                                                        })();
-                                                        if !__ok {
-                                                            state.offset = __pretty_cp23;
-                                                        }
-                                                        __ok
-                                                    } {
-                                                        return false;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                };
-                true
-            }
-        }
-        pub fn compare_op_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__compare_op_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
@@ -16363,7 +17174,7 @@ mod __googlesheetsparser_emit_impl {
                 Some(__builder.finish())
             })
         }
-        fn __concat_expr_prettify<'a>(
+        fn __mul_expr_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -16378,7 +17189,7 @@ mod __googlesheetsparser_emit_impl {
                                     let __ows45 = state.offset;
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __builder.text_inline_ws(&state.src[__ows45..state.offset]);
-                                    if !Self::__add_expr_prettify(state, __builder) {
+                                    if !Self::__exp_expr_prettify(state, __builder) {
                                         return false;
                                     }
                                     let __ows46 = state.offset;
@@ -16397,383 +17208,35 @@ mod __googlesheetsparser_emit_impl {
                         }
                     };
                     {
-                        let mut __rep_count58 = 0usize;
-                        while __rep_count58 < 4294967295 {
-                            let __rep_cp59 = state.offset;
+                        let mut __rep_count59 = 0usize;
+                        while __rep_count59 < 4294967295 {
+                            let __rep_cp60 = state.offset;
                             if !{
-                                let __pretty_cp56 = state.offset;
-                                let __pretty_bcp57 = __builder.checkpoint();
-                                let __ok = (|| -> bool {
-                                    {
-                                        {
-                                            let __ows49 = state.offset;
-                                            ::parse_that::trim_leading_whitespace_mut(state);
-                                            let __ows50 = state.offset;
-                                            {
-                                                if state.src_bytes.get(state.offset).copied() != Some(b'&')
-                                                {
-                                                    return false;
-                                                }
-                                                state.offset += 1;
-                                                __builder.char(b'&');
-                                            };
-                                            __builder.text_inline_ws(&state.src[__ows49..__ows50]);
-                                            let __ows51 = state.offset;
-                                            ::parse_that::trim_leading_whitespace_mut(state);
-                                            __builder.text_inline_ws(&state.src[__ows51..state.offset]);
-                                        };
-                                        {
-                                            if !{
-                                                let __pretty_cp54 = state.offset;
-                                                let __pretty_bcp55 = __builder.checkpoint();
-                                                let __ok = (|| -> bool {
-                                                    {
-                                                        let __ows52 = state.offset;
-                                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                                        __builder.text_inline_ws(&state.src[__ows52..state.offset]);
-                                                        if !Self::__add_expr_prettify(state, __builder) {
-                                                            return false;
-                                                        }
-                                                        let __ows53 = state.offset;
-                                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                                        __builder.text_inline_ws(&state.src[__ows53..state.offset]);
-                                                    };
-                                                    true
-                                                })();
-                                                if !__ok {
-                                                    state.offset = __pretty_cp54;
-                                                    __builder.restore(__pretty_bcp55);
-                                                }
-                                                __ok
-                                            } {
-                                                return false;
-                                            }
-                                        };
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp56;
-                                    __builder.restore(__pretty_bcp57);
-                                }
-                                __ok
-                            } {
-                                state.offset = __rep_cp59;
-                                break;
-                            }
-                            if state.offset == __rep_cp59 {
-                                break;
-                            }
-                            __rep_count58 += 1;
-                        }
-                    };
-                };
-                true
-            }
-        }
-        pub fn concat_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__concat_expr_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __add_op_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    let __byte = match state.src_bytes.get(state.offset) {
-                        Some(&b) => b,
-                        None => return false,
-                    };
-                    match __byte {
-                        b'+' => {
-                            {
-                                if state.src_bytes.get(state.offset).copied() != Some(b'+')
-                                {
-                                    return false;
-                                }
-                                state.offset += 1;
-                                __builder.char(b'+');
-                            };
-                        }
-                        b'-' => {
-                            {
-                                if state.src_bytes.get(state.offset).copied() != Some(b'-')
-                                {
-                                    return false;
-                                }
-                                state.offset += 1;
-                                __builder.char(b'-');
-                            };
-                        }
-                        _ => {
-                            return false;
-                        }
-                    }
-                };
-                true
-            }
-        }
-        pub fn add_op_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__add_op_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __add_expr_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    {
-                        if !{
-                            let __pretty_cp62 = state.offset;
-                            let __pretty_bcp63 = __builder.checkpoint();
-                            let __ok = (|| -> bool {
-                                {
-                                    let __ows60 = state.offset;
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __builder.text_inline_ws(&state.src[__ows60..state.offset]);
-                                    if !Self::__mul_expr_prettify(state, __builder) {
-                                        return false;
-                                    }
-                                    let __ows61 = state.offset;
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __builder.text_inline_ws(&state.src[__ows61..state.offset]);
-                                };
-                                true
-                            })();
-                            if !__ok {
-                                state.offset = __pretty_cp62;
-                                __builder.restore(__pretty_bcp63);
-                            }
-                            __ok
-                        } {
-                            return false;
-                        }
-                    };
-                    {
-                        let mut __rep_count74 = 0usize;
-                        while __rep_count74 < 4294967295 {
-                            let __rep_cp75 = state.offset;
-                            if !{
-                                let __pretty_cp72 = state.offset;
-                                let __pretty_bcp73 = __builder.checkpoint();
+                                let __pretty_cp57 = state.offset;
+                                let __pretty_bcp58 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         {
                                             if !{
-                                                let __pretty_cp66 = state.offset;
-                                                let __pretty_bcp67 = __builder.checkpoint();
+                                                let __pretty_cp51 = state.offset;
+                                                let __pretty_bcp52 = __builder.checkpoint();
                                                 let __ok = (|| -> bool {
                                                     {
-                                                        let __ows64 = state.offset;
+                                                        let __ows49 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
-                                                        __builder.text_inline_ws(&state.src[__ows64..state.offset]);
-                                                        if !Self::__add_op_prettify(state, __builder) {
-                                                            return false;
-                                                        }
-                                                        let __ows65 = state.offset;
-                                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                                        __builder.text_inline_ws(&state.src[__ows65..state.offset]);
-                                                    };
-                                                    true
-                                                })();
-                                                if !__ok {
-                                                    state.offset = __pretty_cp66;
-                                                    __builder.restore(__pretty_bcp67);
-                                                }
-                                                __ok
-                                            } {
-                                                return false;
-                                            }
-                                        };
-                                        {
-                                            if !{
-                                                let __pretty_cp70 = state.offset;
-                                                let __pretty_bcp71 = __builder.checkpoint();
-                                                let __ok = (|| -> bool {
-                                                    {
-                                                        let __ows68 = state.offset;
-                                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                                        __builder.text_inline_ws(&state.src[__ows68..state.offset]);
-                                                        if !Self::__mul_expr_prettify(state, __builder) {
-                                                            return false;
-                                                        }
-                                                        let __ows69 = state.offset;
-                                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                                        __builder.text_inline_ws(&state.src[__ows69..state.offset]);
-                                                    };
-                                                    true
-                                                })();
-                                                if !__ok {
-                                                    state.offset = __pretty_cp70;
-                                                    __builder.restore(__pretty_bcp71);
-                                                }
-                                                __ok
-                                            } {
-                                                return false;
-                                            }
-                                        };
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp72;
-                                    __builder.restore(__pretty_bcp73);
-                                }
-                                __ok
-                            } {
-                                state.offset = __rep_cp75;
-                                break;
-                            }
-                            if state.offset == __rep_cp75 {
-                                break;
-                            }
-                            __rep_count74 += 1;
-                        }
-                    };
-                };
-                true
-            }
-        }
-        pub fn add_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__add_expr_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __mul_op_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    let __byte = match state.src_bytes.get(state.offset) {
-                        Some(&b) => b,
-                        None => return false,
-                    };
-                    match __byte {
-                        b'*' => {
-                            {
-                                if state.src_bytes.get(state.offset).copied() != Some(b'*')
-                                {
-                                    return false;
-                                }
-                                state.offset += 1;
-                                __builder.char(b'*');
-                            };
-                        }
-                        b'/' => {
-                            {
-                                if state.src_bytes.get(state.offset).copied() != Some(b'/')
-                                {
-                                    return false;
-                                }
-                                state.offset += 1;
-                                __builder.char(b'/');
-                            };
-                        }
-                        _ => {
-                            return false;
-                        }
-                    }
-                };
-                true
-            }
-        }
-        pub fn mul_op_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__mul_op_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __mul_expr_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    {
-                        if !{
-                            let __pretty_cp78 = state.offset;
-                            let __pretty_bcp79 = __builder.checkpoint();
-                            let __ok = (|| -> bool {
-                                {
-                                    let __ows76 = state.offset;
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __builder.text_inline_ws(&state.src[__ows76..state.offset]);
-                                    if !Self::__exp_expr_prettify(state, __builder) {
-                                        return false;
-                                    }
-                                    let __ows77 = state.offset;
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __builder.text_inline_ws(&state.src[__ows77..state.offset]);
-                                };
-                                true
-                            })();
-                            if !__ok {
-                                state.offset = __pretty_cp78;
-                                __builder.restore(__pretty_bcp79);
-                            }
-                            __ok
-                        } {
-                            return false;
-                        }
-                    };
-                    {
-                        let mut __rep_count90 = 0usize;
-                        while __rep_count90 < 4294967295 {
-                            let __rep_cp91 = state.offset;
-                            if !{
-                                let __pretty_cp88 = state.offset;
-                                let __pretty_bcp89 = __builder.checkpoint();
-                                let __ok = (|| -> bool {
-                                    {
-                                        {
-                                            if !{
-                                                let __pretty_cp82 = state.offset;
-                                                let __pretty_bcp83 = __builder.checkpoint();
-                                                let __ok = (|| -> bool {
-                                                    {
-                                                        let __ows80 = state.offset;
-                                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                                        __builder.text_inline_ws(&state.src[__ows80..state.offset]);
+                                                        __builder.text_inline_ws(&state.src[__ows49..state.offset]);
                                                         if !Self::__mul_op_prettify(state, __builder) {
                                                             return false;
                                                         }
-                                                        let __ows81 = state.offset;
+                                                        let __ows50 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
-                                                        __builder.text_inline_ws(&state.src[__ows81..state.offset]);
+                                                        __builder.text_inline_ws(&state.src[__ows50..state.offset]);
                                                     };
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp82;
-                                                    __builder.restore(__pretty_bcp83);
+                                                    state.offset = __pretty_cp51;
+                                                    __builder.restore(__pretty_bcp52);
                                                 }
                                                 __ok
                                             } {
@@ -16782,25 +17245,25 @@ mod __googlesheetsparser_emit_impl {
                                         };
                                         {
                                             if !{
-                                                let __pretty_cp86 = state.offset;
-                                                let __pretty_bcp87 = __builder.checkpoint();
+                                                let __pretty_cp55 = state.offset;
+                                                let __pretty_bcp56 = __builder.checkpoint();
                                                 let __ok = (|| -> bool {
                                                     {
-                                                        let __ows84 = state.offset;
+                                                        let __ows53 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
-                                                        __builder.text_inline_ws(&state.src[__ows84..state.offset]);
+                                                        __builder.text_inline_ws(&state.src[__ows53..state.offset]);
                                                         if !Self::__exp_expr_prettify(state, __builder) {
                                                             return false;
                                                         }
-                                                        let __ows85 = state.offset;
+                                                        let __ows54 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
-                                                        __builder.text_inline_ws(&state.src[__ows85..state.offset]);
+                                                        __builder.text_inline_ws(&state.src[__ows54..state.offset]);
                                                     };
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp86;
-                                                    __builder.restore(__pretty_bcp87);
+                                                    state.offset = __pretty_cp55;
+                                                    __builder.restore(__pretty_bcp56);
                                                 }
                                                 __ok
                                             } {
@@ -16811,18 +17274,18 @@ mod __googlesheetsparser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp88;
-                                    __builder.restore(__pretty_bcp89);
+                                    state.offset = __pretty_cp57;
+                                    __builder.restore(__pretty_bcp58);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp91;
+                                state.offset = __rep_cp60;
                                 break;
                             }
-                            if state.offset == __rep_cp91 {
+                            if state.offset == __rep_cp60 {
                                 break;
                             }
-                            __rep_count90 += 1;
+                            __rep_count59 += 1;
                         }
                     };
                 };
@@ -16840,39 +17303,457 @@ mod __googlesheetsparser_emit_impl {
                 Some(__builder.finish())
             })
         }
-        fn __exp_expr_prettify<'a>(
+        fn __unary_expr_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
             {
                 {
                     {
-                        if !{
-                            let __pretty_cp94 = state.offset;
-                            let __pretty_bcp95 = __builder.checkpoint();
-                            let __ok = (|| -> bool {
-                                {
-                                    let __ows92 = state.offset;
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __builder.text_inline_ws(&state.src[__ows92..state.offset]);
-                                    if !Self::__unary_expr_prettify(state, __builder) {
+                        let mut __rep_count63 = 0usize;
+                        while __rep_count63 < 4294967295 {
+                            let __rep_cp64 = state.offset;
+                            if !{
+                                let __pretty_cp61 = state.offset;
+                                let __pretty_bcp62 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
+                                    if !Self::__unary_prefix_prettify(state, __builder) {
                                         return false;
                                     }
-                                    let __ows93 = state.offset;
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp61;
+                                    __builder.restore(__pretty_bcp62);
+                                }
+                                __ok
+                            } {
+                                state.offset = __rep_cp64;
+                                break;
+                            }
+                            if state.offset == __rep_cp64 {
+                                break;
+                            }
+                            __rep_count63 += 1;
+                        }
+                    };
+                    if !Self::__postfix_expr_prettify(state, __builder) {
+                        return false;
+                    }
+                };
+                true
+            }
+        }
+        pub fn unary_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__unary_expr_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __paren_expr_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    {
+                        if state.src_bytes.get(state.offset).copied() != Some(b'(') {
+                            return false;
+                        }
+                        state.offset += 1;
+                        __builder.char(b'(');
+                    };
+                    {
+                        if !{
+                            let __pretty_cp67 = state.offset;
+                            let __pretty_bcp68 = __builder.checkpoint();
+                            let __ok = (|| -> bool {
+                                {
+                                    let __ows65 = state.offset;
                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                    __builder.text_inline_ws(&state.src[__ows93..state.offset]);
+                                    __builder.text_inline_ws(&state.src[__ows65..state.offset]);
+                                    if !Self::__expression_prettify(state, __builder) {
+                                        return false;
+                                    }
+                                    let __ows66 = state.offset;
+                                    ::parse_that::trim_leading_whitespace_mut(state);
+                                    __builder.text_inline_ws(&state.src[__ows66..state.offset]);
                                 };
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp94;
-                                __builder.restore(__pretty_bcp95);
+                                state.offset = __pretty_cp67;
+                                __builder.restore(__pretty_bcp68);
                             }
                             __ok
                         } {
                             return false;
                         }
                     };
+                    {
+                        if state.src_bytes.get(state.offset).copied() != Some(b')') {
+                            return false;
+                        }
+                        state.offset += 1;
+                        __builder.char(b')');
+                    };
+                };
+                true
+            }
+        }
+        pub fn paren_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__paren_expr_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __arg_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    let _ = {
+                        let __pretty_cp69 = state.offset;
+                        let __pretty_bcp70 = __builder.checkpoint();
+                        let __ok = (|| -> bool {
+                            if !Self::__expression_prettify(state, __builder) {
+                                return false;
+                            }
+                            true
+                        })();
+                        if !__ok {
+                            state.offset = __pretty_cp69;
+                            __builder.restore(__pretty_bcp70);
+                        }
+                        __ok
+                    };
+                    true
+                };
+                true
+            }
+        }
+        pub fn arg_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__arg_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __func_args_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            __builder.group_open();
+            __builder.indent_open();
+            let __pretty_ok = {
+                {
+                    {
+                        let __rep_start81 = state.offset;
+                        let __rep_bcp82 = __builder.checkpoint();
+                        let mut __rep_count79 = 0usize;
+                        while __rep_count79 < 4294967295 {
+                            let __rep_cp80 = state.offset;
+                            let __iter_cp = if __rep_count79 > 0 {
+                                Some(__builder.checkpoint())
+                            } else {
+                                None
+                            };
+                            if __rep_count79 > 0 {
+                                __builder.sep(", ", "");
+                            }
+                            if !{
+                                let __pretty_cp78 = state.offset;
+                                let __ok = (|| -> bool {
+                                    {
+                                        if !Self::__arg_prettify(state, __builder) {
+                                            return false;
+                                        }
+                                        {
+                                            let __silent_cp76 = state.offset;
+                                            let __silent_bcp77 = __builder.light_checkpoint();
+                                            let __ok = (|| -> bool {
+                                                {
+                                                    let _ = {
+                                                        let __pretty_cp74 = state.offset;
+                                                        let __pretty_bcp75 = __builder.checkpoint();
+                                                        let __ok = (|| -> bool {
+                                                            {
+                                                                let __ows71 = state.offset;
+                                                                ::parse_that::trim_leading_whitespace_mut(state);
+                                                                let __ows72 = state.offset;
+                                                                {
+                                                                    if state.src_bytes.get(state.offset).copied() != Some(b',')
+                                                                    {
+                                                                        return false;
+                                                                    }
+                                                                    state.offset += 1;
+                                                                    __builder.char(b',');
+                                                                };
+                                                                __builder.text_inline_ws(&state.src[__ows71..__ows72]);
+                                                                let __ows73 = state.offset;
+                                                                ::parse_that::trim_leading_whitespace_mut(state);
+                                                                __builder.text_inline_ws(&state.src[__ows73..state.offset]);
+                                                            };
+                                                            true
+                                                        })();
+                                                        if !__ok {
+                                                            state.offset = __pretty_cp74;
+                                                            __builder.restore(__pretty_bcp75);
+                                                        }
+                                                        __ok
+                                                    };
+                                                    true
+                                                };
+                                                true
+                                            })();
+                                            __builder.light_restore(__silent_bcp77);
+                                            if !__ok {
+                                                state.offset = __silent_cp76;
+                                                return false;
+                                            }
+                                        };
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp78;
+                                }
+                                __ok
+                            } {
+                                state.offset = __rep_cp80;
+                                if let Some(__bcp) = __iter_cp {
+                                    __builder.restore(__bcp);
+                                }
+                                break;
+                            }
+                            if state.offset == __rep_cp80 {
+                                if let Some(__bcp) = __iter_cp {
+                                    __builder.restore(__bcp);
+                                }
+                                break;
+                            }
+                            __rep_count79 += 1;
+                        }
+                        if __rep_count79 < 1 {
+                            state.offset = __rep_start81;
+                            __builder.restore(__rep_bcp82);
+                            return false;
+                        }
+                    };
+                    true
+                }
+            };
+            __builder.indent_close();
+            __builder.group_close();
+            __pretty_ok
+        }
+        pub fn func_args_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__func_args_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __let_binding_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            __builder.group_open();
+            __builder.indent_open();
+            let __pretty_ok = {
+                {
+                    {
+                        {
+                            if !Self::__expression_prettify(state, __builder) {
+                                return false;
+                            }
+                            {
+                                let __ows83 = state.offset;
+                                ::parse_that::trim_leading_whitespace_mut(state);
+                                let __ows84 = state.offset;
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b',')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b',');
+                                };
+                                __builder.text_inline_ws(&state.src[__ows83..__ows84]);
+                                let __ows85 = state.offset;
+                                ::parse_that::trim_leading_whitespace_mut(state);
+                                __builder.text_inline_ws(&state.src[__ows85..state.offset]);
+                            };
+                        };
+                        if !Self::__expression_prettify(state, __builder) {
+                            return false;
+                        }
+                    };
+                    true
+                }
+            };
+            __builder.indent_close();
+            __builder.group_close();
+            __pretty_ok
+        }
+        pub fn let_binding_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__let_binding_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __lambda_params_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            __builder.group_open();
+            __builder.indent_open();
+            let __pretty_ok = {
+                {
+                    {
+                        let __rep_start96 = state.offset;
+                        let __rep_bcp97 = __builder.checkpoint();
+                        let mut __rep_count94 = 0usize;
+                        while __rep_count94 < 4294967295 {
+                            let __rep_cp95 = state.offset;
+                            let __iter_cp = if __rep_count94 > 0 {
+                                Some(__builder.checkpoint())
+                            } else {
+                                None
+                            };
+                            if __rep_count94 > 0 {
+                                __builder.sep(", ", "");
+                            }
+                            if !{
+                                let __pretty_cp93 = state.offset;
+                                let __ok = (|| -> bool {
+                                    {
+                                        if !Self::__expression_prettify(state, __builder) {
+                                            return false;
+                                        }
+                                        {
+                                            let __silent_cp91 = state.offset;
+                                            let __silent_bcp92 = __builder.light_checkpoint();
+                                            let __ok = (|| -> bool {
+                                                {
+                                                    let _ = {
+                                                        let __pretty_cp89 = state.offset;
+                                                        let __pretty_bcp90 = __builder.checkpoint();
+                                                        let __ok = (|| -> bool {
+                                                            {
+                                                                let __ows86 = state.offset;
+                                                                ::parse_that::trim_leading_whitespace_mut(state);
+                                                                let __ows87 = state.offset;
+                                                                {
+                                                                    if state.src_bytes.get(state.offset).copied() != Some(b',')
+                                                                    {
+                                                                        return false;
+                                                                    }
+                                                                    state.offset += 1;
+                                                                    __builder.char(b',');
+                                                                };
+                                                                __builder.text_inline_ws(&state.src[__ows86..__ows87]);
+                                                                let __ows88 = state.offset;
+                                                                ::parse_that::trim_leading_whitespace_mut(state);
+                                                                __builder.text_inline_ws(&state.src[__ows88..state.offset]);
+                                                            };
+                                                            true
+                                                        })();
+                                                        if !__ok {
+                                                            state.offset = __pretty_cp89;
+                                                            __builder.restore(__pretty_bcp90);
+                                                        }
+                                                        __ok
+                                                    };
+                                                    true
+                                                };
+                                                true
+                                            })();
+                                            __builder.light_restore(__silent_bcp92);
+                                            if !__ok {
+                                                state.offset = __silent_cp91;
+                                                return false;
+                                            }
+                                        };
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp93;
+                                }
+                                __ok
+                            } {
+                                state.offset = __rep_cp95;
+                                if let Some(__bcp) = __iter_cp {
+                                    __builder.restore(__bcp);
+                                }
+                                break;
+                            }
+                            if state.offset == __rep_cp95 {
+                                if let Some(__bcp) = __iter_cp {
+                                    __builder.restore(__bcp);
+                                }
+                                break;
+                            }
+                            __rep_count94 += 1;
+                        }
+                        if __rep_count94 < 1 {
+                            state.offset = __rep_start96;
+                            __builder.restore(__rep_bcp97);
+                            return false;
+                        }
+                    };
+                    true
+                }
+            };
+            __builder.indent_close();
+            __builder.group_close();
+            __pretty_ok
+        }
+        pub fn lambda_params_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__lambda_params_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __array_row_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    if !Self::__expression_prettify(state, __builder) {
+                        return false;
+                    }
                     {
                         let mut __rep_count105 = 0usize;
                         while __rep_count105 < 4294967295 {
@@ -16882,51 +17763,40 @@ mod __googlesheetsparser_emit_impl {
                                 let __pretty_bcp104 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
+                                        __builder.sep(", ", "");
                                         {
-                                            let __ows96 = state.offset;
-                                            ::parse_that::trim_leading_whitespace_mut(state);
-                                            let __ows97 = state.offset;
-                                            {
-                                                if state.src_bytes.get(state.offset).copied() != Some(b'^')
+                                            let __silent_cp101 = state.offset;
+                                            let __silent_bcp102 = __builder.light_checkpoint();
+                                            let __ok = (|| -> bool {
                                                 {
-                                                    return false;
-                                                }
-                                                state.offset += 1;
-                                                __builder.char(b'^');
-                                            };
-                                            __builder.text_inline_ws(&state.src[__ows96..__ows97]);
-                                            let __ows98 = state.offset;
-                                            ::parse_that::trim_leading_whitespace_mut(state);
-                                            __builder.text_inline_ws(&state.src[__ows98..state.offset]);
-                                        };
-                                        {
-                                            if !{
-                                                let __pretty_cp101 = state.offset;
-                                                let __pretty_bcp102 = __builder.checkpoint();
-                                                let __ok = (|| -> bool {
+                                                    let __ows98 = state.offset;
+                                                    ::parse_that::trim_leading_whitespace_mut(state);
+                                                    let __ows99 = state.offset;
                                                     {
-                                                        let __ows99 = state.offset;
-                                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                                        __builder.text_inline_ws(&state.src[__ows99..state.offset]);
-                                                        if !Self::__unary_expr_prettify(state, __builder) {
+                                                        if state.src_bytes.get(state.offset).copied() != Some(b',')
+                                                        {
                                                             return false;
                                                         }
-                                                        let __ows100 = state.offset;
-                                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                                        __builder
-                                                            .text_inline_ws(&state.src[__ows100..state.offset]);
+                                                        state.offset += 1;
+                                                        __builder.char(b',');
                                                     };
-                                                    true
-                                                })();
-                                                if !__ok {
-                                                    state.offset = __pretty_cp101;
-                                                    __builder.restore(__pretty_bcp102);
-                                                }
-                                                __ok
-                                            } {
+                                                    __builder.text_inline_ws(&state.src[__ows98..__ows99]);
+                                                    let __ows100 = state.offset;
+                                                    ::parse_that::trim_leading_whitespace_mut(state);
+                                                    __builder
+                                                        .text_inline_ws(&state.src[__ows100..state.offset]);
+                                                };
+                                                true
+                                            })();
+                                            __builder.light_restore(__silent_bcp102);
+                                            if !__ok {
+                                                state.offset = __silent_cp101;
                                                 return false;
                                             }
                                         };
+                                        if !Self::__expression_prettify(state, __builder) {
+                                            return false;
+                                        }
                                     };
                                     true
                                 })();
@@ -16949,6 +17819,552 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
+        pub fn array_row_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__array_row_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __array_rows_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            __builder.group_open();
+            __builder.indent_open();
+            let __pretty_ok = {
+                {
+                    {
+                        if !Self::__array_row_prettify(state, __builder) {
+                            return false;
+                        }
+                        {
+                            let mut __rep_count114 = 0usize;
+                            while __rep_count114 < 4294967295 {
+                                let __rep_cp115 = state.offset;
+                                if !{
+                                    let __pretty_cp112 = state.offset;
+                                    let __pretty_bcp113 = __builder.checkpoint();
+                                    let __ok = (|| -> bool {
+                                        {
+                                            __builder.sep("; ", "");
+                                            {
+                                                let __silent_cp110 = state.offset;
+                                                let __silent_bcp111 = __builder.light_checkpoint();
+                                                let __ok = (|| -> bool {
+                                                    {
+                                                        let __ows107 = state.offset;
+                                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                                        let __ows108 = state.offset;
+                                                        {
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b';')
+                                                            {
+                                                                return false;
+                                                            }
+                                                            state.offset += 1;
+                                                            __builder.char(b';');
+                                                        };
+                                                        __builder.text_inline_ws(&state.src[__ows107..__ows108]);
+                                                        let __ows109 = state.offset;
+                                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                                        __builder
+                                                            .text_inline_ws(&state.src[__ows109..state.offset]);
+                                                    };
+                                                    true
+                                                })();
+                                                __builder.light_restore(__silent_bcp111);
+                                                if !__ok {
+                                                    state.offset = __silent_cp110;
+                                                    return false;
+                                                }
+                                            };
+                                            if !Self::__array_row_prettify(state, __builder) {
+                                                return false;
+                                            }
+                                        };
+                                        true
+                                    })();
+                                    if !__ok {
+                                        state.offset = __pretty_cp112;
+                                        __builder.restore(__pretty_bcp113);
+                                    }
+                                    __ok
+                                } {
+                                    state.offset = __rep_cp115;
+                                    break;
+                                }
+                                if state.offset == __rep_cp115 {
+                                    break;
+                                }
+                                __rep_count114 += 1;
+                            }
+                        };
+                    };
+                    true
+                }
+            };
+            __builder.indent_close();
+            __builder.group_close();
+            __pretty_ok
+        }
+        pub fn array_rows_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__array_rows_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __array_literal_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            __builder.group_open();
+            __builder.indent_open();
+            let __pretty_ok = {
+                {
+                    {
+                        {
+                            if state.src_bytes.get(state.offset).copied() != Some(b'{') {
+                                return false;
+                            }
+                            state.offset += 1;
+                            __builder.char(b'{');
+                        };
+                        {
+                            if !{
+                                let __pretty_cp118 = state.offset;
+                                let __pretty_bcp119 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
+                                    {
+                                        let __ows116 = state.offset;
+                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                        __builder
+                                            .text_inline_ws(&state.src[__ows116..state.offset]);
+                                        if !Self::__array_rows_prettify(state, __builder) {
+                                            return false;
+                                        }
+                                        let __ows117 = state.offset;
+                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                        __builder
+                                            .text_inline_ws(&state.src[__ows117..state.offset]);
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp118;
+                                    __builder.restore(__pretty_bcp119);
+                                }
+                                __ok
+                            } {
+                                return false;
+                            }
+                        };
+                        {
+                            if state.src_bytes.get(state.offset).copied() != Some(b'}') {
+                                return false;
+                            }
+                            state.offset += 1;
+                            __builder.char(b'}');
+                        };
+                    };
+                    true
+                }
+            };
+            __builder.indent_close();
+            __builder.group_close();
+            __pretty_ok
+        }
+        pub fn array_literal_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__array_literal_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __concat_expr_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    {
+                        if !{
+                            let __pretty_cp122 = state.offset;
+                            let __pretty_bcp123 = __builder.checkpoint();
+                            let __ok = (|| -> bool {
+                                {
+                                    let __ows120 = state.offset;
+                                    ::parse_that::trim_leading_whitespace_mut(state);
+                                    __builder
+                                        .text_inline_ws(&state.src[__ows120..state.offset]);
+                                    if !Self::__add_expr_prettify(state, __builder) {
+                                        return false;
+                                    }
+                                    let __ows121 = state.offset;
+                                    ::parse_that::trim_leading_whitespace_mut(state);
+                                    __builder
+                                        .text_inline_ws(&state.src[__ows121..state.offset]);
+                                };
+                                true
+                            })();
+                            if !__ok {
+                                state.offset = __pretty_cp122;
+                                __builder.restore(__pretty_bcp123);
+                            }
+                            __ok
+                        } {
+                            return false;
+                        }
+                    };
+                    {
+                        let mut __rep_count133 = 0usize;
+                        while __rep_count133 < 4294967295 {
+                            let __rep_cp134 = state.offset;
+                            if !{
+                                let __pretty_cp131 = state.offset;
+                                let __pretty_bcp132 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
+                                    {
+                                        {
+                                            let __ows124 = state.offset;
+                                            ::parse_that::trim_leading_whitespace_mut(state);
+                                            let __ows125 = state.offset;
+                                            {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b'&')
+                                                {
+                                                    return false;
+                                                }
+                                                state.offset += 1;
+                                                __builder.char(b'&');
+                                            };
+                                            __builder.text_inline_ws(&state.src[__ows124..__ows125]);
+                                            let __ows126 = state.offset;
+                                            ::parse_that::trim_leading_whitespace_mut(state);
+                                            __builder
+                                                .text_inline_ws(&state.src[__ows126..state.offset]);
+                                        };
+                                        {
+                                            if !{
+                                                let __pretty_cp129 = state.offset;
+                                                let __pretty_bcp130 = __builder.checkpoint();
+                                                let __ok = (|| -> bool {
+                                                    {
+                                                        let __ows127 = state.offset;
+                                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                                        __builder
+                                                            .text_inline_ws(&state.src[__ows127..state.offset]);
+                                                        if !Self::__add_expr_prettify(state, __builder) {
+                                                            return false;
+                                                        }
+                                                        let __ows128 = state.offset;
+                                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                                        __builder
+                                                            .text_inline_ws(&state.src[__ows128..state.offset]);
+                                                    };
+                                                    true
+                                                })();
+                                                if !__ok {
+                                                    state.offset = __pretty_cp129;
+                                                    __builder.restore(__pretty_bcp130);
+                                                }
+                                                __ok
+                                            } {
+                                                return false;
+                                            }
+                                        };
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp131;
+                                    __builder.restore(__pretty_bcp132);
+                                }
+                                __ok
+                            } {
+                                state.offset = __rep_cp134;
+                                break;
+                            }
+                            if state.offset == __rep_cp134 {
+                                break;
+                            }
+                            __rep_count133 += 1;
+                        }
+                    };
+                };
+                true
+            }
+        }
+        pub fn concat_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__concat_expr_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __add_expr_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    {
+                        if !{
+                            let __pretty_cp137 = state.offset;
+                            let __pretty_bcp138 = __builder.checkpoint();
+                            let __ok = (|| -> bool {
+                                {
+                                    let __ows135 = state.offset;
+                                    ::parse_that::trim_leading_whitespace_mut(state);
+                                    __builder
+                                        .text_inline_ws(&state.src[__ows135..state.offset]);
+                                    if !Self::__mul_expr_prettify(state, __builder) {
+                                        return false;
+                                    }
+                                    let __ows136 = state.offset;
+                                    ::parse_that::trim_leading_whitespace_mut(state);
+                                    __builder
+                                        .text_inline_ws(&state.src[__ows136..state.offset]);
+                                };
+                                true
+                            })();
+                            if !__ok {
+                                state.offset = __pretty_cp137;
+                                __builder.restore(__pretty_bcp138);
+                            }
+                            __ok
+                        } {
+                            return false;
+                        }
+                    };
+                    {
+                        let mut __rep_count149 = 0usize;
+                        while __rep_count149 < 4294967295 {
+                            let __rep_cp150 = state.offset;
+                            if !{
+                                let __pretty_cp147 = state.offset;
+                                let __pretty_bcp148 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
+                                    {
+                                        {
+                                            if !{
+                                                let __pretty_cp141 = state.offset;
+                                                let __pretty_bcp142 = __builder.checkpoint();
+                                                let __ok = (|| -> bool {
+                                                    {
+                                                        let __ows139 = state.offset;
+                                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                                        __builder
+                                                            .text_inline_ws(&state.src[__ows139..state.offset]);
+                                                        if !Self::__add_op_prettify(state, __builder) {
+                                                            return false;
+                                                        }
+                                                        let __ows140 = state.offset;
+                                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                                        __builder
+                                                            .text_inline_ws(&state.src[__ows140..state.offset]);
+                                                    };
+                                                    true
+                                                })();
+                                                if !__ok {
+                                                    state.offset = __pretty_cp141;
+                                                    __builder.restore(__pretty_bcp142);
+                                                }
+                                                __ok
+                                            } {
+                                                return false;
+                                            }
+                                        };
+                                        {
+                                            if !{
+                                                let __pretty_cp145 = state.offset;
+                                                let __pretty_bcp146 = __builder.checkpoint();
+                                                let __ok = (|| -> bool {
+                                                    {
+                                                        let __ows143 = state.offset;
+                                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                                        __builder
+                                                            .text_inline_ws(&state.src[__ows143..state.offset]);
+                                                        if !Self::__mul_expr_prettify(state, __builder) {
+                                                            return false;
+                                                        }
+                                                        let __ows144 = state.offset;
+                                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                                        __builder
+                                                            .text_inline_ws(&state.src[__ows144..state.offset]);
+                                                    };
+                                                    true
+                                                })();
+                                                if !__ok {
+                                                    state.offset = __pretty_cp145;
+                                                    __builder.restore(__pretty_bcp146);
+                                                }
+                                                __ok
+                                            } {
+                                                return false;
+                                            }
+                                        };
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp147;
+                                    __builder.restore(__pretty_bcp148);
+                                }
+                                __ok
+                            } {
+                                state.offset = __rep_cp150;
+                                break;
+                            }
+                            if state.offset == __rep_cp150 {
+                                break;
+                            }
+                            __rep_count149 += 1;
+                        }
+                    };
+                };
+                true
+            }
+        }
+        pub fn add_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__add_expr_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __exp_expr_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    {
+                        if !{
+                            let __pretty_cp153 = state.offset;
+                            let __pretty_bcp154 = __builder.checkpoint();
+                            let __ok = (|| -> bool {
+                                {
+                                    let __ows151 = state.offset;
+                                    ::parse_that::trim_leading_whitespace_mut(state);
+                                    __builder
+                                        .text_inline_ws(&state.src[__ows151..state.offset]);
+                                    if !Self::__unary_expr_prettify(state, __builder) {
+                                        return false;
+                                    }
+                                    let __ows152 = state.offset;
+                                    ::parse_that::trim_leading_whitespace_mut(state);
+                                    __builder
+                                        .text_inline_ws(&state.src[__ows152..state.offset]);
+                                };
+                                true
+                            })();
+                            if !__ok {
+                                state.offset = __pretty_cp153;
+                                __builder.restore(__pretty_bcp154);
+                            }
+                            __ok
+                        } {
+                            return false;
+                        }
+                    };
+                    {
+                        let mut __rep_count164 = 0usize;
+                        while __rep_count164 < 4294967295 {
+                            let __rep_cp165 = state.offset;
+                            if !{
+                                let __pretty_cp162 = state.offset;
+                                let __pretty_bcp163 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
+                                    {
+                                        {
+                                            let __ows155 = state.offset;
+                                            ::parse_that::trim_leading_whitespace_mut(state);
+                                            let __ows156 = state.offset;
+                                            {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b'^')
+                                                {
+                                                    return false;
+                                                }
+                                                state.offset += 1;
+                                                __builder.char(b'^');
+                                            };
+                                            __builder.text_inline_ws(&state.src[__ows155..__ows156]);
+                                            let __ows157 = state.offset;
+                                            ::parse_that::trim_leading_whitespace_mut(state);
+                                            __builder
+                                                .text_inline_ws(&state.src[__ows157..state.offset]);
+                                        };
+                                        {
+                                            if !{
+                                                let __pretty_cp160 = state.offset;
+                                                let __pretty_bcp161 = __builder.checkpoint();
+                                                let __ok = (|| -> bool {
+                                                    {
+                                                        let __ows158 = state.offset;
+                                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                                        __builder
+                                                            .text_inline_ws(&state.src[__ows158..state.offset]);
+                                                        if !Self::__unary_expr_prettify(state, __builder) {
+                                                            return false;
+                                                        }
+                                                        let __ows159 = state.offset;
+                                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                                        __builder
+                                                            .text_inline_ws(&state.src[__ows159..state.offset]);
+                                                    };
+                                                    true
+                                                })();
+                                                if !__ok {
+                                                    state.offset = __pretty_cp160;
+                                                    __builder.restore(__pretty_bcp161);
+                                                }
+                                                __ok
+                                            } {
+                                                return false;
+                                            }
+                                        };
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp162;
+                                    __builder.restore(__pretty_bcp163);
+                                }
+                                __ok
+                            } {
+                                state.offset = __rep_cp165;
+                                break;
+                            }
+                            if state.offset == __rep_cp165 {
+                                break;
+                            }
+                            __rep_count164 += 1;
+                        }
+                    };
+                };
+                true
+            }
+        }
         pub fn exp_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
@@ -16960,160 +18376,440 @@ mod __googlesheetsparser_emit_impl {
                 Some(__builder.finish())
             })
         }
-        fn __unary_prefix_prettify<'a>(
+        fn __lambda_call_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
-            {
-                {
-                    let __byte = match state.src_bytes.get(state.offset) {
-                        Some(&b) => b,
-                        None => return false,
-                    };
-                    match __byte {
-                        b'+' => {
-                            {
-                                if state.src_bytes.get(state.offset).copied() != Some(b'+')
-                                {
-                                    return false;
-                                }
-                                state.offset += 1;
-                                __builder.char(b'+');
-                            };
-                        }
-                        b'-' => {
-                            {
-                                if state.src_bytes.get(state.offset).copied() != Some(b'-')
-                                {
-                                    return false;
-                                }
-                                state.offset += 1;
-                                __builder.char(b'-');
-                            };
-                        }
-                        _ => {
-                            return false;
-                        }
-                    }
-                };
-                true
-            }
-        }
-        pub fn unary_prefix_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__unary_prefix_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __unary_expr_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
+            __builder.group_open();
+            __builder.indent_open();
+            let __pretty_ok = {
                 {
                     {
-                        let mut __rep_count109 = 0usize;
-                        while __rep_count109 < 4294967295 {
-                            let __rep_cp110 = state.offset;
-                            if !{
-                                let __pretty_cp107 = state.offset;
-                                let __pretty_bcp108 = __builder.checkpoint();
-                                let __ok = (|| -> bool {
-                                    if !Self::__unary_prefix_prettify(state, __builder) {
-                                        return false;
-                                    }
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp107;
-                                    __builder.restore(__pretty_bcp108);
-                                }
-                                __ok
-                            } {
-                                state.offset = __rep_cp110;
-                                break;
-                            }
-                            if state.offset == __rep_cp110 {
-                                break;
-                            }
-                            __rep_count109 += 1;
-                        }
-                    };
-                    if !Self::__postfix_expr_prettify(state, __builder) {
-                        return false;
-                    }
-                };
-                true
-            }
-        }
-        pub fn unary_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__unary_expr_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __postfix_expr_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    if !Self::__primary_prettify(state, __builder) {
-                        return false;
-                    }
-                    {
-                        let mut __rep_count113 = 0usize;
-                        while __rep_count113 < 4294967295 {
-                            let __rep_cp114 = state.offset;
-                            if !{
-                                let __pretty_cp111 = state.offset;
-                                let __pretty_bcp112 = __builder.checkpoint();
-                                let __ok = (|| -> bool {
+                        {
+                            let __start = state.offset;
+                            if {
+                                let __start = state.offset;
+                                let __result: Option<()> = (|| {
                                     {
-                                        if state.src_bytes.get(state.offset).copied() != Some(b'%')
-                                        {
-                                            return false;
+                                        let __b = *state.src_bytes.get(state.offset)?;
+                                        if !((__b == b'L' || __b == b'l')) {
+                                            return None;
                                         }
                                         state.offset += 1;
-                                        __builder.char(b'%');
+                                    }
+                                    {
+                                        let __b = *state.src_bytes.get(state.offset)?;
+                                        if !((__b == b'A' || __b == b'a')) {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                    }
+                                    {
+                                        let __b = *state.src_bytes.get(state.offset)?;
+                                        if !((__b == b'M' || __b == b'm')) {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                    }
+                                    {
+                                        let __b = *state.src_bytes.get(state.offset)?;
+                                        if !((__b == b'B' || __b == b'b')) {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                    }
+                                    {
+                                        let __b = *state.src_bytes.get(state.offset)?;
+                                        if !((__b == b'D' || __b == b'd')) {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                    }
+                                    {
+                                        let __b = *state.src_bytes.get(state.offset)?;
+                                        if !((__b == b'A' || __b == b'a')) {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                    }
+                                    if state.src_bytes.get(state.offset).copied() != Some(b'(')
+                                    {
+                                        return None;
+                                    }
+                                    state.offset += 1;
+                                    Some(())
+                                })();
+                                if __result.is_some() && state.offset > __start {
+                                    Some(
+                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                    )
+                                } else {
+                                    state.offset = __start;
+                                    None
+                                }
+                            }
+                                .is_none()
+                            {
+                                return false;
+                            }
+                            let __matched = &state.src[__start..state.offset];
+                            if !__matched.is_empty() {
+                                __builder.text(__matched);
+                            }
+                        };
+                        {
+                            if !{
+                                let __pretty_cp168 = state.offset;
+                                let __pretty_bcp169 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
+                                    {
+                                        let __ows166 = state.offset;
+                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                        __builder
+                                            .text_inline_ws(&state.src[__ows166..state.offset]);
+                                        if !Self::__lambda_params_prettify(state, __builder) {
+                                            return false;
+                                        }
+                                        let __ows167 = state.offset;
+                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                        __builder
+                                            .text_inline_ws(&state.src[__ows167..state.offset]);
                                     };
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp111;
-                                    __builder.restore(__pretty_bcp112);
+                                    state.offset = __pretty_cp168;
+                                    __builder.restore(__pretty_bcp169);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp114;
-                                break;
+                                return false;
                             }
-                            if state.offset == __rep_cp114 {
-                                break;
+                        };
+                        {
+                            if state.src_bytes.get(state.offset).copied() != Some(b')') {
+                                return false;
                             }
-                            __rep_count113 += 1;
-                        }
+                            state.offset += 1;
+                            __builder.char(b')');
+                        };
                     };
-                };
-                true
-            }
+                    true
+                }
+            };
+            __builder.indent_close();
+            __builder.group_close();
+            __pretty_ok
         }
-        pub fn postfix_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn lambda_call_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::__postfix_expr_prettify(state, &mut __builder) {
+                if !Self::__lambda_call_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __expression_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                if !Self::__comparison_expr_prettify(state, __builder) {
+                    return false;
+                }
+                true
+            }
+        }
+        pub fn expression_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__expression_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __func_call_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            __builder.group_open();
+            __builder.indent_open();
+            let __pretty_ok = {
+                {
+                    {
+                        if !Self::__func_open_prettify(state, __builder) {
+                            return false;
+                        }
+                        {
+                            if !{
+                                let __pretty_cp174 = state.offset;
+                                let __pretty_bcp175 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
+                                    {
+                                        let __ows172 = state.offset;
+                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                        __builder
+                                            .text_inline_ws(&state.src[__ows172..state.offset]);
+                                        {
+                                            let _ = {
+                                                let __pretty_cp170 = state.offset;
+                                                let __pretty_bcp171 = __builder.checkpoint();
+                                                let __ok = (|| -> bool {
+                                                    if !Self::__func_args_prettify(state, __builder) {
+                                                        return false;
+                                                    }
+                                                    true
+                                                })();
+                                                if !__ok {
+                                                    state.offset = __pretty_cp170;
+                                                    __builder.restore(__pretty_bcp171);
+                                                }
+                                                __ok
+                                            };
+                                            true
+                                        };
+                                        let __ows173 = state.offset;
+                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                        __builder
+                                            .text_inline_ws(&state.src[__ows173..state.offset]);
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp174;
+                                    __builder.restore(__pretty_bcp175);
+                                }
+                                __ok
+                            } {
+                                return false;
+                            }
+                        };
+                        {
+                            if state.src_bytes.get(state.offset).copied() != Some(b')') {
+                                return false;
+                            }
+                            state.offset += 1;
+                            __builder.char(b')');
+                        };
+                    };
+                    true
+                }
+            };
+            __builder.indent_close();
+            __builder.group_close();
+            __pretty_ok
+        }
+        pub fn func_call_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__func_call_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __let_args_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    {
+                        let mut __rep_count180 = 0usize;
+                        while __rep_count180 < 4294967295 {
+                            let __rep_cp181 = state.offset;
+                            let __iter_cp = if __rep_count180 > 0 {
+                                Some(__builder.checkpoint())
+                            } else {
+                                None
+                            };
+                            if __rep_count180 > 0 {
+                                __builder.hardline();
+                            }
+                            if !{
+                                let __pretty_cp179 = state.offset;
+                                let __ok = (|| -> bool {
+                                    {
+                                        if !Self::__let_binding_prettify(state, __builder) {
+                                            return false;
+                                        }
+                                        {
+                                            let __ows176 = state.offset;
+                                            ::parse_that::trim_leading_whitespace_mut(state);
+                                            let __ows177 = state.offset;
+                                            {
+                                                if state.src_bytes.get(state.offset).copied() != Some(b',')
+                                                {
+                                                    return false;
+                                                }
+                                                state.offset += 1;
+                                                __builder.char(b',');
+                                            };
+                                            __builder.text_inline_ws(&state.src[__ows176..__ows177]);
+                                            let __ows178 = state.offset;
+                                            ::parse_that::trim_leading_whitespace_mut(state);
+                                            __builder
+                                                .text_inline_ws(&state.src[__ows178..state.offset]);
+                                        };
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp179;
+                                }
+                                __ok
+                            } {
+                                state.offset = __rep_cp181;
+                                if let Some(__bcp) = __iter_cp {
+                                    __builder.restore(__bcp);
+                                }
+                                break;
+                            }
+                            if state.offset == __rep_cp181 {
+                                if let Some(__bcp) = __iter_cp {
+                                    __builder.restore(__bcp);
+                                }
+                                break;
+                            }
+                            __rep_count180 += 1;
+                        }
+                    };
+                    if !Self::__expression_prettify(state, __builder) {
+                        return false;
+                    }
+                };
+                true
+            }
+        }
+        pub fn let_args_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__let_args_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __let_call_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            __builder.group_open();
+            __builder.indent_open();
+            let __pretty_ok = {
+                {
+                    {
+                        {
+                            let __start = state.offset;
+                            if {
+                                let __start = state.offset;
+                                let __result: Option<()> = (|| {
+                                    {
+                                        let __b = *state.src_bytes.get(state.offset)?;
+                                        if !((__b == b'L' || __b == b'l')) {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                    }
+                                    {
+                                        let __b = *state.src_bytes.get(state.offset)?;
+                                        if !((__b == b'E' || __b == b'e')) {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                    }
+                                    {
+                                        let __b = *state.src_bytes.get(state.offset)?;
+                                        if !((__b == b'T' || __b == b't')) {
+                                            return None;
+                                        }
+                                        state.offset += 1;
+                                    }
+                                    if state.src_bytes.get(state.offset).copied() != Some(b'(')
+                                    {
+                                        return None;
+                                    }
+                                    state.offset += 1;
+                                    Some(())
+                                })();
+                                if __result.is_some() && state.offset > __start {
+                                    Some(
+                                        ::parse_that::Span::new(__start, state.offset, state.src),
+                                    )
+                                } else {
+                                    state.offset = __start;
+                                    None
+                                }
+                            }
+                                .is_none()
+                            {
+                                return false;
+                            }
+                            let __matched = &state.src[__start..state.offset];
+                            if !__matched.is_empty() {
+                                __builder.text(__matched);
+                            }
+                        };
+                        {
+                            if !{
+                                let __pretty_cp184 = state.offset;
+                                let __pretty_bcp185 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
+                                    {
+                                        let __ows182 = state.offset;
+                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                        __builder
+                                            .text_inline_ws(&state.src[__ows182..state.offset]);
+                                        if !Self::__let_args_prettify(state, __builder) {
+                                            return false;
+                                        }
+                                        let __ows183 = state.offset;
+                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                        __builder
+                                            .text_inline_ws(&state.src[__ows183..state.offset]);
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp184;
+                                    __builder.restore(__pretty_bcp185);
+                                }
+                                __ok
+                            } {
+                                return false;
+                            }
+                        };
+                        {
+                            if state.src_bytes.get(state.offset).copied() != Some(b')') {
+                                return false;
+                            }
+                            state.offset += 1;
+                            __builder.char(b')');
+                        };
+                    };
+                    true
+                }
+            };
+            __builder.indent_close();
+            __builder.group_close();
+            __pretty_ok
+        }
+        pub fn let_call_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__let_call_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
@@ -17126,8 +18822,8 @@ mod __googlesheetsparser_emit_impl {
             {
                 {
                     if !{
-                        let __pretty_cp132 = state.offset;
-                        let __pretty_bcp133 = __builder.checkpoint();
+                        let __pretty_cp203 = state.offset;
+                        let __pretty_bcp204 = __builder.checkpoint();
                         let __ok = (|| -> bool {
                             if !Self::__let_call_prettify(state, __builder) {
                                 return false;
@@ -17135,15 +18831,15 @@ mod __googlesheetsparser_emit_impl {
                             true
                         })();
                         if !__ok {
-                            state.offset = __pretty_cp132;
-                            __builder.restore(__pretty_bcp133);
+                            state.offset = __pretty_cp203;
+                            __builder.restore(__pretty_bcp204);
                         }
                         __ok
                     } {
                         {
                             if !{
-                                let __pretty_cp130 = state.offset;
-                                let __pretty_bcp131 = __builder.checkpoint();
+                                let __pretty_cp201 = state.offset;
+                                let __pretty_bcp202 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     if !Self::__lambda_call_prettify(state, __builder) {
                                         return false;
@@ -17151,15 +18847,15 @@ mod __googlesheetsparser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp130;
-                                    __builder.restore(__pretty_bcp131);
+                                    state.offset = __pretty_cp201;
+                                    __builder.restore(__pretty_bcp202);
                                 }
                                 __ok
                             } {
                                 {
                                     if !{
-                                        let __pretty_cp128 = state.offset;
-                                        let __pretty_bcp129 = __builder.checkpoint();
+                                        let __pretty_cp199 = state.offset;
+                                        let __pretty_bcp200 = __builder.checkpoint();
                                         let __ok = (|| -> bool {
                                             if !Self::__func_call_prettify(state, __builder) {
                                                 return false;
@@ -17167,14 +18863,14 @@ mod __googlesheetsparser_emit_impl {
                                             true
                                         })();
                                         if !__ok {
-                                            state.offset = __pretty_cp128;
-                                            __builder.restore(__pretty_bcp129);
+                                            state.offset = __pretty_cp199;
+                                            __builder.restore(__pretty_bcp200);
                                         }
                                         __ok
                                     } {
                                         {
                                             if !{
-                                                let __pretty_cp127 = state.offset;
+                                                let __pretty_cp198 = state.offset;
                                                 let __ok = (|| -> bool {
                                                     {
                                                         let __start = state.offset;
@@ -17301,14 +18997,14 @@ mod __googlesheetsparser_emit_impl {
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp127;
+                                                    state.offset = __pretty_cp198;
                                                 }
                                                 __ok
                                             } {
                                                 {
                                                     if !{
-                                                        let __pretty_cp125 = state.offset;
-                                                        let __pretty_bcp126 = __builder.checkpoint();
+                                                        let __pretty_cp196 = state.offset;
+                                                        let __pretty_bcp197 = __builder.checkpoint();
                                                         let __ok = (|| -> bool {
                                                             if !Self::__boolean_prettify(state, __builder) {
                                                                 return false;
@@ -17316,15 +19012,15 @@ mod __googlesheetsparser_emit_impl {
                                                             true
                                                         })();
                                                         if !__ok {
-                                                            state.offset = __pretty_cp125;
-                                                            __builder.restore(__pretty_bcp126);
+                                                            state.offset = __pretty_cp196;
+                                                            __builder.restore(__pretty_bcp197);
                                                         }
                                                         __ok
                                                     } {
                                                         {
                                                             if !{
-                                                                let __pretty_cp123 = state.offset;
-                                                                let __pretty_bcp124 = __builder.checkpoint();
+                                                                let __pretty_cp194 = state.offset;
+                                                                let __pretty_bcp195 = __builder.checkpoint();
                                                                 let __ok = (|| -> bool {
                                                                     if !Self::__cell_or_range_prettify(state, __builder) {
                                                                         return false;
@@ -17332,56 +19028,21 @@ mod __googlesheetsparser_emit_impl {
                                                                     true
                                                                 })();
                                                                 if !__ok {
-                                                                    state.offset = __pretty_cp123;
-                                                                    __builder.restore(__pretty_bcp124);
+                                                                    state.offset = __pretty_cp194;
+                                                                    __builder.restore(__pretty_bcp195);
                                                                 }
                                                                 __ok
                                                             } {
                                                                 {
                                                                     if !{
-                                                                        let __pretty_cp122 = state.offset;
+                                                                        let __pretty_cp193 = state.offset;
                                                                         let __ok = (|| -> bool {
                                                                             {
                                                                                 let __start = state.offset;
-                                                                                if {
-                                                                                    let __start = state.offset;
-                                                                                    let __result: Option<()> = (|| {
-                                                                                        {
-                                                                                            let __b = *state.src_bytes.get(state.offset)?;
-                                                                                            if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                                                                || (__b >= b'a' && __b <= b'z')))
-                                                                                            {
-                                                                                                return None;
-                                                                                            }
-                                                                                            state.offset += 1;
-                                                                                        }
-                                                                                        {
-                                                                                            let __end = state.src_bytes.len();
-                                                                                            let mut __pos = state.offset;
-                                                                                            while __pos < __end {
-                                                                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                                                                if (__b == b'.' || (__b >= b'0' && __b <= b'9')
-                                                                                                    || (__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                                                                    || (__b >= b'a' && __b <= b'z'))
-                                                                                                {
-                                                                                                    __pos += 1;
-                                                                                                } else {
-                                                                                                    break;
-                                                                                                }
-                                                                                            }
-                                                                                            state.offset = __pos;
-                                                                                        }
-                                                                                        Some(())
-                                                                                    })();
-                                                                                    if __result.is_some() && state.offset > __start {
-                                                                                        Some(
-                                                                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                                                                        )
-                                                                                    } else {
-                                                                                        state.offset = __start;
-                                                                                        None
-                                                                                    }
-                                                                                }
+                                                                                if ::parse_that::scan_ident(
+                                                                                        state,
+                                                                                        &::parse_that::DEFAULT_IDENT_CONFIG,
+                                                                                    )
                                                                                     .is_none()
                                                                                 {
                                                                                     return false;
@@ -17394,13 +19055,13 @@ mod __googlesheetsparser_emit_impl {
                                                                             true
                                                                         })();
                                                                         if !__ok {
-                                                                            state.offset = __pretty_cp122;
+                                                                            state.offset = __pretty_cp193;
                                                                         }
                                                                         __ok
                                                                     } {
                                                                         {
                                                                             if !{
-                                                                                let __pretty_cp121 = state.offset;
+                                                                                let __pretty_cp192 = state.offset;
                                                                                 let __ok = (|| -> bool {
                                                                                     {
                                                                                         let __start = state.offset;
@@ -17415,14 +19076,14 @@ mod __googlesheetsparser_emit_impl {
                                                                                     true
                                                                                 })();
                                                                                 if !__ok {
-                                                                                    state.offset = __pretty_cp121;
+                                                                                    state.offset = __pretty_cp192;
                                                                                 }
                                                                                 __ok
                                                                             } {
                                                                                 {
                                                                                     if !{
-                                                                                        let __pretty_cp119 = state.offset;
-                                                                                        let __pretty_bcp120 = __builder.checkpoint();
+                                                                                        let __pretty_cp190 = state.offset;
+                                                                                        let __pretty_bcp191 = __builder.checkpoint();
                                                                                         let __ok = (|| -> bool {
                                                                                             if !Self::__error_literal_prettify(state, __builder) {
                                                                                                 return false;
@@ -17430,15 +19091,15 @@ mod __googlesheetsparser_emit_impl {
                                                                                             true
                                                                                         })();
                                                                                         if !__ok {
-                                                                                            state.offset = __pretty_cp119;
-                                                                                            __builder.restore(__pretty_bcp120);
+                                                                                            state.offset = __pretty_cp190;
+                                                                                            __builder.restore(__pretty_bcp191);
                                                                                         }
                                                                                         __ok
                                                                                     } {
                                                                                         {
                                                                                             if !{
-                                                                                                let __pretty_cp117 = state.offset;
-                                                                                                let __pretty_bcp118 = __builder.checkpoint();
+                                                                                                let __pretty_cp188 = state.offset;
+                                                                                                let __pretty_bcp189 = __builder.checkpoint();
                                                                                                 let __ok = (|| -> bool {
                                                                                                     if !Self::__array_literal_prettify(state, __builder) {
                                                                                                         return false;
@@ -17446,15 +19107,15 @@ mod __googlesheetsparser_emit_impl {
                                                                                                     true
                                                                                                 })();
                                                                                                 if !__ok {
-                                                                                                    state.offset = __pretty_cp117;
-                                                                                                    __builder.restore(__pretty_bcp118);
+                                                                                                    state.offset = __pretty_cp188;
+                                                                                                    __builder.restore(__pretty_bcp189);
                                                                                                 }
                                                                                                 __ok
                                                                                             } {
                                                                                                 {
                                                                                                     if !{
-                                                                                                        let __pretty_cp115 = state.offset;
-                                                                                                        let __pretty_bcp116 = __builder.checkpoint();
+                                                                                                        let __pretty_cp186 = state.offset;
+                                                                                                        let __pretty_bcp187 = __builder.checkpoint();
                                                                                                         let __ok = (|| -> bool {
                                                                                                             if !Self::__paren_expr_prettify(state, __builder) {
                                                                                                                 return false;
@@ -17462,8 +19123,8 @@ mod __googlesheetsparser_emit_impl {
                                                                                                             true
                                                                                                         })();
                                                                                                         if !__ok {
-                                                                                                            state.offset = __pretty_cp115;
-                                                                                                            __builder.restore(__pretty_bcp116);
+                                                                                                            state.offset = __pretty_cp186;
+                                                                                                            __builder.restore(__pretty_bcp187);
                                                                                                         }
                                                                                                         __ok
                                                                                                     } {
@@ -17504,1139 +19165,58 @@ mod __googlesheetsparser_emit_impl {
                 Some(__builder.finish())
             })
         }
-        fn __paren_expr_prettify<'a>(
+        fn __postfix_expr_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
             {
                 {
-                    {
-                        if state.src_bytes.get(state.offset).copied() != Some(b'(') {
-                            return false;
-                        }
-                        state.offset += 1;
-                        __builder.char(b'(');
-                    };
-                    {
-                        if !{
-                            let __pretty_cp136 = state.offset;
-                            let __pretty_bcp137 = __builder.checkpoint();
-                            let __ok = (|| -> bool {
-                                {
-                                    let __ows134 = state.offset;
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __builder
-                                        .text_inline_ws(&state.src[__ows134..state.offset]);
-                                    if !Self::__comparison_expr_prettify(state, __builder) {
-                                        return false;
-                                    }
-                                    let __ows135 = state.offset;
-                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                    __builder
-                                        .text_inline_ws(&state.src[__ows135..state.offset]);
-                                };
-                                true
-                            })();
-                            if !__ok {
-                                state.offset = __pretty_cp136;
-                                __builder.restore(__pretty_bcp137);
-                            }
-                            __ok
-                        } {
-                            return false;
-                        }
-                    };
-                    {
-                        if state.src_bytes.get(state.offset).copied() != Some(b')') {
-                            return false;
-                        }
-                        state.offset += 1;
-                        __builder.char(b')');
-                    };
-                };
-                true
-            }
-        }
-        pub fn paren_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__paren_expr_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __func_open_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    {
-                        let __start = state.offset;
-                        if {
-                            let __start = state.offset;
-                            let __result: Option<()> = (|| {
-                                {
-                                    let __b = *state.src_bytes.get(state.offset)?;
-                                    if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                        || (__b >= b'a' && __b <= b'z')))
-                                    {
-                                        return None;
-                                    }
-                                    state.offset += 1;
-                                }
-                                {
-                                    let __end = state.src_bytes.len();
-                                    let mut __pos = state.offset;
-                                    while __pos < __end {
-                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                        if (__b == b'.' || (__b >= b'0' && __b <= b'9')
-                                            || (__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                            || (__b >= b'a' && __b <= b'z'))
-                                        {
-                                            __pos += 1;
-                                        } else {
-                                            break;
-                                        }
-                                    }
-                                    state.offset = __pos;
-                                }
-                                Some(())
-                            })();
-                            if __result.is_some() && state.offset > __start {
-                                Some(
-                                    ::parse_that::Span::new(__start, state.offset, state.src),
-                                )
-                            } else {
-                                state.offset = __start;
-                                None
-                            }
-                        }
-                            .is_none()
-                        {
-                            return false;
-                        }
-                        let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
-                            __builder.text(__matched);
-                        }
-                    };
-                    {
-                        if state.src_bytes.get(state.offset).copied() != Some(b'(') {
-                            return false;
-                        }
-                        state.offset += 1;
-                        __builder.char(b'(');
-                    };
-                };
-                true
-            }
-        }
-        pub fn func_open_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__func_open_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __arg_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    let _ = {
-                        let __pretty_cp138 = state.offset;
-                        let __pretty_bcp139 = __builder.checkpoint();
-                        let __ok = (|| -> bool {
-                            if !Self::__comparison_expr_prettify(state, __builder) {
-                                return false;
-                            }
-                            true
-                        })();
-                        if !__ok {
-                            state.offset = __pretty_cp138;
-                            __builder.restore(__pretty_bcp139);
-                        }
-                        __ok
-                    };
-                    true
-                };
-                true
-            }
-        }
-        pub fn arg_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__arg_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __func_args_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            __builder.group_open();
-            __builder.indent_open();
-            let __pretty_ok = {
-                {
-                    {
-                        let __rep_start150 = state.offset;
-                        let __rep_bcp151 = __builder.checkpoint();
-                        let mut __rep_count148 = 0usize;
-                        while __rep_count148 < 4294967295 {
-                            let __rep_cp149 = state.offset;
-                            let __iter_cp = if __rep_count148 > 0 {
-                                Some(__builder.checkpoint())
-                            } else {
-                                None
-                            };
-                            if __rep_count148 > 0 {
-                                __builder.sep(", ", "");
-                            }
-                            if !{
-                                let __pretty_cp147 = state.offset;
-                                let __ok = (|| -> bool {
-                                    {
-                                        if !Self::__arg_prettify(state, __builder) {
-                                            return false;
-                                        }
-                                        {
-                                            let __silent_cp145 = state.offset;
-                                            let __silent_bcp146 = __builder.light_checkpoint();
-                                            let __ok = (|| -> bool {
-                                                {
-                                                    let _ = {
-                                                        let __pretty_cp143 = state.offset;
-                                                        let __pretty_bcp144 = __builder.checkpoint();
-                                                        let __ok = (|| -> bool {
-                                                            {
-                                                                let __ows140 = state.offset;
-                                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                                let __ows141 = state.offset;
-                                                                {
-                                                                    if state.src_bytes.get(state.offset).copied() != Some(b',')
-                                                                    {
-                                                                        return false;
-                                                                    }
-                                                                    state.offset += 1;
-                                                                    __builder.char(b',');
-                                                                };
-                                                                __builder.text_inline_ws(&state.src[__ows140..__ows141]);
-                                                                let __ows142 = state.offset;
-                                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                                __builder
-                                                                    .text_inline_ws(&state.src[__ows142..state.offset]);
-                                                            };
-                                                            true
-                                                        })();
-                                                        if !__ok {
-                                                            state.offset = __pretty_cp143;
-                                                            __builder.restore(__pretty_bcp144);
-                                                        }
-                                                        __ok
-                                                    };
-                                                    true
-                                                };
-                                                true
-                                            })();
-                                            __builder.light_restore(__silent_bcp146);
-                                            if !__ok {
-                                                state.offset = __silent_cp145;
-                                                return false;
-                                            }
-                                        };
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp147;
-                                }
-                                __ok
-                            } {
-                                state.offset = __rep_cp149;
-                                if let Some(__bcp) = __iter_cp {
-                                    __builder.restore(__bcp);
-                                }
-                                break;
-                            }
-                            if state.offset == __rep_cp149 {
-                                if let Some(__bcp) = __iter_cp {
-                                    __builder.restore(__bcp);
-                                }
-                                break;
-                            }
-                            __rep_count148 += 1;
-                        }
-                        if __rep_count148 < 1 {
-                            state.offset = __rep_start150;
-                            __builder.restore(__rep_bcp151);
-                            return false;
-                        }
-                    };
-                    true
-                }
-            };
-            __builder.indent_close();
-            __builder.group_close();
-            __pretty_ok
-        }
-        pub fn func_args_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__func_args_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __func_call_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            __builder.group_open();
-            __builder.indent_open();
-            let __pretty_ok = {
-                {
-                    {
-                        if !Self::__func_open_prettify(state, __builder) {
-                            return false;
-                        }
-                        {
-                            if !{
-                                let __pretty_cp156 = state.offset;
-                                let __pretty_bcp157 = __builder.checkpoint();
-                                let __ok = (|| -> bool {
-                                    {
-                                        let __ows154 = state.offset;
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        __builder
-                                            .text_inline_ws(&state.src[__ows154..state.offset]);
-                                        {
-                                            let _ = {
-                                                let __pretty_cp152 = state.offset;
-                                                let __pretty_bcp153 = __builder.checkpoint();
-                                                let __ok = (|| -> bool {
-                                                    if !Self::__func_args_prettify(state, __builder) {
-                                                        return false;
-                                                    }
-                                                    true
-                                                })();
-                                                if !__ok {
-                                                    state.offset = __pretty_cp152;
-                                                    __builder.restore(__pretty_bcp153);
-                                                }
-                                                __ok
-                                            };
-                                            true
-                                        };
-                                        let __ows155 = state.offset;
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        __builder
-                                            .text_inline_ws(&state.src[__ows155..state.offset]);
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp156;
-                                    __builder.restore(__pretty_bcp157);
-                                }
-                                __ok
-                            } {
-                                return false;
-                            }
-                        };
-                        {
-                            if state.src_bytes.get(state.offset).copied() != Some(b')') {
-                                return false;
-                            }
-                            state.offset += 1;
-                            __builder.char(b')');
-                        };
-                    };
-                    true
-                }
-            };
-            __builder.indent_close();
-            __builder.group_close();
-            __pretty_ok
-        }
-        pub fn func_call_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__func_call_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __let_binding_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            __builder.group_open();
-            __builder.indent_open();
-            let __pretty_ok = {
-                {
-                    {
-                        {
-                            if !Self::__comparison_expr_prettify(state, __builder) {
-                                return false;
-                            }
-                            {
-                                let __ows158 = state.offset;
-                                ::parse_that::trim_leading_whitespace_mut(state);
-                                let __ows159 = state.offset;
-                                {
-                                    if state.src_bytes.get(state.offset).copied() != Some(b',')
-                                    {
-                                        return false;
-                                    }
-                                    state.offset += 1;
-                                    __builder.char(b',');
-                                };
-                                __builder.text_inline_ws(&state.src[__ows158..__ows159]);
-                                let __ows160 = state.offset;
-                                ::parse_that::trim_leading_whitespace_mut(state);
-                                __builder
-                                    .text_inline_ws(&state.src[__ows160..state.offset]);
-                            };
-                        };
-                        if !Self::__comparison_expr_prettify(state, __builder) {
-                            return false;
-                        }
-                    };
-                    true
-                }
-            };
-            __builder.indent_close();
-            __builder.group_close();
-            __pretty_ok
-        }
-        pub fn let_binding_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__let_binding_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __let_args_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    {
-                        let mut __rep_count165 = 0usize;
-                        while __rep_count165 < 4294967295 {
-                            let __rep_cp166 = state.offset;
-                            let __iter_cp = if __rep_count165 > 0 {
-                                Some(__builder.checkpoint())
-                            } else {
-                                None
-                            };
-                            if __rep_count165 > 0 {
-                                __builder.hardline();
-                            }
-                            if !{
-                                let __pretty_cp164 = state.offset;
-                                let __ok = (|| -> bool {
-                                    {
-                                        if !Self::__let_binding_prettify(state, __builder) {
-                                            return false;
-                                        }
-                                        {
-                                            let __ows161 = state.offset;
-                                            ::parse_that::trim_leading_whitespace_mut(state);
-                                            let __ows162 = state.offset;
-                                            {
-                                                if state.src_bytes.get(state.offset).copied() != Some(b',')
-                                                {
-                                                    return false;
-                                                }
-                                                state.offset += 1;
-                                                __builder.char(b',');
-                                            };
-                                            __builder.text_inline_ws(&state.src[__ows161..__ows162]);
-                                            let __ows163 = state.offset;
-                                            ::parse_that::trim_leading_whitespace_mut(state);
-                                            __builder
-                                                .text_inline_ws(&state.src[__ows163..state.offset]);
-                                        };
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp164;
-                                }
-                                __ok
-                            } {
-                                state.offset = __rep_cp166;
-                                if let Some(__bcp) = __iter_cp {
-                                    __builder.restore(__bcp);
-                                }
-                                break;
-                            }
-                            if state.offset == __rep_cp166 {
-                                if let Some(__bcp) = __iter_cp {
-                                    __builder.restore(__bcp);
-                                }
-                                break;
-                            }
-                            __rep_count165 += 1;
-                        }
-                    };
-                    if !Self::__comparison_expr_prettify(state, __builder) {
-                        return false;
-                    }
-                };
-                true
-            }
-        }
-        pub fn let_args_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__let_args_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __let_call_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            __builder.group_open();
-            __builder.indent_open();
-            let __pretty_ok = {
-                {
-                    {
-                        {
-                            let __start = state.offset;
-                            if {
-                                let __start = state.offset;
-                                let __result: Option<()> = (|| {
-                                    {
-                                        let __b = *state.src_bytes.get(state.offset)?;
-                                        if !((__b == b'L' || __b == b'l')) {
-                                            return None;
-                                        }
-                                        state.offset += 1;
-                                    }
-                                    {
-                                        let __b = *state.src_bytes.get(state.offset)?;
-                                        if !((__b == b'E' || __b == b'e')) {
-                                            return None;
-                                        }
-                                        state.offset += 1;
-                                    }
-                                    {
-                                        let __b = *state.src_bytes.get(state.offset)?;
-                                        if !((__b == b'T' || __b == b't')) {
-                                            return None;
-                                        }
-                                        state.offset += 1;
-                                    }
-                                    if state.src_bytes.get(state.offset).copied() != Some(b'(')
-                                    {
-                                        return None;
-                                    }
-                                    state.offset += 1;
-                                    Some(())
-                                })();
-                                if __result.is_some() && state.offset > __start {
-                                    Some(
-                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                    )
-                                } else {
-                                    state.offset = __start;
-                                    None
-                                }
-                            }
-                                .is_none()
-                            {
-                                return false;
-                            }
-                            let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
-                                __builder.text(__matched);
-                            }
-                        };
-                        {
-                            if !{
-                                let __pretty_cp169 = state.offset;
-                                let __pretty_bcp170 = __builder.checkpoint();
-                                let __ok = (|| -> bool {
-                                    {
-                                        let __ows167 = state.offset;
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        __builder
-                                            .text_inline_ws(&state.src[__ows167..state.offset]);
-                                        if !Self::__let_args_prettify(state, __builder) {
-                                            return false;
-                                        }
-                                        let __ows168 = state.offset;
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        __builder
-                                            .text_inline_ws(&state.src[__ows168..state.offset]);
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp169;
-                                    __builder.restore(__pretty_bcp170);
-                                }
-                                __ok
-                            } {
-                                return false;
-                            }
-                        };
-                        {
-                            if state.src_bytes.get(state.offset).copied() != Some(b')') {
-                                return false;
-                            }
-                            state.offset += 1;
-                            __builder.char(b')');
-                        };
-                    };
-                    true
-                }
-            };
-            __builder.indent_close();
-            __builder.group_close();
-            __pretty_ok
-        }
-        pub fn let_call_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__let_call_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __lambda_params_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            __builder.group_open();
-            __builder.indent_open();
-            let __pretty_ok = {
-                {
-                    {
-                        let __rep_start181 = state.offset;
-                        let __rep_bcp182 = __builder.checkpoint();
-                        let mut __rep_count179 = 0usize;
-                        while __rep_count179 < 4294967295 {
-                            let __rep_cp180 = state.offset;
-                            let __iter_cp = if __rep_count179 > 0 {
-                                Some(__builder.checkpoint())
-                            } else {
-                                None
-                            };
-                            if __rep_count179 > 0 {
-                                __builder.sep(", ", "");
-                            }
-                            if !{
-                                let __pretty_cp178 = state.offset;
-                                let __ok = (|| -> bool {
-                                    {
-                                        if !Self::__comparison_expr_prettify(state, __builder) {
-                                            return false;
-                                        }
-                                        {
-                                            let __silent_cp176 = state.offset;
-                                            let __silent_bcp177 = __builder.light_checkpoint();
-                                            let __ok = (|| -> bool {
-                                                {
-                                                    let _ = {
-                                                        let __pretty_cp174 = state.offset;
-                                                        let __pretty_bcp175 = __builder.checkpoint();
-                                                        let __ok = (|| -> bool {
-                                                            {
-                                                                let __ows171 = state.offset;
-                                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                                let __ows172 = state.offset;
-                                                                {
-                                                                    if state.src_bytes.get(state.offset).copied() != Some(b',')
-                                                                    {
-                                                                        return false;
-                                                                    }
-                                                                    state.offset += 1;
-                                                                    __builder.char(b',');
-                                                                };
-                                                                __builder.text_inline_ws(&state.src[__ows171..__ows172]);
-                                                                let __ows173 = state.offset;
-                                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                                __builder
-                                                                    .text_inline_ws(&state.src[__ows173..state.offset]);
-                                                            };
-                                                            true
-                                                        })();
-                                                        if !__ok {
-                                                            state.offset = __pretty_cp174;
-                                                            __builder.restore(__pretty_bcp175);
-                                                        }
-                                                        __ok
-                                                    };
-                                                    true
-                                                };
-                                                true
-                                            })();
-                                            __builder.light_restore(__silent_bcp177);
-                                            if !__ok {
-                                                state.offset = __silent_cp176;
-                                                return false;
-                                            }
-                                        };
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp178;
-                                }
-                                __ok
-                            } {
-                                state.offset = __rep_cp180;
-                                if let Some(__bcp) = __iter_cp {
-                                    __builder.restore(__bcp);
-                                }
-                                break;
-                            }
-                            if state.offset == __rep_cp180 {
-                                if let Some(__bcp) = __iter_cp {
-                                    __builder.restore(__bcp);
-                                }
-                                break;
-                            }
-                            __rep_count179 += 1;
-                        }
-                        if __rep_count179 < 1 {
-                            state.offset = __rep_start181;
-                            __builder.restore(__rep_bcp182);
-                            return false;
-                        }
-                    };
-                    true
-                }
-            };
-            __builder.indent_close();
-            __builder.group_close();
-            __pretty_ok
-        }
-        pub fn lambda_params_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__lambda_params_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __lambda_call_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            __builder.group_open();
-            __builder.indent_open();
-            let __pretty_ok = {
-                {
-                    {
-                        {
-                            let __start = state.offset;
-                            if {
-                                let __start = state.offset;
-                                let __result: Option<()> = (|| {
-                                    {
-                                        let __b = *state.src_bytes.get(state.offset)?;
-                                        if !((__b == b'L' || __b == b'l')) {
-                                            return None;
-                                        }
-                                        state.offset += 1;
-                                    }
-                                    {
-                                        let __b = *state.src_bytes.get(state.offset)?;
-                                        if !((__b == b'A' || __b == b'a')) {
-                                            return None;
-                                        }
-                                        state.offset += 1;
-                                    }
-                                    {
-                                        let __b = *state.src_bytes.get(state.offset)?;
-                                        if !((__b == b'M' || __b == b'm')) {
-                                            return None;
-                                        }
-                                        state.offset += 1;
-                                    }
-                                    {
-                                        let __b = *state.src_bytes.get(state.offset)?;
-                                        if !((__b == b'B' || __b == b'b')) {
-                                            return None;
-                                        }
-                                        state.offset += 1;
-                                    }
-                                    {
-                                        let __b = *state.src_bytes.get(state.offset)?;
-                                        if !((__b == b'D' || __b == b'd')) {
-                                            return None;
-                                        }
-                                        state.offset += 1;
-                                    }
-                                    {
-                                        let __b = *state.src_bytes.get(state.offset)?;
-                                        if !((__b == b'A' || __b == b'a')) {
-                                            return None;
-                                        }
-                                        state.offset += 1;
-                                    }
-                                    if state.src_bytes.get(state.offset).copied() != Some(b'(')
-                                    {
-                                        return None;
-                                    }
-                                    state.offset += 1;
-                                    Some(())
-                                })();
-                                if __result.is_some() && state.offset > __start {
-                                    Some(
-                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                    )
-                                } else {
-                                    state.offset = __start;
-                                    None
-                                }
-                            }
-                                .is_none()
-                            {
-                                return false;
-                            }
-                            let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
-                                __builder.text(__matched);
-                            }
-                        };
-                        {
-                            if !{
-                                let __pretty_cp185 = state.offset;
-                                let __pretty_bcp186 = __builder.checkpoint();
-                                let __ok = (|| -> bool {
-                                    {
-                                        let __ows183 = state.offset;
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        __builder
-                                            .text_inline_ws(&state.src[__ows183..state.offset]);
-                                        if !Self::__lambda_params_prettify(state, __builder) {
-                                            return false;
-                                        }
-                                        let __ows184 = state.offset;
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        __builder
-                                            .text_inline_ws(&state.src[__ows184..state.offset]);
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp185;
-                                    __builder.restore(__pretty_bcp186);
-                                }
-                                __ok
-                            } {
-                                return false;
-                            }
-                        };
-                        {
-                            if state.src_bytes.get(state.offset).copied() != Some(b')') {
-                                return false;
-                            }
-                            state.offset += 1;
-                            __builder.char(b')');
-                        };
-                    };
-                    true
-                }
-            };
-            __builder.indent_close();
-            __builder.group_close();
-            __pretty_ok
-        }
-        pub fn lambda_call_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__lambda_call_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __array_row_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    if !Self::__comparison_expr_prettify(state, __builder) {
+                    if !Self::__primary_prettify(state, __builder) {
                         return false;
                     }
                     {
-                        let mut __rep_count194 = 0usize;
-                        while __rep_count194 < 4294967295 {
-                            let __rep_cp195 = state.offset;
+                        let mut __rep_count207 = 0usize;
+                        while __rep_count207 < 4294967295 {
+                            let __rep_cp208 = state.offset;
                             if !{
-                                let __pretty_cp192 = state.offset;
-                                let __pretty_bcp193 = __builder.checkpoint();
+                                let __pretty_cp205 = state.offset;
+                                let __pretty_bcp206 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
-                                        __builder.sep(", ", "");
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'%')
                                         {
-                                            let __silent_cp190 = state.offset;
-                                            let __silent_bcp191 = __builder.light_checkpoint();
-                                            let __ok = (|| -> bool {
-                                                {
-                                                    let __ows187 = state.offset;
-                                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                                    let __ows188 = state.offset;
-                                                    {
-                                                        if state.src_bytes.get(state.offset).copied() != Some(b',')
-                                                        {
-                                                            return false;
-                                                        }
-                                                        state.offset += 1;
-                                                        __builder.char(b',');
-                                                    };
-                                                    __builder.text_inline_ws(&state.src[__ows187..__ows188]);
-                                                    let __ows189 = state.offset;
-                                                    ::parse_that::trim_leading_whitespace_mut(state);
-                                                    __builder
-                                                        .text_inline_ws(&state.src[__ows189..state.offset]);
-                                                };
-                                                true
-                                            })();
-                                            __builder.light_restore(__silent_bcp191);
-                                            if !__ok {
-                                                state.offset = __silent_cp190;
-                                                return false;
-                                            }
-                                        };
-                                        if !Self::__comparison_expr_prettify(state, __builder) {
                                             return false;
                                         }
+                                        state.offset += 1;
+                                        __builder.char(b'%');
                                     };
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp192;
-                                    __builder.restore(__pretty_bcp193);
+                                    state.offset = __pretty_cp205;
+                                    __builder.restore(__pretty_bcp206);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp195;
+                                state.offset = __rep_cp208;
                                 break;
                             }
-                            if state.offset == __rep_cp195 {
+                            if state.offset == __rep_cp208 {
                                 break;
                             }
-                            __rep_count194 += 1;
+                            __rep_count207 += 1;
                         }
                     };
                 };
                 true
             }
         }
-        pub fn array_row_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn postfix_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
                 );
-                if !Self::__array_row_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __array_rows_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            __builder.group_open();
-            __builder.indent_open();
-            let __pretty_ok = {
-                {
-                    {
-                        if !Self::__array_row_prettify(state, __builder) {
-                            return false;
-                        }
-                        {
-                            let mut __rep_count203 = 0usize;
-                            while __rep_count203 < 4294967295 {
-                                let __rep_cp204 = state.offset;
-                                if !{
-                                    let __pretty_cp201 = state.offset;
-                                    let __pretty_bcp202 = __builder.checkpoint();
-                                    let __ok = (|| -> bool {
-                                        {
-                                            __builder.sep("; ", "");
-                                            {
-                                                let __silent_cp199 = state.offset;
-                                                let __silent_bcp200 = __builder.light_checkpoint();
-                                                let __ok = (|| -> bool {
-                                                    {
-                                                        let __ows196 = state.offset;
-                                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                                        let __ows197 = state.offset;
-                                                        {
-                                                            if state.src_bytes.get(state.offset).copied() != Some(b';')
-                                                            {
-                                                                return false;
-                                                            }
-                                                            state.offset += 1;
-                                                            __builder.char(b';');
-                                                        };
-                                                        __builder.text_inline_ws(&state.src[__ows196..__ows197]);
-                                                        let __ows198 = state.offset;
-                                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                                        __builder
-                                                            .text_inline_ws(&state.src[__ows198..state.offset]);
-                                                    };
-                                                    true
-                                                })();
-                                                __builder.light_restore(__silent_bcp200);
-                                                if !__ok {
-                                                    state.offset = __silent_cp199;
-                                                    return false;
-                                                }
-                                            };
-                                            if !Self::__array_row_prettify(state, __builder) {
-                                                return false;
-                                            }
-                                        };
-                                        true
-                                    })();
-                                    if !__ok {
-                                        state.offset = __pretty_cp201;
-                                        __builder.restore(__pretty_bcp202);
-                                    }
-                                    __ok
-                                } {
-                                    state.offset = __rep_cp204;
-                                    break;
-                                }
-                                if state.offset == __rep_cp204 {
-                                    break;
-                                }
-                                __rep_count203 += 1;
-                            }
-                        };
-                    };
-                    true
-                }
-            };
-            __builder.indent_close();
-            __builder.group_close();
-            __pretty_ok
-        }
-        pub fn array_rows_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__array_rows_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __array_literal_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            __builder.group_open();
-            __builder.indent_open();
-            let __pretty_ok = {
-                {
-                    {
-                        {
-                            if state.src_bytes.get(state.offset).copied() != Some(b'{') {
-                                return false;
-                            }
-                            state.offset += 1;
-                            __builder.char(b'{');
-                        };
-                        {
-                            if !{
-                                let __pretty_cp207 = state.offset;
-                                let __pretty_bcp208 = __builder.checkpoint();
-                                let __ok = (|| -> bool {
-                                    {
-                                        let __ows205 = state.offset;
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        __builder
-                                            .text_inline_ws(&state.src[__ows205..state.offset]);
-                                        if !Self::__array_rows_prettify(state, __builder) {
-                                            return false;
-                                        }
-                                        let __ows206 = state.offset;
-                                        ::parse_that::trim_leading_whitespace_mut(state);
-                                        __builder
-                                            .text_inline_ws(&state.src[__ows206..state.offset]);
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp207;
-                                    __builder.restore(__pretty_bcp208);
-                                }
-                                __ok
-                            } {
-                                return false;
-                            }
-                        };
-                        {
-                            if state.src_bytes.get(state.offset).copied() != Some(b'}') {
-                                return false;
-                            }
-                            state.offset += 1;
-                            __builder.char(b'}');
-                        };
-                    };
-                    true
-                }
-            };
-            __builder.indent_close();
-            __builder.group_close();
-            __pretty_ok
-        }
-        pub fn array_literal_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__array_literal_prettify(state, &mut __builder) {
+                if !Self::__postfix_expr_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
@@ -18687,7 +19267,7 @@ mod __googlesheetsparser_emit_impl {
                             __builder.text(__matched);
                         }
                     };
-                    if !Self::__comparison_expr_prettify(state, __builder) {
+                    if !Self::__expression_prettify(state, __builder) {
                         return false;
                     }
                 };
@@ -18741,7 +19321,43 @@ mod __googlesheetsparser_emit_impl {
         ) {
             __ser.text(__v.span_text());
         }
+        pub fn serialize_identifier<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: GoogleSheetsParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_compare_op<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: GoogleSheetsParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_unary_prefix<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: GoogleSheetsParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_mul_op<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: GoogleSheetsParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_add_op<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: GoogleSheetsParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
         pub fn serialize_cell<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: GoogleSheetsParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_func_open<'a, __S: ::bbnf_ser::Serializer<'a>>(
             __v: GoogleSheetsParserNodeView<'a>,
             __ser: &mut __S,
         ) {
@@ -18759,43 +19375,7 @@ mod __googlesheetsparser_emit_impl {
         ) {
             __ser.text(__v.span_text());
         }
-        pub fn serialize_identifier<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: GoogleSheetsParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
-        pub fn serialize_compare_op<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: GoogleSheetsParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
         pub fn serialize_comparison_expr<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: GoogleSheetsParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
-        pub fn serialize_concat_expr<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: GoogleSheetsParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
-        pub fn serialize_add_op<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: GoogleSheetsParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
-        pub fn serialize_add_expr<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: GoogleSheetsParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
-        pub fn serialize_mul_op<'a, __S: ::bbnf_ser::Serializer<'a>>(
             __v: GoogleSheetsParserNodeView<'a>,
             __ser: &mut __S,
         ) {
@@ -18807,43 +19387,13 @@ mod __googlesheetsparser_emit_impl {
         ) {
             __ser.text(__v.span_text());
         }
-        pub fn serialize_exp_expr<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: GoogleSheetsParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
-        pub fn serialize_unary_prefix<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: GoogleSheetsParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
         pub fn serialize_unary_expr<'a, __S: ::bbnf_ser::Serializer<'a>>(
             __v: GoogleSheetsParserNodeView<'a>,
             __ser: &mut __S,
         ) {
             __ser.text(__v.span_text());
         }
-        pub fn serialize_postfix_expr<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: GoogleSheetsParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
-        pub fn serialize_primary<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: GoogleSheetsParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
         pub fn serialize_paren_expr<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: GoogleSheetsParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
-        pub fn serialize_func_open<'a, __S: ::bbnf_ser::Serializer<'a>>(
             __v: GoogleSheetsParserNodeView<'a>,
             __ser: &mut __S,
         ) {
@@ -18861,37 +19411,13 @@ mod __googlesheetsparser_emit_impl {
         ) {
             __ser.text(__v.span_text());
         }
-        pub fn serialize_func_call<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: GoogleSheetsParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
         pub fn serialize_let_binding<'a, __S: ::bbnf_ser::Serializer<'a>>(
             __v: GoogleSheetsParserNodeView<'a>,
             __ser: &mut __S,
         ) {
             __ser.text(__v.span_text());
         }
-        pub fn serialize_let_args<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: GoogleSheetsParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
-        pub fn serialize_let_call<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: GoogleSheetsParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
         pub fn serialize_lambda_params<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: GoogleSheetsParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
-        pub fn serialize_lambda_call<'a, __S: ::bbnf_ser::Serializer<'a>>(
             __v: GoogleSheetsParserNodeView<'a>,
             __ser: &mut __S,
         ) {
@@ -18910,6 +19436,60 @@ mod __googlesheetsparser_emit_impl {
             __ser.text(__v.span_text());
         }
         pub fn serialize_array_literal<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: GoogleSheetsParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_concat_expr<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: GoogleSheetsParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_add_expr<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: GoogleSheetsParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_exp_expr<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: GoogleSheetsParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_lambda_call<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: GoogleSheetsParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_expression<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: GoogleSheetsParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_func_call<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: GoogleSheetsParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_let_args<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: GoogleSheetsParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_let_call<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: GoogleSheetsParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_postfix_expr<'a, __S: ::bbnf_ser::Serializer<'a>>(
             __v: GoogleSheetsParserNodeView<'a>,
             __ser: &mut __S,
         ) {
@@ -18945,93 +19525,93 @@ mod __googlesheetsparser_emit_impl {
                     Self::serialize_cell_ref(__v, __ser);
                 }
                 6u8 => {
-                    Self::serialize_cell(__v, __ser);
-                }
-                7u8 => {
-                    Self::serialize_range_ref(__v, __ser);
-                }
-                8u8 => {
-                    Self::serialize_cell_or_range(__v, __ser);
-                }
-                9u8 => {
                     Self::serialize_identifier(__v, __ser);
                 }
-                10u8 => {
+                7u8 => {
                     Self::serialize_compare_op(__v, __ser);
                 }
-                11u8 => {
-                    Self::serialize_comparison_expr(__v, __ser);
+                8u8 => {
+                    Self::serialize_unary_prefix(__v, __ser);
                 }
-                12u8 => {
-                    Self::serialize_concat_expr(__v, __ser);
+                9u8 => {
+                    Self::serialize_mul_op(__v, __ser);
                 }
-                13u8 => {
+                10u8 => {
                     Self::serialize_add_op(__v, __ser);
                 }
+                11u8 => {
+                    Self::serialize_cell(__v, __ser);
+                }
+                12u8 => {
+                    Self::serialize_func_open(__v, __ser);
+                }
+                13u8 => {
+                    Self::serialize_range_ref(__v, __ser);
+                }
                 14u8 => {
-                    Self::serialize_add_expr(__v, __ser);
+                    Self::serialize_cell_or_range(__v, __ser);
                 }
                 15u8 => {
-                    Self::serialize_mul_op(__v, __ser);
+                    Self::serialize_comparison_expr(__v, __ser);
                 }
                 16u8 => {
                     Self::serialize_mul_expr(__v, __ser);
                 }
                 17u8 => {
-                    Self::serialize_exp_expr(__v, __ser);
-                }
-                18u8 => {
-                    Self::serialize_unary_prefix(__v, __ser);
-                }
-                19u8 => {
                     Self::serialize_unary_expr(__v, __ser);
                 }
-                20u8 => {
-                    Self::serialize_postfix_expr(__v, __ser);
-                }
-                21u8 => {
-                    Self::serialize_primary(__v, __ser);
-                }
-                22u8 => {
+                18u8 => {
                     Self::serialize_paren_expr(__v, __ser);
                 }
-                23u8 => {
-                    Self::serialize_func_open(__v, __ser);
-                }
-                24u8 => {
+                19u8 => {
                     Self::serialize_arg(__v, __ser);
                 }
-                25u8 => {
+                20u8 => {
                     Self::serialize_func_args(__v, __ser);
                 }
-                26u8 => {
-                    Self::serialize_func_call(__v, __ser);
-                }
-                27u8 => {
+                21u8 => {
                     Self::serialize_let_binding(__v, __ser);
                 }
-                28u8 => {
-                    Self::serialize_let_args(__v, __ser);
-                }
-                29u8 => {
-                    Self::serialize_let_call(__v, __ser);
-                }
-                30u8 => {
+                22u8 => {
                     Self::serialize_lambda_params(__v, __ser);
                 }
-                31u8 => {
-                    Self::serialize_lambda_call(__v, __ser);
-                }
-                32u8 => {
+                23u8 => {
                     Self::serialize_array_row(__v, __ser);
                 }
-                33u8 => {
+                24u8 => {
                     Self::serialize_array_rows(__v, __ser);
                 }
-                34u8 => {
+                25u8 => {
                     Self::serialize_array_literal(__v, __ser);
                 }
+                26u8 => {
+                    Self::serialize_concat_expr(__v, __ser);
+                }
+                27u8 => {
+                    Self::serialize_add_expr(__v, __ser);
+                }
+                28u8 => {
+                    Self::serialize_exp_expr(__v, __ser);
+                }
+                29u8 => {
+                    Self::serialize_lambda_call(__v, __ser);
+                }
+                30u8 => {
+                    Self::serialize_expression(__v, __ser);
+                }
+                31u8 => {
+                    Self::serialize_func_call(__v, __ser);
+                }
+                32u8 => {
+                    Self::serialize_let_args(__v, __ser);
+                }
+                33u8 => {
+                    Self::serialize_let_call(__v, __ser);
+                }
                 35u8 => {
+                    Self::serialize_postfix_expr(__v, __ser);
+                }
+                36u8 => {
                     Self::serialize_formula(__v, __ser);
                 }
                 _ => {
@@ -19174,7 +19754,7 @@ mod __googlesheetsparser_emit_impl {
         cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     ) -> &'p str {
-        match cst_find_identifier_cursor(cursor, 9u8) {
+        match cst_find_identifier_cursor(cursor, 6u8) {
             ::core::option::Option::Some(found) => {
                 let (lo, hi) = found.span();
                 &input[lo as usize..hi as usize]
@@ -19190,7 +19770,7 @@ mod __googlesheetsparser_emit_impl {
         cursor: crate::runtime::tape::TapeCursor<'p>,
         _input: &'p str,
     ) -> (u32, u32) {
-        cst_find_identifier_cursor(cursor, 9u8).map(|c| c.span()).unwrap_or((0, 0))
+        cst_find_identifier_cursor(cursor, 6u8).map(|c| c.span()).unwrap_or((0, 0))
     }
     /// DFS helper shared by `cst_identifier_text` and
     /// `cst_identifier_span`. Returns the first cursor under

@@ -240,11 +240,11 @@ mod __ebnfparser_emit_impl {
     /// Mined literal-led Alt branches, sorted lexicographically.
     /// Binary search dispatches in O(log N) compares; LLVM lowers
     /// the fixed-size table to a balanced compare tree.
-    static __PHF_EbnfParser_6_KW: [&[u8]; 3usize] = [b"(", b"[", b"{"];
+    static __PHF_EbnfParser_9_KW: [&[u8]; 3usize] = [b"(", b"[", b"{"];
     /// Per-entry branch discriminant — parallel to [`#kw_ident`].
     /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
     /// branch with discriminant `#idx_ident[i]`.
-    static __PHF_EbnfParser_6_IDX: [u8; 3usize] = [0, 1, 2];
+    static __PHF_EbnfParser_9_IDX: [u8; 3usize] = [0, 1, 2];
     /// AW-III.W6.2 — dispatch the mined keyword table for rule
     /// `#rule_id`.
     ///
@@ -254,10 +254,10 @@ mod __ebnfparser_emit_impl {
     /// scan to a single binary search.
     #[allow(dead_code)]
     #[inline]
-    fn __phf_EbnfParser_dispatch_6(bytes: &[u8]) -> ::core::option::Option<u8> {
-        match __PHF_EbnfParser_6_KW.binary_search(&bytes) {
+    fn __phf_EbnfParser_dispatch_9(bytes: &[u8]) -> ::core::option::Option<u8> {
+        match __PHF_EbnfParser_9_KW.binary_search(&bytes) {
             ::core::result::Result::Ok(idx) => {
-                ::core::option::Option::Some(__PHF_EbnfParser_6_IDX[idx])
+                ::core::option::Option::Some(__PHF_EbnfParser_9_IDX[idx])
             }
             ::core::result::Result::Err(_) => ::core::option::Option::None,
         }
@@ -296,7 +296,7 @@ mod __ebnfparser_emit_impl {
     /// grammar. Non-zero iff the lift admitted ≥ 1 chain OR the
     /// shape classifier admitted ≥ 1 single-rung Pratt rule.
     pub const PRECEDENCE_OPERATOR_COUNT: usize = 0usize;
-    static __DTA_REGEX_125: &str = "[ \\t\\n\\r\\f]*";
+    static __DTA_REGEX_124: &str = "[ \\t\\n\\r\\f]*";
     #[inline]
     #[cold]
     fn __regex_scan_EbnfParser(
@@ -304,8 +304,8 @@ mod __ebnfparser_emit_impl {
         input: &[u8],
         pos: usize,
     ) -> ::core::option::Option<u32> {
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_125.as_ptr())
-            || pattern == __DTA_REGEX_125
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_124.as_ptr())
+            || pattern == __DTA_REGEX_124
         {
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
@@ -2305,315 +2305,6 @@ mod __ebnfparser_emit_impl {
             );
         Ok(crate::runtime::tape::TapeOffset(off))
     }
-    /// AX.W0a.2.b — per-grammar AltDispatch-shape parse function.
-    ///
-    /// Generalized byte-dispatch over `Alt(leaf, leaf, …)` bodies.
-    /// Each branch is a classified-Ref, a Literal, a Regex, or a
-    /// leaf-only Seq (prefix-tree factoring). No recursion through
-    /// `__value` — per-Ref routing emits direct shape-fn calls.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-    /// recursion rationale.
-    #[inline]
-    #[allow(
-        non_snake_case,
-        clippy::too_many_arguments,
-        unused_variables,
-        unused_mut,
-        unused_assignments,
-        unreachable_code
-    )]
-    pub fn parse_altdispatch_EbnfParser_character(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let first = __shape_support_EbnfParser::skip_space(input, p, state)
-            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                offset: *p as u32,
-            })?;
-        let alt_lo = *p as u32;
-        let alt_child = builder.enter_post_order_children();
-        let _ = alt_child;
-        let save_p = *p;
-        let save_child = builder.position();
-        let _ = save_p;
-        let _ = save_child;
-        'try_branches: loop {
-            match first {
-                32u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [32u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                48u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                49u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                50u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                51u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                52u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                53u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                54u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                55u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                56u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                57u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                95u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [95u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                _ => {}
-            }
-            {
-                let attempt_p = *p;
-                match { parse_altdispatch_EbnfParser_symbol(input, p, state, builder) } {
-                    Ok(_) => break 'try_branches,
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_EbnfParser::skip_space(input, p, state);
-                    parse_altdispatch_EbnfParser_letter(input, p, state, builder)
-                } {
-                    Ok(_) => break 'try_branches,
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            builder.exit_post_order_children();
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
-        }
-        let alt_hi = *p as u32;
-        let off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Rule,
-                alt_lo,
-                3u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                off,
-                alt_hi,
-                crate::runtime::tape::TapeOffset(alt_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(off))
-    }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
     ///
@@ -3061,7 +2752,7 @@ mod __ebnfparser_emit_impl {
             .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
-                4u8,
+                3u8,
                 0u8,
                 0u16,
             );
@@ -3072,6 +2763,315 @@ mod __ebnfparser_emit_impl {
                 crate::runtime::tape::TapeOffset(outer_child),
             );
         Ok(crate::runtime::tape::TapeOffset(outer_off))
+    }
+    /// AX.W0a.2.b — per-grammar AltDispatch-shape parse function.
+    ///
+    /// Generalized byte-dispatch over `Alt(leaf, leaf, …)` bodies.
+    /// Each branch is a classified-Ref, a Literal, a Regex, or a
+    /// leaf-only Seq (prefix-tree factoring). No recursion through
+    /// `__value` — per-Ref routing emits direct shape-fn calls.
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
+    /// recursion rationale.
+    #[inline]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut,
+        unused_assignments,
+        unreachable_code
+    )]
+    pub fn parse_altdispatch_EbnfParser_character(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut crate::runtime::tape::Tape<()>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let first = __shape_support_EbnfParser::skip_space(input, p, state)
+            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                offset: *p as u32,
+            })?;
+        let alt_lo = *p as u32;
+        let alt_child = builder.enter_post_order_children();
+        let _ = alt_child;
+        let save_p = *p;
+        let save_child = builder.position();
+        let _ = save_p;
+        let _ = save_child;
+        'try_branches: loop {
+            match first {
+                32u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [32u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                crate::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                48u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                49u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                50u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                51u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                52u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                53u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                54u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                55u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                56u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                57u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                95u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [95u8] {
+                        *p = end;
+                        let _ = builder
+                            .push_leaf(
+                                crate::runtime::tape::TapeKind::Literal,
+                                at as u32,
+                                end as u32,
+                                0,
+                                0,
+                            );
+                        break 'try_branches;
+                    }
+                }
+                _ => {}
+            }
+            {
+                let attempt_p = *p;
+                match { parse_altdispatch_EbnfParser_symbol(input, p, state, builder) } {
+                    Ok(_) => break 'try_branches,
+                    Err(_) => {
+                        *p = attempt_p;
+                    }
+                }
+            }
+            {
+                let attempt_p = *p;
+                match {
+                    let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                    parse_altdispatch_EbnfParser_letter(input, p, state, builder)
+                } {
+                    Ok(_) => break 'try_branches,
+                    Err(_) => {
+                        *p = attempt_p;
+                    }
+                }
+            }
+            builder.exit_post_order_children();
+            return Err(crate::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+            });
+        }
+        let alt_hi = *p as u32;
+        let off = builder
+            .begin_compound_post(
+                crate::runtime::tape::TapeKind::Rule,
+                alt_lo,
+                4u8,
+                0u8,
+                0u16,
+            );
+        builder
+            .end_compound_post_order(
+                off,
+                alt_hi,
+                crate::runtime::tape::TapeOffset(alt_child),
+            );
+        Ok(crate::runtime::tape::TapeOffset(off))
     }
     /// AW-V.W3.2 — per-grammar Keyword-shape parse function
     /// (Alt of literal-led or Ref-led branches).
@@ -3430,6 +3430,520 @@ mod __ebnfparser_emit_impl {
             }
         }
     }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_EbnfParser_concatenation(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut crate::runtime::tape::Tape<()>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let span_lo = *p as u32;
+        let __save_cols = builder.position();
+        let outer_child = builder.enter_post_order_children();
+        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            {
+                let repeat_lo = *p as u32;
+                let repeat_child = builder.enter_post_order_children();
+                let mut iter_count: u32 = 0;
+                loop {
+                    let save_p = *p;
+                    let save_cols = builder.position();
+                    let iter_lo = *p as u32;
+                    let iter_child = builder.enter_post_order_children();
+                    let attempt = (|| -> ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > {
+                        {
+                            let span_lo = *p as u32;
+                            let Some(match_len) = __regex_scan_EbnfParser(
+                                "[ \\t\\n\\r\\f]*",
+                                input,
+                                *p,
+                            ) else {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: span_lo,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            };
+                            *p += match_len as usize;
+                            let span_hi = *p as u32;
+                            let _ = builder
+                                .push_leaf_with(
+                                    crate::runtime::tape::TapeKind::Span,
+                                    span_lo,
+                                    span_hi,
+                                    6u8,
+                                    0,
+                                    crate::runtime::tape::PayloadData::None,
+                                );
+                        }
+                        let _ = ({
+                            let _ = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            parse_flat_EbnfParser_factor(input, p, state, builder)
+                        })?;
+                        {
+                            let span_lo = *p as u32;
+                            let Some(match_len) = __regex_scan_EbnfParser(
+                                "[ \\t\\n\\r\\f]*",
+                                input,
+                                *p,
+                            ) else {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: span_lo,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            };
+                            *p += match_len as usize;
+                            let span_hi = *p as u32;
+                            let _ = builder
+                                .push_leaf_with(
+                                    crate::runtime::tape::TapeKind::Span,
+                                    span_lo,
+                                    span_hi,
+                                    6u8,
+                                    0,
+                                    crate::runtime::tape::PayloadData::None,
+                                );
+                        }
+                        let repeat_lo = *p as u32;
+                        let repeat_child = builder.enter_post_order_children();
+                        let iter_save_p = *p;
+                        let iter_save_cols = builder.position();
+                        let iter_lo = *p as u32;
+                        let iter_child = builder.enter_post_order_children();
+                        let opt_attempt: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [44u8] {
+                                return Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            let _ = builder
+                                .push_leaf_with(
+                                    crate::runtime::tape::TapeKind::Literal,
+                                    at as u32,
+                                    end as u32,
+                                    6u8,
+                                    0,
+                                    crate::runtime::tape::PayloadData::None,
+                                );
+                            Ok(())
+                        })();
+                        let matched = opt_attempt.is_ok();
+                        if !matched {
+                            *p = iter_save_p;
+                            builder.rollback_to(iter_save_cols);
+                            builder.exit_post_order_children();
+                        } else {
+                            let iter_hi = *p as u32;
+                            let __iter_off = builder
+                                .begin_compound_post(
+                                    crate::runtime::tape::TapeKind::Seq,
+                                    iter_lo,
+                                    0u8,
+                                    0u8,
+                                    0u16,
+                                );
+                            builder
+                                .end_compound_post_order(
+                                    __iter_off,
+                                    iter_hi,
+                                    crate::runtime::tape::TapeOffset(iter_child),
+                                );
+                        }
+                        let repeat_hi = *p as u32;
+                        let __repeat_off = builder
+                            .begin_compound_post(
+                                crate::runtime::tape::TapeKind::Repeat,
+                                repeat_lo,
+                                0u8,
+                                0u8,
+                                0u16,
+                            );
+                        builder
+                            .end_compound_post_order(
+                                __repeat_off,
+                                repeat_hi,
+                                crate::runtime::tape::TapeOffset(repeat_child),
+                            );
+                        Ok(())
+                    })();
+                    if attempt.is_err() {
+                        *p = save_p;
+                        builder.rollback_to(save_cols);
+                        builder.exit_post_order_children();
+                        break;
+                    }
+                    if *p == save_p {
+                        builder.rollback_to(save_cols);
+                        builder.exit_post_order_children();
+                        break;
+                    }
+                    let iter_hi = *p as u32;
+                    let __iter_off = builder
+                        .begin_compound_post(
+                            crate::runtime::tape::TapeKind::Seq,
+                            iter_lo,
+                            0u8,
+                            0u8,
+                            0u16,
+                        );
+                    builder
+                        .end_compound_post_order(
+                            __iter_off,
+                            iter_hi,
+                            crate::runtime::tape::TapeOffset(iter_child),
+                        );
+                    iter_count = iter_count.saturating_add(1);
+                }
+                if iter_count < (1usize as u32) {
+                    builder.exit_post_order_children();
+                    return Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                let repeat_hi = *p as u32;
+                let __repeat_off = builder
+                    .begin_compound_post(
+                        crate::runtime::tape::TapeKind::Repeat,
+                        repeat_lo,
+                        0u8,
+                        0u8,
+                        0u16,
+                    );
+                builder
+                    .end_compound_post_order(
+                        __repeat_off,
+                        repeat_hi,
+                        crate::runtime::tape::TapeOffset(repeat_child),
+                    );
+            }
+            Ok(())
+        })();
+        if let ::core::result::Result::Err(__err) = __post_body {
+            builder.rollback_to(__save_cols);
+            builder.exit_post_order_children();
+            return ::core::result::Result::Err(__err);
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder
+            .begin_compound_post(
+                crate::runtime::tape::TapeKind::Seq,
+                span_lo,
+                6u8,
+                0u8,
+                0u16,
+            );
+        builder
+            .end_compound_post_order(
+                outer_off,
+                span_hi,
+                crate::runtime::tape::TapeOffset(outer_child),
+            );
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
+    }
+    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
+    /// walker-tape-identical.
+    ///
+    /// Emits one outer Seq compound plus per-position inner
+    /// records. Ref / Regex / Alt positions recurse through the
+    /// grammar's value-position dispatcher (the walker's
+    /// authoritative state path).
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
+    /// sits on a cross-shape recursive edge
+    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
+    /// peer shape fn → back here through the grammar's `__value`
+    /// discriminant). LLVM's inliner collapses plain `#[inline]`
+    /// candidates only when profitable and bails cleanly on
+    /// detected recursion; `#[inline(always)]` would recurse the
+    /// inliner until stack exhaustion (observed SIGBUS in
+    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_EbnfParser_alternation(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut crate::runtime::tape::Tape<()>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let span_lo = *p as u32;
+        let __save_cols = builder.position();
+        let outer_child = builder.enter_post_order_children();
+        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            {
+                let repeat_lo = *p as u32;
+                let repeat_child = builder.enter_post_order_children();
+                let mut iter_count: u32 = 0;
+                loop {
+                    let save_p = *p;
+                    let save_cols = builder.position();
+                    let iter_lo = *p as u32;
+                    let iter_child = builder.enter_post_order_children();
+                    let attempt = (|| -> ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > {
+                        {
+                            let span_lo = *p as u32;
+                            let Some(match_len) = __regex_scan_EbnfParser(
+                                "[ \\t\\n\\r\\f]*",
+                                input,
+                                *p,
+                            ) else {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: span_lo,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            };
+                            *p += match_len as usize;
+                            let span_hi = *p as u32;
+                            let _ = builder
+                                .push_leaf_with(
+                                    crate::runtime::tape::TapeKind::Span,
+                                    span_lo,
+                                    span_hi,
+                                    7u8,
+                                    0,
+                                    crate::runtime::tape::PayloadData::None,
+                                );
+                        }
+                        let _ = ({
+                            parse_flat_EbnfParser_concatenation(input, p, state, builder)
+                        })?;
+                        {
+                            let span_lo = *p as u32;
+                            let Some(match_len) = __regex_scan_EbnfParser(
+                                "[ \\t\\n\\r\\f]*",
+                                input,
+                                *p,
+                            ) else {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: span_lo,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            };
+                            *p += match_len as usize;
+                            let span_hi = *p as u32;
+                            let _ = builder
+                                .push_leaf_with(
+                                    crate::runtime::tape::TapeKind::Span,
+                                    span_lo,
+                                    span_hi,
+                                    7u8,
+                                    0,
+                                    crate::runtime::tape::PayloadData::None,
+                                );
+                        }
+                        let repeat_lo = *p as u32;
+                        let repeat_child = builder.enter_post_order_children();
+                        let iter_save_p = *p;
+                        let iter_save_cols = builder.position();
+                        let iter_lo = *p as u32;
+                        let iter_child = builder.enter_post_order_children();
+                        let opt_attempt: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [124u8] {
+                                return Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            let _ = builder
+                                .push_leaf_with(
+                                    crate::runtime::tape::TapeKind::Literal,
+                                    at as u32,
+                                    end as u32,
+                                    7u8,
+                                    0,
+                                    crate::runtime::tape::PayloadData::None,
+                                );
+                            Ok(())
+                        })();
+                        let matched = opt_attempt.is_ok();
+                        if !matched {
+                            *p = iter_save_p;
+                            builder.rollback_to(iter_save_cols);
+                            builder.exit_post_order_children();
+                        } else {
+                            let iter_hi = *p as u32;
+                            let __iter_off = builder
+                                .begin_compound_post(
+                                    crate::runtime::tape::TapeKind::Seq,
+                                    iter_lo,
+                                    0u8,
+                                    0u8,
+                                    0u16,
+                                );
+                            builder
+                                .end_compound_post_order(
+                                    __iter_off,
+                                    iter_hi,
+                                    crate::runtime::tape::TapeOffset(iter_child),
+                                );
+                        }
+                        let repeat_hi = *p as u32;
+                        let __repeat_off = builder
+                            .begin_compound_post(
+                                crate::runtime::tape::TapeKind::Repeat,
+                                repeat_lo,
+                                0u8,
+                                0u8,
+                                0u16,
+                            );
+                        builder
+                            .end_compound_post_order(
+                                __repeat_off,
+                                repeat_hi,
+                                crate::runtime::tape::TapeOffset(repeat_child),
+                            );
+                        Ok(())
+                    })();
+                    if attempt.is_err() {
+                        *p = save_p;
+                        builder.rollback_to(save_cols);
+                        builder.exit_post_order_children();
+                        break;
+                    }
+                    if *p == save_p {
+                        builder.rollback_to(save_cols);
+                        builder.exit_post_order_children();
+                        break;
+                    }
+                    let iter_hi = *p as u32;
+                    let __iter_off = builder
+                        .begin_compound_post(
+                            crate::runtime::tape::TapeKind::Seq,
+                            iter_lo,
+                            0u8,
+                            0u8,
+                            0u16,
+                        );
+                    builder
+                        .end_compound_post_order(
+                            __iter_off,
+                            iter_hi,
+                            crate::runtime::tape::TapeOffset(iter_child),
+                        );
+                    iter_count = iter_count.saturating_add(1);
+                }
+                if iter_count < (1usize as u32) {
+                    builder.exit_post_order_children();
+                    return Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                let repeat_hi = *p as u32;
+                let __repeat_off = builder
+                    .begin_compound_post(
+                        crate::runtime::tape::TapeKind::Repeat,
+                        repeat_lo,
+                        0u8,
+                        0u8,
+                        0u16,
+                    );
+                builder
+                    .end_compound_post_order(
+                        __repeat_off,
+                        repeat_hi,
+                        crate::runtime::tape::TapeOffset(repeat_child),
+                    );
+            }
+            Ok(())
+        })();
+        if let ::core::result::Result::Err(__err) = __post_body {
+            builder.rollback_to(__save_cols);
+            builder.exit_post_order_children();
+            return ::core::result::Result::Err(__err);
+        }
+        let span_hi = *p as u32;
+        let outer_off = builder
+            .begin_compound_post(
+                crate::runtime::tape::TapeKind::Seq,
+                span_lo,
+                7u8,
+                0u8,
+                0u16,
+            );
+        builder
+            .end_compound_post_order(
+                outer_off,
+                span_hi,
+                crate::runtime::tape::TapeOffset(outer_child),
+            );
+        Ok(crate::runtime::tape::TapeOffset(outer_off))
+    }
+    /// AX.W0a.2.b — per-grammar Scalar-shape parse function
+    /// (transparent-Ref body, tape substrate). Delegates
+    /// to the target's shape fn.
+    ///
+    /// AX.W0a.2.f — compound (delegates via
+    /// `emit_ref_call_tape`); plain `#[inline]`.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_scalar_EbnfParser_rhs(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        builder: &mut crate::runtime::tape::Tape<()>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        { parse_flat_EbnfParser_alternation(input, p, state, builder) }
+    }
     /// AX.W0a.2.b — per-grammar AltDispatch-shape parse function.
     ///
     /// Generalized byte-dispatch over `Alt(leaf, leaf, …)` bodies.
@@ -3558,9 +4072,7 @@ mod __ebnfparser_emit_impl {
                                 0,
                                 crate::runtime::tape::PayloadData::None,
                             );
-                        if ({
-                            parse_flat_EbnfParser_alternation(input, p, state, builder)
-                        })
+                        if ({ parse_scalar_EbnfParser_rhs(input, p, state, builder) })
                             .is_err()
                         {
                             return Err(());
@@ -3647,9 +4159,7 @@ mod __ebnfparser_emit_impl {
                                 0,
                                 crate::runtime::tape::PayloadData::None,
                             );
-                        if ({
-                            parse_flat_EbnfParser_alternation(input, p, state, builder)
-                        })
+                        if ({ parse_scalar_EbnfParser_rhs(input, p, state, builder) })
                             .is_err()
                         {
                             return Err(());
@@ -3736,9 +4246,7 @@ mod __ebnfparser_emit_impl {
                                 0,
                                 crate::runtime::tape::PayloadData::None,
                             );
-                        if ({
-                            parse_flat_EbnfParser_alternation(input, p, state, builder)
-                        })
+                        if ({ parse_scalar_EbnfParser_rhs(input, p, state, builder) })
                             .is_err()
                         {
                             return Err(());
@@ -3813,7 +4321,7 @@ mod __ebnfparser_emit_impl {
             .begin_compound_post(
                 crate::runtime::tape::TapeKind::Rule,
                 alt_lo,
-                6u8,
+                9u8,
                 0u8,
                 0u16,
             );
@@ -3885,7 +4393,7 @@ mod __ebnfparser_emit_impl {
                             crate::runtime::tape::TapeKind::Span,
                             span_lo,
                             span_hi,
-                            7u8,
+                            10u8,
                             0,
                             crate::runtime::tape::PayloadData::None,
                         );
@@ -4030,502 +4538,7 @@ mod __ebnfparser_emit_impl {
             .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
-                7u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
-    }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
-    ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_EbnfParser_concatenation(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
-            {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let mut iter_count: u32 = 0;
-                loop {
-                    let save_p = *p;
-                    let save_cols = builder.position();
-                    let iter_lo = *p as u32;
-                    let iter_child = builder.enter_post_order_children();
-                    let attempt = (|| -> ::core::result::Result<
-                        (),
-                        crate::runtime::tape::DtaError,
-                    > {
-                        {
-                            let span_lo = *p as u32;
-                            let Some(match_len) = __regex_scan_EbnfParser(
-                                "[ \\t\\n\\r\\f]*",
-                                input,
-                                *p,
-                            ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: span_lo,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
-                            };
-                            *p += match_len as usize;
-                            let span_hi = *p as u32;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Span,
-                                    span_lo,
-                                    span_hi,
-                                    8u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
-                        }
-                        let _ = ({
-                            let _ = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            parse_flat_EbnfParser_factor(input, p, state, builder)
-                        })?;
-                        {
-                            let span_lo = *p as u32;
-                            let Some(match_len) = __regex_scan_EbnfParser(
-                                "[ \\t\\n\\r\\f]*",
-                                input,
-                                *p,
-                            ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: span_lo,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
-                            };
-                            *p += match_len as usize;
-                            let span_hi = *p as u32;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Span,
-                                    span_lo,
-                                    span_hi,
-                                    8u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
-                        }
-                        let repeat_lo = *p as u32;
-                        let repeat_child = builder.enter_post_order_children();
-                        let iter_save_p = *p;
-                        let iter_save_cols = builder.position();
-                        let iter_lo = *p as u32;
-                        let iter_child = builder.enter_post_order_children();
-                        let opt_attempt: ::core::result::Result<
-                            (),
-                            crate::runtime::tape::DtaError,
-                        > = (|| {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [44u8] {
-                                return Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
-                            }
-                            *p = end;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    8u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
-                            Ok(())
-                        })();
-                        let matched = opt_attempt.is_ok();
-                        if !matched {
-                            *p = iter_save_p;
-                            builder.rollback_to(iter_save_cols);
-                            builder.exit_post_order_children();
-                        } else {
-                            let iter_hi = *p as u32;
-                            let __iter_off = builder
-                                .begin_compound_post(
-                                    crate::runtime::tape::TapeKind::Seq,
-                                    iter_lo,
-                                    0u8,
-                                    0u8,
-                                    0u16,
-                                );
-                            builder
-                                .end_compound_post_order(
-                                    __iter_off,
-                                    iter_hi,
-                                    crate::runtime::tape::TapeOffset(iter_child),
-                                );
-                        }
-                        let repeat_hi = *p as u32;
-                        let __repeat_off = builder
-                            .begin_compound_post(
-                                crate::runtime::tape::TapeKind::Repeat,
-                                repeat_lo,
-                                0u8,
-                                0u8,
-                                0u16,
-                            );
-                        builder
-                            .end_compound_post_order(
-                                __repeat_off,
-                                repeat_hi,
-                                crate::runtime::tape::TapeOffset(repeat_child),
-                            );
-                        Ok(())
-                    })();
-                    if attempt.is_err() {
-                        *p = save_p;
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    if *p == save_p {
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
-                    iter_count = iter_count.saturating_add(1);
-                }
-                if iter_count < (1usize as u32) {
-                    builder.exit_post_order_children();
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                8u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
-    }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
-    ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_EbnfParser_alternation(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
-            {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let mut iter_count: u32 = 0;
-                loop {
-                    let save_p = *p;
-                    let save_cols = builder.position();
-                    let iter_lo = *p as u32;
-                    let iter_child = builder.enter_post_order_children();
-                    let attempt = (|| -> ::core::result::Result<
-                        (),
-                        crate::runtime::tape::DtaError,
-                    > {
-                        {
-                            let span_lo = *p as u32;
-                            let Some(match_len) = __regex_scan_EbnfParser(
-                                "[ \\t\\n\\r\\f]*",
-                                input,
-                                *p,
-                            ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: span_lo,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
-                            };
-                            *p += match_len as usize;
-                            let span_hi = *p as u32;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Span,
-                                    span_lo,
-                                    span_hi,
-                                    9u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
-                        }
-                        let _ = ({
-                            parse_flat_EbnfParser_concatenation(input, p, state, builder)
-                        })?;
-                        {
-                            let span_lo = *p as u32;
-                            let Some(match_len) = __regex_scan_EbnfParser(
-                                "[ \\t\\n\\r\\f]*",
-                                input,
-                                *p,
-                            ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: span_lo,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
-                            };
-                            *p += match_len as usize;
-                            let span_hi = *p as u32;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Span,
-                                    span_lo,
-                                    span_hi,
-                                    9u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
-                        }
-                        let repeat_lo = *p as u32;
-                        let repeat_child = builder.enter_post_order_children();
-                        let iter_save_p = *p;
-                        let iter_save_cols = builder.position();
-                        let iter_lo = *p as u32;
-                        let iter_child = builder.enter_post_order_children();
-                        let opt_attempt: ::core::result::Result<
-                            (),
-                            crate::runtime::tape::DtaError,
-                        > = (|| {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [124u8] {
-                                return Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
-                            }
-                            *p = end;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    9u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
-                            Ok(())
-                        })();
-                        let matched = opt_attempt.is_ok();
-                        if !matched {
-                            *p = iter_save_p;
-                            builder.rollback_to(iter_save_cols);
-                            builder.exit_post_order_children();
-                        } else {
-                            let iter_hi = *p as u32;
-                            let __iter_off = builder
-                                .begin_compound_post(
-                                    crate::runtime::tape::TapeKind::Seq,
-                                    iter_lo,
-                                    0u8,
-                                    0u8,
-                                    0u16,
-                                );
-                            builder
-                                .end_compound_post_order(
-                                    __iter_off,
-                                    iter_hi,
-                                    crate::runtime::tape::TapeOffset(iter_child),
-                                );
-                        }
-                        let repeat_hi = *p as u32;
-                        let __repeat_off = builder
-                            .begin_compound_post(
-                                crate::runtime::tape::TapeKind::Repeat,
-                                repeat_lo,
-                                0u8,
-                                0u8,
-                                0u16,
-                            );
-                        builder
-                            .end_compound_post_order(
-                                __repeat_off,
-                                repeat_hi,
-                                crate::runtime::tape::TapeOffset(repeat_child),
-                            );
-                        Ok(())
-                    })();
-                    if attempt.is_err() {
-                        *p = save_p;
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    if *p == save_p {
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
-                    iter_count = iter_count.saturating_add(1);
-                }
-                if iter_count < (1usize as u32) {
-                    builder.exit_post_order_children();
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                9u8,
+                10u8,
                 0u8,
                 0u16,
             );
@@ -4597,7 +4610,7 @@ mod __ebnfparser_emit_impl {
                             crate::runtime::tape::TapeKind::Span,
                             span_lo,
                             span_hi,
-                            10u8,
+                            11u8,
                             0,
                             crate::runtime::tape::PayloadData::None,
                         );
@@ -4619,7 +4632,7 @@ mod __ebnfparser_emit_impl {
                         crate::runtime::tape::TapeKind::Literal,
                         at as u32,
                         end as u32,
-                        10u8,
+                        11u8,
                         0,
                         crate::runtime::tape::PayloadData::None,
                     );
@@ -4645,16 +4658,14 @@ mod __ebnfparser_emit_impl {
                             crate::runtime::tape::TapeKind::Span,
                             span_lo,
                             span_hi,
-                            10u8,
+                            11u8,
                             0,
                             crate::runtime::tape::PayloadData::None,
                         );
                 }
             }
             {
-                let _ = ({
-                    parse_flat_EbnfParser_alternation(input, p, state, builder)
-                })?;
+                let _ = ({ parse_scalar_EbnfParser_rhs(input, p, state, builder) })?;
             }
             {
                 {
@@ -4677,7 +4688,7 @@ mod __ebnfparser_emit_impl {
                             crate::runtime::tape::TapeKind::Span,
                             span_lo,
                             span_hi,
-                            10u8,
+                            11u8,
                             0,
                             crate::runtime::tape::PayloadData::None,
                         );
@@ -4745,7 +4756,7 @@ mod __ebnfparser_emit_impl {
             .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
-                10u8,
+                11u8,
                 0u8,
                 0u16,
             );
@@ -4828,7 +4839,7 @@ mod __ebnfparser_emit_impl {
                             crate::runtime::tape::TapeKind::Span,
                             span_lo,
                             span_hi,
-                            11u8,
+                            12u8,
                             0,
                             crate::runtime::tape::PayloadData::None,
                         );
@@ -4857,7 +4868,7 @@ mod __ebnfparser_emit_impl {
                             crate::runtime::tape::TapeKind::Span,
                             span_lo,
                             span_hi,
-                            11u8,
+                            12u8,
                             0,
                             crate::runtime::tape::PayloadData::None,
                         );
@@ -5777,345 +5788,6 @@ mod __ebnfparser_emit_impl {
         }
         Ok(())
     }
-    /// AX.W0a.2.b — visitor-path AltDispatch-shape parse function.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]`.
-    #[inline]
-    #[allow(
-        non_snake_case,
-        clippy::too_many_arguments,
-        unused_variables,
-        unused_mut,
-        unused_assignments,
-        unreachable_code
-    )]
-    pub fn parse_altdispatch_visitor_EbnfParser_character<V>(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_EbnfParser::ScanState,
-        visitor: &mut V,
-    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
-    where
-        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
-            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
-            + crate::runtime::tape::KeywordVisitor,
-    {
-        let first = __shape_support_EbnfParser::skip_space(input, p, state)
-            .ok_or(crate::runtime::ParseErr::Syntax {
-                offset: *p as u32,
-                rule: None,
-            })?;
-        'try_branches: loop {
-            match first {
-                32u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [32u8] {
-                        *p = end;
-                        break 'try_branches;
-                    }
-                }
-                48u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::ParseErr::Syntax {
-                                offset: *p as u32,
-                                rule: None,
-                            })?;
-                        parse_keyword_visitor_EbnfParser_digit(
-                            input,
-                            p,
-                            __first,
-                            state,
-                            visitor,
-                        )
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                49u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::ParseErr::Syntax {
-                                offset: *p as u32,
-                                rule: None,
-                            })?;
-                        parse_keyword_visitor_EbnfParser_digit(
-                            input,
-                            p,
-                            __first,
-                            state,
-                            visitor,
-                        )
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                50u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::ParseErr::Syntax {
-                                offset: *p as u32,
-                                rule: None,
-                            })?;
-                        parse_keyword_visitor_EbnfParser_digit(
-                            input,
-                            p,
-                            __first,
-                            state,
-                            visitor,
-                        )
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                51u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::ParseErr::Syntax {
-                                offset: *p as u32,
-                                rule: None,
-                            })?;
-                        parse_keyword_visitor_EbnfParser_digit(
-                            input,
-                            p,
-                            __first,
-                            state,
-                            visitor,
-                        )
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                52u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::ParseErr::Syntax {
-                                offset: *p as u32,
-                                rule: None,
-                            })?;
-                        parse_keyword_visitor_EbnfParser_digit(
-                            input,
-                            p,
-                            __first,
-                            state,
-                            visitor,
-                        )
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                53u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::ParseErr::Syntax {
-                                offset: *p as u32,
-                                rule: None,
-                            })?;
-                        parse_keyword_visitor_EbnfParser_digit(
-                            input,
-                            p,
-                            __first,
-                            state,
-                            visitor,
-                        )
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                54u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::ParseErr::Syntax {
-                                offset: *p as u32,
-                                rule: None,
-                            })?;
-                        parse_keyword_visitor_EbnfParser_digit(
-                            input,
-                            p,
-                            __first,
-                            state,
-                            visitor,
-                        )
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                55u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::ParseErr::Syntax {
-                                offset: *p as u32,
-                                rule: None,
-                            })?;
-                        parse_keyword_visitor_EbnfParser_digit(
-                            input,
-                            p,
-                            __first,
-                            state,
-                            visitor,
-                        )
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                56u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::ParseErr::Syntax {
-                                offset: *p as u32,
-                                rule: None,
-                            })?;
-                        parse_keyword_visitor_EbnfParser_digit(
-                            input,
-                            p,
-                            __first,
-                            state,
-                            visitor,
-                        )
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                57u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::ParseErr::Syntax {
-                                offset: *p as u32,
-                                rule: None,
-                            })?;
-                        parse_keyword_visitor_EbnfParser_digit(
-                            input,
-                            p,
-                            __first,
-                            state,
-                            visitor,
-                        )
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                95u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [95u8] {
-                        *p = end;
-                        break 'try_branches;
-                    }
-                }
-                _ => {}
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_EbnfParser::skip_space(input, p, state);
-                    parse_altdispatch_visitor_EbnfParser_symbol(input, p, state, visitor)
-                } {
-                    Ok(_) => break 'try_branches,
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_EbnfParser::skip_space(input, p, state);
-                    parse_altdispatch_visitor_EbnfParser_letter(input, p, state, visitor)
-                } {
-                    Ok(_) => break 'try_branches,
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
-            }
-            return Err(crate::runtime::ParseErr::Syntax {
-                offset: *p as u32,
-                rule: None,
-            });
-        }
-        Ok(())
-    }
     /// AW-V.W4-fix — visitor-path Flat-shape parse function.
     ///
     /// Mirrors the tape-path emitter structure. Literal positions
@@ -6477,6 +6149,345 @@ mod __ebnfparser_emit_impl {
         }
         Ok(())
     }
+    /// AX.W0a.2.b — visitor-path AltDispatch-shape parse function.
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]`.
+    #[inline]
+    #[allow(
+        non_snake_case,
+        clippy::too_many_arguments,
+        unused_variables,
+        unused_mut,
+        unused_assignments,
+        unreachable_code
+    )]
+    pub fn parse_altdispatch_visitor_EbnfParser_character<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
+    where
+        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
+            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
+            + crate::runtime::tape::KeywordVisitor,
+    {
+        let first = __shape_support_EbnfParser::skip_space(input, p, state)
+            .ok_or(crate::runtime::ParseErr::Syntax {
+                offset: *p as u32,
+                rule: None,
+            })?;
+        'try_branches: loop {
+            match first {
+                32u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [32u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                48u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                49u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                50u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                51u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                52u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                53u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                54u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                55u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                56u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                57u8 => {
+                    let attempt_p = *p;
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::ParseErr::Syntax {
+                                offset: *p as u32,
+                                rule: None,
+                            })?;
+                        parse_keyword_visitor_EbnfParser_digit(
+                            input,
+                            p,
+                            __first,
+                            state,
+                            visitor,
+                        )
+                    } {
+                        Ok(_) => break 'try_branches,
+                        Err(_) => {
+                            *p = attempt_p;
+                        }
+                    }
+                }
+                95u8 => {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [95u8] {
+                        *p = end;
+                        break 'try_branches;
+                    }
+                }
+                _ => {}
+            }
+            {
+                let attempt_p = *p;
+                match {
+                    let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                    parse_altdispatch_visitor_EbnfParser_symbol(input, p, state, visitor)
+                } {
+                    Ok(_) => break 'try_branches,
+                    Err(_) => {
+                        *p = attempt_p;
+                    }
+                }
+            }
+            {
+                let attempt_p = *p;
+                match {
+                    let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                    parse_altdispatch_visitor_EbnfParser_letter(input, p, state, visitor)
+                } {
+                    Ok(_) => break 'try_branches,
+                    Err(_) => {
+                        *p = attempt_p;
+                    }
+                }
+            }
+            return Err(crate::runtime::ParseErr::Syntax {
+                offset: *p as u32,
+                rule: None,
+            });
+        }
+        Ok(())
+    }
     /// AW-V.W3-bench-fix — visitor-path Keyword-shape parse
     /// function (Alt of literal-led or Ref-led branches).
     ///
@@ -6505,6 +6516,228 @@ mod __ebnfparser_emit_impl {
                 })
             }
         }
+    }
+    /// AW-V.W4-fix — visitor-path Flat-shape parse function.
+    ///
+    /// Mirrors the tape-path emitter structure. Literal positions
+    /// byte-match without emitting a visitor event; Ref / Regex /
+    /// Alt positions recurse through the visitor dispatcher.
+    ///
+    /// AX.W0a.2.f — compound; see tape-path comment for the
+    /// `#[inline]` downgrade rationale.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_visitor_EbnfParser_concatenation<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
+    where
+        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
+            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
+            + crate::runtime::tape::KeywordVisitor,
+    {
+        {
+            let mut iter_count: u32 = 0;
+            loop {
+                let save_p = *p;
+                let res = (|| -> ::core::result::Result<(), crate::runtime::ParseErr> {
+                    {
+                        let span_lo = *p;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
+                                offset: span_lo as u32,
+                                rule: None,
+                            });
+                        };
+                        *p = span_lo + match_len as usize;
+                    }
+                    ({
+                        let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                        parse_flat_visitor_EbnfParser_factor(input, p, state, visitor)
+                    })?;
+                    {
+                        let span_lo = *p;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
+                                offset: span_lo as u32,
+                                rule: None,
+                            });
+                        };
+                        *p = span_lo + match_len as usize;
+                    }
+                    let save_p = *p;
+                    let res = (|| -> ::core::result::Result<
+                        (),
+                        crate::runtime::ParseErr,
+                    > {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [44u8] {
+                            return Err(crate::runtime::ParseErr::Syntax {
+                                offset: at as u32,
+                                rule: None,
+                            });
+                        }
+                        *p = end;
+                        Ok(())
+                    })();
+                    if res.is_err() {
+                        *p = save_p;
+                    }
+                    Ok(())
+                })();
+                if res.is_err() {
+                    *p = save_p;
+                    break;
+                }
+                if *p == save_p {
+                    break;
+                }
+                iter_count = iter_count.saturating_add(1);
+            }
+            if iter_count < (1usize as u32) {
+                return Err(crate::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+            }
+        }
+        Ok(())
+    }
+    /// AW-V.W4-fix — visitor-path Flat-shape parse function.
+    ///
+    /// Mirrors the tape-path emitter structure. Literal positions
+    /// byte-match without emitting a visitor event; Ref / Regex /
+    /// Alt positions recurse through the visitor dispatcher.
+    ///
+    /// AX.W0a.2.f — compound; see tape-path comment for the
+    /// `#[inline]` downgrade rationale.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_visitor_EbnfParser_alternation<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
+    where
+        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
+            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
+            + crate::runtime::tape::KeywordVisitor,
+    {
+        {
+            let mut iter_count: u32 = 0;
+            loop {
+                let save_p = *p;
+                let res = (|| -> ::core::result::Result<(), crate::runtime::ParseErr> {
+                    {
+                        let span_lo = *p;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
+                                offset: span_lo as u32,
+                                rule: None,
+                            });
+                        };
+                        *p = span_lo + match_len as usize;
+                    }
+                    ({
+                        let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                        parse_flat_visitor_EbnfParser_concatenation(
+                            input,
+                            p,
+                            state,
+                            visitor,
+                        )
+                    })?;
+                    {
+                        let span_lo = *p;
+                        let Some(match_len) = __regex_scan_EbnfParser(
+                            "[ \\t\\n\\r\\f]*",
+                            input,
+                            *p,
+                        ) else {
+                            return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
+                                offset: span_lo as u32,
+                                rule: None,
+                            });
+                        };
+                        *p = span_lo + match_len as usize;
+                    }
+                    let save_p = *p;
+                    let res = (|| -> ::core::result::Result<
+                        (),
+                        crate::runtime::ParseErr,
+                    > {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [124u8] {
+                            return Err(crate::runtime::ParseErr::Syntax {
+                                offset: at as u32,
+                                rule: None,
+                            });
+                        }
+                        *p = end;
+                        Ok(())
+                    })();
+                    if res.is_err() {
+                        *p = save_p;
+                    }
+                    Ok(())
+                })();
+                if res.is_err() {
+                    *p = save_p;
+                    break;
+                }
+                if *p == save_p {
+                    break;
+                }
+                iter_count = iter_count.saturating_add(1);
+            }
+            if iter_count < (1usize as u32) {
+                return Err(crate::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+            }
+        }
+        Ok(())
+    }
+    /// AX.W0a.2.b — visitor-path Scalar-shape parse function
+    /// (transparent-Ref body).
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]`.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_scalar_visitor_EbnfParser_rhs<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_EbnfParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
+    where
+        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
+            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
+            + crate::runtime::tape::KeywordVisitor,
+    {
+        {
+            let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+            parse_flat_visitor_EbnfParser_alternation(input, p, state, visitor)
+        }
+            .map(|_| ())
     }
     /// AX.W0a.2.b — visitor-path AltDispatch-shape parse function.
     ///
@@ -6898,205 +7131,6 @@ mod __ebnfparser_emit_impl {
     /// `#[inline]` downgrade rationale.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_visitor_EbnfParser_concatenation<V>(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_EbnfParser::ScanState,
-        visitor: &mut V,
-    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
-    where
-        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
-            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
-            + crate::runtime::tape::KeywordVisitor,
-    {
-        {
-            let mut iter_count: u32 = 0;
-            loop {
-                let save_p = *p;
-                let res = (|| -> ::core::result::Result<(), crate::runtime::ParseErr> {
-                    {
-                        let span_lo = *p;
-                        let Some(match_len) = __regex_scan_EbnfParser(
-                            "[ \\t\\n\\r\\f]*",
-                            input,
-                            *p,
-                        ) else {
-                            return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
-                                offset: span_lo as u32,
-                                rule: None,
-                            });
-                        };
-                        *p = span_lo + match_len as usize;
-                    }
-                    ({
-                        let _ = __shape_support_EbnfParser::skip_space(input, p, state);
-                        parse_flat_visitor_EbnfParser_factor(input, p, state, visitor)
-                    })?;
-                    {
-                        let span_lo = *p;
-                        let Some(match_len) = __regex_scan_EbnfParser(
-                            "[ \\t\\n\\r\\f]*",
-                            input,
-                            *p,
-                        ) else {
-                            return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
-                                offset: span_lo as u32,
-                                rule: None,
-                            });
-                        };
-                        *p = span_lo + match_len as usize;
-                    }
-                    let save_p = *p;
-                    let res = (|| -> ::core::result::Result<
-                        (),
-                        crate::runtime::ParseErr,
-                    > {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [44u8] {
-                            return Err(crate::runtime::ParseErr::Syntax {
-                                offset: at as u32,
-                                rule: None,
-                            });
-                        }
-                        *p = end;
-                        Ok(())
-                    })();
-                    if res.is_err() {
-                        *p = save_p;
-                    }
-                    Ok(())
-                })();
-                if res.is_err() {
-                    *p = save_p;
-                    break;
-                }
-                if *p == save_p {
-                    break;
-                }
-                iter_count = iter_count.saturating_add(1);
-            }
-            if iter_count < (1usize as u32) {
-                return Err(crate::runtime::ParseErr::Syntax {
-                    offset: *p as u32,
-                    rule: None,
-                });
-            }
-        }
-        Ok(())
-    }
-    /// AW-V.W4-fix — visitor-path Flat-shape parse function.
-    ///
-    /// Mirrors the tape-path emitter structure. Literal positions
-    /// byte-match without emitting a visitor event; Ref / Regex /
-    /// Alt positions recurse through the visitor dispatcher.
-    ///
-    /// AX.W0a.2.f — compound; see tape-path comment for the
-    /// `#[inline]` downgrade rationale.
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_visitor_EbnfParser_alternation<V>(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_EbnfParser::ScanState,
-        visitor: &mut V,
-    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
-    where
-        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
-            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
-            + crate::runtime::tape::KeywordVisitor,
-    {
-        {
-            let mut iter_count: u32 = 0;
-            loop {
-                let save_p = *p;
-                let res = (|| -> ::core::result::Result<(), crate::runtime::ParseErr> {
-                    {
-                        let span_lo = *p;
-                        let Some(match_len) = __regex_scan_EbnfParser(
-                            "[ \\t\\n\\r\\f]*",
-                            input,
-                            *p,
-                        ) else {
-                            return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
-                                offset: span_lo as u32,
-                                rule: None,
-                            });
-                        };
-                        *p = span_lo + match_len as usize;
-                    }
-                    ({
-                        let _ = __shape_support_EbnfParser::skip_space(input, p, state);
-                        parse_flat_visitor_EbnfParser_concatenation(
-                            input,
-                            p,
-                            state,
-                            visitor,
-                        )
-                    })?;
-                    {
-                        let span_lo = *p;
-                        let Some(match_len) = __regex_scan_EbnfParser(
-                            "[ \\t\\n\\r\\f]*",
-                            input,
-                            *p,
-                        ) else {
-                            return ::core::result::Result::Err(crate::runtime::ParseErr::Syntax {
-                                offset: span_lo as u32,
-                                rule: None,
-                            });
-                        };
-                        *p = span_lo + match_len as usize;
-                    }
-                    let save_p = *p;
-                    let res = (|| -> ::core::result::Result<
-                        (),
-                        crate::runtime::ParseErr,
-                    > {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [124u8] {
-                            return Err(crate::runtime::ParseErr::Syntax {
-                                offset: at as u32,
-                                rule: None,
-                            });
-                        }
-                        *p = end;
-                        Ok(())
-                    })();
-                    if res.is_err() {
-                        *p = save_p;
-                    }
-                    Ok(())
-                })();
-                if res.is_err() {
-                    *p = save_p;
-                    break;
-                }
-                if *p == save_p {
-                    break;
-                }
-                iter_count = iter_count.saturating_add(1);
-            }
-            if iter_count < (1usize as u32) {
-                return Err(crate::runtime::ParseErr::Syntax {
-                    offset: *p as u32,
-                    rule: None,
-                });
-            }
-        }
-        Ok(())
-    }
-    /// AW-V.W4-fix — visitor-path Flat-shape parse function.
-    ///
-    /// Mirrors the tape-path emitter structure. Literal positions
-    /// byte-match without emitting a visitor event; Ref / Regex /
-    /// Alt positions recurse through the visitor dispatcher.
-    ///
-    /// AX.W0a.2.f — compound; see tape-path comment for the
-    /// `#[inline]` downgrade rationale.
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
     pub fn parse_flat_visitor_EbnfParser_rule<V>(
         input: &[u8],
         p: &mut usize,
@@ -7160,7 +7194,7 @@ mod __ebnfparser_emit_impl {
         {
             ({
                 let _ = __shape_support_EbnfParser::skip_space(input, p, state);
-                parse_flat_visitor_EbnfParser_alternation(input, p, state, visitor)
+                parse_scalar_visitor_EbnfParser_rhs(input, p, state, visitor)
             })?;
         }
         {
@@ -7355,7 +7389,7 @@ mod __ebnfparser_emit_impl {
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 8u32,
             alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 9u32,
@@ -7369,6 +7403,11 @@ mod __ebnfparser_emit_impl {
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 11u32,
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
+            activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
+        },
+        crate::runtime::tape::ScanPolicyEntry {
+            rule_id: 12u32,
             alphabet_class: crate::runtime::tape::ScanAlphabetClass::Dense,
             activation: crate::runtime::tape::ScanActivationFlags::from_bits(7),
         },
@@ -7531,19 +7570,20 @@ mod __ebnfparser_emit_impl {
                 0u8 => EbnfParserRuleKind::letter,
                 1u8 => EbnfParserRuleKind::digit,
                 2u8 => EbnfParserRuleKind::symbol,
-                3u8 => EbnfParserRuleKind::character,
-                4u8 => EbnfParserRuleKind::identifier,
+                3u8 => EbnfParserRuleKind::identifier,
+                4u8 => EbnfParserRuleKind::character,
                 5u8 => EbnfParserRuleKind::terminal,
-                6u8 => EbnfParserRuleKind::term,
-                7u8 => EbnfParserRuleKind::factor,
-                8u8 => EbnfParserRuleKind::concatenation,
-                9u8 => EbnfParserRuleKind::alternation,
-                10u8 => EbnfParserRuleKind::rule,
-                11u8 => EbnfParserRuleKind::grammar,
-                12u8 => EbnfParserRuleKind::term_0,
-                13u8 => EbnfParserRuleKind::term_1,
-                14u8 => EbnfParserRuleKind::factor_0,
-                15u8 => EbnfParserRuleKind::factor_1,
+                6u8 => EbnfParserRuleKind::concatenation,
+                7u8 => EbnfParserRuleKind::alternation,
+                8u8 => EbnfParserRuleKind::rhs,
+                9u8 => EbnfParserRuleKind::term,
+                10u8 => EbnfParserRuleKind::factor,
+                11u8 => EbnfParserRuleKind::rule,
+                12u8 => EbnfParserRuleKind::grammar,
+                13u8 => EbnfParserRuleKind::term_0,
+                14u8 => EbnfParserRuleKind::term_1,
+                15u8 => EbnfParserRuleKind::factor_0,
+                16u8 => EbnfParserRuleKind::factor_1,
                 _ => EbnfParserRuleKind::Unknown,
             }
         }
@@ -7671,19 +7711,20 @@ mod __ebnfparser_emit_impl {
                 0u8 => EbnfParserRuleKind::letter,
                 1u8 => EbnfParserRuleKind::digit,
                 2u8 => EbnfParserRuleKind::symbol,
-                3u8 => EbnfParserRuleKind::character,
-                4u8 => EbnfParserRuleKind::identifier,
+                3u8 => EbnfParserRuleKind::identifier,
+                4u8 => EbnfParserRuleKind::character,
                 5u8 => EbnfParserRuleKind::terminal,
-                6u8 => EbnfParserRuleKind::term,
-                7u8 => EbnfParserRuleKind::factor,
-                8u8 => EbnfParserRuleKind::concatenation,
-                9u8 => EbnfParserRuleKind::alternation,
-                10u8 => EbnfParserRuleKind::rule,
-                11u8 => EbnfParserRuleKind::grammar,
-                12u8 => EbnfParserRuleKind::term_0,
-                13u8 => EbnfParserRuleKind::term_1,
-                14u8 => EbnfParserRuleKind::factor_0,
-                15u8 => EbnfParserRuleKind::factor_1,
+                6u8 => EbnfParserRuleKind::concatenation,
+                7u8 => EbnfParserRuleKind::alternation,
+                8u8 => EbnfParserRuleKind::rhs,
+                9u8 => EbnfParserRuleKind::term,
+                10u8 => EbnfParserRuleKind::factor,
+                11u8 => EbnfParserRuleKind::rule,
+                12u8 => EbnfParserRuleKind::grammar,
+                13u8 => EbnfParserRuleKind::term_0,
+                14u8 => EbnfParserRuleKind::term_1,
+                15u8 => EbnfParserRuleKind::factor_0,
+                16u8 => EbnfParserRuleKind::factor_1,
                 _ => EbnfParserRuleKind::Unknown,
             }
         }
@@ -7811,19 +7852,20 @@ mod __ebnfparser_emit_impl {
                 0u8 => EbnfParserRuleKind::letter,
                 1u8 => EbnfParserRuleKind::digit,
                 2u8 => EbnfParserRuleKind::symbol,
-                3u8 => EbnfParserRuleKind::character,
-                4u8 => EbnfParserRuleKind::identifier,
+                3u8 => EbnfParserRuleKind::identifier,
+                4u8 => EbnfParserRuleKind::character,
                 5u8 => EbnfParserRuleKind::terminal,
-                6u8 => EbnfParserRuleKind::term,
-                7u8 => EbnfParserRuleKind::factor,
-                8u8 => EbnfParserRuleKind::concatenation,
-                9u8 => EbnfParserRuleKind::alternation,
-                10u8 => EbnfParserRuleKind::rule,
-                11u8 => EbnfParserRuleKind::grammar,
-                12u8 => EbnfParserRuleKind::term_0,
-                13u8 => EbnfParserRuleKind::term_1,
-                14u8 => EbnfParserRuleKind::factor_0,
-                15u8 => EbnfParserRuleKind::factor_1,
+                6u8 => EbnfParserRuleKind::concatenation,
+                7u8 => EbnfParserRuleKind::alternation,
+                8u8 => EbnfParserRuleKind::rhs,
+                9u8 => EbnfParserRuleKind::term,
+                10u8 => EbnfParserRuleKind::factor,
+                11u8 => EbnfParserRuleKind::rule,
+                12u8 => EbnfParserRuleKind::grammar,
+                13u8 => EbnfParserRuleKind::term_0,
+                14u8 => EbnfParserRuleKind::term_1,
+                15u8 => EbnfParserRuleKind::factor_0,
+                16u8 => EbnfParserRuleKind::factor_1,
                 _ => EbnfParserRuleKind::Unknown,
             }
         }
@@ -7895,6 +7937,134 @@ mod __ebnfparser_emit_impl {
     }
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
+    pub struct identifierView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> identifierView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> EbnfParserRuleKind {
+            match self.variant_idx() {
+                0u8 => EbnfParserRuleKind::letter,
+                1u8 => EbnfParserRuleKind::digit,
+                2u8 => EbnfParserRuleKind::symbol,
+                3u8 => EbnfParserRuleKind::identifier,
+                4u8 => EbnfParserRuleKind::character,
+                5u8 => EbnfParserRuleKind::terminal,
+                6u8 => EbnfParserRuleKind::concatenation,
+                7u8 => EbnfParserRuleKind::alternation,
+                8u8 => EbnfParserRuleKind::rhs,
+                9u8 => EbnfParserRuleKind::term,
+                10u8 => EbnfParserRuleKind::factor,
+                11u8 => EbnfParserRuleKind::rule,
+                12u8 => EbnfParserRuleKind::grammar,
+                13u8 => EbnfParserRuleKind::term_0,
+                14u8 => EbnfParserRuleKind::term_1,
+                15u8 => EbnfParserRuleKind::factor_0,
+                16u8 => EbnfParserRuleKind::factor_1,
+                _ => EbnfParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> identifierView<'p> {
+        ///Child at position 0 as a typed view.
+        #[inline]
+        pub fn child_0(&self) -> ::core::option::Option<letterView<'p>> {
+            self.cursor.child(0usize).map(|c| letterView::from_cursor(c, self.input))
+        }
+        ///The `letter` child as a typed view.
+        #[inline]
+        pub fn letter(&self) -> ::core::option::Option<letterView<'p>> {
+            self.cursor.child(0usize).map(|c| letterView::from_cursor(c, self.input))
+        }
+        ///Child at position 1 as a typed view.
+        #[inline]
+        pub fn child_1(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor
+                .child(1usize)
+                .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        /// The number of typed child positions in this Seq.
+        #[inline]
+        pub fn num_children(&self) -> usize {
+            2usize
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
     pub struct characterView<'p> {
         cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
@@ -7951,19 +8121,20 @@ mod __ebnfparser_emit_impl {
                 0u8 => EbnfParserRuleKind::letter,
                 1u8 => EbnfParserRuleKind::digit,
                 2u8 => EbnfParserRuleKind::symbol,
-                3u8 => EbnfParserRuleKind::character,
-                4u8 => EbnfParserRuleKind::identifier,
+                3u8 => EbnfParserRuleKind::identifier,
+                4u8 => EbnfParserRuleKind::character,
                 5u8 => EbnfParserRuleKind::terminal,
-                6u8 => EbnfParserRuleKind::term,
-                7u8 => EbnfParserRuleKind::factor,
-                8u8 => EbnfParserRuleKind::concatenation,
-                9u8 => EbnfParserRuleKind::alternation,
-                10u8 => EbnfParserRuleKind::rule,
-                11u8 => EbnfParserRuleKind::grammar,
-                12u8 => EbnfParserRuleKind::term_0,
-                13u8 => EbnfParserRuleKind::term_1,
-                14u8 => EbnfParserRuleKind::factor_0,
-                15u8 => EbnfParserRuleKind::factor_1,
+                6u8 => EbnfParserRuleKind::concatenation,
+                7u8 => EbnfParserRuleKind::alternation,
+                8u8 => EbnfParserRuleKind::rhs,
+                9u8 => EbnfParserRuleKind::term,
+                10u8 => EbnfParserRuleKind::factor,
+                11u8 => EbnfParserRuleKind::rule,
+                12u8 => EbnfParserRuleKind::grammar,
+                13u8 => EbnfParserRuleKind::term_0,
+                14u8 => EbnfParserRuleKind::term_1,
+                15u8 => EbnfParserRuleKind::factor_0,
+                16u8 => EbnfParserRuleKind::factor_1,
                 _ => EbnfParserRuleKind::Unknown,
             }
         }
@@ -8168,133 +8339,6 @@ mod __ebnfparser_emit_impl {
     }
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
-    pub struct identifierView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> identifierView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> EbnfParserRuleKind {
-            match self.variant_idx() {
-                0u8 => EbnfParserRuleKind::letter,
-                1u8 => EbnfParserRuleKind::digit,
-                2u8 => EbnfParserRuleKind::symbol,
-                3u8 => EbnfParserRuleKind::character,
-                4u8 => EbnfParserRuleKind::identifier,
-                5u8 => EbnfParserRuleKind::terminal,
-                6u8 => EbnfParserRuleKind::term,
-                7u8 => EbnfParserRuleKind::factor,
-                8u8 => EbnfParserRuleKind::concatenation,
-                9u8 => EbnfParserRuleKind::alternation,
-                10u8 => EbnfParserRuleKind::rule,
-                11u8 => EbnfParserRuleKind::grammar,
-                12u8 => EbnfParserRuleKind::term_0,
-                13u8 => EbnfParserRuleKind::term_1,
-                14u8 => EbnfParserRuleKind::factor_0,
-                15u8 => EbnfParserRuleKind::factor_1,
-                _ => EbnfParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
-            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> identifierView<'p> {
-        ///Child at position 0 as a typed view.
-        #[inline]
-        pub fn child_0(&self) -> ::core::option::Option<letterView<'p>> {
-            self.cursor.child(0usize).map(|c| letterView::from_cursor(c, self.input))
-        }
-        ///The `letter` child as a typed view.
-        #[inline]
-        pub fn letter(&self) -> ::core::option::Option<letterView<'p>> {
-            self.cursor.child(0usize).map(|c| letterView::from_cursor(c, self.input))
-        }
-        ///Child at position 1 as a typed view.
-        #[inline]
-        pub fn child_1(&self) -> ::core::option::Option<EbnfParserNodeView<'p>> {
-            self.cursor
-                .child(1usize)
-                .map(|c| EbnfParserNodeView::from_cursor(c, self.input))
-        }
-        /// The number of typed child positions in this Seq.
-        #[inline]
-        pub fn num_children(&self) -> usize {
-            2usize
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
     pub struct terminalView<'p> {
         cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
@@ -8351,19 +8395,20 @@ mod __ebnfparser_emit_impl {
                 0u8 => EbnfParserRuleKind::letter,
                 1u8 => EbnfParserRuleKind::digit,
                 2u8 => EbnfParserRuleKind::symbol,
-                3u8 => EbnfParserRuleKind::character,
-                4u8 => EbnfParserRuleKind::identifier,
+                3u8 => EbnfParserRuleKind::identifier,
+                4u8 => EbnfParserRuleKind::character,
                 5u8 => EbnfParserRuleKind::terminal,
-                6u8 => EbnfParserRuleKind::term,
-                7u8 => EbnfParserRuleKind::factor,
-                8u8 => EbnfParserRuleKind::concatenation,
-                9u8 => EbnfParserRuleKind::alternation,
-                10u8 => EbnfParserRuleKind::rule,
-                11u8 => EbnfParserRuleKind::grammar,
-                12u8 => EbnfParserRuleKind::term_0,
-                13u8 => EbnfParserRuleKind::term_1,
-                14u8 => EbnfParserRuleKind::factor_0,
-                15u8 => EbnfParserRuleKind::factor_1,
+                6u8 => EbnfParserRuleKind::concatenation,
+                7u8 => EbnfParserRuleKind::alternation,
+                8u8 => EbnfParserRuleKind::rhs,
+                9u8 => EbnfParserRuleKind::term,
+                10u8 => EbnfParserRuleKind::factor,
+                11u8 => EbnfParserRuleKind::rule,
+                12u8 => EbnfParserRuleKind::grammar,
+                13u8 => EbnfParserRuleKind::term_0,
+                14u8 => EbnfParserRuleKind::term_1,
+                15u8 => EbnfParserRuleKind::factor_0,
+                16u8 => EbnfParserRuleKind::factor_1,
                 _ => EbnfParserRuleKind::Unknown,
             }
         }
@@ -8438,6 +8483,379 @@ mod __ebnfparser_emit_impl {
     }
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
+    pub struct concatenationView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> concatenationView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> EbnfParserRuleKind {
+            match self.variant_idx() {
+                0u8 => EbnfParserRuleKind::letter,
+                1u8 => EbnfParserRuleKind::digit,
+                2u8 => EbnfParserRuleKind::symbol,
+                3u8 => EbnfParserRuleKind::identifier,
+                4u8 => EbnfParserRuleKind::character,
+                5u8 => EbnfParserRuleKind::terminal,
+                6u8 => EbnfParserRuleKind::concatenation,
+                7u8 => EbnfParserRuleKind::alternation,
+                8u8 => EbnfParserRuleKind::rhs,
+                9u8 => EbnfParserRuleKind::term,
+                10u8 => EbnfParserRuleKind::factor,
+                11u8 => EbnfParserRuleKind::rule,
+                12u8 => EbnfParserRuleKind::grammar,
+                13u8 => EbnfParserRuleKind::term_0,
+                14u8 => EbnfParserRuleKind::term_1,
+                15u8 => EbnfParserRuleKind::factor_0,
+                16u8 => EbnfParserRuleKind::factor_1,
+                _ => EbnfParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> concatenationView<'p> {
+        /// Iterator over each repetition element as a typed view.
+        #[inline]
+        pub fn iter(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The number of elements in this repetition.
+        #[inline]
+        pub fn len(&self) -> usize {
+            self.cursor.child_count()
+        }
+        /// Whether this repetition matched zero elements.
+        #[inline]
+        pub fn is_empty(&self) -> bool {
+            self.len() == 0
+        }
+        /// The i-th element as a typed view, if present.
+        #[inline]
+        pub fn get(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct alternationView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> alternationView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> EbnfParserRuleKind {
+            match self.variant_idx() {
+                0u8 => EbnfParserRuleKind::letter,
+                1u8 => EbnfParserRuleKind::digit,
+                2u8 => EbnfParserRuleKind::symbol,
+                3u8 => EbnfParserRuleKind::identifier,
+                4u8 => EbnfParserRuleKind::character,
+                5u8 => EbnfParserRuleKind::terminal,
+                6u8 => EbnfParserRuleKind::concatenation,
+                7u8 => EbnfParserRuleKind::alternation,
+                8u8 => EbnfParserRuleKind::rhs,
+                9u8 => EbnfParserRuleKind::term,
+                10u8 => EbnfParserRuleKind::factor,
+                11u8 => EbnfParserRuleKind::rule,
+                12u8 => EbnfParserRuleKind::grammar,
+                13u8 => EbnfParserRuleKind::term_0,
+                14u8 => EbnfParserRuleKind::term_1,
+                15u8 => EbnfParserRuleKind::factor_0,
+                16u8 => EbnfParserRuleKind::factor_1,
+                _ => EbnfParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> alternationView<'p> {
+        /// Iterator over each repetition element as a typed view.
+        #[inline]
+        pub fn iter(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The number of elements in this repetition.
+        #[inline]
+        pub fn len(&self) -> usize {
+            self.cursor.child_count()
+        }
+        /// Whether this repetition matched zero elements.
+        #[inline]
+        pub fn is_empty(&self) -> bool {
+            self.len() == 0
+        }
+        /// The i-th element as a typed view, if present.
+        #[inline]
+        pub fn get(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct rhsView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> rhsView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> EbnfParserRuleKind {
+            match self.variant_idx() {
+                0u8 => EbnfParserRuleKind::letter,
+                1u8 => EbnfParserRuleKind::digit,
+                2u8 => EbnfParserRuleKind::symbol,
+                3u8 => EbnfParserRuleKind::identifier,
+                4u8 => EbnfParserRuleKind::character,
+                5u8 => EbnfParserRuleKind::terminal,
+                6u8 => EbnfParserRuleKind::concatenation,
+                7u8 => EbnfParserRuleKind::alternation,
+                8u8 => EbnfParserRuleKind::rhs,
+                9u8 => EbnfParserRuleKind::term,
+                10u8 => EbnfParserRuleKind::factor,
+                11u8 => EbnfParserRuleKind::rule,
+                12u8 => EbnfParserRuleKind::grammar,
+                13u8 => EbnfParserRuleKind::term_0,
+                14u8 => EbnfParserRuleKind::term_1,
+                15u8 => EbnfParserRuleKind::factor_0,
+                16u8 => EbnfParserRuleKind::factor_1,
+                _ => EbnfParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> rhsView<'p> {
+        /// The source text matched by this leaf rule.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
     pub struct termView<'p> {
         cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
@@ -8494,19 +8912,20 @@ mod __ebnfparser_emit_impl {
                 0u8 => EbnfParserRuleKind::letter,
                 1u8 => EbnfParserRuleKind::digit,
                 2u8 => EbnfParserRuleKind::symbol,
-                3u8 => EbnfParserRuleKind::character,
-                4u8 => EbnfParserRuleKind::identifier,
+                3u8 => EbnfParserRuleKind::identifier,
+                4u8 => EbnfParserRuleKind::character,
                 5u8 => EbnfParserRuleKind::terminal,
-                6u8 => EbnfParserRuleKind::term,
-                7u8 => EbnfParserRuleKind::factor,
-                8u8 => EbnfParserRuleKind::concatenation,
-                9u8 => EbnfParserRuleKind::alternation,
-                10u8 => EbnfParserRuleKind::rule,
-                11u8 => EbnfParserRuleKind::grammar,
-                12u8 => EbnfParserRuleKind::term_0,
-                13u8 => EbnfParserRuleKind::term_1,
-                14u8 => EbnfParserRuleKind::factor_0,
-                15u8 => EbnfParserRuleKind::factor_1,
+                6u8 => EbnfParserRuleKind::concatenation,
+                7u8 => EbnfParserRuleKind::alternation,
+                8u8 => EbnfParserRuleKind::rhs,
+                9u8 => EbnfParserRuleKind::term,
+                10u8 => EbnfParserRuleKind::factor,
+                11u8 => EbnfParserRuleKind::rule,
+                12u8 => EbnfParserRuleKind::grammar,
+                13u8 => EbnfParserRuleKind::term_0,
+                14u8 => EbnfParserRuleKind::term_1,
+                15u8 => EbnfParserRuleKind::factor_0,
+                16u8 => EbnfParserRuleKind::factor_1,
                 _ => EbnfParserRuleKind::Unknown,
             }
         }
@@ -8807,19 +9226,20 @@ mod __ebnfparser_emit_impl {
                 0u8 => EbnfParserRuleKind::letter,
                 1u8 => EbnfParserRuleKind::digit,
                 2u8 => EbnfParserRuleKind::symbol,
-                3u8 => EbnfParserRuleKind::character,
-                4u8 => EbnfParserRuleKind::identifier,
+                3u8 => EbnfParserRuleKind::identifier,
+                4u8 => EbnfParserRuleKind::character,
                 5u8 => EbnfParserRuleKind::terminal,
-                6u8 => EbnfParserRuleKind::term,
-                7u8 => EbnfParserRuleKind::factor,
-                8u8 => EbnfParserRuleKind::concatenation,
-                9u8 => EbnfParserRuleKind::alternation,
-                10u8 => EbnfParserRuleKind::rule,
-                11u8 => EbnfParserRuleKind::grammar,
-                12u8 => EbnfParserRuleKind::term_0,
-                13u8 => EbnfParserRuleKind::term_1,
-                14u8 => EbnfParserRuleKind::factor_0,
-                15u8 => EbnfParserRuleKind::factor_1,
+                6u8 => EbnfParserRuleKind::concatenation,
+                7u8 => EbnfParserRuleKind::alternation,
+                8u8 => EbnfParserRuleKind::rhs,
+                9u8 => EbnfParserRuleKind::term,
+                10u8 => EbnfParserRuleKind::factor,
+                11u8 => EbnfParserRuleKind::rule,
+                12u8 => EbnfParserRuleKind::grammar,
+                13u8 => EbnfParserRuleKind::term_0,
+                14u8 => EbnfParserRuleKind::term_1,
+                15u8 => EbnfParserRuleKind::factor_0,
+                16u8 => EbnfParserRuleKind::factor_1,
                 _ => EbnfParserRuleKind::Unknown,
             }
         }
@@ -8874,266 +9294,6 @@ mod __ebnfparser_emit_impl {
         #[inline]
         pub fn num_children(&self) -> usize {
             2usize
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct concatenationView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> concatenationView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> EbnfParserRuleKind {
-            match self.variant_idx() {
-                0u8 => EbnfParserRuleKind::letter,
-                1u8 => EbnfParserRuleKind::digit,
-                2u8 => EbnfParserRuleKind::symbol,
-                3u8 => EbnfParserRuleKind::character,
-                4u8 => EbnfParserRuleKind::identifier,
-                5u8 => EbnfParserRuleKind::terminal,
-                6u8 => EbnfParserRuleKind::term,
-                7u8 => EbnfParserRuleKind::factor,
-                8u8 => EbnfParserRuleKind::concatenation,
-                9u8 => EbnfParserRuleKind::alternation,
-                10u8 => EbnfParserRuleKind::rule,
-                11u8 => EbnfParserRuleKind::grammar,
-                12u8 => EbnfParserRuleKind::term_0,
-                13u8 => EbnfParserRuleKind::term_1,
-                14u8 => EbnfParserRuleKind::factor_0,
-                15u8 => EbnfParserRuleKind::factor_1,
-                _ => EbnfParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
-            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> concatenationView<'p> {
-        /// Iterator over each repetition element as a typed view.
-        #[inline]
-        pub fn iter(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
-        }
-        /// The number of elements in this repetition.
-        #[inline]
-        pub fn len(&self) -> usize {
-            self.cursor.child_count()
-        }
-        /// Whether this repetition matched zero elements.
-        #[inline]
-        pub fn is_empty(&self) -> bool {
-            self.len() == 0
-        }
-        /// The i-th element as a typed view, if present.
-        #[inline]
-        pub fn get(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
-            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct alternationView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> alternationView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> EbnfParserRuleKind {
-            match self.variant_idx() {
-                0u8 => EbnfParserRuleKind::letter,
-                1u8 => EbnfParserRuleKind::digit,
-                2u8 => EbnfParserRuleKind::symbol,
-                3u8 => EbnfParserRuleKind::character,
-                4u8 => EbnfParserRuleKind::identifier,
-                5u8 => EbnfParserRuleKind::terminal,
-                6u8 => EbnfParserRuleKind::term,
-                7u8 => EbnfParserRuleKind::factor,
-                8u8 => EbnfParserRuleKind::concatenation,
-                9u8 => EbnfParserRuleKind::alternation,
-                10u8 => EbnfParserRuleKind::rule,
-                11u8 => EbnfParserRuleKind::grammar,
-                12u8 => EbnfParserRuleKind::term_0,
-                13u8 => EbnfParserRuleKind::term_1,
-                14u8 => EbnfParserRuleKind::factor_0,
-                15u8 => EbnfParserRuleKind::factor_1,
-                _ => EbnfParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
-            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> alternationView<'p> {
-        /// Iterator over each repetition element as a typed view.
-        #[inline]
-        pub fn iter(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = EbnfParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| EbnfParserNodeView::from_cursor(c, input))
-        }
-        /// The number of elements in this repetition.
-        #[inline]
-        pub fn len(&self) -> usize {
-            self.cursor.child_count()
-        }
-        /// Whether this repetition matched zero elements.
-        #[inline]
-        pub fn is_empty(&self) -> bool {
-            self.len() == 0
-        }
-        /// The i-th element as a typed view, if present.
-        #[inline]
-        pub fn get(&self, i: usize) -> ::core::option::Option<EbnfParserNodeView<'p>> {
-            self.cursor.child(i).map(|c| EbnfParserNodeView::from_cursor(c, self.input))
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -9194,19 +9354,20 @@ mod __ebnfparser_emit_impl {
                 0u8 => EbnfParserRuleKind::letter,
                 1u8 => EbnfParserRuleKind::digit,
                 2u8 => EbnfParserRuleKind::symbol,
-                3u8 => EbnfParserRuleKind::character,
-                4u8 => EbnfParserRuleKind::identifier,
+                3u8 => EbnfParserRuleKind::identifier,
+                4u8 => EbnfParserRuleKind::character,
                 5u8 => EbnfParserRuleKind::terminal,
-                6u8 => EbnfParserRuleKind::term,
-                7u8 => EbnfParserRuleKind::factor,
-                8u8 => EbnfParserRuleKind::concatenation,
-                9u8 => EbnfParserRuleKind::alternation,
-                10u8 => EbnfParserRuleKind::rule,
-                11u8 => EbnfParserRuleKind::grammar,
-                12u8 => EbnfParserRuleKind::term_0,
-                13u8 => EbnfParserRuleKind::term_1,
-                14u8 => EbnfParserRuleKind::factor_0,
-                15u8 => EbnfParserRuleKind::factor_1,
+                6u8 => EbnfParserRuleKind::concatenation,
+                7u8 => EbnfParserRuleKind::alternation,
+                8u8 => EbnfParserRuleKind::rhs,
+                9u8 => EbnfParserRuleKind::term,
+                10u8 => EbnfParserRuleKind::factor,
+                11u8 => EbnfParserRuleKind::rule,
+                12u8 => EbnfParserRuleKind::grammar,
+                13u8 => EbnfParserRuleKind::term_0,
+                14u8 => EbnfParserRuleKind::term_1,
+                15u8 => EbnfParserRuleKind::factor_0,
+                16u8 => EbnfParserRuleKind::factor_1,
                 _ => EbnfParserRuleKind::Unknown,
             }
         }
@@ -9273,17 +9434,13 @@ mod __ebnfparser_emit_impl {
         }
         ///Child at position 4 as a typed view.
         #[inline]
-        pub fn child_4(&self) -> ::core::option::Option<alternationView<'p>> {
-            self.cursor
-                .child(4usize)
-                .map(|c| alternationView::from_cursor(c, self.input))
+        pub fn child_4(&self) -> ::core::option::Option<rhsView<'p>> {
+            self.cursor.child(4usize).map(|c| rhsView::from_cursor(c, self.input))
         }
-        ///The `alternation` child as a typed view.
+        ///The `rhs` child as a typed view.
         #[inline]
-        pub fn alternation(&self) -> ::core::option::Option<alternationView<'p>> {
-            self.cursor
-                .child(4usize)
-                .map(|c| alternationView::from_cursor(c, self.input))
+        pub fn rhs(&self) -> ::core::option::Option<rhsView<'p>> {
+            self.cursor.child(4usize).map(|c| rhsView::from_cursor(c, self.input))
         }
         ///Child at position 5 as a typed view.
         #[inline]
@@ -9363,19 +9520,20 @@ mod __ebnfparser_emit_impl {
                 0u8 => EbnfParserRuleKind::letter,
                 1u8 => EbnfParserRuleKind::digit,
                 2u8 => EbnfParserRuleKind::symbol,
-                3u8 => EbnfParserRuleKind::character,
-                4u8 => EbnfParserRuleKind::identifier,
+                3u8 => EbnfParserRuleKind::identifier,
+                4u8 => EbnfParserRuleKind::character,
                 5u8 => EbnfParserRuleKind::terminal,
-                6u8 => EbnfParserRuleKind::term,
-                7u8 => EbnfParserRuleKind::factor,
-                8u8 => EbnfParserRuleKind::concatenation,
-                9u8 => EbnfParserRuleKind::alternation,
-                10u8 => EbnfParserRuleKind::rule,
-                11u8 => EbnfParserRuleKind::grammar,
-                12u8 => EbnfParserRuleKind::term_0,
-                13u8 => EbnfParserRuleKind::term_1,
-                14u8 => EbnfParserRuleKind::factor_0,
-                15u8 => EbnfParserRuleKind::factor_1,
+                6u8 => EbnfParserRuleKind::concatenation,
+                7u8 => EbnfParserRuleKind::alternation,
+                8u8 => EbnfParserRuleKind::rhs,
+                9u8 => EbnfParserRuleKind::term,
+                10u8 => EbnfParserRuleKind::factor,
+                11u8 => EbnfParserRuleKind::rule,
+                12u8 => EbnfParserRuleKind::grammar,
+                13u8 => EbnfParserRuleKind::term_0,
+                14u8 => EbnfParserRuleKind::term_1,
+                15u8 => EbnfParserRuleKind::factor_0,
+                16u8 => EbnfParserRuleKind::factor_1,
                 _ => EbnfParserRuleKind::Unknown,
             }
         }
@@ -9453,13 +9611,14 @@ mod __ebnfparser_emit_impl {
         letter,
         digit,
         symbol,
-        character,
         identifier,
+        character,
         terminal,
-        term,
-        factor,
         concatenation,
         alternation,
+        rhs,
+        term,
+        factor,
         rule,
         grammar,
         term_0,
@@ -9522,19 +9681,20 @@ mod __ebnfparser_emit_impl {
                 0u8 => EbnfParserRuleKind::letter,
                 1u8 => EbnfParserRuleKind::digit,
                 2u8 => EbnfParserRuleKind::symbol,
-                3u8 => EbnfParserRuleKind::character,
-                4u8 => EbnfParserRuleKind::identifier,
+                3u8 => EbnfParserRuleKind::identifier,
+                4u8 => EbnfParserRuleKind::character,
                 5u8 => EbnfParserRuleKind::terminal,
-                6u8 => EbnfParserRuleKind::term,
-                7u8 => EbnfParserRuleKind::factor,
-                8u8 => EbnfParserRuleKind::concatenation,
-                9u8 => EbnfParserRuleKind::alternation,
-                10u8 => EbnfParserRuleKind::rule,
-                11u8 => EbnfParserRuleKind::grammar,
-                12u8 => EbnfParserRuleKind::term_0,
-                13u8 => EbnfParserRuleKind::term_1,
-                14u8 => EbnfParserRuleKind::factor_0,
-                15u8 => EbnfParserRuleKind::factor_1,
+                6u8 => EbnfParserRuleKind::concatenation,
+                7u8 => EbnfParserRuleKind::alternation,
+                8u8 => EbnfParserRuleKind::rhs,
+                9u8 => EbnfParserRuleKind::term,
+                10u8 => EbnfParserRuleKind::factor,
+                11u8 => EbnfParserRuleKind::rule,
+                12u8 => EbnfParserRuleKind::grammar,
+                13u8 => EbnfParserRuleKind::term_0,
+                14u8 => EbnfParserRuleKind::term_1,
+                15u8 => EbnfParserRuleKind::factor_0,
+                16u8 => EbnfParserRuleKind::factor_1,
                 _ => EbnfParserRuleKind::Unknown,
             }
         }
@@ -9791,13 +9951,14 @@ mod __ebnfparser_emit_impl {
         letter(EbnfParserLetterProjection),
         digit(EbnfParserDigitProjection),
         symbol(EbnfParserSymbolProjection),
-        character(::std::vec::Vec<EbnfParserValue<'p>>),
         identifier(::std::vec::Vec<EbnfParserValue<'p>>),
+        character(::std::vec::Vec<EbnfParserValue<'p>>),
         terminal(::std::vec::Vec<EbnfParserValue<'p>>),
-        term(::std::vec::Vec<EbnfParserValue<'p>>),
-        factor(::std::vec::Vec<EbnfParserValue<'p>>),
         concatenation(::std::vec::Vec<EbnfParserValue<'p>>),
         alternation(::std::vec::Vec<EbnfParserValue<'p>>),
+        rhs(EbnfParserNodeView<'p>),
+        term(::std::vec::Vec<EbnfParserValue<'p>>),
+        factor(::std::vec::Vec<EbnfParserValue<'p>>),
         rule(::std::vec::Vec<EbnfParserValue<'p>>),
         grammar(::std::vec::Vec<EbnfParserValue<'p>>),
         /// Fallback for records whose `variant_idx` is not a
@@ -9836,15 +9997,16 @@ mod __ebnfparser_emit_impl {
             0u8 => EbnfParserRuleKind::letter,
             1u8 => EbnfParserRuleKind::digit,
             2u8 => EbnfParserRuleKind::symbol,
-            3u8 => EbnfParserRuleKind::character,
-            4u8 => EbnfParserRuleKind::identifier,
+            3u8 => EbnfParserRuleKind::identifier,
+            4u8 => EbnfParserRuleKind::character,
             5u8 => EbnfParserRuleKind::terminal,
-            6u8 => EbnfParserRuleKind::term,
-            7u8 => EbnfParserRuleKind::factor,
-            8u8 => EbnfParserRuleKind::concatenation,
-            9u8 => EbnfParserRuleKind::alternation,
-            10u8 => EbnfParserRuleKind::rule,
-            11u8 => EbnfParserRuleKind::grammar,
+            6u8 => EbnfParserRuleKind::concatenation,
+            7u8 => EbnfParserRuleKind::alternation,
+            8u8 => EbnfParserRuleKind::rhs,
+            9u8 => EbnfParserRuleKind::term,
+            10u8 => EbnfParserRuleKind::factor,
+            11u8 => EbnfParserRuleKind::rule,
+            12u8 => EbnfParserRuleKind::grammar,
             _ => EbnfParserRuleKind::Unknown,
         }
     }
@@ -9968,22 +10130,6 @@ mod __ebnfparser_emit_impl {
                     });
                 EbnfParserValue::symbol(proj)
             }
-            EbnfParserRuleKind::character => {
-                let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = crate::runtime::tape::TapeCursor::new(
-                    __tape,
-                    crate::runtime::tape::TapeOffset(offset),
-                );
-                for __child in __cur.children() {
-                    project_push_children_EbnfParser(
-                        output,
-                        input,
-                        __child.offset().0,
-                        &mut children,
-                    );
-                }
-                EbnfParserValue::character(children)
-            }
             EbnfParserRuleKind::identifier => {
                 let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::new();
                 let __cur = crate::runtime::tape::TapeCursor::new(
@@ -10000,6 +10146,22 @@ mod __ebnfparser_emit_impl {
                 }
                 EbnfParserValue::identifier(children)
             }
+            EbnfParserRuleKind::character => {
+                let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_EbnfParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                EbnfParserValue::character(children)
+            }
             EbnfParserRuleKind::terminal => {
                 let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::new();
                 let __cur = crate::runtime::tape::TapeCursor::new(
@@ -10015,38 +10177,6 @@ mod __ebnfparser_emit_impl {
                     );
                 }
                 EbnfParserValue::terminal(children)
-            }
-            EbnfParserRuleKind::term => {
-                let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = crate::runtime::tape::TapeCursor::new(
-                    __tape,
-                    crate::runtime::tape::TapeOffset(offset),
-                );
-                for __child in __cur.children() {
-                    project_push_children_EbnfParser(
-                        output,
-                        input,
-                        __child.offset().0,
-                        &mut children,
-                    );
-                }
-                EbnfParserValue::term(children)
-            }
-            EbnfParserRuleKind::factor => {
-                let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = crate::runtime::tape::TapeCursor::new(
-                    __tape,
-                    crate::runtime::tape::TapeOffset(offset),
-                );
-                for __child in __cur.children() {
-                    project_push_children_EbnfParser(
-                        output,
-                        input,
-                        __child.offset().0,
-                        &mut children,
-                    );
-                }
-                EbnfParserValue::factor(children)
             }
             EbnfParserRuleKind::concatenation => {
                 let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::new();
@@ -10079,6 +10209,45 @@ mod __ebnfparser_emit_impl {
                     );
                 }
                 EbnfParserValue::alternation(children)
+            }
+            EbnfParserRuleKind::rhs => {
+                ::core::panic!(
+                    "AY-II.W0'.b: Cursor-shape variant projection not yet \
+                     available; tape record offset {}",
+                    offset,
+                );
+            }
+            EbnfParserRuleKind::term => {
+                let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_EbnfParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                EbnfParserValue::term(children)
+            }
+            EbnfParserRuleKind::factor => {
+                let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::new();
+                let __cur = crate::runtime::tape::TapeCursor::new(
+                    __tape,
+                    crate::runtime::tape::TapeOffset(offset),
+                );
+                for __child in __cur.children() {
+                    project_push_children_EbnfParser(
+                        output,
+                        input,
+                        __child.offset().0,
+                        &mut children,
+                    );
+                }
+                EbnfParserValue::factor(children)
             }
             EbnfParserRuleKind::rule => {
                 let mut children: ::std::vec::Vec<EbnfParserValue<'p>> = ::std::vec::Vec::new();
@@ -10211,12 +10380,12 @@ mod __ebnfparser_emit_impl {
                         EbnfParserRuleKind::letter
                         | EbnfParserRuleKind::digit
                         | EbnfParserRuleKind::symbol
-                        | EbnfParserRuleKind::character
                         | EbnfParserRuleKind::identifier
-                        | EbnfParserRuleKind::term
-                        | EbnfParserRuleKind::factor
+                        | EbnfParserRuleKind::character
                         | EbnfParserRuleKind::concatenation
                         | EbnfParserRuleKind::alternation
+                        | EbnfParserRuleKind::term
+                        | EbnfParserRuleKind::factor
                         | EbnfParserRuleKind::rule
                         | EbnfParserRuleKind::grammar => {
                             let parent = cur.cursor();
@@ -10338,12 +10507,12 @@ mod __ebnfparser_emit_impl {
                         EbnfParserRuleKind::letter
                         | EbnfParserRuleKind::digit
                         | EbnfParserRuleKind::symbol
-                        | EbnfParserRuleKind::character
                         | EbnfParserRuleKind::identifier
-                        | EbnfParserRuleKind::term
-                        | EbnfParserRuleKind::factor
+                        | EbnfParserRuleKind::character
                         | EbnfParserRuleKind::concatenation
                         | EbnfParserRuleKind::alternation
+                        | EbnfParserRuleKind::term
+                        | EbnfParserRuleKind::factor
                         | EbnfParserRuleKind::rule
                         | EbnfParserRuleKind::grammar => {
                             let parent = cur.cursor();
@@ -11473,79 +11642,6 @@ mod __ebnfparser_emit_impl {
                 Some(__builder.finish())
             })
         }
-        fn __character_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    let __byte = match state.src_bytes.get(state.offset) {
-                        Some(&b) => b,
-                        None => return false,
-                    };
-                    match __byte {
-                        b'_' => {
-                            {
-                                if state.src_bytes.get(state.offset).copied() != Some(b'_')
-                                {
-                                    return false;
-                                }
-                                state.offset += 1;
-                                __builder.char(b'_');
-                            };
-                        }
-                        b' ' => {
-                            {
-                                if state.src_bytes.get(state.offset).copied() != Some(b' ')
-                                {
-                                    return false;
-                                }
-                                state.offset += 1;
-                                __builder.char(b' ');
-                            };
-                        }
-                        b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' | b'8'
-                        | b'9' => {
-                            if !Self::__digit_prettify(state, __builder) {
-                                return false;
-                            }
-                        }
-                        b'\x08' | b'\t' | b'\n' | b'\x0C' | b'\r' | b'"' | b'\'' | b'('
-                        | b')' | b'*' | b'+' | b',' | b'-' | b'.' | b';' | b'<' | b'='
-                        | b'>' | b'?' | b'[' | b'\\' | b']' | b'{' | b'|' | b'}' => {
-                            if !Self::__symbol_prettify(state, __builder) {
-                                return false;
-                            }
-                        }
-                        b'A' | b'B' | b'C' | b'D' | b'E' | b'F' | b'G' | b'H' | b'I'
-                        | b'J' | b'K' | b'L' | b'M' | b'N' | b'O' | b'P' | b'Q' | b'R'
-                        | b'S' | b'T' | b'U' | b'V' | b'W' | b'X' | b'Y' | b'Z' | b'a'
-                        | b'b' | b'c' | b'd' | b'e' | b'f' | b'g' | b'h' | b'i' | b'j'
-                        | b'k' | b'l' | b'm' | b'n' | b'o' | b'p' | b'q' | b'r' | b's'
-                        | b't' | b'u' | b'v' | b'w' | b'x' | b'y' | b'z' => {
-                            if !Self::__letter_prettify(state, __builder) {
-                                return false;
-                            }
-                        }
-                        _ => {
-                            return false;
-                        }
-                    }
-                };
-                true
-            }
-        }
-        pub fn character_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__character_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
         fn __identifier_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -11628,6 +11724,79 @@ mod __ebnfparser_emit_impl {
                     state.src.len().saturating_mul(2),
                 );
                 if !Self::__identifier_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __character_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    let __byte = match state.src_bytes.get(state.offset) {
+                        Some(&b) => b,
+                        None => return false,
+                    };
+                    match __byte {
+                        b'_' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'_')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'_');
+                            };
+                        }
+                        b' ' => {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b' ')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b' ');
+                            };
+                        }
+                        b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' | b'8'
+                        | b'9' => {
+                            if !Self::__digit_prettify(state, __builder) {
+                                return false;
+                            }
+                        }
+                        b'\x08' | b'\t' | b'\n' | b'\x0C' | b'\r' | b'"' | b'\'' | b'('
+                        | b')' | b'*' | b'+' | b',' | b'-' | b'.' | b';' | b'<' | b'='
+                        | b'>' | b'?' | b'[' | b'\\' | b']' | b'{' | b'|' | b'}' => {
+                            if !Self::__symbol_prettify(state, __builder) {
+                                return false;
+                            }
+                        }
+                        b'A' | b'B' | b'C' | b'D' | b'E' | b'F' | b'G' | b'H' | b'I'
+                        | b'J' | b'K' | b'L' | b'M' | b'N' | b'O' | b'P' | b'Q' | b'R'
+                        | b'S' | b'T' | b'U' | b'V' | b'W' | b'X' | b'Y' | b'Z' | b'a'
+                        | b'b' | b'c' | b'd' | b'e' | b'f' | b'g' | b'h' | b'i' | b'j'
+                        | b'k' | b'l' | b'm' | b'n' | b'o' | b'p' | b'q' | b'r' | b's'
+                        | b't' | b'u' | b'v' | b'w' | b'x' | b'y' | b'z' => {
+                            if !Self::__letter_prettify(state, __builder) {
+                                return false;
+                            }
+                        }
+                        _ => {
+                            return false;
+                        }
+                    }
+                };
+                true
+            }
+        }
+        pub fn character_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__character_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
@@ -11848,424 +12017,6 @@ mod __ebnfparser_emit_impl {
                     state.src.len().saturating_mul(2),
                 );
                 if !Self::__terminal_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __term_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    let __byte = match state.src_bytes.get(state.offset) {
-                        Some(&b) => b,
-                        None => return false,
-                    };
-                    match __byte {
-                        b'(' => {
-                            {
-                                {
-                                    if state.src_bytes.get(state.offset).copied() != Some(b'(')
-                                    {
-                                        return false;
-                                    }
-                                    state.offset += 1;
-                                    __builder.char(b'(');
-                                };
-                                {
-                                    let __start = state.offset;
-                                    if {
-                                        let __start = state.offset;
-                                        let __end = state.src_bytes.len();
-                                        let mut __pos = __start;
-                                        while __pos < __end {
-                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                            if (__b >= b'\t' && __b <= b'\n')
-                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
-                                            {
-                                                __pos += 1;
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                        state.offset = __pos;
-                                        Some(::parse_that::Span::new(__start, __pos, state.src))
-                                    }
-                                        .is_none()
-                                    {
-                                        return false;
-                                    }
-                                    let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
-                                        __builder.text(__matched);
-                                    }
-                                };
-                                if !Self::__alternation_prettify(state, __builder) {
-                                    return false;
-                                }
-                                {
-                                    let __start = state.offset;
-                                    if {
-                                        let __start = state.offset;
-                                        let __end = state.src_bytes.len();
-                                        let mut __pos = __start;
-                                        while __pos < __end {
-                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                            if (__b >= b'\t' && __b <= b'\n')
-                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
-                                            {
-                                                __pos += 1;
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                        state.offset = __pos;
-                                        Some(::parse_that::Span::new(__start, __pos, state.src))
-                                    }
-                                        .is_none()
-                                    {
-                                        return false;
-                                    }
-                                    let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
-                                        __builder.text(__matched);
-                                    }
-                                };
-                                {
-                                    if state.src_bytes.get(state.offset).copied() != Some(b')')
-                                    {
-                                        return false;
-                                    }
-                                    state.offset += 1;
-                                    __builder.char(b')');
-                                };
-                            };
-                        }
-                        b'[' => {
-                            {
-                                {
-                                    if state.src_bytes.get(state.offset).copied() != Some(b'[')
-                                    {
-                                        return false;
-                                    }
-                                    state.offset += 1;
-                                    __builder.char(b'[');
-                                };
-                                {
-                                    let __start = state.offset;
-                                    if {
-                                        let __start = state.offset;
-                                        let __end = state.src_bytes.len();
-                                        let mut __pos = __start;
-                                        while __pos < __end {
-                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                            if (__b >= b'\t' && __b <= b'\n')
-                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
-                                            {
-                                                __pos += 1;
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                        state.offset = __pos;
-                                        Some(::parse_that::Span::new(__start, __pos, state.src))
-                                    }
-                                        .is_none()
-                                    {
-                                        return false;
-                                    }
-                                    let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
-                                        __builder.text(__matched);
-                                    }
-                                };
-                                if !Self::__alternation_prettify(state, __builder) {
-                                    return false;
-                                }
-                                {
-                                    let __start = state.offset;
-                                    if {
-                                        let __start = state.offset;
-                                        let __end = state.src_bytes.len();
-                                        let mut __pos = __start;
-                                        while __pos < __end {
-                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                            if (__b >= b'\t' && __b <= b'\n')
-                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
-                                            {
-                                                __pos += 1;
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                        state.offset = __pos;
-                                        Some(::parse_that::Span::new(__start, __pos, state.src))
-                                    }
-                                        .is_none()
-                                    {
-                                        return false;
-                                    }
-                                    let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
-                                        __builder.text(__matched);
-                                    }
-                                };
-                                {
-                                    if state.src_bytes.get(state.offset).copied() != Some(b']')
-                                    {
-                                        return false;
-                                    }
-                                    state.offset += 1;
-                                    __builder.char(b']');
-                                };
-                            };
-                        }
-                        b'{' => {
-                            {
-                                {
-                                    if state.src_bytes.get(state.offset).copied() != Some(b'{')
-                                    {
-                                        return false;
-                                    }
-                                    state.offset += 1;
-                                    __builder.char(b'{');
-                                };
-                                {
-                                    let __start = state.offset;
-                                    if {
-                                        let __start = state.offset;
-                                        let __end = state.src_bytes.len();
-                                        let mut __pos = __start;
-                                        while __pos < __end {
-                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                            if (__b >= b'\t' && __b <= b'\n')
-                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
-                                            {
-                                                __pos += 1;
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                        state.offset = __pos;
-                                        Some(::parse_that::Span::new(__start, __pos, state.src))
-                                    }
-                                        .is_none()
-                                    {
-                                        return false;
-                                    }
-                                    let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
-                                        __builder.text(__matched);
-                                    }
-                                };
-                                if !Self::__alternation_prettify(state, __builder) {
-                                    return false;
-                                }
-                                {
-                                    let __start = state.offset;
-                                    if {
-                                        let __start = state.offset;
-                                        let __end = state.src_bytes.len();
-                                        let mut __pos = __start;
-                                        while __pos < __end {
-                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                            if (__b >= b'\t' && __b <= b'\n')
-                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
-                                            {
-                                                __pos += 1;
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                        state.offset = __pos;
-                                        Some(::parse_that::Span::new(__start, __pos, state.src))
-                                    }
-                                        .is_none()
-                                    {
-                                        return false;
-                                    }
-                                    let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
-                                        __builder.text(__matched);
-                                    }
-                                };
-                                {
-                                    if state.src_bytes.get(state.offset).copied() != Some(b'}')
-                                    {
-                                        return false;
-                                    }
-                                    state.offset += 1;
-                                    __builder.char(b'}');
-                                };
-                            };
-                        }
-                        b'"' | b'\'' => {
-                            if !Self::__terminal_prettify(state, __builder) {
-                                return false;
-                            }
-                        }
-                        b'A' | b'B' | b'C' | b'D' | b'E' | b'F' | b'G' | b'H' | b'I'
-                        | b'J' | b'K' | b'L' | b'M' | b'N' | b'O' | b'P' | b'Q' | b'R'
-                        | b'S' | b'T' | b'U' | b'V' | b'W' | b'X' | b'Y' | b'Z' | b'a'
-                        | b'b' | b'c' | b'd' | b'e' | b'f' | b'g' | b'h' | b'i' | b'j'
-                        | b'k' | b'l' | b'm' | b'n' | b'o' | b'p' | b'q' | b'r' | b's'
-                        | b't' | b'u' | b'v' | b'w' | b'x' | b'y' | b'z' => {
-                            if !Self::__identifier_prettify(state, __builder) {
-                                return false;
-                            }
-                        }
-                        _ => {
-                            return false;
-                        }
-                    }
-                };
-                true
-            }
-        }
-        pub fn term_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__term_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __factor_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            {
-                {
-                    if !Self::__term_prettify(state, __builder) {
-                        return false;
-                    }
-                    {
-                        {
-                            let __start = state.offset;
-                            if {
-                                let __start = state.offset;
-                                let __end = state.src_bytes.len();
-                                let mut __pos = __start;
-                                while __pos < __end {
-                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                    if (__b >= b'\t' && __b <= b'\n')
-                                        || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
-                                    {
-                                        __pos += 1;
-                                    } else {
-                                        break;
-                                    }
-                                }
-                                state.offset = __pos;
-                                Some(::parse_that::Span::new(__start, __pos, state.src))
-                            }
-                                .is_none()
-                            {
-                                return false;
-                            }
-                            let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
-                                __builder.text(__matched);
-                            }
-                        };
-                        {
-                            let Some(&__byte) = state.src_bytes.get(state.offset) else {
-                                return true;
-                            };
-                            match __byte {
-                                b'?' => {
-                                    {
-                                        if state.src_bytes.get(state.offset).copied() != Some(b'?')
-                                        {
-                                            return false;
-                                        }
-                                        state.offset += 1;
-                                        __builder.char(b'?');
-                                    };
-                                }
-                                b'*' => {
-                                    {
-                                        if state.src_bytes.get(state.offset).copied() != Some(b'*')
-                                        {
-                                            return false;
-                                        }
-                                        state.offset += 1;
-                                        __builder.char(b'*');
-                                    };
-                                }
-                                b'+' => {
-                                    {
-                                        if state.src_bytes.get(state.offset).copied() != Some(b'+')
-                                        {
-                                            return false;
-                                        }
-                                        state.offset += 1;
-                                        __builder.char(b'+');
-                                    };
-                                }
-                                b'-' => {
-                                    {
-                                        {
-                                            if state.src_bytes.get(state.offset).copied() != Some(b'-')
-                                            {
-                                                return false;
-                                            }
-                                            state.offset += 1;
-                                            __builder.char(b'-');
-                                        };
-                                        {
-                                            let __start = state.offset;
-                                            if {
-                                                let __start = state.offset;
-                                                let __end = state.src_bytes.len();
-                                                let mut __pos = __start;
-                                                while __pos < __end {
-                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                    if (__b >= b'\t' && __b <= b'\n')
-                                                        || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
-                                                    {
-                                                        __pos += 1;
-                                                    } else {
-                                                        break;
-                                                    }
-                                                }
-                                                state.offset = __pos;
-                                                Some(::parse_that::Span::new(__start, __pos, state.src))
-                                            }
-                                                .is_none()
-                                            {
-                                                return false;
-                                            }
-                                            let __matched = &state.src[__start..state.offset];
-                                            if !__matched.is_empty() {
-                                                __builder.text(__matched);
-                                            }
-                                        };
-                                        if !Self::__term_prettify(state, __builder) {
-                                            return false;
-                                        }
-                                    };
-                                }
-                                b'\t' | b'\n' | b'\x0C' | b'\r' | b' ' => {}
-                                _ => {}
-                            }
-                        };
-                    };
-                };
-                true
-            }
-        }
-        pub fn factor_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__factor_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
@@ -12546,6 +12297,446 @@ mod __ebnfparser_emit_impl {
                 Some(__builder.finish())
             })
         }
+        fn __rhs_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                if !Self::__alternation_prettify(state, __builder) {
+                    return false;
+                }
+                true
+            }
+        }
+        pub fn rhs_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__rhs_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __term_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    let __byte = match state.src_bytes.get(state.offset) {
+                        Some(&b) => b,
+                        None => return false,
+                    };
+                    match __byte {
+                        b'(' => {
+                            {
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b'(')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b'(');
+                                };
+                                {
+                                    let __start = state.offset;
+                                    if {
+                                        let __start = state.offset;
+                                        let __end = state.src_bytes.len();
+                                        let mut __pos = __start;
+                                        while __pos < __end {
+                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                            if (__b >= b'\t' && __b <= b'\n')
+                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                            {
+                                                __pos += 1;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        state.offset = __pos;
+                                        Some(::parse_that::Span::new(__start, __pos, state.src))
+                                    }
+                                        .is_none()
+                                    {
+                                        return false;
+                                    }
+                                    let __matched = &state.src[__start..state.offset];
+                                    if !__matched.is_empty() {
+                                        __builder.text(__matched);
+                                    }
+                                };
+                                if !Self::__rhs_prettify(state, __builder) {
+                                    return false;
+                                }
+                                {
+                                    let __start = state.offset;
+                                    if {
+                                        let __start = state.offset;
+                                        let __end = state.src_bytes.len();
+                                        let mut __pos = __start;
+                                        while __pos < __end {
+                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                            if (__b >= b'\t' && __b <= b'\n')
+                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                            {
+                                                __pos += 1;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        state.offset = __pos;
+                                        Some(::parse_that::Span::new(__start, __pos, state.src))
+                                    }
+                                        .is_none()
+                                    {
+                                        return false;
+                                    }
+                                    let __matched = &state.src[__start..state.offset];
+                                    if !__matched.is_empty() {
+                                        __builder.text(__matched);
+                                    }
+                                };
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b')')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b')');
+                                };
+                            };
+                        }
+                        b'[' => {
+                            {
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b'[')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b'[');
+                                };
+                                {
+                                    let __start = state.offset;
+                                    if {
+                                        let __start = state.offset;
+                                        let __end = state.src_bytes.len();
+                                        let mut __pos = __start;
+                                        while __pos < __end {
+                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                            if (__b >= b'\t' && __b <= b'\n')
+                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                            {
+                                                __pos += 1;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        state.offset = __pos;
+                                        Some(::parse_that::Span::new(__start, __pos, state.src))
+                                    }
+                                        .is_none()
+                                    {
+                                        return false;
+                                    }
+                                    let __matched = &state.src[__start..state.offset];
+                                    if !__matched.is_empty() {
+                                        __builder.text(__matched);
+                                    }
+                                };
+                                if !Self::__rhs_prettify(state, __builder) {
+                                    return false;
+                                }
+                                {
+                                    let __start = state.offset;
+                                    if {
+                                        let __start = state.offset;
+                                        let __end = state.src_bytes.len();
+                                        let mut __pos = __start;
+                                        while __pos < __end {
+                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                            if (__b >= b'\t' && __b <= b'\n')
+                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                            {
+                                                __pos += 1;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        state.offset = __pos;
+                                        Some(::parse_that::Span::new(__start, __pos, state.src))
+                                    }
+                                        .is_none()
+                                    {
+                                        return false;
+                                    }
+                                    let __matched = &state.src[__start..state.offset];
+                                    if !__matched.is_empty() {
+                                        __builder.text(__matched);
+                                    }
+                                };
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b']')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b']');
+                                };
+                            };
+                        }
+                        b'{' => {
+                            {
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b'{')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b'{');
+                                };
+                                {
+                                    let __start = state.offset;
+                                    if {
+                                        let __start = state.offset;
+                                        let __end = state.src_bytes.len();
+                                        let mut __pos = __start;
+                                        while __pos < __end {
+                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                            if (__b >= b'\t' && __b <= b'\n')
+                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                            {
+                                                __pos += 1;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        state.offset = __pos;
+                                        Some(::parse_that::Span::new(__start, __pos, state.src))
+                                    }
+                                        .is_none()
+                                    {
+                                        return false;
+                                    }
+                                    let __matched = &state.src[__start..state.offset];
+                                    if !__matched.is_empty() {
+                                        __builder.text(__matched);
+                                    }
+                                };
+                                if !Self::__rhs_prettify(state, __builder) {
+                                    return false;
+                                }
+                                {
+                                    let __start = state.offset;
+                                    if {
+                                        let __start = state.offset;
+                                        let __end = state.src_bytes.len();
+                                        let mut __pos = __start;
+                                        while __pos < __end {
+                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                            if (__b >= b'\t' && __b <= b'\n')
+                                                || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                            {
+                                                __pos += 1;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        state.offset = __pos;
+                                        Some(::parse_that::Span::new(__start, __pos, state.src))
+                                    }
+                                        .is_none()
+                                    {
+                                        return false;
+                                    }
+                                    let __matched = &state.src[__start..state.offset];
+                                    if !__matched.is_empty() {
+                                        __builder.text(__matched);
+                                    }
+                                };
+                                {
+                                    if state.src_bytes.get(state.offset).copied() != Some(b'}')
+                                    {
+                                        return false;
+                                    }
+                                    state.offset += 1;
+                                    __builder.char(b'}');
+                                };
+                            };
+                        }
+                        b'"' | b'\'' => {
+                            if !Self::__terminal_prettify(state, __builder) {
+                                return false;
+                            }
+                        }
+                        b'A' | b'B' | b'C' | b'D' | b'E' | b'F' | b'G' | b'H' | b'I'
+                        | b'J' | b'K' | b'L' | b'M' | b'N' | b'O' | b'P' | b'Q' | b'R'
+                        | b'S' | b'T' | b'U' | b'V' | b'W' | b'X' | b'Y' | b'Z' | b'a'
+                        | b'b' | b'c' | b'd' | b'e' | b'f' | b'g' | b'h' | b'i' | b'j'
+                        | b'k' | b'l' | b'm' | b'n' | b'o' | b'p' | b'q' | b'r' | b's'
+                        | b't' | b'u' | b'v' | b'w' | b'x' | b'y' | b'z' => {
+                            if !Self::__identifier_prettify(state, __builder) {
+                                return false;
+                            }
+                        }
+                        _ => {
+                            return false;
+                        }
+                    }
+                };
+                true
+            }
+        }
+        pub fn term_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__term_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __factor_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    if !Self::__term_prettify(state, __builder) {
+                        return false;
+                    }
+                    {
+                        {
+                            let __start = state.offset;
+                            if {
+                                let __start = state.offset;
+                                let __end = state.src_bytes.len();
+                                let mut __pos = __start;
+                                while __pos < __end {
+                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                    if (__b >= b'\t' && __b <= b'\n')
+                                        || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                    {
+                                        __pos += 1;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                state.offset = __pos;
+                                Some(::parse_that::Span::new(__start, __pos, state.src))
+                            }
+                                .is_none()
+                            {
+                                return false;
+                            }
+                            let __matched = &state.src[__start..state.offset];
+                            if !__matched.is_empty() {
+                                __builder.text(__matched);
+                            }
+                        };
+                        {
+                            let Some(&__byte) = state.src_bytes.get(state.offset) else {
+                                return true;
+                            };
+                            match __byte {
+                                b'?' => {
+                                    {
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'?')
+                                        {
+                                            return false;
+                                        }
+                                        state.offset += 1;
+                                        __builder.char(b'?');
+                                    };
+                                }
+                                b'*' => {
+                                    {
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                        {
+                                            return false;
+                                        }
+                                        state.offset += 1;
+                                        __builder.char(b'*');
+                                    };
+                                }
+                                b'+' => {
+                                    {
+                                        if state.src_bytes.get(state.offset).copied() != Some(b'+')
+                                        {
+                                            return false;
+                                        }
+                                        state.offset += 1;
+                                        __builder.char(b'+');
+                                    };
+                                }
+                                b'-' => {
+                                    {
+                                        {
+                                            if state.src_bytes.get(state.offset).copied() != Some(b'-')
+                                            {
+                                                return false;
+                                            }
+                                            state.offset += 1;
+                                            __builder.char(b'-');
+                                        };
+                                        {
+                                            let __start = state.offset;
+                                            if {
+                                                let __start = state.offset;
+                                                let __end = state.src_bytes.len();
+                                                let mut __pos = __start;
+                                                while __pos < __end {
+                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                    if (__b >= b'\t' && __b <= b'\n')
+                                                        || (__b >= b'\x0C' && __b <= b'\r') || __b == b' '
+                                                    {
+                                                        __pos += 1;
+                                                    } else {
+                                                        break;
+                                                    }
+                                                }
+                                                state.offset = __pos;
+                                                Some(::parse_that::Span::new(__start, __pos, state.src))
+                                            }
+                                                .is_none()
+                                            {
+                                                return false;
+                                            }
+                                            let __matched = &state.src[__start..state.offset];
+                                            if !__matched.is_empty() {
+                                                __builder.text(__matched);
+                                            }
+                                        };
+                                        if !Self::__term_prettify(state, __builder) {
+                                            return false;
+                                        }
+                                    };
+                                }
+                                b'\t' | b'\n' | b'\x0C' | b'\r' | b' ' => {}
+                                _ => {}
+                            }
+                        };
+                    };
+                };
+                true
+            }
+        }
+        pub fn factor_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__factor_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
         fn __rule_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -12620,7 +12811,7 @@ mod __ebnfparser_emit_impl {
                                 __builder.text(__matched);
                             }
                         };
-                        if !Self::__alternation_prettify(state, __builder) {
+                        if !Self::__rhs_prettify(state, __builder) {
                             return false;
                         }
                         {
@@ -12835,31 +13026,19 @@ mod __ebnfparser_emit_impl {
         ) {
             __ser.text(__v.span_text());
         }
-        pub fn serialize_character<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: EbnfParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
         pub fn serialize_identifier<'a, __S: ::bbnf_ser::Serializer<'a>>(
             __v: EbnfParserNodeView<'a>,
             __ser: &mut __S,
         ) {
             __ser.text(__v.span_text());
         }
+        pub fn serialize_character<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
         pub fn serialize_terminal<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: EbnfParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
-        pub fn serialize_term<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: EbnfParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
-        pub fn serialize_factor<'a, __S: ::bbnf_ser::Serializer<'a>>(
             __v: EbnfParserNodeView<'a>,
             __ser: &mut __S,
         ) {
@@ -12872,6 +13051,24 @@ mod __ebnfparser_emit_impl {
             __ser.text(__v.span_text());
         }
         pub fn serialize_alternation<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_rhs<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_term<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: EbnfParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
+        pub fn serialize_factor<'a, __S: ::bbnf_ser::Serializer<'a>>(
             __v: EbnfParserNodeView<'a>,
             __ser: &mut __S,
         ) {
@@ -12904,30 +13101,33 @@ mod __ebnfparser_emit_impl {
                     Self::serialize_symbol(__v, __ser);
                 }
                 3u8 => {
-                    Self::serialize_character(__v, __ser);
+                    Self::serialize_identifier(__v, __ser);
                 }
                 4u8 => {
-                    Self::serialize_identifier(__v, __ser);
+                    Self::serialize_character(__v, __ser);
                 }
                 5u8 => {
                     Self::serialize_terminal(__v, __ser);
                 }
                 6u8 => {
-                    Self::serialize_term(__v, __ser);
-                }
-                7u8 => {
-                    Self::serialize_factor(__v, __ser);
-                }
-                8u8 => {
                     Self::serialize_concatenation(__v, __ser);
                 }
-                9u8 => {
+                7u8 => {
                     Self::serialize_alternation(__v, __ser);
                 }
+                8u8 => {
+                    Self::serialize_rhs(__v, __ser);
+                }
+                9u8 => {
+                    Self::serialize_term(__v, __ser);
+                }
                 10u8 => {
-                    Self::serialize_rule(__v, __ser);
+                    Self::serialize_factor(__v, __ser);
                 }
                 11u8 => {
+                    Self::serialize_rule(__v, __ser);
+                }
+                12u8 => {
                     Self::serialize_grammar(__v, __ser);
                 }
                 _ => {
@@ -13081,7 +13281,7 @@ mod __ebnfparser_emit_impl {
         cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
     ) -> &'p str {
-        match cst_find_identifier_cursor(cursor, 4u8) {
+        match cst_find_identifier_cursor(cursor, 3u8) {
             ::core::option::Option::Some(found) => {
                 let (lo, hi) = found.span();
                 &input[lo as usize..hi as usize]
@@ -13097,7 +13297,7 @@ mod __ebnfparser_emit_impl {
         cursor: crate::runtime::tape::TapeCursor<'p>,
         _input: &'p str,
     ) -> (u32, u32) {
-        cst_find_identifier_cursor(cursor, 4u8).map(|c| c.span()).unwrap_or((0, 0))
+        cst_find_identifier_cursor(cursor, 3u8).map(|c| c.span()).unwrap_or((0, 0))
     }
     /// DFS helper shared by `cst_identifier_text` and
     /// `cst_identifier_span`. Returns the first cursor under

@@ -83,7 +83,7 @@ mod __csvparser_emit_impl {
     /// grammar. Non-zero iff the lift admitted ≥ 1 chain OR the
     /// shape classifier admitted ≥ 1 single-rung Pratt rule.
     pub const PRECEDENCE_OPERATOR_COUNT: usize = 0usize;
-    static __DTA_REGEX_1: &str = "[^\"]*";
+    static __DTA_REGEX_2: &str = "[^\"]*";
     static __DTA_REGEX_17: &str = "\\r?\\n";
     static __DTA_HREGEX_22: &str = "[^,\"\\r\\n]+";
     #[inline]
@@ -93,8 +93,8 @@ mod __csvparser_emit_impl {
         input: &[u8],
         pos: usize,
     ) -> ::core::option::Option<u32> {
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_1.as_ptr())
-            || pattern == __DTA_REGEX_1
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_2.as_ptr())
+            || pattern == __DTA_REGEX_2
         {
             return '__dfa: {
                 let mut __dfa_state: u32 = 0;
@@ -632,6 +632,44 @@ mod __csvparser_emit_impl {
             true
         }
     }
+    /// AW-V.W4-fix — per-grammar HRegex-shape parse function.
+    ///
+    /// Regex scan via the per-grammar adapter; emits a
+    /// `TapeKind::Regex` leaf carrying the matched span. Decoder
+    /// hooks (host_fn payloads) are wired at the dispatcher level
+    /// post-scan; the raw Span-leaf path is the default.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_hregex_CsvParser_textdata(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_CsvParser::ScanState,
+        builder: &mut crate::runtime::tape::Tape<()>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let span_lo = *p as u32;
+        let Some(match_len) = __regex_scan_CsvParser("[^,\"\\r\\n]+", input, *p) else {
+            return Err(crate::runtime::tape::DtaError::Syntax {
+                offset: span_lo,
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+            });
+        };
+        *p += match_len as usize;
+        let span_hi = *p as u32;
+        let leaf_off = builder
+            .push_leaf_with(
+                crate::runtime::tape::TapeKind::Regex,
+                span_lo,
+                span_hi,
+                0u8,
+                0,
+                crate::runtime::tape::PayloadData::None,
+            );
+        Ok(leaf_off)
+    }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
     ///
@@ -681,7 +719,7 @@ mod __csvparser_emit_impl {
                         crate::runtime::tape::TapeKind::Literal,
                         at as u32,
                         end as u32,
-                        0u8,
+                        1u8,
                         0,
                         crate::runtime::tape::PayloadData::None,
                     );
@@ -704,7 +742,7 @@ mod __csvparser_emit_impl {
                             crate::runtime::tape::TapeKind::Span,
                             span_lo,
                             span_hi,
-                            0u8,
+                            1u8,
                             0,
                             crate::runtime::tape::PayloadData::None,
                         );
@@ -726,7 +764,7 @@ mod __csvparser_emit_impl {
                         crate::runtime::tape::TapeKind::Literal,
                         at as u32,
                         end as u32,
-                        0u8,
+                        1u8,
                         0,
                         crate::runtime::tape::PayloadData::None,
                     );
@@ -743,7 +781,7 @@ mod __csvparser_emit_impl {
             .begin_compound_post(
                 crate::runtime::tape::TapeKind::Seq,
                 span_lo,
-                0u8,
+                1u8,
                 0u8,
                 0u16,
             );
@@ -754,44 +792,6 @@ mod __csvparser_emit_impl {
                 crate::runtime::tape::TapeOffset(outer_child),
             );
         Ok(crate::runtime::tape::TapeOffset(outer_off))
-    }
-    /// AW-V.W4-fix — per-grammar HRegex-shape parse function.
-    ///
-    /// Regex scan via the per-grammar adapter; emits a
-    /// `TapeKind::Regex` leaf carrying the matched span. Decoder
-    /// hooks (host_fn payloads) are wired at the dispatcher level
-    /// post-scan; the raw Span-leaf path is the default.
-    #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_CsvParser_textdata(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_CsvParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let span_lo = *p as u32;
-        let Some(match_len) = __regex_scan_CsvParser("[^,\"\\r\\n]+", input, *p) else {
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: span_lo,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
-        };
-        *p += match_len as usize;
-        let span_hi = *p as u32;
-        let leaf_off = builder
-            .push_leaf_with(
-                crate::runtime::tape::TapeKind::Regex,
-                span_lo,
-                span_hi,
-                1u8,
-                0,
-                crate::runtime::tape::PayloadData::None,
-            );
-        Ok(leaf_off)
     }
     /// AW-V.W4-fix — per-grammar Flat-shape parse function,
     /// walker-tape-identical.
@@ -1191,6 +1191,41 @@ mod __csvparser_emit_impl {
             );
         Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
+    /// AW-V.W4-fix — visitor-path HRegex-shape parse function.
+    ///
+    /// Regex scan via the per-grammar adapter; fires the
+    /// visitor's `string()` event with the matched span when
+    /// visitor is a StringVisitor. Non-string decoders (host_fn
+    /// payloads) dispatch at the per-grammar consumer wave.
+    #[inline(always)]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+    pub fn parse_hregex_visitor_CsvParser_textdata<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_CsvParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
+    where
+        V: crate::runtime::tape::StringVisitor,
+    {
+        let span_lo = *p;
+        let Some(match_len) = __regex_scan_CsvParser("[^,\"\\r\\n]+", input, *p) else {
+            return Err(crate::runtime::ParseErr::Syntax {
+                offset: span_lo as u32,
+                rule: None,
+            });
+        };
+        let span_hi = *p + match_len as usize;
+        *p = span_hi;
+        visitor
+            .string(&input[span_lo..span_hi])
+            .map_err(|_| {
+                crate::runtime::ParseErr::Syntax {
+                    offset: span_lo as u32,
+                    rule: None,
+                }
+            })
+    }
     /// AW-V.W4-fix — visitor-path Flat-shape parse function.
     ///
     /// Mirrors the tape-path emitter structure. Literal positions
@@ -1247,41 +1282,6 @@ mod __csvparser_emit_impl {
             *p = end;
         }
         Ok(())
-    }
-    /// AW-V.W4-fix — visitor-path HRegex-shape parse function.
-    ///
-    /// Regex scan via the per-grammar adapter; fires the
-    /// visitor's `string()` event with the matched span when
-    /// visitor is a StringVisitor. Non-string decoders (host_fn
-    /// payloads) dispatch at the per-grammar consumer wave.
-    #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_visitor_CsvParser_textdata<V>(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_CsvParser::ScanState,
-        visitor: &mut V,
-    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
-    where
-        V: crate::runtime::tape::StringVisitor,
-    {
-        let span_lo = *p;
-        let Some(match_len) = __regex_scan_CsvParser("[^,\"\\r\\n]+", input, *p) else {
-            return Err(crate::runtime::ParseErr::Syntax {
-                offset: span_lo as u32,
-                rule: None,
-            });
-        };
-        let span_hi = *p + match_len as usize;
-        *p = span_hi;
-        visitor
-            .string(&input[span_lo..span_hi])
-            .map_err(|_| {
-                crate::runtime::ParseErr::Syntax {
-                    offset: span_lo as u32,
-                    rule: None,
-                }
-            })
     }
     /// AW-V.W4-fix — visitor-path Flat-shape parse function.
     ///
@@ -1552,12 +1552,12 @@ mod __csvparser_emit_impl {
     pub const STRUCTURAL_SCAN_POLICY: &[crate::runtime::tape::ScanPolicyEntry] = &[
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 0u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Empty,
             activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 1u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Empty,
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
             activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
         },
         crate::runtime::tape::ScanPolicyEntry {
@@ -1673,132 +1673,6 @@ mod __csvparser_emit_impl {
     }
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
-    pub struct escapedView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> escapedView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> CsvParserRuleKind {
-            match self.variant_idx() {
-                0u8 => CsvParserRuleKind::escaped,
-                1u8 => CsvParserRuleKind::textdata,
-                2u8 => CsvParserRuleKind::record,
-                3u8 => CsvParserRuleKind::csv,
-                _ => CsvParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = CsvParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor.children().map(move |c| CsvParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(&self, i: usize) -> ::core::option::Option<CsvParserNodeView<'p>> {
-            self.cursor.child(i).map(|c| CsvParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> escapedView<'p> {
-        /// The source text matched by this rule.
-        #[inline]
-        pub fn text(&self) -> &'p str {
-            self.span_text()
-        }
-        /// The packed scalar fields decoded from the tape's
-        /// aggregate payload buffer.
-        ///
-        /// Returns the layout-zeroed tuple if no payload was
-        /// written for this record (e.g. an alternative branch
-        /// path that never set any fields).
-        #[inline]
-        pub fn value(&self) -> ((u32, u32)) {
-            let tape = self.cursor.tape();
-            let rec = self.cursor.record();
-            match tape.payload_bytes(rec, 8usize) {
-                Some(__bytes) => {
-                    ({
-                        let __raw = u64::from_le_bytes(
-                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
-                                .expect("aggregate slice is 8 bytes"),
-                        );
-                        (__raw as u32, (__raw >> 32) as u32)
-                    })
-                }
-                None => ((0_u32, 0_u32)),
-            }
-        }
-        /// The matched byte range as a `Range<usize>`, suitable
-        /// for slicing the input string directly.
-        #[inline]
-        pub fn byte_range(&self) -> ::core::ops::Range<usize> {
-            let (lo, hi) = self.span();
-            lo as usize..hi as usize
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
     pub struct textdataView<'p> {
         cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
@@ -1852,8 +1726,8 @@ mod __csvparser_emit_impl {
         #[inline]
         pub fn rule_kind(&self) -> CsvParserRuleKind {
             match self.variant_idx() {
-                0u8 => CsvParserRuleKind::escaped,
-                1u8 => CsvParserRuleKind::textdata,
+                0u8 => CsvParserRuleKind::textdata,
+                1u8 => CsvParserRuleKind::escaped,
                 2u8 => CsvParserRuleKind::record,
                 3u8 => CsvParserRuleKind::csv,
                 _ => CsvParserRuleKind::Unknown,
@@ -1887,6 +1761,132 @@ mod __csvparser_emit_impl {
         }
     }
     impl<'p> textdataView<'p> {
+        /// The source text matched by this rule.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
+        ///
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
+        #[inline]
+        pub fn value(&self) -> ((u32, u32)) {
+            let tape = self.cursor.tape();
+            let rec = self.cursor.record();
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
+            }
+        }
+        /// The matched byte range as a `Range<usize>`, suitable
+        /// for slicing the input string directly.
+        #[inline]
+        pub fn byte_range(&self) -> ::core::ops::Range<usize> {
+            let (lo, hi) = self.span();
+            lo as usize..hi as usize
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
+    pub struct escapedView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> escapedView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> CsvParserRuleKind {
+            match self.variant_idx() {
+                0u8 => CsvParserRuleKind::textdata,
+                1u8 => CsvParserRuleKind::escaped,
+                2u8 => CsvParserRuleKind::record,
+                3u8 => CsvParserRuleKind::csv,
+                _ => CsvParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = CsvParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor.children().map(move |c| CsvParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<CsvParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| CsvParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> escapedView<'p> {
         /// The source text matched by this rule.
         #[inline]
         pub fn text(&self) -> &'p str {
@@ -1978,8 +1978,8 @@ mod __csvparser_emit_impl {
         #[inline]
         pub fn rule_kind(&self) -> CsvParserRuleKind {
             match self.variant_idx() {
-                0u8 => CsvParserRuleKind::escaped,
-                1u8 => CsvParserRuleKind::textdata,
+                0u8 => CsvParserRuleKind::textdata,
+                1u8 => CsvParserRuleKind::escaped,
                 2u8 => CsvParserRuleKind::record,
                 3u8 => CsvParserRuleKind::csv,
                 _ => CsvParserRuleKind::Unknown,
@@ -2088,8 +2088,8 @@ mod __csvparser_emit_impl {
         #[inline]
         pub fn rule_kind(&self) -> CsvParserRuleKind {
             match self.variant_idx() {
-                0u8 => CsvParserRuleKind::escaped,
-                1u8 => CsvParserRuleKind::textdata,
+                0u8 => CsvParserRuleKind::textdata,
+                1u8 => CsvParserRuleKind::escaped,
                 2u8 => CsvParserRuleKind::record,
                 3u8 => CsvParserRuleKind::csv,
                 _ => CsvParserRuleKind::Unknown,
@@ -2161,8 +2161,8 @@ mod __csvparser_emit_impl {
     /// not cover (leaf spans, alt branch indices, etc.).
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum CsvParserRuleKind {
-        escaped,
         textdata,
+        escaped,
         record,
         csv,
         /// Fallback for records whose variant_idx is not a
@@ -2218,8 +2218,8 @@ mod __csvparser_emit_impl {
         #[inline]
         pub fn rule_kind(&self) -> CsvParserRuleKind {
             match self.variant_idx() {
-                0u8 => CsvParserRuleKind::escaped,
-                1u8 => CsvParserRuleKind::textdata,
+                0u8 => CsvParserRuleKind::textdata,
+                1u8 => CsvParserRuleKind::escaped,
                 2u8 => CsvParserRuleKind::record,
                 3u8 => CsvParserRuleKind::csv,
                 _ => CsvParserRuleKind::Unknown,
@@ -2286,17 +2286,17 @@ mod __csvparser_emit_impl {
     /// type hint (e.g. CSS `"Color"`) read this const.
     #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
     #[doc(hidden)]
-    pub struct CsvParserEscapedProjection {
+    pub struct CsvParserTextdataProjection {
         /// Grammar-declared scalar field at packed-buffer offset
         #[doc = concat!("`", stringify!(0), "` (bytes).")]
         pub field_0: (u32, u32),
     }
-    impl CsvParserEscapedProjection {
+    impl CsvParserTextdataProjection {
         /// Grammar-declared rule that projects into this
         /// struct. Matches the `rule_name` entry in
         /// `PROJECTION_DIRECT_TO_STRUCT`.
         #[doc(hidden)]
-        pub const RULE_NAME: &'static str = "escaped";
+        pub const RULE_NAME: &'static str = "textdata";
         /// Grammar-declared `-> Name` binding; empty string
         /// when the admission came from a pure layout arm.
         #[doc(hidden)]
@@ -2327,17 +2327,17 @@ mod __csvparser_emit_impl {
     /// type hint (e.g. CSS `"Color"`) read this const.
     #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
     #[doc(hidden)]
-    pub struct CsvParserTextdataProjection {
+    pub struct CsvParserEscapedProjection {
         /// Grammar-declared scalar field at packed-buffer offset
         #[doc = concat!("`", stringify!(0), "` (bytes).")]
         pub field_0: (u32, u32),
     }
-    impl CsvParserTextdataProjection {
+    impl CsvParserEscapedProjection {
         /// Grammar-declared rule that projects into this
         /// struct. Matches the `rule_name` entry in
         /// `PROJECTION_DIRECT_TO_STRUCT`.
         #[doc(hidden)]
-        pub const RULE_NAME: &'static str = "textdata";
+        pub const RULE_NAME: &'static str = "escaped";
         /// Grammar-declared `-> Name` binding; empty string
         /// when the admission came from a pure layout arm.
         #[doc(hidden)]
@@ -2362,8 +2362,8 @@ mod __csvparser_emit_impl {
     /// `<Grammar><RuleCamel>Projection` struct emitted alongside
     /// this const — no resolver-bound name dispatch.
     pub const PROJECTION_DIRECT_TO_STRUCT: &[(&str, &str); 2usize] = &[
-        ("escaped", "CsvParserEscapedProjection"),
         ("textdata", "CsvParserTextdataProjection"),
+        ("escaped", "CsvParserEscapedProjection"),
     ];
     /// AY-II.W0.d — grammar-declared `-> Name` bindings, indexed in
     /// lockstep with `PROJECTION_DIRECT_TO_STRUCT`. Empty string for
@@ -2377,8 +2377,8 @@ mod __csvparser_emit_impl {
     /// same length per grammar.
     #[doc(hidden)]
     pub const PROJECTION_MATERIALIZERS: &[&str; 2usize] = &[
-        "materialize_projection_escaped_CsvParser",
         "materialize_projection_textdata_CsvParser",
+        "materialize_projection_escaped_CsvParser",
     ];
     /// AY-II.W0.d — canonical evidence that every admission has a
     /// matching `<Grammar>Value::<RuleName>` enum variant
@@ -2386,20 +2386,9 @@ mod __csvparser_emit_impl {
     /// `PROJECTION_DIRECT_TO_STRUCT`.
     #[doc(hidden)]
     pub const PROJECTION_CONSUMERS: &[&str; 2usize] = &[
-        "CsvParserValue::escaped",
         "CsvParserValue::textdata",
+        "CsvParserValue::escaped",
     ];
-    /// AY-II.W0.d marker — structural evidence that the
-    /// layout pass + resolver admitted this rule for
-    /// direct-to-struct projection. The returned
-    /// `(rule_name, field_count, named_binding)` triple
-    /// exposes the admitted shape to the `cargo expand`
-    /// hard gate without requiring a runtime compilation.
-    #[doc(hidden)]
-    #[inline(always)]
-    pub fn __grammar_projection_escaped() -> (&'static str, usize, &'static str) {
-        ("escaped", 1, "")
-    }
     /// AY-II.W0.d marker — structural evidence that the
     /// layout pass + resolver admitted this rule for
     /// direct-to-struct projection. The returned
@@ -2411,6 +2400,17 @@ mod __csvparser_emit_impl {
     pub fn __grammar_projection_textdata() -> (&'static str, usize, &'static str) {
         ("textdata", 1, "")
     }
+    /// AY-II.W0.d marker — structural evidence that the
+    /// layout pass + resolver admitted this rule for
+    /// direct-to-struct projection. The returned
+    /// `(rule_name, field_count, named_binding)` triple
+    /// exposes the admitted shape to the `cargo expand`
+    /// hard gate without requiring a runtime compilation.
+    #[doc(hidden)]
+    #[inline(always)]
+    pub fn __grammar_projection_escaped() -> (&'static str, usize, &'static str) {
+        ("escaped", 1, "")
+    }
     /// AY-II.W0'.b — grammar-emitted value enum. Eager
     /// materialisation target for `Parsed::to_value()`. Variants
     /// enumerate non-transparent rules; admitted rules carry the
@@ -2418,8 +2418,8 @@ mod __csvparser_emit_impl {
     /// non-admitted rules carry their shape-classified payload.
     #[derive(Clone, Debug)]
     pub enum CsvParserValue<'p> {
-        escaped(CsvParserEscapedProjection),
         textdata(CsvParserTextdataProjection),
+        escaped(CsvParserEscapedProjection),
         record(::std::vec::Vec<CsvParserValue<'p>>),
         csv(::std::vec::Vec<CsvParserValue<'p>>),
         /// Fallback for records whose `variant_idx` is not a
@@ -2455,8 +2455,8 @@ mod __csvparser_emit_impl {
             return CsvParserRuleKind::Unknown;
         }
         match variant_idx {
-            0u8 => CsvParserRuleKind::escaped,
-            1u8 => CsvParserRuleKind::textdata,
+            0u8 => CsvParserRuleKind::textdata,
+            1u8 => CsvParserRuleKind::escaped,
             2u8 => CsvParserRuleKind::record,
             3u8 => CsvParserRuleKind::csv,
             _ => CsvParserRuleKind::Unknown,
@@ -2538,22 +2538,6 @@ mod __csvparser_emit_impl {
             }
         };
         match project_rule_kind_CsvParser(__rec.kind(), __rec.variant_idx()) {
-            CsvParserRuleKind::escaped => {
-                let proj = materialize_projection_escaped_CsvParser(
-                        output,
-                        input,
-                        offset,
-                    )
-                    .unwrap_or_else(|| {
-                        ::core::panic!(
-                            "AY-II.W0'.b: materializer for admitted rule `{}` \
-                                 returned None at frame offset {}; admission \
-                                 invariant violated",
-                            "escaped", offset,
-                        );
-                    });
-                CsvParserValue::escaped(proj)
-            }
             CsvParserRuleKind::textdata => {
                 let proj = materialize_projection_textdata_CsvParser(
                         output,
@@ -2569,6 +2553,22 @@ mod __csvparser_emit_impl {
                         );
                     });
                 CsvParserValue::textdata(proj)
+            }
+            CsvParserRuleKind::escaped => {
+                let proj = materialize_projection_escaped_CsvParser(
+                        output,
+                        input,
+                        offset,
+                    )
+                    .unwrap_or_else(|| {
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "escaped", offset,
+                        );
+                    });
+                CsvParserValue::escaped(proj)
             }
             CsvParserRuleKind::record => {
                 let mut children: ::std::vec::Vec<CsvParserValue<'p>> = ::std::vec::Vec::new();
@@ -2855,17 +2855,17 @@ mod __csvparser_emit_impl {
     /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
-    pub fn materialize_projection_escaped_CsvParser<'p>(
+    pub fn materialize_projection_textdata_CsvParser<'p>(
         output: &crate::runtime::tape::Tape<CsvParser>,
         input: &'p str,
         offset: u32,
-    ) -> ::core::option::Option<CsvParserEscapedProjection> {
+    ) -> ::core::option::Option<CsvParserTextdataProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
-        ::core::option::Option::Some(CsvParserEscapedProjection {
+        ::core::option::Option::Some(CsvParserTextdataProjection {
             field_0,
         })
     }
@@ -2884,28 +2884,28 @@ mod __csvparser_emit_impl {
     /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
-    pub fn materialize_projection_textdata_CsvParser<'p>(
+    pub fn materialize_projection_escaped_CsvParser<'p>(
         output: &crate::runtime::tape::Tape<CsvParser>,
         input: &'p str,
         offset: u32,
-    ) -> ::core::option::Option<CsvParserTextdataProjection> {
+    ) -> ::core::option::Option<CsvParserEscapedProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
         let __bytes: &[u8] = &[];
         let _ = __bytes;
         let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
-        ::core::option::Option::Some(CsvParserTextdataProjection {
+        ::core::option::Option::Some(CsvParserEscapedProjection {
             field_0,
         })
     }
     impl CsvParser {
-        pub fn serialize_escaped<'a, __S: ::bbnf_ser::Serializer<'a>>(
+        pub fn serialize_textdata<'a, __S: ::bbnf_ser::Serializer<'a>>(
             __v: CsvParserNodeView<'a>,
             __ser: &mut __S,
         ) {
             __ser.text(__v.span_text());
         }
-        pub fn serialize_textdata<'a, __S: ::bbnf_ser::Serializer<'a>>(
+        pub fn serialize_escaped<'a, __S: ::bbnf_ser::Serializer<'a>>(
             __v: CsvParserNodeView<'a>,
             __ser: &mut __S,
         ) {
@@ -2929,10 +2929,10 @@ mod __csvparser_emit_impl {
         ) {
             match __v.variant_idx() {
                 0u8 => {
-                    Self::serialize_escaped(__v, __ser);
+                    Self::serialize_textdata(__v, __ser);
                 }
                 1u8 => {
-                    Self::serialize_textdata(__v, __ser);
+                    Self::serialize_escaped(__v, __ser);
                 }
                 2u8 => {
                     Self::serialize_record(__v, __ser);

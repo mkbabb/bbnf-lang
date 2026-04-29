@@ -52,33 +52,6 @@ mod __jsonparser_emit_impl {
         structural_digraph_mask: [0, 0, 0, 0],
         structural_quote_classes: &__GRAMMAR_PROFILE_QUOTE_CLASSES,
     };
-    /// AW-III.W6.2 — PHF keyword table.
-    ///
-    /// Mined literal-led Alt branches, sorted lexicographically.
-    /// Binary search dispatches in O(log N) compares; LLVM lowers
-    /// the fixed-size table to a balanced compare tree.
-    static __PHF_JsonParser_7_KW: [&[u8]; 3usize] = [b"[", b"null", b"{"];
-    /// Per-entry branch discriminant — parallel to [`#kw_ident`].
-    /// Entry `i`'s keyword bytes at `#kw_ident[i]` route to the
-    /// branch with discriminant `#idx_ident[i]`.
-    static __PHF_JsonParser_7_IDX: [u8; 3usize] = [1, 3, 0];
-    /// AW-III.W6.2 — dispatch the mined keyword table for rule
-    /// `#rule_id`.
-    ///
-    /// Returns `Some(branch_idx)` when `bytes` matches a mined
-    /// keyword, `None` otherwise. Called from the walker's
-    /// AltLinear / ClassifyByte arm to short-circuit the branch
-    /// scan to a single binary search.
-    #[allow(dead_code)]
-    #[inline]
-    fn __phf_JsonParser_dispatch_7(bytes: &[u8]) -> ::core::option::Option<u8> {
-        match __PHF_JsonParser_7_KW.binary_search(&bytes) {
-            ::core::result::Result::Ok(idx) => {
-                ::core::option::Option::Some(__PHF_JsonParser_7_IDX[idx])
-            }
-            ::core::result::Result::Err(_) => ::core::option::Option::None,
-        }
-    }
     /// AW-III.W6.5 — aggregate dense Pratt precedence LUT.
     ///
     /// Union of every Pratt rule's packed LUT (last-write-wins
@@ -1078,21 +1051,23 @@ mod __jsonparser_emit_impl {
         ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
-    /// (Alt of literal-led branches).
+    /// (Alt of literal-led, Ref-led, or Seq-led branches).
     ///
-    /// Each branch's typed payload routes through
+    /// Literal branches push leaves through
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
-    /// untyped). Returns `TapeOffset::NONE` for
-    /// compositional uniformity.
+    /// untyped). Ref branches delegate to the target shape
+    /// fn so the target's records bubble up unchanged.
+    /// Returns `TapeOffset::NONE` for compositional
+    /// uniformity.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_JsonParser_bool(
-        input: &[u8],
+    pub fn parse_keyword_JsonParser_bool<'p>(
+        input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_JsonParser::ScanState,
-        builder: &mut crate::runtime::json::JsonStructBuilder<'_>,
+        builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -1107,7 +1082,7 @@ mod __jsonparser_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    builder.push_leaf_with_bool(((0u32) as u32) != 0u32);
+                    builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(
                         crate::runtime::tape::TapeOffset::NONE,
                     );
@@ -1125,7 +1100,7 @@ mod __jsonparser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_bool(((1u32) as u32) != 0u32);
+                    builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(
                         crate::runtime::tape::TapeOffset::NONE,
                     );
@@ -1389,8 +1364,93 @@ mod __jsonparser_emit_impl {
             }
         }
     }
-    /// AZ-I.W2.RB — per-grammar Array-shape parse function,
+    /// AZ-I.W2.RB — per-grammar Object-shape parse function,
     /// **struct-direct body**. Targets [`JsonStructBuilder`].
+    ///
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-element pushes (string keys + value
+    /// dispatch) land directly on the topmost open frame.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_object_JsonParser_object<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_JsonParser::ScanState,
+        builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        use crate::runtime::builder::StructBuilder;
+        if input.get(*p).copied() != Some(b'{') {
+            return Err(crate::runtime::tape::DtaError::Syntax {
+                offset: *p as u32,
+                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+            });
+        }
+        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 4u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("object"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __handle = builder.begin_compound(&__layout);
+        *p += 1;
+        let _ = __shape_support_JsonParser::skip_space(input, p, state);
+        if input.get(*p).copied() == Some(b'}') {
+            *p += 1;
+            builder.end_compound(__handle);
+            return Ok(crate::runtime::tape::TapeOffset::NONE);
+        }
+        loop {
+            if input.get(*p).copied() != Some(b'"') {
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            parse_string_JsonParser_string(input, p, state, builder)?;
+            let _ = __shape_support_JsonParser::skip_space(input, p, state);
+            if input.get(*p).copied() != Some(b':') {
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
+            }
+            *p += 1;
+            let _ = __shape_support_JsonParser::skip_space(input, p, state);
+            ({
+                let _ = __shape_support_JsonParser::skip_space(input, p, state);
+                parse_wrap_JsonParser_value(input, p, state, builder)
+            })?;
+            let _ = __shape_support_JsonParser::skip_space(input, p, state);
+            match input.get(*p).copied() {
+                Some(b',') => {
+                    *p += 1;
+                    let _ = __shape_support_JsonParser::skip_space(input, p, state);
+                }
+                Some(b'}') => {
+                    *p += 1;
+                    builder.end_compound(__handle);
+                    return Ok(crate::runtime::tape::TapeOffset::NONE);
+                }
+                _ => {
+                    return Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+            }
+        }
+    }
+    /// AZ-I.W2.RB — per-grammar Array-shape parse function,
+    /// **struct-direct body** (Shape 1 — wrapped homogeneous repeat).
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_array_JsonParser_array<'p>(
@@ -1411,7 +1471,7 @@ mod __jsonparser_emit_impl {
             });
         }
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 4u32 as ::bbnf_ir::RuleId,
+            rule_id: 5u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("array"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -1483,7 +1543,7 @@ mod __jsonparser_emit_impl {
         crate::runtime::tape::DtaError,
     > {
         let __pair_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 5u32 as ::bbnf_ir::RuleId,
+            rule_id: 6u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("pair"),
             kind: ::bbnf_ir::registry::LayoutKind::Struct,
             rule_type: ::bbnf_ir::TypeDesc::Span,
@@ -1492,121 +1552,41 @@ mod __jsonparser_emit_impl {
         let __pair_handle = <crate::runtime::json::JsonStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__pair_layout);
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
-            let _ = ({
-                let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                parse_string_JsonParser_string(input, p, state, builder)
-            })?;
-        }
-        {
-            let _ = __shape_support_JsonParser::skip_space(input, p, state);
-            let at = *p;
-            let end = at + 1usize;
-            if input.len() < end || input[at..end] != [58u8] {
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: at as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                });
-            }
-            *p = end;
-            let _ = __shape_support_JsonParser::skip_space(input, p, state);
-        }
-        {
-            let _ = ({
-                let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                parse_wrap_JsonParser_value(input, p, state, builder)
-            })?;
-        }
-        <crate::runtime::json::JsonStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __pair_handle);
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
-    }
-    /// AZ-I.W2.RB — per-grammar Object-shape parse function,
-    /// **struct-direct body**. Targets [`JsonStructBuilder`].
-    ///
-    /// Walker-tape compound emission is replaced by typed
-    /// `begin_compound` / `end_compound` calls against the in-flight
-    /// frame stack. Per-element pushes (string keys + value
-    /// dispatch) land directly on the topmost open frame.
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_object_JsonParser_object<'p>(
-        input: &'p [u8],
-        p: &mut usize,
-        state: &mut __shape_support_JsonParser::ScanState,
-        builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        use crate::runtime::builder::StructBuilder;
-        if input.get(*p).copied() != Some(b'{') {
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
-        }
-        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 6u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("object"),
-            kind: ::bbnf_ir::registry::LayoutKind::Struct,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __handle = builder.begin_compound(&__layout);
-        *p += 1;
-        let _ = __shape_support_JsonParser::skip_space(input, p, state);
-        if input.get(*p).copied() == Some(b'}') {
-            *p += 1;
-            builder.end_compound(__handle);
-            return Ok(crate::runtime::tape::TapeOffset::NONE);
-        }
-        loop {
-            if input.get(*p).copied() != Some(b'"') {
-                return Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                });
-            }
-            parse_string_JsonParser_string(input, p, state, builder)?;
-            let _ = __shape_support_JsonParser::skip_space(input, p, state);
-            if input.get(*p).copied() != Some(b':') {
-                return Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                });
-            }
-            *p += 1;
-            let _ = __shape_support_JsonParser::skip_space(input, p, state);
-            ({
-                let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                parse_wrap_JsonParser_value(input, p, state, builder)
-            })?;
-            let _ = __shape_support_JsonParser::skip_space(input, p, state);
-            match input.get(*p).copied() {
-                Some(b',') => {
-                    *p += 1;
+            {
+                let _ = ({
                     let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                }
-                Some(b'}') => {
-                    *p += 1;
-                    builder.end_compound(__handle);
-                    return Ok(crate::runtime::tape::TapeOffset::NONE);
-                }
-                _ => {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
+                    parse_string_JsonParser_string(input, p, state, builder)
+                })?;
+            }
+            {
+                let _ = __shape_support_JsonParser::skip_space(input, p, state);
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [58u8] {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
                         failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
+                *p = end;
+                let _ = __shape_support_JsonParser::skip_space(input, p, state);
             }
-        }
+            {
+                let _ = ({
+                    let _ = __shape_support_JsonParser::skip_space(input, p, state);
+                    parse_wrap_JsonParser_value(input, p, state, builder)
+                })?;
+            }
+            ::core::result::Result::Ok(())
+        })();
+        <crate::runtime::json::JsonStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __pair_handle);
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -1632,17 +1612,6 @@ mod __jsonparser_emit_impl {
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
-            rule_id: 7u32 as ::bbnf_ir::RuleId,
-            rule_name: ::std::string::String::from("value"),
-            kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
-            rule_type: ::bbnf_ir::TypeDesc::Span,
-            fields: ::std::vec::Vec::new(),
-        };
-        let __wrap_handle = <crate::runtime::json::JsonStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
-        let mut __wrap_branch_idx: u32 = 0;
         let first = __shape_support_JsonParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -1653,7 +1622,6 @@ mod __jsonparser_emit_impl {
                     let attempt_p = *p;
                     match parse_string_JsonParser_string(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 2u32;
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
@@ -1665,7 +1633,6 @@ mod __jsonparser_emit_impl {
                     let attempt_p = *p;
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
@@ -1677,7 +1644,6 @@ mod __jsonparser_emit_impl {
                     let attempt_p = *p;
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
@@ -1689,7 +1655,6 @@ mod __jsonparser_emit_impl {
                     let attempt_p = *p;
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
@@ -1701,7 +1666,6 @@ mod __jsonparser_emit_impl {
                     let attempt_p = *p;
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
@@ -1713,7 +1677,6 @@ mod __jsonparser_emit_impl {
                     let attempt_p = *p;
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
@@ -1725,7 +1688,6 @@ mod __jsonparser_emit_impl {
                     let attempt_p = *p;
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
@@ -1737,7 +1699,6 @@ mod __jsonparser_emit_impl {
                     let attempt_p = *p;
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
@@ -1749,7 +1710,6 @@ mod __jsonparser_emit_impl {
                     let attempt_p = *p;
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
@@ -1761,7 +1721,6 @@ mod __jsonparser_emit_impl {
                     let attempt_p = *p;
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
@@ -1773,7 +1732,6 @@ mod __jsonparser_emit_impl {
                     let attempt_p = *p;
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
@@ -1785,7 +1743,6 @@ mod __jsonparser_emit_impl {
                     let attempt_p = *p;
                     match parse_number_JsonParser_number(input, p, first, builder) {
                         ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 5u32;
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
@@ -1797,7 +1754,6 @@ mod __jsonparser_emit_impl {
                     let attempt_p = *p;
                     match parse_array_JsonParser_array(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 1u32;
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
@@ -1815,7 +1771,6 @@ mod __jsonparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 4u32;
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
@@ -1833,7 +1788,6 @@ mod __jsonparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 3u32;
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
@@ -1851,7 +1805,6 @@ mod __jsonparser_emit_impl {
                         builder,
                     ) {
                         ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 4u32;
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
@@ -1863,7 +1816,6 @@ mod __jsonparser_emit_impl {
                     let attempt_p = *p;
                     match parse_object_JsonParser_object(input, p, state, builder) {
                         ::core::result::Result::Ok(_) => {
-                            __wrap_branch_idx = 0u32;
                             break 'try_branches;
                         }
                         ::core::result::Result::Err(_) => {
@@ -1873,21 +1825,12 @@ mod __jsonparser_emit_impl {
                 }
                 _ => {}
             }
-            <crate::runtime::json::JsonStructBuilder<
-                '_,
-            > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
             return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        <crate::runtime::json::JsonStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::push_branch_tag(builder, __wrap_branch_idx);
-        <crate::runtime::json::JsonStructBuilder<
-            '_,
-        > as crate::runtime::StructBuilder>::end_compound(builder, __wrap_handle);
         ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AW-V.W3-bench-fix — visitor-path Keyword-shape parse
@@ -2214,6 +2157,92 @@ mod __jsonparser_emit_impl {
             }
         }
     }
+    /// AW-V.W3-bench-fix — visitor-path Object-shape parse function.
+    ///
+    /// Mirrors `json_prototype::parse_object::<V>`. Bypasses
+    /// the tape entirely; visitor method calls drive materialisation.
+    ///
+    /// AX.W0a.2.f — compound; plain `#[inline]`.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments)]
+    pub fn parse_object_visitor_JsonParser_object<V>(
+        input: &[u8],
+        p: &mut usize,
+        state: &mut __shape_support_JsonParser::ScanState,
+        visitor: &mut V,
+    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
+    where
+        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
+            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
+            + crate::runtime::tape::KeywordVisitor,
+    {
+        let begin_at = *p;
+        if input.get(*p).copied() != Some(b'{') {
+            return Err(crate::runtime::ParseErr::Syntax {
+                offset: begin_at as u32,
+                rule: None,
+            });
+        }
+        *p += 1;
+        visitor
+            .begin_object()
+            .map_err(|_| crate::runtime::ParseErr::Syntax {
+                offset: begin_at as u32,
+                rule: None,
+            })?;
+        let mut cur = __shape_support_JsonParser::skip_space(input, p, state);
+        if cur == Some(b'}') {
+            *p += 1;
+            return visitor
+                .end_object()
+                .map_err(|_| crate::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+        }
+        loop {
+            if cur != Some(b'"') {
+                return Err(crate::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+            }
+            parse_string_visitor_JsonParser_string(input, p, state, visitor, true)?;
+            if __shape_support_JsonParser::skip_space(input, p, state) != Some(b':') {
+                return Err(crate::runtime::ParseErr::Syntax {
+                    offset: *p as u32,
+                    rule: None,
+                });
+            }
+            *p += 1;
+            let _ = __shape_support_JsonParser::skip_space(input, p, state);
+            ({
+                let _ = __shape_support_JsonParser::skip_space(input, p, state);
+                parse_wrap_visitor_JsonParser_value(input, p, state, visitor)
+            })?;
+            match __shape_support_JsonParser::skip_space(input, p, state) {
+                Some(b'}') => {
+                    *p += 1;
+                    return visitor
+                        .end_object()
+                        .map_err(|_| crate::runtime::ParseErr::Syntax {
+                            offset: *p as u32,
+                            rule: None,
+                        });
+                }
+                Some(b',') => {
+                    *p += 1;
+                    cur = __shape_support_JsonParser::skip_space(input, p, state);
+                }
+                _ => {
+                    return Err(crate::runtime::ParseErr::Syntax {
+                        offset: *p as u32,
+                        rule: None,
+                    });
+                }
+            }
+        }
+    }
     /// AW-V.W3-bench-fix — visitor-path Array-shape parse function.
     ///
     /// Mirrors `json_prototype::parse_array::<V>`. Bypasses
@@ -2339,92 +2368,6 @@ mod __jsonparser_emit_impl {
         }
         Ok(())
     }
-    /// AW-V.W3-bench-fix — visitor-path Object-shape parse function.
-    ///
-    /// Mirrors `json_prototype::parse_object::<V>`. Bypasses
-    /// the tape entirely; visitor method calls drive materialisation.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]`.
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_object_visitor_JsonParser_object<V>(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_JsonParser::ScanState,
-        visitor: &mut V,
-    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
-    where
-        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
-            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
-            + crate::runtime::tape::KeywordVisitor,
-    {
-        let begin_at = *p;
-        if input.get(*p).copied() != Some(b'{') {
-            return Err(crate::runtime::ParseErr::Syntax {
-                offset: begin_at as u32,
-                rule: None,
-            });
-        }
-        *p += 1;
-        visitor
-            .begin_object()
-            .map_err(|_| crate::runtime::ParseErr::Syntax {
-                offset: begin_at as u32,
-                rule: None,
-            })?;
-        let mut cur = __shape_support_JsonParser::skip_space(input, p, state);
-        if cur == Some(b'}') {
-            *p += 1;
-            return visitor
-                .end_object()
-                .map_err(|_| crate::runtime::ParseErr::Syntax {
-                    offset: *p as u32,
-                    rule: None,
-                });
-        }
-        loop {
-            if cur != Some(b'"') {
-                return Err(crate::runtime::ParseErr::Syntax {
-                    offset: *p as u32,
-                    rule: None,
-                });
-            }
-            parse_string_visitor_JsonParser_string(input, p, state, visitor, true)?;
-            if __shape_support_JsonParser::skip_space(input, p, state) != Some(b':') {
-                return Err(crate::runtime::ParseErr::Syntax {
-                    offset: *p as u32,
-                    rule: None,
-                });
-            }
-            *p += 1;
-            let _ = __shape_support_JsonParser::skip_space(input, p, state);
-            ({
-                let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                parse_wrap_visitor_JsonParser_value(input, p, state, visitor)
-            })?;
-            match __shape_support_JsonParser::skip_space(input, p, state) {
-                Some(b'}') => {
-                    *p += 1;
-                    return visitor
-                        .end_object()
-                        .map_err(|_| crate::runtime::ParseErr::Syntax {
-                            offset: *p as u32,
-                            rule: None,
-                        });
-                }
-                Some(b',') => {
-                    *p += 1;
-                    cur = __shape_support_JsonParser::skip_space(input, p, state);
-                }
-                _ => {
-                    return Err(crate::runtime::ParseErr::Syntax {
-                        offset: *p as u32,
-                        rule: None,
-                    });
-                }
-            }
-        }
-    }
     /// AW-V.W4-fix — visitor-path Wrap-shape parse function.
     ///
     /// Transparent dispatcher — skip leading ws, byte-dispatch to
@@ -2516,18 +2459,13 @@ mod __jsonparser_emit_impl {
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 5u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Empty,
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
             activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
         },
         crate::runtime::tape::ScanPolicyEntry {
             rule_id: 6u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
+            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Empty,
             activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
-        },
-        crate::runtime::tape::ScanPolicyEntry {
-            rule_id: 7u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Sparse,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(2),
         },
     ];
     /// AW-V.W3.2 — top-level shape dispatcher.
@@ -2734,13 +2672,9 @@ mod __jsonparser_emit_impl {
                 1u8 => JsonParserRuleKind::bool,
                 2u8 => JsonParserRuleKind::number,
                 3u8 => JsonParserRuleKind::string,
-                4u8 => JsonParserRuleKind::array,
-                5u8 => JsonParserRuleKind::pair,
-                6u8 => JsonParserRuleKind::object,
-                7u8 => JsonParserRuleKind::value,
-                8u8 => JsonParserRuleKind::value_0,
-                9u8 => JsonParserRuleKind::value_1,
-                10u8 => JsonParserRuleKind::value_2,
+                4u8 => JsonParserRuleKind::object,
+                5u8 => JsonParserRuleKind::array,
+                6u8 => JsonParserRuleKind::pair,
                 _ => JsonParserRuleKind::Unknown,
             }
         }
@@ -2774,31 +2708,33 @@ mod __jsonparser_emit_impl {
         }
     }
     impl<'p> nullView<'p> {
-        /// The source text matched by this leaf rule.
+        /// The source text matched by this rule.
         #[inline]
         pub fn text(&self) -> &'p str {
             self.span_text()
         }
-        /// Get the parsed scalar value.
+        /// The packed scalar fields decoded from the tape's
+        /// aggregate payload buffer.
         ///
-        /// Payload-first: reads the pre-computed value from the
-        /// tape payload buffer in O(1). Falls back to span text
-        /// parsing if no payload is present.
+        /// Returns the layout-zeroed tuple if no payload was
+        /// written for this record (e.g. an alternative branch
+        /// path that never set any fields).
         #[inline]
-        pub fn value(&self) -> u8 {
+        pub fn value(&self) -> ((u32, u32)) {
             let tape = self.cursor.tape();
             let rec = self.cursor.record();
-            if let Some(v) = tape.payload_u8(rec) {
-                return v;
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
             }
-            self.span_text().parse::<u8>().unwrap_or(0)
-        }
-        /// Convert the matched span to the scalar type.
-        ///
-        /// Alias for backward compatibility. Prefer `.value()`.
-        #[inline]
-        pub fn as_u8(&self) -> u8 {
-            self.value()
         }
     }
     /// Generated view over a tape record produced by this rule.
@@ -2860,13 +2796,9 @@ mod __jsonparser_emit_impl {
                 1u8 => JsonParserRuleKind::bool,
                 2u8 => JsonParserRuleKind::number,
                 3u8 => JsonParserRuleKind::string,
-                4u8 => JsonParserRuleKind::array,
-                5u8 => JsonParserRuleKind::pair,
-                6u8 => JsonParserRuleKind::object,
-                7u8 => JsonParserRuleKind::value,
-                8u8 => JsonParserRuleKind::value_0,
-                9u8 => JsonParserRuleKind::value_1,
-                10u8 => JsonParserRuleKind::value_2,
+                4u8 => JsonParserRuleKind::object,
+                5u8 => JsonParserRuleKind::array,
+                6u8 => JsonParserRuleKind::pair,
                 _ => JsonParserRuleKind::Unknown,
             }
         }
@@ -2912,12 +2844,20 @@ mod __jsonparser_emit_impl {
         /// written for this record (e.g. an alternative branch
         /// path that never set any fields).
         #[inline]
-        pub fn value(&self) -> (bool) {
+        pub fn value(&self) -> ((u32, u32)) {
             let tape = self.cursor.tape();
             let rec = self.cursor.record();
-            match tape.payload_bytes(rec, 1usize) {
-                Some(__bytes) => (__bytes[0usize] != 0),
-                None => (false),
+            match tape.payload_bytes(rec, 8usize) {
+                Some(__bytes) => {
+                    ({
+                        let __raw = u64::from_le_bytes(
+                            <[u8; 8]>::try_from(&__bytes[0usize..8usize])
+                                .expect("aggregate slice is 8 bytes"),
+                        );
+                        (__raw as u32, (__raw >> 32) as u32)
+                    })
+                }
+                None => ((0_u32, 0_u32)),
             }
         }
     }
@@ -2980,13 +2920,9 @@ mod __jsonparser_emit_impl {
                 1u8 => JsonParserRuleKind::bool,
                 2u8 => JsonParserRuleKind::number,
                 3u8 => JsonParserRuleKind::string,
-                4u8 => JsonParserRuleKind::array,
-                5u8 => JsonParserRuleKind::pair,
-                6u8 => JsonParserRuleKind::object,
-                7u8 => JsonParserRuleKind::value,
-                8u8 => JsonParserRuleKind::value_0,
-                9u8 => JsonParserRuleKind::value_1,
-                10u8 => JsonParserRuleKind::value_2,
+                4u8 => JsonParserRuleKind::object,
+                5u8 => JsonParserRuleKind::array,
+                6u8 => JsonParserRuleKind::pair,
                 _ => JsonParserRuleKind::Unknown,
             }
         }
@@ -3106,13 +3042,9 @@ mod __jsonparser_emit_impl {
                 1u8 => JsonParserRuleKind::bool,
                 2u8 => JsonParserRuleKind::number,
                 3u8 => JsonParserRuleKind::string,
-                4u8 => JsonParserRuleKind::array,
-                5u8 => JsonParserRuleKind::pair,
-                6u8 => JsonParserRuleKind::object,
-                7u8 => JsonParserRuleKind::value,
-                8u8 => JsonParserRuleKind::value_0,
-                9u8 => JsonParserRuleKind::value_1,
-                10u8 => JsonParserRuleKind::value_2,
+                4u8 => JsonParserRuleKind::object,
+                5u8 => JsonParserRuleKind::array,
+                6u8 => JsonParserRuleKind::pair,
                 _ => JsonParserRuleKind::Unknown,
             }
         }
@@ -3177,6 +3109,107 @@ mod __jsonparser_emit_impl {
     }
     /// Generated view over a tape record produced by this rule.
     #[derive(Clone, Copy, Debug)]
+    pub struct objectView<'p> {
+        cursor: crate::runtime::tape::TapeCursor<'p>,
+        input: &'p str,
+    }
+    impl<'p> objectView<'p> {
+        #[inline]
+        pub fn new(
+            tape: &'p crate::runtime::tape::Tape,
+            input: &'p str,
+            offset: crate::runtime::tape::TapeOffset,
+        ) -> Self {
+            Self {
+                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                input,
+            }
+        }
+        #[inline]
+        pub fn from_cursor(
+            cursor: crate::runtime::tape::TapeCursor<'p>,
+            input: &'p str,
+        ) -> Self {
+            Self { cursor, input }
+        }
+        #[inline]
+        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+            self.cursor
+        }
+        #[inline]
+        pub fn input(&self) -> &'p str {
+            self.input
+        }
+        #[inline]
+        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+            self.cursor.kind()
+        }
+        #[inline]
+        pub fn span(&self) -> (u32, u32) {
+            self.cursor.span()
+        }
+        #[inline]
+        pub fn span_text(&self) -> &'p str {
+            let (lo, hi) = self.cursor.span();
+            &self.input[lo as usize..hi as usize]
+        }
+        #[inline]
+        pub fn variant_idx(&self) -> u8 {
+            self.cursor.variant_idx()
+        }
+        /// Dispatch on `variant_idx` to identify which rule
+        /// (or sub-variant) produced this record.
+        #[inline]
+        pub fn rule_kind(&self) -> JsonParserRuleKind {
+            match self.variant_idx() {
+                0u8 => JsonParserRuleKind::null,
+                1u8 => JsonParserRuleKind::bool,
+                2u8 => JsonParserRuleKind::number,
+                3u8 => JsonParserRuleKind::string,
+                4u8 => JsonParserRuleKind::object,
+                5u8 => JsonParserRuleKind::array,
+                6u8 => JsonParserRuleKind::pair,
+                _ => JsonParserRuleKind::Unknown,
+            }
+        }
+        /// Iterator over direct children as `NodeView`s.
+        #[inline]
+        pub fn children(
+            &self,
+        ) -> impl ::core::iter::Iterator<Item = JsonParserNodeView<'p>> + 'p {
+            let input = self.input;
+            self.cursor
+                .children()
+                .map(move |c| JsonParserNodeView::from_cursor(c, input))
+        }
+        /// The i-th direct child as a `NodeView`, if present.
+        #[inline]
+        pub fn child(&self, i: usize) -> ::core::option::Option<JsonParserNodeView<'p>> {
+            self.cursor.child(i).map(|c| JsonParserNodeView::from_cursor(c, self.input))
+        }
+        #[inline]
+        pub fn is_recovered(&self) -> bool {
+            self.cursor.kind().is_recovered()
+        }
+        /// Source-byte span as a `parse_that::Span<'p>` slice.
+        /// Used by CST consumers that historically held
+        /// `parse_that::Span` references (`RuleEntry::name_span`,
+        /// `ImportedName::span`) alongside the view.
+        #[inline]
+        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
+            let (lo, hi) = self.cursor.span();
+            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
+        }
+    }
+    impl<'p> objectView<'p> {
+        /// The source text matched by this leaf rule.
+        #[inline]
+        pub fn text(&self) -> &'p str {
+            self.span_text()
+        }
+    }
+    /// Generated view over a tape record produced by this rule.
+    #[derive(Clone, Copy, Debug)]
     pub struct arrayView<'p> {
         cursor: crate::runtime::tape::TapeCursor<'p>,
         input: &'p str,
@@ -3234,13 +3267,9 @@ mod __jsonparser_emit_impl {
                 1u8 => JsonParserRuleKind::bool,
                 2u8 => JsonParserRuleKind::number,
                 3u8 => JsonParserRuleKind::string,
-                4u8 => JsonParserRuleKind::array,
-                5u8 => JsonParserRuleKind::pair,
-                6u8 => JsonParserRuleKind::object,
-                7u8 => JsonParserRuleKind::value,
-                8u8 => JsonParserRuleKind::value_0,
-                9u8 => JsonParserRuleKind::value_1,
-                10u8 => JsonParserRuleKind::value_2,
+                4u8 => JsonParserRuleKind::object,
+                5u8 => JsonParserRuleKind::array,
+                6u8 => JsonParserRuleKind::pair,
                 _ => JsonParserRuleKind::Unknown,
             }
         }
@@ -3339,13 +3368,9 @@ mod __jsonparser_emit_impl {
                 1u8 => JsonParserRuleKind::bool,
                 2u8 => JsonParserRuleKind::number,
                 3u8 => JsonParserRuleKind::string,
-                4u8 => JsonParserRuleKind::array,
-                5u8 => JsonParserRuleKind::pair,
-                6u8 => JsonParserRuleKind::object,
-                7u8 => JsonParserRuleKind::value,
-                8u8 => JsonParserRuleKind::value_0,
-                9u8 => JsonParserRuleKind::value_1,
-                10u8 => JsonParserRuleKind::value_2,
+                4u8 => JsonParserRuleKind::object,
+                5u8 => JsonParserRuleKind::array,
+                6u8 => JsonParserRuleKind::pair,
                 _ => JsonParserRuleKind::Unknown,
             }
         }
@@ -3391,441 +3416,15 @@ mod __jsonparser_emit_impl {
         }
         ///Child at position 1 as a typed view.
         #[inline]
-        pub fn child_1(&self) -> ::core::option::Option<valueView<'p>> {
-            self.cursor.child(1usize).map(|c| valueView::from_cursor(c, self.input))
-        }
-        ///The `value` child as a typed view.
-        #[inline]
-        pub fn value(&self) -> ::core::option::Option<valueView<'p>> {
-            self.cursor.child(1usize).map(|c| valueView::from_cursor(c, self.input))
+        pub fn child_1(&self) -> ::core::option::Option<JsonParserNodeView<'p>> {
+            self.cursor
+                .child(1usize)
+                .map(|c| JsonParserNodeView::from_cursor(c, self.input))
         }
         /// The number of typed child positions in this Seq.
         #[inline]
         pub fn num_children(&self) -> usize {
             2usize
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct objectView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> objectView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> JsonParserRuleKind {
-            match self.variant_idx() {
-                0u8 => JsonParserRuleKind::null,
-                1u8 => JsonParserRuleKind::bool,
-                2u8 => JsonParserRuleKind::number,
-                3u8 => JsonParserRuleKind::string,
-                4u8 => JsonParserRuleKind::array,
-                5u8 => JsonParserRuleKind::pair,
-                6u8 => JsonParserRuleKind::object,
-                7u8 => JsonParserRuleKind::value,
-                8u8 => JsonParserRuleKind::value_0,
-                9u8 => JsonParserRuleKind::value_1,
-                10u8 => JsonParserRuleKind::value_2,
-                _ => JsonParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = JsonParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| JsonParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(&self, i: usize) -> ::core::option::Option<JsonParserNodeView<'p>> {
-            self.cursor.child(i).map(|c| JsonParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> objectView<'p> {
-        /// The source text matched by this leaf rule.
-        #[inline]
-        pub fn text(&self) -> &'p str {
-            self.span_text()
-        }
-    }
-    /// Generated view over a tape record produced by this rule.
-    #[derive(Clone, Copy, Debug)]
-    pub struct valueView<'p> {
-        cursor: crate::runtime::tape::TapeCursor<'p>,
-        input: &'p str,
-    }
-    impl<'p> valueView<'p> {
-        #[inline]
-        pub fn new(
-            tape: &'p crate::runtime::tape::Tape,
-            input: &'p str,
-            offset: crate::runtime::tape::TapeOffset,
-        ) -> Self {
-            Self {
-                cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
-                input,
-            }
-        }
-        #[inline]
-        pub fn from_cursor(
-            cursor: crate::runtime::tape::TapeCursor<'p>,
-            input: &'p str,
-        ) -> Self {
-            Self { cursor, input }
-        }
-        #[inline]
-        pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
-            self.cursor
-        }
-        #[inline]
-        pub fn input(&self) -> &'p str {
-            self.input
-        }
-        #[inline]
-        pub fn kind(&self) -> crate::runtime::tape::TapeKind {
-            self.cursor.kind()
-        }
-        #[inline]
-        pub fn span(&self) -> (u32, u32) {
-            self.cursor.span()
-        }
-        #[inline]
-        pub fn span_text(&self) -> &'p str {
-            let (lo, hi) = self.cursor.span();
-            &self.input[lo as usize..hi as usize]
-        }
-        #[inline]
-        pub fn variant_idx(&self) -> u8 {
-            self.cursor.variant_idx()
-        }
-        /// Dispatch on `variant_idx` to identify which rule
-        /// (or sub-variant) produced this record.
-        #[inline]
-        pub fn rule_kind(&self) -> JsonParserRuleKind {
-            match self.variant_idx() {
-                0u8 => JsonParserRuleKind::null,
-                1u8 => JsonParserRuleKind::bool,
-                2u8 => JsonParserRuleKind::number,
-                3u8 => JsonParserRuleKind::string,
-                4u8 => JsonParserRuleKind::array,
-                5u8 => JsonParserRuleKind::pair,
-                6u8 => JsonParserRuleKind::object,
-                7u8 => JsonParserRuleKind::value,
-                8u8 => JsonParserRuleKind::value_0,
-                9u8 => JsonParserRuleKind::value_1,
-                10u8 => JsonParserRuleKind::value_2,
-                _ => JsonParserRuleKind::Unknown,
-            }
-        }
-        /// Iterator over direct children as `NodeView`s.
-        #[inline]
-        pub fn children(
-            &self,
-        ) -> impl ::core::iter::Iterator<Item = JsonParserNodeView<'p>> + 'p {
-            let input = self.input;
-            self.cursor
-                .children()
-                .map(move |c| JsonParserNodeView::from_cursor(c, input))
-        }
-        /// The i-th direct child as a `NodeView`, if present.
-        #[inline]
-        pub fn child(&self, i: usize) -> ::core::option::Option<JsonParserNodeView<'p>> {
-            self.cursor.child(i).map(|c| JsonParserNodeView::from_cursor(c, self.input))
-        }
-        #[inline]
-        pub fn is_recovered(&self) -> bool {
-            self.cursor.kind().is_recovered()
-        }
-        /// Source-byte span as a `parse_that::Span<'p>` slice.
-        /// Used by CST consumers that historically held
-        /// `parse_that::Span` references (`RuleEntry::name_span`,
-        /// `ImportedName::span`) alongside the view.
-        #[inline]
-        pub fn identifier_span(&self) -> ::parse_that::Span<'p> {
-            let (lo, hi) = self.cursor.span();
-            ::parse_that::Span::new(lo as usize, hi as usize, self.input)
-        }
-    }
-    impl<'p> valueView<'p> {
-        ///If variant `object` (branch 0) was chosen, return its child view.
-        #[inline]
-        pub fn as_object(&self) -> ::core::option::Option<objectView<'p>> {
-            if self.cursor.meta_idx() == 0u8 {
-                self.cursor.child(0).map(|c| objectView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `object` (branch 0) was chosen.
-        #[inline]
-        pub fn is_object(&self) -> bool {
-            self.cursor.meta_idx() == 0u8
-        }
-        ///If variant `array` (branch 1) was chosen, return its child view.
-        #[inline]
-        pub fn as_array(&self) -> ::core::option::Option<arrayView<'p>> {
-            if self.cursor.meta_idx() == 1u8 {
-                self.cursor.child(0).map(|c| arrayView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `array` (branch 1) was chosen.
-        #[inline]
-        pub fn is_array(&self) -> bool {
-            self.cursor.meta_idx() == 1u8
-        }
-        ///If variant `string` (branch 2) was chosen, return its child view.
-        #[inline]
-        pub fn as_string(&self) -> ::core::option::Option<stringView<'p>> {
-            if self.cursor.meta_idx() == 2u8 {
-                self.cursor.child(0).map(|c| stringView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `string` (branch 2) was chosen.
-        #[inline]
-        pub fn is_string(&self) -> bool {
-            self.cursor.meta_idx() == 2u8
-        }
-        ///If variant `null` (branch 3) was chosen, return its child view.
-        #[inline]
-        pub fn as_null(&self) -> ::core::option::Option<nullView<'p>> {
-            if self.cursor.meta_idx() == 3u8 {
-                self.cursor.child(0).map(|c| nullView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `null` (branch 3) was chosen.
-        #[inline]
-        pub fn is_null(&self) -> bool {
-            self.cursor.meta_idx() == 3u8
-        }
-        ///If variant `bool` (branch 4) was chosen, return its child view.
-        #[inline]
-        pub fn as_bool(&self) -> ::core::option::Option<boolView<'p>> {
-            if self.cursor.meta_idx() == 4u8 {
-                self.cursor.child(0).map(|c| boolView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `bool` (branch 4) was chosen.
-        #[inline]
-        pub fn is_bool(&self) -> bool {
-            self.cursor.meta_idx() == 4u8
-        }
-        ///If variant `number` (branch 5) was chosen, return its child view.
-        #[inline]
-        pub fn as_number(&self) -> ::core::option::Option<numberView<'p>> {
-            if self.cursor.meta_idx() == 5u8 {
-                self.cursor.child(0).map(|c| numberView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        ///Returns `true` if variant `number` (branch 5) was chosen.
-        #[inline]
-        pub fn is_number(&self) -> bool {
-            self.cursor.meta_idx() == 5u8
-        }
-        ///If sub-variant `value_0` was chosen (branch 3), return its child view.
-        #[inline]
-        pub fn as_value_0(&self) -> ::core::option::Option<JsonParserNodeView<'p>> {
-            if self.cursor.meta_idx() == 3u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| JsonParserNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        #[inline]
-        pub fn is_value_0(&self) -> bool {
-            self.cursor.meta_idx() == 3u8
-        }
-        ///If sub-variant `value_1` was chosen (branch 4), return its child view.
-        #[inline]
-        pub fn as_value_1(&self) -> ::core::option::Option<JsonParserNodeView<'p>> {
-            if self.cursor.meta_idx() == 4u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| JsonParserNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        #[inline]
-        pub fn is_value_1(&self) -> bool {
-            self.cursor.meta_idx() == 4u8
-        }
-        ///If sub-variant `value_2` was chosen (branch 5), return its child view.
-        #[inline]
-        pub fn as_value_2(&self) -> ::core::option::Option<JsonParserNodeView<'p>> {
-            if self.cursor.meta_idx() == 5u8 {
-                self.cursor
-                    .child(0)
-                    .map(|c| JsonParserNodeView::from_cursor(c, self.input))
-            } else {
-                None
-            }
-        }
-        #[inline]
-        pub fn is_value_2(&self) -> bool {
-            self.cursor.meta_idx() == 5u8
-        }
-        /// The chosen branch's child as a generic node view,
-        /// regardless of which variant was selected.
-        #[inline]
-        pub fn chosen(&self) -> ::core::option::Option<JsonParserNodeView<'p>> {
-            self.cursor.child(0).map(|c| JsonParserNodeView::from_cursor(c, self.input))
-        }
-    }
-    /// Typed value enum — payload-eligible branches carry typed
-    /// values directly; non-eligible branches wrap a cursor view.
-    #[derive(Clone, Debug)]
-    pub enum valueValue<'p> {
-        object(JsonParserNodeView<'p>),
-        array(JsonParserNodeView<'p>),
-        string(((u32, u32))),
-        null(u8),
-        bool((bool)),
-        number(f64),
-    }
-    impl<'p> valueView<'p> {
-        /// Decode the chosen branch's value. Payload-eligible
-        /// branches return typed scalars/aggregates; other
-        /// branches return cursor-wrapped sub-views.
-        #[inline]
-        pub fn value(&self) -> ::core::option::Option<valueValue<'p>> {
-            match self.cursor.meta_idx() {
-                0u8 => {
-                    let __child = self.cursor.child(0)?;
-                    Some(
-                        valueValue::object(
-                            JsonParserNodeView::from_cursor(__child, self.input),
-                        ),
-                    )
-                }
-                1u8 => {
-                    let __child = self.cursor.child(0)?;
-                    Some(
-                        valueValue::array(
-                            JsonParserNodeView::from_cursor(__child, self.input),
-                        ),
-                    )
-                }
-                2u8 => {
-                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
-                    let __rec = __cursor.record();
-                    let __tape = __cursor.tape();
-                    let __value = match __tape.payload_bytes(__rec, 8usize) {
-                        Some(__bytes) => {
-                            ({
-                                let __raw = u64::from_le_bytes(
-                                    <[u8; 8]>::try_from(&__bytes[0usize..8usize]).unwrap(),
-                                );
-                                (__raw as u32, (__raw >> 32) as u32)
-                            })
-                        }
-                        None => ((0_u32, 0_u32)),
-                    };
-                    Some(valueValue::string(__value))
-                }
-                3u8 => {
-                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
-                    let __rec = __cursor.record();
-                    let __tape = __cursor.tape();
-                    let __value = __tape
-                        .payload_u8(__rec)
-                        .unwrap_or(<u8 as ::core::default::Default>::default());
-                    Some(valueValue::null(__value))
-                }
-                4u8 => {
-                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
-                    let __rec = __cursor.record();
-                    let __tape = __cursor.tape();
-                    let __value = match __tape.payload_bytes(__rec, 1usize) {
-                        Some(__bytes) => (__bytes[0usize] != 0),
-                        None => (false),
-                    };
-                    Some(valueValue::bool(__value))
-                }
-                5u8 => {
-                    let __cursor = self.cursor.child(0).unwrap_or(self.cursor);
-                    let __rec = __cursor.record();
-                    let __tape = __cursor.tape();
-                    let __value = __tape
-                        .payload_f64(__rec)
-                        .unwrap_or(<f64 as ::core::default::Default>::default());
-                    Some(valueValue::number(__value))
-                }
-                _ => None,
-            }
         }
     }
     /// Generic node view over any tape record for this grammar.
@@ -3847,13 +3446,9 @@ mod __jsonparser_emit_impl {
         bool,
         number,
         string,
+        object,
         array,
         pair,
-        object,
-        value,
-        value_0,
-        value_1,
-        value_2,
         /// Fallback for records whose variant_idx is not a
         /// known rule- or sub-variant discriminator.
         Unknown,
@@ -3911,13 +3506,9 @@ mod __jsonparser_emit_impl {
                 1u8 => JsonParserRuleKind::bool,
                 2u8 => JsonParserRuleKind::number,
                 3u8 => JsonParserRuleKind::string,
-                4u8 => JsonParserRuleKind::array,
-                5u8 => JsonParserRuleKind::pair,
-                6u8 => JsonParserRuleKind::object,
-                7u8 => JsonParserRuleKind::value,
-                8u8 => JsonParserRuleKind::value_0,
-                9u8 => JsonParserRuleKind::value_1,
-                10u8 => JsonParserRuleKind::value_2,
+                4u8 => JsonParserRuleKind::object,
+                5u8 => JsonParserRuleKind::array,
+                6u8 => JsonParserRuleKind::pair,
                 _ => JsonParserRuleKind::Unknown,
             }
         }
@@ -3951,22 +3542,63 @@ mod __jsonparser_emit_impl {
         }
     }
     impl crate::runtime::Root for JsonParser {
-        type View<'p> = valueView<'p>;
+        type View<'p> = nullView<'p>;
         #[inline]
         fn make_view<'p>(
             tape: &'p crate::runtime::tape::Tape<()>,
             input: &'p str,
             root: crate::runtime::tape::TapeOffset,
         ) -> Self::View<'p> {
-            valueView::new(tape, input, root)
+            nullView::new(tape, input, root)
         }
     }
     impl JsonParser {
         /// The name of the root rule for this grammar.
         #[inline]
         pub fn root_rule_name() -> &'static str {
-            "value"
+            "null"
         }
+    }
+    /// AY-II.W0.d — grammar-derived direct-to-struct projection.
+    ///
+    /// Emitted storage for a rule whose child sequence projects
+    /// onto a fixed-layout tuple. Packed admissions read every
+    /// field from `Tape::payload_bytes` at scalar offsets; rich
+    /// (resolver-backed) admissions mix scalar payload reads with
+    /// per-child cursor handles — the materialiser walks
+    /// `view.child(i)` at the admitted `CHILD_INDICES` to
+    /// populate cursor fields.
+    ///
+    /// `NAMED_BINDING` is `""` when the admission came from a
+    /// pure layout arm; non-empty when the grammar author spelt
+    /// a `-> Name` annotation. Consumers that want a semantic-
+    /// type hint (e.g. CSS `"Color"`) read this const.
+    #[derive(::core::marker::Copy, ::core::clone::Clone, ::core::fmt::Debug)]
+    #[doc(hidden)]
+    pub struct JsonParserNullProjection {
+        /// Grammar-declared scalar field at packed-buffer offset
+        #[doc = concat!("`", stringify!(0), "` (bytes).")]
+        pub field_0: (u32, u32),
+    }
+    impl JsonParserNullProjection {
+        /// Grammar-declared rule that projects into this
+        /// struct. Matches the `rule_name` entry in
+        /// `PROJECTION_DIRECT_TO_STRUCT`.
+        #[doc(hidden)]
+        pub const RULE_NAME: &'static str = "null";
+        /// Grammar-declared `-> Name` binding; empty string
+        /// when the admission came from a pure layout arm.
+        #[doc(hidden)]
+        pub const NAMED_BINDING: &'static str = "";
+        /// Number of fields (scalar + cursor) the layout pass
+        /// admitted for this projection.
+        #[doc(hidden)]
+        pub const FIELD_COUNT: usize = 1;
+        /// Total bytes the projection's packed portion occupies
+        /// in the aggregate payload buffer; `0` when every
+        /// field is a cursor handle.
+        #[doc(hidden)]
+        pub const TOTAL_BYTES: u8 = 8;
     }
     /// AY-II.W0.d — grammar-derived direct-to-struct projection.
     ///
@@ -3987,7 +3619,7 @@ mod __jsonparser_emit_impl {
     pub struct JsonParserBoolProjection {
         /// Grammar-declared scalar field at packed-buffer offset
         #[doc = concat!("`", stringify!(0), "` (bytes).")]
-        pub field_0: bool,
+        pub field_0: (u32, u32),
     }
     impl JsonParserBoolProjection {
         /// Grammar-declared rule that projects into this
@@ -4007,7 +3639,7 @@ mod __jsonparser_emit_impl {
         /// in the aggregate payload buffer; `0` when every
         /// field is a cursor handle.
         #[doc(hidden)]
-        pub const TOTAL_BYTES: u8 = 1;
+        pub const TOTAL_BYTES: u8 = 8;
     }
     /// AY-II.W0.d — grammar-derived direct-to-struct projection.
     ///
@@ -4059,7 +3691,8 @@ mod __jsonparser_emit_impl {
     /// struct storage. `struct_name` is ALWAYS the synthesised
     /// `<Grammar><RuleCamel>Projection` struct emitted alongside
     /// this const — no resolver-bound name dispatch.
-    pub const PROJECTION_DIRECT_TO_STRUCT: &[(&str, &str); 2usize] = &[
+    pub const PROJECTION_DIRECT_TO_STRUCT: &[(&str, &str); 3usize] = &[
+        ("null", "JsonParserNullProjection"),
         ("bool", "JsonParserBoolProjection"),
         ("string", "JsonParserStringProjection"),
     ];
@@ -4067,14 +3700,15 @@ mod __jsonparser_emit_impl {
     /// lockstep with `PROJECTION_DIRECT_TO_STRUCT`. Empty string for
     /// admissions that did not spell a named type.
     #[doc(hidden)]
-    pub const PROJECTION_NAMED_BINDINGS: &[&str; 2usize] = &["", "String"];
+    pub const PROJECTION_NAMED_BINDINGS: &[&str; 3usize] = &["", "", "String"];
     /// AY-II.W0.d — canonical evidence that every admission has a
     /// matching `materialize_projection_<rule>_<Grammar>` fn.
     /// Indexed in lockstep with `PROJECTION_DIRECT_TO_STRUCT`; the
     /// wire-contract totality test asserts both slices share the
     /// same length per grammar.
     #[doc(hidden)]
-    pub const PROJECTION_MATERIALIZERS: &[&str; 2usize] = &[
+    pub const PROJECTION_MATERIALIZERS: &[&str; 3usize] = &[
+        "materialize_projection_null_JsonParser",
         "materialize_projection_bool_JsonParser",
         "materialize_projection_string_JsonParser",
     ];
@@ -4083,10 +3717,22 @@ mod __jsonparser_emit_impl {
     /// (production consumer). Indexed in lockstep with
     /// `PROJECTION_DIRECT_TO_STRUCT`.
     #[doc(hidden)]
-    pub const PROJECTION_CONSUMERS: &[&str; 2usize] = &[
+    pub const PROJECTION_CONSUMERS: &[&str; 3usize] = &[
+        "JsonParserValue::null",
         "JsonParserValue::bool",
         "JsonParserValue::string",
     ];
+    /// AY-II.W0.d marker — structural evidence that the
+    /// layout pass + resolver admitted this rule for
+    /// direct-to-struct projection. The returned
+    /// `(rule_name, field_count, named_binding)` triple
+    /// exposes the admitted shape to the `cargo expand`
+    /// hard gate without requiring a runtime compilation.
+    #[doc(hidden)]
+    #[inline(always)]
+    pub fn __grammar_projection_null() -> (&'static str, usize, &'static str) {
+        ("null", 1, "")
+    }
     /// AY-II.W0.d marker — structural evidence that the
     /// layout pass + resolver admitted this rule for
     /// direct-to-struct projection. The returned
@@ -4116,14 +3762,13 @@ mod __jsonparser_emit_impl {
     /// non-admitted rules carry their shape-classified payload.
     #[derive(Clone, Debug)]
     pub enum JsonParserValue<'p> {
-        null(u8),
+        null(JsonParserNullProjection),
         bool(JsonParserBoolProjection),
         number(f64),
         string(JsonParserStringProjection),
+        object(&'p str),
         array(&'p str),
         pair(::std::vec::Vec<JsonParserValue<'p>>),
-        object(&'p str),
-        value(::std::vec::Vec<JsonParserValue<'p>>),
         /// Fallback for records whose `variant_idx` is not a
         /// known rule discriminator (recovered records, stray
         /// sub-variant indices).
@@ -4161,10 +3806,9 @@ mod __jsonparser_emit_impl {
             1u8 => JsonParserRuleKind::bool,
             2u8 => JsonParserRuleKind::number,
             3u8 => JsonParserRuleKind::string,
-            4u8 => JsonParserRuleKind::array,
-            5u8 => JsonParserRuleKind::pair,
-            6u8 => JsonParserRuleKind::object,
-            7u8 => JsonParserRuleKind::value,
+            4u8 => JsonParserRuleKind::object,
+            5u8 => JsonParserRuleKind::array,
+            6u8 => JsonParserRuleKind::pair,
             _ => JsonParserRuleKind::Unknown,
         }
     }
@@ -4245,17 +3889,16 @@ mod __jsonparser_emit_impl {
         };
         match project_rule_kind_JsonParser(__rec.kind(), __rec.variant_idx()) {
             JsonParserRuleKind::null => {
-                let v: u8 = output
-                    .frame(offset)
-                    .and_then(|f| output.payload_for(f))
-                    .and_then(|p| p.as_u32())
-                    .map(|v| v as u8)
+                let proj = materialize_projection_null_JsonParser(output, input, offset)
                     .unwrap_or_else(|| {
-                        (&input[__rec.span_lo as usize..__rec.span_hi as usize])
-                            .parse::<u8>()
-                            .unwrap_or(0)
+                        ::core::panic!(
+                            "AY-II.W0'.b: materializer for admitted rule `{}` \
+                                 returned None at frame offset {}; admission \
+                                 invariant violated",
+                            "null", offset,
+                        );
                     });
-                JsonParserValue::null(v)
+                JsonParserValue::null(proj)
             }
             JsonParserRuleKind::bool => {
                 let proj = materialize_projection_bool_JsonParser(output, input, offset)
@@ -4297,6 +3940,10 @@ mod __jsonparser_emit_impl {
                     });
                 JsonParserValue::string(proj)
             }
+            JsonParserRuleKind::object => {
+                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
+                JsonParserValue::object(span)
+            }
             JsonParserRuleKind::array => {
                 let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
                 JsonParserValue::array(span)
@@ -4316,26 +3963,6 @@ mod __jsonparser_emit_impl {
                     );
                 }
                 JsonParserValue::pair(children)
-            }
-            JsonParserRuleKind::object => {
-                let span = &input[__rec.span_lo as usize..__rec.span_hi as usize];
-                JsonParserValue::object(span)
-            }
-            JsonParserRuleKind::value => {
-                let mut children: ::std::vec::Vec<JsonParserValue<'p>> = ::std::vec::Vec::new();
-                let __cur = crate::runtime::tape::TapeCursor::new(
-                    __tape,
-                    crate::runtime::tape::TapeOffset(offset),
-                );
-                for __child in __cur.children() {
-                    project_push_children_JsonParser(
-                        output,
-                        input,
-                        __child.offset().0,
-                        &mut children,
-                    );
-                }
-                JsonParserValue::value(children)
             }
             _ => {
                 ::core::panic!(
@@ -4433,47 +4060,6 @@ mod __jsonparser_emit_impl {
             match seg {
                 crate::runtime::PathSegment::Field(key) => {
                     match cur.rule_kind() {
-                        JsonParserRuleKind::value => {
-                            let parent = cur.cursor();
-                            let (_, parent_end) = parent.span();
-                            let mut iter = parent.bounded_lookahead(parent_end);
-                            let mut hit: ::core::option::Option<
-                                JsonParserNodeView<'p>,
-                            > = None;
-                            loop {
-                                let k_cur = match iter.next() {
-                                    ::core::option::Option::Some(c) => c,
-                                    ::core::option::Option::None => break,
-                                };
-                                let v_cur = match iter.next() {
-                                    ::core::option::Option::Some(c) => c,
-                                    ::core::option::Option::None => break,
-                                };
-                                let (k_lo, k_hi) = k_cur.span();
-                                let raw = &cur_input[k_lo as usize..k_hi as usize];
-                                let key_text = if raw.as_bytes().first()
-                                    == ::core::option::Option::Some(&b'"')
-                                    && raw.as_bytes().last()
-                                        == ::core::option::Option::Some(&b'"') && raw.len() >= 2
-                                {
-                                    &raw[1..raw.len() - 1]
-                                } else {
-                                    raw
-                                };
-                                if key_text == *key {
-                                    hit = ::core::option::Option::Some(
-                                        JsonParserNodeView::from_cursor(v_cur, cur_input),
-                                    );
-                                    break;
-                                }
-                            }
-                            cur = match hit {
-                                ::core::option::Option::Some(v) => v,
-                                ::core::option::Option::None => {
-                                    return ::core::option::Option::None;
-                                }
-                            };
-                        }
                         _ => {
                             let mut it = cur.children();
                             let mut found = None;
@@ -4592,6 +4178,35 @@ mod __jsonparser_emit_impl {
     /// 1:1:1 per grammar with runtime call-count truth.
     #[inline]
     #[doc(hidden)]
+    pub fn materialize_projection_null_JsonParser<'p>(
+        output: &crate::runtime::tape::Tape<JsonParser>,
+        input: &'p str,
+        offset: u32,
+    ) -> ::core::option::Option<JsonParserNullProjection> {
+        let _ = input;
+        let frame = output.frame(offset)?;
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
+        ::core::option::Option::Some(JsonParserNullProjection {
+            field_0,
+        })
+    }
+    /// AY-II.W0'.b — grammar-derived direct-to-struct projection
+    /// helper. Reads the admitted rule's frame from the
+    /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
+    /// slab and constructs the matching projection struct;
+    /// returns `None` when the slab's frame is absent or the
+    /// tape's aggregate buffer is too short.
+    ///
+    /// Routed from `project_frame_<Grammar>` per admission.
+    /// `#[inline]` so LLVM folds the body into the dispatcher at
+    /// monomorphisation time. Emitted 1:1 per
+    /// [`PROJECTION_DIRECT_TO_STRUCT`] entry — post-AY-II.W0'.b
+    /// totality is admission : materialiser : consumer at
+    /// 1:1:1 per grammar with runtime call-count truth.
+    #[inline]
+    #[doc(hidden)]
     pub fn materialize_projection_bool_JsonParser<'p>(
         output: &crate::runtime::tape::Tape<JsonParser>,
         input: &'p str,
@@ -4599,14 +4214,9 @@ mod __jsonparser_emit_impl {
     ) -> ::core::option::Option<JsonParserBoolProjection> {
         let _ = input;
         let frame = output.frame(offset)?;
-        let __tape = output;
-        let __tape_rec = __tape.try_get(crate::runtime::tape::TapeOffset(offset))?;
-        let __bytes = __tape.payload_bytes(__tape_rec, 1)?;
-        let field_0: bool = {
-            let __b = *__bytes.get(0)?;
-            let _ = 1;
-            __b != 0
-        };
+        let __bytes: &[u8] = &[];
+        let _ = __bytes;
+        let field_0: (u32, u32) = (frame.span_lo, frame.span_hi);
         ::core::option::Option::Some(JsonParserBoolProjection {
             field_0,
         })
@@ -4793,7 +4403,7 @@ mod __jsonparser_emit_impl {
                 Some(__builder.finish())
             })
         }
-        fn __array_prettify<'a>(
+        fn __object_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
@@ -4803,12 +4413,12 @@ mod __jsonparser_emit_impl {
                     {
                         {
                             {
-                                if state.src_bytes.get(state.offset).copied() != Some(b'[')
+                                if state.src_bytes.get(state.offset).copied() != Some(b'{')
                                 {
                                     return false;
                                 }
                                 state.offset += 1;
-                                __builder.char(b'[');
+                                __builder.char(b'{');
                             };
                             {
                                 if !{
@@ -4828,7 +4438,7 @@ mod __jsonparser_emit_impl {
                                                         let __pretty_bcp6 = __builder.checkpoint();
                                                         let __ok = (|| -> bool {
                                                             {
-                                                                if !Self::__value_prettify(state, __builder) {
+                                                                if !Self::__pair_prettify(state, __builder) {
                                                                     return false;
                                                                 }
                                                                 {
@@ -4898,6 +4508,135 @@ mod __jsonparser_emit_impl {
                             };
                         };
                         {
+                            if state.src_bytes.get(state.offset).copied() != Some(b'}') {
+                                return false;
+                            }
+                            state.offset += 1;
+                            __builder.char(b'}');
+                        };
+                    };
+                    true
+                }
+            };
+            __builder.group_close();
+            __pretty_ok
+        }
+        pub fn object_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__object_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
+        fn __array_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            __builder.group_open();
+            let __pretty_ok = {
+                {
+                    {
+                        {
+                            {
+                                if state.src_bytes.get(state.offset).copied() != Some(b'[')
+                                {
+                                    return false;
+                                }
+                                state.offset += 1;
+                                __builder.char(b'[');
+                            };
+                            {
+                                if !{
+                                    let __pretty_cp24 = state.offset;
+                                    let __pretty_bcp25 = __builder.checkpoint();
+                                    let __ok = (|| -> bool {
+                                        {
+                                            let __ows22 = state.offset;
+                                            ::parse_that::trim_leading_whitespace_mut(state);
+                                            __builder.text_inline_ws(&state.src[__ows22..state.offset]);
+                                            {
+                                                let mut __rep_count20 = 0usize;
+                                                while __rep_count20 < 4294967295 {
+                                                    let __rep_cp21 = state.offset;
+                                                    if !{
+                                                        let __pretty_cp18 = state.offset;
+                                                        let __pretty_bcp19 = __builder.checkpoint();
+                                                        let __ok = (|| -> bool {
+                                                            {
+                                                                if !Self::__value_prettify(state, __builder) {
+                                                                    return false;
+                                                                }
+                                                                {
+                                                                    let _ = {
+                                                                        let __pretty_cp16 = state.offset;
+                                                                        let __pretty_bcp17 = __builder.checkpoint();
+                                                                        let __ok = (|| -> bool {
+                                                                            {
+                                                                                let __ows13 = state.offset;
+                                                                                ::parse_that::trim_leading_whitespace_mut(state);
+                                                                                let __ows14 = state.offset;
+                                                                                {
+                                                                                    if state.src_bytes.get(state.offset).copied() != Some(b',')
+                                                                                    {
+                                                                                        return false;
+                                                                                    }
+                                                                                    state.offset += 1;
+                                                                                    __builder.char(b',');
+                                                                                };
+                                                                                __builder.text_inline_ws(&state.src[__ows13..__ows14]);
+                                                                                let __ows15 = state.offset;
+                                                                                ::parse_that::trim_leading_whitespace_mut(state);
+                                                                                __builder.text_inline_ws(&state.src[__ows15..state.offset]);
+                                                                            };
+                                                                            true
+                                                                        })();
+                                                                        if !__ok {
+                                                                            state.offset = __pretty_cp16;
+                                                                            __builder.restore(__pretty_bcp17);
+                                                                        }
+                                                                        __ok
+                                                                    };
+                                                                    true
+                                                                };
+                                                            };
+                                                            true
+                                                        })();
+                                                        if !__ok {
+                                                            state.offset = __pretty_cp18;
+                                                            __builder.restore(__pretty_bcp19);
+                                                        }
+                                                        __ok
+                                                    } {
+                                                        state.offset = __rep_cp21;
+                                                        break;
+                                                    }
+                                                    if state.offset == __rep_cp21 {
+                                                        break;
+                                                    }
+                                                    __rep_count20 += 1;
+                                                }
+                                            };
+                                            let __ows23 = state.offset;
+                                            ::parse_that::trim_leading_whitespace_mut(state);
+                                            __builder.text_inline_ws(&state.src[__ows23..state.offset]);
+                                        };
+                                        true
+                                    })();
+                                    if !__ok {
+                                        state.offset = __pretty_cp24;
+                                        __builder.restore(__pretty_bcp25);
+                                    }
+                                    __ok
+                                } {
+                                    return false;
+                                }
+                            };
+                        };
+                        {
                             if state.src_bytes.get(state.offset).copied() != Some(b']') {
                                 return false;
                             }
@@ -4942,9 +4681,9 @@ mod __jsonparser_emit_impl {
                         };
                         {
                             {
-                                let __ows13 = state.offset;
+                                let __ows26 = state.offset;
                                 ::parse_that::trim_leading_whitespace_mut(state);
-                                let __ows14 = state.offset;
+                                let __ows27 = state.offset;
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b':')
                                     {
@@ -4953,10 +4692,10 @@ mod __jsonparser_emit_impl {
                                     state.offset += 1;
                                     __builder.char(b':');
                                 };
-                                __builder.text_inline_ws(&state.src[__ows13..__ows14]);
-                                let __ows15 = state.offset;
+                                __builder.text_inline_ws(&state.src[__ows26..__ows27]);
+                                let __ows28 = state.offset;
                                 ::parse_that::trim_leading_whitespace_mut(state);
-                                __builder.text_inline_ws(&state.src[__ows15..state.offset]);
+                                __builder.text_inline_ws(&state.src[__ows28..state.offset]);
                             };
                             if !Self::__value_prettify(state, __builder) {
                                 return false;
@@ -4975,135 +4714,6 @@ mod __jsonparser_emit_impl {
                     state.src.len().saturating_mul(2),
                 );
                 if !Self::__pair_prettify(state, &mut __builder) {
-                    return None;
-                }
-                Some(__builder.finish())
-            })
-        }
-        fn __object_prettify<'a>(
-            state: &mut ::parse_that::ParserState<'a>,
-            __builder: &mut ::pprint::FmtBuilder<'a>,
-        ) -> bool {
-            __builder.group_open();
-            let __pretty_ok = {
-                {
-                    {
-                        {
-                            {
-                                if state.src_bytes.get(state.offset).copied() != Some(b'{')
-                                {
-                                    return false;
-                                }
-                                state.offset += 1;
-                                __builder.char(b'{');
-                            };
-                            {
-                                if !{
-                                    let __pretty_cp27 = state.offset;
-                                    let __pretty_bcp28 = __builder.checkpoint();
-                                    let __ok = (|| -> bool {
-                                        {
-                                            let __ows25 = state.offset;
-                                            ::parse_that::trim_leading_whitespace_mut(state);
-                                            __builder.text_inline_ws(&state.src[__ows25..state.offset]);
-                                            {
-                                                let mut __rep_count23 = 0usize;
-                                                while __rep_count23 < 4294967295 {
-                                                    let __rep_cp24 = state.offset;
-                                                    if !{
-                                                        let __pretty_cp21 = state.offset;
-                                                        let __pretty_bcp22 = __builder.checkpoint();
-                                                        let __ok = (|| -> bool {
-                                                            {
-                                                                if !Self::__pair_prettify(state, __builder) {
-                                                                    return false;
-                                                                }
-                                                                {
-                                                                    let _ = {
-                                                                        let __pretty_cp19 = state.offset;
-                                                                        let __pretty_bcp20 = __builder.checkpoint();
-                                                                        let __ok = (|| -> bool {
-                                                                            {
-                                                                                let __ows16 = state.offset;
-                                                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                                                let __ows17 = state.offset;
-                                                                                {
-                                                                                    if state.src_bytes.get(state.offset).copied() != Some(b',')
-                                                                                    {
-                                                                                        return false;
-                                                                                    }
-                                                                                    state.offset += 1;
-                                                                                    __builder.char(b',');
-                                                                                };
-                                                                                __builder.text_inline_ws(&state.src[__ows16..__ows17]);
-                                                                                let __ows18 = state.offset;
-                                                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                                                __builder.text_inline_ws(&state.src[__ows18..state.offset]);
-                                                                            };
-                                                                            true
-                                                                        })();
-                                                                        if !__ok {
-                                                                            state.offset = __pretty_cp19;
-                                                                            __builder.restore(__pretty_bcp20);
-                                                                        }
-                                                                        __ok
-                                                                    };
-                                                                    true
-                                                                };
-                                                            };
-                                                            true
-                                                        })();
-                                                        if !__ok {
-                                                            state.offset = __pretty_cp21;
-                                                            __builder.restore(__pretty_bcp22);
-                                                        }
-                                                        __ok
-                                                    } {
-                                                        state.offset = __rep_cp24;
-                                                        break;
-                                                    }
-                                                    if state.offset == __rep_cp24 {
-                                                        break;
-                                                    }
-                                                    __rep_count23 += 1;
-                                                }
-                                            };
-                                            let __ows26 = state.offset;
-                                            ::parse_that::trim_leading_whitespace_mut(state);
-                                            __builder.text_inline_ws(&state.src[__ows26..state.offset]);
-                                        };
-                                        true
-                                    })();
-                                    if !__ok {
-                                        state.offset = __pretty_cp27;
-                                        __builder.restore(__pretty_bcp28);
-                                    }
-                                    __ok
-                                } {
-                                    return false;
-                                }
-                            };
-                        };
-                        {
-                            if state.src_bytes.get(state.offset).copied() != Some(b'}') {
-                                return false;
-                            }
-                            state.offset += 1;
-                            __builder.char(b'}');
-                        };
-                    };
-                    true
-                }
-            };
-            __builder.group_close();
-            __pretty_ok
-        }
-        pub fn object_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
-            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
-                let mut __builder = ::pprint::FmtBuilder::with_capacity(
-                    state.src.len().saturating_mul(2),
-                );
-                if !Self::__object_prettify(state, &mut __builder) {
                     return None;
                 }
                 Some(__builder.finish())
@@ -5220,6 +4830,12 @@ mod __jsonparser_emit_impl {
         ) {
             __ser.text(__v.span_text());
         }
+        pub fn serialize_object<'a, __S: ::bbnf_ser::Serializer<'a>>(
+            __v: JsonParserNodeView<'a>,
+            __ser: &mut __S,
+        ) {
+            __ser.text(__v.span_text());
+        }
         pub fn serialize_array<'a, __S: ::bbnf_ser::Serializer<'a>>(
             __v: JsonParserNodeView<'a>,
             __ser: &mut __S,
@@ -5227,18 +4843,6 @@ mod __jsonparser_emit_impl {
             __ser.text(__v.span_text());
         }
         pub fn serialize_pair<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: JsonParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
-        pub fn serialize_object<'a, __S: ::bbnf_ser::Serializer<'a>>(
-            __v: JsonParserNodeView<'a>,
-            __ser: &mut __S,
-        ) {
-            __ser.text(__v.span_text());
-        }
-        pub fn serialize_value<'a, __S: ::bbnf_ser::Serializer<'a>>(
             __v: JsonParserNodeView<'a>,
             __ser: &mut __S,
         ) {
@@ -5262,16 +4866,13 @@ mod __jsonparser_emit_impl {
                     Self::serialize_string(__v, __ser);
                 }
                 4u8 => {
-                    Self::serialize_array(__v, __ser);
-                }
-                5u8 => {
-                    Self::serialize_pair(__v, __ser);
-                }
-                6u8 => {
                     Self::serialize_object(__v, __ser);
                 }
-                7u8 => {
-                    Self::serialize_value(__v, __ser);
+                5u8 => {
+                    Self::serialize_array(__v, __ser);
+                }
+                6u8 => {
+                    Self::serialize_pair(__v, __ser);
                 }
                 _ => {
                     __ser.text(__v.span_text());
@@ -5280,14 +4881,14 @@ mod __jsonparser_emit_impl {
         }
         pub fn serialize_compact<'a>(__v: JsonParserNodeView<'a>) -> String {
             let mut __ser = ::bbnf_ser::StringSerializer::new();
-            Self::serialize_value(__v, &mut __ser);
+            Self::__dispatch_serialize(__v, &mut __ser);
             __ser.finish()
         }
         pub fn serialize<'a, __S: ::bbnf_ser::Serializer<'a>>(
             __v: JsonParserNodeView<'a>,
             __ser: &mut __S,
         ) {
-            Self::serialize_value(__v, __ser);
+            Self::__dispatch_serialize(__v, __ser);
         }
         /// AW-IV.W1.δ — associated-constant accessor for the
         /// grammar's consolidated codegen fingerprint. Alias

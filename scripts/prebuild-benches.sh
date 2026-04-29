@@ -18,7 +18,7 @@ BENCHES=(
   css_l4
   google_sheets_monolithic
   bbnf_monolithic
-  json_monolithic_value
+  json_value
 )
 
 # Maps each bench target name to its source path (relative to
@@ -31,8 +31,15 @@ bench_source() {
     css_l4)                   echo "benches/css/l4.rs" ;;
     google_sheets_monolithic) echo "benches/google_sheets/monolithic.rs" ;;
     bbnf_monolithic)          echo "benches/bbnf/monolithic.rs" ;;
-    json_monolithic_value)    echo "benches/json/value.rs" ;;
+    json_value)               echo "benches/json/value.rs" ;;
     *) return 1 ;;
+  esac
+}
+
+bench_features() {
+  case "$1" in
+    json_value) echo "competitor" ;;
+    *) echo "" ;;
   esac
 }
 
@@ -81,9 +88,8 @@ find_bench_binary() {
 
 # A prepared binary is fresh when it exists AND is newer than its bench
 # source file. Any edit to `crates/core/benches/<bench>.rs` invalidates
-# the cache; other inputs (shape emitters, generated.rs) do not, because
-# `cargo bench --no-run` itself detects those via cargo's dependency
-# tracking on the next invocation.
+# the cache; other Rust inputs are detected by cargo dependency tracking
+# on the next `cargo bench --no-run` invocation.
 bench_binary_fresh() {
   local bench="$1"
   local bin="$2"
@@ -114,8 +120,14 @@ for bench in "${BENCHES[@]}"; do
     bin="$cached_bin"
     printf 'reused: %s\n' "$bin"
   else
-    cargo bench -p bbnf --bench "$bench" --profile "$PROFILE" --no-run \
-      > "$OUT_ROOT/$bench-build.txt" 2>&1
+    features="$(bench_features "$bench")"
+    if [[ -n "$features" ]]; then
+      cargo bench -p bbnf --features "$features" --bench "$bench" --profile "$PROFILE" --no-run \
+        > "$OUT_ROOT/$bench-build.txt" 2>&1
+    else
+      cargo bench -p bbnf --bench "$bench" --profile "$PROFILE" --no-run \
+        > "$OUT_ROOT/$bench-build.txt" 2>&1
+    fi
     if ! bin="$(find_bench_binary "$bench")"; then
       {
         printf 'Expected exactly one binary for %s under %s/{%s}/deps\n' \

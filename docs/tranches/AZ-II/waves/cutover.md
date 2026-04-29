@@ -12,8 +12,9 @@ full BBNF fixture corpus; `crates/tape/` deleted; `cargo build -p bbnf
 + `docs/benchmarks/post-AZ-II.json` archived.
 **Status**: PARTIAL CLOSE — substrate canonical; 8/9 grammars
 StructDirect; BBNF self-parity 56/56; reproducibility CI gate green;
-remaining work (EBNF activation + tape deletion + bench refresh +
-FINAL CLOSE conversion) routed to cutover.O.
+cutover.O.0 tooling preflight landed; remaining work resumes at O1
+builder transactions before EBNF activation, tape deletion, bench
+refresh, and FINAL CLOSE conversion.
 
 **2026-04-29 hardening amendment**: cutover.O must begin with the
 grammar-general StructDirect builder transaction gap. EBNF activation
@@ -165,7 +166,7 @@ the terminal AZ-II wave, not an AZ-III deferral surface.
 
 Required order:
 
-1. **O0 tooling preflight** — repair or explicitly de-canonicalize stale
+1. **O0 tooling preflight** — LANDED: repair or explicitly de-canonicalize stale
    bench/profiling/IAI command surfaces before they are used as close
    evidence.
 2. **O1 transactional builder ABI** — add grammar-general

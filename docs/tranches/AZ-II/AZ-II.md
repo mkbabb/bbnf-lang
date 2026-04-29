@@ -204,7 +204,7 @@ disk as historical record.
 
 | Wave | Headline | Opens after | Status |
 |---|---|---|---|
-| **cutover** | BBNF self-host + tape deletion ([waves/cutover.md](waves/cutover.md)) — original three-stage plan expanded under contact into 14 sub-stages cutover.A through cutover.N | AZ-I.W2-act close (AZ-I FINAL.md committed; seven-point handoff verified) | partial-close (cutover.A→M LANDED; cutover.N halted at usage limit; terminal hardening routes to cutover.O.0-O.7 with builder transactions before EBNF activation) |
+| **cutover** | BBNF self-host + tape deletion ([waves/cutover.md](waves/cutover.md)) — original three-stage plan expanded under contact into 14 sub-stages cutover.A through cutover.N | AZ-I.W2-act close (AZ-I FINAL.md committed; seven-point handoff verified) | partial-close (cutover.A→M LANDED; cutover.N halted at usage limit; cutover.O.0 LANDED; terminal hardening resumes at O1 builder transactions before EBNF activation) |
 
 The cutover wave's actual trajectory across 14 sub-stages is recorded
 in `docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md` (per-substage

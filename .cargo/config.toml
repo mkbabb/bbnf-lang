@@ -161,15 +161,15 @@ iter-clippy           = "clippy --profile ax-iter --workspace --all-targets -- -
 
 # Benches: divan harness (ay-final profile). One cargo invocation per target;
 # divan's per-sample regression check runs inside the harness.
-bench-all             = "bench --profile ay-final --workspace"
-bench-json            = "bench --profile ay-final -p bbnf --bench json_monolithic --bench json_parse_that --bench json_vm --bench json_competitors --bench json_stress --bench json_value"
-bench-css             = "bench --profile ay-final -p bbnf --bench css_l4 --bench css_vm --bench css_competitors --bench css_stress"
+bench-all             = "bench --profile ay-final --workspace --features bbnf/competitor,bbnf/stress,bbnf/vm,bbnf/wasm-bench"
+bench-json            = "bench --profile ay-final -p bbnf --features competitor,stress,vm --bench json_monolithic --bench json_parse_that --bench json_vm --bench json_competitors --bench json_stress --bench json_value"
+bench-css             = "bench --profile ay-final -p bbnf --features competitor,stress,vm --bench css_l4 --bench css_vm --bench css_competitors --bench css_stress"
 bench-bbnf            = "bench --profile ay-final -p bbnf --bench bbnf_monolithic"
-bench-sheets          = "bench --profile ay-final -p bbnf --bench google_sheets_monolithic --bench google_sheets_vm"
+bench-sheets          = "bench --profile ay-final -p bbnf --features vm --bench google_sheets_monolithic --bench google_sheets_vm"
 bench-compile         = "bench --profile ay-final -p bbnf --bench compile_pipeline"
 
 # iai-callgrind (CI-only; requires valgrind on Linux).
-bench-iai             = "bench --profile bench-ci --workspace --features iai"
+bench-iai             = "bench --profile bench-ci -p bbnf --features callgrind --bench json_callgrind"
 
 # B0.W1.a three-tier surface — `prep-bench` and `final-bench` anchor
 # the profiling-prep and publish-grade tiers. Profile definitions live

@@ -14,7 +14,7 @@ BENCHES=(
   css_l4
   google_sheets_monolithic
   bbnf_monolithic
-  json_monolithic_value
+  json_value
 )
 RECORD_PORTS=(
   3130
@@ -39,8 +39,15 @@ bench_source() {
     css_l4)                   echo "benches/css/l4.rs" ;;
     google_sheets_monolithic) echo "benches/google_sheets/monolithic.rs" ;;
     bbnf_monolithic)          echo "benches/bbnf/monolithic.rs" ;;
-    json_monolithic_value)    echo "benches/json/value.rs" ;;
+    json_value)               echo "benches/json/value.rs" ;;
     *) return 1 ;;
+  esac
+}
+
+bench_features() {
+  case "$1" in
+    json_value) echo "competitor" ;;
+    *) echo "" ;;
   esac
 }
 
@@ -58,7 +65,7 @@ entries_for() {
     bbnf_monolithic)
       echo "json ebnf css_pretty google_sheets bbnf_self css_l4_grammar"
       ;;
-    json_monolithic_value)
+    json_value)
       echo "bbnf_data bbnf_twitter bbnf_citm bbnf_canada bbnf_data_xl sonic_data sonic_twitter sonic_citm sonic_canada sonic_data_xl"
       ;;
     *)
@@ -92,7 +99,7 @@ check_port_free() {
 
 # `expand.rs` is fresh when it exists AND is newer than every input that
 # could alter expansion: the bench source, all shape emitter files, and
-# the regenerated `generated.rs`. `find -newer` returns truthy when
+# every regenerated grammar module. `find -newer` returns truthy when
 # `$expand_rs` mtime > `$candidate` mtime; any stale input invalidates
 # the cache. Callers that edit emitter internals re-run expand the next
 # time; unrelated benches stay cached.
@@ -103,19 +110,24 @@ expand_fresh() {
   src_rel="$(bench_source "$bench")" || return 1
   local bench_src="$ROOT/crates/core/$src_rel"
   local shapes_dir="$ROOT/crates/core/src/backend/rust/emitter/shapes"
-  local generated="$ROOT/crates/core/src/grammar/generated.rs"
+  local generated_dir="$ROOT/crates/core/src/grammar/generated"
 
   [[ -s "$expand_rs" ]] || return 1
   [[ -f "$bench_src" ]] || return 1
   [[ -n "$(find "$expand_rs" -newer "$bench_src" 2>/dev/null)" ]] || return 1
-  [[ -f "$generated" ]] || return 1
-  [[ -n "$(find "$expand_rs" -newer "$generated" 2>/dev/null)" ]] || return 1
+  [[ -d "$generated_dir" ]] || return 1
 
   if [[ -d "$shapes_dir" ]]; then
     # Any shape emitter newer than expand.rs invalidates the cache.
     local newer_shape
     newer_shape="$(find "$shapes_dir" -type f -name '*.rs' -newer "$expand_rs" -print -quit 2>/dev/null)"
     [[ -z "$newer_shape" ]] || return 1
+  fi
+  if [[ -d "$generated_dir" ]]; then
+    # Any regenerated grammar file newer than expand.rs invalidates the cache.
+    local newer_generated
+    newer_generated="$(find "$generated_dir" -type f -name '*.rs' -newer "$expand_rs" -print -quit 2>/dev/null)"
+    [[ -z "$newer_generated" ]] || return 1
   fi
   return 0
 }
@@ -137,9 +149,16 @@ for bench in "${BENCHES[@]}"; do
   if expand_fresh "$bench"; then
     printf 'expand: reused %s\n' "$EXPAND_ROOT/$bench/expand.rs"
   else
-    cargo expand -p bbnf --bench "$bench" \
-      > "$EXPAND_ROOT/$bench/expand.rs" \
-      2> "$EXPAND_ROOT/$bench/expand.err"
+    features="$(bench_features "$bench")"
+    if [[ -n "$features" ]]; then
+      cargo expand -p bbnf --features "$features" --bench "$bench" \
+        > "$EXPAND_ROOT/$bench/expand.rs" \
+        2> "$EXPAND_ROOT/$bench/expand.err"
+    else
+      cargo expand -p bbnf --bench "$bench" \
+        > "$EXPAND_ROOT/$bench/expand.rs" \
+        2> "$EXPAND_ROOT/$bench/expand.err"
+    fi
     printf 'expand: regen %s\n' "$EXPAND_ROOT/$bench/expand.rs"
   fi
 done

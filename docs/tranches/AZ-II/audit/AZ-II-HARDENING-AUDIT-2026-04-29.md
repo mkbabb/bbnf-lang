@@ -127,7 +127,7 @@ before declaring terminal close:
 
 B0-B7 delivered the intended runway: pinned nightly, nextest, divan,
 xtask regen, canonical generated source, and broad cross-repo
-modernization. The audit still found proof-surface drift:
+modernization. The pre-O0 audit found proof-surface drift:
 
 - `.cargo/config.toml` bench aliases reach feature-gated benches without
   always enabling the required features.
@@ -143,6 +143,15 @@ modernization. The audit still found proof-surface drift:
   toolchain pin.
 - The AZ-I/AZ-II 17-entry bench matrix is stale; Sheets and CSS close
   artifacts include abort/stack-overflow or placeholder entries.
+
+cutover.O.0 disposition: the command-surface drift above was repaired
+or de-canonicalized before O1. Bench aliases now activate their required
+feature tiers, IAI uses the `callgrind` feature and a tracked compare
+script, profiling prep names `json_value` and checks per-grammar
+generated modules for freshness, the release workflow installs the
+repository toolchain pin, and the legacy `bench_regression.sh` wrapper
+was deleted. This does not refresh the AZ-II performance baseline; O6
+owns fresh JSON/CSS parity and the 17-entry close matrix.
 
 Required close before BB optimization:
 

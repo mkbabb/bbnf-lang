@@ -948,12 +948,12 @@ tranche plan cites invariant 13 explicitly.
 B1 re-anchors the measurement surface. `bencher = "0.1"` produces
 `ns/iter` point estimates that do not model per-parse variance;
 `divan` ships cold-per-parse samples with statistical distribution,
-`--save-baseline` / `--baseline` JSON artefacts, and a `cargo
-bench` UX. The `scripts/bench_regression.sh` script — a 89-line
-Python file with a `.sh` extension that regex-scrapes `cargo
-bench` text output against a JSON baseline — collapses to the
-alias `cargo bench -- --save-baseline current && cargo bench --
---baseline main`. `iai-callgrind` adds instruction-count
+JSON artefacts, and a `cargo bench` UX. The legacy
+`scripts/bench_regression.sh` wrapper — a Python file with a `.sh`
+extension that regex-scraped old `cargo bench` text output against a
+JSON baseline — was deleted in AZ-II `cutover.O.0`; the live surfaces
+are the tiered cargo bench aliases plus close-matrix JSON capture.
+`iai-callgrind` adds instruction-count
 regression gating to CI; wall-clock benches stay on bare metal,
 instruction counts gate the contributor's PR. `feedback_no-warm-benches`
 is enforced: every measurement is cold per-parse; warm/cached

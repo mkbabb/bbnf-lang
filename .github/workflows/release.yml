@@ -35,9 +35,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@nightly
-        with:
-          targets: ${{ matrix.target }}
+      - name: Install repository rust toolchain
+        run: |
+          toolchain="$(awk -F '"' '/^channel =/ { print $2 }' rust-toolchain.toml)"
+          rustup toolchain install "$toolchain" --profile minimal
+          rustup target add --toolchain "$toolchain" ${{ matrix.target }}
+          echo "RUSTUP_TOOLCHAIN=$toolchain" >> "$GITHUB_ENV"
+          rustc --version
 
       - uses: Swatinem/rust-cache@v2
 

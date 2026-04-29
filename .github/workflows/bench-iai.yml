@@ -3,9 +3,6 @@
 # Triggered on pull_request; runs the `json_callgrind` bench under valgrind on
 # a Linux runner and posts the instruction-count delta vs the baseline committed
 # at `docs/benchmarks/iai-baselines/json.json`. Threshold: ±1%.
-#
-# This workflow stays under `docs/tranches/B1/patches/` as a draft until B1.W2.a
-# promotes it to `.github/workflows/bench-iai.yml` (CI land).
 
 name: iai-callgrind regression
 
@@ -47,7 +44,7 @@ jobs:
 
       - name: run iai-callgrind bench on PR branch
         run: |
-          cargo bench --bench json_callgrind --features iai --profile bench-ci \
+          cargo bench -p bbnf --bench json_callgrind --features callgrind --profile bench-ci \
             > /tmp/iai-pr.txt 2>&1
           cat /tmp/iai-pr.txt
 

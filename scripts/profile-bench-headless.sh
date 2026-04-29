@@ -56,12 +56,19 @@ check_port_free() {
 
 resolve_bin() {
   bins=()
-  while IFS= read -r bin; do
-    bins+=("$bin")
-  done < <(
-    find "${CARGO_TARGET_DIR:-$ROOT/target}/release/deps" -maxdepth 1 -type f -perm -111 \
-      -name "$BENCH-*" ! -name '*.d' ! -name '*.dSYM' | sort
-  )
+  for profile_dir in profiling-prep release bench; do
+    local deps="${CARGO_TARGET_DIR:-$ROOT/target}/$profile_dir/deps"
+    [[ -d "$deps" ]] || continue
+    while IFS= read -r bin; do
+      bins+=("$bin")
+    done < <(
+      find "$deps" -maxdepth 1 -type f -perm -111 \
+        -name "$BENCH-*" ! -name '*.d' ! -name '*.dSYM' | sort
+    )
+    if [[ "${#bins[@]}" -gt 0 ]]; then
+      break
+    fi
+  done
   if [[ "${#bins[@]}" -ne 1 ]]; then
     printf 'Could not resolve a unique bench binary for %s\n' "$BENCH" >&2
     printf 'Candidates:\n%s\n' "${bins[*]}" >&2

@@ -1,6 +1,7 @@
 # AZ-II — Progress Log
 
-**Status**: partial close. Implemented-state record:
+**Status**: partial close; `cutover.O.0` landed, O1 next.
+Implemented-state record:
 [`PROGRESS-SNAPSHOT-2026-04-29.md`](PROGRESS-SNAPSHOT-2026-04-29.md).
 Live terminal sequence: `cutover.O.0` through `cutover.O.7`.
 
@@ -90,7 +91,7 @@ The cutover wave runs in three sequential sub-stages:
 | W0 | superseded (2026-04-28) | Folded into cutover.A (substrate hoist + BBNF runtime + decay sweep) |
 | W1 | superseded (2026-04-28) | Folded into cutover.B (Stage A + Stage B byte-equal cycle) |
 | W2 | superseded (2026-04-28) | Folded into cutover.C (`crates/tape/` deletion + recode + FINAL) |
-| cutover | partial-close (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; EBNF activation + Parsed<R> deletion + tape deletion + bench refresh deferred) | 8/9 grammars StructDirect; terminal hardening routes through cutover.O.0-O.7 with builder transactions before EBNF activation ([waves/cutover.md](waves/cutover.md)) |
+| cutover | partial-close (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; cutover.O.0 tooling preflight landed; O1 builder transactions next) | 8/9 grammars StructDirect; terminal hardening routes through cutover.O.1-O.7 with builder transactions before EBNF activation ([waves/cutover.md](waves/cutover.md)) |
 
 ## 2026-04-28 — cutover.G partial close
 
@@ -321,7 +322,7 @@ cross-crate refs).
 
 | Substage | Scope | Estimated cap |
 |---|---|---|
-| cutover.O.0 | Tooling preflight: stale bench aliases, IAI CI, profiling scripts, release pin | 60 min |
+| cutover.O.0 | Tooling preflight: stale bench aliases, IAI CI, profiling scripts, release pin | LANDED |
 | cutover.O.1 | StructDirect builder transaction ABI across speculative branches | 120 min |
 | cutover.O.2 | EBNF diagnosis + generic AltFacts/layout-routing repair | 120 min |
 | cutover.O.3 | Generated tape-view / `ValueRoot` residue purge for StructDirect | 90 min |
@@ -365,3 +366,26 @@ Integrated findings:
 
 Canonical follow-up ledger:
 `docs/tranches/AZ-II/audit/AZ-II-HARDENING-AUDIT-2026-04-29.md`.
+
+## 2026-04-29 — cutover.O.0 tooling preflight
+
+O0 repaired the command surfaces that would otherwise poison terminal
+close evidence:
+
+- Bench aliases now activate the feature tiers required by
+  `json_parse_that`, `json_value`, competitor, stress, VM, and
+  workspace bench surfaces.
+- IAI CI now invokes `json_callgrind` with the `callgrind` feature and
+  consumes a tracked `scripts/iai-compare.sh` instead of a missing
+  helper.
+- Profiling prep now targets `json_value`, carries the required
+  `competitor` feature for that bench, and invalidates expand artifacts
+  against `crates/core/src/grammar/generated/*.rs`.
+- Release CI now installs the repository `rust-toolchain.toml` channel
+  instead of floating `dtolnay/rust-toolchain@nightly`.
+- The obsolete `scripts/bench_regression.sh` wrapper was deleted rather
+  than retained as a second benchmark authority.
+
+No performance or testing baseline was collected in O0 per user
+instruction. O6 still owns JSON sonic-rs parity, CSS lightningcss typed
+parity, and the 17-entry post-AZ-II close matrix.

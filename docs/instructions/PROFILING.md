@@ -123,13 +123,13 @@ cold to seconds.
 
 ## Bench alias surface
 
-**2026-04-29 audit note.** Treat this section as canonical intent, not
-proof that every alias is currently green. The hardening audit found
-drift: feature-gated benches are reachable without their required
-features, `bench-iai.yml` still invokes `json_callgrind` with the old
-`iai` feature, and the profiling prep scripts still reference stale
-bench names. Repair those command surfaces before using them as close
-evidence.
+**2026-04-29 cutover.O.0 note.** The command surface is canonical
+again after O0 repair: aliases activate required feature tiers,
+`bench-iai.yml` uses the `callgrind` feature, profiling prep names the
+current `json_value` bench, and generated-file freshness checks read
+`crates/core/src/grammar/generated/*.rs`. This is command-surface
+repair only; post-AZ-II performance numbers remain stale until O6
+collects fresh close evidence.
 
 Benches ride the `ay-final` profile (release inheriting fat LTO + debug
 1 for samply-resolvable symbols + packed split-debuginfo). Every alias

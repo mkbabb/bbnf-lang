@@ -19,7 +19,7 @@
 .PHONY: all build build-lsp build-lsp-debug build-ext build-wasm dev \
         test test-ci test-close \
         bench bench-json bench-css bench-bbnf bench-sheets bench-compile \
-        profile profile-json profile-css \
+        profile \
         expand expand-bootstrap expand-derive asm \
         regen regen-check iter-grammar \
         ay-expand-json ay-expand-named-type ay-asm-close-compound \
@@ -113,12 +113,6 @@ bench-compile:
 
 profile:
 	./scripts/prepare-profile-wave.sh
-
-profile-json:
-	./scripts/profile-bench-headless.sh --bench json_monolithic
-
-profile-css:
-	./scripts/profile-bench-headless.sh --bench css_l4
 
 # ─── Expand / inspect ────────────────────────────────────────────────────────
 #
@@ -398,4 +392,3 @@ ay-prepare-profile-wave:
 	fi
 	scripts/prepare-profile-wave.sh
 	@echo "prebuilt bench binaries under $(CARGO_TARGET_DIR)/profiling-prep/deps/" >&2
-

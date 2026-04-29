@@ -1,0 +1,153 @@
+# AZ-II.cutover.O3 — Generated View Purge
+**Opens after**: AZ-II.cutover.O2 close
+**Agents**: up to 10 parallel
+**Hard gate**: StructDirect regen emits no tape-backed view, node-view, `ValueRoot`, or `TapeCursor` artifacts except document-owned APIs.
+**Status**: in_progress
+
+## Scope
+
+1. Remove StructDirect generated view emission from the Rust AOT generator and replace it with document-owned projection surfaces that are consumed by runtime tests.
+2. Delete or carve tape-shaped schema view emitters whose only output is `TapeCursor` / node-view / `ValueRoot` code.
+3. Preserve live `Document` APIs for JSON, Sheets, CSS L4, BBNF, CSV, Math, BNF, CSS Pretty, and EBNF without adding compatibility shims.
+4. Refresh generated parser source through a single orchestrator-owned regen window after all emitter edits land.
+5. Add wire-contract tests proving StructDirect parse outputs remain navigable without generated tape views.
+6. Archive the generated-view deletion proof and update AZ-II progress docs at the wave boundary.
+
+## File bounds
+
+| File | Access |
+|---|---|
+| `crates/core/src/backend/rust/emitter/grammar.rs` | modify |
+| `crates/core/src/backend/rust/emitter/mod.rs` | modify |
+| `crates/core/src/backend/rust/view/mod.rs` | modify-carve |
+| `crates/core/src/backend/rust/view/leaves.rs` | modify-carve |
+| `crates/core/src/backend/rust/view/seq.rs` | modify-carve |
+| `crates/core/src/backend/rust/view/value.rs` | modify-carve |
+| `crates/core/src/grammar/schema/emit/rust/mod.rs` | modify-carve |
+| `crates/core/src/grammar/schema/emit/rust/directives.rs` | modify-carve |
+| `crates/core/src/grammar/schema/emit/rust/identifiers.rs` | modify-carve |
+| `crates/core/src/backend/rust/emitter/shapes/value_materialize.rs` | modify-carve |
+| `crates/core/src/runtime/{bbnf,json,css_l4,google_sheets,csv,math,bnf,css_pretty,ebnf}/document.rs` | modify |
+| `crates/core/src/runtime/{bbnf,json,css_l4,google_sheets,csv,math,bnf,css_pretty,ebnf}/mod.rs` | modify |
+| `crates/core/tests/typed_accessor_surface.rs` | modify |
+| `crates/core/tests/projection_totality.rs` | modify |
+| `crates/core/tests/runtime_root.rs` | modify |
+| `crates/core/tests/regen_shape_goldens.rs` | modify |
+| `crates/core/src/grammar/generated/*.rs` | modify |
+| `docs/benchmarks/AZ-II/cutover/O3-generated-view-scan.txt` | create |
+| `docs/tranches/AZ-II/PROGRESS.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover.md` | modify |
+
+**Do NOT touch**: `crates/tape/**`, `crates/core/src/runtime/parsed.rs`, `crates/ir/src/registry/strategy.rs`, `Cargo.toml`, `crates/core/Cargo.toml`, benchmark harnesses. O4/O5 own `Parsed<R>`, `TapeDirect`, and tape crate deletion.
+Deployment invariant: every sub-agent runs in a sibling
+fully-contained worktree seeded with `scripts/seed-worktree.sh`, with
+explicit allow/forbidden lists; only the orchestrator performs final
+fleet regen and generated-source review.
+
+## Phase sub-items
+
+### AZ-II.cutover.O3.1 Generator Admission Gate
+
+Mechanism: make `EmitStrategy::StructDirect` suppress generation of tape-backed view/materializer modules at the top-level Rust AOT emission boundary. The generator must fail if a StructDirect grammar still requests `TapeCursor`-owned output.
+
+Files touched: `crates/core/src/backend/rust/emitter/grammar.rs`, `crates/core/src/backend/rust/emitter/mod.rs`.
+
+Sub-gate: `cargo xtask regen --grammar ebnf` emits an EBNF parser whose parse return is `EbnfDocument` and whose generated source contains no `TapeCursor` / `ValueRoot` symbols.
+
+### AZ-II.cutover.O3.2 Backend View Carve
+
+Mechanism: carve `crates/core/src/backend/rust/view/*` down to APIs that either feed document-owned projections or are deleted. No re-export shim may preserve tape view names.
+
+Files touched: `crates/core/src/backend/rust/view/mod.rs`, `crates/core/src/backend/rust/view/leaves.rs`, `crates/core/src/backend/rust/view/seq.rs`, `crates/core/src/backend/rust/view/value.rs`.
+
+Sub-gate: the module no longer emits or imports `TapeCursor`, `TapeRec`, or `ValueRoot` for StructDirect grammars.
+
+### AZ-II.cutover.O3.3 Schema View Emitter Carve
+
+Mechanism: remove schema-generated `TapeCursor` fields and child accessors from directive and identifier schema emitters, replacing any still-consumed accessor with a document-level method on the owning runtime.
+
+Files touched: `crates/core/src/grammar/schema/emit/rust/mod.rs`, `crates/core/src/grammar/schema/emit/rust/directives.rs`, `crates/core/src/grammar/schema/emit/rust/identifiers.rs`.
+
+Sub-gate: generated schema output does not mention `TapeCursor<'p>`.
+
+### AZ-II.cutover.O3.4 Value Materializer Deletion
+
+Mechanism: remove generated `ValueRoot` / tape materializer emission for StructDirect grammars. If a public `to_value` surface remains, it must read from the concrete `Document` and runtime arena.
+
+Files touched: `crates/core/src/backend/rust/emitter/shapes/value_materialize.rs`.
+
+Sub-gate: `rg 'ValueRoot|TapeCursor' crates/core/src/grammar/generated/*.rs` returns no production StructDirect hits after orchestrator regen.
+
+### AZ-II.cutover.O3.5 Runtime Document Projection Surface
+
+Mechanism: fill any missing document-owned accessors needed by tests or product entry points, using each runtime arena directly. Do not add compatibility wrappers with tape-shaped names.
+
+Files touched: `crates/core/src/runtime/{bbnf,json,css_l4,google_sheets,csv,math,bnf,css_pretty,ebnf}/document.rs`, `crates/core/src/runtime/{bbnf,json,css_l4,google_sheets,csv,math,bnf,css_pretty,ebnf}/mod.rs`.
+
+Sub-gate: existing document parse/accessor tests compile and execute without generated node-view types.
+
+### AZ-II.cutover.O3.6 Typed Accessor Tests
+
+Mechanism: extend typed-accessor and projection-totality tests to call document-owned APIs for EBNF and at least one previously active StructDirect grammar.
+
+Files touched: `crates/core/tests/typed_accessor_surface.rs`, `crates/core/tests/projection_totality.rs`.
+
+Sub-gate: test failure before the runtime accessors are wired; pass after O3 integration.
+
+### AZ-II.cutover.O3.7 Runtime Root Tests
+
+Mechanism: harden root-navigation tests so they assert concrete `Document` root kinds and never instantiate generated node views.
+
+Files touched: `crates/core/tests/runtime_root.rs`.
+
+Sub-gate: `cargo test -p bbnf --profile ax-iter --test runtime_root -- --nocapture` passes.
+
+### AZ-II.cutover.O3.8 Regen Shape Goldens
+
+Mechanism: update regen shape goldens to assert absence of tape-backed generated view residue for all nine grammars.
+
+Files touched: `crates/core/tests/regen_shape_goldens.rs`.
+
+Sub-gate: golden failure names the first generated grammar still carrying tape-view residue.
+
+### AZ-II.cutover.O3.9 Orchestrator Regen Consolidation
+
+Mechanism: after accepted agent commits land, the orchestrator runs one canonical `cargo xtask regen`, reviews generated diffs, and records a scan artifact.
+
+Files touched: `crates/core/src/grammar/generated/*.rs`, `docs/benchmarks/AZ-II/cutover/O3-generated-view-scan.txt`.
+
+Sub-gate: `cargo xtask regen --check` passes after the consolidation commit.
+
+### AZ-II.cutover.O3.10 Progress Boundary
+
+Mechanism: update the AZ-II progress ledger and parent cutover index with O3 close evidence and O4 as the next active wave.
+
+Files touched: `docs/tranches/AZ-II/PROGRESS.md`, `docs/tranches/AZ-II/waves/cutover.md`.
+
+Sub-gate: status lines agree across `PROGRESS.md`, `cutover.md`, and this wave spec.
+
+## Hard gate
+
+1. `docs/benchmarks/AZ-II/cutover/O3-generated-view-scan.txt` records zero `TapeCursor`, generated node-view, and `ValueRoot` hits in StructDirect generated output.
+2. `cargo xtask regen --check` output is archived and clean.
+3. `cargo test -p bbnf --profile ax-iter --test typed_accessor_surface -- --nocapture` passes.
+4. `cargo test -p bbnf --profile ax-iter --test projection_totality -- --nocapture` passes for document-owned APIs.
+5. `cargo test -p bbnf --profile ax-iter --test runtime_root -- --nocapture` passes.
+
+## Verification artefacts
+
+- `/tmp/az-ii-o3-regen-check.txt`
+- `/tmp/az-ii-o3-typed-accessor.txt`
+- `/tmp/az-ii-o3-projection-totality.txt`
+- `/tmp/az-ii-o3-runtime-root.txt`
+- `docs/benchmarks/AZ-II/cutover/O3-generated-view-scan.txt`
+- O3 close commit hashes recorded in `docs/tranches/AZ-II/PROGRESS.md`.
+
+## Dependencies
+
+- **Depends on**: AZ-II.cutover.O2
+- **Blocks**: AZ-II.cutover.O4
+
+## Archaeology
+
+Prior cutover.C revealed generated BBNF node-view residue after StructDirect activation. cutover.O3 differs by deleting the generated view producer before `Parsed<R>` deletion, so O4 does not inherit a mixed generated surface.

@@ -6,6 +6,11 @@
 **Master HEAD at FINAL.md update**: `1d9a80bb` (`docs(az-ii): comprehensive PROGRESS-SNAPSHOT-2026-04-29 — 14 substage trajectory`).
 **Last cutover commit landed**: this O2 close commit (`feat(cutover.O2): activate EBNF StructDirect projection`).
 **Wave document**: [`waves/cutover.md`](waves/cutover.md)
+**O-wave specs**: [`O0`](waves/cutover.O0.md) /
+[`O1`](waves/cutover.O1.md) / [`O2`](waves/cutover.O2.md) /
+[`O3`](waves/cutover.O3.md) / [`O4`](waves/cutover.O4.md) /
+[`O5`](waves/cutover.O5.md) / [`O6`](waves/cutover.O6.md) /
+[`O7`](waves/cutover.O7.md)
 **Parent plan**: [`AZ-II.md`](AZ-II.md)
 **Trajectory snapshot**: [`PROGRESS-SNAPSHOT-2026-04-29.md`](PROGRESS-SNAPSHOT-2026-04-29.md)
 **Implemented-state record**: the snapshot is canonical for cutover.A through cutover.N. Later hardening notes refine cutover.O ordering and record O0/O1 landing; they do not claim cutover.N landed code.
@@ -124,26 +129,26 @@ cutover.N no-code halt recorded by the progress snapshot. Items 1, 2
 (4/5 grammars), 5, 7 LANDED in cutover.K/L/M; remaining work for
 cutover.O:
 
-1. **O0 tooling preflight** — LANDED: stale bench, profiling, IAI, and
+1. **[O0 tooling preflight](waves/cutover.O0.md)** — LANDED: stale bench, profiling, IAI, and
    release-pin surfaces were repaired or de-canonicalized before close
    evidence collection.
-2. **O1 builder transactions** — LANDED: grammar-general
+2. **[O1 builder transactions](waves/cutover.O1.md)** — LANDED: grammar-general
    checkpoint/rollback/commit support exists on StructDirect builders and
    is wired through every speculative alternate/repeat/minus/negate
    emitter path.
-3. **O2 EBNF activation** — LANDED: high-branch literal alternates
+3. **[O2 EBNF activation](waves/cutover.O2.md)** — LANDED: high-branch literal alternates
    and structural `Seq` AltDispatch branches project through
    StructDirect; `EbnfParser::parse -> EbnfDocument`.
-4. **O3 generated view purge** — ACTIVE: remove tape-backed `TapeCursor`,
+4. **[O3 generated view purge](waves/cutover.O3.md)** — in_progress: remove tape-backed `TapeCursor`,
    node-view, and `ValueRoot` residue from StructDirect generated output
    unless consumed through a document API.
-5. **O4 `Parsed<R>` / `TapeDirect` deletion** — delete production
+5. **[O4 `Parsed<R>` / `TapeDirect` deletion](waves/cutover.O4.md)** — delete production
    `Parsed<R>` and remove fallback `TapeDirect` semantics.
-6. **O5 `crates/tape` deletion** — delete the standalone crate after
+6. **[O5 `crates/tape` deletion](waves/cutover.O5.md)** — delete the standalone crate after
    relocating only non-tape scan/index primitives.
-7. **O6 semantic/perf close** — refresh JSON sonic-rs parity, CSS
+7. **[O6 semantic/perf close](waves/cutover.O6.md)** — refresh JSON sonic-rs parity, CSS
    lightningcss typed parity, and the 17-entry close matrix.
-8. **O7 FINAL conversion** — convert this manifest from PARTIAL CLOSE to
+8. **[O7 FINAL conversion](waves/cutover.O7.md)** — convert this manifest from PARTIAL CLOSE to
    terminal close.
 
 Remaining estimate after O2: ~7 hours sequential under fan-out. Open

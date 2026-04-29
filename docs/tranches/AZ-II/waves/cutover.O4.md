@@ -1,0 +1,149 @@
+# AZ-II.cutover.O4 — Parsed and TapeDirect Deletion
+**Opens after**: AZ-II.cutover.O3 close
+**Agents**: up to 10 parallel
+**Hard gate**: Production code has no `Parsed<R>` return surface and no `TapeDirect` fallback strategy.
+**Status**: planned
+
+## Scope
+
+1. Delete `Parsed<R>` as a production parser return model after O3 removes generated tape-view consumers.
+2. Remove `TapeDirect` fallback semantics from `EmitStrategy`; unknown production grammars fail generation loudly.
+3. Convert emitter function signatures away from `TapeOffset`-typed production control flow where StructDirect returns `()`.
+4. Recode tests, examples, and benches that still name `Parsed` onto concrete `Document` APIs or move them to O5 deletion if they are tape-only.
+5. Run one orchestrator-owned regen consolidation and assert every generated `parse` returns a concrete document.
+
+## File bounds
+
+| File | Access |
+|---|---|
+| `crates/ir/src/registry/strategy.rs` | modify-carve |
+| `crates/core/src/runtime/parsed.rs` | delete |
+| `crates/core/src/runtime/mod.rs` | modify |
+| `crates/core/src/grammar/mod.rs` | modify |
+| `crates/core/src/backend/rust/emitter/grammar.rs` | modify |
+| `crates/core/src/backend/rust/ir_types.rs` | modify |
+| `crates/core/src/backend/rust/emitter/shapes/dispatcher/*.rs` | modify |
+| `crates/core/src/backend/rust/emitter/shapes/{alt_dispatch,keyword,flat,wrap,pratt,array}/**/*.rs` | modify |
+| `crates/core/src/backend/rust/emitter/shapes/{arglist,object,number,string,scalar,hregex,unordered}.rs` | modify |
+| `crates/core/benches/json/value.rs` | modify |
+| `crates/core/benches/common/validate.rs` | modify |
+| `crates/core/examples/json_check.rs` | modify |
+| `crates/core/tests/{ay_w3b_value_api_smoke,emit_strategy,pipeline,projection_totality,regen_shape_goldens,runtime_root,typed_accessor_surface}.rs` | modify |
+| `crates/core/src/grammar/generated/*.rs` | modify |
+| `docs/benchmarks/AZ-II/cutover/O4-parsed-tapedirect-scan.txt` | create |
+| `docs/tranches/AZ-II/PROGRESS.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover.md` | modify |
+
+**Do NOT touch**: `crates/tape/**`, workspace manifests, `crates/core/Cargo.toml`, sibling repos, benchmark result JSON. O5 owns tape crate deletion; O6 owns benchmark truth.
+Deployment invariant: every sub-agent runs in a sibling
+fully-contained worktree seeded with `scripts/seed-worktree.sh`, with
+explicit allow/forbidden lists; only the orchestrator performs final
+fleet regen and generated-source review.
+
+## Phase sub-items
+
+### AZ-II.cutover.O4.1 Strategy Closure
+
+Mechanism: replace the default `_ => EmitStrategy::TapeDirect` with a generation error for unknown production grammars, then delete `TapeDirect` from live strategy selection.
+
+Files touched: `crates/ir/src/registry/strategy.rs`.
+
+Sub-gate: `cargo test -p bbnf --profile ax-iter --test emit_strategy -- --nocapture` proves all nine production grammars resolve StructDirect and unknown production grammar selection fails loudly.
+
+### AZ-II.cutover.O4.2 Runtime Parsed Deletion
+
+Mechanism: delete `runtime/parsed.rs` and remove `Parsed` exports. Callers must use concrete `Document` types.
+
+Files touched: `crates/core/src/runtime/parsed.rs`, `crates/core/src/runtime/mod.rs`.
+
+Sub-gate: `rg '\bParsed\b' crates/core/src/runtime crates/core/src/grammar --type rust` returns no production hits.
+
+### AZ-II.cutover.O4.3 Public Grammar API
+
+Mechanism: update public grammar entry points and docs to return concrete documents or grammar-specific results. No `parse_dta` or fallback entry is allowed.
+
+Files touched: `crates/core/src/grammar/mod.rs`.
+
+Sub-gate: public parse tests compile without importing `Parsed`.
+
+### AZ-II.cutover.O4.4 Parse Return Emitter
+
+Mechanism: remove production `Parsed::new` emission and make every generated `parse` signature document-returning.
+
+Files touched: `crates/core/src/backend/rust/emitter/grammar.rs`.
+
+Sub-gate: `rg 'Parsed::new|Parsed<' crates/core/src/grammar/generated/*.rs` returns zero after orchestrator regen.
+
+### AZ-II.cutover.O4.5 Return-Type Substrate
+
+Mechanism: retire `Option<TapeOffset>` / `TapeOffset` as the generic production return model where only StructDirect remains.
+
+Files touched: `crates/core/src/backend/rust/ir_types.rs`.
+
+Sub-gate: generated StructDirect parse functions compile without a tape return payload.
+
+### AZ-II.cutover.O4.6 Dispatcher and Cross-Shape Calls
+
+Mechanism: normalize cross-shape dispatcher helpers around StructDirect return semantics and remove TapeDirect branches.
+
+Files touched: `crates/core/src/backend/rust/emitter/shapes/dispatcher/*.rs`.
+
+Sub-gate: direct cross-shape tests still pass after O4.4 return changes.
+
+### AZ-II.cutover.O4.7 Compound Shape Emitters
+
+Mechanism: update AltDispatch, Keyword, Flat, Wrap, Pratt, and Array shape families so their production StructDirect paths do not depend on `TapeOffset` control payloads.
+
+Files touched: `crates/core/src/backend/rust/emitter/shapes/{alt_dispatch,keyword,flat,wrap,pratt,array}/**/*.rs`.
+
+Sub-gate: `cargo check -p bbnf --lib --profile ax-iter` passes after orchestrator regen.
+
+### AZ-II.cutover.O4.8 Leaf and Misc Shape Emitters
+
+Mechanism: update ArgList, Object, Number, String, Scalar, HRegex, and Unordered shape emitters to the same StructDirect-only production contract.
+
+Files touched: `crates/core/src/backend/rust/emitter/shapes/{arglist,object,number,string,scalar,hregex,unordered}.rs`.
+
+Sub-gate: shape-specific emission tests compile and pass.
+
+### AZ-II.cutover.O4.9 Tests, Benches, and Examples
+
+Mechanism: recode `Parsed` call sites in tests, value benches, validation helpers, and examples to concrete document APIs. Tape-only call sites that cannot survive without tape are recorded for O5 deletion, not shimmed.
+
+Files touched: `crates/core/benches/json/value.rs`, `crates/core/benches/common/validate.rs`, `crates/core/examples/json_check.rs`, `crates/core/tests/{ay_w3b_value_api_smoke,emit_strategy,pipeline,projection_totality,regen_shape_goldens,runtime_root,typed_accessor_surface}.rs`.
+
+Sub-gate: `rg '\bParsed\b' crates/core --type rust -g '!crates/core/src/grammar/generated/*.rs'` returns zero production hits outside historical comments marked for O5.
+
+### AZ-II.cutover.O4.10 Orchestrator Regen and Progress
+
+Mechanism: run canonical regen once after accepted edits, archive the `Parsed` / `TapeDirect` scan, and update progress docs.
+
+Files touched: `crates/core/src/grammar/generated/*.rs`, `docs/benchmarks/AZ-II/cutover/O4-parsed-tapedirect-scan.txt`, `docs/tranches/AZ-II/PROGRESS.md`, `docs/tranches/AZ-II/waves/cutover.md`.
+
+Sub-gate: `cargo xtask regen --check` passes and the scan artifact records zero production `Parsed` / `TapeDirect` hits.
+
+## Hard gate
+
+1. `docs/benchmarks/AZ-II/cutover/O4-parsed-tapedirect-scan.txt` records zero production `Parsed<R>`, `Parsed::new`, and `TapeDirect` hits outside historical docs.
+2. `cargo xtask regen --check` output is archived and clean.
+3. `cargo check -p bbnf --lib --profile ax-iter` passes.
+4. `cargo test -p bbnf --profile ax-iter --test emit_strategy -- --nocapture` passes.
+5. `cargo test -p bbnf --profile ax-iter --test typed_accessor_surface -- --nocapture` passes.
+
+## Verification artefacts
+
+- `/tmp/az-ii-o4-cargo-check.txt`
+- `/tmp/az-ii-o4-regen-check.txt`
+- `/tmp/az-ii-o4-emit-strategy.txt`
+- `/tmp/az-ii-o4-typed-accessor.txt`
+- `docs/benchmarks/AZ-II/cutover/O4-parsed-tapedirect-scan.txt`
+- O4 close commit hashes recorded in `docs/tranches/AZ-II/PROGRESS.md`.
+
+## Dependencies
+
+- **Depends on**: AZ-II.cutover.O3
+- **Blocks**: AZ-II.cutover.O5
+
+## Archaeology
+
+cutover.H and cutover.M deferred `Parsed<R>` deletion because EBNF and generated tape views were still live. O4 opens only after O2 and O3 remove those blockers, so it deletes the return model instead of adding an adapter.

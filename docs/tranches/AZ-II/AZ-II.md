@@ -32,6 +32,9 @@ landed. The active resume point is O3: purge generated tape-view
 residue from StructDirect output, then delete `Parsed<R>` and
 `TapeDirect`, delete the standalone tape crate, and refresh semantic
 parity/performance truth.
+Each O substage is now specified as a dispatchable wave under
+`waves/cutover.O0.md` through `waves/cutover.O7.md`, with up to 10
+parallel sibling worktree agents and explicit file bounds.
 
 AZ-III opens only if the EBNF blocker is proven to require new
 grammar-general inference/layout machinery spanning node facts,
@@ -195,7 +198,7 @@ the primary grammars on the struct substrate.
 
 ## Wave structure
 
-**Wave plan refined 2026-04-28** per six-agent audit synthesis at
+**Wave plan refined 2026-04-28** per audit synthesis at
 `docs/tranches/AZ-I/audit/W2-CLOSE-AUDIT.md` §9. The original W0 / W1 /
 W2 three-wave plan collapses into a single **AZ-II.cutover** wave —
 the W2-act activation pattern is reusable for BBNF without further
@@ -206,7 +209,7 @@ disk as historical record.
 
 | Wave | Headline | Opens after | Status |
 |---|---|---|---|
-| **cutover** | BBNF self-host + tape deletion ([waves/cutover.md](waves/cutover.md)) — original three-stage plan expanded under contact into 14 sub-stages cutover.A through cutover.N | AZ-I.W2-act close (AZ-I FINAL.md committed; seven-point handoff verified) | partial-close (cutover.A→M LANDED; cutover.N halted at usage limit; cutover.O.0/O1/O2 LANDED; terminal hardening resumes at O3 generated view purge) |
+| **cutover** | BBNF self-host + tape deletion ([waves/cutover.md](waves/cutover.md)) — original three-stage plan expanded under contact into 14 sub-stages cutover.A through cutover.N, then O0-O7 child specs | AZ-I.W2-act close (AZ-I FINAL.md committed; seven-point handoff verified) | partial-close (cutover.A→M LANDED; cutover.N halted at usage limit; [O0](waves/cutover.O0.md)/[O1](waves/cutover.O1.md)/[O2](waves/cutover.O2.md) LANDED; terminal hardening resumes at [O3 generated view purge](waves/cutover.O3.md)) |
 
 The cutover wave's actual trajectory across 14 sub-stages is recorded
 in `docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md` (per-substage
@@ -229,6 +232,17 @@ history). Per-substage scope-reveal reports archived under
 | cutover.L | keyword-shape Alt-of-Ref handler | LANDED |
 | cutover.M | non-BBNF resolver arms (CSV/Math/BNF/CSS Pretty); AltDispatch struct_direct surgery | LANDED |
 | cutover.N | EBNF activation + Phases 4/5/6 close | dispatched + halted at usage limit; routed to cutover.O; O0/O1/O2 now landed and O3 generated view purge is next |
+
+| O spec | Headline | Status |
+|---|---|---|
+| [cutover.O0](waves/cutover.O0.md) | Tooling preflight | LANDED |
+| [cutover.O1](waves/cutover.O1.md) | StructDirect builder transactions | LANDED |
+| [cutover.O2](waves/cutover.O2.md) | EBNF direct projection | LANDED |
+| [cutover.O3](waves/cutover.O3.md) | Generated view purge | in_progress |
+| [cutover.O4](waves/cutover.O4.md) | `Parsed<R>` / `TapeDirect` deletion | planned |
+| [cutover.O5](waves/cutover.O5.md) | `crates/tape` deletion | planned |
+| [cutover.O6](waves/cutover.O6.md) | Semantic/performance close | planned |
+| [cutover.O7](waves/cutover.O7.md) | FINAL conversion | planned |
 
 ### W0 — Research + cutover design + classifier extension
 

@@ -93,18 +93,20 @@ cherry-pick was reviewed for compile + nextest health before landing.
 cutover.N's intended deletion + bench close remains open after O2 EBNF
 activation, and the post-snapshot hardening audit refines the order.
 `cutover.O` is the terminal AZ-II wave and must close these gates in
-sequence:
+sequence. Each row now has a dispatchable wave spec under
+`docs/tranches/AZ-II/waves/` and may use up to 10 parallel
+fully-contained sibling worktrees inside the row's file bounds:
 
 | Substage | Scope | Required outcome |
 |---|---|---|
-| O0 | Tooling preflight | LANDED — stale bench aliases, IAI CI, profiling scripts, and release pin repaired or explicitly de-canonicalized before close evidence is collected |
-| O1 | StructDirect builder transactions | LANDED — grammar-general checkpoint/rollback/commit support wired through speculative alternate/repeat/minus/negate emitter paths and runtime builders |
-| O2 | EBNF direct projection | LANDED — high-branch literal alternates and structural `Seq` branches project through StructDirect; `EbnfParser::parse -> EbnfDocument` |
-| O3 | Generated view purge | ACTIVE — tape-backed `TapeCursor`, node-view, and `ValueRoot` residue removed from StructDirect generated output unless consumed through a document API |
-| O4 | `Parsed<R>` / `TapeDirect` deletion | `Parsed<R>` removed as a production parser result; `TapeDirect` fallback semantics removed |
-| O5 | `crates/tape` deletion | standalone tape crate deleted after only genuinely non-tape scan/index primitives move to their natural owner |
-| O6 | semantic/perf close | JSON sonic-rs parity, CSS lightningcss typed parity, and the 17-entry close matrix refreshed |
-| O7 | final conversion | `FINAL.md` converted from PARTIAL CLOSE to terminal close |
+| [O0](waves/cutover.O0.md) | Tooling preflight | LANDED — stale bench aliases, IAI CI, profiling scripts, and release pin repaired or explicitly de-canonicalized before close evidence is collected |
+| [O1](waves/cutover.O1.md) | StructDirect builder transactions | LANDED — grammar-general checkpoint/rollback/commit support wired through speculative alternate/repeat/minus/negate emitter paths and runtime builders |
+| [O2](waves/cutover.O2.md) | EBNF direct projection | LANDED — high-branch literal alternates and structural `Seq` branches project through StructDirect; `EbnfParser::parse -> EbnfDocument` |
+| [O3](waves/cutover.O3.md) | Generated view purge | in_progress — tape-backed `TapeCursor`, node-view, and `ValueRoot` residue removed from StructDirect generated output unless consumed through a document API |
+| [O4](waves/cutover.O4.md) | `Parsed<R>` / `TapeDirect` deletion | `Parsed<R>` removed as a production parser result; `TapeDirect` fallback semantics removed |
+| [O5](waves/cutover.O5.md) | `crates/tape` deletion | standalone tape crate deleted after only genuinely non-tape scan/index primitives move to their natural owner |
+| [O6](waves/cutover.O6.md) | semantic/perf close | JSON sonic-rs parity, CSS lightningcss typed parity, and the 17-entry close matrix refreshed |
+| [O7](waves/cutover.O7.md) | final conversion | `FINAL.md` converted from PARTIAL CLOSE to terminal close |
 
 The EBNF failure remains structural and generic. Per cutover.M's
 deviation note, EBNF's `letter = "A" | "B" | ... | "z"` 52-branch

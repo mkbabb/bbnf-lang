@@ -1,0 +1,190 @@
+# AZ-II.cutover.O2 — EBNF Direct Projection
+**Opens after**: AZ-II.cutover.O1 close
+**Agents**: up to 10 parallel
+**Hard gate**: EBNF routes through StructDirect and `EbnfParser::parse` returns `EbnfDocument` with structural branch projection intact.
+**Status**: complete
+
+## Scope
+
+1. Flip the EBNF resolver arm to `StructDirect` with
+   `EbnfStructBuilder` and `EbnfDocument`.
+2. Repair high-branch literal alternate routing generically through
+   StructDirect AltDispatch, not through an EBNF carveout.
+3. Add a shared StructDirect structural `Seq` branch walker and consume
+   it from both Keyword and AltDispatch emitters.
+4. Preserve nested children and branch tags transactionally for grouped
+   EBNF terms such as `{ digit }`, `[ rhs ]`, and `( rhs )`.
+5. Refresh the affected generated fleet and prove regen idempotence.
+6. Extend tests so EBNF parse, serialize, and typed accessors fail if
+   the resolver silently falls back to tape.
+
+## File bounds
+
+| File | Access |
+|---|---|
+| `crates/ir/src/registry/strategy.rs` | modify |
+| `crates/core/src/backend/rust/emitter/shapes/inline/mod.rs` | modify |
+| `crates/core/src/backend/rust/emitter/shapes/inline/structural_branch.rs` | modify |
+| `crates/core/src/backend/rust/emitter/shapes/keyword/struct_direct.rs` | modify |
+| `crates/core/src/backend/rust/emitter/shapes/alt_dispatch/branches.rs` | modify |
+| `crates/core/tests/ebnf_prettify.rs` | modify |
+| `crates/core/tests/serialize_roundtrip.rs` | modify |
+| `crates/core/tests/typed_accessor_surface.rs` | modify |
+| `crates/core/tests/emit_strategy.rs` | modify |
+| `crates/core/src/grammar/generated/{bbnf,css_l4,ebnf,google_sheets}.rs` | modify |
+| `docs/tranches/AZ-II/PROGRESS.md` | modify |
+| `docs/tranches/AZ-II/waves/cutover.md` | modify |
+
+**Do NOT touch**: generated view deletion, `Parsed<R>`, `TapeDirect`,
+`crates/tape/**`, benchmark result JSON, or close-matrix scripts. O3,
+O4, O5, and O6 own those surfaces respectively.
+Deployment invariant: every sub-agent runs in a sibling
+fully-contained worktree seeded with `scripts/seed-worktree.sh`, with
+explicit allow/forbidden lists; the orchestrator owns final regen and
+cross-grammar generated-source review.
+
+## Phase sub-items
+
+### AZ-II.cutover.O2.1 Resolver Arm Flip
+
+Mechanism: route `EbnfParser` / `EbnfGrammar` through
+`EmitStrategy::StructDirect` with `EbnfStructBuilder` and
+`EbnfDocument` binding paths.
+
+Files touched: `crates/ir/src/registry/strategy.rs`.
+
+Sub-gate: `emit_strategy` tests prove EBNF no longer resolves to
+`TapeDirect`.
+
+### AZ-II.cutover.O2.2 Structural Seq Export
+
+Mechanism: expose a shared inline StructDirect structural branch walker
+for `Seq` branches.
+
+Files touched: `crates/core/src/backend/rust/emitter/shapes/inline/mod.rs`,
+`crates/core/src/backend/rust/emitter/shapes/inline/structural_branch.rs`.
+
+Sub-gate: the helper can be called by more than one shape family without
+duplicating EBNF-specific logic.
+
+### AZ-II.cutover.O2.3 Structural Seq Transaction Semantics
+
+Mechanism: make the shared walker checkpoint the builder before branch
+attempts, rollback on failed child matches, and commit only after the
+whole structural branch succeeds.
+
+Files touched:
+`crates/core/src/backend/rust/emitter/shapes/inline/structural_branch.rs`.
+
+Sub-gate: failed grouped-term attempts leave no partial EBNF children or
+branch tags.
+
+### AZ-II.cutover.O2.4 Keyword Shape Consumption
+
+Mechanism: replace keyword-local structural branch handling with the
+shared walker.
+
+Files touched:
+`crates/core/src/backend/rust/emitter/shapes/keyword/struct_direct.rs`.
+
+Sub-gate: keyword structural branch tests and CSS L4 focused smokes
+still pass.
+
+### AZ-II.cutover.O2.5 AltDispatch Structural Seq Consumption
+
+Mechanism: route AltDispatch `Seq` branches through the shared walker
+and preserve nested structural children instead of dropping them.
+
+Files touched:
+`crates/core/src/backend/rust/emitter/shapes/alt_dispatch/branches.rs`.
+
+Sub-gate: generated EBNF grouped terms build the expected document
+shape.
+
+### AZ-II.cutover.O2.6 High-Branch Literal Alternate Check
+
+Mechanism: verify the existing literal AltDispatch path can handle
+EBNF's `letter`, `digit`, and `symbol` alternates under StructDirect
+with branch tags.
+
+Files touched:
+`crates/core/src/backend/rust/emitter/shapes/alt_dispatch/branches.rs`,
+`crates/core/tests/ebnf_prettify.rs`.
+
+Sub-gate: focused EBNF parse/prettify tests cover high-branch literal
+alternates without tape fallback.
+
+### AZ-II.cutover.O2.7 EBNF Serialize Roundtrip
+
+Mechanism: ensure the EBNF document path is exercised through
+serialize/roundtrip tests.
+
+Files touched: `crates/core/tests/serialize_roundtrip.rs`.
+
+Sub-gate: `cargo test -p bbnf --profile ax-iter --test serialize_roundtrip ebnf_rule -- --nocapture`
+passes.
+
+### AZ-II.cutover.O2.8 EBNF Typed Accessors
+
+Mechanism: assert compile-time accessors over `EbnfDocument` so parse
+success alone is not enough to close O2.
+
+Files touched: `crates/core/tests/typed_accessor_surface.rs`.
+
+Sub-gate: `cargo test -p bbnf --profile ax-iter --test typed_accessor_surface ebnf_compile_time_accessors -- --nocapture`
+passes.
+
+### AZ-II.cutover.O2.9 Orchestrator Regen
+
+Mechanism: run canonical regen after accepted emitter/resolver changes;
+review generated diffs for EBNF and affected neighbouring grammars.
+
+Files touched:
+`crates/core/src/grammar/generated/{bbnf,css_l4,ebnf,google_sheets}.rs`.
+
+Sub-gate: `cargo xtask regen --check` passes across the full
+nine-grammar fleet.
+
+### AZ-II.cutover.O2.10 Progress Boundary
+
+Mechanism: record O2 as landed, declare 9/9 grammars StructDirect, and
+make O3 generated view purge the active next gate.
+
+Files touched: `docs/tranches/AZ-II/PROGRESS.md`,
+`docs/tranches/AZ-II/waves/cutover.md`.
+
+Sub-gate: `PROGRESS.md`, `FINAL.md`, `AZ-II.md`, and this wave spec
+agree that EBNF is no longer TapeDirect.
+
+## Hard gate
+
+1. `EbnfParser::parse` returns `EbnfDocument<'_>`.
+2. `cargo check -p bbnf --lib --profile ax-iter` passes.
+3. Focused EBNF parse/prettify, serialize roundtrip, and typed-accessor
+   tests pass.
+4. `cargo test -p bbnf --profile ax-iter --test emit_strategy -- --nocapture`
+   proves all nine production grammars resolve StructDirect.
+5. `cargo xtask regen --check` passes with EBNF generated output on the
+   StructDirect path.
+
+## Verification artefacts
+
+- `/tmp/az-ii-o2-cargo-check.txt`
+- `/tmp/az-ii-o2-ebnf-prettify.txt`
+- `/tmp/az-ii-o2-ebnf-roundtrip.txt`
+- `/tmp/az-ii-o2-typed-accessor.txt`
+- `/tmp/az-ii-o2-emit-strategy.txt`
+- `/tmp/az-ii-o2-regen-check.txt`
+- O2 close commit hashes recorded in `docs/tranches/AZ-II/PROGRESS.md`.
+
+## Dependencies
+
+- **Depends on**: AZ-II.cutover.O1
+- **Blocks**: AZ-II.cutover.O3
+
+## Archaeology
+
+cutover.M's EBNF attempt failed on high-branch literal alternates and
+structural grouping because the AltDispatch StructDirect path did not
+route nested `Seq` children through builder layouts. O2 closes that as
+a shared emitter repair consumed by multiple shape families.

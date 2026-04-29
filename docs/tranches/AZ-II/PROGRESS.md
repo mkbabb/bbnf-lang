@@ -4,7 +4,9 @@
 `cutover.O.2` landed, O3 next.
 Implemented-state record:
 [`PROGRESS-SNAPSHOT-2026-04-29.md`](PROGRESS-SNAPSHOT-2026-04-29.md).
-Live terminal sequence: `cutover.O.0` through `cutover.O.7`.
+Live terminal sequence: `cutover.O.0` through `cutover.O.7`, specified
+for dispatch at [`waves/cutover.O0.md`](waves/cutover.O0.md) through
+[`waves/cutover.O7.md`](waves/cutover.O7.md).
 
 **Date**: 2026-04-23
 
@@ -92,7 +94,7 @@ The cutover wave runs in three sequential sub-stages:
 | W0 | superseded (2026-04-28) | Folded into cutover.A (substrate hoist + BBNF runtime + decay sweep) |
 | W1 | superseded (2026-04-28) | Folded into cutover.B (Stage A + Stage B byte-equal cycle) |
 | W2 | superseded (2026-04-28) | Folded into cutover.C (`crates/tape/` deletion + recode + FINAL) |
-| cutover | partial-close (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; cutover.O.0 tooling preflight, O1 builder transactions, and O2 EBNF direct projection landed; O3 generated view purge next) | 9/9 grammars StructDirect; terminal hardening routes through cutover.O.3-O.7 after transactional StructDirect rollback support and EBNF activation ([waves/cutover.md](waves/cutover.md)) |
+| cutover | partial-close (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; [O0](waves/cutover.O0.md) tooling preflight, [O1](waves/cutover.O1.md) builder transactions, and [O2](waves/cutover.O2.md) EBNF direct projection landed; [O3](waves/cutover.O3.md) generated view purge next) | 9/9 grammars StructDirect; terminal hardening routes through [cutover.O3-O7](waves/cutover.md) after transactional StructDirect rollback support and EBNF activation |
 
 ## 2026-04-28 — cutover.G partial close
 
@@ -324,23 +326,23 @@ cross-crate refs).
 
 | Substage | Scope | Estimated cap |
 |---|---|---|
-| cutover.O.0 | Tooling preflight: stale bench aliases, IAI CI, profiling scripts, release pin | LANDED |
-| cutover.O.1 | StructDirect builder transaction ABI across speculative branches | LANDED |
-| cutover.O.2 | EBNF diagnosis + generic AltDispatch structural-Seq repair | LANDED |
-| cutover.O.3 | Generated tape-view / `ValueRoot` residue purge for StructDirect | 90 min |
-| cutover.O.4 | `Parsed<R>` deletion and `TapeDirect` fallback removal | 90 min |
-| cutover.O.5 | `crates/tape` deletion after relocating non-tape scan/index primitives | 120 min |
-| cutover.O.6 | 17-entry close matrix + JSON sonic-rs / CSS lightningcss parity refresh | 90 min |
-| cutover.O.7 | AZ-II FINAL.md PARTIAL → FINAL CLOSE conversion | 30 min |
+| [cutover.O.0](waves/cutover.O0.md) | Tooling preflight: stale bench aliases, IAI CI, profiling scripts, release pin | LANDED |
+| [cutover.O.1](waves/cutover.O1.md) | StructDirect builder transaction ABI across speculative branches | LANDED |
+| [cutover.O.2](waves/cutover.O2.md) | EBNF diagnosis + generic AltDispatch structural-Seq repair | LANDED |
+| [cutover.O.3](waves/cutover.O3.md) | Generated tape-view / `ValueRoot` residue purge for StructDirect | 90 min |
+| [cutover.O.4](waves/cutover.O4.md) | `Parsed<R>` deletion and `TapeDirect` fallback removal | 90 min |
+| [cutover.O.5](waves/cutover.O5.md) | `crates/tape` deletion after relocating non-tape scan/index primitives | 120 min |
+| [cutover.O.6](waves/cutover.O6.md) | 17-entry close matrix + JSON sonic-rs / CSS lightningcss parity refresh | 90 min |
+| [cutover.O.7](waves/cutover.O7.md) | AZ-II FINAL.md PARTIAL -> FINAL CLOSE conversion | 30 min |
 
 Remaining estimate after O2: ~7 hours sequential under fan-out. If a
 later gate requires a new grammar-general inference/layout substrate,
 author AZ-III for that substrate only; do not move tape deletion,
 `Parsed<R>` deletion, stale benches, or parity gaps into AZ-III.
 
-## 2026-04-29 — Six-lane hardening audit
+## 2026-04-29 — Parallel hardening audit
 
-Six parallel audit lanes reviewed B0-B7, AY-AZ-II, instructions,
+Parallel audit lanes reviewed B0-B7, AY-AZ-II, instructions,
 gestalt, remaining trajectory, risk/perf, meta-audit, codegen paths,
 the last 1200 commits, and current implementation wiring.
 

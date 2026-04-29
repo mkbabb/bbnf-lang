@@ -1,7 +1,7 @@
 # AZ-II Hardening Audit - 2026-04-29
 
 Status: live coordination ledger for resuming AZ-II. This document
-folds the six-lane audit of B0-B7, AY-AZ-II, docs/instructions,
+folds the parallel audit of B0-B7, AY-AZ-II, docs/instructions,
 gestalt, remaining trajectory, risk/perf, meta-audit, and codegen paths
 back into one current plan.
 
@@ -206,26 +206,28 @@ Primary references used for this direction:
 
 ## cutover.O Plan
 
-`cutover.O` should stay inside AZ-II and close these gates in order:
+`cutover.O` should stay inside AZ-II and close these gates in order.
+Each row is now a dispatch-ready wave spec with up to 10 parallel
+fully-contained sibling worktree agents and explicit file bounds:
 
-1. **O0 - Tooling preflight.** LANDED: stale bench aliases/scripts/IAI
+1. **[O0 - Tooling preflight](../waves/cutover.O0.md).** LANDED: stale bench aliases/scripts/IAI
    CI were fixed or marked noncanonical before using them for close
    evidence.
-2. **O1 - Builder transactions.** LANDED: shared speculative builder
+2. **[O1 - Builder transactions](../waves/cutover.O1.md).** LANDED: shared speculative builder
    ABI is wired through StructDirect speculative emission sites.
-3. **O2 - EBNF generalization.** LANDED: shared structural
+3. **[O2 - EBNF generalization](../waves/cutover.O2.md).** LANDED: shared structural
    AltDispatch emission flips EBNF to `EbnfDocument`.
-4. **O3 - Generated view purge.** ACTIVE: stop emitting tape-backed view and
+4. **[O3 - Generated view purge](../waves/cutover.O3.md).** in_progress: stop emitting tape-backed view and
    `ValueRoot` materializer artifacts for StructDirect grammars unless
    they are consumed through a document API.
-5. **O4 - Parsed/TapeDirect deletion.** Remove `Parsed<R>` as a
+5. **[O4 - Parsed/TapeDirect deletion](../waves/cutover.O4.md).** Remove `Parsed<R>` as a
    production parser result and delete `TapeDirect` fallback semantics.
-6. **O5 - Tape crate deletion.** Remove `crates/tape` after relocating
+6. **[O5 - Tape crate deletion](../waves/cutover.O5.md).** Remove `crates/tape` after relocating
    only non-tape scan/index primitives to their natural owner.
-7. **O6 - Bench/parity close.** Refresh the 17-entry matrix, JSON
+7. **[O6 - Bench/parity close](../waves/cutover.O6.md).** Refresh the 17-entry matrix, JSON
    `sonic-rs` parity, CSS `lightningcss` typed parity, and publish the
    terminal `post-AZ-II.json`.
-8. **O7 - Final conversion.** Convert AZ-II FINAL from PARTIAL CLOSE to
+8. **[O7 - Final conversion](../waves/cutover.O7.md).** Convert AZ-II FINAL from PARTIAL CLOSE to
    terminal close only after the gates above pass.
 
 BA and BB remain blocked on the terminal close. BB.scaffold may exist,

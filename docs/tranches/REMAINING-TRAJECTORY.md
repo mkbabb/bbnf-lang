@@ -19,8 +19,8 @@ cargo bench gate). The per-shape pattern proven at W2 (inline
 `StructLayout` literal + fully-qualified trait calls + dispatcher
 signature parameterized by strategy + `<'p>` lifetime threading)
 is reusable for W2.B (Sheets) and W3 (CSS L4) without further
-substrate work. The 2026-04-28 audit synthesis (six parallel
-reviewers — see `docs/tranches/AZ-I/audit/W2-CLOSE-AUDIT.md`)
+substrate work. The 2026-04-28 audit synthesis (see
+`docs/tranches/AZ-I/audit/W2-CLOSE-AUDIT.md`)
 collapses W2-act + W2.B + W3 into one gestalt activation pass and
 folds W4 into AZ-II.W0 to retire the ceremonial wave overhead.
 

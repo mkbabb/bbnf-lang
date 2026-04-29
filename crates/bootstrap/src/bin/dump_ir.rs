@@ -144,6 +144,19 @@ fn main() {
     println!("total rules = {}", ir.rules.len());
     println!();
 
+    // Cutover.J diagnostic: dump fns + types tables.
+    println!("=== fns table ({} entries) ===", ir.fns.len());
+    for (i, fd) in ir.fns.iter().enumerate() {
+        println!("  fn[{i}] = {fd:?}");
+    }
+    println!();
+    println!("=== types table ({} entries) ===", ir.types.len());
+    for (rid, td) in &ir.types {
+        let name = ir.get_string(ir.get_rule(*rid).name);
+        println!("  rule #{rid} ({name}) -> {td:?}");
+    }
+    println!();
+
     match rule_filter.as_deref() {
         None => {
             for rid in 0..ir.rules.len() as RuleId {

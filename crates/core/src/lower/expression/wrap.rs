@@ -161,14 +161,33 @@ fn find_value_expr_child<'a>(
         if trimmed.starts_with(':') {
             return;
         }
-        // Substantive candidate: a compound or non-trivial Span
-        // that's not whitespace / arrow / type annotation.
-        if matches!(view.compound_kind(), Some(BbnfCompoundKind::Other))
-            || matches!(view.compound_kind(), None)
-        {
-            // Other-kinded compound (value-expression sub-grammar
-            // root) or a leaf — first match wins as the value
-            // expression head.
+        // Substantive candidate: the value-expression head. The
+        // hand-written bootstrap parser pushes `value_expr` /
+        // `value_or` / `value_and` / … as recognised compounds; the
+        // codegen-emitted parse_that tape also produces an `Other`-
+        // kinded anonymous wrapper. Either form is the head we want.
+        let kind = view.compound_kind();
+        let is_value_expr_head = matches!(
+            kind,
+            Some(
+                BbnfCompoundKind::ValueExpr
+                    | BbnfCompoundKind::ValueClosure
+                    | BbnfCompoundKind::ValueOr
+                    | BbnfCompoundKind::ValueAnd
+                    | BbnfCompoundKind::ValueCmp
+                    | BbnfCompoundKind::ValueAdd
+                    | BbnfCompoundKind::ValueMul
+                    | BbnfCompoundKind::ValueUnary
+                    | BbnfCompoundKind::ValueAtom
+                    | BbnfCompoundKind::ValuePath
+                    | BbnfCompoundKind::ValueInput
+                    | BbnfCompoundKind::ValueFnCall
+                    | BbnfCompoundKind::Other,
+            ),
+        ) || kind.is_none();
+        if is_value_expr_head {
+            // First match wins — a value-expression-layer compound
+            // (named or anonymous) or a bare leaf.
             *out = Some(view);
             return;
         }

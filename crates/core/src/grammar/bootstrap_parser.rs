@@ -451,18 +451,39 @@ impl<'p> Parser<'p> {
     }
 
     /// `mapped_factor = factor , ( "->" ?w , ( value_expr , type_annotation ? ) ) ?`
+    ///
+    /// When the optional mapping is present, wrap its content in an
+    /// anonymous sub-compound (kind `Other`) whose span starts at `->`.
+    /// `lower_mapped_factor` discriminates this child by
+    /// `c.span_text().starts_with("->")`; without the wrapper, the
+    /// arrow leaf and the value_expr are siblings of `factor` and
+    /// neither child satisfies the prefix test, so the Map IR node is
+    /// silently skipped (regression introduced in cutover.G when the
+    /// hand-written bootstrap parser replaced the codegen-emitted
+    /// parse_that-shaped tape).
     fn parse_mapped_factor(&mut self) -> Result<(), ParseErr> {
         let h = self.begin("mapped_factor");
         self.parse_factor()?;
         self.skip_ws();
         if self.peek_str("->") {
+            // Open the mapping wrapper at the `->` byte so its span
+            // text begins with the arrow — the canonical predicate
+            // `lower_mapped_factor` walks for.
+            let mh = self.begin("mapping");
+            // Push the arrow as an explicit Span leaf so consumers
+            // that walk children rather than span_text (e.g.
+            // `find_value_expr_child`) can skip it via the
+            // `trimmed == "->"` guard.
+            let arrow_lo = self.pos;
             self.pos += 2;
+            self.push_span(arrow_lo, self.pos);
             self.skip_ws();
             self.parse_value_expr()?;
             self.skip_ws();
             if self.at() == Some(b':') {
                 self.parse_type_annotation()?;
             }
+            self.end(mh);
         }
         self.end(h);
         Ok(())

@@ -4,6 +4,13 @@
 **Date**: 2026-04-28
 **Master HEAD**: `98008086`
 
+**2026-04-29 supersession note**: this file is historical evidence for
+the cutover.I halt. Later cutover.K/L/M closed much of the Phase 2
+fleet activation path, and the live remaining work is now cutover.O in
+`../waves/cutover.md`, beginning with builder transactions before EBNF
+activation. Do not dispatch from this file's "Next-tranche scope"
+section.
+
 cutover.I closed AZ-II's Phase 5 deferral (BBNF compact-source serializer + bbnf_rule un-ignore) and discovered two wave-scale blockers that gate Phase 2's full-fleet StructDirect activation. The cutover.I.2 emitter substrate (`shapes/transparent.rs`) was authored in a worktree but did NOT land — its activation requires the blockers below to close first.
 
 ## Phase 5 — LANDED

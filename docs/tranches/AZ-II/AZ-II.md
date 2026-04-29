@@ -14,6 +14,29 @@ AZ-II opens on AZ-I's close contract: three data grammars
 compilable but scoped to BBNF's bootstrap only. AZ-II's work is
 the last consumer migration + the substrate deletion.
 
+## 2026-04-29 Hardening Amendment
+
+AZ-II remains open. The implemented progress read-of-record is
+[`PROGRESS-SNAPSHOT-2026-04-29.md`](PROGRESS-SNAPSHOT-2026-04-29.md):
+cutover.A through cutover.M landed, cutover.N was dispatched and
+halted at organizational usage limit, and no cutover.N code commits
+landed. The current state is a partial close: direct-to-struct is live
+for 8/9 grammars, while EBNF, `Parsed<R>`, `TapeDirect`, generated
+tape-view residue, and `crates/tape` remain terminal blockers.
+
+The next AZ-II wave is `cutover.O`. It is not a workaround wave and not
+a reduced tape floor. It must first fix the grammar-general
+StructDirect builder transaction gap, then activate EBNF through shared
+alternate/layout inference, delete `Parsed<R>` and `TapeDirect`, delete
+the standalone tape crate, and refresh semantic parity/performance
+truth.
+
+AZ-III opens only if the EBNF blocker is proven to require new
+grammar-general inference/layout machinery spanning node facts,
+CSP/egraph typing, and projection emission. AZ-III must not carry
+forward tape deletion, `Parsed<R>` deletion, stale benches, or parity
+gaps as deferred work.
+
 ## Thesis
 
 BBNF self-hosts on a grammar-derived struct. `project_types`
@@ -158,16 +181,15 @@ grammar-read step; it is measured but lightly weighted — regression
 - Pass count ≥ 967, fail count ≤ 33, ignored count ≤ 30 on
   `cargo nextest run --workspace --profile ax-iter`.
 
-### AZ-II.W2 absorbs durable AY-III gates
+### cutover.O absorbs durable AY-III gates
 
-AY-III.W2's BBNF self-host identity gate folds into AZ-II.W2 as the
-post-cutover regen check. After Stage-B's struct-only rebuild from
-struct-only source, `cargo xtask regen --check` exit 0 across the
-full 9-grammar corpus is the byte-equal close ceremony. The grammar-
-general totality test (parameterized per primary grammar) verifies
-admission ≡ materialiser ≡ consumer for the post-tape struct-only
-path; this generalises AY-III.W2's BBNF-only assertion to all four
-primary grammars on the struct substrate.
+AY-III.W2's BBNF self-host identity gate folds into AZ-II cutover.O as
+the post-cutover regen check. `cargo xtask regen --check` exit 0 across
+the full 9-grammar corpus remains the byte-equal close ceremony. The
+grammar-general totality test (parameterized per primary grammar)
+verifies admission ≡ materialiser ≡ consumer for the post-tape
+struct-only path; this generalises AY-III.W2's BBNF-only assertion to
+the primary grammars on the struct substrate.
 
 ## Wave structure
 
@@ -182,7 +204,7 @@ disk as historical record.
 
 | Wave | Headline | Opens after | Status |
 |---|---|---|---|
-| **cutover** | BBNF self-host + tape deletion ([waves/cutover.md](waves/cutover.md)) — original three-stage plan expanded under contact into 14 sub-stages cutover.A through cutover.N | AZ-I.W2-act close (AZ-I FINAL.md committed; seven-point handoff verified) | partial-close (cutover.A→M LANDED; cutover.N halted at usage limit; EBNF activation + Parsed<R> deletion + tape deletion + bench refresh deferred to cutover.O) |
+| **cutover** | BBNF self-host + tape deletion ([waves/cutover.md](waves/cutover.md)) — original three-stage plan expanded under contact into 14 sub-stages cutover.A through cutover.N | AZ-I.W2-act close (AZ-I FINAL.md committed; seven-point handoff verified) | partial-close (cutover.A→M LANDED; cutover.N halted at usage limit; terminal hardening routes to cutover.O.0-O.7 with builder transactions before EBNF activation) |
 
 The cutover wave's actual trajectory across 14 sub-stages is recorded
 in `docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md` (per-substage
@@ -204,7 +226,7 @@ history). Per-substage scope-reveal reports archived under
 | cutover.K | mapped_factor wrapper + typed-leaf source recovery + per-shape Err frame cleanup | LANDED |
 | cutover.L | keyword-shape Alt-of-Ref handler | LANDED |
 | cutover.M | non-BBNF resolver arms (CSV/Math/BNF/CSS Pretty); AltDispatch struct_direct surgery | LANDED |
-| cutover.N | EBNF activation + Phases 4/5/6 close | dispatched + halted at usage limit; routes to cutover.O |
+| cutover.N | EBNF activation + Phases 4/5/6 close | dispatched + halted at usage limit; routes to cutover.O, beginning with tooling preflight and StructDirect builder transactions |
 
 ### W0 — Research + cutover design + classifier extension
 

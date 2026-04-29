@@ -1,10 +1,15 @@
 # Remaining Trajectory — Architecture, Optimisation, and Competitor Plan
 
-Status: planning canon. This file explains the remaining path
-`B1 -> B3 -> B4 -> B2 -> B5 -> B6 -> B7 -> AZ-I -> AZ-II -> BA -> BB`
-after the 2026-04-26 B5 close, with AY-III deferred and its durable
-gates absorbed into AZ-I.W4 + AZ-II.W2. It does not authorize
+Status: planning canon. This file explains the remaining path after
+B0-B7, AZ-I, and the AZ-II partial close. It does not authorize
 execution.
+
+**2026-04-29 hardening update.** AZ-II is open through terminal
+`cutover.O`. The current state is 8/9 StructDirect grammars; EBNF,
+`Parsed<R>`, `TapeDirect`, generated tape-view residue, and
+`crates/tape` remain blockers. BA and BB remain blocked on AZ-II
+terminal close. AZ-III opens only if `cutover.O` proves that EBNF
+requires a new grammar-general inference/layout substrate.
 
 **2026-04-28 status update.** AZ-I.W0 + W1 + W2-substrate closed.
 W2 substrate landed nine per-shape struct-direct emitters with the
@@ -19,6 +24,22 @@ reviewers — see `docs/tranches/AZ-I/audit/W2-CLOSE-AUDIT.md`)
 collapses W2-act + W2.B + W3 into one gestalt activation pass and
 folds W4 into AZ-II.W0 to retire the ceremonial wave overhead.
 
+## Live Blockers After AZ-II Partial Close
+
+| Blocker | Required close |
+|---|---|
+| StructDirect speculative parsing | Grammar-general builder checkpoint/rollback/commit, wired through all speculative alternate/repeat/minus/negate emitter paths |
+| EBNF direct projection | Generic high-branch alternate layout/inference, then `EbnfParser::parse -> EbnfDocument` |
+| `Parsed<R>` | Delete production runtime surface and generated return path |
+| `TapeDirect` | Remove fallback strategy; generation must fail loudly instead |
+| generated tape views | Stop emitting `TapeCursor` / `ValueRoot` / node-view residues for StructDirect grammars unless consumed through a document API |
+| `crates/tape` | Delete workspace crate after relocating only non-tape scan/index primitives |
+| BBNF bootstrap bridge | Retire `bootstrap_parser.rs` as canonical entry once generated self-hosting is repaired |
+| sonic-rs parity | JSON semantic parity plus fresh throughput baseline |
+| lightningcss parity | CSS typed semantic parity, including known color/value divergences |
+| perf truth | Refresh post-`cutover.O` numbers before BB optimization |
+| legacy/dead substrate | Audit tape cursor helpers, visitor placeholders, legacy recognizers, schema emit stubs, stale derive/JIT paths |
+
 ## 1. Path Change From The Redress
 
 The runway picks up four predecessor tranches between B1 and AY-II:
@@ -26,7 +47,7 @@ The runway picks up four predecessor tranches between B1 and AY-II:
 ```text
 B1 -> B3 -> B4 -> B2 -> B5 -> B6 -> B7 -> AZ-I -> AZ-II -> BA -> BB
                                              |
-                                             AY-III deferred (gates absorb into AZ-I.W4 + AZ-II.W2)
+                                             AY-III deferred (gates absorb into AZ-I close + AZ-II cutover.O)
 ```
 
 The redress + post-B1 predecessor sequence changes the floor + the
@@ -188,8 +209,8 @@ table above remains the live forecast.
 | AZ-I.W1 | `StructRegistry` closure | Every JSON `Named` rule gets `StructLayout` | Every CSS L4 `Named` rule gets `StructLayout` | `crates/ir/src/registry/struct.rs`. |
 | AZ-I.W2 | Scalar direct-to-struct | Numbers, strings, bools, arrays/objects write direct | Out-of-scope except no regression | JSON builder writes fields, not tape records. |
 | AZ-I.W3 | CSS aggregate direct-to-struct | Holds JSON parity | `Length`, `Color`, selectors, declarations write direct | CSS typed enums + struct builder. |
-| AZ-II.W1-W2 | BBNF self-hosting struct cutover | Holds three-data-grammar struct path | Holds CSS struct path | `bbnf-derive` emits struct-writing parsers. |
-| AZ-II.W3 | Physical tape deletion | No live tape symbols/imports | No live tape symbols/imports | `crates/tape/` deleted. |
+| AZ-II.cutover.O | Terminal direct-to-struct hardening | Holds StructDirect data grammars and deletes `Parsed<R>` / tape residue | Holds CSS StructDirect path after builder transactions | `cargo xtask regen` emits checked-in struct-writing parsers; EBNF flips to `EbnfDocument`; `crates/tape/` deleted in O5. |
+| AZ-II.W3 | superseded historical label | absorbed into cutover.O.5 | absorbed into cutover.O.5 | physical tape deletion now belongs to cutover.O.5. |
 | BA | Lazy typed path queries | Compile-time checked `path!`, zero allocation | Typed selector/declaration paths | `Path<Grammar, Target>`, parent/ascent strategy. |
 | BB | E-graph rule inference + VM residue oracle | Auto-derived JSON rewrites, object-key seek, scalar folds | Auto-derived selector/value rewrites | `crates/ir/src/rewrites/`, `grammar/<name>/rewrites/`. |
 
@@ -409,10 +430,10 @@ principle, represent it in grammar/IR/CSP/e-graph form, and re-measure. Treat
 hand-written SIMD wins as missing compiler transpositions until proven
 otherwise.
 
-## 9. Tape-substrate prune candidates (AZ-II.W2 absorbs)
+## 9. Tape-substrate prune candidates (AZ-II cutover.O.5 absorbs)
 
 The B7 close-ceremony audit (γ pass, 2026-04-26) catalogued a class of
-dead or near-dead surfaces inside `crates/tape/`. AZ-II.W2 deletes the
+dead or near-dead surfaces inside `crates/tape/`. AZ-II cutover.O.5 deletes the
 crate wholesale; pruning these surfaces in isolation now would
 duplicate AZ-II's work and force a second round of consumer reroutes
 under cleanup-only commit cadence. They are listed here so the AZ-II
@@ -420,20 +441,21 @@ plan opens with the inventory pre-built and the audit-γ Top-10 list
 does not reappear as "newly discovered" debt.
 
 The principle: cleanup tranches do not pre-empt structural deletions
-already on the runway. If AZ-II.W2 retreats or partitions, this
-section is the inventory the follow-up cleanup tranche works against.
+already on the runway. If cutover.O.5 proves a narrower
+grammar-general blocker, this section is the inventory the follow-up
+cleanup work must account for after the blocker is named.
 
 ### 9.1 PHF dispatch functions
 
 The DTA walker interpreter retired with AX.W0b; its PHF-keyed dispatch
 helpers persist as orphaned generated surface. The expected resting
-place is total deletion alongside the walker; AZ-I close should
-verify the walker retirement landed end-to-end before AZ-II.W2
-removes the rest of the tape crate.
+place is total deletion alongside the walker; cutover.O.5 removes the
+rest of the tape crate after only genuinely non-tape primitives move to
+their natural owner.
 
 - Verify: AZ-I close confirms zero live DTA-walker call sites in
   `crates/core/`, `crates/ir/`, and the bootstrap output.
-- Absorbed by: full `crates/tape/` deletion in AZ-II.W2.
+- Absorbed by: full `crates/tape/` deletion in cutover.O.5.
 
 ### 9.2 DTA precedence helpers
 
@@ -445,18 +467,18 @@ post-walker shape emitters do not consume them. They retire with the
 crate.
 
 - Files: `crates/tape/src/dta.rs`, `crates/tape/src/driver.rs:229+`.
-- Absorbed by: AZ-II.W2.
+- Absorbed by: AZ-II cutover.O.5.
 
 ### 9.3 Tape value-frame readers
 
 `PayloadValue`, `ValueChildren`, `ValueCheckpoint`, and `ValueFrame`
 in `crates/tape/src/value.rs` are the read-side of the tape value
 lane. Direct-to-struct emission (AZ-I) skips the value lane entirely;
-the readers exist for legacy AY-I value-path consumers that AZ-II.W2
+the readers exist for legacy AY-I value-path consumers that cutover.O.5
 removes alongside the lane itself.
 
 - File: `crates/tape/src/value.rs`.
-- Absorbed by: AZ-II.W2.
+- Absorbed by: AZ-II cutover.O.5.
 
 ### 9.4 Bloom dedup
 
@@ -466,7 +488,7 @@ deduplication pass. Direct-to-struct emission has no compound-pool
 identity to dedup; the bloom-filter machinery is dead post-AZ-I.
 
 - File: `crates/tape/src/dedup.rs`.
-- Absorbed by: AZ-II.W2.
+- Absorbed by: AZ-II cutover.O.5.
 
 ### 9.5 Cursor lookahead
 
@@ -476,7 +498,7 @@ surface. Struct-only consumers walk the typed AST, not the tape, so
 the cursor surface is dead at AZ-I close.
 
 - File: `crates/tape/src/cursor.rs`.
-- Absorbed by: AZ-II.W2.
+- Absorbed by: AZ-II cutover.O.5.
 
 ### 9.6 Stage-1 structural index
 
@@ -486,7 +508,7 @@ SIMD-scan crate produces the structural information directly; the
 tape-side wrapper has no remaining consumer.
 
 - File: `crates/tape/src/stage1.rs`.
-- Absorbed by: AZ-II.W2.
+- Absorbed by: AZ-II cutover.O.5.
 
 ### 9.7 Tape visitor re-exports
 
@@ -498,7 +520,7 @@ only emission these traits have no implementor outside the tape
 crate's own tests; the re-export block retires with the crate.
 
 - File: `crates/tape/src/lib.rs`, lines 72-103.
-- Absorbed by: AZ-II.W2.
+- Absorbed by: AZ-II cutover.O.5.
 
 ### 9.8 Discipline
 

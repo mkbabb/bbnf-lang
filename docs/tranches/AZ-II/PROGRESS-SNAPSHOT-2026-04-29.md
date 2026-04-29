@@ -6,6 +6,11 @@ trajectory across 14 sub-stages (cutover.A through cutover.N), the
 substrate / consumer / activation phases each landed, and what remains to
 close AZ-II terminally.
 
+This document is the implemented-state read-of-record for AZ-II through
+cutover.N halt: cutover.N landed no code commits. Post-snapshot
+hardening amendments may refine the order of cutover.O, but they do not
+change the implemented progress recorded here.
+
 This document supplements:
 - `docs/tranches/AZ-II/AZ-II.md` (parent plan)
 - `docs/tranches/AZ-II/PROGRESS.md` (rolling dated execution log)
@@ -80,59 +85,28 @@ cherry-pick was reviewed for compile + nextest health before landing.
 
 ## Remaining work to AZ-II terminal close
 
-### Phase 1 — EBNF activation (cutover.N in flight)
+cutover.N's intended EBNF + deletion + bench close remains open, but the
+post-snapshot hardening audit refines the order. `cutover.O` is the
+terminal AZ-II wave and must close these gates in sequence:
 
-Diagnose + fix EBNF's parse-fails-at-offset-0 regression. Per cutover.M's
-deviation note, EBNF's `letter = "A" | "B" | … | "z"` 52-branch
-Alt-of-literal hits a layout-routing depth gap in `EbnfStructBuilder`
-even after cutover.M's alt_dispatch struct_direct surgery. The fix is
-expected to be **structural and generic**, applying to any grammar with
-high-branch-count Alt-of-literal patterns — not an EBNF carve-out. Three
-candidate roots:
+| Substage | Scope | Required outcome |
+|---|---|---|
+| O0 | Tooling preflight | stale bench aliases, IAI CI, profiling scripts, and release pin repaired or explicitly de-canonicalized before close evidence is collected |
+| O1 | StructDirect builder transactions | grammar-general checkpoint/rollback/commit support wired through speculative alternate/repeat/minus/negate emitter paths |
+| O2 | EBNF direct projection | high-branch literal alternates modeled through shared layout/type facts; `EbnfParser::parse -> EbnfDocument` |
+| O3 | Generated view purge | tape-backed `TapeCursor`, node-view, and `ValueRoot` residue removed from StructDirect generated output unless consumed through a document API |
+| O4 | `Parsed<R>` / `TapeDirect` deletion | `Parsed<R>` removed as a production parser result; `TapeDirect` fallback semantics removed |
+| O5 | `crates/tape` deletion | standalone tape crate deleted after only genuinely non-tape scan/index primitives move to their natural owner |
+| O6 | semantic/perf close | JSON sonic-rs parity, CSS lightningcss typed parity, and the 17-entry close matrix refreshed |
+| O7 | final conversion | `FINAL.md` converted from PARTIAL CLOSE to terminal close |
 
-1. Shape classifier's branch-count-aware dispatch (does 52-branch Alt
-   classify as keyword? alt_dispatch? something else?)
-2. `EbnfStructBuilder` layout admission depth (cutover.E authored the
-   substrate as a thin scaffold; may need extension)
-3. Runtime `push_branch_tag(idx)` indexing for high branch counts
-   (potential `u8` overflow at idx=52? unlikely but worth verifying)
-
-### Phase 2 — `Parsed<R>` deletion (cutover.N Phase 2)
-
-Post-Phase-1: every grammar emits StructDirect, returning its
-grammar-specific Document. Delete `crates/core/src/runtime/parsed.rs::Parsed<R>`
-(option b — each grammar's parse() returns Document directly).
-
-`rg 'Parsed<' crates/ | wc -l` — expected to be small post-EBNF
-activation since the consumer count cutover.I noted (~42 sites) was
-mostly in code that was already migrated by cutover.D. Net deletion +
-remaining consumer migrations.
-
-### Phase 3 — `crates/tape/` migration / deletion (cutover.N Phase 3)
-
-Per cutover.K's recommendation: migrate tape types into
-`crates/core/src/runtime/tape/` (a sub-module), then delete the
-standalone `crates/tape/` crate.
-
-`crates/tape/` has ~10k cross-crate refs in `crates/core/src/`; literal
-`rm -rf` is unrealistic without migration. The substrate has 12 modules
-totaling ~3,578 LOC; cutover.K identified that visitor traits + DTA
-types + structural-scan are the load-bearing surfaces.
-
-Per AZ-II.md §Reversal: full tape abrogation is binding repo policy; no
-shrunken-tape floor permitted. PARTIAL means types migrated but crate
-not deleted yet — the deletion lands when zero consumers remain.
-
-### Phase 4 — bench refresh + AZ-II FINAL terminal close (cutover.N Phase 4)
-
-```bash
-make ay-bench-close WAVE=AZ-II-close
-```
-
-Update `docs/benchmarks/post-AZ-II.json` with honest per-entry deltas vs
-AU baseline + vs AZ-I baseline. Update `docs/tranches/AZ-II/FINAL.md` to
-convert from PARTIAL CLOSE to FINAL CLOSE manifest with all 8 hard gates
-PASS or documented deferred.
+The EBNF failure remains structural and generic. Per cutover.M's
+deviation note, EBNF's `letter = "A" | "B" | ... | "z"` 52-branch
+Alt-of-literal hits a layout-routing depth gap even after cutover.M's
+AltDispatch surgery. The hardening audit adds one prior correctness
+gate: speculative StructDirect parsing must roll back builder state, not
+only input position, before EBNF/CSS/BBNF correctness claims are
+trustworthy.
 
 ## Agent dispatch history
 
@@ -247,7 +221,8 @@ candidate structural roots:
 The fix when it lands will be **structural and generic** — applying to
 any grammar with high-branch-count Alt-of-literal patterns. cutover.N is
 diagnosing this; halted at organizational usage limit. cutover.O will
-resume once usage resets.
+resume once usage resets, but O1 builder transactions must land before
+O2 EBNF activation.
 
 ## Trajectory progress estimate
 
@@ -260,8 +235,10 @@ resume once usage resets.
 
 ## Trajectory follow-on
 
-- **cutover.O** (next): resume cutover.N's EBNF diagnosis; close Phases
-  4/5/6 of the cutover.md original plan.
+- **cutover.O** (next): terminal hardening sequence O0-O7: tooling
+  preflight, builder transactions, EBNF projection, generated view purge,
+  `Parsed<R>` / `TapeDirect` deletion, tape crate deletion, semantic/perf
+  close, and FINAL conversion.
 - **AZ-II FINAL CLOSE**: convert `docs/tranches/AZ-II/FINAL.md` from
   PARTIAL CLOSE manifest to FINAL CLOSE; archive
   `docs/benchmarks/post-AZ-II.json` with full bench refresh.
@@ -282,7 +259,7 @@ overran cap.
 
 `feedback_no-deferrals` envelope: every deferral is documented in a
 PARTIAL CLOSE artefact under `docs/tranches/AZ-II/audit/` with a named
-follow-on substage carrying the work. The trajectory's BB.close gate
-lives at the refined plan's Wave 4; the deferred-to-cutover.N work is
-NOT a hedge to a phantom future tranche — it's the canonical close path
-for the AZ-II terminal milestone.
+cutover.O substage carrying the work. The trajectory's BB.close gate
+lives at the refined plan's Wave 4; the deferred work is not a hedge to a
+phantom future tranche. It is the canonical cutover.O close path for the
+AZ-II terminal milestone.

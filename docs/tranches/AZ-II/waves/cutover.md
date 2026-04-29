@@ -15,6 +15,12 @@ StructDirect; BBNF self-parity 56/56; reproducibility CI gate green;
 remaining work (EBNF activation + tape deletion + bench refresh +
 FINAL CLOSE conversion) routed to cutover.O.
 
+**2026-04-29 hardening amendment**: cutover.O must begin with the
+grammar-general StructDirect builder transaction gap. EBNF activation
+is blocked not only by alternate layout depth but also by the fact that
+speculative StructDirect branches can mutate builder state without a
+matching rollback.
+
 **Trajectory snapshot**: see [`../PROGRESS-SNAPSHOT-2026-04-29.md`](../PROGRESS-SNAPSHOT-2026-04-29.md)
 for per-substage commit-by-commit detail across cutover.A through
 cutover.N, agent dispatch history with caps + outcomes, hard-gate
@@ -151,6 +157,48 @@ in `crates/core/src/runtime/mod.rs`'s re-export retirement, not in
 sibling repo source); BB scaffold (BB.W0 owns its own files).
 
 ## Phase sub-items
+
+### AZ-II.cutover.O — Terminal hardening
+
+Sequential with fan-out only where file ownership is disjoint. This is
+the terminal AZ-II wave, not an AZ-III deferral surface.
+
+Required order:
+
+1. **O0 tooling preflight** — repair or explicitly de-canonicalize stale
+   bench/profiling/IAI command surfaces before they are used as close
+   evidence.
+2. **O1 transactional builder ABI** — add grammar-general
+   checkpoint/rollback/commit support to `StructBuilder` and wire every
+   speculative StructDirect emitter path.
+3. **O2 EBNF direct projection** — model large literal alternates
+   through shared layout/type facts and require `EbnfParser::parse ->
+   EbnfDocument`.
+4. **O3 generated view purge** — remove tape-backed `TapeCursor`,
+   node-view, and `ValueRoot` residue from StructDirect generated output
+   unless it is consumed through a document API.
+5. **O4 Parsed/TapeDirect deletion** — delete `Parsed<R>` as a
+   production parser result and remove `TapeDirect` fallback semantics.
+6. **O5 tape crate deletion** — delete `crates/tape` after relocating
+   only genuinely non-tape scan/index primitives to their natural owner.
+7. **O6 semantic/perf close** — refresh JSON `sonic-rs` parity, CSS
+   `lightningcss` typed parity, and the 17-entry close matrix.
+8. **O7 final conversion** — convert AZ-II FINAL from PARTIAL CLOSE to
+   terminal close after the gates above pass.
+
+Hard gates:
+
+- `EbnfParser::parse` returns `EbnfDocument`.
+- `rg '\bParsed\b|\bTapeDirect\b|\bTapeCursor\b|\bTapeRec\b|\bTapeOffset\b|runtime::tape|crates/tape' crates/ --type rust`
+  has no production hits except deliberately relocated non-tape
+  primitives.
+- `cargo xtask regen --check` passes.
+- `cargo nextest run -p bbnf --test bbnf_bootstrap_reproducibility --profile ax-iter`
+  passes.
+- JSON and CSS parity tests pass against `sonic-rs` and `lightningcss`
+  respectively on the post-tape path.
+- `docs/benchmarks/post-AZ-II.json` is regenerated with no placeholder
+  entries.
 
 ### AZ-II.cutover.A — Substrate hoist + BBNF runtime + resolver-arm
 

@@ -1,11 +1,14 @@
 # AZ-II — Progress Log
 
-**Status**: planned (gated on AZ-I close)
+**Status**: partial close. Implemented-state record:
+[`PROGRESS-SNAPSHOT-2026-04-29.md`](PROGRESS-SNAPSHOT-2026-04-29.md).
+Live terminal sequence: `cutover.O.0` through `cutover.O.7`.
 
 **Date**: 2026-04-23
 
-Dated execution log for tranche AZ-II. Execution begins after AZ-II
-opens on AZ-I close (seven-point handoff contract verified).
+Dated execution log for tranche AZ-II. AZ-II opened after AZ-I close
+(seven-point handoff contract verified) and is now open only for
+terminal hardening.
 
 AZ-II completes the direct-to-struct migration. BBNF's own grammar
 moves to the `project_types`-derived struct path via a two-stage
@@ -14,7 +17,7 @@ candidate; Stage B: candidate rebuilds itself; byte-equal output
 is the close gate). Once BBNF parses into a derived struct, the
 tape crate has no remaining consumers and is deleted.
 
-Wave plan (three waves + FINAL): W0 bootstrap-cutover research +
+Original wave plan (three waves + FINAL): W0 bootstrap-cutover research +
 classifier extension + AZ-II baseline → W1 Stage A (tape-compiler
 builds struct-compiler candidate) → W2 Stage B (candidate rebuilds
 itself + byte-equal close gate) → W3 FINAL — `crates/tape/`
@@ -87,7 +90,7 @@ The cutover wave runs in three sequential sub-stages:
 | W0 | superseded (2026-04-28) | Folded into cutover.A (substrate hoist + BBNF runtime + decay sweep) |
 | W1 | superseded (2026-04-28) | Folded into cutover.B (Stage A + Stage B byte-equal cycle) |
 | W2 | superseded (2026-04-28) | Folded into cutover.C (`crates/tape/` deletion + recode + FINAL) |
-| cutover | partial-close (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; EBNF activation + Parsed<R> deletion + tape deletion + bench refresh deferred) | 8/9 grammars StructDirect; tape deletion + EBNF activation routes through cutover.N follow-on ([waves/cutover.md](waves/cutover.md)) |
+| cutover | partial-close (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; EBNF activation + Parsed<R> deletion + tape deletion + bench refresh deferred) | 8/9 grammars StructDirect; terminal hardening routes through cutover.O.0-O.7 with builder transactions before EBNF activation ([waves/cutover.md](waves/cutover.md)) |
 
 ## 2026-04-28 — cutover.G partial close
 
@@ -182,8 +185,9 @@ AZ-II closes as **PARTIAL** per `docs/instructions/README.md`
 §"Substrate-with-consumer is one unit of work". The substrate
 (cutover.A through cutover.H Phase 1) is canonical; the consumer
 half (full regen-fleet activation, tape deletion, bench refresh,
-codegen self-host) routes to a follow-on tranche under explicit
-scope.
+codegen self-host) now routes to cutover.O under explicit scope. Later
+cutover.K/L/M closed most of the regen-fleet activation; the remaining
+terminal blockers are listed in the trajectory follow-on table below.
 
 Master HEAD at cutover.H Phase 1 close: cherry-picked to master
 at `1513328e` then `ee568213` (PARTIAL CLOSE FINAL.md authored).
@@ -288,11 +292,16 @@ tape migration / deletion, bench refresh + AZ-II FINAL terminal
 close. Halted at organizational usage limit; no commits landed.
 
 A comprehensive trajectory-state document was authored at
-`docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md` (288 LOC,
-master `1d9a80bb`) capturing the full 14-substage trajectory
+`docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md` (master
+`1d9a80bb`) capturing the full 14-substage trajectory
 (cutover.A through cutover.N), agent dispatch history, hard-gate
 readout, BA handoff verification, substrate inventory, and the
 remaining work routed through cutover.O.
+
+That snapshot is the implemented-state record: cutover.N landed no code
+commits. The 2026-04-29 hardening audit does not change the implemented
+state; it aligns the next cutover.O sequence so tooling preflight and
+StructDirect builder transactions precede EBNF activation.
 
 The trajectory's ~85% complete by structural milestones; ~70%
 complete by LOC churn (tape migration is the long pole at ~10k
@@ -312,12 +321,47 @@ cross-crate refs).
 
 | Substage | Scope | Estimated cap |
 |---|---|---|
-| cutover.O | Resume EBNF diagnosis (Alt-of-many-literal layout-routing depth) | 120 min |
-| cutover.O continued | Parsed<R> deletion (option b — per-grammar Document direct) | 90 min |
-| cutover.O continued | tape migration into `crates/core/src/runtime/tape/` + crate deletion | 120 min |
-| cutover.O continued | 17-entry close matrix bench refresh + post-AZ-II.json terminal | 60 min |
-| cutover.O continued | AZ-II FINAL.md PARTIAL → FINAL CLOSE conversion | 30 min |
+| cutover.O.0 | Tooling preflight: stale bench aliases, IAI CI, profiling scripts, release pin | 60 min |
+| cutover.O.1 | StructDirect builder transaction ABI across speculative branches | 120 min |
+| cutover.O.2 | EBNF diagnosis + generic AltFacts/layout-routing repair | 120 min |
+| cutover.O.3 | Generated tape-view / `ValueRoot` residue purge for StructDirect | 90 min |
+| cutover.O.4 | `Parsed<R>` deletion and `TapeDirect` fallback removal | 90 min |
+| cutover.O.5 | `crates/tape` deletion after relocating non-tape scan/index primitives | 120 min |
+| cutover.O.6 | 17-entry close matrix + JSON sonic-rs / CSS lightningcss parity refresh | 90 min |
+| cutover.O.7 | AZ-II FINAL.md PARTIAL → FINAL CLOSE conversion | 30 min |
 
-Total estimated: ~7 hours sequential under fan-out (or 1 dispatch
-wave at 300-min cap if EBNF activation is structural-quick;
-2 waves if EBNF requires substrate extension).
+Total estimated: ~12 hours sequential under fan-out. If EBNF requires a
+new grammar-general inference/layout substrate beyond `AltFacts` +
+transactional builders, author AZ-III for that substrate only; do not
+move tape deletion, `Parsed<R>` deletion, stale benches, or parity gaps
+into AZ-III.
+
+## 2026-04-29 — Six-lane hardening audit
+
+Six parallel audit lanes reviewed B0-B7, AY-AZ-II, instructions,
+gestalt, remaining trajectory, risk/perf, meta-audit, codegen paths,
+the last 1200 commits, and current implementation wiring.
+
+Integrated findings:
+
+- AZ-II is partial, not terminal: 8/9 grammars are StructDirect; EBNF
+  remains TapeDirect.
+- StructDirect speculative branches need grammar-general builder
+  transactions before EBNF/CSS/BBNF correctness claims are reliable.
+- `Parsed<R>`, `TapeDirect`, generated tape views, and `crates/tape`
+  remain live blockers.
+- BBNF's hand-written `bootstrap_parser.rs` is a bridge, not the final
+  canonical self-hosting parser.
+- CSP/egraph/type-inference facts are underwired: egraph facts are not
+  persisted as the shared semantic database; documented CSP tier/parent
+  constraints are not fully installed; type inference still falls back to
+  `BoxedEnum`.
+- B0-B7 tooling mostly landed, but bench aliases, IAI CI, profiling
+  scripts, release workflow pinning, and bench docs have drifted.
+- `docs/tranches/meta-audit/` and
+  `docs/tranches/next-tranche-research/` are historical provenance, not
+  live planning canon. They should be archived after inbound links are
+  rewritten.
+
+Canonical follow-up ledger:
+`docs/tranches/AZ-II/audit/AZ-II-HARDENING-AUDIT-2026-04-29.md`.

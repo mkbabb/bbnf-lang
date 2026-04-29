@@ -1,6 +1,6 @@
 # AZ-II — FINAL (Partial Close)
 
-**Status**: PARTIAL CLOSE — cutover.A through cutover.M Phase 3 LANDED at master; cutover.N dispatched + halted at organizational usage limit; tape deletion + EBNF activation + Parsed<R> deletion + 17-entry bench refresh deferred to cutover.O.
+**Status**: PARTIAL CLOSE — cutover.A through cutover.M Phase 3 LANDED at master; cutover.N dispatched + halted at organizational usage limit; tape deletion + EBNF activation + Parsed<R> deletion + 17-entry bench refresh deferred to cutover.O terminal hardening.
 
 **Date authored**: 2026-04-28 (cutover.H Phase 7); refreshed 2026-04-29 (cutover.N halt addendum).
 **Master HEAD at FINAL.md update**: `1d9a80bb` (`docs(az-ii): comprehensive PROGRESS-SNAPSHOT-2026-04-29 — 14 substage trajectory`).
@@ -8,6 +8,7 @@
 **Wave document**: [`waves/cutover.md`](waves/cutover.md)
 **Parent plan**: [`AZ-II.md`](AZ-II.md)
 **Trajectory snapshot**: [`PROGRESS-SNAPSHOT-2026-04-29.md`](PROGRESS-SNAPSHOT-2026-04-29.md)
+**Implemented-state record**: the snapshot is canonical for cutover.A through cutover.N. Later hardening notes refine cutover.O ordering only; they do not claim cutover.N landed code.
 
 AZ-II's cutover wave decomposed into 14 sequential sub-stages (cutover.A through cutover.N) over multiple sessions. cutover.A through cutover.M LANDED at master, completing the BBNF resolver-arm activation, emitter substrate fixes, the BBNF compact-source serializer, and the cutover.M Phase 3 fleet activation onto StructDirect for CSV / Math / BNF / CSS Pretty. cutover.N (EBNF activation + Phases 4/5/6 close) was dispatched at master `43f0795b` and halted at organizational usage limit before any commits landed. The tape crate deletion (Hard gate 1), EBNF activation (deferred under cutover.M for layout-routing depth in `letter`/`digit`/`symbol` Alt-of-many-literal rules), Parsed<R> deletion, and 17-entry bench refresh route to cutover.O.
 
@@ -15,7 +16,10 @@ The bootstrap reproducibility CI gate is intact (BBNF + JSON regen idempotence b
 
 ## Trajectory recap
 
-AZ-II decomposed into eight cutover sub-stages spanning ~30 hours of dispatch:
+AZ-II decomposed into 14 cutover sub-stages spanning multiple dispatch
+sessions. This table is a compact recap; the authoritative
+commit-by-commit record is
+[`PROGRESS-SNAPSHOT-2026-04-29.md`](PROGRESS-SNAPSHOT-2026-04-29.md).
 
 | Sub-stage | Commits | Headline |
 |---|---|---|
@@ -37,20 +41,20 @@ AZ-II decomposed into eight cutover sub-stages spanning ~30 hours of dispatch:
 
 | # | Gate | Status | Evidence |
 |---|---|---|---|
-| 1 | `crates/tape/` deleted; `cargo build -p bbnf --no-default-features` green without it | DEFERRED | 13874 tape references workspace-wide; deletion is a wave-scale refactor outside cutover.H's 300-min cap. Routed to follow-on tranche. |
+| 1 | `crates/tape/` deleted; `cargo build -p bbnf --no-default-features` green without it | DEFERRED | Large live tape surface remains (~10k core refs; 13,874 workspace-wide at an earlier scan). Deletion is a wave-scale refactor routed to cutover.O, not a separate tranche. |
 | 2 | Stage A / Stage B byte-equal across BBNF fixture corpus | MET (cutover.B) | Permanent CI gate at `crates/core/tests/bbnf_bootstrap_reproducibility.rs` PASSES under cutover.H regen output; idempotent. |
-| 3 | IR audit pass reports 100% `->` coverage fleet-wide | NOT VERIFIED | Audit pass exists; full-fleet verification gated on Phase 2 regen-fleet activation (deferred). |
+| 3 | IR audit pass reports 100% `->` coverage fleet-wide | NOT VERIFIED | Audit pass exists; full-fleet verification is part of cutover.O semantic/perf close after EBNF activation. |
 | 4 | `StructRegistry` non-empty for every Named rule | MET (cutover.A) | `populate_struct_registry` returns layouts for all 9 grammars; regression test in place. |
 | 5 | Parity harnesses recoded to struct-vs-external on all four grammars | MET (cutover.D) | `685bad2f` / `825e8a06`. |
-| 6 | 17-entry matrix at AU floor; BBNF self-parse within ±10% of AU baseline | DEFERRED | Bench archive captured at `docs/benchmarks/post-AZ-II.json` (cutover.E-era placeholder; refresh at follow-on tranche after tape deletion). BBNF self-parse via bootstrap_parser, not codegen. |
-| 7 | AZ-II FINAL.md + `docs/benchmarks/post-AZ-II.json` exist on master | MET (this commit) | This document; bench archive present (cutover.E placeholder retained). |
+| 6 | 17-entry matrix at AU floor; BBNF self-parse within ±10% of AU baseline | PARTIAL | Bench archive captured at `docs/benchmarks/post-AZ-II.json` (cutover.E-era placeholder plus later notes). Full refresh belongs to cutover.O after builder transactions, EBNF projection, and tape deletion. BBNF self-parse still routes through `bootstrap_parser`, not generated self-host parse. |
+| 7 | AZ-II FINAL.md + `docs/benchmarks/post-AZ-II.json` exist on master | MET (PARTIAL CLOSE form) | Convert this manifest at cutover.O.7 after terminal gates pass. |
 | 8 | Decay sweep | PARTIAL | cutover.A landed (`tape::dta` hoist + `tape::visitor` deletion + driver helper deletion); `crates/tape/` deletion deferred per Gate 1. |
 
 ## BA handoff verification per AZ-II.md §Handoff contract — 7 points
 
 | # | Point | Status | Notes |
 |---|---|---|---|
-| 1 | All four grammars on direct-to-struct (JSON + CSS L4 + Sheets + BBNF) | PARTIAL | JSON + CSS L4 + Sheets active at cutover.A (StructDirect resolver-arms flipped, regen output on disk). BBNF resolver-arm flipped at cutover.H Phase 1 (`3d799a29`); the regen output produces a working struct-direct parser via `bootstrap_parser` routing. The codegen-emitted `BbnfBootstrap::parse` self-host (regen reproducing itself byte-equal AND admitting the BBNF fixture corpus) is a deferred follow-up — cutover.G's hand-written parser remains the canonical entry point. |
+| 1 | All four grammars on direct-to-struct (JSON + CSS L4 + Sheets + BBNF) | MET for the named four; terminal surface still partial | JSON + CSS L4 + Sheets active at cutover.A (StructDirect resolver-arms flipped, regen output on disk). BBNF resolver-arm flipped at cutover.H Phase 1 (`3d799a29`); the regen output produces a working struct-direct parser via `bootstrap_parser` routing. CSV / Math / BNF / CSS Pretty also flipped at cutover.M. EBNF remains TapeDirect, and the codegen-emitted `BbnfBootstrap::parse` self-host is still bridged by cutover.G's hand-written parser. |
 | 2 | `crates/tape/` deleted | DEFERRED | Per Hard gate 1 above. |
 | 3 | `StructRegistry` closed fleet-wide | MET | Per Hard gate 4 above. |
 | 4 | Parity harnesses on struct comparisons | MET | Per Hard gate 5 above. |
@@ -60,7 +64,7 @@ AZ-II decomposed into eight cutover sub-stages spanning ~30 hours of dispatch:
 
 ## Throughput delta vs AU + vs AZ-I
 
-`docs/benchmarks/post-AZ-II.json` retains the cutover.E placeholder values; re-bench gated on tape-deletion + struct-direct activation parity. The cutover.E values reflect BBNF on TapeDirect baseline; numbers do not capture cutover.H's StructDirect activation. Per-bench logs at `docs/benchmarks/post-AY-AZ-II-close-*.txt` (cutover.E-era for compile/css/sheets/bbnf; cutover.H Phase 6 partial run for json).
+`docs/benchmarks/post-AZ-II.json` retains the cutover.E placeholder values plus later explanatory notes; re-bench is gated on cutover.O terminal hardening. The cutover.E values reflect BBNF on the old baseline and do not capture the terminal StructDirect/tape-deleted state. Per-bench logs at `docs/benchmarks/post-AY-AZ-II-close-*.txt` remain historical until O6 refreshes JSON sonic-rs parity, CSS lightningcss typed parity, and the 17-entry close matrix.
 
 | Grammar / fixture | AU baseline | AZ-I close | AZ-II close (cutover.E placeholder) | Delta vs AU | Delta vs AZ-I |
 |---|---:|---:|---:|---:|---:|
@@ -71,11 +75,11 @@ AZ-II decomposed into eight cutover sub-stages spanning ~30 hours of dispatch:
 | Sheets parse_simple | 95 MB/s | SIGABRT | SIGABRT | n/a | n/a |
 | BBNF self-parse | 394 MB/s | 87 MB/s | 87 MB/s | -77.9% | 0% |
 
-The post-AY cumulative regression vs AU baseline (~70-80%) is documented in the cutover.A through cutover.E reports; remediation routes to BB.close (cost-model-driven inferred rewrites) per the refined wave trajectory at `docs/tranches/az-i/W2-CLOSE-AUDIT.md`.
+The post-AY cumulative regression vs AU baseline (~70-80%) is documented in the cutover.A through cutover.E reports. No optimization tranche may consume these stale values as truth; cutover.O.6 must publish the next baseline before BB.close consumes cost-model or inferred-rewrite work.
 
 ## Reversal disposition
 
-cutover.H Phase 1 + cutover.I Phase 5 land as a non-reversal partial close. The BBNF resolver-arm + emitter fixes + serialize_compact_doc are NOT under reversal — they net-improve workspace test pass count by +16 tests at cutover.H (HEAD: 1429/1640 pass; cutover.H: 1445/1640 pass) and +1 test at cutover.I.5 (bbnf_rule un-ignored). The deferrals (Phase 2 non-BBNF regen-fleet; Phase 3-4 Parsed<R> + tape deletion; Phase 6 bench refresh) carry forward under explicit scope to a follow-on tranche; cutover.I.2 substrate (`shapes/transparent.rs`, ~430 LOC) sits in a worktree pending the wave-scale blocker resolution documented under cutover.I Phase 2 above.
+cutover.H Phase 1 + cutover.I Phase 5 landed as a non-reversal partial close. The BBNF resolver-arm + emitter fixes + `serialize_compact_doc` are not under reversal: they improve workspace test posture and preserve the reproducibility gate. The old Phase 2 non-BBNF regen-fleet deferral is now mostly closed by cutover.K/L/M; the remaining deferrals carry forward under explicit scope to cutover.O terminal hardening.
 
 ## Workspace test posture
 
@@ -107,35 +111,43 @@ Net: +16 tests fixed at cutover.H; +1 test (bbnf_rule un-ignored) at cutover.I.5
 | Phase | Scope | Deferral rationale | Route |
 |---|---|---|---|
 | H.2 / I.2 / M.3 | Re-enable non-BBNF resolver arms + regen fleet | LANDED at cutover.M Phase 3b/c/d (commit `a29a1265`) for CSV / Math / BNF / CSS Pretty. cutover.K Phase 2's per-shape Err-path open-frame close + cutover.L Phase 3a's Alt-of-Ref keyword surgery + cutover.M's alt_dispatch struct_direct Alt-of-Literal/Regex/Seq emitter surgery together unblocked the activation. EBNF stays on TapeDirect: its `letter` / `digit` / `symbol` Alt-of-many-literal AltDispatch rules expose layout-routing depth (the per-letter pushes don't yet route through the `EbnfStructBuilder`'s expected layout) beyond cutover.M's cap. | LANDED for 4/5 grammars; EBNF deferred |
-| H.3 | `Parsed<R>` deletion (Option B) | Eight of nine grammars now return concrete `Document` types directly. Only EBNF still routes through `Parsed<R>` (still on TapeDirect under cutover.M's deferral). Per-site `view()` / `to_value()` migration plus the EBNF activation must close first. | follow-on tranche |
-| H.4 | `crates/tape/` deletion | Cross-crate references remain large (~10k); deletion requires resolution of every `tape::Tape` / `tape::TapeOffset` / `tape::dta::*` consumer plus EBNF activation. | follow-on tranche |
+| H.3 | `Parsed<R>` deletion (Option B) | Eight of nine grammars now return concrete `Document` types directly. Only EBNF still routes through `Parsed<R>` (still on TapeDirect under cutover.M's deferral). Per-site `view()` / `to_value()` migration plus the EBNF activation must close first. | cutover.O.4 |
+| H.4 | `crates/tape/` deletion | Cross-crate references remain large (~10k); deletion requires resolution of every `tape::Tape` / `tape::TapeOffset` / `tape::dta::*` consumer plus EBNF activation. | cutover.O.5 |
 | H.5 | `bbnf_rule` un-ignore | LANDED at cutover.I.5 (commit `98008086`). |
-| H.6 | 17-entry close matrix bench refresh | Bench compile under fat-LTO takes >10 minutes per harness. Full bench refresh deferred — the cutover.M emitter changes do not move the JSON / CSS L4 / Sheets / BBNF hot paths (those grammars were already on StructDirect pre-M); the freshly-activated CSV / Math / BNF / CSS Pretty parsers were not in the AU-era 17-entry close matrix. | follow-on tranche |
+| H.6 | 17-entry close matrix bench refresh | Bench compile under fat-LTO takes >10 minutes per harness. Full bench refresh deferred — the cutover.M emitter changes do not move the JSON / CSS L4 / Sheets / BBNF hot paths (those grammars were already on StructDirect pre-M); the freshly-activated CSV / Math / BNF / CSS Pretty parsers were not in the AU-era 17-entry close matrix. | cutover.O.6 |
 
-## Next-tranche scope (cutover.O)
+## cutover.O Terminal Hardening Scope
 
-The follow-on substage opens on cutover.M's substrate. Items 1, 2 (4/5
-grammars), 5, 7 LANDED in cutover.K/L/M; remaining work for cutover.O:
+The terminal substage opens on cutover.M's substrate and the
+cutover.N no-code halt recorded by the progress snapshot. Items 1, 2
+(4/5 grammars), 5, 7 LANDED in cutover.K/L/M; remaining work for
+cutover.O:
 
-1. **EBNF activation** — `letter` / `digit` / `symbol` Alt-of-many-
-   literal AltDispatch rules expose layout-routing depth in
-   `EbnfStructBuilder` beyond cutover.M's cap. Three candidate
-   structural roots (per-shape uniform fix, NOT EBNF carve-out): shape
-   classifier branch-count-aware dispatch; substrate layout admission
-   depth; runtime `push_branch_tag(idx)` u8 indexing.
-2. **`Parsed<R>` deletion (Option B)** — only EBNF still routes through
-   `Parsed<R>`; gate on item 1.
-3. **`crates/tape/` deletion + cross-crate severance** — ~10k cross-crate
-   refs; per cutover.K recommendation, migrate types to
-   `crates/core/src/runtime/tape/` first, then delete the standalone
-   crate.
-4. **17-entry bench refresh** — full close-matrix capture replacing the
-   cutover.E placeholder values in `docs/benchmarks/post-AZ-II.json`.
-5. **AZ-II FINAL.md PARTIAL → FINAL CLOSE conversion** — convert this
-   manifest from PARTIAL to FINAL once items 1-4 land.
+1. **O0 tooling preflight** — repair or de-canonicalize stale bench,
+   profiling, IAI, and release-pin surfaces before collecting close
+   evidence.
+2. **O1 builder transactions** — add grammar-general
+   checkpoint/rollback/commit support to StructDirect builders and wire
+   every speculative alternate/repeat/minus/negate emitter path.
+3. **O2 EBNF activation** — model `letter` / `digit` / `symbol`
+   Alt-of-many-literal rules through shared alternate/layout facts and
+   require `EbnfParser::parse -> EbnfDocument`.
+4. **O3 generated view purge** — remove tape-backed `TapeCursor`,
+   node-view, and `ValueRoot` residue from StructDirect generated output
+   unless consumed through a document API.
+5. **O4 `Parsed<R>` / `TapeDirect` deletion** — delete production
+   `Parsed<R>` and remove fallback `TapeDirect` semantics.
+6. **O5 `crates/tape` deletion** — delete the standalone crate after
+   relocating only non-tape scan/index primitives.
+7. **O6 semantic/perf close** — refresh JSON sonic-rs parity, CSS
+   lightningcss typed parity, and the 17-entry close matrix.
+8. **O7 FINAL conversion** — convert this manifest from PARTIAL CLOSE to
+   terminal close.
 
-Estimated: 1 dispatch wave at 300-min cap if EBNF activation is
-structural-quick; 2 waves if EBNF requires substrate extension.
+Estimated: ~12 hours sequential under fan-out. Open AZ-III only if O2
+proves EBNF requires new grammar-general inference/layout substrate
+beyond `AltFacts` plus transactional builders; do not move tape deletion,
+`Parsed<R>` deletion, stale benches, or parity gaps into AZ-III.
 
 ## Trajectory snapshot pointer
 
@@ -148,6 +160,6 @@ and the trajectory progress estimate, see
 
 ## Archaeology
 
-cutover.H inherits cutover.G's substrate and adds the resolver-arm + emitter fix that was scoped at cutover.H per cutover.G-PARTIAL §Recommendation. The eight-phase dispatch brief targeted full close in 300 minutes; the actual scope (per-shape transparent emission across the full shape alphabet + tape-deletion's 13874-ref refactor) is wave-scale and routes to a follow-on tranche.
+cutover.H inherits cutover.G's substrate and adds the resolver-arm + emitter fix that was scoped at cutover.H per cutover.G-PARTIAL §Recommendation. The eight-phase dispatch brief targeted full close in 300 minutes; the actual scope grew into cutover.A through cutover.N and now routes to cutover.O terminal hardening.
 
-The PARTIAL close discipline holds: cutover.H Phase 1 is a productive landing — the BBNF substrate is canonical; the regen pipeline produces a self-consistent parser; the bootstrap reproducibility CI gate is intact; net workspace test posture improves by +16 tests. The path to AZ-II's ultimate close (tape deletion + full-fleet StructDirect activation + bench refresh) is well-scoped, and the BB.close gate documented at `docs/tranches/az-i/W2-CLOSE-AUDIT.md` §9 unblocks on the substrate cutover.H lands.
+The PARTIAL close discipline holds: cutover.H Phase 1 is a productive landing — the BBNF substrate is canonical; the regen pipeline produces a self-consistent parser; the bootstrap reproducibility CI gate is intact; net workspace test posture improves by +16 tests. The path to AZ-II's ultimate close is now cutover.O: builder transactions, EBNF activation, tape and `Parsed<R>` deletion, generated view purge, semantic/perf refresh, and FINAL conversion.

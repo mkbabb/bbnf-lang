@@ -5,8 +5,13 @@ BBNF self-hosting bootstrap cutover, byte-equal reproducibility
 harness, tape deletion risk analysis, and the re-plan discipline
 escape design.
 
-Consumed alongside `AZ-II.md` and the forthcoming
-`BOOTSTRAP-CUTOVER.md` (authored in AZ-II.W0).
+2026-04-29 status: historical research. This document predates the B2
+proc-macro retirement and uses `bbnf-derive` language for what is now
+the `cargo xtask regen` checked-in-source path. Use
+`PROGRESS-SNAPSHOT-2026-04-29.md` as the implemented-state record, and
+use `AZ-II.md`, `waves/cutover.md`, `PROGRESS.md`, and
+`audit/AZ-II-HARDENING-AUDIT-2026-04-29.md` as the aligned live execution
+canon for cutover.O.
 
 The research on direct-to-struct thesis foundations (simdjson
 ondemand, sonic-rs pointer, lightningcss derive, parent-pointer

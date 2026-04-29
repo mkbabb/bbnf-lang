@@ -14,12 +14,12 @@ regen windows, cherry-pick order, and status consolidation.
 full BBNF fixture corpus; `crates/tape/` deleted; `cargo build -p bbnf
 --no-default-features` succeeds without `crates/tape/`; AZ-II FINAL.md
 + `docs/benchmarks/post-AZ-II.json` archived.
-**Status**: PARTIAL CLOSE — substrate canonical; 9/9 grammars
+**Status**: interim manifest routed through cutover.O — substrate canonical; 9/9 grammars
 StructDirect after O2; BBNF self-parity 56/56; reproducibility CI gate
 green; cutover.O.0 tooling preflight, O1 builder transactions, and O2
-EBNF direct projection landed; remaining work resumes at O3 generated
-view purge before tape deletion, bench refresh, and FINAL CLOSE
-conversion.
+EBNF direct projection landed; current work is O3a failure-baseline
+triage and child-wave dispatch before O3 generated view purge can
+resume.
 
 **2026-04-29 hardening amendment**: cutover.O must begin with the
 grammar-general StructDirect builder transaction gap. EBNF activation
@@ -27,8 +27,9 @@ is blocked not only by alternate layout depth but also by the fact that
 speculative StructDirect branches can mutate builder state without a
 matching rollback.
 
-**2026-04-29 O2 addendum**: O0, O1, and O2 are landed. The active
-resume point is O3 generated view purge, now with EBNF on
+**2026-04-29 O3a addendum**: O0, O1, and O2 are landed. O3a is the
+active resume point. O3 remains blocked until O3a closes the failure
+cohort routing and P1 projection-totality plan, now with EBNF on
 StructDirect and grammar-general StructDirect checkpoint/rollback/
 commit support available to every speculative emitter path.
 
@@ -204,7 +205,7 @@ Required order:
    in_progress: assign all 84 test failures and the failed JSON bench
    baseline to research/plan/redress cohorts before implementation
    resumes.
-5. **[O3 generated view purge](O3.md)** — in_progress: remove tape-backed `TapeCursor`,
+5. **[O3 generated view purge](O3.md)** — blocked until O3a close: remove tape-backed `TapeCursor`,
    node-view, and `ValueRoot` residue from StructDirect generated output
    unless it is consumed through a document API.
 6. **[O4 Parsed/TapeDirect deletion](O4.md)** — delete `Parsed<R>` as a
@@ -214,7 +215,7 @@ Required order:
 8. **[O6 semantic/perf close](O6.md)** — refresh JSON `sonic-rs` parity, CSS
    `lightningcss` typed parity, and the 17-entry close matrix.
 9. **[O7 final conversion](O7.md)** — convert AZ-II FINAL from
-   PARTIAL CLOSE to terminal close after the gates above pass.
+   interim manifest to terminal close after the gates above pass.
 
 Child wave specs:
 
@@ -224,7 +225,12 @@ Child wave specs:
 | [`O1.md`](O1.md) | complete | up to 10 parallel worktree-isolated lanes; orchestrator-owned regen |
 | [`O2.md`](O2.md) | complete | up to 10 parallel worktree-isolated lanes; orchestrator-owned regen |
 | [`O3a.md`](O3a.md) | in_progress | up to 10 parallel worktree-isolated lanes; failure cohort triumvirates |
-| [`O3.md`](O3.md) | in_progress | up to 10 parallel worktree-isolated lanes; generated view purge |
+| [`O3a-J1.md`](O3a-J1.md) | planned | JSON materialization, parity, and throughput triad |
+| [`O3a-C1.md`](O3a-C1.md) | planned | CSS admission, payload, and lightningcss triad |
+| [`O3a-S1.md`](O3a-S1.md) | planned | Sheets branch payload and serializer triad |
+| [`O3a-P1.md`](O3a-P1.md) | planned | projection totality and generated-view residue triad |
+| [`O3a-A1.md`](O3a-A1.md) | planned | analysis/LSP/prototype/bootstrap bridge disposition triad |
+| [`O3.md`](O3.md) | blocked | up to 10 parallel worktree-isolated lanes; generated view purge |
 | [`O4.md`](O4.md) | planned | up to 10 parallel worktree-isolated lanes; return-model deletion |
 | [`O5.md`](O5.md) | planned | up to 10 parallel worktree-isolated lanes; tape crate deletion |
 | [`O6.md`](O6.md) | planned | up to 10 parallel worktree-isolated lanes; sequential bench execution |

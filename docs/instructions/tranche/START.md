@@ -30,7 +30,9 @@ yours and theirs. Update `PROGRESS.md` at every wave boundary.
 Do not relinquish control until the tranche-completion
 requirements in `docs/instructions/README.md` are met: `FINAL.md`,
 `docs/benchmarks/post-{LETTER}.json` over the four parse-benches,
-and a clean `cargo test --workspace`. A multi-phase escape clause
+and a clean `make test-close` or
+`cargo nextest run --workspace --cargo-profile ax-iter --no-fail-fast`.
+A multi-phase escape clause
 must be declared at plan time in `{LETTER}.md`, never invoked
 mid-execution.
 

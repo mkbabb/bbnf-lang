@@ -1,14 +1,15 @@
 # AZ-II — Progress Log
 
-**Status**: partial close; `cutover.O.0`, `cutover.O.1`, and
-`cutover.O.2` landed, O3 next.
+**Status**: interim manifest routed through cutover.O; `cutover.O.0`,
+`cutover.O.1`, and `cutover.O.2` landed, O3a active.
 Implemented-state record:
 [`PROGRESS-SNAPSHOT-2026-04-29.md`](PROGRESS-SNAPSHOT-2026-04-29.md).
 Live terminal sequence: `cutover.O.0` through `cutover.O.7`, specified
 for dispatch at [`waves/cutover/O0.md`](waves/cutover/O0.md) through
 [`waves/cutover/O7.md`](waves/cutover/O7.md).
 `cutover.O3a` is the active failure-baseline and triumvirate redress
-prelude inserted before O3 implementation continues.
+prelude inserted before O3 implementation continues; O3 is blocked
+until O3a closes P1 routing and child-wave ownership.
 
 **Date**: 2026-04-23
 
@@ -98,7 +99,7 @@ The cutover wave runs in three sequential sub-stages:
 | W0 | superseded (2026-04-28) | Folded into cutover.A (substrate hoist + BBNF runtime + decay sweep) |
 | W1 | superseded (2026-04-28) | Folded into cutover.B (Stage A + Stage B byte-equal cycle) |
 | W2 | superseded (2026-04-28) | Folded into cutover.C (`crates/tape/` deletion + recode + FINAL) |
-| cutover | partial-close (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; [O0](waves/cutover/O0.md) tooling preflight, [O1](waves/cutover/O1.md) builder transactions, and [O2](waves/cutover/O2.md) EBNF direct projection landed; [O3](waves/cutover/O3.md) generated view purge next) | 9/9 grammars StructDirect; terminal hardening routes through [cutover.O3-O7](waves/cutover/README.md) after transactional StructDirect rollback support and EBNF activation |
+| cutover | interim-manifest (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; [O0](waves/cutover/O0.md) tooling preflight, [O1](waves/cutover/O1.md) builder transactions, and [O2](waves/cutover/O2.md) EBNF direct projection landed; [O3a](waves/cutover/O3a.md) active; [O3](waves/cutover/O3.md) blocked until O3a close) | 9/9 grammars StructDirect; terminal hardening routes through [cutover.O3a-O7](waves/cutover/README.md) after transactional StructDirect rollback support and EBNF activation |
 
 ## 2026-04-28 — cutover.G partial close
 
@@ -334,15 +335,21 @@ cross-crate refs).
 | [cutover.O.1](waves/cutover/O1.md) | StructDirect builder transaction ABI across speculative branches | LANDED |
 | [cutover.O.2](waves/cutover/O2.md) | EBNF diagnosis + generic AltDispatch structural-Seq repair | LANDED |
 | [cutover.O.3a](waves/cutover/O3a.md) | Failure baseline + research/plan/redress cohort dispatch | in_progress |
-| [cutover.O.3](waves/cutover/O3.md) | Generated tape-view / `ValueRoot` residue purge for StructDirect | 90 min |
+| [cutover.O.3a-J1](waves/cutover/O3a-J1.md) | JSON materialization, parity, and throughput cohort | planned |
+| [cutover.O.3a-C1](waves/cutover/O3a-C1.md) | CSS admission, payloads, and lightningcss cohort | planned |
+| [cutover.O.3a-S1](waves/cutover/O3a-S1.md) | Sheets branch payload and serialization cohort | planned |
+| [cutover.O.3a-P1](waves/cutover/O3a-P1.md) | Projection totality and generated-view residue cohort | planned |
+| [cutover.O.3a-A1](waves/cutover/O3a-A1.md) | Analysis/LSP/prototype/bootstrap disposition cohort | planned |
+| [cutover.O.3](waves/cutover/O3.md) | Generated tape-view / `ValueRoot` residue purge for StructDirect | blocked until O3a close |
 | [cutover.O.4](waves/cutover/O4.md) | `Parsed<R>` deletion and `TapeDirect` fallback removal | 90 min |
 | [cutover.O.5](waves/cutover/O5.md) | `crates/tape` deletion after relocating non-tape scan/index primitives | 120 min |
 | [cutover.O.6](waves/cutover/O6.md) | 17-entry close matrix + JSON sonic-rs / CSS lightningcss parity refresh | 90 min |
-| [cutover.O.7](waves/cutover/O7.md) | AZ-II FINAL.md PARTIAL -> FINAL CLOSE conversion | 30 min |
+| [cutover.O.7](waves/cutover/O7.md) | AZ-II FINAL.md interim manifest -> terminal close conversion | 30 min |
 
-Remaining estimate after O2: ~7 hours sequential under fan-out. If a
-later gate requires a new grammar-general inference/layout substrate,
-author AZ-III for that substrate only; do not move tape deletion,
+Remaining estimate after O2: O3a adds planning/redress fan-out before
+the earlier ~7 hour sequential O3-O7 terminal path. If a later gate
+requires a new grammar-general inference/layout substrate, author
+AZ-III for that substrate only; do not move tape deletion,
 `Parsed<R>` deletion, stale benches, or parity gaps into AZ-III.
 
 ## 2026-04-29 — Parallel hardening audit
@@ -353,7 +360,7 @@ the last 1200 commits, and current implementation wiring.
 
 Integrated findings:
 
-- AZ-II is partial, not terminal: 9/9 grammars are StructDirect after
+- AZ-II is interim, not terminal: 9/9 grammars are StructDirect after
   O2; generated tape-view residue, `Parsed<R>`, `TapeDirect`, and
   `crates/tape` remain.
 - StructDirect speculative branches needed grammar-general builder
@@ -479,3 +486,21 @@ continues:
 Round 1 dispatch uses research + plan + redress triads for J1, C1, and
 S1. Round 2 covers P1 and A1. Plan agents must create or amend wave
 specs before redress lands.
+
+Six-agent audit synthesis:
+`docs/tranches/AZ-II/audit/O3a-six-agent-audit-synthesis-2026-04-29.md`.
+The audit confirms the five cohorts exhaust the 84 failed tests and the
+JSON `data_xl` bench timeout, but J1/C1/S1 required finer-grained child
+wave specs before any source redress. Those deployable specs now exist:
+
+| Child spec | Owned surface | Blocks |
+|---|---|---|
+| [O3a-J1](waves/cutover/O3a-J1.md) | 24 JSON tests plus `json_monolithic::data_xl` timeout | O3/O4/O6 depending root cause |
+| [O3a-C1](waves/cutover/O3a-C1.md) | 17 CSS/lightningcss tests | O6 CSS parity |
+| [O3a-S1](waves/cutover/O3a-S1.md) | 33 Sheets tests | O4/O6 depending root cause |
+| [O3a-P1](waves/cutover/O3a-P1.md) | 1 projection-totality test plus generated-view residue | O3 close |
+| [O3a-A1](waves/cutover/O3a-A1.md) | 2 analysis/LSP tests, 7 json-prototype tests, bootstrap/JIT disposition | O5/O7 |
+
+Current instruction: implementation remains halted until the child
+triads are explicitly dispatched from these specs. O3 is blocked, not
+active.

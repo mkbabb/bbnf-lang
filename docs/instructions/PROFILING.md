@@ -197,9 +197,10 @@ across same-wave samply runs.
 Profiling artefacts live under `.profiles/` in the main repo. All
 agents in a profiling wave share **one** absolute `CARGO_TARGET_DIR` —
 not per-worktree, not per-agent. Prepare once, then profile many.
-Worktrees are **optional** for profiling (they isolate git, not
-builds); sibling worktrees are permitted for parallel source-reading,
-never `/tmp`.
+Sibling worktrees are mandatory for profiling agents too; they isolate
+git while sharing the prepared target. Worktrees are siblings of the
+main checkout under `/Users/mkbabb/Programming/bbnf-wt-*`, never `/tmp`
+or `/private/tmp`.
 
 ```bash
 export CARGO_TARGET_DIR=/absolute/path/to/shared/profile-target
@@ -338,7 +339,7 @@ google_sheets_monolithic, bbnf_monolithic, json_value).
 - `.profiles/` in the main repo is the only retained artefact root.
   Sub-agents writing elsewhere violate the contract.
 - Dispatch sub-agents with their exact `wave.tsv` row as input:
-  worktree path (optional), bench, entry list, record port, load port,
+  worktree path, bench, entry list, record port, load port,
   artefact dir, binary path, expand.rs path, expand.err path, bench
   cwd, shared target dir.
 - Do not ask sub-agents to rerun `cargo expand` or `cargo bench` if
@@ -348,7 +349,7 @@ google_sheets_monolithic, bbnf_monolithic, json_value).
 **Sub-agent responsibilities.**
 
 - Read `docs/instructions/README.md` and this file before starting.
-- Operate inside the assigned worktree (if any); otherwise main
+- Operate inside the assigned sibling worktree; never use the main
   checkout.
 - Read-only analysis: no edits to tracked files, no commits (the
   orchestrator cherry-picks from wave artefacts, not sub-agent

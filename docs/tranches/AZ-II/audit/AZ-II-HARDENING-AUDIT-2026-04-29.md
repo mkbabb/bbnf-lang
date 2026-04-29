@@ -12,7 +12,7 @@ Repo head audited: `25693310`.
 AZ-II remains open. The repository is not in a terminal direct-to-struct
 state.
 
-The current implementation is a partial close:
+The current implementation is an interim manifest, not a terminal close:
 
 - StructDirect is live for 9/9 grammars after cutover.O2: JSON,
   Google Sheets, CSS L4, BBNF, CSV, Math, BNF, CSS Pretty, and EBNF.
@@ -32,8 +32,10 @@ The current implementation is a partial close:
 This is not an AZ-III by default. The active work is AZ-II
 `cutover.O`, a terminal hardening wave. O0 tooling preflight, O1
 StructDirect builder transactions, and O2 EBNF direct projection have
-landed; the active gate is O3 generated view purge. Open AZ-III only if
-a later `cutover.O` gate proves that new grammar-general
+landed; the active gate is O3a failure-baseline triage and child-wave
+dispatch. O3 generated view purge is blocked until O3a closes P1 and
+failure-cohort ownership. Open AZ-III only if a later `cutover.O` gate
+proves that new grammar-general
 inference/layout substrate cannot land inside AZ-II without hiding a
 larger architectural transposition.
 
@@ -102,8 +104,9 @@ Landed close:
 ### Tape and Parsed Deletion
 
 Tape deletion is not mechanical yet because StructDirect generated files
-still carry tape-shaped view/materializer surfaces and because EBNF still
-uses the tape return path.
+still carry tape-shaped view/materializer surfaces and because
+`Parsed<R>` / `TapeDirect` fallback surfaces still exist after EBNF's O2
+resolver flip.
 
 Required close:
 
@@ -173,6 +176,12 @@ Required close before BB optimization:
 4. Publish a post-`cutover.O` benchmark artifact instead of carrying
    AZ-II partial placeholder numbers.
 
+O6 close must also re-run the post-O5 structural gates that were
+unverified at this audit boundary: payload coverage, StructRegistry
+closure, `cargo xtask regen --check`, BBNF bootstrap reproducibility,
+and workspace nextest. O7 cannot carry misses from those gates into
+BA/BB.
+
 ## Inference Direction
 
 The project direction is aligned with SOTA: grammar lowering, fact
@@ -220,7 +229,14 @@ fully-contained sibling worktree agents and explicit file bounds:
 4. **[O3a - Failure baseline and triumvirate redress](../waves/cutover/O3a.md).**
    in_progress: assign all post-O2 failures to research/plan/redress
    cohorts and require wave creation/amendment before redress lands.
-5. **[O3 - Generated view purge](../waves/cutover/O3.md).** in_progress: stop emitting tape-backed view and
+   Child specs now own the five cohorts:
+   [`J1`](../waves/cutover/O3a-J1.md),
+   [`C1`](../waves/cutover/O3a-C1.md),
+   [`S1`](../waves/cutover/O3a-S1.md),
+   [`P1`](../waves/cutover/O3a-P1.md), and
+   [`A1`](../waves/cutover/O3a-A1.md). Six-agent synthesis:
+   [`O3a-six-agent-audit-synthesis-2026-04-29.md`](O3a-six-agent-audit-synthesis-2026-04-29.md).
+5. **[O3 - Generated view purge](../waves/cutover/O3.md).** blocked until O3a closes P1: stop emitting tape-backed view and
    `ValueRoot` materializer artifacts for StructDirect grammars unless
    they are consumed through a document API.
 6. **[O4 - Parsed/TapeDirect deletion](../waves/cutover/O4.md).** Remove `Parsed<R>` as a
@@ -228,13 +244,15 @@ fully-contained sibling worktree agents and explicit file bounds:
 7. **[O5 - Tape crate deletion](../waves/cutover/O5.md).** Remove `crates/tape` after relocating
    only non-tape scan/index primitives to their natural owner.
 8. **[O6 - Bench/parity close](../waves/cutover/O6.md).** Refresh the 17-entry matrix, JSON
-   `sonic-rs` parity, CSS `lightningcss` typed parity, and publish the
-   terminal `post-AZ-II.json`.
-9. **[O7 - Final conversion](../waves/cutover/O7.md).** Convert AZ-II FINAL from PARTIAL CLOSE to
+   `sonic-rs` parity, CSS `lightningcss` typed parity, workspace
+   nextest health, payload coverage, StructRegistry closure, bootstrap
+   reproducibility, and publish the terminal `post-AZ-II.json`.
+9. **[O7 - Final conversion](../waves/cutover/O7.md).** Convert AZ-II FINAL from interim manifest to
    terminal close only after the gates above pass.
 
 BA and BB remain blocked on the terminal close. BB.scaffold may exist,
-but optimization work must not hide structural incompleteness.
+but optimization work must not hide structural incompleteness and must
+remain production-disconnected until AZ-II terminal close.
 
 ## Archive Decision
 

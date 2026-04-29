@@ -321,7 +321,8 @@ bench and close-gate test runs ride `cargo final-bench` /
 wave-close evidence and closing-ceremony artefacts. Wave plans
 and gate phrasings name the tier explicitly; a gate that silently
 defaults routine work onto `cargo check --workspace`,
-`cargo test --workspace`, or `cargo bench` is a miscalibration
+`cargo test --workspace`, bare `cargo nextest run --workspace`, or
+`cargo bench` is a miscalibration
 against this three-tier discipline.
 
 ## Scope-reveal protocol
@@ -516,7 +517,9 @@ A tranche closes when:
 1. `FINAL.md` exists under `docs/tranches/{LETTER}/`.
 2. `docs/benchmarks/post-{LETTER}.json` covers the matrix (or is
    rationale-satisfied per the plan's escape clause).
-3. `cargo test --workspace --no-fail-fast` returns 0 failures at
+3. `make test-close` or
+   `cargo nextest run --workspace --cargo-profile ax-iter --no-fail-fast`
+   returns 0 failures at
    master after all tranche commits land.
 4. Every invariant in `{LETTER}.md` verified with artefact
    citation in FINAL.md.
@@ -592,6 +595,8 @@ tranche authoring:
       aggregate derive-Parser surface at ~26 GB peak RSS; see
       `README.md` §"Memory discipline for aggregate test binaries")
     - `cargo test --workspace`
+    - bare `cargo nextest run --workspace` without the close or
+      tranche-specified cargo profile
     - `cargo bench`
   Every iteration-loop `cargo check` / `cargo test` invocation
   carries `--profile ax-iter` explicitly; bare `cargo check
@@ -625,7 +630,9 @@ tranche authoring:
   samply / test).
 - [ ] `docs/benchmarks/post-{LETTER}.json` exists and covers the
   matrix.
-- [ ] `cargo test --workspace --no-fail-fast` 0 failures.
+- [ ] `make test-close` or
+      `cargo nextest run --workspace --cargo-profile ax-iter --no-fail-fast`
+      0 failures.
 - [ ] `FINAL.md` composed and committed.
 - [ ] `PROGRESS.md` has close entry with tranche HEAD commit.
 - [ ] All tranche-specific worktrees removed.

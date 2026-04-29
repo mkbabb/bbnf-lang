@@ -101,8 +101,10 @@ Sub-gate: snapshot says cutover.N landed no code commits.
 ## Verification artefacts
 
 - `docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md`.
-- Worktree record `/private/tmp/bbnf-worktrees/cutover-N` cited in the
-  snapshot.
+- Historical nonconforming worktree record
+  `/private/tmp/bbnf-worktrees/cutover-N` cited in the snapshot. This
+  path is provenance only; future O-wave dispatch uses sibling
+  `/Users/mkbabb/Programming/bbnf-wt-*` worktrees exclusively.
 - Commits `1d9a80bb`, `53d3e6b2`, `77d8cdf7` as post-halt doc
   alignment before O0/O1/O2.
 

@@ -1,6 +1,6 @@
 # Changelog
 
-## 2026-04-29 — AZ-II partial close snapshot + cutover.O alignment
+## 2026-04-29 — AZ-II interim manifest + cutover.O alignment
 
 AZ-II's implemented-state record is
 `docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md`: cutover.A
@@ -8,8 +8,9 @@ through cutover.M landed, cutover.N dispatched and halted at
 organizational usage limit, and cutover.N landed no code commits. The
 live terminal sequence is AZ-II `cutover.O.0` through `cutover.O.7`:
 tooling preflight, StructDirect builder transactions, EBNF direct
-projection, generated view purge, `Parsed<R>` / `TapeDirect` deletion,
-`crates/tape` deletion, semantic/perf refresh, and FINAL conversion.
+projection, O3a failure-baseline child specs, generated view purge,
+`Parsed<R>` / `TapeDirect` deletion, `crates/tape` deletion,
+semantic/perf refresh, and FINAL conversion.
 Wave fan-out language is now capped at up to 10 parallel
 worktree-isolated agents with disjoint file bounds.
 Commit-message guidance no longer imposes a 72-character subject cap;
@@ -17,6 +18,8 @@ subjects are as long as needed, granular, and filler-free.
 Scope-reveal protocol now requires written wave creation/amendment
 before deployment; large multi-week root fixes stay in-tranche when
 they are fully specified and own their consumers.
+The profiling/worktree contract now applies the sibling-worktree rule
+to profiling agents as well as source/audit agents.
 
 ## 2026-04-28 — AZ-I W0/W1/W2-substrate close
 

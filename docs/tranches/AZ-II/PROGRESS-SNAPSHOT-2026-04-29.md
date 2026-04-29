@@ -103,11 +103,12 @@ fully-contained sibling worktrees inside the row's file bounds:
 | [O1](waves/cutover/O1.md) | StructDirect builder transactions | LANDED — grammar-general checkpoint/rollback/commit support wired through speculative alternate/repeat/minus/negate emitter paths and runtime builders |
 | [O2](waves/cutover/O2.md) | EBNF direct projection | LANDED — high-branch literal alternates and structural `Seq` branches project through StructDirect; `EbnfParser::parse -> EbnfDocument` |
 | [O3a](waves/cutover/O3a.md) | failure baseline + triumvirate redress | in_progress — post-O2 test/bench failures are assigned to research/plan/redress cohorts before implementation continues |
-| [O3](waves/cutover/O3.md) | Generated view purge | in_progress — tape-backed `TapeCursor`, node-view, and `ValueRoot` residue removed from StructDirect generated output unless consumed through a document API |
+| [O3a-J1](waves/cutover/O3a-J1.md) / [C1](waves/cutover/O3a-C1.md) / [S1](waves/cutover/O3a-S1.md) / [P1](waves/cutover/O3a-P1.md) / [A1](waves/cutover/O3a-A1.md) | failure cohort child specs | planned — deployable research/plan/wave-creation/redress specs for all 84 failed tests and the JSON bench timeout |
+| [O3](waves/cutover/O3.md) | Generated view purge | blocked until O3a close — tape-backed `TapeCursor`, node-view, and `ValueRoot` residue removed from StructDirect generated output unless consumed through a document API |
 | [O4](waves/cutover/O4.md) | `Parsed<R>` / `TapeDirect` deletion | `Parsed<R>` removed as a production parser result; `TapeDirect` fallback semantics removed |
 | [O5](waves/cutover/O5.md) | `crates/tape` deletion | standalone tape crate deleted after only genuinely non-tape scan/index primitives move to their natural owner |
 | [O6](waves/cutover/O6.md) | semantic/perf close | JSON sonic-rs parity, CSS lightningcss typed parity, and the 17-entry close matrix refreshed |
-| [O7](waves/cutover/O7.md) | final conversion | `FINAL.md` converted from PARTIAL CLOSE to terminal close |
+| [O7](waves/cutover/O7.md) | final conversion | `FINAL.md` converted from interim manifest to terminal close |
 
 The EBNF failure remains structural and generic. Per cutover.M's
 deviation note, EBNF's `letter = "A" | "B" | ... | "z"` 52-branch
@@ -197,7 +198,7 @@ trustworthy.
 
 ```
 /Users/mkbabb/Programming/bbnf-lang    43f0795b [master]
-/private/tmp/bbnf-worktrees/cutover-N  43f0795b (detached HEAD; cutover.N dispatched + halted)
+/private/tmp/bbnf-worktrees/cutover-N  43f0795b (detached HEAD; cutover.N dispatched + halted; historical nonconforming path, not reusable for O-wave dispatch)
 ```
 
 ## Verification at snapshot time
@@ -233,7 +234,9 @@ inline branch walker, preserving nested children and committing the
 branch tag transactionally. cutover.N halted at organizational usage
 limit with no code commits; cutover.O.1 supplied the builder
 transaction prerequisite, and cutover.O.2 flipped EBNF to
-`EbnfDocument`. The next active gate is O3 generated view purge.
+`EbnfDocument`. The next active gate is O3a failure-cohort closure;
+O3 generated view purge is blocked until O3a closes P1 and cohort
+ownership.
 
 ## Trajectory progress estimate
 

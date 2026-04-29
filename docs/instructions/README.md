@@ -285,7 +285,9 @@ A tranche is **not complete** until:
    `json_value` is included when the tranche touches the Value API.
    Numbers come from a fresh cold bench run on master after all
    tranche commits have landed.
-3. **All tests pass** — `cargo test --workspace` exits zero, no
+3. **All tests pass** — `make test-close` or
+   `cargo nextest run --workspace --cargo-profile ax-iter --no-fail-fast`
+   exits zero, no
    `#[ignore]` added in the tranche, no workarounds, no skips.
 
 Escape clause and scope-reveal response modes live in
@@ -302,13 +304,13 @@ the file. Never re-run an expensive command to slice output
 differently.
 
 ```bash
-cargo test --workspace > /tmp/test-out.txt 2>&1
+make test-close > /tmp/test-out.txt 2>&1
 grep 'test result' /tmp/test-out.txt
 grep FAILED /tmp/test-out.txt
 tail -40 /tmp/test-out.txt
 ```
 
-Applies to `cargo test`, `cargo bench`, `cargo expand`, `cargo
+Applies to `cargo nextest run`, `cargo test`, `cargo bench`, `cargo expand`, `cargo
 build`, `cargo check --workspace`, `samply record`, and any command
 taking > 30 seconds.
 

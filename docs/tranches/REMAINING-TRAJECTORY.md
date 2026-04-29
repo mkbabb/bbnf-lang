@@ -5,11 +5,11 @@ B0-B7, AZ-I, and the AZ-II partial close. It does not authorize
 execution.
 
 **2026-04-29 hardening update.** AZ-II is open through terminal
-`cutover.O`. The current state is 8/9 StructDirect grammars; EBNF,
+`cutover.O`. The current state is 9/9 StructDirect grammars after O2;
 `Parsed<R>`, `TapeDirect`, generated tape-view residue, and
 `crates/tape` remain blockers. BA and BB remain blocked on AZ-II
-terminal close. AZ-III opens only if `cutover.O` proves that EBNF
-requires a new grammar-general inference/layout substrate.
+terminal close. AZ-III opens only if a later `cutover.O` gate proves a
+new grammar-general inference/layout substrate is required.
 
 **2026-04-28 status update.** AZ-I.W0 + W1 + W2-substrate closed.
 W2 substrate landed nine per-shape struct-direct emitters with the
@@ -28,8 +28,8 @@ folds W4 into AZ-II.W0 to retire the ceremonial wave overhead.
 
 | Blocker | Required close |
 |---|---|
-| StructDirect speculative parsing | Grammar-general builder checkpoint/rollback/commit, wired through all speculative alternate/repeat/minus/negate emitter paths |
-| EBNF direct projection | Generic high-branch alternate layout/inference, then `EbnfParser::parse -> EbnfDocument` |
+| StructDirect speculative parsing | LANDED in cutover.O1: grammar-general builder checkpoint/rollback/commit wired through speculative alternate/repeat/minus/negate emitter paths |
+| EBNF direct projection | LANDED in cutover.O2: high-branch and structural `Seq` alternates project through StructDirect; `EbnfParser::parse -> EbnfDocument` |
 | `Parsed<R>` | Delete production runtime surface and generated return path |
 | `TapeDirect` | Remove fallback strategy; generation must fail loudly instead |
 | generated tape views | Stop emitting `TapeCursor` / `ValueRoot` / node-view residues for StructDirect grammars unless consumed through a document API |

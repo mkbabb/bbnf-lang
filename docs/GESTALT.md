@@ -13,15 +13,15 @@ retirement, substrate restoration, regen-content skipping, and
 cross-repo bench/test modernization. AZ-I closed structurally but
 recorded unresolved performance and parser-stack risks. AZ-II is
 partially closed, not terminally closed: direct-to-struct is live for
-8/9 grammars, with EBNF, `Parsed<R>`, `TapeDirect`, generated
-tape-view residue, and `crates/tape` still blocking the gestalt
-architecture. The implemented-state read-of-record is the AZ-II
+9/9 grammars after cutover.O2, with `Parsed<R>`, `TapeDirect`,
+generated tape-view residue, and `crates/tape` still blocking the
+gestalt architecture. The implemented-state read-of-record is the AZ-II
 progress snapshot; the immediate path is AZ-II `cutover.O`, aligned by
 `docs/tranches/AZ-II/waves/cutover.md` and
 `docs/tranches/AZ-II/audit/AZ-II-HARDENING-AUDIT-2026-04-29.md`.
-As of the post-snapshot hardening work, O0 tooling preflight and O1
-StructDirect builder transactions are landed; O2 EBNF direct projection
-is the active gate.
+As of the post-snapshot hardening work, O0 tooling preflight, O1
+StructDirect builder transactions, and O2 EBNF direct projection are
+landed; O3 generated view purge is the active gate.
 AZ-III opens only if `cutover.O` proves a new grammar-general
 inference/layout substrate is required; it must not carry forward tape
 deletion, `Parsed<R>` deletion, stale benches, or parity gaps as
@@ -37,9 +37,10 @@ pluggable CSP solver (`crates/csp-solver`) and a pluggable e-graph
 (`crates/egraph`), both grammar-agnostic; grammar semantics flow in
 through `IrNode` plus persisted projection facts. The historical tape
 runtime is no longer the architecture's target. It remains only as
-unfinished substrate around EBNF, `Parsed<R>`, generated view helpers,
-and `crates/tape`; AZ-II `cutover.O` must delete it or expose a new
-grammar-general blocker. A parse-that substrate (`../parse-that`)
+unfinished substrate around `Parsed<R>`, `TapeDirect` fallback
+semantics, generated view helpers, and `crates/tape`; AZ-II
+`cutover.O` must delete it or expose a new grammar-general blocker. A
+parse-that substrate (`../parse-that`)
 carries the parser-combinator surface and bespoke regex HIR/NFA/DFA
 engine. A pprint substrate (`../pprint`) carries the gorgeous
 auto-formatter.

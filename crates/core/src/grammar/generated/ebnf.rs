@@ -688,15 +688,10 @@ mod __ebnfparser_emit_impl {
             true
         }
     }
-    /// AX.W0a.2.b — per-grammar AltDispatch-shape parse function.
-    ///
-    /// Generalized byte-dispatch over `Alt(leaf, leaf, …)` bodies.
-    /// Each branch is a classified-Ref, a Literal, a Regex, or a
-    /// leaf-only Seq (prefix-tree factoring). No recursion through
-    /// `__value` — per-Ref routing emits direct shape-fn calls.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-    /// recursion rationale.
+    /// AZ-I.W2.RB — per-grammar AltDispatch-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / Sheets / CSS L4 per the resolver's
+    /// `SubstrateBinding`).
     #[inline]
     #[allow(
         non_snake_case,
@@ -706,908 +701,593 @@ mod __ebnfparser_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_EbnfParser_letter(
-        input: &[u8],
+    pub fn parse_altdispatch_EbnfParser_letter<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+        builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        use crate::runtime::builder::StructBuilder;
         let first = __shape_support_EbnfParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
-        let alt_lo = *p as u32;
-        let alt_child = builder.enter_post_order_children();
-        let _ = alt_child;
-        let save_p = *p;
-        let save_child = builder.position();
-        let _ = save_p;
-        let _ = save_child;
-        'try_branches: loop {
-            match first {
-                65u8 => {
+        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 0u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("letter"),
+            kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __dispatch_checkpoint = builder.checkpoint();
+        let __handle = builder.begin_compound(&__layout);
+        let __dispatch_result: ::core::result::Result<
+            (),
+            crate::runtime::tape::DtaError,
+        > = (|| {
+            'try_branches: loop {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [65u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(0u32);
                         break 'try_branches;
                     }
                 }
-                66u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [66u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(1u32);
                         break 'try_branches;
                     }
                 }
-                67u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [67u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(2u32);
                         break 'try_branches;
                     }
                 }
-                68u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [68u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(3u32);
                         break 'try_branches;
                     }
                 }
-                69u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [69u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(4u32);
                         break 'try_branches;
                     }
                 }
-                70u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [70u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(5u32);
                         break 'try_branches;
                     }
                 }
-                71u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [71u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(6u32);
                         break 'try_branches;
                     }
                 }
-                72u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [72u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(7u32);
                         break 'try_branches;
                     }
                 }
-                73u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [73u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(8u32);
                         break 'try_branches;
                     }
                 }
-                74u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [74u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(9u32);
                         break 'try_branches;
                     }
                 }
-                75u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [75u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(10u32);
                         break 'try_branches;
                     }
                 }
-                76u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [76u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(11u32);
                         break 'try_branches;
                     }
                 }
-                77u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [77u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(12u32);
                         break 'try_branches;
                     }
                 }
-                78u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [78u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(13u32);
                         break 'try_branches;
                     }
                 }
-                79u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [79u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(14u32);
                         break 'try_branches;
                     }
                 }
-                80u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [80u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(15u32);
                         break 'try_branches;
                     }
                 }
-                81u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [81u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(16u32);
                         break 'try_branches;
                     }
                 }
-                82u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [82u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(17u32);
                         break 'try_branches;
                     }
                 }
-                83u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [83u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(18u32);
                         break 'try_branches;
                     }
                 }
-                84u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [84u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(19u32);
                         break 'try_branches;
                     }
                 }
-                85u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [85u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(20u32);
                         break 'try_branches;
                     }
                 }
-                86u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [86u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(21u32);
                         break 'try_branches;
                     }
                 }
-                87u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [87u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(22u32);
                         break 'try_branches;
                     }
                 }
-                88u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [88u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(23u32);
                         break 'try_branches;
                     }
                 }
-                89u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [89u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(24u32);
                         break 'try_branches;
                     }
                 }
-                90u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [90u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(25u32);
                         break 'try_branches;
                     }
                 }
-                97u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [97u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(26u32);
                         break 'try_branches;
                     }
                 }
-                98u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [98u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(27u32);
                         break 'try_branches;
                     }
                 }
-                99u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [99u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(28u32);
                         break 'try_branches;
                     }
                 }
-                100u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [100u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(29u32);
                         break 'try_branches;
                     }
                 }
-                101u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [101u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(30u32);
                         break 'try_branches;
                     }
                 }
-                102u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [102u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(31u32);
                         break 'try_branches;
                     }
                 }
-                103u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [103u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(32u32);
                         break 'try_branches;
                     }
                 }
-                104u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [104u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(33u32);
                         break 'try_branches;
                     }
                 }
-                105u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [105u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(34u32);
                         break 'try_branches;
                     }
                 }
-                106u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [106u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(35u32);
                         break 'try_branches;
                     }
                 }
-                107u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [107u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(36u32);
                         break 'try_branches;
                     }
                 }
-                108u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [108u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(37u32);
                         break 'try_branches;
                     }
                 }
-                109u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [109u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(38u32);
                         break 'try_branches;
                     }
                 }
-                110u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [110u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(39u32);
                         break 'try_branches;
                     }
                 }
-                111u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [111u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(40u32);
                         break 'try_branches;
                     }
                 }
-                112u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [112u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(41u32);
                         break 'try_branches;
                     }
                 }
-                113u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [113u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(42u32);
                         break 'try_branches;
                     }
                 }
-                114u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [114u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(43u32);
                         break 'try_branches;
                     }
                 }
-                115u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [115u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(44u32);
                         break 'try_branches;
                     }
                 }
-                116u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [116u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(45u32);
                         break 'try_branches;
                     }
                 }
-                117u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [117u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(46u32);
                         break 'try_branches;
                     }
                 }
-                118u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [118u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(47u32);
                         break 'try_branches;
                     }
                 }
-                119u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [119u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(48u32);
                         break 'try_branches;
                     }
                 }
-                120u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [120u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(49u32);
                         break 'try_branches;
                     }
                 }
-                121u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [121u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(50u32);
                         break 'try_branches;
                     }
                 }
-                122u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [122u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(51u32);
                         break 'try_branches;
                     }
                 }
-                _ => {}
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            builder.exit_post_order_children();
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
+            ::core::result::Result::Ok(())
+        })();
+        match __dispatch_result {
+            ::core::result::Result::Ok(()) => {
+                builder.end_compound(__handle);
+                Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__dispatch_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        let alt_hi = *p as u32;
-        let off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Rule,
-                alt_lo,
-                0u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                off,
-                alt_hi,
-                crate::runtime::tape::TapeOffset(alt_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(off))
     }
-    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
-    /// (Alt of literal-led or Ref-led branches).
+    /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
+    /// (Alt of literal-led, Ref-led, or Seq-led branches).
     ///
-    /// AX.W0a.2.g — admits Ref-led branches whose target
-    /// resolves to a literal-prefix body (per `leading_
-    /// literal_bytes`). For each first-byte group, each
-    /// candidate's full prefix is checked before committing:
-    /// Literal branches emit the legacy leaf push;
-    /// Ref branches delegate to the target's shape fn via
-    /// [`emit_ref_call_tape`], threading `state` through.
+    /// Literal branches push leaves through
+    /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
+    /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
+    /// untyped). Ref branches delegate to the target shape
+    /// fn so the target's records bubble up unchanged.
+    /// Returns `TapeOffset::NONE` for compositional
+    /// uniformity.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_EbnfParser_digit(
-        input: &[u8],
+    pub fn parse_keyword_EbnfParser_digit<'p>(
+        input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
             48u8 => {
@@ -1615,18 +1295,12 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let off = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            at as u32,
-                            end as u32,
-                            1u8,
-                            0u8,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -1637,18 +1311,12 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let off = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            at as u32,
-                            end as u32,
-                            1u8,
-                            0u8,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -1659,18 +1327,12 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let off = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            at as u32,
-                            end as u32,
-                            1u8,
-                            0u8,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -1681,18 +1343,12 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let off = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            at as u32,
-                            end as u32,
-                            1u8,
-                            0u8,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -1703,18 +1359,12 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let off = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            at as u32,
-                            end as u32,
-                            1u8,
-                            0u8,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -1725,18 +1375,12 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let off = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            at as u32,
-                            end as u32,
-                            1u8,
-                            0u8,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -1747,18 +1391,12 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let off = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            at as u32,
-                            end as u32,
-                            1u8,
-                            0u8,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -1769,18 +1407,12 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let off = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            at as u32,
-                            end as u32,
-                            1u8,
-                            0u8,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -1791,18 +1423,12 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let off = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            at as u32,
-                            end as u32,
-                            1u8,
-                            0u8,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -1813,25 +1439,19 @@ mod __ebnfparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let off = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            at as u32,
-                            end as u32,
-                            1u8,
-                            0u8,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                Err(crate::runtime::tape::DtaError::Syntax {
+                ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -1839,15 +1459,10 @@ mod __ebnfparser_emit_impl {
             }
         }
     }
-    /// AX.W0a.2.b — per-grammar AltDispatch-shape parse function.
-    ///
-    /// Generalized byte-dispatch over `Alt(leaf, leaf, …)` bodies.
-    /// Each branch is a classified-Ref, a Literal, a Regex, or a
-    /// leaf-only Seq (prefix-tree factoring). No recursion through
-    /// `__value` — per-Ref routing emits direct shape-fn calls.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-    /// recursion rationale.
+    /// AZ-I.W2.RB — per-grammar AltDispatch-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / Sheets / CSS L4 per the resolver's
+    /// `SubstrateBinding`).
     #[inline]
     #[allow(
         non_snake_case,
@@ -1857,486 +1472,347 @@ mod __ebnfparser_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_EbnfParser_symbol(
-        input: &[u8],
+    pub fn parse_altdispatch_EbnfParser_symbol<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+        builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        use crate::runtime::builder::StructBuilder;
         let first = __shape_support_EbnfParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
-        let alt_lo = *p as u32;
-        let alt_child = builder.enter_post_order_children();
-        let _ = alt_child;
-        let save_p = *p;
-        let save_child = builder.position();
-        let _ = save_p;
-        let _ = save_child;
-        'try_branches: loop {
-            match first {
-                8u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [8u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                9u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [9u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                10u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [10u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                12u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [12u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                13u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [13u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                34u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [34u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                39u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [39u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                40u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [40u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                41u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [41u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                42u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [42u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                43u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [43u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                44u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [44u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                45u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [45u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                46u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [46u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                59u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [59u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                60u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [60u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                61u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [61u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                62u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [62u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                63u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [63u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                91u8 => {
+        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 2u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("symbol"),
+            kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __dispatch_checkpoint = builder.checkpoint();
+        let __handle = builder.begin_compound(&__layout);
+        let __dispatch_result: ::core::result::Result<
+            (),
+            crate::runtime::tape::DtaError,
+        > = (|| {
+            'try_branches: loop {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [91u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(0u32);
                         break 'try_branches;
                     }
                 }
-                92u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [92u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                93u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [93u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(1u32);
                         break 'try_branches;
                     }
                 }
-                123u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [123u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(2u32);
                         break 'try_branches;
                     }
                 }
-                124u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [124u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                125u8 => {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [125u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(3u32);
                         break 'try_branches;
                     }
                 }
-                _ => {}
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [40u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(4u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [41u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(5u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [60u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(6u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [62u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(7u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [39u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(8u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [34u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(9u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [61u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(10u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [124u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(11u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [46u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(12u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [44u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(13u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [59u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(14u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [45u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(15u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [43u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(16u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [42u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(17u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [63u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(18u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [10u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(19u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [9u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(20u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [13u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(21u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [12u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(22u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [8u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(23u32);
+                        break 'try_branches;
+                    }
+                }
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [92u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(24u32);
+                        break 'try_branches;
+                    }
+                }
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            builder.exit_post_order_children();
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
+            ::core::result::Result::Ok(())
+        })();
+        match __dispatch_result {
+            ::core::result::Result::Ok(()) => {
+                builder.end_compound(__handle);
+                Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__dispatch_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        let alt_hi = *p as u32;
-        let off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Rule,
-                alt_lo,
-                2u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                off,
-                alt_hi,
-                crate::runtime::tape::TapeOffset(alt_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(off))
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_EbnfParser_identifier(
-        input: &[u8],
+    pub fn parse_flat_EbnfParser_identifier<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
+        let __identifier_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 3u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("identifier"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __identifier_handle = <crate::runtime::ebnf::EbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__identifier_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
             {
                 let _ = ({
@@ -2345,337 +1821,119 @@ mod __ebnfparser_emit_impl {
                 })?;
             }
             {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let mut iter_count: u32 = 0;
-                loop {
-                    let save_p = *p;
-                    let save_cols = builder.position();
-                    let iter_lo = *p as u32;
-                    let iter_child = builder.enter_post_order_children();
-                    let attempt = (|| -> ::core::result::Result<
-                        (),
-                        crate::runtime::tape::DtaError,
-                    > {
-                        {
-                            let first = __shape_support_EbnfParser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                )
-                                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                    offset: *p as u32,
-                                })?;
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
                             'try_branches: loop {
-                                match first {
-                                    48u8 => {
-                                        let attempt_p = *p;
-                                        let attempt_len = builder.position();
-                                        match {
-                                            let __first = __shape_support_EbnfParser::skip_space(
-                                                    input,
-                                                    p,
-                                                    state,
-                                                )
-                                                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_EbnfParser_digit(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                            )
-                                        } {
-                                            Ok(_) => break 'try_branches,
-                                            Err(_) => {
-                                                *p = attempt_p;
-                                                builder.rollback_to(attempt_len);
-                                            }
-                                        }
-                                    }
-                                    49u8 => {
-                                        let attempt_p = *p;
-                                        let attempt_len = builder.position();
-                                        match {
-                                            let __first = __shape_support_EbnfParser::skip_space(
-                                                    input,
-                                                    p,
-                                                    state,
-                                                )
-                                                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_EbnfParser_digit(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                            )
-                                        } {
-                                            Ok(_) => break 'try_branches,
-                                            Err(_) => {
-                                                *p = attempt_p;
-                                                builder.rollback_to(attempt_len);
-                                            }
-                                        }
-                                    }
-                                    50u8 => {
-                                        let attempt_p = *p;
-                                        let attempt_len = builder.position();
-                                        match {
-                                            let __first = __shape_support_EbnfParser::skip_space(
-                                                    input,
-                                                    p,
-                                                    state,
-                                                )
-                                                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_EbnfParser_digit(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                            )
-                                        } {
-                                            Ok(_) => break 'try_branches,
-                                            Err(_) => {
-                                                *p = attempt_p;
-                                                builder.rollback_to(attempt_len);
-                                            }
-                                        }
-                                    }
-                                    51u8 => {
-                                        let attempt_p = *p;
-                                        let attempt_len = builder.position();
-                                        match {
-                                            let __first = __shape_support_EbnfParser::skip_space(
-                                                    input,
-                                                    p,
-                                                    state,
-                                                )
-                                                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_EbnfParser_digit(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                            )
-                                        } {
-                                            Ok(_) => break 'try_branches,
-                                            Err(_) => {
-                                                *p = attempt_p;
-                                                builder.rollback_to(attempt_len);
-                                            }
-                                        }
-                                    }
-                                    52u8 => {
-                                        let attempt_p = *p;
-                                        let attempt_len = builder.position();
-                                        match {
-                                            let __first = __shape_support_EbnfParser::skip_space(
-                                                    input,
-                                                    p,
-                                                    state,
-                                                )
-                                                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_EbnfParser_digit(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                            )
-                                        } {
-                                            Ok(_) => break 'try_branches,
-                                            Err(_) => {
-                                                *p = attempt_p;
-                                                builder.rollback_to(attempt_len);
-                                            }
-                                        }
-                                    }
-                                    53u8 => {
-                                        let attempt_p = *p;
-                                        let attempt_len = builder.position();
-                                        match {
-                                            let __first = __shape_support_EbnfParser::skip_space(
-                                                    input,
-                                                    p,
-                                                    state,
-                                                )
-                                                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_EbnfParser_digit(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                            )
-                                        } {
-                                            Ok(_) => break 'try_branches,
-                                            Err(_) => {
-                                                *p = attempt_p;
-                                                builder.rollback_to(attempt_len);
-                                            }
-                                        }
-                                    }
-                                    54u8 => {
-                                        let attempt_p = *p;
-                                        let attempt_len = builder.position();
-                                        match {
-                                            let __first = __shape_support_EbnfParser::skip_space(
-                                                    input,
-                                                    p,
-                                                    state,
-                                                )
-                                                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_EbnfParser_digit(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                            )
-                                        } {
-                                            Ok(_) => break 'try_branches,
-                                            Err(_) => {
-                                                *p = attempt_p;
-                                                builder.rollback_to(attempt_len);
-                                            }
-                                        }
-                                    }
-                                    55u8 => {
-                                        let attempt_p = *p;
-                                        let attempt_len = builder.position();
-                                        match {
-                                            let __first = __shape_support_EbnfParser::skip_space(
-                                                    input,
-                                                    p,
-                                                    state,
-                                                )
-                                                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_EbnfParser_digit(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                            )
-                                        } {
-                                            Ok(_) => break 'try_branches,
-                                            Err(_) => {
-                                                *p = attempt_p;
-                                                builder.rollback_to(attempt_len);
-                                            }
-                                        }
-                                    }
-                                    56u8 => {
-                                        let attempt_p = *p;
-                                        let attempt_len = builder.position();
-                                        match {
-                                            let __first = __shape_support_EbnfParser::skip_space(
-                                                    input,
-                                                    p,
-                                                    state,
-                                                )
-                                                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_EbnfParser_digit(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                            )
-                                        } {
-                                            Ok(_) => break 'try_branches,
-                                            Err(_) => {
-                                                *p = attempt_p;
-                                                builder.rollback_to(attempt_len);
-                                            }
-                                        }
-                                    }
-                                    57u8 => {
-                                        let attempt_p = *p;
-                                        let attempt_len = builder.position();
-                                        match {
-                                            let __first = __shape_support_EbnfParser::skip_space(
-                                                    input,
-                                                    p,
-                                                    state,
-                                                )
-                                                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_EbnfParser_digit(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                            )
-                                        } {
-                                            Ok(_) => break 'try_branches,
-                                            Err(_) => {
-                                                *p = attempt_p;
-                                                builder.rollback_to(attempt_len);
-                                            }
-                                        }
-                                    }
-                                    95u8 => {
+                                {
+                                    let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::tape::DtaError,
+                                    > = (|| {
                                         let at = *p;
                                         let end = at + 1usize;
-                                        if input.len() >= end && input[at..end] == [95u8] {
-                                            *p = end;
-                                            let _ = builder
-                                                .push_leaf(
-                                                    crate::runtime::tape::TapeKind::Literal,
-                                                    at as u32,
-                                                    end as u32,
-                                                    0,
-                                                    0,
-                                                );
+                                        if input.len() < end || input[at..end] != [95u8] {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: at as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
+                                        }
+                                        *p = end;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
                                             break 'try_branches;
                                         }
+                                        Err(_) => {
+                                            *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
+                                        }
                                     }
-                                    _ => {}
                                 }
                                 {
-                                    let attempt_p = *p;
-                                    let attempt_len = builder.position();
-                                    match {
-                                        let _ = __shape_support_EbnfParser::skip_space(
-                                            input,
-                                            p,
-                                            state,
-                                        );
-                                        parse_altdispatch_EbnfParser_letter(
-                                            input,
-                                            p,
-                                            state,
-                                            builder,
-                                        )
-                                    } {
-                                        Ok(_) => break 'try_branches,
+                                    let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::tape::DtaError,
+                                    > = (|| {
+                                        let _ = ({
+                                            let __first = __shape_support_EbnfParser::skip_space(
+                                                    input,
+                                                    p,
+                                                    state,
+                                                )
+                                                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                                    offset: *p as u32,
+                                                })?;
+                                            parse_keyword_EbnfParser_digit(
+                                                input,
+                                                p,
+                                                __first,
+                                                state,
+                                                builder,
+                                            )
+                                        })?;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
                                         Err(_) => {
-                                            *p = attempt_p;
-                                            builder.rollback_to(attempt_len);
+                                            *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
+                                        }
+                                    }
+                                }
+                                {
+                                    let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::tape::DtaError,
+                                    > = (|| {
+                                        let _ = ({
+                                            let _ = __shape_support_EbnfParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            );
+                                            parse_altdispatch_EbnfParser_letter(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                            )
+                                        })?;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
+                                        Err(_) => {
+                                            *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
                                         }
                                     }
                                 }
@@ -2685,94 +1943,55 @@ mod __ebnfparser_emit_impl {
                                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
                         }
-                        Ok(())
-                    })();
-                    if attempt.is_err() {
-                        *p = save_p;
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
                     }
-                    if *p == save_p {
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
                     }
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
-                    iter_count = iter_count.saturating_add(1);
                 }
-                if iter_count < (0usize as u32) {
-                    builder.exit_post_order_children();
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
             }
-            Ok(())
+            ::core::result::Result::Ok(())
         })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::ebnf::EbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __identifier_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                3u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
-    /// AX.W0a.2.b — per-grammar AltDispatch-shape parse function.
-    ///
-    /// Generalized byte-dispatch over `Alt(leaf, leaf, …)` bodies.
-    /// Each branch is a classified-Ref, a Literal, a Regex, or a
-    /// leaf-only Seq (prefix-tree factoring). No recursion through
-    /// `__value` — per-Ref routing emits direct shape-fn calls.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-    /// recursion rationale.
+    /// AZ-I.W2.RB — per-grammar AltDispatch-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / Sheets / CSS L4 per the resolver's
+    /// `SubstrateBinding`).
     #[inline]
     #[allow(
         non_snake_case,
@@ -2782,478 +2001,327 @@ mod __ebnfparser_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_EbnfParser_character(
-        input: &[u8],
+    pub fn parse_altdispatch_EbnfParser_character<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+        builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        use crate::runtime::builder::StructBuilder;
         let first = __shape_support_EbnfParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
-        let alt_lo = *p as u32;
-        let alt_child = builder.enter_post_order_children();
-        let _ = alt_child;
-        let save_p = *p;
-        let save_child = builder.position();
-        let _ = save_p;
-        let _ = save_child;
-        'try_branches: loop {
-            match first {
-                32u8 => {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() >= end && input[at..end] == [32u8] {
-                        *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
-                        break 'try_branches;
-                    }
-                }
-                48u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                49u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                50u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                51u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                52u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                53u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                54u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                55u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                56u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                57u8 => {
-                    let attempt_p = *p;
-                    match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
-                    } {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                        }
-                    }
-                }
-                95u8 => {
+        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 4u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("character"),
+            kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __dispatch_checkpoint = builder.checkpoint();
+        let __handle = builder.begin_compound(&__layout);
+        let __dispatch_result: ::core::result::Result<
+            (),
+            crate::runtime::tape::DtaError,
+        > = (|| {
+            'try_branches: loop {
+                {
                     let at = *p;
                     let end = at + 1usize;
                     if input.len() >= end && input[at..end] == [95u8] {
                         *p = end;
-                        let _ = builder
-                            .push_leaf(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                            );
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(0u32);
                         break 'try_branches;
                     }
                 }
-                _ => {}
-            }
-            {
-                let attempt_p = *p;
-                match { parse_altdispatch_EbnfParser_symbol(input, p, state, builder) } {
-                    Ok(_) => break 'try_branches,
-                    Err(_) => {
-                        *p = attempt_p;
+                {
+                    let at = *p;
+                    let end = at + 1usize;
+                    if input.len() >= end && input[at..end] == [32u8] {
+                        *p = end;
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(1u32);
+                        break 'try_branches;
                     }
                 }
-            }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_EbnfParser::skip_space(input, p, state);
-                    parse_altdispatch_EbnfParser_letter(input, p, state, builder)
-                } {
-                    Ok(_) => break 'try_branches,
-                    Err(_) => {
-                        *p = attempt_p;
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let __first = __shape_support_EbnfParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            )
+                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(2u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
                     }
                 }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        parse_altdispatch_EbnfParser_symbol(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(3u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    match {
+                        let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                        parse_altdispatch_EbnfParser_letter(input, p, state, builder)
+                    } {
+                        Ok(_) => {
+                            builder.push_branch_tag(4u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            builder.exit_post_order_children();
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
+            ::core::result::Result::Ok(())
+        })();
+        match __dispatch_result {
+            ::core::result::Result::Ok(()) => {
+                builder.end_compound(__handle);
+                Ok(())
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__dispatch_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        let alt_hi = *p as u32;
-        let off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Rule,
-                alt_lo,
-                4u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                off,
-                alt_hi,
-                crate::runtime::tape::TapeOffset(alt_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(off))
     }
-    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
-    /// (Alt of literal-led or Ref-led branches).
+    /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
+    /// (Alt of literal-led, Ref-led, or Seq-led branches).
     ///
-    /// AX.W0a.2.g — admits Ref-led branches whose target
-    /// resolves to a literal-prefix body (per `leading_
-    /// literal_bytes`). For each first-byte group, each
-    /// candidate's full prefix is checked before committing:
-    /// Literal branches emit the legacy leaf push;
-    /// Ref branches delegate to the target's shape fn via
-    /// [`emit_ref_call_tape`], threading `state` through.
+    /// Literal branches push leaves through
+    /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
+    /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
+    /// untyped). Ref branches delegate to the target shape
+    /// fn so the target's records bubble up unchanged.
+    /// Returns `TapeOffset::NONE` for compositional
+    /// uniformity.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_EbnfParser_terminal(
-        input: &[u8],
+    pub fn parse_keyword_EbnfParser_terminal<'p>(
+        input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
             34u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [34u8] {
-                    let span_lo = *p as u32;
-                    let seq_save_cols = builder.position();
-                    let seq_attempt: ::core::result::Result<(), ()> = (|| {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [34u8] {
-                            return Err(());
-                        }
-                        *p = end;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
+                    let __seq_span_lo = *p;
+                    let __seq_builder_checkpoint = builder.checkpoint();
+                    let __seq_result: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
                         {
-                            let __pos_attempt: ::core::result::Result<
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [34u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        {
+                            let __minus_save_p = *p;
+                            let __minus_builder_checkpoint = builder.checkpoint();
+                            let __minus_excl: ::core::result::Result<
                                 (),
                                 crate::runtime::tape::DtaError,
                             > = (|| {
                                 {
-                                    let save_p = *p;
-                                    let excluded_result: ::core::result::Result<(), ()> = (|| {
-                                        let at = *p;
-                                        let end = at + 1usize;
-                                        if input.len() < end || input[at..end] != [34u8] {
-                                            return Err(());
-                                        }
-                                        *p = end;
-                                        Ok(())
-                                    })();
-                                    *p = save_p;
-                                    if excluded_result.is_ok() {
+                                    let at = *p;
+                                    let end = at + 1usize;
+                                    if input.len() < end || input[at..end] != [34u8] {
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                            offset: save_p as u32,
+                                            offset: at as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                         });
                                     }
-                                    let _ = ({
-                                        parse_altdispatch_EbnfParser_character(
-                                            input,
-                                            p,
-                                            state,
-                                            builder,
-                                        )
-                                    })?;
+                                    *p = end;
                                 }
                                 ::core::result::Result::Ok(())
                             })();
-                            if __pos_attempt.is_err() {
-                                return ::core::result::Result::Err(());
+                            *p = __minus_save_p;
+                            builder.rollback(__minus_builder_checkpoint);
+                            if __minus_excl.is_ok() {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: *p as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
                             }
+                            let _ = ({
+                                parse_altdispatch_EbnfParser_character(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                )
+                            })?;
                         }
                         {
-                            let mut iter_count: usize = 0;
+                            let mut __iter_count: u32 = 0;
                             loop {
-                                let iter_p = *p;
-                                let iter_len = builder.position();
-                                let iter_res: ::core::result::Result<(), ()> = (|| {
+                                let __iter_save_p = *p;
+                                if input.get(*p).is_none() {
+                                    break;
+                                }
+                                let __iter_builder_checkpoint = builder.checkpoint();
+                                let __iter_result: ::core::result::Result<
+                                    (),
+                                    crate::runtime::tape::DtaError,
+                                > = (|| {
                                     {
-                                        let __pos_attempt: ::core::result::Result<
+                                        let __minus_save_p = *p;
+                                        let __minus_builder_checkpoint = builder.checkpoint();
+                                        let __minus_excl: ::core::result::Result<
                                             (),
                                             crate::runtime::tape::DtaError,
                                         > = (|| {
                                             {
-                                                let save_p = *p;
-                                                let excluded_result: ::core::result::Result<(), ()> = (|| {
-                                                    let at = *p;
-                                                    let end = at + 1usize;
-                                                    if input.len() < end || input[at..end] != [34u8] {
-                                                        return Err(());
-                                                    }
-                                                    *p = end;
-                                                    Ok(())
-                                                })();
-                                                *p = save_p;
-                                                if excluded_result.is_ok() {
+                                                let at = *p;
+                                                let end = at + 1usize;
+                                                if input.len() < end || input[at..end] != [34u8] {
                                                     return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                                        offset: save_p as u32,
+                                                        offset: at as u32,
                                                         failing_state: crate::runtime::tape::DtaStateId::NONE,
                                                         failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                                     });
                                                 }
-                                                let _ = ({
-                                                    parse_altdispatch_EbnfParser_character(
-                                                        input,
-                                                        p,
-                                                        state,
-                                                        builder,
-                                                    )
-                                                })?;
+                                                *p = end;
                                             }
                                             ::core::result::Result::Ok(())
                                         })();
-                                        if __pos_attempt.is_err() {
-                                            return ::core::result::Result::Err(());
+                                        *p = __minus_save_p;
+                                        builder.rollback(__minus_builder_checkpoint);
+                                        if __minus_excl.is_ok() {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: *p as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
                                         }
+                                        let _ = ({
+                                            parse_altdispatch_EbnfParser_character(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                            )
+                                        })?;
                                     }
-                                    Ok(())
+                                    ::core::result::Result::Ok(())
                                 })();
-                                if iter_res.is_err() || *p == iter_p {
-                                    *p = iter_p;
-                                    builder.rollback_to(iter_len);
-                                    break;
+                                match __iter_result {
+                                    ::core::result::Result::Ok(()) => {
+                                        if *p == __iter_save_p {
+                                            builder.rollback(__iter_builder_checkpoint);
+                                            break;
+                                        }
+                                        builder.commit(__iter_builder_checkpoint);
+                                        __iter_count += 1;
+                                    }
+                                    ::core::result::Result::Err(_) => {
+                                        *p = __iter_save_p;
+                                        builder.rollback(__iter_builder_checkpoint);
+                                        break;
+                                    }
                                 }
-                                iter_count += 1;
                             }
-                            if iter_count < 0u32 as usize {
-                                return Err(());
+                            if __iter_count < 0u32 {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: *p as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
                             }
                         }
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [34u8] {
-                            return Err(());
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [34u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
                         }
-                        *p = end;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        Ok(())
+                        ::core::result::Result::Ok(())
                     })();
-                    if seq_attempt.is_err() {
-                        *p = span_lo as usize;
-                        builder.rollback_to(seq_save_cols);
-                        return Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                        });
+                    match __seq_result {
+                        ::core::result::Result::Ok(()) => {
+                            let __seq_span_hi = *p;
+                            builder.rollback(__seq_builder_checkpoint);
+                            let __seq_text = unsafe {
+                                ::core::str::from_utf8_unchecked(
+                                    &input[__seq_span_lo..__seq_span_hi],
+                                )
+                            };
+                            builder.push_leaf_with_str(__seq_text);
+                            return ::core::result::Result::Ok(
+                                crate::runtime::tape::TapeOffset::NONE,
+                            );
+                        }
+                        ::core::result::Result::Err(__err) => {
+                            *p = __seq_span_lo;
+                            builder.rollback(__seq_builder_checkpoint);
+                            return ::core::result::Result::Err(__err);
+                        }
                     }
-                    let span_hi = *p as u32;
-                    builder.rollback_to(seq_save_cols);
-                    let off = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            5u8,
-                            0u8,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                    return Ok(off);
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -3261,168 +2329,183 @@ mod __ebnfparser_emit_impl {
             }
             39u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [39u8] {
-                    let span_lo = *p as u32;
-                    let seq_save_cols = builder.position();
-                    let seq_attempt: ::core::result::Result<(), ()> = (|| {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [39u8] {
-                            return Err(());
-                        }
-                        *p = end;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
+                    let __seq_span_lo = *p;
+                    let __seq_builder_checkpoint = builder.checkpoint();
+                    let __seq_result: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
                         {
-                            let __pos_attempt: ::core::result::Result<
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [39u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        {
+                            let __minus_save_p = *p;
+                            let __minus_builder_checkpoint = builder.checkpoint();
+                            let __minus_excl: ::core::result::Result<
                                 (),
                                 crate::runtime::tape::DtaError,
                             > = (|| {
                                 {
-                                    let save_p = *p;
-                                    let excluded_result: ::core::result::Result<(), ()> = (|| {
-                                        let at = *p;
-                                        let end = at + 1usize;
-                                        if input.len() < end || input[at..end] != [39u8] {
-                                            return Err(());
-                                        }
-                                        *p = end;
-                                        Ok(())
-                                    })();
-                                    *p = save_p;
-                                    if excluded_result.is_ok() {
+                                    let at = *p;
+                                    let end = at + 1usize;
+                                    if input.len() < end || input[at..end] != [39u8] {
                                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                            offset: save_p as u32,
+                                            offset: at as u32,
                                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                         });
                                     }
-                                    let _ = ({
-                                        parse_altdispatch_EbnfParser_character(
-                                            input,
-                                            p,
-                                            state,
-                                            builder,
-                                        )
-                                    })?;
+                                    *p = end;
                                 }
                                 ::core::result::Result::Ok(())
                             })();
-                            if __pos_attempt.is_err() {
-                                return ::core::result::Result::Err(());
+                            *p = __minus_save_p;
+                            builder.rollback(__minus_builder_checkpoint);
+                            if __minus_excl.is_ok() {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: *p as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
                             }
+                            let _ = ({
+                                parse_altdispatch_EbnfParser_character(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                )
+                            })?;
                         }
                         {
-                            let mut iter_count: usize = 0;
+                            let mut __iter_count: u32 = 0;
                             loop {
-                                let iter_p = *p;
-                                let iter_len = builder.position();
-                                let iter_res: ::core::result::Result<(), ()> = (|| {
+                                let __iter_save_p = *p;
+                                if input.get(*p).is_none() {
+                                    break;
+                                }
+                                let __iter_builder_checkpoint = builder.checkpoint();
+                                let __iter_result: ::core::result::Result<
+                                    (),
+                                    crate::runtime::tape::DtaError,
+                                > = (|| {
                                     {
-                                        let __pos_attempt: ::core::result::Result<
+                                        let __minus_save_p = *p;
+                                        let __minus_builder_checkpoint = builder.checkpoint();
+                                        let __minus_excl: ::core::result::Result<
                                             (),
                                             crate::runtime::tape::DtaError,
                                         > = (|| {
                                             {
-                                                let save_p = *p;
-                                                let excluded_result: ::core::result::Result<(), ()> = (|| {
-                                                    let at = *p;
-                                                    let end = at + 1usize;
-                                                    if input.len() < end || input[at..end] != [39u8] {
-                                                        return Err(());
-                                                    }
-                                                    *p = end;
-                                                    Ok(())
-                                                })();
-                                                *p = save_p;
-                                                if excluded_result.is_ok() {
+                                                let at = *p;
+                                                let end = at + 1usize;
+                                                if input.len() < end || input[at..end] != [39u8] {
                                                     return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                                        offset: save_p as u32,
+                                                        offset: at as u32,
                                                         failing_state: crate::runtime::tape::DtaStateId::NONE,
                                                         failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                                     });
                                                 }
-                                                let _ = ({
-                                                    parse_altdispatch_EbnfParser_character(
-                                                        input,
-                                                        p,
-                                                        state,
-                                                        builder,
-                                                    )
-                                                })?;
+                                                *p = end;
                                             }
                                             ::core::result::Result::Ok(())
                                         })();
-                                        if __pos_attempt.is_err() {
-                                            return ::core::result::Result::Err(());
+                                        *p = __minus_save_p;
+                                        builder.rollback(__minus_builder_checkpoint);
+                                        if __minus_excl.is_ok() {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: *p as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
                                         }
+                                        let _ = ({
+                                            parse_altdispatch_EbnfParser_character(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                            )
+                                        })?;
                                     }
-                                    Ok(())
+                                    ::core::result::Result::Ok(())
                                 })();
-                                if iter_res.is_err() || *p == iter_p {
-                                    *p = iter_p;
-                                    builder.rollback_to(iter_len);
-                                    break;
+                                match __iter_result {
+                                    ::core::result::Result::Ok(()) => {
+                                        if *p == __iter_save_p {
+                                            builder.rollback(__iter_builder_checkpoint);
+                                            break;
+                                        }
+                                        builder.commit(__iter_builder_checkpoint);
+                                        __iter_count += 1;
+                                    }
+                                    ::core::result::Result::Err(_) => {
+                                        *p = __iter_save_p;
+                                        builder.rollback(__iter_builder_checkpoint);
+                                        break;
+                                    }
                                 }
-                                iter_count += 1;
                             }
-                            if iter_count < 0u32 as usize {
-                                return Err(());
+                            if __iter_count < 0u32 {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: *p as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
                             }
                         }
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [39u8] {
-                            return Err(());
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [39u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
                         }
-                        *p = end;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        Ok(())
+                        ::core::result::Result::Ok(())
                     })();
-                    if seq_attempt.is_err() {
-                        *p = span_lo as usize;
-                        builder.rollback_to(seq_save_cols);
-                        return Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                        });
+                    match __seq_result {
+                        ::core::result::Result::Ok(()) => {
+                            let __seq_span_hi = *p;
+                            builder.rollback(__seq_builder_checkpoint);
+                            let __seq_text = unsafe {
+                                ::core::str::from_utf8_unchecked(
+                                    &input[__seq_span_lo..__seq_span_hi],
+                                )
+                            };
+                            builder.push_leaf_with_str(__seq_text);
+                            return ::core::result::Result::Ok(
+                                crate::runtime::tape::TapeOffset::NONE,
+                            );
+                        }
+                        ::core::result::Result::Err(__err) => {
+                            *p = __seq_span_lo;
+                            builder.rollback(__seq_builder_checkpoint);
+                            return ::core::result::Result::Err(__err);
+                        }
                     }
-                    let span_hi = *p as u32;
-                    builder.rollback_to(seq_save_cols);
-                    let off = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            5u8,
-                            0u8,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                    return Ok(off);
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                Err(crate::runtime::tape::DtaError::Syntax {
+                ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -3430,529 +2513,425 @@ mod __ebnfparser_emit_impl {
             }
         }
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_EbnfParser_concatenation(
-        input: &[u8],
+    pub fn parse_flat_EbnfParser_concatenation<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
+        let __concatenation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 6u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("concatenation"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __concatenation_handle = <crate::runtime::ebnf::EbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__concatenation_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
             {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let mut iter_count: u32 = 0;
-                loop {
-                    let save_p = *p;
-                    let save_cols = builder.position();
-                    let iter_lo = *p as u32;
-                    let iter_child = builder.enter_post_order_children();
-                    let attempt = (|| -> ::core::result::Result<
-                        (),
-                        crate::runtime::tape::DtaError,
-                    > {
-                        {
-                            let span_lo = *p as u32;
-                            let Some(match_len) = __regex_scan_EbnfParser(
-                                "[ \\t\\n\\r\\f]*",
-                                input,
-                                *p,
-                            ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: span_lo,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
-                            };
-                            *p += match_len as usize;
-                            let span_hi = *p as u32;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Span,
-                                    span_lo,
-                                    span_hi,
-                                    6u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
                         }
-                        let _ = ({
-                            let _ = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
-                            parse_flat_EbnfParser_factor(input, p, state, builder)
-                        })?;
-                        {
-                            let span_lo = *p as u32;
-                            let Some(match_len) = __regex_scan_EbnfParser(
-                                "[ \\t\\n\\r\\f]*",
-                                input,
-                                *p,
-                            ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: span_lo,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
-                            };
-                            *p += match_len as usize;
-                            let span_hi = *p as u32;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Span,
-                                    span_lo,
-                                    span_hi,
-                                    6u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
                         }
-                        let repeat_lo = *p as u32;
-                        let repeat_child = builder.enter_post_order_children();
-                        let iter_save_p = *p;
-                        let iter_save_cols = builder.position();
-                        let iter_lo = *p as u32;
-                        let iter_child = builder.enter_post_order_children();
-                        let opt_attempt: ::core::result::Result<
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
                         > = (|| {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [44u8] {
-                                return Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_EbnfParser(
+                                    "[ \\t\\n\\r\\f]*",
+                                    input,
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    });
+                                };
+                                *p += match_len as usize;
                             }
-                            *p = end;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    6u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
+                            let _ = ({
+                                let _ = __shape_support_EbnfParser::skip_space(
+                                    input,
+                                    p,
+                                    state,
                                 );
+                                parse_flat_EbnfParser_factor(input, p, state, builder)
+                            })?;
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_EbnfParser(
+                                    "[ \\t\\n\\r\\f]*",
+                                    input,
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    });
+                                };
+                                *p += match_len as usize;
+                            }
+                            {
+                                let mut __iter_count: u32 = 0;
+                                loop {
+                                    if __iter_count >= 1u32 {
+                                        break;
+                                    }
+                                    let __iter_save_p = *p;
+                                    if input.get(*p).is_none() {
+                                        break;
+                                    }
+                                    let __iter_builder_checkpoint = builder.checkpoint();
+                                    let __iter_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::tape::DtaError,
+                                    > = (|| {
+                                        let at = *p;
+                                        let end = at + 1usize;
+                                        if input.len() < end || input[at..end] != [44u8] {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: at as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
+                                        }
+                                        *p = end;
+                                        Ok(())
+                                    })();
+                                    match __iter_result {
+                                        Ok(()) => {
+                                            if *p == __iter_save_p {
+                                                builder.rollback(__iter_builder_checkpoint);
+                                                break;
+                                            }
+                                            builder.commit(__iter_builder_checkpoint);
+                                            __iter_count += 1;
+                                        }
+                                        Err(_) => {
+                                            *p = __iter_save_p;
+                                            builder.rollback(__iter_builder_checkpoint);
+                                            break;
+                                        }
+                                    }
+                                }
+                                if __iter_count < 0u32 {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        offset: *p as u32,
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    });
+                                }
+                            }
                             Ok(())
                         })();
-                        let matched = opt_attempt.is_ok();
-                        if !matched {
-                            *p = iter_save_p;
-                            builder.rollback_to(iter_save_cols);
-                            builder.exit_post_order_children();
-                        } else {
-                            let iter_hi = *p as u32;
-                            let __iter_off = builder
-                                .begin_compound_post(
-                                    crate::runtime::tape::TapeKind::Seq,
-                                    iter_lo,
-                                    0u8,
-                                    0u8,
-                                    0u16,
-                                );
-                            builder
-                                .end_compound_post_order(
-                                    __iter_off,
-                                    iter_hi,
-                                    crate::runtime::tape::TapeOffset(iter_child),
-                                );
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
                         }
-                        let repeat_hi = *p as u32;
-                        let __repeat_off = builder
-                            .begin_compound_post(
-                                crate::runtime::tape::TapeKind::Repeat,
-                                repeat_lo,
-                                0u8,
-                                0u8,
-                                0u16,
-                            );
-                        builder
-                            .end_compound_post_order(
-                                __repeat_off,
-                                repeat_hi,
-                                crate::runtime::tape::TapeOffset(repeat_child),
-                            );
-                        Ok(())
-                    })();
-                    if attempt.is_err() {
-                        *p = save_p;
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
                     }
-                    if *p == save_p {
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
+                    if __iter_count < 1u32 {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
                     }
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
-                    iter_count = iter_count.saturating_add(1);
                 }
-                if iter_count < (1usize as u32) {
-                    builder.exit_post_order_children();
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
             }
-            Ok(())
+            ::core::result::Result::Ok(())
         })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::ebnf::EbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __concatenation_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                6u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_EbnfParser_alternation(
-        input: &[u8],
+    pub fn parse_flat_EbnfParser_alternation<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
+        let __alternation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 7u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("alternation"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __alternation_handle = <crate::runtime::ebnf::EbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__alternation_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
             {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let mut iter_count: u32 = 0;
-                loop {
-                    let save_p = *p;
-                    let save_cols = builder.position();
-                    let iter_lo = *p as u32;
-                    let iter_child = builder.enter_post_order_children();
-                    let attempt = (|| -> ::core::result::Result<
-                        (),
-                        crate::runtime::tape::DtaError,
-                    > {
-                        {
-                            let span_lo = *p as u32;
-                            let Some(match_len) = __regex_scan_EbnfParser(
-                                "[ \\t\\n\\r\\f]*",
-                                input,
-                                *p,
-                            ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: span_lo,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
-                            };
-                            *p += match_len as usize;
-                            let span_hi = *p as u32;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Span,
-                                    span_lo,
-                                    span_hi,
-                                    7u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
                         }
-                        let _ = ({
-                            parse_flat_EbnfParser_concatenation(input, p, state, builder)
-                        })?;
-                        {
-                            let span_lo = *p as u32;
-                            let Some(match_len) = __regex_scan_EbnfParser(
-                                "[ \\t\\n\\r\\f]*",
-                                input,
-                                *p,
-                            ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: span_lo,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
-                            };
-                            *p += match_len as usize;
-                            let span_hi = *p as u32;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Span,
-                                    span_lo,
-                                    span_hi,
-                                    7u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
                         }
-                        let repeat_lo = *p as u32;
-                        let repeat_child = builder.enter_post_order_children();
-                        let iter_save_p = *p;
-                        let iter_save_cols = builder.position();
-                        let iter_lo = *p as u32;
-                        let iter_child = builder.enter_post_order_children();
-                        let opt_attempt: ::core::result::Result<
+                        let __iter_builder_checkpoint = builder.checkpoint();
+                        let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
                         > = (|| {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [124u8] {
-                                return Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_EbnfParser(
+                                    "[ \\t\\n\\r\\f]*",
+                                    input,
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    });
+                                };
+                                *p += match_len as usize;
                             }
-                            *p = end;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    7u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
+                            let _ = ({
+                                parse_flat_EbnfParser_concatenation(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                )
+                            })?;
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_EbnfParser(
+                                    "[ \\t\\n\\r\\f]*",
+                                    input,
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    });
+                                };
+                                *p += match_len as usize;
+                            }
+                            {
+                                let mut __iter_count: u32 = 0;
+                                loop {
+                                    if __iter_count >= 1u32 {
+                                        break;
+                                    }
+                                    let __iter_save_p = *p;
+                                    if input.get(*p).is_none() {
+                                        break;
+                                    }
+                                    let __iter_builder_checkpoint = builder.checkpoint();
+                                    let __iter_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::tape::DtaError,
+                                    > = (|| {
+                                        let at = *p;
+                                        let end = at + 1usize;
+                                        if input.len() < end || input[at..end] != [124u8] {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: at as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
+                                        }
+                                        *p = end;
+                                        Ok(())
+                                    })();
+                                    match __iter_result {
+                                        Ok(()) => {
+                                            if *p == __iter_save_p {
+                                                builder.rollback(__iter_builder_checkpoint);
+                                                break;
+                                            }
+                                            builder.commit(__iter_builder_checkpoint);
+                                            __iter_count += 1;
+                                        }
+                                        Err(_) => {
+                                            *p = __iter_save_p;
+                                            builder.rollback(__iter_builder_checkpoint);
+                                            break;
+                                        }
+                                    }
+                                }
+                                if __iter_count < 0u32 {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        offset: *p as u32,
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    });
+                                }
+                            }
                             Ok(())
                         })();
-                        let matched = opt_attempt.is_ok();
-                        if !matched {
-                            *p = iter_save_p;
-                            builder.rollback_to(iter_save_cols);
-                            builder.exit_post_order_children();
-                        } else {
-                            let iter_hi = *p as u32;
-                            let __iter_off = builder
-                                .begin_compound_post(
-                                    crate::runtime::tape::TapeKind::Seq,
-                                    iter_lo,
-                                    0u8,
-                                    0u8,
-                                    0u16,
-                                );
-                            builder
-                                .end_compound_post_order(
-                                    __iter_off,
-                                    iter_hi,
-                                    crate::runtime::tape::TapeOffset(iter_child),
-                                );
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    builder.rollback(__iter_builder_checkpoint);
+                                    break;
+                                }
+                                builder.commit(__iter_builder_checkpoint);
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                builder.rollback(__iter_builder_checkpoint);
+                                break;
+                            }
                         }
-                        let repeat_hi = *p as u32;
-                        let __repeat_off = builder
-                            .begin_compound_post(
-                                crate::runtime::tape::TapeKind::Repeat,
-                                repeat_lo,
-                                0u8,
-                                0u8,
-                                0u16,
-                            );
-                        builder
-                            .end_compound_post_order(
-                                __repeat_off,
-                                repeat_hi,
-                                crate::runtime::tape::TapeOffset(repeat_child),
-                            );
-                        Ok(())
-                    })();
-                    if attempt.is_err() {
-                        *p = save_p;
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
                     }
-                    if *p == save_p {
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
+                    if __iter_count < 1u32 {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
                     }
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
-                    iter_count = iter_count.saturating_add(1);
                 }
-                if iter_count < (1usize as u32) {
-                    builder.exit_post_order_children();
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
             }
-            Ok(())
+            ::core::result::Result::Ok(())
         })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::ebnf::EbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __alternation_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                7u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
-    /// AX.W0a.2.b — per-grammar Scalar-shape parse function
-    /// (transparent-Ref body, tape substrate). Delegates
-    /// to the target's shape fn.
-    ///
-    /// AX.W0a.2.f — compound (delegates via
-    /// `emit_ref_call_tape`); plain `#[inline]`.
+    /// AZ-I.W2.RC — per-grammar Scalar-shape parse
+    /// function (transparent-Ref body, struct-direct
+    /// substrate). Delegates to the target's
+    /// strategy-resolved shape fn; the inner call
+    /// expression names `builder` against the
+    /// concrete struct-builder.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_scalar_EbnfParser_rhs(
-        input: &[u8],
+    pub fn parse_scalar_EbnfParser_rhs<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
         { parse_flat_EbnfParser_alternation(input, p, state, builder) }
     }
-    /// AX.W0a.2.b — per-grammar AltDispatch-shape parse function.
-    ///
-    /// Generalized byte-dispatch over `Alt(leaf, leaf, …)` bodies.
-    /// Each branch is a classified-Ref, a Literal, a Regex, or a
-    /// leaf-only Seq (prefix-tree factoring). No recursion through
-    /// `__value` — per-Ref routing emits direct shape-fn calls.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-    /// recursion rationale.
+    /// AZ-I.W2.RB — per-grammar AltDispatch-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / Sheets / CSS L4 per the resolver's
+    /// `SubstrateBinding`).
     #[inline]
     #[allow(
         non_snake_case,
@@ -3962,30 +2941,268 @@ mod __ebnfparser_emit_impl {
         unused_assignments,
         unreachable_code
     )]
-    pub fn parse_altdispatch_EbnfParser_term(
-        input: &[u8],
+    pub fn parse_altdispatch_EbnfParser_term<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+        builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        use crate::runtime::builder::StructBuilder;
         let first = __shape_support_EbnfParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
-        let alt_lo = *p as u32;
-        let alt_child = builder.enter_post_order_children();
-        let _ = alt_child;
-        let save_p = *p;
-        let save_child = builder.position();
-        let _ = save_p;
-        let _ = save_child;
-        'try_branches: loop {
-            match first {
-                34u8 => {
+        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 9u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("term"),
+            kind: ::bbnf_ir::registry::LayoutKind::TaggedEnum,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __dispatch_checkpoint = builder.checkpoint();
+        let __handle = builder.begin_compound(&__layout);
+        let __dispatch_result: ::core::result::Result<
+            (),
+            crate::runtime::tape::DtaError,
+        > = (|| {
+            'try_branches: loop {
+                {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    let attempt: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [40u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        {
+                            let __scan_start = *p;
+                            let Some(match_len) = __regex_scan_EbnfParser(
+                                "[ \\t\\n\\r\\f]*",
+                                input,
+                                *p,
+                            ) else {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: __scan_start as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            };
+                            *p += match_len as usize;
+                        }
+                        let _ = ({
+                            parse_scalar_EbnfParser_rhs(input, p, state, builder)
+                        })?;
+                        {
+                            let __scan_start = *p;
+                            let Some(match_len) = __regex_scan_EbnfParser(
+                                "[ \\t\\n\\r\\f]*",
+                                input,
+                                *p,
+                            ) else {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: __scan_start as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            };
+                            *p += match_len as usize;
+                        }
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [41u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        ::core::result::Result::Ok(())
+                    })();
+                    match attempt {
+                        ::core::result::Result::Ok(()) => {
+                            builder.push_branch_tag(0u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    let attempt: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [91u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        {
+                            let __scan_start = *p;
+                            let Some(match_len) = __regex_scan_EbnfParser(
+                                "[ \\t\\n\\r\\f]*",
+                                input,
+                                *p,
+                            ) else {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: __scan_start as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            };
+                            *p += match_len as usize;
+                        }
+                        let _ = ({
+                            parse_scalar_EbnfParser_rhs(input, p, state, builder)
+                        })?;
+                        {
+                            let __scan_start = *p;
+                            let Some(match_len) = __regex_scan_EbnfParser(
+                                "[ \\t\\n\\r\\f]*",
+                                input,
+                                *p,
+                            ) else {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: __scan_start as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            };
+                            *p += match_len as usize;
+                        }
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [93u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        ::core::result::Result::Ok(())
+                    })();
+                    match attempt {
+                        ::core::result::Result::Ok(()) => {
+                            builder.push_branch_tag(1u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    let attempt: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [123u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        {
+                            let __scan_start = *p;
+                            let Some(match_len) = __regex_scan_EbnfParser(
+                                "[ \\t\\n\\r\\f]*",
+                                input,
+                                *p,
+                            ) else {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: __scan_start as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            };
+                            *p += match_len as usize;
+                        }
+                        let _ = ({
+                            parse_scalar_EbnfParser_rhs(input, p, state, builder)
+                        })?;
+                        {
+                            let __scan_start = *p;
+                            let Some(match_len) = __regex_scan_EbnfParser(
+                                "[ \\t\\n\\r\\f]*",
+                                input,
+                                *p,
+                            ) else {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: __scan_start as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            };
+                            *p += match_len as usize;
+                        }
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [125u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        ::core::result::Result::Ok(())
+                    })();
+                    match attempt {
+                        ::core::result::Result::Ok(()) => {
+                            builder.push_branch_tag(2u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match {
                         let __first = __shape_support_EbnfParser::skip_space(
                                 input,
@@ -4003,368 +3220,98 @@ mod __ebnfparser_emit_impl {
                             builder,
                         )
                     } {
-                        Ok(_) => break 'try_branches,
+                        Ok(_) => {
+                            builder.push_branch_tag(3u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
                         Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
-                39u8 => {
+                {
                     let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match {
-                        let __first = __shape_support_EbnfParser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_EbnfParser_terminal(
-                            input,
-                            p,
-                            __first,
-                            state,
-                            builder,
-                        )
+                        let _ = __shape_support_EbnfParser::skip_space(input, p, state);
+                        parse_flat_EbnfParser_identifier(input, p, state, builder)
                     } {
-                        Ok(_) => break 'try_branches,
+                        Ok(_) => {
+                            builder.push_branch_tag(4u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
                         Err(_) => {
                             *p = attempt_p;
+                            builder.rollback(attempt_builder);
                         }
                     }
                 }
-                40u8 => {
-                    let attempt_p = *p;
-                    let attempt_len = builder.position();
-                    let attempt: ::core::result::Result<(), ()> = (|| {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [40u8] {
-                            return Err(());
-                        }
-                        *p = end;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        let span_lo = *p as u32;
-                        let Some(match_len) = __regex_scan_EbnfParser(
-                            "[ \\t\\n\\r\\f]*",
-                            input,
-                            *p,
-                        ) else {
-                            return Err(());
-                        };
-                        *p += match_len as usize;
-                        let span_hi = *p as u32;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Span,
-                                span_lo,
-                                span_hi,
-                                0,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        if ({ parse_scalar_EbnfParser_rhs(input, p, state, builder) })
-                            .is_err()
-                        {
-                            return Err(());
-                        }
-                        let span_lo = *p as u32;
-                        let Some(match_len) = __regex_scan_EbnfParser(
-                            "[ \\t\\n\\r\\f]*",
-                            input,
-                            *p,
-                        ) else {
-                            return Err(());
-                        };
-                        *p += match_len as usize;
-                        let span_hi = *p as u32;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Span,
-                                span_lo,
-                                span_hi,
-                                0,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [41u8] {
-                            return Err(());
-                        }
-                        *p = end;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        Ok(())
-                    })();
-                    match attempt {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback_to(attempt_len);
-                        }
-                    }
-                }
-                91u8 => {
-                    let attempt_p = *p;
-                    let attempt_len = builder.position();
-                    let attempt: ::core::result::Result<(), ()> = (|| {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [91u8] {
-                            return Err(());
-                        }
-                        *p = end;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        let span_lo = *p as u32;
-                        let Some(match_len) = __regex_scan_EbnfParser(
-                            "[ \\t\\n\\r\\f]*",
-                            input,
-                            *p,
-                        ) else {
-                            return Err(());
-                        };
-                        *p += match_len as usize;
-                        let span_hi = *p as u32;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Span,
-                                span_lo,
-                                span_hi,
-                                0,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        if ({ parse_scalar_EbnfParser_rhs(input, p, state, builder) })
-                            .is_err()
-                        {
-                            return Err(());
-                        }
-                        let span_lo = *p as u32;
-                        let Some(match_len) = __regex_scan_EbnfParser(
-                            "[ \\t\\n\\r\\f]*",
-                            input,
-                            *p,
-                        ) else {
-                            return Err(());
-                        };
-                        *p += match_len as usize;
-                        let span_hi = *p as u32;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Span,
-                                span_lo,
-                                span_hi,
-                                0,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [93u8] {
-                            return Err(());
-                        }
-                        *p = end;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        Ok(())
-                    })();
-                    match attempt {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback_to(attempt_len);
-                        }
-                    }
-                }
-                123u8 => {
-                    let attempt_p = *p;
-                    let attempt_len = builder.position();
-                    let attempt: ::core::result::Result<(), ()> = (|| {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [123u8] {
-                            return Err(());
-                        }
-                        *p = end;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        let span_lo = *p as u32;
-                        let Some(match_len) = __regex_scan_EbnfParser(
-                            "[ \\t\\n\\r\\f]*",
-                            input,
-                            *p,
-                        ) else {
-                            return Err(());
-                        };
-                        *p += match_len as usize;
-                        let span_hi = *p as u32;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Span,
-                                span_lo,
-                                span_hi,
-                                0,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        if ({ parse_scalar_EbnfParser_rhs(input, p, state, builder) })
-                            .is_err()
-                        {
-                            return Err(());
-                        }
-                        let span_lo = *p as u32;
-                        let Some(match_len) = __regex_scan_EbnfParser(
-                            "[ \\t\\n\\r\\f]*",
-                            input,
-                            *p,
-                        ) else {
-                            return Err(());
-                        };
-                        *p += match_len as usize;
-                        let span_hi = *p as u32;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Span,
-                                span_lo,
-                                span_hi,
-                                0,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [125u8] {
-                            return Err(());
-                        }
-                        *p = end;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                0,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        Ok(())
-                    })();
-                    match attempt {
-                        Ok(_) => break 'try_branches,
-                        Err(_) => {
-                            *p = attempt_p;
-                            builder.rollback_to(attempt_len);
-                        }
-                    }
-                }
-                _ => {}
+                return Err(crate::runtime::tape::DtaError::Syntax {
+                    offset: *p as u32,
+                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                });
             }
-            {
-                let attempt_p = *p;
-                match {
-                    let _ = __shape_support_EbnfParser::skip_space(input, p, state);
-                    parse_flat_EbnfParser_identifier(input, p, state, builder)
-                } {
-                    Ok(_) => break 'try_branches,
-                    Err(_) => {
-                        *p = attempt_p;
-                    }
-                }
+            ::core::result::Result::Ok(())
+        })();
+        match __dispatch_result {
+            ::core::result::Result::Ok(()) => {
+                builder.end_compound(__handle);
+                Ok(())
             }
-            builder.exit_post_order_children();
-            return Err(crate::runtime::tape::DtaError::Syntax {
-                offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-            });
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__dispatch_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        let alt_hi = *p as u32;
-        let off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Rule,
-                alt_lo,
-                9u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                off,
-                alt_hi,
-                crate::runtime::tape::TapeOffset(alt_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(off))
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_EbnfParser_factor(
-        input: &[u8],
+    pub fn parse_flat_EbnfParser_factor<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
+        let __factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 10u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("factor"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __factor_handle = <crate::runtime::ebnf::EbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__factor_layout);
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
             {
                 let _ = ({
@@ -4374,214 +3321,253 @@ mod __ebnfparser_emit_impl {
             }
             {
                 {
-                    let span_lo = *p as u32;
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_EbnfParser(
                         "[ \\t\\n\\r\\f]*",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            10u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
             {
-                {
-                    let first = __shape_support_EbnfParser::skip_space(input, p, state)
-                        .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    'try_branches: loop {
-                        match first {
-                            42u8 => {
-                                let at = *p;
-                                let end = at + 1usize;
-                                if input.len() >= end && input[at..end] == [42u8] {
-                                    *p = end;
-                                    let _ = builder
-                                        .push_leaf(
-                                            crate::runtime::tape::TapeKind::Literal,
-                                            at as u32,
-                                            end as u32,
-                                            0,
-                                            0,
-                                        );
-                                    break 'try_branches;
-                                }
+                'try_branches: loop {
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [63u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
                             }
-                            43u8 => {
-                                let at = *p;
-                                let end = at + 1usize;
-                                if input.len() >= end && input[at..end] == [43u8] {
-                                    *p = end;
-                                    let _ = builder
-                                        .push_leaf(
-                                            crate::runtime::tape::TapeKind::Literal,
-                                            at as u32,
-                                            end as u32,
-                                            0,
-                                            0,
-                                        );
-                                    break 'try_branches;
-                                }
+                            *p = end;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
                             }
-                            45u8 => {
-                                let attempt_p = *p;
-                                let attempt_len = builder.position();
-                                let attempt: ::core::result::Result<(), ()> = (|| {
-                                    let at = *p;
-                                    let end = at + 1usize;
-                                    if input.len() < end || input[at..end] != [45u8] {
-                                        return Err(());
-                                    }
-                                    *p = end;
-                                    let _ = builder
-                                        .push_leaf_with(
-                                            crate::runtime::tape::TapeKind::Literal,
-                                            at as u32,
-                                            end as u32,
-                                            0,
-                                            0,
-                                            crate::runtime::tape::PayloadData::None,
-                                        );
-                                    let span_lo = *p as u32;
-                                    let Some(match_len) = __regex_scan_EbnfParser(
-                                        "[ \\t\\n\\r\\f]*",
-                                        input,
-                                        *p,
-                                    ) else {
-                                        return Err(());
-                                    };
-                                    *p += match_len as usize;
-                                    let span_hi = *p as u32;
-                                    let _ = builder
-                                        .push_leaf_with(
-                                            crate::runtime::tape::TapeKind::Span,
-                                            span_lo,
-                                            span_hi,
-                                            0,
-                                            0,
-                                            crate::runtime::tape::PayloadData::None,
-                                        );
-                                    if ({
-                                        let _ = __shape_support_EbnfParser::skip_space(
-                                            input,
-                                            p,
-                                            state,
-                                        );
-                                        parse_altdispatch_EbnfParser_term(input, p, state, builder)
-                                    })
-                                        .is_err()
-                                    {
-                                        return Err(());
-                                    }
-                                    Ok(())
-                                })();
-                                match attempt {
-                                    Ok(_) => break 'try_branches,
-                                    Err(_) => {
-                                        *p = attempt_p;
-                                        builder.rollback_to(attempt_len);
-                                    }
-                                }
+                            Err(_) => {
+                                *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
                             }
-                            63u8 => {
-                                let at = *p;
-                                let end = at + 1usize;
-                                if input.len() >= end && input[at..end] == [63u8] {
-                                    *p = end;
-                                    let _ = builder
-                                        .push_leaf(
-                                            crate::runtime::tape::TapeKind::Literal,
-                                            at as u32,
-                                            end as u32,
-                                            0,
-                                            0,
-                                        );
-                                    break 'try_branches;
-                                }
-                            }
-                            _ => {}
                         }
-                        break 'try_branches;
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                        });
                     }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [42u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
+                            Err(_) => {
+                                *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
+                            }
+                        }
+                    }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [43u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
+                            Err(_) => {
+                                *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
+                            }
+                        }
+                    }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [45u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_EbnfParser(
+                                    "[ \\t\\n\\r\\f]*",
+                                    input,
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    });
+                                };
+                                *p += match_len as usize;
+                            }
+                            let _ = ({
+                                let _ = __shape_support_EbnfParser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_altdispatch_EbnfParser_term(input, p, state, builder)
+                            })?;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
+                            Err(_) => {
+                                *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
+                            }
+                        }
+                    }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| { Ok(()) })();
+                        match __alt_result {
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
+                            Err(_) => {
+                                *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
+                            }
+                        }
+                    }
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
                 }
             }
-            Ok(())
+            ::core::result::Result::Ok(())
         })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::ebnf::EbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __factor_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                10u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_EbnfParser_rule(
-        input: &[u8],
+    pub fn parse_flat_EbnfParser_rule<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        use crate::runtime::builder::StructBuilder as _;
+        let __flat_checkpoint = builder.checkpoint();
+        let __rule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 11u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("rule"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __rule_handle = <crate::runtime::ebnf::EbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__rule_layout);
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
             {
                 let _ = ({
@@ -4591,77 +3577,48 @@ mod __ebnfparser_emit_impl {
             }
             {
                 {
-                    let span_lo = *p as u32;
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_EbnfParser(
                         "[ \\t\\n\\r\\f]*",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            11u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
             {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [61u8] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: at as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
                         failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        11u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
             }
             {
                 {
-                    let span_lo = *p as u32;
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_EbnfParser(
                         "[ \\t\\n\\r\\f]*",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            11u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
             {
@@ -4669,231 +3626,171 @@ mod __ebnfparser_emit_impl {
             }
             {
                 {
-                    let span_lo = *p as u32;
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_EbnfParser(
                         "[ \\t\\n\\r\\f]*",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            11u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
             {
-                {
-                    let first = __shape_support_EbnfParser::skip_space(input, p, state)
-                        .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    'try_branches: loop {
-                        match first {
-                            46u8 => {
-                                let at = *p;
-                                let end = at + 1usize;
-                                if input.len() >= end && input[at..end] == [46u8] {
-                                    *p = end;
-                                    let _ = builder
-                                        .push_leaf(
-                                            crate::runtime::tape::TapeKind::Literal,
-                                            at as u32,
-                                            end as u32,
-                                            0,
-                                            0,
-                                        );
-                                    break 'try_branches;
-                                }
+                'try_branches: loop {
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [59u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
                             }
-                            59u8 => {
-                                let at = *p;
-                                let end = at + 1usize;
-                                if input.len() >= end && input[at..end] == [59u8] {
-                                    *p = end;
-                                    let _ = builder
-                                        .push_leaf(
-                                            crate::runtime::tape::TapeKind::Literal,
-                                            at as u32,
-                                            end as u32,
-                                            0,
-                                            0,
-                                        );
-                                    break 'try_branches;
-                                }
+                            *p = end;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
                             }
-                            _ => {}
+                            Err(_) => {
+                                *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
+                            }
                         }
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                        });
                     }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [46u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
+                            Err(_) => {
+                                *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
+                            }
+                        }
+                    }
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
                 }
             }
-            Ok(())
+            ::core::result::Result::Ok(())
         })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <crate::runtime::ebnf::EbnfStructBuilder<
+                    '_,
+                > as crate::runtime::StructBuilder>::end_compound(
+                    builder,
+                    __rule_handle,
+                );
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(__err) => {
+                builder.rollback(__flat_checkpoint);
+                ::core::result::Result::Err(__err)
+            }
         }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                11u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
     }
-    /// AX.W0a.2.a — per-grammar Array-shape parse function
-    /// (Shape 2 — direct-Repeat entry-rule list,
-    /// **walker-tape-identical**).
+    /// AZ-II.cutover.F — per-grammar Array-shape parse function
+    /// (Shape 2 — entry-rule list, **struct-direct body**).
     ///
-    /// Emits a single Rule compound (the Repeat frame)
-    /// carrying the per-iteration children. Matches the
-    /// walker's direct lowering of a `Repeat { .. }` body
-    /// where the rule's variant stamp lands on the Rule
-    /// compound itself (no outer Seq wrapper).
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]`.
+    /// Opens the rule's compound frame on the StructBuilder,
+    /// iterates the inner Repeat with savepoint rollback, and
+    /// closes the frame on first-byte rejection or EOF. NO
+    /// bracket-delimiter literals — termination is driven by
+    /// the inner dispatcher's first-set check.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_array_EbnfParser_grammar(
-        input: &[u8],
+    pub fn parse_array_EbnfParser_grammar<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let repeat_open = *p as u32;
-        let repeat_off = builder
-            .begin_compound(
-                crate::runtime::tape::TapeKind::Rule,
-                repeat_open,
-                0u8,
-                0u8,
-                0u16,
-            );
+        use crate::runtime::builder::StructBuilder;
+        let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 12u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("grammar"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __handle = builder.begin_compound(&__layout);
         loop {
-            let iter_save_p = *p;
-            let __iter_save_cols = builder.position();
+            let __iter_save_p = *p;
             if input.get(*p).is_none() {
                 break;
             }
-            let iter_result: ::core::result::Result<
+            let __iter_builder_checkpoint = builder.checkpoint();
+            let __iter_result: ::core::result::Result<
                 (),
                 crate::runtime::tape::DtaError,
             > = (|| {
-                let iter_open = *p as u32;
-                let iter_off = builder
-                    .begin_compound(
-                        crate::runtime::tape::TapeKind::Seq,
-                        iter_open,
-                        0,
-                        0u8,
-                        0u16,
-                    );
                 let _ = __shape_support_EbnfParser::skip_space(input, p, state);
-                {
-                    let span_lo = *p as u32;
-                    let Some(match_len) = __regex_scan_EbnfParser(
-                        "[ \\t\\n\\r\\f]*",
-                        input,
-                        *p,
-                    ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                        });
-                    };
-                    *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            12u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                }
-                let _value_off = ({
+                ({
                     let _ = __shape_support_EbnfParser::skip_space(input, p, state);
                     parse_flat_EbnfParser_rule(input, p, state, builder)
                 })?;
-                {
-                    let span_lo = *p as u32;
-                    let Some(match_len) = __regex_scan_EbnfParser(
-                        "[ \\t\\n\\r\\f]*",
-                        input,
-                        *p,
-                    ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                        });
-                    };
-                    *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            12u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                }
                 let _ = __shape_support_EbnfParser::skip_space(input, p, state);
-                let iter_close = *p as u32;
-                builder.end_compound(iter_off, iter_close);
                 Ok(())
             })();
-            match iter_result {
+            match __iter_result {
                 Ok(()) => {
-                    if *p == iter_save_p {
+                    if *p == __iter_save_p {
+                        builder.rollback(__iter_builder_checkpoint);
                         break;
                     }
+                    builder.commit(__iter_builder_checkpoint);
                 }
                 Err(_) => {
-                    *p = iter_save_p;
-                    builder.rollback_to(__iter_save_cols);
+                    *p = __iter_save_p;
+                    builder.rollback(__iter_builder_checkpoint);
                     break;
                 }
             }
         }
-        let repeat_close = *p as u32;
-        builder.end_compound(repeat_off, repeat_close);
-        Ok(crate::runtime::tape::TapeOffset(repeat_off))
+        builder.end_compound(__handle);
+        Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AX.W0a.2.b — visitor-path AltDispatch-shape parse function.
     ///
@@ -7426,11 +6323,11 @@ mod __ebnfparser_emit_impl {
     /// recursion rationale.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_EbnfParser_grammar(
-        input: &[u8],
+    pub fn parse_EbnfParser_grammar<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -7443,11 +6340,11 @@ mod __ebnfparser_emit_impl {
     /// AX.W0a.2.f — compound; plain `#[inline]`.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_EbnfParser_grammar__value(
-        input: &[u8],
+    pub fn parse_EbnfParser_grammar__value<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -13204,21 +12101,19 @@ mod __ebnfparser_emit_impl {
         pub fn parse(
             input: &str,
         ) -> ::core::result::Result<
-            crate::runtime::Parsed<'_, Self>,
+            crate::runtime::ebnf::EbnfDocument<'_>,
             crate::runtime::ParseErr,
         > {
             let __input_bytes = input.as_bytes();
             let mut state = __shape_support_EbnfParser::ScanState::new();
-            let mut tape = crate::runtime::tape::Tape::<
-                (),
-            >::with_capacity(GRAMMAR_PROFILE.capacity_for(input.len()));
-            let root_off = {
+            let mut builder = crate::runtime::ebnf::EbnfStructBuilder::new();
+            {
                 let mut pos: usize = 0;
-                let off = parse_EbnfParser_grammar(
+                parse_EbnfParser_grammar(
                         __input_bytes,
                         &mut pos,
                         &mut state,
-                        &mut tape,
+                        &mut builder,
                     )
                     .map_err(|e| match e {
                         crate::runtime::tape::DtaError::Syntax { offset, .. } => {
@@ -13251,17 +12146,8 @@ mod __ebnfparser_emit_impl {
                         rule: None,
                     });
                 }
-                off
-            };
-            let tape: crate::runtime::tape::Tape<()> = tape
-                .finish(root_off.0)
-                .map_err(crate::runtime::ParseErr::Tape)?;
-            let tape: crate::runtime::tape::Tape<Self> = unsafe {
-                ::core::mem::transmute(tape)
-            };
-            ::core::result::Result::Ok(
-                crate::runtime::Parsed::new(tape, input, root_off),
-            )
+            }
+            ::core::result::Result::Ok(builder.finalise(input))
         }
     }
     impl<'p> identifierView<'p> {

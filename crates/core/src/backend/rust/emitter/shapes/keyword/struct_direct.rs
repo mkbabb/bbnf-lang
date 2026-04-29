@@ -184,12 +184,12 @@ pub(super) fn emit_parse_keyword_struct_direct(
             //               an attempt closure (handled identically to
             //               Ref for now — sub-rule's emitter carries
             //               the records; the keyword body just routes).
-            enum BranchKind {
+            enum BranchKind<'a> {
                 Literal,
                 Ref(bbnf_ir::RuleId),
-                Seq,
+                Seq(&'a IrNode),
             }
-            let per_branch: Vec<(Vec<u8>, BranchKind, usize, &bbnf_ir::AltBranch)> = branches
+            let per_branch: Vec<(Vec<u8>, BranchKind<'_>, usize, &bbnf_ir::AltBranch)> = branches
                 .iter()
                 .enumerate()
                 .filter_map(|(branch_idx, branch)| {
@@ -214,14 +214,14 @@ pub(super) fn emit_parse_keyword_struct_direct(
                             if bytes.is_empty() {
                                 return None;
                             }
-                            Some((bytes, BranchKind::Seq, branch_idx, branch))
+                            Some((bytes, BranchKind::Seq(body), branch_idx, branch))
                         }
                         _ => None,
                     }
                 })
                 .collect();
 
-            let mut by_first: BTreeMap<u8, Vec<&(Vec<u8>, BranchKind, usize, &bbnf_ir::AltBranch)>> =
+            let mut by_first: BTreeMap<u8, Vec<&(Vec<u8>, BranchKind<'_>, usize, &bbnf_ir::AltBranch)>> =
                 BTreeMap::new();
             for entry in &per_branch {
                 by_first.entry(entry.0[0]).or_default().push(entry);
@@ -231,7 +231,7 @@ pub(super) fn emit_parse_keyword_struct_direct(
                 .iter()
                 .map(|(first, group)| {
                     // Descending prefix length — longer literals try first.
-                    let mut group_sorted: Vec<&(Vec<u8>, BranchKind, usize, &bbnf_ir::AltBranch)> =
+                    let mut group_sorted: Vec<&(Vec<u8>, BranchKind<'_>, usize, &bbnf_ir::AltBranch)> =
                         group.iter().copied().collect();
                     group_sorted.sort_by_key(|entry| {
                         (std::cmp::Reverse(entry.0.len()), entry.2)
@@ -320,30 +320,47 @@ pub(super) fn emit_parse_keyword_struct_direct(
                                         }
                                     }
                                 }
-                                BranchKind::Seq => {
-                                    // Seq-led branches under StructDirect
-                                    // remain orchestrator-deferred — no
-                                    // active grammar admits Alt-of-Seq
-                                    // under struct-direct keyword today
-                                    // (BBNF's `literal` is tape-direct;
-                                    // CSS L4's pseudo-class branches are
-                                    // Ref-led). Emit a syntax error so
-                                    // the regen surfaces if a future
-                                    // grammar lands a Seq-led branch
-                                    // here without an emitter update.
+                                BranchKind::Seq(seq_body) => {
+                                    let inner_emit = super::super::inline::
+                                        emit_seq_branch_structural_struct_direct(
+                                            seq_body,
+                                            &support_mod,
+                                            grammar_suffix,
+                                            ir,
+                                        );
                                     quote! {
                                         if input.len() >= *p + #len
                                             && input[*p..*p + #len] == [#(#byte_lits),*]
                                         {
-                                            return ::core::result::Result::Err(
-                                                crate::runtime::tape::DtaError::Syntax {
-                                                    offset: *p as u32,
-                                                    failing_state:
-                                                        crate::runtime::tape::DtaStateId::NONE,
-                                                    failing_rule:
-                                                        crate::runtime::tape::DtaRuleId(u32::MAX),
-                                                },
-                                            );
+                                            let __seq_span_lo = *p;
+                                            let __seq_builder_checkpoint = builder.checkpoint();
+                                            let __seq_result: ::core::result::Result<
+                                                (),
+                                                crate::runtime::tape::DtaError,
+                                            > = (|| {
+                                                #inner_emit
+                                                ::core::result::Result::Ok(())
+                                            })();
+                                            match __seq_result {
+                                                ::core::result::Result::Ok(()) => {
+                                                    let __seq_span_hi = *p;
+                                                    builder.rollback(__seq_builder_checkpoint);
+                                                    let __seq_text = unsafe {
+                                                        ::core::str::from_utf8_unchecked(
+                                                            &input[__seq_span_lo..__seq_span_hi],
+                                                        )
+                                                    };
+                                                    builder.push_leaf_with_str(__seq_text);
+                                                    return ::core::result::Result::Ok(
+                                                        crate::runtime::tape::TapeOffset::NONE,
+                                                    );
+                                                }
+                                                ::core::result::Result::Err(__err) => {
+                                                    *p = __seq_span_lo;
+                                                    builder.rollback(__seq_builder_checkpoint);
+                                                    return ::core::result::Result::Err(__err);
+                                                }
+                                            }
                                         }
                                     }
                                 }

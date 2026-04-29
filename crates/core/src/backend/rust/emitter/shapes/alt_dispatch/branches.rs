@@ -106,11 +106,14 @@ pub(super) fn emit_dispatch_arms_struct_direct(
                     }
                 }
             }
-            // Seq branches (literal-chain or mixed). Walk the
-            // pure-literal sequence position-by-position; on full
-            // match record one unit leaf for the entire seq plus the
-            // branch tag. Mixed seqs fall through to the post-cap
-            // typed-leaf emission lane.
+            // Seq branches (literal-chain or mixed). Pure literal
+            // chains record one unit leaf for the whole match; mixed
+            // structural seqs preserve their position-level children
+            // inside the surrounding TaggedEnum compound. EBNF
+            // `term = "(" S rhs S ")" | "[" ... | "{" ...` is the
+            // canonical O2 consumer: the grouped-term branch is not a
+            // leaf and must keep the nested `rhs` record while still
+            // recording the owning branch tag.
             IrNode::Seq(_) | IrNode::Next(_, _) | IrNode::Skip(_, _) => {
                 if seq_is_pure_literal_chain(inner) {
                     let mut positions: Vec<&IrNode> = Vec::new();
@@ -157,7 +160,36 @@ pub(super) fn emit_dispatch_arms_struct_direct(
                         }
                     }
                 } else {
-                    quote! {}
+                    let seq_body = super::super::inline::emit_seq_branch_structural_struct_direct(
+                        inner,
+                        &format_ident!("__shape_support_{}", grammar_suffix),
+                        grammar_suffix,
+                        ir,
+                    );
+                    quote! {
+                        {
+                            let attempt_p = *p;
+                            let attempt_builder = builder.checkpoint();
+                            let attempt: ::core::result::Result<
+                                (),
+                                crate::runtime::tape::DtaError,
+                            > = (|| {
+                                #seq_body
+                                ::core::result::Result::Ok(())
+                            })();
+                            match attempt {
+                                ::core::result::Result::Ok(()) => {
+                                    builder.push_branch_tag(#idx_u32);
+                                    builder.commit(attempt_builder);
+                                    break 'try_branches;
+                                }
+                                ::core::result::Result::Err(_) => {
+                                    *p = attempt_p;
+                                    builder.rollback(attempt_builder);
+                                }
+                            }
+                        }
+                    }
                 }
             }
             _ => quote! {},

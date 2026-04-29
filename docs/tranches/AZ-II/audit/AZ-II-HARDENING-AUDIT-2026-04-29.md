@@ -14,9 +14,11 @@ state.
 
 The current implementation is a partial close:
 
-- StructDirect is live for 8/9 grammars: JSON, Google Sheets, CSS L4,
-  BBNF, CSV, Math, BNF, and CSS Pretty.
-- EBNF remains TapeDirect and returns `Parsed<'_, EbnfParser>`.
+- StructDirect is live for 9/9 grammars after cutover.O2: JSON,
+  Google Sheets, CSS L4, BBNF, CSV, Math, BNF, CSS Pretty, and EBNF.
+- EBNF now returns `EbnfDocument<'_>`; generated tape-view residue,
+  `Parsed<R>`, and `TapeDirect` fallback semantics remain deletion
+  blockers.
 - `Parsed<R>`, tape cursor/view code, and `crates/tape` remain live
   runtime substrate.
 - BBNF's public `grammar::parse` path returns `BbnfDocument`, but the
@@ -28,11 +30,12 @@ The current implementation is a partial close:
   bench feature matrix.
 
 This is not an AZ-III by default. The active work is AZ-II
-`cutover.O`, a terminal hardening wave. O0 tooling preflight and O1
-StructDirect builder transactions have landed; the active gate is O2
-EBNF direct projection. Open AZ-III only if `cutover.O` proves that EBNF
-requires a new grammar-general inference/layout substrate that cannot
-land inside AZ-II without hiding a larger architectural transposition.
+`cutover.O`, a terminal hardening wave. O0 tooling preflight, O1
+StructDirect builder transactions, and O2 EBNF direct projection have
+landed; the active gate is O3 generated view purge. Open AZ-III only if
+a later `cutover.O` gate proves that new grammar-general
+inference/layout substrate cannot land inside AZ-II without hiding a
+larger architectural transposition.
 
 ## P0 Gates
 
@@ -69,29 +72,32 @@ checkpoint/rollback/commit support; grammar-specific builders restore
 arena cursors, open-frame stacks, roots, next handles, and CSS pending
 value state; speculative StructDirect emitter paths are transactionally
 wired. Focused JSON and CSS wire-contract tests cover failed-branch
-rollback. The remaining correctness blocker is O2 EBNF layout/type
-projection, not builder-state leakage.
+rollback. The remaining tape-abrogation blockers are generated view
+purge, `Parsed<R>` / `TapeDirect` deletion, and crate deletion, not
+builder-state leakage.
 
 ### EBNF Direct Projection
 
-EBNF is the only remaining TapeDirect grammar. The resolver still
-comments out the EBNF StructDirect arm and generated EBNF parse still
-allocates tape and returns `Parsed::new`.
+Disposition: LANDED in cutover.O2. EBNF is no longer a TapeDirect
+grammar; the resolver routes it to `EbnfStructBuilder`, and generated
+EBNF parse returns `EbnfDocument<'_>`.
 
 The known blocker is grammar-general: high-branch literal alternates
 (`letter`, `digit`, `symbol`) expose layout-routing depth that the
 current AltDispatch + struct layout path does not satisfy.
 
-Required close:
+Landed close:
 
-1. Model large alternates as a shared `AltFacts` obligation:
-   branch count, FIRST partition, ambiguity class, tag width, payload
-   shape, source span/trivia preservation, and dispatch admissibility.
-2. Feed those facts into layout/type inference and emitter dispatch.
-3. Flip EBNF through the normal resolver path, not an EBNF carveout.
-4. Require `EbnfParser::parse -> EbnfDocument`.
-5. Add EBNF accessor/materializer/projection tests that actually call the
-   parse path and fail if the resolver silently falls back to tape.
+1. High-branch literal alternates route through StructDirect
+   AltDispatch with `u32` branch tags.
+2. Structural `Seq` AltDispatch branches route through the shared
+   StructDirect inline branch walker, preserving nested children and
+   source/trivia positions through the same emitter machinery used by
+   Keyword structural branches.
+3. EBNF flips through the normal resolver path, not an EBNF carveout.
+4. `EbnfParser::parse -> EbnfDocument`.
+5. EBNF parse, serialize, and typed-accessor tests exercise the parse
+   path and fail if the resolver silently falls back to tape.
 
 ### Tape and Parsed Deletion
 
@@ -207,9 +213,9 @@ Primary references used for this direction:
    evidence.
 2. **O1 - Builder transactions.** LANDED: shared speculative builder
    ABI is wired through StructDirect speculative emission sites.
-3. **O2 - EBNF generalization.** Introduce shared alternate/layout
-   obligations and flip EBNF to `EbnfDocument`.
-4. **O3 - Generated view purge.** Stop emitting tape-backed view and
+3. **O2 - EBNF generalization.** LANDED: shared structural
+   AltDispatch emission flips EBNF to `EbnfDocument`.
+4. **O3 - Generated view purge.** ACTIVE: stop emitting tape-backed view and
    `ValueRoot` materializer artifacts for StructDirect grammars unless
    they are consumed through a document API.
 5. **O4 - Parsed/TapeDirect deletion.** Remove `Parsed<R>` as a

@@ -86,16 +86,18 @@ Python post-process path retired entirely at B2.W2.
 Current strategy status:
 
 - StructDirect: JSON, Google Sheets, CSS L4, BBNF, CSV, Math, BNF,
-  CSS Pretty.
-- TapeDirect: EBNF only, terminal AZ-II blocker.
+  CSS Pretty, and EBNF.
+- TapeDirect: no production grammar should select it after AZ-II
+  `cutover.O2`; the enum/fallback residue is an O4 deletion target.
 - Fallback TapeDirect: must be deleted in AZ-II `cutover.O`; unknown
   grammars should fail generation loudly rather than silently selecting
   tape.
 
 **Generated code per grammar:**
-- `parse(...) -> <Grammar>Document<'_>` for StructDirect grammars.
-- `parse(...) -> Parsed<'_, Self>` only for the remaining EBNF
-  TapeDirect blocker.
+- `parse(...) -> <Grammar>Document<'_>` for every production grammar.
+- `parse(...) -> Parsed<'_, Self>` is production-dead after O2 and
+  remains only as deletion residue until O4 removes `Parsed<R>` and
+  `TapeDirect`.
 - Per-rule monolithic parse functions selected by shape and
   `EmitStrategy`.
 - Grammar-specific runtime builder/document accessors for StructDirect.

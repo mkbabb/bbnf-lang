@@ -3203,11 +3203,73 @@ mod __bbnfbootstrap_emit_impl {
         match first_byte {
             34u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [34u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                    let __seq_span_lo = *p;
+                    let __seq_builder_checkpoint = builder.checkpoint();
+                    let __seq_result: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [34u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        {
+                            let __scan_start = *p;
+                            let Some(match_len) = __regex_scan_BbnfBootstrap(
+                                "(\\\\.|[^\"\\\\])*",
+                                input,
+                                *p,
+                            ) else {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: __scan_start as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            };
+                            *p += match_len as usize;
+                        }
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [34u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        ::core::result::Result::Ok(())
+                    })();
+                    match __seq_result {
+                        ::core::result::Result::Ok(()) => {
+                            let __seq_span_hi = *p;
+                            builder.rollback(__seq_builder_checkpoint);
+                            let __seq_text = unsafe {
+                                ::core::str::from_utf8_unchecked(
+                                    &input[__seq_span_lo..__seq_span_hi],
+                                )
+                            };
+                            builder.push_leaf_with_str(__seq_text);
+                            return ::core::result::Result::Ok(
+                                crate::runtime::tape::TapeOffset::NONE,
+                            );
+                        }
+                        ::core::result::Result::Err(__err) => {
+                            *p = __seq_span_lo;
+                            builder.rollback(__seq_builder_checkpoint);
+                            return ::core::result::Result::Err(__err);
+                        }
+                    }
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3217,11 +3279,73 @@ mod __bbnfbootstrap_emit_impl {
             }
             39u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [39u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                    let __seq_span_lo = *p;
+                    let __seq_builder_checkpoint = builder.checkpoint();
+                    let __seq_result: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [39u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        {
+                            let __scan_start = *p;
+                            let Some(match_len) = __regex_scan_BbnfBootstrap(
+                                "(\\\\.|[^'\\\\])*",
+                                input,
+                                *p,
+                            ) else {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: __scan_start as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            };
+                            *p += match_len as usize;
+                        }
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [39u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        ::core::result::Result::Ok(())
+                    })();
+                    match __seq_result {
+                        ::core::result::Result::Ok(()) => {
+                            let __seq_span_hi = *p;
+                            builder.rollback(__seq_builder_checkpoint);
+                            let __seq_text = unsafe {
+                                ::core::str::from_utf8_unchecked(
+                                    &input[__seq_span_lo..__seq_span_hi],
+                                )
+                            };
+                            builder.push_leaf_with_str(__seq_text);
+                            return ::core::result::Result::Ok(
+                                crate::runtime::tape::TapeOffset::NONE,
+                            );
+                        }
+                        ::core::result::Result::Err(__err) => {
+                            *p = __seq_span_lo;
+                            builder.rollback(__seq_builder_checkpoint);
+                            return ::core::result::Result::Err(__err);
+                        }
+                    }
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3231,11 +3355,73 @@ mod __bbnfbootstrap_emit_impl {
             }
             96u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [96u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                    let __seq_span_lo = *p;
+                    let __seq_builder_checkpoint = builder.checkpoint();
+                    let __seq_result: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [96u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        {
+                            let __scan_start = *p;
+                            let Some(match_len) = __regex_scan_BbnfBootstrap(
+                                "(\\\\.|[^`\\\\])*",
+                                input,
+                                *p,
+                            ) else {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: __scan_start as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            };
+                            *p += match_len as usize;
+                        }
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [96u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        ::core::result::Result::Ok(())
+                    })();
+                    match __seq_result {
+                        ::core::result::Result::Ok(()) => {
+                            let __seq_span_hi = *p;
+                            builder.rollback(__seq_builder_checkpoint);
+                            let __seq_text = unsafe {
+                                ::core::str::from_utf8_unchecked(
+                                    &input[__seq_span_lo..__seq_span_hi],
+                                )
+                            };
+                            builder.push_leaf_with_str(__seq_text);
+                            return ::core::result::Result::Ok(
+                                crate::runtime::tape::TapeOffset::NONE,
+                            );
+                        }
+                        ::core::result::Result::Err(__err) => {
+                            *p = __seq_span_lo;
+                            builder.rollback(__seq_builder_checkpoint);
+                            return ::core::result::Result::Err(__err);
+                        }
+                    }
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -6736,6 +6922,69 @@ mod __bbnfbootstrap_emit_impl {
                         }
                     }
                 }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    let attempt: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [40u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        let _ = ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            parse_wrap_BbnfBootstrap_value_expr(input, p, state, builder)
+                        })?;
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [41u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        ::core::result::Result::Ok(())
+                    })();
+                    match attempt {
+                        ::core::result::Result::Ok(()) => {
+                            builder.push_branch_tag(7u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
                 return Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -6793,6 +7042,111 @@ mod __bbnfbootstrap_emit_impl {
             crate::runtime::tape::DtaError,
         > = (|| {
             'try_branches: loop {
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    let attempt: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
+                        'try_branches: loop {
+                            {
+                                let __alt_save_p = *p;
+                                let __alt_builder_checkpoint = builder.checkpoint();
+                                let __alt_result: ::core::result::Result<
+                                    (),
+                                    crate::runtime::tape::DtaError,
+                                > = (|| {
+                                    {
+                                        let at = *p;
+                                        let end = at + 1usize;
+                                        if input.len() < end || input[at..end] != [33u8] {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: at as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
+                                        }
+                                        *p = end;
+                                    }
+                                    ::core::result::Result::Ok(())
+                                })();
+                                match __alt_result {
+                                    ::core::result::Result::Ok(()) => {
+                                        builder.commit(__alt_builder_checkpoint);
+                                        break 'try_branches;
+                                    }
+                                    ::core::result::Result::Err(_) => {
+                                        *p = __alt_save_p;
+                                        builder.rollback(__alt_builder_checkpoint);
+                                    }
+                                }
+                            }
+                            {
+                                let __alt_save_p = *p;
+                                let __alt_builder_checkpoint = builder.checkpoint();
+                                let __alt_result: ::core::result::Result<
+                                    (),
+                                    crate::runtime::tape::DtaError,
+                                > = (|| {
+                                    {
+                                        let at = *p;
+                                        let end = at + 1usize;
+                                        if input.len() < end || input[at..end] != [45u8] {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: at as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
+                                        }
+                                        *p = end;
+                                    }
+                                    ::core::result::Result::Ok(())
+                                })();
+                                match __alt_result {
+                                    ::core::result::Result::Ok(()) => {
+                                        builder.commit(__alt_builder_checkpoint);
+                                        break 'try_branches;
+                                    }
+                                    ::core::result::Result::Err(_) => {
+                                        *p = __alt_save_p;
+                                        builder.rollback(__alt_builder_checkpoint);
+                                    }
+                                }
+                            }
+                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                offset: *p as u32,
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                            });
+                        }
+                        let _ = ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            parse_altdispatch_BbnfBootstrap_value_atom(
+                                input,
+                                p,
+                                state,
+                                builder,
+                            )
+                        })?;
+                        ::core::result::Result::Ok(())
+                    })();
+                    match attempt {
+                        ::core::result::Result::Ok(()) => {
+                            builder.push_branch_tag(0u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
                 {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
@@ -8272,6 +8626,201 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
+                    let attempt: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
+                        let _ = ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            parse_hregex_BbnfBootstrap_identifier(
+                                input,
+                                p,
+                                state,
+                                builder,
+                            )
+                        })?;
+                        {
+                            let mut __iter_count: u32 = 0;
+                            loop {
+                                if __iter_count >= 1u32 {
+                                    break;
+                                }
+                                let __iter_save_p = *p;
+                                if input.get(*p).is_none() {
+                                    break;
+                                }
+                                let __iter_builder_checkpoint = builder.checkpoint();
+                                let __iter_result: ::core::result::Result<
+                                    (),
+                                    crate::runtime::tape::DtaError,
+                                > = (|| {
+                                    {
+                                        let at = *p;
+                                        let end = at + 1usize;
+                                        if input.len() < end || input[at..end] != [40u8] {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: at as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
+                                        }
+                                        *p = end;
+                                    }
+                                    let _ = __shape_support_BbnfBootstrap::skip_space(
+                                        input,
+                                        p,
+                                        state,
+                                    );
+                                    let _ = ({
+                                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                                            input,
+                                            p,
+                                            state,
+                                        );
+                                        parse_flat_BbnfBootstrap_call_arg(input, p, state, builder)
+                                    })?;
+                                    let _ = __shape_support_BbnfBootstrap::skip_space(
+                                        input,
+                                        p,
+                                        state,
+                                    );
+                                    {
+                                        let mut __iter_count: u32 = 0;
+                                        loop {
+                                            let __iter_save_p = *p;
+                                            if input.get(*p).is_none() {
+                                                break;
+                                            }
+                                            let __iter_builder_checkpoint = builder.checkpoint();
+                                            let __iter_result: ::core::result::Result<
+                                                (),
+                                                crate::runtime::tape::DtaError,
+                                            > = (|| {
+                                                let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                    input,
+                                                    p,
+                                                    state,
+                                                );
+                                                {
+                                                    let at = *p;
+                                                    let end = at + 1usize;
+                                                    if input.len() < end || input[at..end] != [44u8] {
+                                                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                            offset: at as u32,
+                                                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                                        });
+                                                    }
+                                                    *p = end;
+                                                }
+                                                let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                    input,
+                                                    p,
+                                                    state,
+                                                );
+                                                let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                    input,
+                                                    p,
+                                                    state,
+                                                );
+                                                let _ = ({
+                                                    let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                        input,
+                                                        p,
+                                                        state,
+                                                    );
+                                                    parse_flat_BbnfBootstrap_call_arg(input, p, state, builder)
+                                                })?;
+                                                let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                    input,
+                                                    p,
+                                                    state,
+                                                );
+                                                ::core::result::Result::Ok(())
+                                            })();
+                                            match __iter_result {
+                                                ::core::result::Result::Ok(()) => {
+                                                    if *p == __iter_save_p {
+                                                        builder.rollback(__iter_builder_checkpoint);
+                                                        break;
+                                                    }
+                                                    builder.commit(__iter_builder_checkpoint);
+                                                    __iter_count += 1;
+                                                }
+                                                ::core::result::Result::Err(_) => {
+                                                    *p = __iter_save_p;
+                                                    builder.rollback(__iter_builder_checkpoint);
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        if __iter_count < 0u32 {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: *p as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
+                                        }
+                                    }
+                                    {
+                                        let at = *p;
+                                        let end = at + 1usize;
+                                        if input.len() < end || input[at..end] != [41u8] {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: at as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
+                                        }
+                                        *p = end;
+                                    }
+                                    ::core::result::Result::Ok(())
+                                })();
+                                match __iter_result {
+                                    ::core::result::Result::Ok(()) => {
+                                        if *p == __iter_save_p {
+                                            builder.rollback(__iter_builder_checkpoint);
+                                            break;
+                                        }
+                                        builder.commit(__iter_builder_checkpoint);
+                                        __iter_count += 1;
+                                    }
+                                    ::core::result::Result::Err(_) => {
+                                        *p = __iter_save_p;
+                                        builder.rollback(__iter_builder_checkpoint);
+                                        break;
+                                    }
+                                }
+                            }
+                            if __iter_count < 0u32 {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: *p as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                        }
+                        ::core::result::Result::Ok(())
+                    })();
+                    match attempt {
+                        ::core::result::Result::Ok(()) => {
+                            builder.push_branch_tag(2u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
                     match {
                         let __first = __shape_support_BbnfBootstrap::skip_space(
                                 input,
@@ -8317,6 +8866,258 @@ mod __bbnfbootstrap_emit_impl {
                             break 'try_branches;
                         }
                         Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    let attempt: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
+                        {
+                            let at = *p;
+                            let end = at + 2usize;
+                            if input.len() < end || input[at..end] != [64u8, 123u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        let _ = ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+                        })?;
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [125u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        ::core::result::Result::Ok(())
+                    })();
+                    match attempt {
+                        ::core::result::Result::Ok(()) => {
+                            builder.push_branch_tag(5u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    let attempt: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [40u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        let _ = ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+                        })?;
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [41u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        ::core::result::Result::Ok(())
+                    })();
+                    match attempt {
+                        ::core::result::Result::Ok(()) => {
+                            builder.push_branch_tag(6u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    let attempt: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [91u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        let _ = ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+                        })?;
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [93u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        ::core::result::Result::Ok(())
+                    })();
+                    match attempt {
+                        ::core::result::Result::Ok(()) => {
+                            builder.push_branch_tag(7u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
+                            *p = attempt_p;
+                            builder.rollback(attempt_builder);
+                        }
+                    }
+                }
+                {
+                    let attempt_p = *p;
+                    let attempt_builder = builder.checkpoint();
+                    let attempt: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [123u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        let _ = ({
+                            let _ = __shape_support_BbnfBootstrap::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            parse_wrap_BbnfBootstrap_rhs(input, p, state, builder)
+                        })?;
+                        let _ = __shape_support_BbnfBootstrap::skip_space(
+                            input,
+                            p,
+                            state,
+                        );
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [125u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        ::core::result::Result::Ok(())
+                    })();
+                    match attempt {
+                        ::core::result::Result::Ok(()) => {
+                            builder.push_branch_tag(8u32);
+                            builder.commit(attempt_builder);
+                            break 'try_branches;
+                        }
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
                             builder.rollback(attempt_builder);
                         }

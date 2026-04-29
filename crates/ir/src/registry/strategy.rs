@@ -247,19 +247,19 @@ impl EmitStrategy {
                 ts: None,
                 wasm: None,
             },
-            // AZ-II.cutover.M Phase 3 — EBNF struct-direct activation
-            // is DEFERRED. The grammar's `letter` / `digit` / `symbol`
-            // AltDispatch rules require a deeper struct-direct emitter
-            // surgery (the Alt-of-many-literals pattern with `Minus`
-            // and `-` constraints around `terminal = "'" , character -
-            // "'" , …`). The literal-attempt arm landed in this phase
-            // produces the per-byte dispatch shells correctly, but
-            // EBNF's higher rules consume the per-letter pushes
-            // through layouts the in-flight `EbnfStructBuilder` does
-            // not yet route. EBNF stays on TapeDirect through cutover.M;
-            // a follow-on tranche admits it once the layout-routing
-            // gap closes.
-            // ("EbnfParser" | "EbnfGrammar", true) => StructDirect {…},
+            // AZ-II.cutover.O.2 — EBNF struct-direct activation. O1
+            // landed transactional StructDirect builders, so the
+            // high-branch `letter` / `digit` / `symbol` alternate
+            // attempts can now speculatively mutate builder state
+            // without leaking failed branches into parent layouts.
+            ("EbnfParser" | "EbnfGrammar", true) => EmitStrategy::StructDirect {
+                rust: SubstrateBinding {
+                    builder_path: "crate::runtime::ebnf::EbnfStructBuilder",
+                    document_path: "crate::runtime::ebnf::EbnfDocument",
+                },
+                ts: None,
+                wasm: None,
+            },
             ("CssPrettyParser" | "CssPrettyGrammar", true) => EmitStrategy::StructDirect {
                 rust: SubstrateBinding {
                     builder_path: "crate::runtime::css_pretty::CssPrettyStructBuilder",

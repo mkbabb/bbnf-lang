@@ -3607,11 +3607,117 @@ mod __googlesheetsparser_emit_impl {
         match first_byte {
             60u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [60u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
+                    let __seq_span_lo = *p;
+                    let __seq_builder_checkpoint = builder.checkpoint();
+                    let __seq_result: ::core::result::Result<
+                        (),
+                        crate::runtime::tape::DtaError,
+                    > = (|| {
+                        {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [60u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                        }
+                        'try_branches: loop {
+                            {
+                                let __alt_save_p = *p;
+                                let __alt_builder_checkpoint = builder.checkpoint();
+                                let __alt_result: ::core::result::Result<
+                                    (),
+                                    crate::runtime::tape::DtaError,
+                                > = (|| {
+                                    {
+                                        let at = *p;
+                                        let end = at + 1usize;
+                                        if input.len() < end || input[at..end] != [62u8] {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: at as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
+                                        }
+                                        *p = end;
+                                    }
+                                    ::core::result::Result::Ok(())
+                                })();
+                                match __alt_result {
+                                    ::core::result::Result::Ok(()) => {
+                                        builder.commit(__alt_builder_checkpoint);
+                                        break 'try_branches;
+                                    }
+                                    ::core::result::Result::Err(_) => {
+                                        *p = __alt_save_p;
+                                        builder.rollback(__alt_builder_checkpoint);
+                                    }
+                                }
+                            }
+                            {
+                                let __alt_save_p = *p;
+                                let __alt_builder_checkpoint = builder.checkpoint();
+                                let __alt_result: ::core::result::Result<
+                                    (),
+                                    crate::runtime::tape::DtaError,
+                                > = (|| {
+                                    {
+                                        let at = *p;
+                                        let end = at + 1usize;
+                                        if input.len() < end || input[at..end] != [61u8] {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: at as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
+                                        }
+                                        *p = end;
+                                    }
+                                    ::core::result::Result::Ok(())
+                                })();
+                                match __alt_result {
+                                    ::core::result::Result::Ok(()) => {
+                                        builder.commit(__alt_builder_checkpoint);
+                                        break 'try_branches;
+                                    }
+                                    ::core::result::Result::Err(_) => {
+                                        *p = __alt_save_p;
+                                        builder.rollback(__alt_builder_checkpoint);
+                                    }
+                                }
+                            }
+                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                offset: *p as u32,
+                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                            });
+                        }
+                        ::core::result::Result::Ok(())
+                    })();
+                    match __seq_result {
+                        ::core::result::Result::Ok(()) => {
+                            let __seq_span_hi = *p;
+                            builder.rollback(__seq_builder_checkpoint);
+                            let __seq_text = unsafe {
+                                ::core::str::from_utf8_unchecked(
+                                    &input[__seq_span_lo..__seq_span_hi],
+                                )
+                            };
+                            builder.push_leaf_with_str(__seq_text);
+                            return ::core::result::Result::Ok(
+                                crate::runtime::tape::TapeOffset::NONE,
+                            );
+                        }
+                        ::core::result::Result::Err(__err) => {
+                            *p = __seq_span_lo;
+                            builder.rollback(__seq_builder_checkpoint);
+                            return ::core::result::Result::Err(__err);
+                        }
+                    }
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [60u8] {
                     let at = *p;

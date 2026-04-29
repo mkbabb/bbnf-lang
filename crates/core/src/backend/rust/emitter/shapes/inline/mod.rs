@@ -91,7 +91,9 @@ mod regex;
 mod structural_branch;
 mod token_dispatch;
 
-pub(super) use structural_branch::emit_seq_branch_structural_tape;
+pub(super) use structural_branch::{
+    emit_seq_branch_structural_struct_direct, emit_seq_branch_structural_tape,
+};
 
 // ─────────────────────────────────────────────────────────────────────
 // Tape-path entry point.

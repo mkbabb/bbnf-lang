@@ -11,9 +11,10 @@ cutover.N halt: cutover.N landed no code commits. Post-snapshot
 hardening amendments may refine the order of cutover.O, but they do not
 change the implemented progress recorded here.
 
-Post-snapshot hardening addendum: cutover.O.0 tooling preflight and
-cutover.O.1 StructDirect builder transactions have since landed. The
-active resume point is cutover.O.2 EBNF direct projection.
+Post-snapshot hardening addendum: cutover.O.0 tooling preflight,
+cutover.O.1 StructDirect builder transactions, and cutover.O.2 EBNF
+direct projection have since landed. The active resume point is
+cutover.O.3 generated view purge.
 
 This document supplements:
 - `docs/tranches/AZ-II/AZ-II.md` (parent plan)
@@ -66,7 +67,7 @@ cherry-pick was reviewed for compile + nextest health before landing.
 
 | # | Gate | Status |
 |---|---|---|
-| 1 | `crates/tape/` deleted; `cargo build -p bbnf --no-default-features` green | DEFERRED — ~10k cross-crate refs; gated on Phase 4 (Parsed<R> deletion) which gates on EBNF activation |
+| 1 | `crates/tape/` deleted; `cargo build -p bbnf --no-default-features` green | DEFERRED — ~10k cross-crate refs; gated on generated view purge plus Phase 4 (Parsed<R> / TapeDirect deletion) |
 | 2 | Stage A / Stage B byte-equal across BBNF fixture corpus; permanent CI gate green | MET — `bbnf_bootstrap_reproducibility::bbnf_regen_is_idempotent` passes; cutover.K Phase 1 added `json_regen_is_idempotent` |
 | 3 | IR audit pass reports 100% `->` coverage fleet-wide (JSON, CSS L4, Sheets, BBNF) | NOT VERIFIED — gated on Phase 6 (bench/audit suite refresh); cutover.M did not run the audit pass |
 | 4 | `StructRegistry` non-empty for every Named rule in the four grammars including BBNF | MET — cutover.A authored BBNF; cutover.M extended to CSV/Math/BNF/CSS Pretty |
@@ -79,9 +80,9 @@ cherry-pick was reviewed for compile + nextest health before landing.
 
 | # | Point | Status |
 |---|---|---|
-| 1 | All four grammars on direct-to-struct (JSON + CSS L4 + Sheets + BBNF) | MET — plus CSV / Math / BNF / CSS Pretty also on StructDirect (cutover.M); EBNF deferred |
+| 1 | All four grammars on direct-to-struct (JSON + CSS L4 + Sheets + BBNF) | MET — plus CSV / Math / BNF / CSS Pretty also on StructDirect (cutover.M); EBNF on StructDirect after cutover.O2 |
 | 2 | `crates/tape/` deleted | DEFERRED |
-| 3 | `StructRegistry` closed fleet-wide | MET (8/9 grammars) |
+| 3 | `StructRegistry` closed fleet-wide | MET (9/9 grammars after cutover.O2) |
 | 4 | Parity harnesses on struct comparisons | MET |
 | 5 | Full 17-entry matrix at AU parity on struct-only path | PARTIAL (per Hard gate 6) |
 | 6 | BBNF self-parse byte-reproducible | MET (cutover.B + reinforced through cutover.H/M) |
@@ -89,16 +90,17 @@ cherry-pick was reviewed for compile + nextest health before landing.
 
 ## Remaining work to AZ-II terminal close
 
-cutover.N's intended EBNF + deletion + bench close remains open, but the
-post-snapshot hardening audit refines the order. `cutover.O` is the
-terminal AZ-II wave and must close these gates in sequence:
+cutover.N's intended deletion + bench close remains open after O2 EBNF
+activation, and the post-snapshot hardening audit refines the order.
+`cutover.O` is the terminal AZ-II wave and must close these gates in
+sequence:
 
 | Substage | Scope | Required outcome |
 |---|---|---|
 | O0 | Tooling preflight | LANDED — stale bench aliases, IAI CI, profiling scripts, and release pin repaired or explicitly de-canonicalized before close evidence is collected |
 | O1 | StructDirect builder transactions | LANDED — grammar-general checkpoint/rollback/commit support wired through speculative alternate/repeat/minus/negate emitter paths and runtime builders |
-| O2 | EBNF direct projection | high-branch literal alternates modeled through shared layout/type facts; `EbnfParser::parse -> EbnfDocument` |
-| O3 | Generated view purge | tape-backed `TapeCursor`, node-view, and `ValueRoot` residue removed from StructDirect generated output unless consumed through a document API |
+| O2 | EBNF direct projection | LANDED — high-branch literal alternates and structural `Seq` branches project through StructDirect; `EbnfParser::parse -> EbnfDocument` |
+| O3 | Generated view purge | ACTIVE — tape-backed `TapeCursor`, node-view, and `ValueRoot` residue removed from StructDirect generated output unless consumed through a document API |
 | O4 | `Parsed<R>` / `TapeDirect` deletion | `Parsed<R>` removed as a production parser result; `TapeDirect` fallback semantics removed |
 | O5 | `crates/tape` deletion | standalone tape crate deleted after only genuinely non-tape scan/index primitives move to their natural owner |
 | O6 | semantic/perf close | JSON sonic-rs parity, CSS lightningcss typed parity, and the 17-entry close matrix refreshed |
@@ -156,7 +158,7 @@ trustworthy.
 
 ### MODIFIED (load-bearing)
 
-- `crates/ir/src/registry/strategy.rs` — `EmitStrategy::for_grammar` resolver arms; 8/9 grammars StructDirect post-cutover.M; EBNF deferred
+- `crates/ir/src/registry/strategy.rs` — `EmitStrategy::for_grammar` resolver arms; 9/9 grammars StructDirect after cutover.O2
 - `crates/core/src/backend/rust/emitter/shapes/array/mod.rs` — Wrap-vs-Repeat dispatch (cutover.F)
 - `crates/core/src/backend/rust/emitter/shapes/flat/struct_direct.rs` — inline-position emission (cutover.F) + Err frame cleanup (cutover.K Phase 2)
 - `crates/core/src/backend/rust/emitter/shapes/wrap/struct_direct.rs` — `emit_alt_struct_dispatch_transparent` (cutover.H Phase 1) + Err frame cleanup (cutover.K Phase 2)
@@ -222,11 +224,13 @@ candidate structural roots:
 3. Runtime `push_branch_tag(idx)` indexing for high branch counts
    (potential `u8` overflow at idx=52? unlikely but worth verifying)
 
-The fix when it lands will be **structural and generic** — applying to
-any grammar with high-branch-count Alt-of-literal patterns. cutover.N
-halted at organizational usage limit with no code commits. cutover.O.1
-has now landed the builder transaction prerequisite, so the next active
-gate is O2 EBNF activation.
+The landed O2 fix is **structural and generic**: StructDirect
+AltDispatch now emits structural `Seq` branches through the shared
+inline branch walker, preserving nested children and committing the
+branch tag transactionally. cutover.N halted at organizational usage
+limit with no code commits; cutover.O.1 supplied the builder
+transaction prerequisite, and cutover.O.2 flipped EBNF to
+`EbnfDocument`. The next active gate is O3 generated view purge.
 
 ## Trajectory progress estimate
 

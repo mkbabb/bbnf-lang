@@ -1,6 +1,7 @@
 # AZ-II — Progress Log
 
-**Status**: partial close; `cutover.O.0` and `cutover.O.1` landed, O2 next.
+**Status**: partial close; `cutover.O.0`, `cutover.O.1`, and
+`cutover.O.2` landed, O3 next.
 Implemented-state record:
 [`PROGRESS-SNAPSHOT-2026-04-29.md`](PROGRESS-SNAPSHOT-2026-04-29.md).
 Live terminal sequence: `cutover.O.0` through `cutover.O.7`.
@@ -91,7 +92,7 @@ The cutover wave runs in three sequential sub-stages:
 | W0 | superseded (2026-04-28) | Folded into cutover.A (substrate hoist + BBNF runtime + decay sweep) |
 | W1 | superseded (2026-04-28) | Folded into cutover.B (Stage A + Stage B byte-equal cycle) |
 | W2 | superseded (2026-04-28) | Folded into cutover.C (`crates/tape/` deletion + recode + FINAL) |
-| cutover | partial-close (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; cutover.O.0 tooling preflight and O1 builder transactions landed; O2 EBNF direct projection next) | 8/9 grammars StructDirect; terminal hardening routes through cutover.O.2-O.7 after transactional StructDirect rollback support ([waves/cutover.md](waves/cutover.md)) |
+| cutover | partial-close (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; cutover.O.0 tooling preflight, O1 builder transactions, and O2 EBNF direct projection landed; O3 generated view purge next) | 9/9 grammars StructDirect; terminal hardening routes through cutover.O.3-O.7 after transactional StructDirect rollback support and EBNF activation ([waves/cutover.md](waves/cutover.md)) |
 
 ## 2026-04-28 — cutover.G partial close
 
@@ -270,15 +271,16 @@ emit byte-comparison + `push_leaf_with_unit()` + `push_branch_tag(idx)`
 triples (pre-cutover.M these arms emitted empty placeholders that
 collapsed BBNF `type_name` and CSS L4 pseudo-class arms into no-op
 loops). All 9 grammars regen onto matching substrate; 8 of 9
-return concrete `Document` types directly.
+returned concrete `Document` types directly at cutover.M close.
 
 EBNF activation deferred — `letter`/`digit`/`symbol` Alt-of-many-
 literal AltDispatch rules expose layout-routing depth (the
 per-letter pushes don't yet route through `EbnfStructBuilder`'s
-expected layout) beyond cutover.M's 300-min cap.
+expected layout) beyond cutover.M's 300-min cap. Superseded by
+cutover.O2, which flips EBNF to `EbnfDocument`.
 
 `docs/tranches/AZ-II/FINAL.md` updated — PARTIAL CLOSE manifest
-reflects 8/9 fleet activation.
+reflected 8/9 fleet activation at cutover.M close.
 `docs/benchmarks/post-AZ-II.json` description updated to recap
 cutover.A through cutover.M trajectory.
 
@@ -324,18 +326,17 @@ cross-crate refs).
 |---|---|---|
 | cutover.O.0 | Tooling preflight: stale bench aliases, IAI CI, profiling scripts, release pin | LANDED |
 | cutover.O.1 | StructDirect builder transaction ABI across speculative branches | LANDED |
-| cutover.O.2 | EBNF diagnosis + generic AltFacts/layout-routing repair | 120 min |
+| cutover.O.2 | EBNF diagnosis + generic AltDispatch structural-Seq repair | LANDED |
 | cutover.O.3 | Generated tape-view / `ValueRoot` residue purge for StructDirect | 90 min |
 | cutover.O.4 | `Parsed<R>` deletion and `TapeDirect` fallback removal | 90 min |
 | cutover.O.5 | `crates/tape` deletion after relocating non-tape scan/index primitives | 120 min |
 | cutover.O.6 | 17-entry close matrix + JSON sonic-rs / CSS lightningcss parity refresh | 90 min |
 | cutover.O.7 | AZ-II FINAL.md PARTIAL → FINAL CLOSE conversion | 30 min |
 
-Total estimated: ~12 hours sequential under fan-out. If EBNF requires a
-new grammar-general inference/layout substrate beyond `AltFacts` +
-transactional builders, author AZ-III for that substrate only; do not
-move tape deletion, `Parsed<R>` deletion, stale benches, or parity gaps
-into AZ-III.
+Remaining estimate after O2: ~7 hours sequential under fan-out. If a
+later gate requires a new grammar-general inference/layout substrate,
+author AZ-III for that substrate only; do not move tape deletion,
+`Parsed<R>` deletion, stale benches, or parity gaps into AZ-III.
 
 ## 2026-04-29 — Six-lane hardening audit
 
@@ -345,10 +346,12 @@ the last 1200 commits, and current implementation wiring.
 
 Integrated findings:
 
-- AZ-II is partial, not terminal: 8/9 grammars are StructDirect; EBNF
-  remains TapeDirect.
-- StructDirect speculative branches need grammar-general builder
-  transactions before EBNF/CSS/BBNF correctness claims are reliable.
+- AZ-II is partial, not terminal: 9/9 grammars are StructDirect after
+  O2; generated tape-view residue, `Parsed<R>`, `TapeDirect`, and
+  `crates/tape` remain.
+- StructDirect speculative branches needed grammar-general builder
+  transactions before EBNF/CSS/BBNF correctness claims were reliable;
+  O1 landed that prerequisite.
 - `Parsed<R>`, `TapeDirect`, generated tape views, and `crates/tape`
   remain live blockers.
 - BBNF's hand-written `bootstrap_parser.rs` is a bridge, not the final
@@ -414,3 +417,30 @@ JSON and CSS StructDirect checkpoint tests; `cargo xtask regen --check`;
 `git diff --check`. No performance or close-matrix baseline was
 collected in O1 per instruction; O6 still owns semantic/parity
 throughput truth.
+
+## 2026-04-29 — cutover.O.2 EBNF direct projection
+
+O2 landed the last production grammar resolver-arm flip:
+
+- `EmitStrategy::for_grammar` now routes `EbnfParser` /
+  `EbnfGrammar` through `EbnfStructBuilder` and `EbnfDocument`.
+- StructDirect structural `Seq` branch emission is shared through the
+  inline branch walker and consumed by both Keyword and AltDispatch
+  shapes. AltDispatch now preserves nested structural children and
+  commits the owning branch tag transactionally, which admits EBNF
+  grouped terms such as `{ digit }`, `[ rhs ]`, and `( rhs )`.
+- Full canonical regen refreshed the affected generated fleet
+  (`bbnf`, `css_l4`, `google_sheets`, `ebnf`); `cargo xtask regen
+  --check` is clean across all 9 grammars.
+- `EbnfParser::parse` now returns `EbnfDocument<'_>`.
+
+Validation: `cargo check -p bbnf --lib --profile ax-iter`;
+`cargo test -p bbnf --profile ax-iter --test ebnf_prettify -- --nocapture`;
+`cargo test -p bbnf --profile ax-iter --test serialize_roundtrip ebnf_rule -- --nocapture`;
+`cargo test -p bbnf --profile ax-iter --test typed_accessor_surface ebnf_compile_time_accessors -- --nocapture`;
+`cargo test -p bbnf --profile ax-iter --test emit_strategy -- --nocapture`;
+`cargo test -p bbnf --profile ax-iter --test bbnf_bootstrap_reproducibility -- --nocapture`;
+affected-consumer smokes for CSS L4, BBNF self-parity, and Sheets
+self-parity; `cargo xtask regen --check`; `git diff --check`.
+No performance or close-matrix baseline was collected in O2 per user
+instruction; O6 still owns semantic/parity throughput truth.

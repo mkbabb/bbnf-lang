@@ -10,11 +10,12 @@ LANDED at master, cutover.N halted at organizational usage limit.
 full BBNF fixture corpus; `crates/tape/` deleted; `cargo build -p bbnf
 --no-default-features` succeeds without `crates/tape/`; AZ-II FINAL.md
 + `docs/benchmarks/post-AZ-II.json` archived.
-**Status**: PARTIAL CLOSE — substrate canonical; 8/9 grammars
-StructDirect; BBNF self-parity 56/56; reproducibility CI gate green;
-cutover.O.0 tooling preflight and O1 builder transactions landed;
-remaining work resumes at O2 EBNF activation before tape deletion,
-bench refresh, and FINAL CLOSE conversion.
+**Status**: PARTIAL CLOSE — substrate canonical; 9/9 grammars
+StructDirect after O2; BBNF self-parity 56/56; reproducibility CI gate
+green; cutover.O.0 tooling preflight, O1 builder transactions, and O2
+EBNF direct projection landed; remaining work resumes at O3 generated
+view purge before tape deletion, bench refresh, and FINAL CLOSE
+conversion.
 
 **2026-04-29 hardening amendment**: cutover.O must begin with the
 grammar-general StructDirect builder transaction gap. EBNF activation
@@ -22,10 +23,10 @@ is blocked not only by alternate layout depth but also by the fact that
 speculative StructDirect branches can mutate builder state without a
 matching rollback.
 
-**2026-04-29 O1 addendum**: O0 and O1 are landed. The active resume
-point is O2 EBNF direct projection, now with grammar-general
-StructDirect checkpoint/rollback/commit support available to every
-speculative emitter path.
+**2026-04-29 O2 addendum**: O0, O1, and O2 are landed. The active
+resume point is O3 generated view purge, now with EBNF on
+StructDirect and grammar-general StructDirect checkpoint/rollback/
+commit support available to every speculative emitter path.
 
 **Trajectory snapshot**: see [`../PROGRESS-SNAPSHOT-2026-04-29.md`](../PROGRESS-SNAPSHOT-2026-04-29.md)
 for per-substage commit-by-commit detail across cutover.A through
@@ -177,10 +178,10 @@ Required order:
 2. **O1 transactional builder ABI** — LANDED: grammar-general
    checkpoint/rollback/commit support exists on `StructBuilder` and is
    wired through every speculative StructDirect emitter path.
-3. **O2 EBNF direct projection** — model large literal alternates
-   through shared layout/type facts and require `EbnfParser::parse ->
-   EbnfDocument`.
-4. **O3 generated view purge** — remove tape-backed `TapeCursor`,
+3. **O2 EBNF direct projection** — LANDED: large literal alternates
+   and structural `Seq` branches project through StructDirect;
+   `EbnfParser::parse -> EbnfDocument`.
+4. **O3 generated view purge** — ACTIVE: remove tape-backed `TapeCursor`,
    node-view, and `ValueRoot` residue from StructDirect generated output
    unless it is consumed through a document API.
 5. **O4 Parsed/TapeDirect deletion** — delete `Parsed<R>` as a

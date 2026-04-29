@@ -142,32 +142,8 @@ pub(crate) fn lower_mapped_factor<'a>(
 fn find_value_expr_child<'a>(
     node: BbnfView<'a, 'a>,
 ) -> Option<BbnfView<'a, 'a>> {
-    fn descend<'a>(
-        view: BbnfView<'a, 'a>,
-        out: &mut Option<BbnfView<'a, 'a>>,
-    ) {
-        if out.is_some() {
-            return;
-        }
-        let trimmed = view.span_text().trim();
-        if trimmed.is_empty() {
-            return;
-        }
-        // Skip the arrow keyword leaf.
-        if trimmed == "->" || trimmed == "=>" {
-            return;
-        }
-        // Skip type-annotation subtrees — they begin with `:`.
-        if trimmed.starts_with(':') {
-            return;
-        }
-        // Substantive candidate: the value-expression head. The
-        // hand-written bootstrap parser pushes `value_expr` /
-        // `value_or` / `value_and` / … as recognised compounds; the
-        // codegen-emitted parse_that tape also produces an `Other`-
-        // kinded anonymous wrapper. Either form is the head we want.
-        let kind = view.compound_kind();
-        let is_value_expr_head = matches!(
+    fn is_value_expr_head_kind(kind: Option<BbnfCompoundKind>) -> bool {
+        matches!(
             kind,
             Some(
                 BbnfCompoundKind::ValueExpr
@@ -184,10 +160,46 @@ fn find_value_expr_child<'a>(
                     | BbnfCompoundKind::ValueFnCall
                     | BbnfCompoundKind::Other,
             ),
-        ) || kind.is_none();
-        if is_value_expr_head {
-            // First match wins — a value-expression-layer compound
-            // (named or anonymous) or a bare leaf.
+        )
+    }
+    fn descend<'a>(
+        view: BbnfView<'a, 'a>,
+        out: &mut Option<BbnfView<'a, 'a>>,
+    ) {
+        if out.is_some() {
+            return;
+        }
+        let kind = view.compound_kind();
+        let trimmed = view.span_text().trim();
+        // Leaves: discriminate by span_text content.
+        if kind.is_none() {
+            if trimmed.is_empty() {
+                return;
+            }
+            if trimmed == "->" || trimmed == "=>" {
+                return;
+            }
+            if trimmed.starts_with(':') {
+                return;
+            }
+            *out = Some(view);
+            return;
+        }
+        // Compounds: the value-expression sub-grammar can collapse to
+        // typed-leaf bool / int / float values whose source-text is
+        // dropped by the parse-time projection (`BbnfValue::Bool` /
+        // `Int` / `Float`). For these the recursive `compute_byte_span`
+        // walk returns None and `span_text()` is `""` — an empty span
+        // does NOT mean "no value-expression head", it means "every
+        // descendant projected to a typed leaf". Discriminate by
+        // structural kind instead and only fall back to the span-text
+        // guard for `Other`-kinded wrappers (which carry source-bytes
+        // verbatim in the parse_that-shaped tape).
+        if is_value_expr_head_kind(kind) {
+            // Skip type-annotation subtrees — they begin with `:`.
+            if trimmed.starts_with(':') {
+                return;
+            }
             *out = Some(view);
             return;
         }

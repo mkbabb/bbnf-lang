@@ -129,6 +129,14 @@ pub(super) fn lower_value_atom<'a, 'p: 'a>(
         }
     }
 
+    // Compound atom whose source-text is dropped by typed projection
+    // (`bool_lit` pushes only `BbnfValue::Bool(_)`, `int_lit` only
+    // `Int(_)`, `float_lit` only `Float(_)`). Recover the lone typed-
+    // leaf descendant before resorting to the source-text classifier.
+    if let Some(folded) = fold_typed_leaf_descendant(node, ctx) {
+        return folded;
+    }
+
     // Compound atom — classify by span text.
     let text = node.span_text_opt().unwrap_or_else(|| {
         panic!(
@@ -166,6 +174,50 @@ pub(super) fn lower_value_atom<'a, 'p: 'a>(
             node.compound_kind(),
         ),
     }
+}
+
+/// Walk a compound focus looking for the lone typed-leaf descendant
+/// (`Int` / `Float` / `Bool`). Returns `Some(MapExpr)` when the
+/// compound's typed-leaf descendant uniquely identifies the atom's
+/// payload. Used to handle the case where typed projection drops the
+/// source-text — e.g. `bool_lit` pushes only `BbnfValue::Bool(_)`,
+/// so the surrounding `value_atom` compound has empty span_text and
+/// the source-text classifier cannot route.
+fn fold_typed_leaf_descendant<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+    _ctx: &mut LowerCtx<'p>,
+) -> Option<MapExpr> {
+    // Walk depth-first with a recursion budget; the first typed-leaf
+    // wins. The depth bound (32) is well past any realistic value-
+    // expression nesting depth (the BBNF grammar's value-expression
+    // sub-grammar has 12 precedence layers max) and prevents
+    // pathological self-recursion in the worst case.
+    fn descend<'a, 'p: 'a>(
+        view: BbnfView<'a, 'p>,
+        out: &mut Option<MapExpr>,
+        depth: u32,
+    ) {
+        if out.is_some() || depth == 0 {
+            return;
+        }
+        match view.focus() {
+            BbnfValue::Int(v) => *out = Some(MapExpr::IntLit(v)),
+            BbnfValue::Float(v) => *out = Some(MapExpr::FloatLit(v)),
+            BbnfValue::Bool(v) => *out = Some(MapExpr::BoolLit(v)),
+            BbnfValue::Compound(_) => {
+                for child in RuntimeView::children(&view) {
+                    descend(child, out, depth - 1);
+                    if out.is_some() {
+                        return;
+                    }
+                }
+            }
+            BbnfValue::Span(_) | BbnfValue::Tag(_) | BbnfValue::Unit => {}
+        }
+    }
+    let mut out: Option<MapExpr> = None;
+    descend(node, &mut out, 32);
+    out
 }
 
 /// Classify a `Span`-shaped atom by its leading byte. The atom may

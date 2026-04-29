@@ -1378,12 +1378,21 @@ impl<'p> Parser<'p> {
     }
 
     /// `value_input = "input" , ( "." , value_ident ) *`
+    ///
+    /// Pushes `input` as a `Span` leaf (not just consumed bytes) so
+    /// the resulting compound's `compute_byte_span` walk recovers a
+    /// non-empty source extent. `lower_value_atom` and the chain
+    /// folder rely on the atom's span_text() to classify the atom; a
+    /// bare `input` ValueInput would otherwise project zero
+    /// descendant spans and panic the source-text classifier.
     fn parse_value_input(&mut self) -> Result<(), ParseErr> {
         let h = self.begin("value_input");
+        let input_lo = self.pos;
         if !self.eat_str("input") {
             self.end(h);
             return Err(self.err());
         }
+        self.push_span(input_lo, self.pos);
         loop {
             if self.at() != Some(b'.') {
                 break;

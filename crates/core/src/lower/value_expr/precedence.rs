@@ -79,7 +79,7 @@ pub(super) fn fold_value_chain<'a, 'p: 'a>(
     layer: &PrecedenceLayer,
     ctx: &mut LowerCtx<'p>,
 ) -> MapExpr {
-    let operands: Vec<BbnfView<'a, 'p>> = collect_chain_operands(node);
+    let mut operands: Vec<BbnfView<'a, 'p>> = collect_chain_operands(node);
     debug_assert!(
         !operands.is_empty(),
         "fold_value_chain: chain compound {:?} produced zero operands \
@@ -87,6 +87,16 @@ pub(super) fn fold_value_chain<'a, 'p: 'a>(
         node.compound_kind(),
         node.span_text(),
     );
+
+    // Single-operand chain — no operators to recover. Dispatch the
+    // lone operand directly; this short-circuit is mandatory when the
+    // operand resolves entirely to typed-projected leaves
+    // (`BbnfValue::Bool` / `Int` / `Float`) whose source-text was
+    // dropped at parse time, so neither per-operand spans nor parent-
+    // span splitting can recover anything from the empty extent.
+    if operands.len() == 1 {
+        return dispatch_value_expr(operands.remove(0), ctx);
+    }
 
     // Try the per-operand span path first; fall back to parent-span
     // splitting when any operand has no recoverable span.

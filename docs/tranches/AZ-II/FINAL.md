@@ -8,7 +8,8 @@
 **Wave document**: [`waves/cutover.md`](waves/cutover.md)
 **O-wave specs**: [`O0`](waves/cutover.O0.md) /
 [`O1`](waves/cutover.O1.md) / [`O2`](waves/cutover.O2.md) /
-[`O3`](waves/cutover.O3.md) / [`O4`](waves/cutover.O4.md) /
+[`O3a`](waves/cutover.O3a.md) / [`O3`](waves/cutover.O3.md) /
+[`O4`](waves/cutover.O4.md) /
 [`O5`](waves/cutover.O5.md) / [`O6`](waves/cutover.O6.md) /
 [`O7`](waves/cutover.O7.md)
 **Parent plan**: [`AZ-II.md`](AZ-II.md)
@@ -139,16 +140,20 @@ cutover.O:
 3. **[O2 EBNF activation](waves/cutover.O2.md)** — LANDED: high-branch literal alternates
    and structural `Seq` AltDispatch branches project through
    StructDirect; `EbnfParser::parse -> EbnfDocument`.
-4. **[O3 generated view purge](waves/cutover.O3.md)** — in_progress: remove tape-backed `TapeCursor`,
+4. **[O3a failure baseline and triumvirate redress](waves/cutover.O3a.md)** —
+   in_progress: assign all post-O2 failures and the failed JSON bench
+   baseline to research/plan/redress cohorts before source redress
+   lands.
+5. **[O3 generated view purge](waves/cutover.O3.md)** — in_progress: remove tape-backed `TapeCursor`,
    node-view, and `ValueRoot` residue from StructDirect generated output
    unless consumed through a document API.
-5. **[O4 `Parsed<R>` / `TapeDirect` deletion](waves/cutover.O4.md)** — delete production
+6. **[O4 `Parsed<R>` / `TapeDirect` deletion](waves/cutover.O4.md)** — delete production
    `Parsed<R>` and remove fallback `TapeDirect` semantics.
-6. **[O5 `crates/tape` deletion](waves/cutover.O5.md)** — delete the standalone crate after
+7. **[O5 `crates/tape` deletion](waves/cutover.O5.md)** — delete the standalone crate after
    relocating only non-tape scan/index primitives.
-7. **[O6 semantic/perf close](waves/cutover.O6.md)** — refresh JSON sonic-rs parity, CSS
+8. **[O6 semantic/perf close](waves/cutover.O6.md)** — refresh JSON sonic-rs parity, CSS
    lightningcss typed parity, and the 17-entry close matrix.
-8. **[O7 FINAL conversion](waves/cutover.O7.md)** — convert this manifest from PARTIAL CLOSE to
+9. **[O7 FINAL conversion](waves/cutover.O7.md)** — convert this manifest from PARTIAL CLOSE to
    terminal close.
 
 Remaining estimate after O2: ~7 hours sequential under fan-out. Open

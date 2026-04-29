@@ -11,6 +11,10 @@
 3. Convert emitter function signatures away from `TapeOffset`-typed production control flow where StructDirect returns `()`.
 4. Recode tests, examples, and benches that still name `Parsed` onto concrete `Document` APIs or move them to O5 deletion if they are tape-only.
 5. Run one orchestrator-owned regen consolidation and assert every generated `parse` returns a concrete document.
+6. Consume O3a J1 and S1 findings if JSON or Sheets failures trace to
+   the parse return model, branch payload return shape, or residual
+   `Parsed<R>` consumers; otherwise route them to their child waves
+   before this deletion lands.
 
 ## File bounds
 
@@ -122,6 +126,21 @@ Files touched: `crates/core/src/grammar/generated/*.rs`, `docs/benchmarks/AZ-II/
 
 Sub-gate: `cargo xtask regen --check` passes and the scan artifact records zero production `Parsed` / `TapeDirect` hits.
 
+### AZ-II.cutover.O4.11 O3a J1/S1 Return-Model Integration
+
+Mechanism: read the O3a J1 and S1 triad outputs before deleting
+`Parsed<R>`. If JSON or Sheets materialization failures are caused by
+the production return surface, O4 owns the fix. If they are serializer
+or payload-layout failures, O4 records the child-wave owner and does
+not mask them with adapter returns.
+
+Files touched: `docs/tranches/AZ-II/audit/O3a-J1-*.md`,
+`docs/tranches/AZ-II/audit/O3a-S1-*.md`,
+`docs/tranches/AZ-II/waves/cutover.O4.md`.
+
+Sub-gate: J1/S1 return-model disposition is cited in the O4 close
+ledger before O5 opens.
+
 ## Hard gate
 
 1. `docs/benchmarks/AZ-II/cutover/O4-parsed-tapedirect-scan.txt` records zero production `Parsed<R>`, `Parsed::new`, and `TapeDirect` hits outside historical docs.
@@ -129,6 +148,8 @@ Sub-gate: `cargo xtask regen --check` passes and the scan artifact records zero 
 3. `cargo check -p bbnf --lib --profile ax-iter` passes.
 4. `cargo test -p bbnf --profile ax-iter --test emit_strategy -- --nocapture` passes.
 5. `cargo test -p bbnf --profile ax-iter --test typed_accessor_surface -- --nocapture` passes.
+6. O3a J1/S1 return-model dispositions are recorded; no JSON or
+   Sheets failure is hidden behind a compatibility `Parsed` adapter.
 
 ## Verification artefacts
 
@@ -136,12 +157,14 @@ Sub-gate: `cargo xtask regen --check` passes and the scan artifact records zero 
 - `/tmp/az-ii-o4-regen-check.txt`
 - `/tmp/az-ii-o4-emit-strategy.txt`
 - `/tmp/az-ii-o4-typed-accessor.txt`
+- `docs/tranches/AZ-II/audit/O3a-J1-*.md`
+- `docs/tranches/AZ-II/audit/O3a-S1-*.md`
 - `docs/benchmarks/AZ-II/cutover/O4-parsed-tapedirect-scan.txt`
 - O4 close commit hashes recorded in `docs/tranches/AZ-II/PROGRESS.md`.
 
 ## Dependencies
 
-- **Depends on**: AZ-II.cutover.O3
+- **Depends on**: AZ-II.cutover.O3, O3a J1/S1 return-model disposition
 - **Blocks**: AZ-II.cutover.O5
 
 ## Archaeology

@@ -11,7 +11,9 @@
 3. Run the 17-entry close matrix sequentially, with no parallel bench invocations.
 4. Archive `docs/benchmarks/post-AZ-II.json` with real post-O5 values and no placeholders.
 5. Capture symbol/profile evidence needed to keep later optimization work honest.
-6. Update AZ-II progress docs with measured throughput and parity status.
+6. Replace the failed O3a JSON baseline with a post-O5 JSON lane
+   measurement and cite the exact delta from the timeout artifact.
+7. Update AZ-II progress docs with measured throughput and parity status.
 
 ## File bounds
 
@@ -125,6 +127,24 @@ Files touched: `docs/benchmarks/post-AZ-II.json`, `docs/tranches/AZ-II/PROGRESS.
 
 Sub-gate: `post-AZ-II.json` contains no placeholders and docs name O7 as FINAL conversion.
 
+### AZ-II.cutover.O6.11 O3a Cohort Close Matrix
+
+Mechanism: consume the O3a J1, C1, and S1 triad outputs before
+claiming parity. JSON sonic-rs parity, CSS lightningcss parity, Sheets
+self-parity, and the `json_monolithic::data_xl` timeout must either be
+green on the post-O5 path or block O7 with named residuals and a
+committed successor owner.
+
+Files touched: `docs/tranches/AZ-II/audit/O3a-J1-*.md`,
+`docs/tranches/AZ-II/audit/O3a-C1-*.md`,
+`docs/tranches/AZ-II/audit/O3a-S1-*.md`,
+`docs/benchmarks/post-AY-az-ii-doc-baseline-json.txt`,
+`docs/benchmarks/post-AZ-II.json`.
+
+Sub-gate: O6 close matrix names the O3a baseline deltas and assigns
+every parity or throughput failure to a closed cohort or successor
+owner.
+
 ## Hard gate
 
 1. `cargo test -p bbnf --profile ax-iter --test sonic_rs_parity -- --nocapture` passes.
@@ -132,6 +152,9 @@ Sub-gate: `post-AZ-II.json` contains no placeholders and docs name O7 as FINAL c
 3. All 17 close-matrix bench entries are present in `docs/benchmarks/post-AZ-II.json` with no placeholder values.
 4. `docs/benchmarks/post-AZ-II-O6-nm.txt` records tape symbols absent from close bench binaries.
 5. `docs/benchmarks/profiles/AZ-II/cutover/O6/**` contains the required profile artifacts for later optimization claims.
+6. O3a J1/C1/S1 cohorts are closed or block O7 with named successor
+   owners; `json_monolithic::data_xl` no longer has an unexplained
+   timeout baseline.
 
 ## Verification artefacts
 
@@ -144,12 +167,13 @@ Sub-gate: `post-AZ-II.json` contains no placeholders and docs name O7 as FINAL c
 - `docs/benchmarks/post-AZ-II-O6-bbnf-compile.txt`
 - `docs/benchmarks/post-AZ-II-O6-nm.txt`
 - `docs/benchmarks/profiles/AZ-II/cutover/O6/**`
+- `docs/tranches/AZ-II/audit/O3a-{J1,C1,S1}-*.md`
 - `docs/benchmarks/post-AZ-II.json`
 - O6 close commit hashes recorded in `docs/tranches/AZ-II/PROGRESS.md`.
 
 ## Dependencies
 
-- **Depends on**: AZ-II.cutover.O5
+- **Depends on**: AZ-II.cutover.O5, O3a J1/C1/S1 cohort dispositions
 - **Blocks**: AZ-II.cutover.O7
 
 ## Archaeology

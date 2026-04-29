@@ -1,0 +1,170 @@
+1745:  TRY 2 FAIL [   0.014s] ( 199/1645) bbnf::ax_w0a2s_real_css_probe bootstrap_full_parse
+1784:  TRY 2 FAIL [   0.007s] ( 200/1645) bbnf::css_l4 hex_color_roundtrip_3digit
+1803:  TRY 2 FAIL [   0.008s] ( 201/1645) bbnf::css_l4 hex_color_roundtrip_6digit
+1822:  TRY 2 FAIL [   0.008s] ( 202/1645) bbnf::css_l4 hex_color_roundtrip_8digit
+1865:  TRY 2 FAIL [   0.013s] ( 207/1645) bbnf::css_l4 parse_bootstrap_css
+1926:  TRY 2 FAIL [   0.007s] ( 227/1645) bbnf::css_l4_named_color_parity white_materialises
+1948:  TRY 2 FAIL [   0.006s] ( 229/1645) bbnf::css_l4_parity dir_pseudo_rtl_branch_fires_payload
+1967:  TRY 2 FAIL [   0.006s] ( 230/1645) bbnf::css_l4_parity dir_pseudo_ltr_branch_fires_payload
+1990:  TRY 2 FAIL [   0.007s] ( 235/1645) bbnf::css_l4_parity hex_color_3digit_expands_u32
+2013:  TRY 2 FAIL [   0.016s] ( 240/1645) bbnf::css_l4_named_color_parity every_named_color_materialises_its_u32_payload
+2042:  TRY 2 FAIL [   0.007s] ( 241/1645) bbnf::css_l4_parity hex_color_6digit_materialises_u32
+2358:  TRY 2 FAIL [   0.007s] ( 395/1645) bbnf::css_l4_parity hex_color_8digit_alpha_materialises
+2446:  TRY 2 FAIL [   0.007s] ( 403/1645) bbnf::css_l4_parity named_color_aliceblue_fires_inline_u32
+2468:  TRY 2 FAIL [   0.007s] ( 407/1645) bbnf::css_l4_parity selector_parses_without_payload_loss
+2527:  TRY 2 FAIL [   0.607s] ( 408/1645) bbnf::ax_w0a2s_real_css_probe tailwind_full_parse
+2591:  TRY 2 FAIL [   0.007s] ( 414/1645) bbnf::json_parity bool_false_materialises_to_bool_false
+2610:  TRY 2 FAIL [   0.007s] ( 415/1645) bbnf::json_parity bool_true_materialises_to_bool_true
+2629:  TRY 2 FAIL [   0.007s] ( 416/1645) bbnf::json_parity every_declared_leaf_reaches_the_document
+2650:  TRY 2 FAIL [   0.006s] ( 419/1645) bbnf::json_parity nested_object_preserves_typed_payloads
+2687:  TRY 2 FAIL [   0.044s] ( 436/1645) bbnf::json_canonical_parity canonical_parity_twitter
+2715:  TRY 2 FAIL [   0.025s] ( 444/1645) bbnf::json_parity parity_twitter_json
+2806:  TRY 2 FAIL [   0.033s] ( 517/1645) bbnf::json_parity_struct native_parity_serde_twitter_json
+2858:  TRY 2 FAIL [   0.007s] ( 531/1645) bbnf::json_value_parity json_parses_bools
+2911:  TRY 2 FAIL [   0.007s] ( 546/1645) bbnf::json_value_parity json_parses_nested_object
+3033:  TRY 2 FAIL [   0.007s] ( 606/1645) bbnf::json_value_parity simdjson_parity_flat_object
+3053:  TRY 2 FAIL [   0.007s] ( 608/1645) bbnf::json_value_parity simdjson_parity_mixed_array
+3086:  TRY 2 FAIL [   0.008s] ( 623/1645) bbnf::json_value_parity simdjson_parity_scalars
+3315:  TRY 2 FAIL [   0.015s] ( 674/1645) bbnf::lightningcss_parity lightningcss_parity_bootstrap
+3354:  TRY 2 FAIL [   0.436s] ( 675/1645) bbnf::json_parity_struct native_parity_serde_canada_json
+3395:  TRY 2 FAIL [   0.008s] ( 676/1645) bbnf::projection_totality projection_totality_runtime_call_count
+3437:  TRY 2 FAIL [   0.007s] ( 680/1645) bbnf::serialize_roundtrip json_false
+3459:  TRY 2 FAIL [   0.007s] ( 682/1645) bbnf::serialize_roundtrip json_true
+3523:  TRY 2 FAIL [   0.006s] ( 686/1645) bbnf::sheets_parity error_literal_error_branch_fires_payload
+3542:  TRY 2 FAIL [   0.007s] ( 687/1645) bbnf::sheets_parity boolean_first_branch_fires_true_payload
+3561:  TRY 2 FAIL [   0.006s] ( 688/1645) bbnf::sheets_parity error_literal_divzero_branch_fires_payload
+3580:  TRY 2 FAIL [   0.007s] ( 689/1645) bbnf::sheets_parity error_literal_first_branch_fires
+3599:  TRY 2 FAIL [   0.007s] ( 690/1645) bbnf::sheets_parity error_literal_factored_branch_fires_payload
+3618:  TRY 2 FAIL [   0.007s] ( 691/1645) bbnf::sheets_parity error_literal_num_branch_fires_payload
+3637:  TRY 2 FAIL [   0.007s] ( 692/1645) bbnf::sheets_parity error_literal_name_branch_fires_payload
+3661:  TRY 2 FAIL [   0.006s] ( 698/1645) bbnf::sheets_parity error_literal_ref_branch_fires_payload
+3896:  TRY 2 FAIL [   0.006s] ( 749/1645) bbnf::sheets_parity error_literal_spill_branch_fires_payload
+3935:  TRY 2 FAIL [   0.007s] ( 750/1645) bbnf::sheets_parity error_literal_value_branch_fires_payload
+3974:  TRY 2 FAIL [   0.584s] ( 751/1645) bbnf::lightningcss_parity lightningcss_parity_tailwind
+4034:  TRY 2 FAIL [   0.008s] ( 753/1645) bbnf::sheets_parity operator_branches_parse
+4073:  TRY 2 FAIL [   0.007s] ( 754/1645) bbnf::sheets_parity range_ref_parses_with_and_without_sheet_prefix
+4092:  TRY 2 FAIL [   0.006s] ( 755/1645) bbnf::sheets_parity unary_prefix_first_branch_fires_0u8
+4168:  TRY 2 FAIL [   0.007s] ( 773/1645) bbnf::sheets_self_parity corpus_simple
+4189:  TRY 2 FAIL [   0.007s] ( 774/1645) bbnf::sheets_self_parity corpus_nested
+4231:  TRY 2 FAIL [   0.009s] ( 776/1645) bbnf::sheets_self_parity corpus_stress
+4293:  TRY 2 FAIL [   0.007s] ( 778/1645) bbnf::sheets_self_parity serialize_roundtrip_array_literal_multi_row
+4312:  TRY 2 FAIL [   0.007s] ( 779/1645) bbnf::sheets_self_parity serialize_roundtrip_array_literal_single_row
+4371:  TRY 2 FAIL [   0.007s] ( 780/1645) bbnf::sheets_self_parity serialize_roundtrip_error_generic
+4390:  TRY 2 FAIL [   0.007s] ( 781/1645) bbnf::sheets_self_parity serialize_roundtrip_error_na
+4409:  TRY 2 FAIL [   0.007s] ( 782/1645) bbnf::sheets_self_parity serialize_roundtrip_error_divzero
+4429:  TRY 2 FAIL [   0.006s] ( 784/1645) bbnf::sheets_self_parity serialize_roundtrip_error_name
+4474:  TRY 2 FAIL [   0.006s] ( 791/1645) bbnf::sheets_self_parity serialize_roundtrip_error_null
+4546:  TRY 2 FAIL [   0.007s] ( 803/1645) bbnf::sheets_self_parity serialize_roundtrip_error_num
+4587:  TRY 2 FAIL [   0.007s] ( 804/1645) bbnf::sheets_self_parity serialize_roundtrip_error_ref
+4687:  TRY 2 FAIL [   0.007s] ( 836/1645) bbnf::sheets_self_parity serialize_roundtrip_error_spill
+4713:  TRY 2 FAIL [   0.006s] ( 844/1645) bbnf::sheets_self_parity serialize_roundtrip_error_value
+4748:  TRY 2 FAIL [   0.006s] ( 861/1645) bbnf::sheets_self_parity serialize_roundtrip_range_ref_column
+4812:  TRY 2 FAIL [   0.006s] ( 865/1645) bbnf::sheets_self_parity serialize_roundtrip_range_ref_quoted_sheet
+4831:  TRY 2 FAIL [   0.006s] ( 866/1645) bbnf::sheets_self_parity serialize_roundtrip_range_ref_sheet_prefixed
+4851:  TRY 2 FAIL [   0.006s] ( 868/1645) bbnf::sheets_self_parity serialize_roundtrip_string_empty
+4900:  TRY 2 FAIL [   0.006s] ( 879/1645) bbnf::sheets_self_parity serialize_roundtrip_unary_plus
+4919:  TRY 2 FAIL [   0.006s] ( 880/1645) bbnf::sheets_self_parity serialize_roundtrip_unary_minus
+4993:  TRY 2 FAIL [   0.026s] ( 936/1645) bbnf::sonic_rs_parity sonic_rs_parity_twitter
+5078:  TRY 2 FAIL [   0.007s] (1003/1645) bbnf::structural structural_object_two_pairs
+5109:  TRY 2 FAIL [   0.007s] (1016/1645) bbnf::structural structural_scalar_bool_false
+5209:  TRY 2 FAIL [   0.007s] (1096/1645) bbnf::structural structural_scalar_bool_true
+5443:  TRY 2 FAIL [   0.009s] (1310/1645) bbnf::typed_accessor_surface json_accessor_surface
+5472:  TRY 2 FAIL [   0.007s] (1311/1645) bbnf::typed_accessor_surface json_compile_time_accessors
+5553:  TRY 2 FAIL [   0.009s] (1353/1645) bbnf::wrap_compound_elision json_object_of_scalars_record_ceiling
+5633:  TRY 2 FAIL [   0.007s] (1415/1645) bbnf::wrap_compound_elision json_scalar_at_top_level_emits_one_record
+5723:  TRY 2 FAIL [   0.008s] (1485/1645) bbnf-analysis::directives import_directive_has_semantic_tokens
+6031:  TRY 2 FAIL [   0.011s] (1635/1645) bbnf-lsp::integration test_hover_recover_keyword
+6051:  TRY 2 FAIL [   0.007s] (1636/1645) json-prototype::corpus parses_citm
+6070:  TRY 2 FAIL [   0.006s] (1637/1645) json-prototype::corpus parses_data_s
+6089:  TRY 2 FAIL [   0.006s] (1638/1645) json-prototype::corpus parses_data_xl
+6108:  TRY 2 FAIL [   0.007s] (1639/1645) json-prototype::corpus parses_canada
+6127:  TRY 2 FAIL [   0.006s] (1640/1645) json-prototype::corpus parses_twitter
+6146:  TRY 2 FAIL [   0.006s] (1641/1645) json-prototype::corpus tape_visitor_twitter
+6165:  TRY 2 FAIL [   0.006s] (1642/1645) json-prototype::corpus tape_visitor_data_s
+6206:  TRY 2 FAIL [   3.360s] (1645/1645) bbnf::sonic_rs_parity sonic_rs_parity_data_xl
+6226:     Summary [  13.283s] 1645 tests run: 1561 passed, 84 failed, 25 skipped
+6227:  TRY 2 FAIL [   0.014s] ( 199/1645) bbnf::ax_w0a2s_real_css_probe bootstrap_full_parse
+6246:  TRY 2 FAIL [   0.007s] ( 200/1645) bbnf::css_l4 hex_color_roundtrip_3digit
+6265:  TRY 2 FAIL [   0.008s] ( 201/1645) bbnf::css_l4 hex_color_roundtrip_6digit
+6284:  TRY 2 FAIL [   0.008s] ( 202/1645) bbnf::css_l4 hex_color_roundtrip_8digit
+6303:  TRY 2 FAIL [   0.013s] ( 207/1645) bbnf::css_l4 parse_bootstrap_css
+6325:  TRY 2 FAIL [   0.007s] ( 227/1645) bbnf::css_l4_named_color_parity white_materialises
+6346:  TRY 2 FAIL [   0.006s] ( 229/1645) bbnf::css_l4_parity dir_pseudo_rtl_branch_fires_payload
+6365:  TRY 2 FAIL [   0.006s] ( 230/1645) bbnf::css_l4_parity dir_pseudo_ltr_branch_fires_payload
+6384:  TRY 2 FAIL [   0.007s] ( 235/1645) bbnf::css_l4_parity hex_color_3digit_expands_u32
+6403:  TRY 2 FAIL [   0.016s] ( 240/1645) bbnf::css_l4_named_color_parity every_named_color_materialises_its_u32_payload
+6432:  TRY 2 FAIL [   0.007s] ( 241/1645) bbnf::css_l4_parity hex_color_6digit_materialises_u32
+6451:  TRY 2 FAIL [   0.007s] ( 395/1645) bbnf::css_l4_parity hex_color_8digit_alpha_materialises
+6470:  TRY 2 FAIL [   0.007s] ( 403/1645) bbnf::css_l4_parity named_color_aliceblue_fires_inline_u32
+6489:  TRY 2 FAIL [   0.007s] ( 407/1645) bbnf::css_l4_parity selector_parses_without_payload_loss
+6508:  TRY 2 FAIL [   0.607s] ( 408/1645) bbnf::ax_w0a2s_real_css_probe tailwind_full_parse
+6527:  TRY 2 FAIL [   0.007s] ( 414/1645) bbnf::json_parity bool_false_materialises_to_bool_false
+6546:  TRY 2 FAIL [   0.007s] ( 415/1645) bbnf::json_parity bool_true_materialises_to_bool_true
+6565:  TRY 2 FAIL [   0.007s] ( 416/1645) bbnf::json_parity every_declared_leaf_reaches_the_document
+6584:  TRY 2 FAIL [   0.006s] ( 419/1645) bbnf::json_parity nested_object_preserves_typed_payloads
+6605:  TRY 2 FAIL [   0.044s] ( 436/1645) bbnf::json_canonical_parity canonical_parity_twitter
+6626:  TRY 2 FAIL [   0.025s] ( 444/1645) bbnf::json_parity parity_twitter_json
+6645:  TRY 2 FAIL [   0.033s] ( 517/1645) bbnf::json_parity_struct native_parity_serde_twitter_json
+6664:  TRY 2 FAIL [   0.007s] ( 531/1645) bbnf::json_value_parity json_parses_bools
+6683:  TRY 2 FAIL [   0.007s] ( 546/1645) bbnf::json_value_parity json_parses_nested_object
+6702:  TRY 2 FAIL [   0.007s] ( 606/1645) bbnf::json_value_parity simdjson_parity_flat_object
+6721:  TRY 2 FAIL [   0.007s] ( 608/1645) bbnf::json_value_parity simdjson_parity_mixed_array
+6740:  TRY 2 FAIL [   0.008s] ( 623/1645) bbnf::json_value_parity simdjson_parity_scalars
+6759:  TRY 2 FAIL [   0.015s] ( 674/1645) bbnf::lightningcss_parity lightningcss_parity_bootstrap
+6778:  TRY 2 FAIL [   0.436s] ( 675/1645) bbnf::json_parity_struct native_parity_serde_canada_json
+6799:  TRY 2 FAIL [   0.008s] ( 676/1645) bbnf::projection_totality projection_totality_runtime_call_count
+6818:  TRY 2 FAIL [   0.007s] ( 680/1645) bbnf::serialize_roundtrip json_false
+6839:  TRY 2 FAIL [   0.007s] ( 682/1645) bbnf::serialize_roundtrip json_true
+6860:  TRY 2 FAIL [   0.006s] ( 686/1645) bbnf::sheets_parity error_literal_error_branch_fires_payload
+6879:  TRY 2 FAIL [   0.007s] ( 687/1645) bbnf::sheets_parity boolean_first_branch_fires_true_payload
+6898:  TRY 2 FAIL [   0.006s] ( 688/1645) bbnf::sheets_parity error_literal_divzero_branch_fires_payload
+6917:  TRY 2 FAIL [   0.007s] ( 689/1645) bbnf::sheets_parity error_literal_first_branch_fires
+6936:  TRY 2 FAIL [   0.007s] ( 690/1645) bbnf::sheets_parity error_literal_factored_branch_fires_payload
+6955:  TRY 2 FAIL [   0.007s] ( 691/1645) bbnf::sheets_parity error_literal_num_branch_fires_payload
+6974:  TRY 2 FAIL [   0.007s] ( 692/1645) bbnf::sheets_parity error_literal_name_branch_fires_payload
+6993:  TRY 2 FAIL [   0.006s] ( 698/1645) bbnf::sheets_parity error_literal_ref_branch_fires_payload
+7012:  TRY 2 FAIL [   0.006s] ( 749/1645) bbnf::sheets_parity error_literal_spill_branch_fires_payload
+7031:  TRY 2 FAIL [   0.007s] ( 750/1645) bbnf::sheets_parity error_literal_value_branch_fires_payload
+7050:  TRY 2 FAIL [   0.584s] ( 751/1645) bbnf::lightningcss_parity lightningcss_parity_tailwind
+7069:  TRY 2 FAIL [   0.008s] ( 753/1645) bbnf::sheets_parity operator_branches_parse
+7088:  TRY 2 FAIL [   0.007s] ( 754/1645) bbnf::sheets_parity range_ref_parses_with_and_without_sheet_prefix
+7107:  TRY 2 FAIL [   0.006s] ( 755/1645) bbnf::sheets_parity unary_prefix_first_branch_fires_0u8
+7126:  TRY 2 FAIL [   0.007s] ( 773/1645) bbnf::sheets_self_parity corpus_simple
+7147:  TRY 2 FAIL [   0.007s] ( 774/1645) bbnf::sheets_self_parity corpus_nested
+7168:  TRY 2 FAIL [   0.009s] ( 776/1645) bbnf::sheets_self_parity corpus_stress
+7189:  TRY 2 FAIL [   0.007s] ( 778/1645) bbnf::sheets_self_parity serialize_roundtrip_array_literal_multi_row
+7208:  TRY 2 FAIL [   0.007s] ( 779/1645) bbnf::sheets_self_parity serialize_roundtrip_array_literal_single_row
+7227:  TRY 2 FAIL [   0.007s] ( 780/1645) bbnf::sheets_self_parity serialize_roundtrip_error_generic
+7246:  TRY 2 FAIL [   0.007s] ( 781/1645) bbnf::sheets_self_parity serialize_roundtrip_error_na
+7265:  TRY 2 FAIL [   0.007s] ( 782/1645) bbnf::sheets_self_parity serialize_roundtrip_error_divzero
+7284:  TRY 2 FAIL [   0.006s] ( 784/1645) bbnf::sheets_self_parity serialize_roundtrip_error_name
+7303:  TRY 2 FAIL [   0.006s] ( 791/1645) bbnf::sheets_self_parity serialize_roundtrip_error_null
+7322:  TRY 2 FAIL [   0.007s] ( 803/1645) bbnf::sheets_self_parity serialize_roundtrip_error_num
+7341:  TRY 2 FAIL [   0.007s] ( 804/1645) bbnf::sheets_self_parity serialize_roundtrip_error_ref
+7360:  TRY 2 FAIL [   0.007s] ( 836/1645) bbnf::sheets_self_parity serialize_roundtrip_error_spill
+7379:  TRY 2 FAIL [   0.006s] ( 844/1645) bbnf::sheets_self_parity serialize_roundtrip_error_value
+7398:  TRY 2 FAIL [   0.006s] ( 861/1645) bbnf::sheets_self_parity serialize_roundtrip_range_ref_column
+7417:  TRY 2 FAIL [   0.006s] ( 865/1645) bbnf::sheets_self_parity serialize_roundtrip_range_ref_quoted_sheet
+7436:  TRY 2 FAIL [   0.006s] ( 866/1645) bbnf::sheets_self_parity serialize_roundtrip_range_ref_sheet_prefixed
+7455:  TRY 2 FAIL [   0.006s] ( 868/1645) bbnf::sheets_self_parity serialize_roundtrip_string_empty
+7474:  TRY 2 FAIL [   0.006s] ( 879/1645) bbnf::sheets_self_parity serialize_roundtrip_unary_plus
+7493:  TRY 2 FAIL [   0.006s] ( 880/1645) bbnf::sheets_self_parity serialize_roundtrip_unary_minus
+7512:  TRY 2 FAIL [   0.026s] ( 936/1645) bbnf::sonic_rs_parity sonic_rs_parity_twitter
+7531:  TRY 2 FAIL [   0.007s] (1003/1645) bbnf::structural structural_object_two_pairs
+7550:  TRY 2 FAIL [   0.007s] (1016/1645) bbnf::structural structural_scalar_bool_false
+7571:  TRY 2 FAIL [   0.007s] (1096/1645) bbnf::structural structural_scalar_bool_true
+7592:  TRY 2 FAIL [   0.009s] (1310/1645) bbnf::typed_accessor_surface json_accessor_surface
+7621:  TRY 2 FAIL [   0.007s] (1311/1645) bbnf::typed_accessor_surface json_compile_time_accessors
+7640:  TRY 2 FAIL [   0.009s] (1353/1645) bbnf::wrap_compound_elision json_object_of_scalars_record_ceiling
+7659:  TRY 2 FAIL [   0.007s] (1415/1645) bbnf::wrap_compound_elision json_scalar_at_top_level_emits_one_record
+7680:  TRY 2 FAIL [   0.008s] (1485/1645) bbnf-analysis::directives import_directive_has_semantic_tokens
+7699:  TRY 2 FAIL [   0.011s] (1635/1645) bbnf-lsp::integration test_hover_recover_keyword
+7719:  TRY 2 FAIL [   0.007s] (1636/1645) json-prototype::corpus parses_citm
+7738:  TRY 2 FAIL [   0.006s] (1637/1645) json-prototype::corpus parses_data_s
+7757:  TRY 2 FAIL [   0.006s] (1638/1645) json-prototype::corpus parses_data_xl
+7776:  TRY 2 FAIL [   0.007s] (1639/1645) json-prototype::corpus parses_canada
+7795:  TRY 2 FAIL [   0.006s] (1640/1645) json-prototype::corpus parses_twitter
+7814:  TRY 2 FAIL [   0.006s] (1641/1645) json-prototype::corpus tape_visitor_twitter
+7833:  TRY 2 FAIL [   0.006s] (1642/1645) json-prototype::corpus tape_visitor_data_s
+7852:  TRY 2 FAIL [   3.360s] (1645/1645) bbnf::sonic_rs_parity sonic_rs_parity_data_xl
+7871:error: test run failed

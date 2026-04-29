@@ -11,7 +11,10 @@
 3. Preserve live `Document` APIs for JSON, Sheets, CSS L4, BBNF, CSV, Math, BNF, CSS Pretty, and EBNF without adding compatibility shims.
 4. Refresh generated parser source through a single orchestrator-owned regen window after all emitter edits land.
 5. Add wire-contract tests proving StructDirect parse outputs remain navigable without generated tape views.
-6. Archive the generated-view deletion proof and update AZ-II progress docs at the wave boundary.
+6. Consume O3a's P1 projection-totality cohort before closing any
+   generated-view deletion proof; if P1 requires more than this file's
+   scope, create the child wave before source redress lands.
+7. Archive the generated-view deletion proof and update AZ-II progress docs at the wave boundary.
 
 ## File bounds
 
@@ -126,6 +129,22 @@ Files touched: `docs/tranches/AZ-II/PROGRESS.md`, `docs/tranches/AZ-II/waves/cut
 
 Sub-gate: status lines agree across `PROGRESS.md`, `cutover.md`, and this wave spec.
 
+### AZ-II.cutover.O3.11 O3a P1 Integration
+
+Mechanism: integrate the O3a P1 projection-totality triad output.
+Generated-view purge may close only after P1 explains whether
+`projection_totality_runtime_call_count` is solved by O3's deletion
+work or routed to a new O3b wave with explicit file bounds.
+
+Files touched: `crates/core/src/backend/rust/view/**`,
+`crates/core/src/backend/rust/emitter/grammar.rs`,
+`crates/core/src/backend/rust/emitter/shapes/value_materialize.rs`,
+`crates/core/tests/projection_totality.rs`,
+`docs/tranches/AZ-II/audit/O3a-P1-*.md`.
+
+Sub-gate: P1 has either a passing projection-totality artifact under
+O3 or a committed child-wave spec before O4 opens.
+
 ## Hard gate
 
 1. `docs/benchmarks/AZ-II/cutover/O3-generated-view-scan.txt` records zero `TapeCursor`, generated node-view, and `ValueRoot` hits in StructDirect generated output.
@@ -133,6 +152,8 @@ Sub-gate: status lines agree across `PROGRESS.md`, `cutover.md`, and this wave s
 3. `cargo test -p bbnf --profile ax-iter --test typed_accessor_surface -- --nocapture` passes.
 4. `cargo test -p bbnf --profile ax-iter --test projection_totality -- --nocapture` passes for document-owned APIs.
 5. `cargo test -p bbnf --profile ax-iter --test runtime_root -- --nocapture` passes.
+6. O3a P1 has a root-cause document and either closes inside O3 or
+   names a child wave before O4 opens.
 
 ## Verification artefacts
 
@@ -140,12 +161,13 @@ Sub-gate: status lines agree across `PROGRESS.md`, `cutover.md`, and this wave s
 - `/tmp/az-ii-o3-typed-accessor.txt`
 - `/tmp/az-ii-o3-projection-totality.txt`
 - `/tmp/az-ii-o3-runtime-root.txt`
+- `docs/tranches/AZ-II/audit/O3a-P1-*.md`
 - `docs/benchmarks/AZ-II/cutover/O3-generated-view-scan.txt`
 - O3 close commit hashes recorded in `docs/tranches/AZ-II/PROGRESS.md`.
 
 ## Dependencies
 
-- **Depends on**: AZ-II.cutover.O2
+- **Depends on**: AZ-II.cutover.O2, AZ-II.cutover.O3a baseline capture and P1 routing
 - **Blocks**: AZ-II.cutover.O4
 
 ## Archaeology

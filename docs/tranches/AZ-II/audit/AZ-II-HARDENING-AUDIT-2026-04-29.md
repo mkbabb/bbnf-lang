@@ -217,17 +217,20 @@ fully-contained sibling worktree agents and explicit file bounds:
    ABI is wired through StructDirect speculative emission sites.
 3. **[O2 - EBNF generalization](../waves/cutover.O2.md).** LANDED: shared structural
    AltDispatch emission flips EBNF to `EbnfDocument`.
-4. **[O3 - Generated view purge](../waves/cutover.O3.md).** in_progress: stop emitting tape-backed view and
+4. **[O3a - Failure baseline and triumvirate redress](../waves/cutover.O3a.md).**
+   in_progress: assign all post-O2 failures to research/plan/redress
+   cohorts and require wave creation/amendment before redress lands.
+5. **[O3 - Generated view purge](../waves/cutover.O3.md).** in_progress: stop emitting tape-backed view and
    `ValueRoot` materializer artifacts for StructDirect grammars unless
    they are consumed through a document API.
-5. **[O4 - Parsed/TapeDirect deletion](../waves/cutover.O4.md).** Remove `Parsed<R>` as a
+6. **[O4 - Parsed/TapeDirect deletion](../waves/cutover.O4.md).** Remove `Parsed<R>` as a
    production parser result and delete `TapeDirect` fallback semantics.
-6. **[O5 - Tape crate deletion](../waves/cutover.O5.md).** Remove `crates/tape` after relocating
+7. **[O5 - Tape crate deletion](../waves/cutover.O5.md).** Remove `crates/tape` after relocating
    only non-tape scan/index primitives to their natural owner.
-7. **[O6 - Bench/parity close](../waves/cutover.O6.md).** Refresh the 17-entry matrix, JSON
+8. **[O6 - Bench/parity close](../waves/cutover.O6.md).** Refresh the 17-entry matrix, JSON
    `sonic-rs` parity, CSS `lightningcss` typed parity, and publish the
    terminal `post-AZ-II.json`.
-8. **[O7 - Final conversion](../waves/cutover.O7.md).** Convert AZ-II FINAL from PARTIAL CLOSE to
+9. **[O7 - Final conversion](../waves/cutover.O7.md).** Convert AZ-II FINAL from PARTIAL CLOSE to
    terminal close only after the gates above pass.
 
 BA and BB remain blocked on the terminal close. BB.scaffold may exist,

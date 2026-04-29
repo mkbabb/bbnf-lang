@@ -102,6 +102,7 @@ fully-contained sibling worktrees inside the row's file bounds:
 | [O0](waves/cutover.O0.md) | Tooling preflight | LANDED — stale bench aliases, IAI CI, profiling scripts, and release pin repaired or explicitly de-canonicalized before close evidence is collected |
 | [O1](waves/cutover.O1.md) | StructDirect builder transactions | LANDED — grammar-general checkpoint/rollback/commit support wired through speculative alternate/repeat/minus/negate emitter paths and runtime builders |
 | [O2](waves/cutover.O2.md) | EBNF direct projection | LANDED — high-branch literal alternates and structural `Seq` branches project through StructDirect; `EbnfParser::parse -> EbnfDocument` |
+| [O3a](waves/cutover.O3a.md) | failure baseline + triumvirate redress | in_progress — post-O2 test/bench failures are assigned to research/plan/redress cohorts before implementation continues |
 | [O3](waves/cutover.O3.md) | Generated view purge | in_progress — tape-backed `TapeCursor`, node-view, and `ValueRoot` residue removed from StructDirect generated output unless consumed through a document API |
 | [O4](waves/cutover.O4.md) | `Parsed<R>` / `TapeDirect` deletion | `Parsed<R>` removed as a production parser result; `TapeDirect` fallback semantics removed |
 | [O5](waves/cutover.O5.md) | `crates/tape` deletion | standalone tape crate deleted after only genuinely non-tape scan/index primitives move to their natural owner |

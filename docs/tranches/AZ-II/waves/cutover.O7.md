@@ -10,7 +10,10 @@
 2. Update every appurtenant planning document so BA/BB open only on the verified post-O6 state.
 3. Archive close scans, bench matrix, parity status, and residual named gaps.
 4. Retire or mark historical documents that still describe EBNF or tape as live production substrate.
-5. Run close-document consistency scans before declaring the tranche closed.
+5. Cite O3a baseline artifacts and all triumvirate outcomes in the
+   terminal close so the post-O2 failure surface is not hidden by the
+   later code waves.
+6. Run close-document consistency scans before declaring the tranche closed.
 
 ## File bounds
 
@@ -120,6 +123,21 @@ Files touched: `docs/tranches/AZ-II/FINAL.md`, `docs/tranches/AZ-II/PROGRESS.md`
 
 Sub-gate: one O7 commit closes the documentation boundary.
 
+### AZ-II.cutover.O7.11 O3a Baseline Conversion
+
+Mechanism: convert O3a from active failure-baseline routing into
+historical close evidence. FINAL must cite the test failure artifact,
+the failed JSON bench artifact, every J1/C1/S1/P1/A1 triad output, and
+the wave that closed each cohort.
+
+Files touched: `docs/tranches/AZ-II/FINAL.md`,
+`docs/tranches/AZ-II/PROGRESS.md`,
+`docs/tranches/AZ-II/waves/cutover.O3a.md`,
+`docs/tranches/AZ-II/audit/O3a-*.md`.
+
+Sub-gate: no O3a cohort remains `in_progress` when AZ-II is declared
+terminally closed.
+
 ## Hard gate
 
 1. `docs/tranches/AZ-II/FINAL.md` is terminal close and cites O0-O6 commits plus artifacts.
@@ -127,6 +145,8 @@ Sub-gate: one O7 commit closes the documentation boundary.
 3. `docs/benchmarks/AZ-II/cutover/O7-close-doc-scan.txt` records zero stale active-blocker claims outside explicitly historical sections.
 4. `PROGRESS.md`, `AZ-II.md`, `cutover.md`, and `cutover.O*.md` statuses agree.
 5. BA/BB handoff in `docs/tranches/REMAINING-TRAJECTORY.md` points at the final close commit and post-AZ-II benchmark artifact.
+6. O3a artifacts and cohort triad outputs are cited in FINAL and no
+   cohort remains active.
 
 ## Verification artefacts
 
@@ -134,11 +154,12 @@ Sub-gate: one O7 commit closes the documentation boundary.
 - `docs/benchmarks/post-AZ-II.json`
 - `/tmp/az-ii-o7-doc-stale-scan.txt`
 - `/tmp/az-ii-o7-link-path-scan.txt`
+- `docs/tranches/AZ-II/audit/O3a-*.md`
 - O7 close commit hash recorded in `docs/tranches/AZ-II/PROGRESS.md`.
 
 ## Dependencies
 
-- **Depends on**: AZ-II.cutover.O6
+- **Depends on**: AZ-II.cutover.O6, O3a cohort close
 - **Blocks**: BA open gate, BB close gate, AZ-II archive handoff
 
 ## Archaeology

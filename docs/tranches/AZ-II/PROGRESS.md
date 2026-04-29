@@ -7,6 +7,8 @@ Implemented-state record:
 Live terminal sequence: `cutover.O.0` through `cutover.O.7`, specified
 for dispatch at [`waves/cutover.O0.md`](waves/cutover.O0.md) through
 [`waves/cutover.O7.md`](waves/cutover.O7.md).
+`cutover.O3a` is the active failure-baseline and triumvirate redress
+prelude inserted before O3 implementation continues.
 
 **Date**: 2026-04-23
 
@@ -329,6 +331,7 @@ cross-crate refs).
 | [cutover.O.0](waves/cutover.O0.md) | Tooling preflight: stale bench aliases, IAI CI, profiling scripts, release pin | LANDED |
 | [cutover.O.1](waves/cutover.O1.md) | StructDirect builder transaction ABI across speculative branches | LANDED |
 | [cutover.O.2](waves/cutover.O2.md) | EBNF diagnosis + generic AltDispatch structural-Seq repair | LANDED |
+| [cutover.O.3a](waves/cutover.O3a.md) | Failure baseline + research/plan/redress cohort dispatch | in_progress |
 | [cutover.O.3](waves/cutover.O3.md) | Generated tape-view / `ValueRoot` residue purge for StructDirect | 90 min |
 | [cutover.O.4](waves/cutover.O4.md) | `Parsed<R>` deletion and `TapeDirect` fallback removal | 90 min |
 | [cutover.O.5](waves/cutover.O5.md) | `crates/tape` deletion after relocating non-tape scan/index primitives | 120 min |
@@ -446,3 +449,31 @@ affected-consumer smokes for CSS L4, BBNF self-parity, and Sheets
 self-parity; `cargo xtask regen --check`; `git diff --check`.
 No performance or close-matrix baseline was collected in O2 per user
 instruction; O6 still owns semantic/parity throughput truth.
+
+## 2026-04-29 — cutover.O3a failure baseline and triumvirate redress
+
+Post-documentation baseline:
+
+- `scripts/test-tier.sh workspace --profile ax-iter --no-fail-fast`
+  ran 1645 tests: 1561 passed, 84 failed, 25 skipped. Failure list:
+  `docs/benchmarks/AZ-II/cutover/O3a-test-failures.txt`.
+- `make ay-bench-close WAVE=az-ii-doc-baseline` failed in the JSON
+  lane. `json_monolithic` measured canada/citm/data_s, then
+  `data_xl` exceeded the bench timeout: 2.478697958s against a 1s
+  cap. Transcript:
+  `docs/benchmarks/post-AY-az-ii-doc-baseline-json.txt`.
+
+O3a routes every failure through five cohorts before source redress
+continues:
+
+| Cohort | Scope |
+|---|---|
+| J1 | JSON materialization, typed accessors, canonical/sonic parity, structural/wrap tests, and JSON bench timeout |
+| C1 | CSS comment admission, hex/named-color payloads, pseudo/selector payloads, and lightningcss parity |
+| S1 | Sheets branch payloads, error literals, operator/range/unary parsing, and serialize self-parity |
+| P1 | projection totality and generated view / `ValueRoot` residue |
+| A1 | analysis/LSP regressions and historical `json-prototype` disposition |
+
+Round 1 dispatch uses research + plan + redress triads for J1, C1, and
+S1. Round 2 covers P1 and A1. Plan agents must create or amend wave
+specs before redress lands.

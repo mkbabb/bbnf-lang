@@ -10,7 +10,9 @@
 2. Relocate only genuinely non-tape scan/index primitives to their natural owner; no public tape runtime may survive under another name.
 3. Remove workspace and package manifest edges to tape.
 4. Recode or delete tests, benches, and examples that exist only to validate tape.
-5. Archive deletion scans and update AZ-II terminal-progress docs.
+5. Consume O3a A1 disposition for `json-prototype` and analysis/LSP
+   failures if they are tape-only or archive-only surfaces.
+6. Archive deletion scans and update AZ-II terminal-progress docs.
 
 ## File bounds
 
@@ -121,6 +123,21 @@ Files touched: `docs/tranches/AZ-II/PROGRESS.md`, `docs/tranches/AZ-II/waves/cut
 
 Sub-gate: status lines agree across the wave spec and progress docs.
 
+### AZ-II.cutover.O5.11 O3a A1 Archive/Deletion Integration
+
+Mechanism: consume the O3a A1 triad output. If `json-prototype`,
+analysis, or LSP failures exist only to exercise tape-era fixtures or
+archived prototype paths, O5 owns deletion/archive. If they remain live
+development surfaces, O5 records the child-wave owner before removing
+tape.
+
+Files touched: `docs/tranches/AZ-II/audit/O3a-A1-*.md`,
+`crates/analysis/**`, `crates/lsp/**`,
+`crates/core/benches/json-prototype/**`, workspace manifests if
+archive/deletion is chosen.
+
+Sub-gate: A1 has a no-shim disposition before `crates/tape` is deleted.
+
 ## Hard gate
 
 1. `test ! -e crates/tape` succeeds and `Cargo.toml` no longer lists the crate.
@@ -128,6 +145,8 @@ Sub-gate: status lines agree across the wave spec and progress docs.
 3. `cargo build -p bbnf --no-default-features --profile ax-iter` passes.
 4. `cargo check -p bbnf --benches --profile ax-iter` passes.
 5. `docs/benchmarks/AZ-II/cutover/O5-tape-delete-scan.txt` records zero production `runtime::tape`, `TapeCursor`, `TapeRec`, `TapeOffset`, or `crates/tape` hits outside historical docs.
+6. O3a A1 has a committed archive/delete/repair disposition with no
+   compatibility shim.
 
 ## Verification artefacts
 
@@ -135,12 +154,13 @@ Sub-gate: status lines agree across the wave spec and progress docs.
 - `/tmp/az-ii-o5-build-no-default-features.txt`
 - `/tmp/az-ii-o5-bench-check.txt`
 - `/tmp/az-ii-o5-regen-check.txt`
+- `docs/tranches/AZ-II/audit/O3a-A1-*.md`
 - `docs/benchmarks/AZ-II/cutover/O5-tape-delete-scan.txt`
 - O5 close commit hashes recorded in `docs/tranches/AZ-II/PROGRESS.md`.
 
 ## Dependencies
 
-- **Depends on**: AZ-II.cutover.O4
+- **Depends on**: AZ-II.cutover.O4, O3a A1 disposition
 - **Blocks**: AZ-II.cutover.O6
 
 ## Archaeology

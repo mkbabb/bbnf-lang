@@ -43,6 +43,18 @@ wave's scope expanded under contact from 3 sub-stages to 14, with
 each scope-reveal report documenting the discovered work, blocker
 diagnosis, and follow-on substage routing.
 
+**Historical agency specs**: every cutover substage now has its own
+wave-spec record for provenance and future audit:
+[`A`](cutover.A.md), [`B`](cutover.B.md), [`C`](cutover.C.md),
+[`D`](cutover.D.md), [`E`](cutover.E.md), [`F`](cutover.F.md),
+[`G`](cutover.G.md), [`H`](cutover.H.md), [`I`](cutover.I.md),
+[`J`](cutover.J.md), [`K`](cutover.K.md), [`L`](cutover.L.md),
+[`M`](cutover.M.md), [`N`](cutover.N.md), and [`O`](cutover.O.md).
+cutover.J is an explicit halted no-code record: its mapped-factor
+diagnosis resumed and landed in K rather than receiving a retroactive J
+implementation. The original embedded A/B/C sections below remain as
+archaeological source; dispatch uses the substage files.
+
 AZ-II.cutover collapses the original AZ-II.W0 / W1 / W2 three-wave
 plan into one cutover wave per `docs/tranches/AZ-I/audit/W2-CLOSE-AUDIT.md`
 §9. The W2 substrate established the per-shape struct-direct pattern;
@@ -188,16 +200,20 @@ Required order:
 3. **[O2 EBNF direct projection](cutover.O2.md)** — LANDED: large literal alternates
    and structural `Seq` branches project through StructDirect;
    `EbnfParser::parse -> EbnfDocument`.
-4. **[O3 generated view purge](cutover.O3.md)** — in_progress: remove tape-backed `TapeCursor`,
+4. **[O3a failure baseline and triumvirate redress](cutover.O3a.md)** —
+   in_progress: assign all 84 test failures and the failed JSON bench
+   baseline to research/plan/redress cohorts before implementation
+   resumes.
+5. **[O3 generated view purge](cutover.O3.md)** — in_progress: remove tape-backed `TapeCursor`,
    node-view, and `ValueRoot` residue from StructDirect generated output
    unless it is consumed through a document API.
-5. **[O4 Parsed/TapeDirect deletion](cutover.O4.md)** — delete `Parsed<R>` as a
+6. **[O4 Parsed/TapeDirect deletion](cutover.O4.md)** — delete `Parsed<R>` as a
    production parser result and remove `TapeDirect` fallback semantics.
-6. **[O5 tape crate deletion](cutover.O5.md)** — delete `crates/tape` after relocating
+7. **[O5 tape crate deletion](cutover.O5.md)** — delete `crates/tape` after relocating
    only genuinely non-tape scan/index primitives to their natural owner.
-7. **[O6 semantic/perf close](cutover.O6.md)** — refresh JSON `sonic-rs` parity, CSS
+8. **[O6 semantic/perf close](cutover.O6.md)** — refresh JSON `sonic-rs` parity, CSS
    `lightningcss` typed parity, and the 17-entry close matrix.
-8. **[O7 final conversion](cutover.O7.md)** — convert AZ-II FINAL from
+9. **[O7 final conversion](cutover.O7.md)** — convert AZ-II FINAL from
    PARTIAL CLOSE to terminal close after the gates above pass.
 
 Child wave specs:
@@ -207,6 +223,7 @@ Child wave specs:
 | [`cutover.O0.md`](cutover.O0.md) | complete | up to 10 parallel worktree-isolated lanes; no perf baseline |
 | [`cutover.O1.md`](cutover.O1.md) | complete | up to 10 parallel worktree-isolated lanes; orchestrator-owned regen |
 | [`cutover.O2.md`](cutover.O2.md) | complete | up to 10 parallel worktree-isolated lanes; orchestrator-owned regen |
+| [`cutover.O3a.md`](cutover.O3a.md) | in_progress | up to 10 parallel worktree-isolated lanes; failure cohort triumvirates |
 | [`cutover.O3.md`](cutover.O3.md) | in_progress | up to 10 parallel worktree-isolated lanes; generated view purge |
 | [`cutover.O4.md`](cutover.O4.md) | planned | up to 10 parallel worktree-isolated lanes; return-model deletion |
 | [`cutover.O5.md`](cutover.O5.md) | planned | up to 10 parallel worktree-isolated lanes; tape crate deletion |

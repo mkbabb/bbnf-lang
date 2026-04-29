@@ -35,6 +35,8 @@ parity/performance truth.
 Each O substage is now specified as a dispatchable wave under
 `waves/cutover.O0.md` through `waves/cutover.O7.md`, with up to 10
 parallel sibling worktree agents and explicit file bounds.
+`cutover.O3a.md` is the inserted failure-baseline and triumvirate
+redress prelude before O3 implementation continues.
 
 AZ-III opens only if the EBNF blocker is proven to require new
 grammar-general inference/layout machinery spanning node facts,
@@ -216,6 +218,10 @@ in `docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md` (per-substage
 commit SHAs, hard-gate readout, BA handoff verification, agent dispatch
 history). Per-substage scope-reveal reports archived under
 `docs/tranches/AZ-II/audit/cutover.{C,E,F,G,I}-PARTIAL.md`.
+Historical agency specs for the substages live beside the active O
+specs at `waves/cutover.{A,B,C,D,E,F,G,H,I,J,K,L,M,N,O}.md`.
+cutover.J is a halted no-code record; its mapped-factor diagnosis
+resumed and landed in K rather than under a retroactive J label.
 
 | Sub-stage | Headline | Status |
 |---|---|---|
@@ -228,6 +234,7 @@ history). Per-substage scope-reveal reports archived under
 | cutover.G | hand-crafted bootstrap_parser breaks chicken-and-egg | LANDED |
 | cutover.H | BBNF resolver-arm re-flip + transparent emitter fix + PARTIAL FINAL.md | LANDED |
 | cutover.I.5 | `BbnfBootstrap::serialize_compact_doc` + bbnf_rule un-ignore | LANDED |
+| cutover.J | halted blocker-fix attempt; zero code commits; mapped-factor diagnosis routes to K | complete_with_misses |
 | cutover.K | mapped_factor wrapper + typed-leaf source recovery + per-shape Err frame cleanup | LANDED |
 | cutover.L | keyword-shape Alt-of-Ref handler | LANDED |
 | cutover.M | non-BBNF resolver arms (CSV/Math/BNF/CSS Pretty); AltDispatch struct_direct surgery | LANDED |
@@ -238,6 +245,7 @@ history). Per-substage scope-reveal reports archived under
 | [cutover.O0](waves/cutover.O0.md) | Tooling preflight | LANDED |
 | [cutover.O1](waves/cutover.O1.md) | StructDirect builder transactions | LANDED |
 | [cutover.O2](waves/cutover.O2.md) | EBNF direct projection | LANDED |
+| [cutover.O3a](waves/cutover.O3a.md) | Failure baseline + triumvirate redress | in_progress |
 | [cutover.O3](waves/cutover.O3.md) | Generated view purge | in_progress |
 | [cutover.O4](waves/cutover.O4.md) | `Parsed<R>` / `TapeDirect` deletion | planned |
 | [cutover.O5](waves/cutover.O5.md) | `crates/tape` deletion | planned |

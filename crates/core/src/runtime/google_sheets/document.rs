@@ -81,10 +81,9 @@ impl<'p> SheetsDocument<'p> {
     }
 
     /// Borrowed root value, mirroring `JsonDocument::to_value()`
-    /// semantics. Where `Parsed::to_value()` projected the tape into
-    /// a `<Grammar>Value` enum, the struct-direct path's
-    /// [`SheetsDocument`] already carries the typed value tree —
-    /// `to_value()` simply lends its root by reference.
+    /// semantics. The struct-direct path's [`SheetsDocument`]
+    /// already carries the typed value tree, so `to_value()` simply
+    /// lends its root by reference.
     #[inline]
     pub fn to_value(&self) -> &SheetsValue<'p> {
         &self.root

@@ -60,7 +60,7 @@ impl<'p> CssDocument<'p> {
     ///
     /// Mirrors `JsonDocument::root` — the lower-level accessor used
     /// internally by [`CssView`]. Consumers who want the
-    /// `Parsed::to_value`-equivalent surface call [`Self::to_value`].
+    /// high-level value accessor surface call [`Self::to_value`].
     #[inline]
     pub fn root(&self) -> &StyleSheet {
         &self.root
@@ -109,19 +109,16 @@ impl<'p> CssDocument<'p> {
         self.arena.keyframes(id)
     }
 
-    /// AZ-I.W2-act.B3 — root view, mirroring `Parsed::view()` semantics.
+    /// AZ-I.W2-act.B3 — root view over the document graph.
     #[inline]
     pub fn view<'a>(&'a self) -> CssView<'a, 'p> {
         CssView { doc: self, focus: CssFocus::Stylesheet(&self.root) }
     }
 
-    /// AZ-I.W2-act.B3 — borrowed root stylesheet, mirroring
-    /// `Parsed::to_value()` semantics.
+    /// AZ-I.W2-act.B3 — borrowed root stylesheet.
     ///
-    /// Where `Parsed::to_value()` projected the tape into a typed
-    /// stylesheet, the struct-direct path's [`CssDocument`] already
-    /// carries the typed graph — `to_value()` lends its root by
-    /// reference.
+    /// The struct-direct path's [`CssDocument`] already carries the
+    /// typed graph, so `to_value()` lends its root by reference.
     #[inline]
     pub fn to_value(&self) -> &StyleSheet {
         &self.root
@@ -274,7 +271,7 @@ impl<'a, 'p: 'a> Iterator for CssDeclWalk<'a, 'p> {
 /// AZ-I.W2-act.B3 — a thin newtype over `&CssDocument`.
 ///
 /// `CssView<'a, 'p>` is the struct-tree equivalent of the cursor-
-/// backed `View<'p>` that the pre-W2-act `Parsed<CssL4Grammar>` lent.
+/// backed `View<'p>` used by the pre-W2-act cursor surface.
 /// Exposes the root, the arena, and ergonomic resolution of compound
 /// handles. Mirrors [`crate::runtime::json::JsonView`] in surface and
 /// lifetime discipline.

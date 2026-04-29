@@ -4,17 +4,16 @@
 //! The struct-direct JSON parse path returns a [`JsonDocument`] whose
 //! root [`JsonValue`] borrows from the input lifetime `'p` and whose
 //! [`JsonArena`] owns every compound child slice. This module wraps
-//! the document with the same API the pre-W2-act
-//! `Parsed<JsonGrammar>` surface exposed:
+//! the document with the same API shape the pre-W2-act cursor result
+//! surface exposed:
 //!
 //! - [`JsonDocument::view`] — yields a thin [`JsonView`] newtype over
 //!   `&JsonDocument` exposing the same shape callers expect (root
 //!   value, arena handle resolution).
-//! - [`JsonDocument::to_value`] — borrowed access to the root value,
-//!   mirroring `Parsed::to_value()` semantics. Where `Parsed::to_value()`
-//!   projected the tape into a `<Grammar>Value` enum, the document
-//!   already IS the typed value tree; `to_value()` simply lends its
-//!   root.
+//! - [`JsonDocument::to_value`] — borrowed access to the root value.
+//!   Earlier tape-backed projection built a `<Grammar>Value` enum;
+//!   the document already is the typed value tree, so `to_value()`
+//!   simply lends its root.
 //! - [`JsonDocument::get`] — typed path queries forwarded to the
 //!   [`JsonPathQuery`] trait; the leaf-type impls
 //!   ([`&str`], [`f64`], [`bool`], [`JsonValue`]) walk the document's
@@ -73,7 +72,7 @@ impl<'p> JsonDocument<'p> {
     /// AZ-I.W2-act.A — companion to [`Self::to_value`]; both lend the
     /// root by reference. `root()` is the lower-level accessor (used
     /// internally by [`JsonView`]); `to_value()` is the API consumers
-    /// expect to mirror `Parsed::to_value()`.
+    /// expect for the document value accessor.
     #[inline]
     pub fn root(&self) -> &JsonValue<'p> {
         &self.root
@@ -111,14 +110,13 @@ impl<'p> JsonDocument<'p> {
         self.arena.object(id)
     }
 
-    /// AZ-I.W2-act.A — root view, mirroring the pre-W2-act
-    /// `Parsed<JsonGrammar>::view()` surface.
+    /// AZ-I.W2-act.A — root view, mirroring the pre-W2-act cursor
+    /// view surface.
     ///
     /// Returns a [`JsonView`] newtype whose accessors expose the
     /// document's root and arena. [`JsonView`] is the struct-tree
-    /// equivalent of the pre-W2-act cursor-backed `View<'p>` GAT
-    /// the generated code emitted on `Parsed`; consumers writing
-    /// against either surface call `.view()` and reach the same
+    /// equivalent of the pre-W2-act cursor-backed `View<'p>` GAT;
+    /// consumers writing against either surface call `.view()` and reach the same
     /// observable shape (root, arena handle resolution, typed
     /// kind discriminator).
     #[inline]
@@ -126,11 +124,10 @@ impl<'p> JsonDocument<'p> {
         JsonView { doc: self, focus: self.root }
     }
 
-    /// AZ-I.W2-act.A — borrowed root value, mirroring
-    /// `Parsed::to_value()` semantics.
+    /// AZ-I.W2-act.A — borrowed root value.
     ///
-    /// Where `Parsed::to_value()` projected the tape into a
-    /// `<Grammar>Value` enum (a one-pass materialisation), the
+    /// Where the older tape projection built a `<Grammar>Value` enum
+    /// in one pass, the
     /// struct-direct path's [`JsonDocument`] already carries the
     /// typed value tree — `to_value()` simply lends its root by
     /// reference. Consumers needing an owned value clone the
@@ -141,8 +138,7 @@ impl<'p> JsonDocument<'p> {
         &self.root
     }
 
-    /// AZ-I.W2-act.A — typed path query, mirroring
-    /// `Parsed::get::<T>(path)` semantics.
+    /// AZ-I.W2-act.A — typed path query.
     ///
     /// Forwards to the [`JsonPathQuery`] trait; impls land per leaf
     /// type ([`&str`], [`f64`], [`bool`], [`JsonValue`]). The walker
@@ -162,9 +158,9 @@ impl<'p> JsonDocument<'p> {
 /// AZ-I.W2-act.A — a thin newtype over `&JsonDocument`.
 ///
 /// `JsonView<'a, 'p>` is the struct-tree equivalent of the
-/// cursor-backed `View<'p>` the pre-W2-act `Parsed<JsonGrammar>`
-/// lent. It exposes the root, the arena, and ergonomic resolution
-/// of compound handles. The newtype shape mirrors `Parsed::view()`:
+/// cursor-backed `View<'p>` the pre-W2-act result lent. It exposes
+/// the root, the arena, and ergonomic resolution of compound handles.
+/// The newtype shape mirrors the document view contract:
 /// `JsonDocument::view()` always succeeds; the returned view
 /// borrows the document for the caller-bound lifetime `'a`,
 /// preserving the input lifetime `'p` on every yielded
@@ -185,7 +181,7 @@ impl<'p> JsonDocument<'p> {
 ///
 /// # Why a newtype, not a `&JsonDocument`?
 ///
-/// The pre-W2-act `Parsed::view()` returned `R::View<'_>` — a
+/// The pre-W2-act view contract returned `R::View<'_>` — a
 /// generic-associated type per grammar. The newtype preserves the
 /// "view is a distinct type" surface so consumers writing against
 /// the struct-direct path mirror the cursor-path call site shape:

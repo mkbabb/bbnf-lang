@@ -8,16 +8,11 @@
 //!   (LSP / gorgeous / debug) or pipeline-direct `(AST, DirectiveMaps)`
 //!   (compile).
 //!
-//! Tranche AC.2: drives the tape-first generated parser.
-//! `generated::BbnfBootstrap::parse(source)` returns a
-//! [`crate::runtime::Parsed`] that owns both the finished tape and the
-//! source string.
-//!
 //! Tranche AU.4.1: deleted the historical `ParsedGrammar` intermediate.
-//! The public `parse` entry point leaks the `Parsed` so callers can
-//! keep their `'static`-flavoured lifetime assumptions, then returns a
-//! [`crate::types::GrammarExtract`] for observational callers. The
-//! compile pipeline bypasses `parse` in favour of
+//! The public `parse` entry point leaks the concrete BBNF document so
+//! callers can keep their `'static`-flavoured lifetime assumptions,
+//! then returns a [`crate::types::GrammarExtract`] for observational
+//! callers. The compile pipeline bypasses `parse` in favour of
 //! [`crate::pipeline::directives::parse_to_pipeline_inputs`], which
 //! walks the tape straight into `DirectiveMaps` + `AST`.
 
@@ -31,12 +26,12 @@ use crate::types::GrammarExtract;
 
 /// Parse a BBNF grammar source into a [`GrammarExtract`].
 ///
-/// The tape-first bootstrap parser owns its own source buffer and tape
-/// via [`crate::runtime::Parsed`]. This entry point leaks the input so
-/// the resulting `GrammarExtract<'_>` — which borrows cursors and text
-/// slices from the tape — lives for the rest of the compile, matching
-/// the pre-AU.4.1 arena-style ownership model observational callers
-/// (LSP analysis, gorgeous JIT, `debug_parse`) already rely on.
+/// The bootstrap parser returns a concrete BBNF document. This entry
+/// point leaks the input and document so the resulting
+/// `GrammarExtract<'_>` — which borrows cursors and text slices from
+/// the document — lives for the rest of the compile, matching the
+/// pre-AU.4.1 arena-style ownership model observational callers (LSP
+/// analysis, gorgeous JIT, `debug_parse`) already rely on.
 ///
 /// Compile-side callers should instead route through
 /// [`crate::pipeline`]; the pipeline avoids this allocation by landing

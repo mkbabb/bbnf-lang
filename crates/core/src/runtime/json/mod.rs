@@ -16,8 +16,7 @@
 //!   slices ([`JsonValue`] in arrays, [`JsonPair`] in objects).
 //! - [`document`] — the [`JsonDocument`] root + the [`JsonView`]
 //!   newtype + [`JsonPathQuery`] trait per AZ-I.W2-act.A. This is
-//!   the API surface mirroring pre-W2-act `Parsed::view()` /
-//!   `Parsed::to_value()` / `Parsed::get::<T>(path)`.
+//!   the document API surface for view, value, and typed path access.
 //! - [`builder`]  — the [`JsonStructBuilder`] concrete `StructBuilder`
 //!   impl that the generated parse function targets.
 //!

@@ -1,21 +1,9 @@
 //! `runtime` — types emitted directly into generated parser code.
 //!
-//! Tranche AB.2a introduced `Parsed<View>`; Tranche AC.1 adds
-//! `ParseErr`. Together they form the public surface area of
-//! every generated `Grammar::parse(input)` entry point:
-//!
-//! ```ignore
-//! impl Grammar {
-//!     pub fn parse(
-//!         input: &str,
-//!     ) -> Result<crate::runtime::Parsed<Self>, ParseErr> { ... }
-//! }
-//! ```
-//!
-//! `Parsed<Grammar>` is marker-typed over the grammar struct itself;
-//! the root view lifetime is lent by `&self` via the `Root` trait's
-//! GAT `type View<'tape>` (landing in AC.2 alongside the emitter
-//! rewrite).
+//! Generated parse entry points return concrete grammar documents. The
+//! runtime surface provides those document arenas, builders, typed
+//! values, shared path/query traits, parse errors, and the remaining
+//! substrate types consumed by generated code.
 
 pub mod bbnf;
 pub mod bnf;
@@ -29,8 +17,8 @@ pub mod google_sheets;
 pub mod handle;
 pub mod json;
 pub mod math;
-pub mod parsed;
 pub mod path;
+pub mod root;
 pub mod view;
 
 pub use bbnf::{
@@ -81,8 +69,8 @@ pub use json::{
     JsonArena, JsonArray, JsonArrayId, JsonDocument, JsonKind, JsonNumber, JsonObject,
     JsonObjectId, JsonPair, JsonPathQuery, JsonStructBuilder, JsonValue, JsonView,
 };
-pub use parsed::{Parsed, PathQuery, Root, ValueRoot};
 pub use path::{IntoPathSegment, Path, PathSegment};
+pub use root::{PathQuery, Root, ValueRoot};
 
 // B5.W1 — the unified [`tape::Tape<R>`] substrate is the sole write
 // + read + projection surface the grammar-emitted parse entry uses.

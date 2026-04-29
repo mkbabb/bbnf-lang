@@ -82,13 +82,13 @@ impl<'p> CsvDocument<'p> {
         CsvView { doc: self, focus: self.root }
     }
 
-    /// Borrow the root value, mirroring `Parsed::to_value()` semantics.
+    /// Borrow the root value.
     #[inline]
     pub fn to_value(&self) -> &CsvValue<'p> {
         &self.root
     }
 
-    /// Typed path query, mirroring `Parsed::get::<T>(path)` semantics.
+    /// Typed path query.
     #[inline]
     pub fn get<T: CsvPathQuery>(&self, path: Path<'_>) -> Option<T> {
         T::query(self, path)

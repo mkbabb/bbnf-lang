@@ -3,12 +3,31 @@
 A calibrated estimate of landing probability per wave and per
 tranche, and the measured performance target each grammar is
 expected to meet at each juncture. This is a planning artefact,
-not a forecast. The probabilities reflect honest judgment against
-the project's observed history: Era V's 572-commit substrate rut,
-AW-IV's 0-of-17 gate miss, AQ.5's clean reversal, AP.5's landed
-delim-scan, AX.W1r's column revert, AY-I.W1's 688 MB/s recovery
-plateau. Every estimate is a "best guess under current evidence"
-with the dominant risk named.
+not a forecast.
+
+**2026-04-29 live risk update.** The probability tables below preserve
+historical context, but their old AZ-I.W2-act assumptions are superseded
+by the AZ-II partial close. Current master is 8/9 StructDirect; EBNF,
+`Parsed<R>`, `TapeDirect`, generated tape-view residue, and
+`crates/tape` remain. A focused probe also exposed a root StructDirect
+ABI risk: speculative branches roll back input position but not builder
+state. Therefore all BA/BB performance and path-query planning is
+blocked on AZ-II `cutover.O`, not on optimization work.
+
+## 2026-04-29 Cutover.O Risk Ledger
+
+| Risk | Severity | Evidence | Required mitigation |
+|---|---:|---|---|
+| StructDirect builder rollback is non-transactional | P0 | CSS projection-totality probe left open builder frames after speculative parsing | Add builder checkpoint/rollback/commit and wire every speculative StructDirect emitter |
+| EBNF remains TapeDirect | P0 | Resolver still comments out EBNF StructDirect; generated EBNF returns `Parsed` | Generalize large alternate layout/inference and require `EbnfDocument` output |
+| Tape deletion incomplete | P0 | `Parsed<R>`, `runtime::tape`, `crates/tape`, and generated tape-view code remain live | Delete `Parsed`, remove `TapeDirect`, purge generated tape views, remove crate |
+| Inference facts are underwired | P1 | CSP comments describe tier/parent constraints that are not installed; egraph facts are dropped then recomputed | Persist projection facts and wire documented CSP constraints or delete the claims |
+| Bench/CI proof surface drift | P1 | stale IAI feature, stale bench aliases, stale profiling scripts, floating release nightly | Repair bench feature matrix before close evidence |
+| Semantic parity stale | P1 | AZ-I/AZ-II close artifacts retain placeholders and known CSS/Sheets aborts | Refresh JSON sonic-rs and CSS lightningcss typed parity after `cutover.O` |
+
+No optimization tranche may use stale AZ-I/AZ-II numbers as a baseline.
+The next publishable performance baseline is the post-`cutover.O`
+17-entry matrix.
 
 The post-B1 predecessor sequence (B3 parser-baseline restoration →
 B4 codegen `syn::parse2` emit-correctness + unified rollback → B2
@@ -18,12 +37,10 @@ AZ-I.W0 (CLASSIFIER-UNIFICATION + audit pass) and AZ-I.W1
 (`StructRegistry` + `project_types` closure on JSON / Sheets /
 CSS L4) closed clean; AZ-I.W2 closed substrate-only 2026-04-28
 (StructBuilder + JSON runtime + EmitStrategy + 9 per-shape struct-
-direct emitters all integrated and compile-clean; resolver returns
-TapeDirect for every grammar pending the W2-act follow-on wave that
-lands JsonDocument view/value accessors, parity harness recoding,
-and the cargo bench gate). Probability lifts on AZ-I (residual
-W2-act / W2.B / W3 / W4) and downstream tranches track that
-substrate footing.
+direct emitters all integrated and compile-clean). That AZ-I.W2-act
+planning language is now historical: AZ-II cutover.A through M landed
+the current eight-of-nine StructDirect state, and cutover.O is the
+remaining risk surface.
 
 ## How to read this matrix
 
@@ -211,11 +228,11 @@ paths.
 
 ## AZ-II — BBNF self-hosting cutover + `crates/tape/` deletion
 
-The second transformational tranche. Opens on AZ-I close.
-Three waves plus FINAL. This is where the most concentrated
-bootstrap risk (BBNF cutover via two-stage reproducibility) lives
-with its own reversal gates, isolated from the data-grammar
-activation work.
+The second transformational tranche. This section preserves the
+original pre-cutover probability table for archaeology; the live
+probability surface is the 2026-04-29 cutover.O risk ledger above.
+The implemented-state record is
+`docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md`.
 
 | Wave | Scope | P(declared) | P(floor) | Dominant risk |
 |---|---|---:|---:|---|
@@ -237,14 +254,14 @@ informs AZ-II's explicit drift-source enumeration in W0. Full
 dissolution remains the only acceptable AZ-II close; re-plan
 cycles may be required until byte-equal holds.
 
-Post-preflight estimate after AZ-II.W0 splits into design plus
+Historical post-preflight estimate after AZ-II.W0 split into design plus
 executable preflight, with `BOOTSTRAP-CUTOVER.md`, actual tape-symbol
 census, `project_types_bbnf`, Stage A/B runner skeleton, and injected
 drift negative test: P(declared) 0.23-0.26, P(floor) 0.55-0.60.
 
 ## BA — lazy typed pointer-path queries over struct tree
 
-Opens on AZ-II close with `crates/tape/` fully dissolved. No
+Opens on AZ-II terminal close with `crates/tape/` fully dissolved. No
 partial-substrate opening is accepted — BA requires the full
 struct-tree surface that AZ-II's close guarantees.
 
@@ -357,9 +374,8 @@ At the floor level, the runway delivers:
 - Direct-to-struct on JSON + Sheets with CSS L4 struct-only but
   semantically partial; tape retained for BBNF only (AZ-I floor).
 - BBNF on direct-to-struct with `crates/tape/` deleted wholesale
-  (AZ-II declared, and the only acceptable close). Byte-equal
-  reproducibility misses route to wave revert and re-plan, not
-  to a partial-closure state.
+  (AZ-II terminal close, and the only acceptable close). cutover.O
+  misses route to evidence-backed re-plan, not to a lower tape floor.
 - Rust-only pointer queries on JSON + CSS with zero-alloc traversal;
   TS + Python bindings stretch (BA floor).
 - JSON enumeration + Class-1 auto-accept + partial Tranche H
@@ -390,9 +406,8 @@ lives in a single-substrate world. Halting after AZ-I leaves
 prohibits. The split improves reversal surface and mid-runway
 checkpointing, it does not create a legitimate halt point. Full
 tape abrogation is binding repo policy. AZ-II does not declare a
-partial-closure floor; a W2 byte-equal miss triggers wave revert
-and re-plan against captured drift evidence, repeated as many
-times as required until the dissolution holds.
+partial-closure floor; cutover.O must close the tape and EBNF blockers
+or prove a new grammar-general blocker with evidence.
 
 ---
 
@@ -416,7 +431,7 @@ reversal criterion.
 | AY-II W1 close | ≥ 800 | ≥ 1600 | ≥ 1200 | Partial recovery on tape substrate |
 | AY-II close | ≥ 1000 | ≥ 2000 | ≥ 1500 | Floor target; full AU recovery is W1 stretch |
 | **AZ-I.W2 close** | **≥ 1231 (AU)** | **≥ 2438 (AU)** | **≥ 1967 (AU)** | **Direct-to-struct recovers AU parity** |
-| AZ-II.W3 FINAL | ≥ 1300 | ≥ 2500 | ≥ 2000 | BEAT AU slightly — direct-to-struct overhead lower than tape+projection |
+| AZ-II.cutover.O FINAL | ≥ 1300 | ≥ 2500 | ≥ 2000 | BEAT AU slightly — direct-to-struct overhead lower than tape+projection |
 | BA W1 close | parity | parity | parity | Pointer queries do not regress full-parse |
 | BA W1 (lazy 3-field) | — | ≥ 3000 | ≥ 2400 | 3-field extraction micro-bench; beats sonic-rs by ≥ 20 % |
 | BB W2 close | parity | parity | parity | Rule inference maintains full-parse perf |
@@ -431,7 +446,7 @@ reversal criterion.
 | AY-II W2 close | ≥ 500 | ≥ 350 | ≥ 380 | Partial recovery with known deep-driver gaps |
 | AY-II close | ≥ 600 | ≥ 400 | ≥ 440 | Floor; full parity remains AZ's responsibility |
 | **AZ-I.W3 close** | **≥ 735 (AU)** | **≥ 600** | **≥ 496 (AU)** | Typed parity with lightningcss node-for-node; bootstrap gate from ARCHIVAL-SYNTHESIS |
-| AZ-II.W3 FINAL | ≥ 800 | ≥ 650 | ≥ 550 | BEAT AU |
+| AZ-II.cutover.O FINAL | ≥ 800 | ≥ 650 | ≥ 550 | BEAT AU |
 | BA W1 close | parity | parity | parity | Pointer queries over selector trees do not regress full-parse |
 | BB W2 close | parity | parity | parity | Rule inference over selector/property IR preserves perf |
 
@@ -445,7 +460,7 @@ reversal criterion.
 | AY-II W3 close | ≥ 75 | — | Partial recovery |
 | AY-II close | ≥ 85 | — | Floor; AU parity is stretch |
 | **AZ-I.W2 close** | **≥ 95 (AU)** | — | Recovery on direct-to-struct; parse_complex may land here |
-| AZ-II.W3 FINAL | ≥ 110 | ≥ 60 | BEAT AU; parse_complex activated |
+| AZ-II.cutover.O FINAL | ≥ 110 | ≥ 60 | BEAT AU; parse_complex activated |
 | BA / BB | parity | parity | — |
 
 ## BBNF grammar (self-hosting)
@@ -456,9 +471,9 @@ reversal criterion.
 | Current | functional, tape-substrate | Self-parse works; perf number not tracked against AU |
 | B1 close | parity | Infra only |
 | AY-II W4 close | functional, byte-identical to master | Correctness maintained on tape |
-| **AZ-II.W1 + W2 close** | **byte-identical to pre-AZ-II compiler** | **Two-stage bootstrap cutover close gate**; perf not primary |
-| AZ-II.W3 close | byte-identical, tape-free | Tape deletion verified |
-| AZ-II.W3 FINAL | ≥ current + 10 % on self-parse micro-bench | Direct-to-struct on BBNF itself |
+| **AZ-II cutover.B / reproducibility gate** | **byte-identical regen output** | permanent BBNF + JSON reproducibility checks are live |
+| AZ-II.cutover.O close | byte-identical, tape-free | EBNF projected; `Parsed<R>`, `TapeDirect`, generated tape views, and `crates/tape` deleted |
+| AZ-II.cutover.O FINAL | ≥ current + 10 % on self-parse micro-bench | Direct-to-struct on BBNF itself without the bootstrap bridge as canonical surface |
 
 ---
 
@@ -484,10 +499,10 @@ Four levers dominate the cascade probability:
    semantic gaps and no tape fallback. Cascade drops by ~ 15 %
    relative to the stale floor.
 
-4. **BBNF bootstrap byte-equal reproducibility** (AZ-II.W2 gate).
-   A miss here is the highest-impact lever — triggers
-   wave revert and AZ-II re-plan against captured drift evidence,
-   repeated as many cycles as required. Cascade drops by ~ 25 %
+4. **AZ-II cutover.O terminal hardening**.
+   A miss here is the highest-impact lever: builder transactions,
+   EBNF projection, or tape deletion must either close or expose a
+   named grammar-general blocker. Cascade drops by ~ 25 %
    per additional re-plan cycle; the close gate (full dissolution)
    does not move.
 

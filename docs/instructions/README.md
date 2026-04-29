@@ -38,9 +38,9 @@ external path dependencies patched via `.cargo/config.toml`:
 
 - **`../parse-that/`** — parser combinators, bbnf-regex, HIR, NFA/DFA, scanners.
 - **`../pprint/`** — pretty printing.
-- **`crates/csp-solver/`, `crates/bbnf-tape/`, `crates/bbnf-ir/`,
-  `crates/egraph/`, `crates/bbnf-regex/`, `crates/analysis/`,
-  `crates/gorgeous/`** — workspace members.
+- **`crates/csp-solver/`, `crates/tape/`, `crates/ir/`,
+  `crates/egraph/`, `crates/simd-scan/`, `crates/analysis/`,
+  `crates/gorgeous/`, `crates/core/`** — workspace members.
 
 Fixes, features, and architectural changes to any of them are
 first-class work items, not "upstream" deferrals.
@@ -110,8 +110,10 @@ first-class work items, not "upstream" deferrals.
   General-purpose infrastructure (e-graph, cost model, CSP
   substrate, regex engine) lives in its own crate.
 - **Generated files are output of fresh regen; never hand-patch.**
-  `generated.rs` is produced by `scripts/bootstrap-bbnf.sh`. The
-  only legitimate edits are via that script.
+  Generated parser files are produced by `cargo xtask regen` under
+  `crates/core/src/grammar/generated/<ident>.rs`. Do not hand-edit
+  generated grammar output. Fix the grammar, IR facts, projection
+  inference, or emitter root cause, then regenerate.
 - **Tests live in `tests/` directories only.** Never inline
   `#[cfg(test)]` modules under `src/`. (Convention-enforced via
   code review; B7.W1.A5 hoisted all 69 inline tests from
@@ -303,15 +305,16 @@ build`, `cargo check --workspace`, `samply record`, and any command
 taking > 30 seconds.
 
 **Never read large files line-by-line.** Any file over ~2 K lines —
-`cargo expand` output, `generated.rs`, monolithic audit docs, session
+`cargo expand` output, generated grammar files, monolithic audit docs, session
 transcripts (`.jsonl`), long PROGRESS files, bench logs — is read via
 `grep -n`, `awk`, `sed` with explicit line ranges, not whole-file
 `Read`. `wc -l` first; if > 2 K lines, every subsequent access uses
-targeted extraction. `generated.rs` (typically > 30 K lines) is
-file-first like any other large artefact.
+targeted extraction. Files under
+`crates/core/src/grammar/generated/*.rs` are file-first like any other
+large artefact.
 
 ```bash
-wc -l crates/core/src/grammar/generated.rs
+wc -l crates/core/src/grammar/generated/bbnf.rs
 grep -n 'fn __declaration' /tmp/expand-css.txt
 awk 'NR>=5000 && NR<=5100' /tmp/expand-css.txt
 awk '/fn __declaration/,/^        fn __/' /tmp/expand-css.txt > /tmp/decl.txt
@@ -407,19 +410,19 @@ the emitter regenerates the table, the script cannot close its loop.
 AW-I.W4ζ escape recipe:
 
 ```bash
-# 1. Restore a known-good fn-per-rule generated.rs from before the
+# 1. Restore a known-good generated grammar file from before the
 #    rewrite. Hand-patch any new DtaTable fields with inert defaults
 #    (entry: DtaRuleId(0)) to restore compile.
-git checkout <pre-rewrite-HEAD>^ -- crates/core/src/grammar/generated.rs
+git checkout <pre-rewrite-HEAD>^ -- crates/core/src/grammar/generated/bbnf.rs
 
 # 2. Confirm the lib compiles.
 cargo check -p bbnf --lib
 
 # 3. Re-run bootstrap. The bbnf lib now carries the OLD working
 #    parser; BbnfBootstrap::parse succeeds on bbnf.bbnf and hands
-#    the AST to the CURRENT emitter, producing a fresh generated.rs.
+#    the AST to the CURRENT emitter, producing fresh generated source.
 rm -rf target/.bbnf-cache/ crates/target/.bbnf-cache/
-bash scripts/bootstrap-bbnf.sh
+cargo xtask regen --grammar bbnf
 
 # 4. Commit. Idempotency check (gen1 == gen2) follows. Truncated
 #    second output means the parser-consumer contract still has gaps.

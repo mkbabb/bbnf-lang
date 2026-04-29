@@ -21,13 +21,18 @@ Each pipeline stage is benchmarked independently.
   ] }
 ```
 
-Three codegen paths feed this pipeline:
+Current codegen paths feeding this pipeline:
 
 | Path | When | Compile | Runtime |
 |------|------|---------|---------|
-| **Rust AOT** | `#[derive(Parser)]` | ~2s rustc (8-rule grammar) | Native speed |
+| **Rust AOT** | `cargo xtask regen` checked-in generated source | xtask regen + rustc compile | Native speed |
 | **Rust VM** | WASM playground | ~2ms (bytecode compile) | ~6–50x slower than AOT |
 | **TS Interpreter** | `ASTToParser()` | ~1ms (combinator gen) | V8 JIT speed |
+
+Post-B7, divan is the live Rust benchmark harness and nextest is the
+live test runner. Post-AZ-II partial-close performance numbers are not
+terminal: the next publishable baseline is the post-`cutover.O` matrix
+after EBNF activation, tape deletion, and parity refresh.
 
 ## Aggregate Throughput
 

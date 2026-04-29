@@ -123,6 +123,14 @@ cold to seconds.
 
 ## Bench alias surface
 
+**2026-04-29 audit note.** Treat this section as canonical intent, not
+proof that every alias is currently green. The hardening audit found
+drift: feature-gated benches are reachable without their required
+features, `bench-iai.yml` still invokes `json_callgrind` with the old
+`iai` feature, and the profiling prep scripts still reference stale
+bench names. Repair those command surfaces before using them as close
+evidence.
+
 Benches ride the `ay-final` profile (release inheriting fat LTO + debug
 1 for samply-resolvable symbols + packed split-debuginfo). Every alias
 is one cargo invocation; divan's per-sample regression check runs
@@ -147,7 +155,7 @@ ported from `bencher = "0.1.5"` at B7.W1.A2 + A3); pprint 38
 | `cargo bench-bbnf` | bbnf_monolithic | `ay-final` |
 | `cargo bench-sheets` | google_sheets_monolithic, google_sheets_vm | `ay-final` |
 | `cargo bench-compile` | compile_pipeline | `ay-final` |
-| `cargo bench-iai` | iai-callgrind under valgrind, `iai` feature gated | `bench-ci` (Linux CI only) |
+| `cargo bench-iai` | iai-callgrind under valgrind, `callgrind` feature gated | `bench-ci` (Linux CI only) |
 
 Capture divan's structured JSON for any scope by setting the format
 env-var and redirecting:
@@ -211,11 +219,11 @@ shared-target contract. Both `scripts/prebuild-benches.sh` and
 `scripts/prepare-profile-wave.sh` reuse cached binaries and `cargo
 expand` artefacts when fresh vs the bench source, shape emitters under
 `crates/core/src/backend/rust/emitter/shapes/`, and
-`crates/core/src/grammar/generated.rs`.
+`crates/core/src/grammar/generated/*.rs`.
 
 Stale detection: editing a bench source, shape emitter, or regenning
-`generated.rs` rebuilds that bench's artefacts; unrelated benches stay
-cached. Per-bench stdout reads `reused: <path>` / `rebuilt: <path>` for
+generated grammar files rebuilds that bench's artefacts; unrelated
+benches stay cached. Per-bench stdout reads `reused: <path>` / `rebuilt: <path>` for
 the binary step and `expand: reused <path>` / `expand: regen <path>`
 for expansion, so the orchestrator can see cache hits without
 reopening build logs. `target/release/deps/` and

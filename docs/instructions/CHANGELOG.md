@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-04-29 — AZ-II partial close snapshot + cutover.O alignment
+
+AZ-II's implemented-state record is
+`docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md`: cutover.A
+through cutover.M landed, cutover.N dispatched and halted at
+organizational usage limit, and cutover.N landed no code commits. The
+live terminal sequence is AZ-II `cutover.O.0` through `cutover.O.7`:
+tooling preflight, StructDirect builder transactions, EBNF direct
+projection, generated view purge, `Parsed<R>` / `TapeDirect` deletion,
+`crates/tape` deletion, semantic/perf refresh, and FINAL conversion.
+
 ## 2026-04-28 — AZ-I W0/W1/W2-substrate close
 
 AZ-I opened against post-B7 substrate and closed three waves in

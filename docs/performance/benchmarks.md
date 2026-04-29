@@ -8,30 +8,39 @@ section: Performance
 
 ## Overview
 
-BBNF uses [bencher](https://crates.io/crates/bencher) for benchmarking with throughput measurement (MB/s via `b.bytes`). All benchmarks use mimalloc as the global allocator and validate parse success before the hot loop.
+BBNF uses divan for benchmarking. Legacy `bencher` / libtest
+benchmark harnesses are retired from the live Rust bench surface. All
+runtime benchmark claims should cite divan output or samply artifacts;
+Linux instruction-count claims should cite iai-callgrind output.
 
-bbnf-lang benchmarks all competitors (combinator-based, hand-written, SIMD-accelerated) for both JSON and CSS. parse-that keeps only its own combinator micro-benches. gorgeous keeps only formatting benches.
+bbnf-lang benchmarks all competitors (combinator-based, hand-written,
+SIMD-accelerated) for both JSON and CSS. parse-that keeps only its own
+combinator micro-benches. gorgeous keeps only formatting benches.
+
+Post-AZ-II partial-close numbers are stale for planning. Refresh the
+17-entry matrix after `cutover.O` closes EBNF, deletes tape, and
+recodes parity.
 
 ## Running Benchmarks
 
 ```bash
-# All benchmarks
-cd rust && cargo bench -p bbnf
+# All workspace divan benchmarks
+cargo bench --profile ay-final --workspace
 
-# Individual benchmark suites (run sequentially for stable numbers)
-cargo bench -p bbnf --bench json_bbnf
-cargo bench -p bbnf --bench json_competitors
-cargo bench -p bbnf --bench css_bbnf
-cargo bench -p bbnf --bench css_competitors
-cargo bench -p bbnf --bench google_sheets
+# Individual benchmark suites, run sequentially for stable numbers.
+cargo bench --profile ay-final -p bbnf --bench json_monolithic
+cargo bench --profile ay-final -p bbnf --features competitor --bench json_competitors
+cargo bench --profile ay-final -p bbnf --bench css_l4
+cargo bench --profile ay-final -p bbnf --features competitor --bench css_competitors
+cargo bench --profile ay-final -p bbnf --bench google_sheets_monolithic
 
-# LSP benchmarks (manual timing, not bencher)
-cargo test -p bbnf-lsp --test bench_lsp -- --nocapture
+# LSP divan benchmarks
+cargo bench --profile ay-final -p bbnf-lsp --bench bench_lsp
 ```
 
 ## Benchmark Suites
 
-### JSON — BBNF (`json_bbnf.rs`)
+### JSON — BBNF (`json_monolithic.rs`)
 
 Four tiers of BBNF JSON parsing on the same datasets, all using `BumpSlab` (cold per-parse: fresh slab + parser per iteration):
 
@@ -61,7 +70,7 @@ Groups: `span`, `borrow`, `copy`, `vm` — 4 groups × 5 datasets = 20 bench fns
 
 Groups: `bench_serde`, `bench_serde_borrow`, `bench_sonic`, `bench_simd`, `bench_jiter`, `bench_nom`, `bench_winnow`, `bench_pest` — 8 groups × 6 datasets = 48 bench fns
 
-### CSS — BBNF (`css_bbnf.rs`)
+### CSS — BBNF (`css_l4.rs`)
 
 Four tiers of BBNF CSS parsing on 3 datasets:
 
@@ -85,7 +94,7 @@ Groups: `bench_cssparser`, `bench_lightningcss` — 2 groups × 3 datasets = 6 b
 
 lightningcss may skip tailwind on parse error.
 
-### Google Sheets (`google_sheets.rs`)
+### Google Sheets (`google_sheets_monolithic.rs`)
 
 | Benchmark | Description |
 |-----------|-------------|
@@ -97,11 +106,7 @@ Groups: `vm_benches`, `aot_benches`
 
 ### LSP (`bench_lsp.rs`)
 
-Separate manual-timing suite. Measures 8 LSP actions across 5 grammar sizes.
-
-```bash
-cargo test -p bbnf-lsp --test bench_lsp -- --nocapture
-```
+Divan suite for LSP actions across representative grammar sizes.
 
 ## Datasets
 
@@ -126,11 +131,15 @@ cargo test -p bbnf-lsp --test bench_lsp -- --nocapture
 
 ## Validation
 
-Every bench fn validates parse success ONCE before the hot loop. The bench binary panics if any parser can't handle the input. CSS benches also assert ≥95% consumption.
+Every bench fn validates parse success once before the hot loop. The
+bench binary panics if any parser cannot handle the input. CSS benches
+also assert >=95% consumption unless the suite documents a stricter
+semantic-parity gate.
 
 ## Fairness Notes
 
-- All benchmarks set `b.bytes` for throughput (MB/s) reporting
+- Divan benchmark groups report throughput in MB/s for input-sized parse
+  workloads.
 - All benchmarks use mimalloc as the global allocator
 - Input data is loaded once before benchmarking (not included in timing)
 - VM benchmarks create a new `Interpreter` per iteration (includes allocation)
@@ -156,6 +165,6 @@ Comparing across tiers is misleading—a no-decode parser skipping escape handli
 
 | Repo | Benches | Purpose |
 |------|---------|---------|
-| **bbnf-lang** | `json_bbnf`, `json_competitors`, `css_bbnf`, `css_competitors`, `google_sheets` | All competitors |
+| **bbnf-lang** | `json_monolithic`, `json_competitors`, `json_value`, `css_l4`, `css_competitors`, `google_sheets_monolithic`, plus VM/stress/compile variants | All competitors |
 | **parse-that** | `parse_that_combinator`, `parse_that_css`, `micro_parse_that` | parse-that's own combinator perf only |
 | **gorgeous** | `gorgeous` | Formatting benches only (gorgeous vs Biome) |

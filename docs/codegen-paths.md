@@ -6,7 +6,15 @@ section: BBNF
 
 # BBNF Code Generation Paths
 
-Three independent pipelines transform `.bbnf` grammars into executable parsers and formatters.
+The live Rust path is `cargo xtask regen`: `.bbnf` grammars lower into
+`GrammarIR`, pass through shared IR facts and strategy selection, then
+emit checked-in per-grammar Rust source under
+`crates/core/src/grammar/generated/<ident>.rs`.
+
+The old `#[derive(Parser)]` / `bbnf_derive` proc-macro path is retired
+for production codegen. References below to historical VM or TypeScript
+surfaces describe secondary/runtime execution paths, not a second
+canonical Rust AOT generator.
 
 ## Pipeline Overview
 
@@ -28,8 +36,8 @@ Three independent pipelines transform `.bbnf` grammars into executable parsers a
           │                     │        (parse-that TS)
           ▼                     │             │
      [Rust AOT]                 │             ▼
-   bbnf::generate               │        Direct execution
-   → TokenStream                │        (prettier plugin)
+   cargo xtask regen            │        Direct execution
+   → checked-in Rust            │        (prettier plugin)
           │                     │
           ▼                     ▼
    rustc → native        [Rust VM]
@@ -46,11 +54,13 @@ Three independent pipelines transform `.bbnf` grammars into executable parsers a
 consume the same optimized IR; they only diverge at the final step: Rust codegen
 vs. bytecode compilation.
 
-## 1. Rust AOT — `bbnf-derive` Proc Macro
+## 1. Rust AOT — xtask-generated checked-in source
 
-Compile-time code generation. Reads `.bbnf`, emits Rust `TokenStream`.
+Build-time code generation. Reads `.bbnf`, emits Rust source files under
+`crates/core/src/grammar/generated/<ident>.rs`, and checks them in.
 
-**Entry:** `#[derive(Parser)]` + `#[parser(path = "grammar.bbnf")]`
+**Entry:** `cargo xtask regen` or `cargo xtask regen --grammar <ident>`.
+CI uses `cargo xtask regen --check`.
 
 **Phases (shared with VM through step 6):**
 1. Parse grammar → AST (`bbnf::grammar`)
@@ -59,7 +69,8 @@ Compile-time code generation. Reads `.bbnf`, emits Rust `TokenStream`.
 4. Analysis — SCC detection, FIRST sets, alias detection, span eligibility
 5. Lower AST → `GrammarIR` (`bbnf::lower`) — IR types from `bbnf-ir`
 6. Apply 17 IR optimization passes (`bbnf-ir::passes`) — **same passes as VM**
-7. **(AOT only)** Codegen → Rust `TokenStream` (`bbnf::generate`)
+7. **(AOT only)** Strategy selection via `EmitStrategy`
+8. Rust codegen → `crates/core/src/grammar/generated/<ident>.rs`
 
 **IR Passes** (17 operations, 15 unique passes, in order):
 `canonicalize_aliases` → `prune_unreachable` → `inline_acyclic` →
@@ -68,38 +79,37 @@ Compile-time code generation. Reads `.bbnf`, emits Rust `TokenStream`.
 `factor_common_prefixes` → `refine_span_eligibility` → `compute_follow_sets` →
 `factor_regex_with_lookahead` → `generate_dispatch_tables` → `project_types`
 
-Post-B2, the single canonical regen entrypoint is `cargo xtask
-regen` (Rust AOT path) or `cargo xtask regen --check` (CI gate);
-the pre-B2 bootstrap.sh / `cargo expand` + Python post-process
-pipeline retired entirely at B2.W2. Per-grammar source emitted to
-`crates/core/src/grammar/generated/<ident>.rs`.
+Post-B2, `cargo xtask regen` is the single canonical Rust AOT
+entrypoint. The pre-B2 bootstrap script, proc-macro expansion, and
+Python post-process path retired entirely at B2.W2.
 
-**Generated code per struct:**
-- `ParserFn` trait impl — one method per rule, returns `Parser<'a, Enum<'a>>`
-- `to_doc()` method — `@pretty`-directed `Doc` emission (if `#[parser(prettify)]`)
-- `source_range()` — byte offset tracking for range formatting
-- SpanParser methods (`_sp()`) for zero-copy eligible rules
-- Dispatch tables for alternations, memoization caches for cyclic rules
+Current strategy status:
 
-**Attributes:**
-| Attribute | Effect |
-|-----------|--------|
-| `path = "..."` | Grammar file path |
-| `prettify` | Emit `to_doc()` codegen |
-| `skip_recover` | Omit `@recover` codegen (well-formed input only) |
-| `remove_left_recursion` | Paull transform before codegen |
-| `ignore_whitespace` | Auto-trim |
-| `debug` | Instrument all rules for trace output |
-| `slab` | Monolithic slab codegen with BumpSlab |
-| `span` | Span-only monolithic codegen (zero allocation) |
+- StructDirect: JSON, Google Sheets, CSS L4, BBNF, CSV, Math, BNF,
+  CSS Pretty.
+- TapeDirect: EBNF only, terminal AZ-II blocker.
+- Fallback TapeDirect: must be deleted in AZ-II `cutover.O`; unknown
+  grammars should fail generation loudly rather than silently selecting
+  tape.
 
-**Consumers:** gorgeous (5 built-in formatters), WASM AOT wrappers
+**Generated code per grammar:**
+- `parse(...) -> <Grammar>Document<'_>` for StructDirect grammars.
+- `parse(...) -> Parsed<'_, Self>` only for the remaining EBNF
+  TapeDirect blocker.
+- Per-rule monolithic parse functions selected by shape and
+  `EmitStrategy`.
+- Grammar-specific runtime builder/document accessors for StructDirect.
+- Debug/prettify/projection helpers only when they are consumed through
+  the live document API.
+
+**Consumers:** core grammar modules, gorgeous built-in formatters, CLI,
+tests, and future WASM AOT wrappers.
 
 ## 2. Rust VM — Bytecode Compiler + Interpreter
 
-Runtime grammar compilation. Shares steps 1-6 with AOT (parse → analyze → lower →
-IR passes), then diverges: compiles the optimized `GrammarIR` to bytecode instead of
-Rust `TokenStream`.
+Runtime grammar compilation. Shares the grammar-to-IR semantics with
+AOT, then diverges: compiles the optimized `GrammarIR` to bytecode
+instead of writing checked-in Rust source.
 
 **Entry:** `bbnf_ir::compiler::compile()` + `bbnf_ir::interpreter::Interpreter::new()`
 
@@ -113,12 +123,11 @@ Rust `TokenStream`.
 7. Serialize via MessagePack (for WASM boundary crossing)
 8. Interpret bytecode against input (`bbnf-ir::interpreter`)
 
-The VM path shares the post-B2 canonical pipeline with AOT: regen
-is driven by `cargo xtask regen` (or `cargo xtask regen --check`
-as the CI gate). The pre-B2 `cargo expand` + Python post-process
-bootstrap retired at B2.W2 and the Rust AOT path is the sole
-entrypoint that materialises per-grammar source under
-`crates/core/src/grammar/generated/<ident>.rs`.
+The VM path does not materialize checked-in parser source. It shares
+grammar parsing, import handling, lowering, and IR passes with AOT, then
+emits `BytecodeProgram`. The pre-B2 `cargo expand` + Python
+post-process bootstrap retired at B2.W2; the only source-materializing
+Rust AOT path is `cargo xtask regen`.
 
 **Bytecode opcodes** (`bbnf-ir::bytecode::Op`):
 `MatchString` | `MatchRegex` | `Epsilon` | `Jump` | `Call` |
@@ -180,64 +189,36 @@ Dynamic parser construction. Builds `parse-that` combinator tree at runtime.
 ## Crate Map
 
 ```
-typescript/
+crates/core/
   src/
-    grammar.ts          Parse BBNF → AST
-    analysis/           FIRST/FOLLOW, SCC, dispatch
-    generate.ts         AST → Parser<T> combinator tree (runtime)
-    optimize.ts         AST optimization (left-recursion)
-    imports.ts          @import resolution
-    imports-loader.ts   Module graph loading
+    pipeline/           Parse -> lower -> IR passes -> egraph -> emit orchestration
+    backend/rust/       Rust emitter, shape emitters, StructDirect/TapeDirect bodies
+    grammar/generated/  Checked-in per-grammar Rust output from cargo xtask regen
+    runtime/            Grammar-specific documents/builders plus remaining Parsed/tape facade
+    generate/regex/     HIR-based regex/scanner emission
+  tests/                Grammar, parity, projection, reproducibility tests
+  benches/              Divan bench suites
 
-rust/
-  core/                 Core library
-    src/
-      grammar.rs        Parse BBNF → AST
-      analysis/         FIRST/FOLLOW, SCC, span eligibility
-      lower/            AST → GrammarIR (mod, string_interner, fn_table, expression, metadata)
-      generate/
-        ir_codegen/     IR → Rust TokenStream (mod, alt, seq, repeat, wrap, inline, trace)
-        ir_span.rs      IR → SpanParser methods
-        ir_pretty/      IR → to_doc() methods (mod, patterns, heuristics, codegen, utils)
-        prettify/       Doc generation helpers
-        fast_paths.rs   Dispatch + memoization codegen
-        regex_emit/     HIR-based inline regex compilation (mod, hir_walk, fallback)
-        regex_classify.rs  Structural regex classification (Numeric, HexDigits, Identifier, QuotedString)
-      optimize/         Left-recursion elimination (Paull)
-      imports.rs        @import resolution
-      pipeline.rs       Orchestrate parse → analyze → lower → pass → codegen
-
-  ir/                Canonical IR — shared by AOT and VM
-    src/
-      lib.rs            GrammarIR, IrNode, IrRule, RuleMeta, TypeDesc types
-      passes/           16 IR operations, 14 unique passes (used by both AOT and VM)
-        canonicalize_aliases, prune_unreachable, inline_acyclic,
-        force_inline, fuse.rs (fuse_single_use),
-        eliminate_epsilon, merge_literals, merge_regex_alts,
-        factor_common_prefixes,
-        refine_span_eligibility, compute_follow_sets,
-        factor_lookahead.rs (factor_regex_with_lookahead),
-        generate_dispatch_tables, project_types
-      compiler.rs       IR → BytecodeProgram (VM path only)
-      interpreter.rs    BytecodeProgram → ParseResult (VM path only)
-      bytecode.rs       Op enum, BytecodeProgram struct (VM path only)
-
-  derive/          Proc macro
-    src/lib.rs          #[derive(Parser)] entry point
-
-  analysis/        Shared analysis for LSP
-    src/                DocumentState, 17 LSP providers
-
-  lsp/                  Language server binary (stdio)
-    src/main.rs         bbnf-lsp entry point
-
-wasm/                   WASM bindings (wasm-bindgen)
+crates/ir/
   src/
-    lib.rs              init, memory management
-    vm.rs               compile_grammar, parse_with_grammar, format_with_grammar
-    gorgeous.rs         format_json, format_css, format_bnf, format_ebnf, format_bbnf
-    lsp.rs              18 LSP feature exports
-    analysis.rs         Grammar analysis exports
+    passes/             Type projection, materialization, CSP strategy, rewrites, facts
+    registry/           Struct and emit strategy registries
+    egraph/             IR egraph integration
+    types/              TypeDesc and TypeDescInterner substrate
+
+crates/egraph/          General egraph implementation
+crates/csp-solver/      General CSP solver implementation
+crates/simd-scan/       Scanner primitives and throughput benches
+crates/tape/            Historical tape runtime, pending AZ-II deletion
+crates/gorgeous/        Formatter surface and built-in grammar formatters
+crates/analysis/        Shared analysis for LSP
+crates/lsp/             Language server binary and benches
+crates/bootstrap/       Bootstrap support crate
+crates/ser/             Serialization support
+crates/egraph-derive/   Derive helper for the egraph crate, not BBNF parser generation
+
+wasm/
+  src/                  WASM exports for VM/gorgeous/LSP/analysis surfaces
 ```
 
 ---

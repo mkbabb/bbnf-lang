@@ -32,10 +32,10 @@ The current implementation is an interim manifest, not a terminal close:
 This is not an AZ-III by default. The active work is AZ-II
 `cutover.O`, a terminal hardening wave. O0 tooling preflight, O1
 StructDirect builder transactions, and O2 EBNF direct projection have
-landed; the active gate is O3a failure-baseline triage and child-wave
-dispatch. O3a Round 1 J1/C1/S1 triads are integrated; O3 generated
-view purge remains blocked until O3a closes P1 and A1 ownership. Open
-AZ-III only if a later `cutover.O` gate
+landed; O3a failure-baseline triage is closed as routed evidence across
+J1/C1/S1/P1/A1. O3 generated view purge is now active because P1
+proved it closes inside O3 with no O3b required. Open AZ-III only if a
+later `cutover.O` gate
 proves that new grammar-general
 inference/layout substrate cannot land inside AZ-II without hiding a
 larger architectural transposition.
@@ -228,20 +228,27 @@ fully-contained sibling worktree agents and explicit file bounds:
 3. **[O2 - EBNF generalization](../waves/cutover/O2.md).** LANDED: shared structural
    AltDispatch emission flips EBNF to `EbnfDocument`.
 4. **[O3a - Failure baseline and triumvirate redress](../waves/cutover/O3a.md).**
-   in_progress: Round 1 J1/C1/S1 triads are integrated under
-   `O3a-{J1,C1,S1}-{research,plan,redress}.md`. J1 routes JSON bool
-   payload to O4, JSON projection accounting to O3, and JSON parity /
-   `data_xl` to O6. C1 routes CSS admission/payload/selector failures
-   to source owners before O6. S1 routes Sheets to S1-E1/S1-R1/S1-SER1
-   and records that O4 is not the return-model owner. Round 2 still
-   owns P1/A1. Child specs now own the five cohorts:
+   complete_with_misses: J1/C1/S1/P1/A1 triads are integrated under
+   `O3a-{J1,C1,S1,P1,A1}-{research,plan,redress}.md`. J1 routes JSON
+   bool payload to O4, JSON projection accounting to O3, and JSON
+   parity / `data_xl` to O6. C1 routes CSS admission/payload/selector
+   failures to source owners before O6. S1 routes Sheets to S1-E1,
+   S1-R1, and S1-SER1 and records that O4 is not the return-model
+   owner. P1 routes projection totality and generated `ValueRoot` /
+   view residue to O3 with no O3b required. A1 routes live
+   analysis/LSP repair, `json-prototype` archive/deletion, Gorgeous JIT
+   deletion, and bootstrap-parser proof to O5/O6/O7. Child specs own
+   the five cohorts:
    [`J1`](../waves/cutover/O3a-J1.md),
    [`C1`](../waves/cutover/O3a-C1.md),
    [`S1`](../waves/cutover/O3a-S1.md),
    [`P1`](../waves/cutover/O3a-P1.md), and
    [`A1`](../waves/cutover/O3a-A1.md). Six-agent synthesis:
    [`O3a-six-agent-audit-synthesis-2026-04-29.md`](O3a-six-agent-audit-synthesis-2026-04-29.md).
-5. **[O3 - Generated view purge](../waves/cutover/O3.md).** blocked until O3a closes P1: stop emitting tape-backed view and
+   Round 2 synthesis:
+   [`O3a-round2-synthesis-2026-04-29.md`](O3a-round2-synthesis-2026-04-29.md).
+5. **[O3 - Generated view purge](../waves/cutover/O3.md).** active:
+   stop emitting tape-backed view and
    `ValueRoot` materializer artifacts for StructDirect grammars unless
    they are consumed through a document API.
 6. **[O4 - Parsed/TapeDirect deletion](../waves/cutover/O4.md).** Remove `Parsed<R>` as a

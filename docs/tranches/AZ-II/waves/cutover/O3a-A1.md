@@ -2,7 +2,15 @@
 **Opens after**: AZ-II.cutover.O3a baseline capture and six-agent audit synthesis
 **Agents**: up to 10 parallel
 **Hard gate**: live analysis/LSP failures are repaired or owned, historical prototype surfaces are deleted/archived without shims, and `bootstrap_parser.rs` has an explicit close disposition before tape deletion.
-**Status**: planned
+**Status**: complete_with_misses
+
+2026-04-29 Round 2 triad complete: research, plan, and redress/probe
+artifacts exist under `docs/tranches/AZ-II/audit/O3a-A1-*.md`. A1
+routes live analysis/LSP source repair to the amended implementation
+path, `json-prototype` archive/deletion and Gorgeous JIT deletion to
+O5, and generated BBNF self-host proof to O6/O7. No fixture-only
+prototype repair, derive-era JIT retention, or bootstrap fallback shim
+is permitted.
 
 ## Scope
 
@@ -61,6 +69,9 @@ actual crate/workspace severance after A1 supplies the disposition.
    not hidden as ambient legacy code.
 4. O5 consumes A1 before deleting `crates/tape`.
 5. O7 cites A1 before declaring terminal close.
+6. `json-prototype` is archive/delete-owned, Gorgeous JIT is
+   deletion-owned in AZ-II, and bootstrap-parser retirement is an O6/O7
+   proof gate rather than ambient legacy.
 
 ## Dependencies
 

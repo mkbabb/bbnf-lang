@@ -1,16 +1,17 @@
 # AZ-II — Progress Log
 
 **Status**: interim manifest routed through cutover.O; `cutover.O.0`,
-`cutover.O.1`, and `cutover.O.2` landed; O3a Round 1
-J1/C1/S1 triads integrated; O3a Round 2 P1/A1 remains active.
+`cutover.O.1`, and `cutover.O.2` landed; O3a J1/C1/S1/P1/A1 triads
+integrated as routed evidence; O3 generated view purge is active.
 Implemented-state record:
 [`PROGRESS-SNAPSHOT-2026-04-29.md`](PROGRESS-SNAPSHOT-2026-04-29.md).
 Live terminal sequence: `cutover.O.0` through `cutover.O.7`, specified
 for dispatch at [`waves/cutover/O0.md`](waves/cutover/O0.md) through
 [`waves/cutover/O7.md`](waves/cutover/O7.md).
-`cutover.O3a` is the active failure-baseline and triumvirate redress
-prelude inserted before O3 implementation continues; O3 is blocked
-until O3a closes P1 routing and A1 ownership.
+`cutover.O3a` is the closed failure-baseline and triumvirate redress
+prelude inserted before O3 implementation continues. O3 is unblocked by
+P1's no-O3b disposition; A1's archive/delete/live-product/bootstrap
+disposition is routed into O5/O6/O7.
 
 **Date**: 2026-04-23
 
@@ -100,7 +101,7 @@ The cutover wave runs in three sequential sub-stages:
 | W0 | superseded (2026-04-28) | Folded into cutover.A (substrate hoist + BBNF runtime + decay sweep) |
 | W1 | superseded (2026-04-28) | Folded into cutover.B (Stage A + Stage B byte-equal cycle) |
 | W2 | superseded (2026-04-28) | Folded into cutover.C (`crates/tape/` deletion + recode + FINAL) |
-| cutover | interim-manifest (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; [O0](waves/cutover/O0.md) tooling preflight, [O1](waves/cutover/O1.md) builder transactions, and [O2](waves/cutover/O2.md) EBNF direct projection landed; [O3a](waves/cutover/O3a.md) active; [O3](waves/cutover/O3.md) blocked until O3a close) | 9/9 grammars StructDirect; terminal hardening routes through [cutover.O3a-O7](waves/cutover/README.md) after transactional StructDirect rollback support and EBNF activation |
+| cutover | interim-manifest (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; [O0](waves/cutover/O0.md) tooling preflight, [O1](waves/cutover/O1.md) builder transactions, and [O2](waves/cutover/O2.md) EBNF direct projection landed; [O3a](waves/cutover/O3a.md) routed closed; [O3](waves/cutover/O3.md) active) | 9/9 grammars StructDirect; terminal hardening routes through [cutover.O3a-O7](waves/cutover/README.md) after transactional StructDirect rollback support, EBNF activation, and routed O3a failure-cohort ownership |
 
 ## 2026-04-28 — cutover.G partial close
 
@@ -335,13 +336,13 @@ cross-crate refs).
 | [cutover.O.0](waves/cutover/O0.md) | Tooling preflight: stale bench aliases, IAI CI, profiling scripts, release pin | LANDED |
 | [cutover.O.1](waves/cutover/O1.md) | StructDirect builder transaction ABI across speculative branches | LANDED |
 | [cutover.O.2](waves/cutover/O2.md) | EBNF diagnosis + generic AltDispatch structural-Seq repair | LANDED |
-| [cutover.O.3a](waves/cutover/O3a.md) | Failure baseline + research/plan/redress cohort dispatch | in_progress |
+| [cutover.O.3a](waves/cutover/O3a.md) | Failure baseline + research/plan/redress cohort dispatch | complete_with_misses — all cohorts routed |
 | [cutover.O.3a-J1](waves/cutover/O3a-J1.md) | JSON materialization, parity, and throughput cohort | complete_with_misses — bool payload to O4, projection accounting to O3, parity/`data_xl` to O6 |
 | [cutover.O.3a-C1](waves/cutover/O3a-C1.md) | CSS admission, payloads, and lightningcss cohort | complete_with_misses — C1 source owners block O6 CSS truth until green |
 | [cutover.O.3a-S1](waves/cutover/O3a-S1.md) | Sheets branch payload and serialization cohort | complete_with_misses — S1-E1/S1-R1/S1-SER1 block O6 Sheets truth until green |
-| [cutover.O.3a-P1](waves/cutover/O3a-P1.md) | Projection totality and generated-view residue cohort | planned |
-| [cutover.O.3a-A1](waves/cutover/O3a-A1.md) | Analysis/LSP/prototype/bootstrap disposition cohort | planned |
-| [cutover.O.3](waves/cutover/O3.md) | Generated tape-view / `ValueRoot` residue purge for StructDirect | blocked until O3a close |
+| [cutover.O.3a-P1](waves/cutover/O3a-P1.md) | Projection totality and generated-view residue cohort | complete_with_misses — closes inside O3, no O3b required |
+| [cutover.O.3a-A1](waves/cutover/O3a-A1.md) | Analysis/LSP/prototype/bootstrap disposition cohort | complete_with_misses — live repairs and archive/delete/bootstrap gates routed to O5/O6/O7 |
+| [cutover.O.3](waves/cutover/O3.md) | Generated tape-view / `ValueRoot` residue purge for StructDirect | in_progress |
 | [cutover.O.4](waves/cutover/O4.md) | `Parsed<R>` deletion and `TapeDirect` fallback removal | 90 min |
 | [cutover.O.5](waves/cutover/O5.md) | `crates/tape` deletion after relocating non-tape scan/index primitives | 120 min |
 | [cutover.O.6](waves/cutover/O6.md) | 17-entry close matrix + JSON sonic-rs / CSS lightningcss parity refresh | 90 min |
@@ -484,12 +485,14 @@ continues:
 | P1 | projection totality and generated view / `ValueRoot` residue |
 | A1 | analysis/LSP regressions and historical `json-prototype` disposition |
 
-Round 1 dispatch uses research + plan + redress triads for J1, C1, and
-S1. Round 2 covers P1 and A1. Plan agents must create or amend wave
-specs before redress lands.
+Round 1 dispatch used research + plan + redress triads for J1, C1, and
+S1. Round 2 used the same triad shape for P1 and A1. Plan agents
+created or amended wave specs before source redress was permitted.
 
 Six-agent audit synthesis:
 `docs/tranches/AZ-II/audit/O3a-six-agent-audit-synthesis-2026-04-29.md`.
+Round 2 synthesis:
+`docs/tranches/AZ-II/audit/O3a-round2-synthesis-2026-04-29.md`.
 The audit confirms the five cohorts exhaust the 84 failed tests and the
 JSON `data_xl` bench timeout, but J1/C1/S1 required finer-grained child
 wave specs before any source redress. Those deployable specs now exist:
@@ -499,8 +502,8 @@ wave specs before any source redress. Those deployable specs now exist:
 | [O3a-J1](waves/cutover/O3a-J1.md) | 24 JSON tests plus `json_monolithic::data_xl` timeout | O3/O4/O6: `O3a-J1-{research,plan,redress}.md` integrated |
 | [O3a-C1](waves/cutover/O3a-C1.md) | 17 CSS/lightningcss tests | O6 CSS parity: `O3a-C1-{research,plan,redress}.md` integrated |
 | [O3a-S1](waves/cutover/O3a-S1.md) | 33 Sheets tests | S1-E1/S1-R1/S1-SER1 then O6: `O3a-S1-{research,plan,redress}.md` integrated |
-| [O3a-P1](waves/cutover/O3a-P1.md) | 1 projection-totality test plus generated-view residue | O3 close |
-| [O3a-A1](waves/cutover/O3a-A1.md) | 2 analysis/LSP tests, 7 json-prototype tests, bootstrap/JIT disposition | O5/O7 |
+| [O3a-P1](waves/cutover/O3a-P1.md) | 1 projection-totality test plus generated-view residue | O3 close: `O3a-P1-{research,plan,redress}.md` integrated; no O3b required |
+| [O3a-A1](waves/cutover/O3a-A1.md) | 2 analysis/LSP tests, 7 json-prototype tests, bootstrap/JIT disposition | O5/O6/O7: `O3a-A1-{research,plan,redress}.md` integrated |
 
 Round 1 integration:
 
@@ -520,6 +523,25 @@ Round 1 integration:
   range admission, and S1-SER1 owns compact serializer fixed points.
   O6 verifies Sheets health after those source owners land.
 
-Current instruction: implementation remains halted until Round 2 P1/A1
-triads are explicitly dispatched and integrated. O3 is blocked, not
-active.
+Round 2 integration:
+
+- P1 research/plan/redress reproduced
+  `projection_totality_runtime_call_count` as a stale runtime witness
+  over the old generated `ValueRoot` / `<Grammar>Value` materializer
+  path. Structural totality still passes (`JSON=3 CSS_L4=53 Sheets=10
+  BBNF=15 -> total=81`). O3 owns the fix: generated view/value
+  residue purge plus document-owned projection/accessor test rewrite.
+  No O3b is required unless O3 redress proves an out-of-bounds owner.
+- A1 research/plan/redress split live product failures from historical
+  prototype surface. `bbnf-analysis::directives
+  import_directive_has_semantic_tokens` and `bbnf-lsp::integration
+  test_hover_recover_keyword` are live directive-span repairs.
+  `json-prototype` is archive/delete-owned, not fixture-seed repair;
+  the retired Gorgeous derive-backed JIT is deletion-owned inside
+  AZ-II; `bootstrap_parser.rs` remains only as a bounded bridge until
+  O6 proves generated self-host or blocks O7.
+
+Current instruction: O3 implementation may resume under
+`waves/cutover/O3.md` with P1's file-owner ledger. O5/O6/O7 must
+consume A1 before claiming tape deletion, semantic close, or terminal
+close.

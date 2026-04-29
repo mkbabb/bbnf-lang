@@ -2,13 +2,16 @@
 **Opens after**: AZ-II.cutover.O2 close and O-wave documentation alignment
 **Agents**: up to 10 parallel
 **Hard gate**: all 84 post-O2 test failures and the failed JSON bench baseline are assigned to root-cause cohorts with research, plan, wave-spec, and redress ownership.
-**Status**: in_progress
+**Status**: complete_with_misses
 
-2026-04-29 Round 1 status: J1, C1, and S1 triads are dispatched and
-closed as routed evidence. Their research, plan, and redress/probe
-artifacts are committed under `docs/tranches/AZ-II/audit/O3a-{J1,C1,S1}-*.md`.
-Source redress remains gated by the amended owning O3/O4/O6 waves.
-Round 2 still owns P1 and A1 before O3 can unblock.
+2026-04-29 status: all five failure cohorts are routed. Round 1 J1,
+C1, and S1 triads are closed as routed evidence under
+`docs/tranches/AZ-II/audit/O3a-{J1,C1,S1}-*.md`. Round 2 P1 and A1
+triads are closed as routed evidence under
+`docs/tranches/AZ-II/audit/O3a-{P1,A1}-*.md`. Source redress now
+belongs to the amended owning waves: P1 closes inside O3; A1 routes
+live analysis/LSP repair, `json-prototype` archive/deletion, Gorgeous
+JIT deletion, and bootstrap-parser proof into O5/O6/O7.
 
 ## Scope
 
@@ -46,6 +49,7 @@ Round 2 still owns P1 and A1 before O3 can unblock.
 | `docs/tranches/AZ-II/waves/cutover/O7.md` | modify |
 | `docs/tranches/AZ-II/waves/cutover/O3a-{J1,C1,S1,P1,A1}.md` | create |
 | `docs/tranches/AZ-II/audit/O3a-six-agent-audit-synthesis-2026-04-29.md` | create |
+| `docs/tranches/AZ-II/audit/O3a-round2-synthesis-2026-04-29.md` | create |
 | `docs/tranches/AZ-II/waves/cutover/README.md` | modify |
 | `docs/tranches/AZ-II/PROGRESS.md` | modify |
 | `docs/tranches/AZ-II/audit/AZ-II-HARDENING-AUDIT-2026-04-29.md` | modify |
@@ -190,6 +194,25 @@ Sub-gate: J1/C1/S1 are marked `complete_with_misses` in their child
 specs, and the misses are named source owners rather than silent
 deferrals.
 
+### AZ-II.cutover.O3a.8b Round 2 Integration
+
+Mechanism: integrate the returned P1/A1 triad artifacts into the main
+worktree and amend O3/O5/O6/O7 so source, archive, and close-proof
+owners are written before implementation continues.
+
+Files touched: `docs/tranches/AZ-II/audit/O3a-{P1,A1}-*.md`,
+`docs/tranches/AZ-II/waves/cutover/O3.md`,
+`docs/tranches/AZ-II/waves/cutover/O5.md`,
+`docs/tranches/AZ-II/waves/cutover/O6.md`,
+`docs/tranches/AZ-II/waves/cutover/O7.md`,
+`docs/tranches/AZ-II/waves/cutover/README.md`,
+`docs/tranches/AZ-II/PROGRESS.md`.
+
+Sub-gate: P1 is marked `complete_with_misses` with no O3b required;
+A1 is marked `complete_with_misses` with no compatibility shim, no
+fixture-only `json-prototype` repair, no derive-era Gorgeous JIT
+retention, and an explicit O6/O7 bootstrap-parser proof gate.
+
 ### AZ-II.cutover.O3a.9 Cutover Item Augmentation
 
 Mechanism: update O3-O7 specs with the cohort outcomes so every failure
@@ -226,11 +249,15 @@ cohort wave owners.
 3. Every failed test is assigned to J1, C1, S1, P1, or A1.
 4. J1/C1/S1 triads are dispatched with research, plan, and redress
    roles before source redress lands.
-5. P1/A1 triads are queued or dispatched before O3 closes.
+5. P1/A1 triads are integrated before O3 resumes; P1 closes inside O3,
+   and A1 is consumed by O5/O6/O7.
 6. O3-O7 specs are amended with cohort child waves before
    implementation resumes.
 7. Round 1 artifacts for J1/C1/S1 are integrated and every named miss
    is routed to O3, O4, O6, or an explicit source child owner.
+8. Round 2 artifacts for P1/A1 are integrated: no O3b is required for
+   projection-totality, and A1's live/product/archive/bootstrap
+   surfaces have explicit O5/O6/O7 close gates.
 
 ## Verification artefacts
 
@@ -239,9 +266,10 @@ cohort wave owners.
 - `docs/tranches/AZ-II/audit/O3a-J1-*.md` after triad close.
 - `docs/tranches/AZ-II/audit/O3a-C1-*.md` after triad close.
 - `docs/tranches/AZ-II/audit/O3a-S1-*.md` after triad close.
-- Future `docs/tranches/AZ-II/audit/O3a-P1-*.md` and
-  `docs/tranches/AZ-II/audit/O3a-A1-*.md`.
+- `docs/tranches/AZ-II/audit/O3a-P1-*.md` after triad close.
+- `docs/tranches/AZ-II/audit/O3a-A1-*.md` after triad close.
 - `docs/tranches/AZ-II/audit/O3a-six-agent-audit-synthesis-2026-04-29.md`.
+- `docs/tranches/AZ-II/audit/O3a-round2-synthesis-2026-04-29.md`.
 - `docs/tranches/AZ-II/waves/cutover/O3a-{J1,C1,S1,P1,A1}.md`.
 
 ## Dependencies

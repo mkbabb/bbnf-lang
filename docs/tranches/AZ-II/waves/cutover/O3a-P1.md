@@ -2,7 +2,12 @@
 **Opens after**: AZ-II.cutover.O3a baseline capture and six-agent audit synthesis
 **Agents**: up to 10 parallel
 **Hard gate**: `projection_totality_runtime_call_count` is either closed inside O3 or routed to a named O3b before generated-view purge lands.
-**Status**: planned
+**Status**: complete_with_misses
+
+2026-04-29 Round 2 triad complete: research, plan, and redress/probe
+artifacts exist under `docs/tranches/AZ-II/audit/O3a-P1-*.md`. P1
+closes inside O3. No `O3b.md` is required unless an O3 implementation
+agent later proves an out-of-bounds owner with source evidence.
 
 ## Scope
 
@@ -45,8 +50,8 @@ benchmark surfaces. O4/O5/O6 own those.
 1. `docs/tranches/AZ-II/audit/O3a-P1-research.md` maps the failing
    projection-totality test to generated-view, runtime projection, or
    materializer ownership.
-2. `docs/tranches/AZ-II/audit/O3a-P1-plan.md` states whether P1 closes
-   in O3 or opens O3b.
+2. `docs/tranches/AZ-II/audit/O3a-P1-plan.md` states P1 closes in O3;
+   no O3b child spec is currently justified.
 3. `cargo nextest run -p bbnf --test projection_totality --cargo-profile ax-iter -- --nocapture` passes before O3 closes.
 4. O3's scan artifact records zero generated StructDirect `TapeCursor`,
    node-view, and `ValueRoot` production hits.

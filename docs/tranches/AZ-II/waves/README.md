@@ -14,8 +14,8 @@ All cutover-specific specs live under [`cutover/`](cutover/):
 |---|---|---|
 | [`cutover/README.md`](cutover/README.md) | interim manifest | Cutover index and original embedded A/B/C archaeology. |
 | [`cutover/A.md`](cutover/A.md) through [`cutover/O.md`](cutover/O.md) | historical | Substage agency records for the A-O execution stream. |
-| [`cutover/O0.md`](cutover/O0.md) through [`cutover/O7.md`](cutover/O7.md) plus [`cutover/O3a.md`](cutover/O3a.md) | active terminal series | O0/O1/O2 landed; O3a active; O3 blocked until O3a closes. |
-| [`cutover/O3a-J1.md`](cutover/O3a-J1.md) / [`O3a-C1.md`](cutover/O3a-C1.md) / [`O3a-S1.md`](cutover/O3a-S1.md) / [`O3a-P1.md`](cutover/O3a-P1.md) / [`O3a-A1.md`](cutover/O3a-A1.md) | planned child specs | Deployable failure-cohort triads for O3a. |
+| [`cutover/O0.md`](cutover/O0.md) through [`cutover/O7.md`](cutover/O7.md) plus [`cutover/O3a.md`](cutover/O3a.md) | active terminal series | O0/O1/O2 landed; O3a routed closed; O3 active. |
+| [`cutover/O3a-J1.md`](cutover/O3a-J1.md) / [`O3a-C1.md`](cutover/O3a-C1.md) / [`O3a-S1.md`](cutover/O3a-S1.md) / [`O3a-P1.md`](cutover/O3a-P1.md) / [`O3a-A1.md`](cutover/O3a-A1.md) | complete_with_misses child specs | Failure-cohort triads for O3a; source/archive/proof misses are routed to O3/O4/O5/O6/O7. |
 
 Do not dispatch from W0/W1/W2. They are historical source for the
 original plan. Active AZ-II dispatch reads the cutover subdirectory and

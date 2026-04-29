@@ -28,25 +28,27 @@ blockers.
 The active AZ-II wave is `cutover.O`. It is not a workaround wave and
 not a reduced tape floor. O0 tooling preflight, O1 grammar-general
 StructDirect builder transactions, and O2 EBNF direct projection have
-landed. The active resume point is O3a: close the post-O2
-failure-baseline cohorts and child-wave ownership before O3 source
-redress resumes. O3 then purges generated tape-view residue from
-StructDirect output, O4 deletes `Parsed<R>` and `TapeDirect`, O5 deletes
-the standalone tape crate, O6 refreshes semantic parity/performance
-truth, and O7 converts the interim manifest to terminal close.
+landed. O3a has routed the post-O2 failure-baseline cohorts and
+child-wave ownership. The active resume point is O3: purge generated
+tape-view residue from StructDirect output using P1's no-O3b owner
+ledger. O4 deletes `Parsed<R>` and `TapeDirect`, O5 deletes the
+standalone tape crate and A1 archive/JIT surfaces, O6 refreshes
+semantic parity/performance truth plus bootstrap proof, and O7 converts
+the interim manifest to terminal close.
 Each O substage is now specified as a dispatchable wave under
 `waves/cutover/O0.md` through `waves/cutover/O7.md`, with up to 10
 parallel sibling worktree agents and explicit file bounds.
 `cutover.O3a.md` is the inserted failure-baseline and triumvirate
 redress prelude before O3 implementation continues. Its child specs
 (`O3a-J1`, `O3a-C1`, `O3a-S1`, `O3a-P1`, `O3a-A1`) own all 84
-post-O2 failed tests and the failed JSON bench timeout.
+post-O2 failed tests and the failed JSON bench timeout, and are now
+`complete_with_misses` routed into O3/O4/O5/O6/O7.
 
-AZ-III opens only if the EBNF blocker is proven to require new
-grammar-general inference/layout machinery spanning node facts,
-CSP/egraph typing, and projection emission. AZ-III must not carry
-forward tape deletion, `Parsed<R>` deletion, stale benches, or parity
-gaps as deferred work.
+AZ-III opens only if a later O-wave gate proves new grammar-general
+inference/layout machinery spanning node facts, CSP/egraph typing, and
+projection emission cannot honestly land inside AZ-II. AZ-III must not
+carry forward tape deletion, `Parsed<R>` deletion, stale benches, or
+parity gaps as deferred work.
 
 ## Thesis
 

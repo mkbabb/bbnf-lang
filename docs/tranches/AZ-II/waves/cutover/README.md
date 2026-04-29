@@ -17,9 +17,8 @@ full BBNF fixture corpus; `crates/tape/` deleted; `cargo build -p bbnf
 **Status**: interim manifest routed through cutover.O — substrate canonical; 9/9 grammars
 StructDirect after O2; BBNF self-parity 56/56; reproducibility CI gate
 green; cutover.O.0 tooling preflight, O1 builder transactions, and O2
-EBNF direct projection landed; current work is O3a failure-baseline
-triage and child-wave dispatch before O3 generated view purge can
-resume.
+EBNF direct projection landed; O3a failure-baseline triage is closed as
+routed evidence; current work is O3 generated view purge.
 
 **2026-04-29 hardening amendment**: cutover.O must begin with the
 grammar-general StructDirect builder transaction gap. EBNF activation
@@ -27,11 +26,14 @@ is blocked not only by alternate layout depth but also by the fact that
 speculative StructDirect branches can mutate builder state without a
 matching rollback.
 
-**2026-04-29 O3a addendum**: O0, O1, and O2 are landed. O3a is the
-active resume point. O3 remains blocked until O3a closes the failure
-cohort routing and P1 projection-totality plan, now with EBNF on
+**2026-04-29 O3a addendum**: O0, O1, and O2 are landed. O3a closed the
+failure-cohort routing as evidence, with J1/C1/S1/P1/A1 triad artifacts
+under `docs/tranches/AZ-II/audit/`. O3 is now unblocked for generated
+view purge: P1 closes inside O3 with no O3b required. A1 routes
+analysis/LSP repair, `json-prototype` archive/deletion, Gorgeous JIT
+deletion, and bootstrap-parser proof into O5/O6/O7. EBNF is on
 StructDirect and grammar-general StructDirect checkpoint/rollback/
-commit support available to every speculative emitter path.
+commit support is available to every speculative emitter path.
 
 **Trajectory snapshot**: see [`../PROGRESS-SNAPSHOT-2026-04-29.md`](../../PROGRESS-SNAPSHOT-2026-04-29.md)
 for per-substage commit-by-commit detail across cutover.A through
@@ -202,10 +204,9 @@ Required order:
    and structural `Seq` branches project through StructDirect;
    `EbnfParser::parse -> EbnfDocument`.
 4. **[O3a failure baseline and triumvirate redress](O3a.md)** —
-   in_progress: assign all 84 test failures and the failed JSON bench
-   baseline to research/plan/redress cohorts before implementation
-   resumes.
-5. **[O3 generated view purge](O3.md)** — blocked until O3a close: remove tape-backed `TapeCursor`,
+   complete_with_misses: all 84 test failures and the failed JSON bench
+   baseline have research/plan/redress cohort routing.
+5. **[O3 generated view purge](O3.md)** — in_progress: remove tape-backed `TapeCursor`,
    node-view, and `ValueRoot` residue from StructDirect generated output
    unless it is consumed through a document API.
 6. **[O4 Parsed/TapeDirect deletion](O4.md)** — delete `Parsed<R>` as a
@@ -224,13 +225,13 @@ Child wave specs:
 | [`O0.md`](O0.md) | complete | up to 10 parallel worktree-isolated lanes; no perf baseline |
 | [`O1.md`](O1.md) | complete | up to 10 parallel worktree-isolated lanes; orchestrator-owned regen |
 | [`O2.md`](O2.md) | complete | up to 10 parallel worktree-isolated lanes; orchestrator-owned regen |
-| [`O3a.md`](O3a.md) | in_progress | up to 10 parallel worktree-isolated lanes; failure cohort triumvirates |
+| [`O3a.md`](O3a.md) | complete_with_misses | up to 10 parallel worktree-isolated lanes; failure cohort triumvirates routed |
 | [`O3a-J1.md`](O3a-J1.md) | complete_with_misses | JSON triad closed; bool payload to O4, projection accounting to O3, parity/`data_xl` to O6 |
 | [`O3a-C1.md`](O3a-C1.md) | complete_with_misses | CSS triad closed; admission/payload/selector owners block O6 CSS truth until green |
 | [`O3a-S1.md`](O3a-S1.md) | complete_with_misses | Sheets triad closed; S1-E1/S1-R1/S1-SER1 source owners block O6 Sheets truth |
-| [`O3a-P1.md`](O3a-P1.md) | planned | projection totality and generated-view residue triad |
-| [`O3a-A1.md`](O3a-A1.md) | planned | analysis/LSP/prototype/bootstrap bridge disposition triad |
-| [`O3.md`](O3.md) | blocked | up to 10 parallel worktree-isolated lanes; generated view purge |
+| [`O3a-P1.md`](O3a-P1.md) | complete_with_misses | P1 triad closed; projection totality closes inside O3, no O3b required |
+| [`O3a-A1.md`](O3a-A1.md) | complete_with_misses | A1 triad closed; live repairs/archive/JIT/bootstrap gates routed to O5/O6/O7 |
+| [`O3.md`](O3.md) | in_progress | up to 10 parallel worktree-isolated lanes; generated view purge |
 | [`O4.md`](O4.md) | planned | up to 10 parallel worktree-isolated lanes; return-model deletion |
 | [`O5.md`](O5.md) | planned | up to 10 parallel worktree-isolated lanes; tape crate deletion |
 | [`O6.md`](O6.md) | planned | up to 10 parallel worktree-isolated lanes; sequential bench execution |

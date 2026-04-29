@@ -1,42 +1,31 @@
-//! AY.W2.7 + AY.W6.b — Named-type preservation + grammar-derived
-//! direct-to-struct admission wire-contract test.
+//! AY.W2.7 + AZ-II.cutover.O3 -- named-type preservation through the
+//! StructDirect document surface.
 //!
 //! Per `docs/tranches/AY/waves/W2.md` §AY.W2.7 + AY invariant 23:
 //! every grammar-declared `-> input : <Name>` annotation (non-scalar,
 //! per the scalar-name table in `TypeDesc::from_scalar_name`) must
-//! reach the Rust tape emitter as `TypeDesc::Named(sid)`. The invariant
+//! reach Rust backend preparation as `TypeDesc::Named(sid)`. The invariant
 //! is end-to-end: the projection survives lowering, the normaliser
 //! loop, the e-graph saturation block, reachability pruning, and the
 //! Rust-backend preparation pass (`analyze_grammar → project_types`).
 //!
-//! The assertion is at emit-side — `compile_paths_request` with
+//! The assertion is at emit-side: `compile_paths_request` with
 //! `CompileTarget::Rust` exposes the exact `ir.types` array the
-//! `emit_direct_to_struct_projection` emitter walks when building the
-//! `PROJECTION_DIRECT_TO_STRUCT` const + `__grammar_projection_<rule>`
-//! marker functions. Checking IR-only (via `CompileTarget::Vm`) would
-//! admit Named entries the Rust-target preparation later drops;
-//! checking emit-only would not surface which rule loses Named.
-//! This test checks both boundaries. Post-AY-II.W0'.b every admission
-//! emits a runnable `materialize_projection_<rule>_<Grammar>` helper
-//! AND a fused-pipeline consumer call site inside
-//! `project_value_<Grammar>`; the structural + runtime wire-contract
-//! lives in `tests/projection_totality.rs`.
+//! Rust backend consumes. Checking IR-only (via `CompileTarget::Vm`)
+//! would admit Named entries the Rust-target preparation later drops;
+//! checking generated code would depend on the tape-backed view/value
+//! surface retired by O3. This test checks the Rust preparation
+//! boundary and then proves the named values are reachable through
+//! concrete StructDirect documents.
 //!
 //! ## AY.W6.b coverage — grammar-derived direct-to-struct admission
 //!
-//! Tranche AY.W6.b broadened the emitter's direct-to-struct admission
-//! to consume `ir.payload_layouts` as a grammar-derived fact, not
-//! just `TypeDesc::Named(sid)`. The admitted surface is now a per-
-//! grammar `pub struct <Grammar><RuleCamel>Projection` emitted
-//! alongside the legacy `PROJECTION_DIRECT_TO_STRUCT` const entries.
-//!
-//! The `admitted_projection_surfaces` test below asserts at least
-//! four admitted direct-to-struct surfaces across the corpus via
-//! `the proc-macro derive (retired B2)` + the emitted `PROJECTION_DIRECT_TO_STRUCT`
-//! const — which is the same `cargo expand` surface the AY.W6.2
-//! hard gate inspects. Surface-by-surface the derives below prove
-//! that grammar-layout admissions emit concrete structs without
-//! name dispatch.
+//! Tranche AY.W6.b broadened admission to consume `ir.payload_layouts`
+//! as a grammar-derived fact, not just `TypeDesc::Named(sid)`. O3
+//! keeps that assertion at the grammar/runtime boundary: the
+//! `admitted_projection_surfaces` test reads payload-layout facts from
+//! the prepared IR, and the runtime test parses concrete JSON/CSS
+//! values into document-owned typed graphs.
 //!
 //! ## Coverage
 //!
@@ -68,20 +57,19 @@
 //! surface these Span-annotated rules as grammar-layout projections,
 //! so they count towards the `admitted_projection_surfaces` gate.
 
+use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 use bbnf::pipeline::{
     compile_paths_request, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
 };
+use bbnf::runtime::{CssTypedValue, JsonValue};
 use bbnf_ir::{GrammarIR, TypeDesc};
 
 // ───────────────────────────────────────────────────────────────────
-// AY.W6.b — `the proc-macro derive (retired B2)` sites so `cargo expand -p bbnf --test
-// named_type_preservation` surfaces the admitted direct-to-struct
-// artefacts. Each derive instantiates the full emitter pipeline; the
-// resulting `PROJECTION_DIRECT_TO_STRUCT` const + per-grammar
-// `<Grammar><RuleCamel>Projection` structs are the structural
-// evidence the wave's hard gate inspects.
+// CSS L4 host shim. The generated CSS parser references
+// `crate::css_types::parse_hex_color`, so this test crate provides the
+// same module while keeping assertions on runtime documents.
 // ───────────────────────────────────────────────────────────────────
 
 /// Host shims required by the CSS L4 grammar's `-> parse_hex_color(...)`
@@ -138,52 +126,39 @@ mod css_types {
     }
 }
 
-/// JSON grammar — admits the resolver-backed `("string", "String")`
-/// entry plus one or more grammar-layout projections (e.g. `bool`).
-use ::bbnf::grammar::generated::json::*;
-
-
-/// CSS L4 — the richest grammar. Admits `colorFn` as resolver-backed
-/// `Color` plus a large suite of grammar-layout projections
-/// (`length`, `angle`, `time`, unit rules, prop groups, …).
-use ::bbnf::grammar::generated::css_l4::*;
-
-
-/// Sheets — admits grammar-layout projections only (no Named
-/// annotations survive per the W2 coverage note).
-use ::bbnf::grammar::generated::google_sheets::*;
-
-
-/// BBNF — self-hosted; admits grammar-layout projections only.
-use ::bbnf::grammar::generated::bbnf::*;
-
+use bbnf::grammar::generated::css_l4::CssL4Parser;
+use bbnf::grammar::generated::json::JsonParser;
 
 /// Compile `grammar_paths` through the Rust backend preparation pass
-/// (which runs `analyze_grammar → project_types` per
-/// `crates/core/src/backend/driver/analysis.rs:136`) and assert every
-/// `(rule_name, type_name)` pair in `named_rules` reaches emit with
-/// `ir.types[rule_id] == TypeDesc::Named(<type_name>)`.
+/// and return the prepared IR the backend consumes.
+fn compile_rust_ir(grammar_paths: &[PathBuf]) -> GrammarIR {
+    let request = CompileRequest {
+        options: PipelineOptions::default(),
+        // `CompileTarget::Rust` is the emit-side path: `prepare_grammar`
+        // runs `analyze_grammar` which invokes `project_types`,
+        // populating `ir.types` exactly as the Rust backend consumes it.
+        target: CompileTarget::Rust {
+            requested_prettify: false,
+        },
+    };
+
+    let out = compile_paths_request(grammar_paths, &request)
+        .expect("Rust-target compile must succeed for the wire contract");
+    match out {
+        CompileOutput::Rust(prepared) => prepared.ir,
+        other => panic!("expected Rust output, got {other:?}"),
+    }
+}
+
+/// Compile `grammar_paths` through the Rust backend preparation pass
+/// and assert every `(rule_name, type_name)` pair in `named_rules`
+/// reaches emit with `ir.types[rule_id] == TypeDesc::Named(<type_name>)`.
 ///
 /// Panics on any rule not found, on any type mismatch, or on any
 /// missing `ir.types` entry — those are the exact paths through which
 /// AY invariant 23 breaks.
 fn assert_named_preserved(grammar_paths: &[PathBuf], named_rules: &[(&str, &str)]) {
-    let request = CompileRequest {
-        options: PipelineOptions::default(),
-        // `CompileTarget::Rust` is the emit-side path: `prepare_grammar`
-        // runs `analyze_grammar` which invokes `project_types`,
-        // populating `ir.types` exactly as the Rust emitter consumes
-        // it at `emit_direct_to_struct_projection`.
-        target: CompileTarget::Rust { requested_prettify: false },
-    };
-
-    let out = compile_paths_request(grammar_paths, &request)
-        .expect("Rust-target compile must succeed for the wire contract");
-    let prepared = match out {
-        CompileOutput::Rust(prepared) => prepared,
-        other => panic!("expected Rust output, got {other:?}"),
-    };
-    let ir: &GrammarIR = &prepared.ir;
+    let ir = compile_rust_ir(grammar_paths);
 
     for (rule_name, type_name) in named_rules {
         let rule = ir.find_rule(rule_name).unwrap_or_else(|| {
@@ -233,6 +208,37 @@ fn assert_named_preserved(grammar_paths: &[PathBuf], named_rules: &[(&str, &str)
     }
 }
 
+fn named_entries(grammar: &PathBuf) -> Vec<(String, String)> {
+    let ir = compile_rust_ir(std::slice::from_ref(grammar));
+    let mut out = Vec::new();
+    for (rule_id, td) in &ir.types {
+        if let TypeDesc::Named(sid) = td {
+            let rule_name = ir
+                .rules
+                .iter()
+                .find(|r| r.id == *rule_id)
+                .map(|r| ir.get_string(r.name).to_string())
+                .unwrap_or_else(|| "<unknown>".to_string());
+            out.push((rule_name, ir.get_string(*sid).to_string()));
+        }
+    }
+    out.sort();
+    out
+}
+
+fn payload_layout_rule_names(grammar: &PathBuf) -> BTreeSet<String> {
+    let ir = compile_rust_ir(std::slice::from_ref(grammar));
+    ir.payload_layouts
+        .keys()
+        .filter_map(|rule_id| {
+            ir.rules
+                .iter()
+                .find(|rule| rule.id == *rule_id)
+                .map(|rule| ir.get_string(rule.name).to_string())
+        })
+        .collect()
+}
+
 /// CSS L4 declares three rules with `-> input : Color`: `colorFunction`,
 /// `colorFn`, `colorMix`. Post-W2.2 grammar-source fix (commit
 /// `14f3a147` — precedence wrap on `colorFn` / `colorMix` bodies) only
@@ -245,14 +251,17 @@ fn assert_named_preserved(grammar_paths: &[PathBuf], named_rules: &[(&str, &str)
 fn css_l4_named_types() {
     let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let stylesheet = manifest.join("../../grammar/css/l4/stylesheet.bbnf");
-    assert_named_preserved(&[stylesheet], &[
-        // colorFunction + colorMix are pruned as unreachable per
-        // AYW2-named-collapse-probe.md §Finding 3. The reachability
-        // fix (extending `properties.bbnf::value` to reach them via
-        // the `color` Alt) is deferred — see AY.W2.2 commit message
-        // for the pattern-dedup interaction that blocks the fix.
-        ("colorFn", "Color"),
-    ]);
+    assert_named_preserved(
+        &[stylesheet],
+        &[
+            // colorFunction + colorMix are pruned as unreachable per
+            // AYW2-named-collapse-probe.md §Finding 3. The reachability
+            // fix (extending `properties.bbnf::value` to reach them via
+            // the `color` Alt) is deferred — see AY.W2.2 commit message
+            // for the pattern-dedup interaction that blocks the fix.
+            ("colorFn", "Color"),
+        ],
+    );
 }
 
 /// JSON declares `string -> decode_json_string_to_arena(input) : String`.
@@ -265,9 +274,7 @@ fn css_l4_named_types() {
 fn json_named_types() {
     let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let json = manifest.join("../../grammar/json/json.bbnf");
-    assert_named_preserved(&[json], &[
-        ("string", "String"),
-    ]);
+    assert_named_preserved(&[json], &[("string", "String")]);
 }
 
 /// Negative-space check: every `ir.types` entry tagged `Named(_)`
@@ -283,38 +290,10 @@ fn json_named_types() {
 /// via the scalar-name table, not `TypeDesc::Named`).
 #[test]
 fn no_spurious_named_entries() {
-    fn count_named(grammar: &PathBuf) -> Vec<(String, String)> {
-        let request = CompileRequest {
-            options: PipelineOptions::default(),
-            target: CompileTarget::Rust { requested_prettify: false },
-        };
-        let out = compile_paths_request(std::slice::from_ref(grammar), &request)
-            .expect("compile must succeed");
-        let prepared = match out {
-            CompileOutput::Rust(p) => p,
-            other => panic!("expected Rust output, got {other:?}"),
-        };
-        let ir = &prepared.ir;
-        let mut out = Vec::new();
-        for (rule_id, td) in &ir.types {
-            if let TypeDesc::Named(sid) = td {
-                let rule_name = ir
-                    .rules
-                    .iter()
-                    .find(|r| r.id == *rule_id)
-                    .map(|r| ir.get_string(r.name).to_string())
-                    .unwrap_or_else(|| "<unknown>".to_string());
-                out.push((rule_name, ir.get_string(*sid).to_string()));
-            }
-        }
-        out.sort();
-        out
-    }
-
     let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
     // CSS L4 — {colorFn → Color}.
-    let css_l4 = count_named(&manifest.join("../../grammar/css/l4/stylesheet.bbnf"));
+    let css_l4 = named_entries(&manifest.join("../../grammar/css/l4/stylesheet.bbnf"));
     assert_eq!(
         css_l4,
         vec![("colorFn".to_string(), "Color".to_string())],
@@ -322,7 +301,7 @@ fn no_spurious_named_entries() {
     );
 
     // JSON — {string → String}.
-    let json = count_named(&manifest.join("../../grammar/json/json.bbnf"));
+    let json = named_entries(&manifest.join("../../grammar/json/json.bbnf"));
     assert_eq!(
         json,
         vec![("string".to_string(), "String".to_string())],
@@ -331,8 +310,7 @@ fn no_spurious_named_entries() {
 
     // Sheets — ∅ (Span-annotated rules resolve to TypeDesc::Span,
     // not TypeDesc::Named).
-    let sheets =
-        count_named(&manifest.join("../../grammar/google-sheets/google-sheets.bbnf"));
+    let sheets = named_entries(&manifest.join("../../grammar/google-sheets/google-sheets.bbnf"));
     assert!(
         sheets.is_empty(),
         "Sheets must have zero Named entries (Span annotations resolve \
@@ -340,7 +318,7 @@ fn no_spurious_named_entries() {
     );
 
     // BBNF — ∅.
-    let bbnf = count_named(&manifest.join("../../grammar/bbnf/bbnf.bbnf"));
+    let bbnf = named_entries(&manifest.join("../../grammar/bbnf/bbnf.bbnf"));
     assert!(
         bbnf.is_empty(),
         "BBNF must have zero Named entries (no `-> : <Name>` \
@@ -348,123 +326,97 @@ fn no_spurious_named_entries() {
     );
 }
 
-/// AY.W6.b — grammar-derived direct-to-struct admission surface.
+/// AY.W6.b/O3 -- grammar-derived StructDirect admission facts.
 ///
-/// The wave broadened `emit_direct_to_struct_projection` from the
-/// narrow `TypeDesc::Named(sid)` admission arm to the full
-/// `ir.payload_layouts` surface, so every non-transparent rule whose
-/// child sequence projects onto a fixed-layout scalar tuple admits
-/// direct-to-struct storage. This test asserts the admitted count
-/// across the four `the proc-macro derive (retired B2)` grammars above crosses the
-/// AY.W6.b floor of four admissions — the wave's deliverable vs
-/// AY.W2's miss.
-///
-/// The assertion reads the derive-emitted `PROJECTION_DIRECT_TO_STRUCT`
-/// const directly via the proc-macro-produced module namespace. Each
-/// grammar's const is a `&[(&str, &str); N]` of admitted projections.
-/// Cross-grammar admissions count additively; `N` per grammar is the
-/// per-grammar admission count (CSS L4 alone clears the floor with
-/// its unit + prop-group rules, but the test asserts the aggregate
-/// so partial regressions in any grammar surface at this gate).
+/// The post-O3 assertion reads the prepared IR's payload-layout table
+/// rather than generated tape-view metadata. These rule names are the
+/// grammar-owned facts the StructDirect runtime builders consume when
+/// constructing concrete document values.
 #[test]
 fn admitted_projection_surfaces() {
-    // Per-grammar admission counts read via the grammar's associated
-    // constant. Each `<Grammar>::PROJECTION_DIRECT_TO_STRUCT` alias
-    // resolves to the per-grammar emitted slice; the alias is a
-    // namespace-safe way to disambiguate across four grammars coexisting
-    // in one test binary (the module-scope `pub use __<grammar>::*;`
-    // glob would otherwise collide on the unqualified name).
-    let json_total = JsonParser::PROJECTION_DIRECT_TO_STRUCT.len();
-    let css_l4_total = CssL4Parser::PROJECTION_DIRECT_TO_STRUCT.len();
-    let sheets_total = GoogleSheetsParser::PROJECTION_DIRECT_TO_STRUCT.len();
-    let bbnf_total = BbnfBootstrap::PROJECTION_DIRECT_TO_STRUCT.len();
+    let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let json = payload_layout_rule_names(&manifest.join("../../grammar/json/json.bbnf"));
+    let css_l4 = payload_layout_rule_names(&manifest.join("../../grammar/css/l4/stylesheet.bbnf"));
+    let sheets =
+        payload_layout_rule_names(&manifest.join("../../grammar/google-sheets/google-sheets.bbnf"));
+    let bbnf = payload_layout_rule_names(&manifest.join("../../grammar/bbnf/bbnf.bbnf"));
 
-    let total = json_total + css_l4_total + sheets_total + bbnf_total;
-    eprintln!(
-        "AY-II.W0.d admission surface: JSON={json_total} CSS_L4={css_l4_total} \
-         Sheets={sheets_total} BBNF={bbnf_total} → total={total}"
-    );
-
-    // AY.W6.b floor: at least four admitted direct-to-struct surfaces
-    // across the corpus. The pre-W6.b baseline was two (CSS L4 `colorFn`
-    // + JSON `string`), both resolver-backed `Named(_)` admissions.
-    // Grammar-layout admissions add every rule whose scalar-tuple
-    // projection succeeded; a regression that silently drops the
-    // layout-driven arm fails this gate even if the resolver-backed
-    // arm still fires.
-    assert!(
-        total >= 4,
-        "AY.W6.b: admitted direct-to-struct surfaces must be >= 4 \
-         (wave-declared floor); got total={total} \
-         (JSON={json_total}, CSS_L4={css_l4_total}, \
-         Sheets={sheets_total}, BBNF={bbnf_total})"
-    );
-
-    // AY.W6.b structural assertion: CSS L4 must admit at least four
-    // direct-to-struct surfaces on its own. Its unit + prop-group +
-    // keyword rules are the richest grammar-layout source in the corpus,
-    // so a regression that drops the layout-driven arm surfaces here
-    // even before the aggregate floor fires.
-    assert!(
-        css_l4_total >= 4,
-        "AY.W6.b: CSS L4 must admit at least four direct-to-struct \
-         surfaces (unit + prop-group rules from the layout pass); \
-         got {css_l4_total}"
-    );
-
-    // AY-II.W0'.b totality invariant — per grammar:
-    // `PROJECTION_DIRECT_TO_STRUCT.len() ==
-    //  PROJECTION_MATERIALIZERS.len() ==
-    //  PROJECTION_CONSUMERS.len()`.
-    // The canonical gate (structural + runtime-call-count) lives in
-    // `tests/projection_totality.rs`; mirroring the structural
-    // assertion here keeps this test's name-type preservation story
-    // colocated with the admission-count story. Post-W0'.b every
-    // admission's consumer is a materializer-driven projection
-    // variant (not `Unknown` fallback); the consumer-side evidence
-    // is `PROJECTION_CONSUMERS[i]` naming the per-grammar enum
-    // variant that wraps the projection struct.
-    for (label, admissions, materializers, consumers) in [
-        (
-            "JsonParser",
-            JsonParser::PROJECTION_DIRECT_TO_STRUCT,
-            JsonParser::PROJECTION_MATERIALIZERS,
-            JsonParser::PROJECTION_CONSUMERS,
-        ),
-        (
-            "CssL4Parser",
-            CssL4Parser::PROJECTION_DIRECT_TO_STRUCT,
-            CssL4Parser::PROJECTION_MATERIALIZERS,
-            CssL4Parser::PROJECTION_CONSUMERS,
-        ),
-        (
-            "GoogleSheetsParser",
-            GoogleSheetsParser::PROJECTION_DIRECT_TO_STRUCT,
-            GoogleSheetsParser::PROJECTION_MATERIALIZERS,
-            GoogleSheetsParser::PROJECTION_CONSUMERS,
-        ),
-        (
-            "BbnfBootstrap",
-            BbnfBootstrap::PROJECTION_DIRECT_TO_STRUCT,
-            BbnfBootstrap::PROJECTION_MATERIALIZERS,
-            BbnfBootstrap::PROJECTION_CONSUMERS,
-        ),
-    ] {
-        assert_eq!(
-            admissions.len(),
-            materializers.len(),
-            "{label}: AY-II invariant 7 — admission count ({}) must equal \
-             materializer count ({})",
-            admissions.len(),
-            materializers.len(),
-        );
-        assert_eq!(
-            admissions.len(),
-            consumers.len(),
-            "{label}: AY-II invariant 7 — admission count ({}) must equal \
-             consumer count ({})",
-            admissions.len(),
-            consumers.len(),
+    for expected in ["bool", "string"] {
+        assert!(
+            json.contains(expected),
+            "JSON payload layouts must include {expected:?}; got {json:?}"
         );
     }
+    for expected in ["colorSpace", "length", "percentage", "hex"] {
+        assert!(
+            css_l4.contains(expected),
+            "CSS L4 payload layouts must include {expected:?}; got {css_l4:?}"
+        );
+    }
+    for expected in ["string", "boolean", "cell_ref", "add_op"] {
+        assert!(
+            sheets.contains(expected),
+            "Sheets payload layouts must include {expected:?}; got {sheets:?}"
+        );
+    }
+    for expected in ["identifier", "import_path", "regex"] {
+        assert!(
+            bbnf.contains(expected),
+            "BBNF payload layouts must include {expected:?}; got {bbnf:?}"
+        );
+    }
+
+    let total = json.len() + css_l4.len() + sheets.len() + bbnf.len();
+    eprintln!(
+        "AZ-II.O3 payload-layout surface: JSON={} CSS_L4={} Sheets={} BBNF={} -> total={total}",
+        json.len(),
+        css_l4.len(),
+        sheets.len(),
+        bbnf.len()
+    );
+
+    assert!(
+        total >= 12,
+        "payload-layout surface must cover the primary StructDirect corpus; got total={total}"
+    );
+    assert!(
+        css_l4.len() >= 4,
+        "CSS L4 must retain multiple grammar-layout payloads; got {css_l4:?}"
+    );
+}
+
+#[test]
+fn named_runtime_documents_preserve_concrete_values() {
+    let json = JsonParser::parse("\"hello\"").expect("JSON string parse");
+    match json.to_value() {
+        JsonValue::String(s) => assert_eq!(*s, "hello"),
+        other => panic!("JSON named String rule must reach JsonValue::String, got {other:?}"),
+    }
+
+    let css_src = "a { color: color(srgb 1 0 1 / 0.75); }";
+    let css = CssL4Parser::parse(css_src)
+        .unwrap_or_else(|e| panic!("CSS named colorFn parse failed: {e:?}"));
+    assert_eq!(css.input(), css_src);
+    assert!(
+        !css.rules(css.to_value().rules).is_empty(),
+        "CSS colorFn fixture must produce a stylesheet rule"
+    );
+    assert!(
+        css.walk_declarations().count() >= 1,
+        "CSS colorFn fixture must expose declarations through CssDocument"
+    );
+    let list_id = css
+        .walk_values()
+        .find_map(|(_property, value)| match value {
+            CssTypedValue::List(id) => Some(*id),
+            _ => None,
+        })
+        .expect("CSS colorFn fixture must expose an arena-backed value list");
+    let values = css.values(list_id);
+    assert!(
+        values
+            .iter()
+            .any(|value| matches!(value, CssTypedValue::Span(name) if *name == "color")),
+        "CSS colorFn document value list must retain the color() function head, got {values:?}"
+    );
 }

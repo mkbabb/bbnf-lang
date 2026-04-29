@@ -286,10 +286,20 @@ orchestrator-direct fixes.
 
 ## Trajectory follow-on
 
-AZ-II.cutover.A opens next per `docs/tranches/AZ-II/waves/cutover.md`:
+AZ-II.cutover.A opened next per `docs/tranches/AZ-II/waves/cutover.md`:
 substrate hoist (`tape::dta` → `bbnf-ir::dta`), `tape::visitor`
 deletion (746 LOC), tape driver dead-helper deletion (~150 LOC),
 BBNF typed-leaf annotations, `crates/core/src/runtime/bbnf/` runtime,
 resolver-arm extension, `recognizers/dta.rs` ~900 LOC amputation.
-Cap 120 min; sequential single-agent. BB.scaffold (Wave 2b) opens in
-parallel on disjoint bounds.
+The original 3-substage plan expanded under contact into 14
+sub-stages (cutover.A through cutover.N). cutover.A through M
+LANDED on master; cutover.N halted at organizational usage limit.
+AZ-II is in PARTIAL CLOSE; tape deletion + EBNF activation route
+to cutover.O. See `docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md`
+for the full 14-substage trajectory record.
+
+BB.scaffold (Wave 2b) opened in parallel on disjoint bounds and
+landed at master `26f95469` / `4bb49ef2` / `9b20ded1` / `a4ca2b2f`
+(e-graph ruler + IR rewrites + xtask integration + bench surface
+compaction). BB.close (Wave 4) gates on AZ-II FINAL CLOSE; BA
+(Wave 3) gates on AZ-II FINAL CLOSE.

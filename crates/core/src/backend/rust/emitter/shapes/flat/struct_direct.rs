@@ -225,13 +225,31 @@ pub(super) fn emit_parse_flat_struct_direct(
                 #builder_ty_elided as crate::runtime::StructBuilder
             >::begin_compound(builder, &#layout_var);
 
-            // Per-position emission.
-            #(#emissions)*
+            // AZ-II.cutover.K Phase 2 — wrap per-position emission in
+            // an IIFE so any inner `return Err(...)` propagates as a
+            // controlled `Result` rather than skipping the matching
+            // `end_compound`. Pre-fix the inline Alt / Repeat / Regex
+            // / Negate / Minus / Literal-mismatch arms returned `Err`
+            // directly from the rule body, leaving the open compound
+            // frame unbalanced on the builder's stack — every
+            // subsequent finalise (or sibling rule's begin/end) saw a
+            // shifted depth. The IIFE folds the bare `return Err`
+            // surface into a deferred Err that the body trailer
+            // observes after closing the frame.
+            let __body_result: ::core::result::Result<
+                (),
+                crate::runtime::tape::DtaError,
+            > = (|| {
+                // Per-position emission.
+                #(#emissions)*
+                ::core::result::Result::Ok(())
+            })();
 
             <
                 #builder_ty_elided as crate::runtime::StructBuilder
             >::end_compound(builder, #handle_var);
 
+            __body_result?;
             ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
         }
     }

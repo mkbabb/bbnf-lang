@@ -852,10 +852,19 @@ fn emit_parse_arglist_struct_direct(
             let __handle = <
                 #builder_ty as crate::runtime::StructBuilder
             >::begin_compound(builder, &__layout);
-            #body_emission
+            // AZ-II.cutover.K Phase 2 — IIFE wrapping the body so any
+            // inner `?`-propagation closes the matching frame.
+            let __body_result: ::core::result::Result<
+                (),
+                crate::runtime::tape::DtaError,
+            > = (|| {
+                #body_emission
+                ::core::result::Result::Ok(())
+            })();
             <
                 #builder_ty as crate::runtime::StructBuilder
             >::end_compound(builder, __handle);
+            __body_result?;
             Ok(crate::runtime::tape::TapeOffset::NONE)
         }
     }

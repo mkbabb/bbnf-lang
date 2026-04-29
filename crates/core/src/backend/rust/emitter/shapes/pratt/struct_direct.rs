@@ -251,6 +251,16 @@ pub(super) fn emit_parse_pratt_struct_direct(
                 #builder_ty_e as crate::runtime::StructBuilder
             >::begin_compound(builder, &#layout_var);
 
+            // AZ-II.cutover.K Phase 2 — wrap operand + operator-loop
+            // emission in an IIFE so any `?` propagation inside the
+            // operand calls can't bypass the matching `end_compound`.
+            // Pre-fix `#operand_call?` / `#rhs_call?` returned `Err`
+            // directly from the rule body, leaking the open Pratt
+            // frame onto the builder's stack.
+            let __body_result: ::core::result::Result<
+                (),
+                crate::runtime::tape::DtaError,
+            > = (|| {
             // ── Leftmost operand ────────────────────────────────────
             // Recurses through the operand's per-shape parse fn,
             // which deposits its own value (scalar or compound) onto
@@ -342,12 +352,15 @@ pub(super) fn emit_parse_pratt_struct_direct(
                 let _ = #support_mod::skip_space(input, p, state);
                 #rhs_call
             }
+            ::core::result::Result::Ok(())
+            })();
 
             // ── Close the rule compound ─────────────────────────────
             <
                 #builder_ty_e as crate::runtime::StructBuilder
             >::end_compound(builder, #handle_var);
 
+            __body_result?;
             ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
         }
     }

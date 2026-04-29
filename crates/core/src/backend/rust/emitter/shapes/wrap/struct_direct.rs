@@ -332,42 +332,57 @@ fn emit_alt_struct_dispatch(
             #builder_ty_e as crate::runtime::StructBuilder
         >::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
-        let first = #support_mod::skip_space(input, p, state)
-            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                offset: *p as u32,
-            })?;
-        'try_branches: loop {
-            match first {
-                #(#byte_arms)*
-                _ => {}
-            }
-            #(#linear_arms)*
-            // No branch succeeded — close the open compound before
-            // bubbling the error so the builder's stack stays
-            // balanced for downstream finalisation diagnostics.
-            <
-                #builder_ty_e as crate::runtime::StructBuilder
-            >::end_compound(builder, __wrap_handle);
-            return ::core::result::Result::Err(
-                crate::runtime::tape::DtaError::Syntax {
+        // AZ-II.cutover.K Phase 2 — wrap the leading skip_space
+        // surface in an IIFE so the `?` propagation can't bypass the
+        // matching `end_compound`. Pre-fix `skip_space?` returned
+        // `Err` directly from the rule body, leaking the open Wrap
+        // frame onto the builder's stack.
+        let __body_result: ::core::result::Result<
+            (),
+            crate::runtime::tape::DtaError,
+        > = (|| {
+            let first = #support_mod::skip_space(input, p, state)
+                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                     offset: *p as u32,
-                    failing_state:
-                        crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule:
-                        crate::runtime::tape::DtaRuleId(u32::MAX),
-                },
-            );
+                })?;
+            'try_branches: loop {
+                match first {
+                    #(#byte_arms)*
+                    _ => {}
+                }
+                #(#linear_arms)*
+                // No branch succeeded — bubble the error; the trailer
+                // closes the open compound after observing the IIFE
+                // result.
+                return ::core::result::Result::Err(
+                    crate::runtime::tape::DtaError::Syntax {
+                        offset: *p as u32,
+                        failing_state:
+                            crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule:
+                            crate::runtime::tape::DtaRuleId(u32::MAX),
+                    },
+                );
+            }
+            ::core::result::Result::Ok(())
+        })();
+        match __body_result {
+            ::core::result::Result::Ok(()) => {
+                <
+                    #builder_ty_e as crate::runtime::StructBuilder
+                >::push_branch_tag(builder, __wrap_branch_idx);
+                <
+                    #builder_ty_e as crate::runtime::StructBuilder
+                >::end_compound(builder, __wrap_handle);
+                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            }
+            ::core::result::Result::Err(e) => {
+                <
+                    #builder_ty_e as crate::runtime::StructBuilder
+                >::end_compound(builder, __wrap_handle);
+                ::core::result::Result::Err(e)
+            }
         }
-        // Matching `OpenFrame::Wrap`: stamp the branch tag (JSON's
-        // builder retains the tag for audit symmetry but does not
-        // store it on the value), then close the wrap.
-        <
-            #builder_ty_e as crate::runtime::StructBuilder
-        >::push_branch_tag(builder, __wrap_branch_idx);
-        <
-            #builder_ty_e as crate::runtime::StructBuilder
-        >::end_compound(builder, __wrap_handle);
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
 }
 

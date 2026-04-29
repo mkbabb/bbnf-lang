@@ -52,18 +52,110 @@ pub(super) fn emit_dispatch_arms_struct_direct(
                 },
                 None => quote! {},
             },
-            // Non-Ref leaf branches (Literal / Regex / Seq) — for
-            // struct-direct AltDispatch admission these would emit
-            // typed `push_leaf_with_*` calls. JSON does not admit them
-            // through AltDispatch; emit a no-op skeleton until W2.B /
-            // W3 light up the per-grammar typed-leaf emission.
-            _ => quote! {
-                {
-                    // Non-Ref AltDispatch branch — placeholder for
-                    // W2.B / W3 typed-leaf emission. Falls through so
-                    // the next candidate can try.
+            // AZ-II.cutover.M Phase 3 — Literal-led Alt branches under
+            // struct-direct emit the byte-comparison + push_leaf pair
+            // mirroring `emit_literal_attempt`'s tape-path body, plus
+            // the discriminator-recording `push_branch_tag(idx)` that
+            // the AltDispatch frame's TaggedEnum layout consumes when
+            // the branch fires. EBNF's `letter`, `digit`, `symbol`,
+            // `terminator` and BNF's `terminal` are the canonical
+            // Alt-of-literal AltDispatch rules; pre-cutover.M these
+            // emitted empty placeholders, dropping every literal
+            // candidate on the floor.
+            IrNode::Literal(sid) => {
+                let bytes = ir.get_string(*sid).as_bytes();
+                let len = bytes.len();
+                let byte_lits: Vec<TokenStream> =
+                    bytes.iter().map(|b| quote! { #b }).collect();
+                quote! {
+                    {
+                        let at = *p;
+                        let end = at + #len;
+                        if input.len() >= end && input[at..end] == [#(#byte_lits),*] {
+                            *p = end;
+                            builder.push_leaf_with_unit();
+                            builder.push_branch_tag(#idx_u32);
+                            break 'try_branches;
+                        }
+                    }
                 }
-            },
+            }
+            // Regex-led branches dispatch through the per-grammar
+            // regex-scan adapter and push a unit leaf on match. Same
+            // discriminator-recording shape as the Literal arm.
+            IrNode::Regex(sid) => {
+                let pattern = ir.get_string(*sid).to_string();
+                let regex_scan_ident = super::super::super::dfa_codegen::regex_scan_adapter_ident(
+                    &super::super::sanitise_grammar(grammar_suffix),
+                );
+                quote! {
+                    {
+                        if let ::core::option::Option::Some(match_len) =
+                            #regex_scan_ident(#pattern, input, *p)
+                        {
+                            *p += match_len as usize;
+                            builder.push_leaf_with_unit();
+                            builder.push_branch_tag(#idx_u32);
+                            break 'try_branches;
+                        }
+                    }
+                }
+            }
+            // Seq branches (literal-chain or mixed). Walk the
+            // pure-literal sequence position-by-position; on full
+            // match record one unit leaf for the entire seq plus the
+            // branch tag. Mixed seqs fall through to the post-cap
+            // typed-leaf emission lane.
+            IrNode::Seq(_) | IrNode::Next(_, _) | IrNode::Skip(_, _) => {
+                if seq_is_pure_literal_chain(inner) {
+                    let mut positions: Vec<&IrNode> = Vec::new();
+                    flatten(inner, &mut positions);
+                    let lit_checks: Vec<TokenStream> = positions
+                        .iter()
+                        .filter_map(|pos| match pos {
+                            IrNode::Literal(sid) => {
+                                let bytes = ir.get_string(*sid).as_bytes();
+                                let len = bytes.len();
+                                let byte_lits: Vec<TokenStream> =
+                                    bytes.iter().map(|b| quote! { #b }).collect();
+                                Some(quote! {
+                                    {
+                                        let at = *p;
+                                        let end = at + #len;
+                                        if input.len() < end
+                                            || input[at..end] != [#(#byte_lits),*]
+                                        {
+                                            return ::core::result::Result::Err(());
+                                        }
+                                        *p = end;
+                                    }
+                                })
+                            }
+                            _ => None,
+                        })
+                        .collect();
+                    quote! {
+                        {
+                            let save_p = *p;
+                            let attempt: ::core::result::Result<(), ()> = (|| {
+                                #(#lit_checks)*
+                                Ok(())
+                            })();
+                            match attempt {
+                                Ok(()) => {
+                                    builder.push_leaf_with_unit();
+                                    builder.push_branch_tag(#idx_u32);
+                                    break 'try_branches;
+                                }
+                                Err(()) => { *p = save_p; }
+                            }
+                        }
+                    }
+                } else {
+                    quote! {}
+                }
+            }
+            _ => quote! {},
         };
         arms.push(body);
     }

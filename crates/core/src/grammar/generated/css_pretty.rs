@@ -1328,85 +1328,79 @@ mod __cssprettyparser_emit_impl {
             true
         }
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_important(
-        input: &[u8],
+    pub fn parse_flat_CssPrettyParser_important<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __important_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 0u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("important"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __important_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__important_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
             {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [33u8] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: at as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
                         failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        0u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
             }
             {
                 {
-                    let span_lo = *p as u32;
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_CssPrettyParser(
                         "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            0u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
             {
@@ -1416,79 +1410,67 @@ mod __cssprettyparser_emit_impl {
                     || input[at..end]
                         != [105u8, 109u8, 112u8, 111u8, 114u8, 116u8, 97u8, 110u8, 116u8]
                 {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: at as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
                         failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        0u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
             }
-            Ok(())
+            ::core::result::Result::Ok(())
         })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                0u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __important_handle);
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_importRule(
-        input: &[u8],
+    pub fn parse_flat_CssPrettyParser_importRule<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __importRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 1u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("importRule"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __importRule_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__importRule_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
             {
                 let at = *p;
@@ -1496,841 +1478,574 @@ mod __cssprettyparser_emit_impl {
                 if input.len() < end
                     || input[at..end] != [64u8, 105u8, 109u8, 112u8, 111u8, 114u8, 116u8]
                 {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: at as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
                         failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        1u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
             }
             {
                 {
-                    let span_lo = *p as u32;
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_CssPrettyParser(
                         "[^;{}!,]+",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            1u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                }
-            }
-            {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let mut iter_count: u32 = 0;
-                loop {
-                    let save_p = *p;
-                    let save_cols = builder.position();
-                    let iter_lo = *p as u32;
-                    let iter_child = builder.enter_post_order_children();
-                    let attempt = (|| -> ::core::result::Result<
-                        (),
-                        crate::runtime::tape::DtaError,
-                    > {
-                        let at = *p;
-                        let end = at + 1usize;
-                        if input.len() < end || input[at..end] != [44u8] {
-                            return Err(crate::runtime::tape::DtaError::Syntax {
-                                offset: at as u32,
-                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                            });
-                        }
-                        *p = end;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Literal,
-                                at as u32,
-                                end as u32,
-                                1u8,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                        {
-                            let span_lo = *p as u32;
-                            let Some(match_len) = __regex_scan_CssPrettyParser(
-                                "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
-                                input,
-                                *p,
-                            ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: span_lo,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
-                            };
-                            *p += match_len as usize;
-                            let span_hi = *p as u32;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Span,
-                                    span_lo,
-                                    span_hi,
-                                    1u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
-                        }
-                        {
-                            let span_lo = *p as u32;
-                            let Some(match_len) = __regex_scan_CssPrettyParser(
-                                "[^;{}!,]+",
-                                input,
-                                *p,
-                            ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: span_lo,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
-                            };
-                            *p += match_len as usize;
-                            let span_hi = *p as u32;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Span,
-                                    span_lo,
-                                    span_hi,
-                                    1u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
-                        }
-                        Ok(())
-                    })();
-                    if attempt.is_err() {
-                        *p = save_p;
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    if *p == save_p {
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
-                    iter_count = iter_count.saturating_add(1);
-                }
-                if iter_count < (0usize as u32) {
-                    builder.exit_post_order_children();
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
-            }
-            {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [59u8] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        1u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                1u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
-    }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
-    ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_declaration(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_CssPrettyParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
-            {
-                {
-                    let span_lo = *p as u32;
-                    let Some(match_len) = __regex_scan_CssPrettyParser(
-                        "[a-zA-Z_][\\w-]*|--[\\w-]+|-[a-zA-Z][\\w-]*",
-                        input,
-                        *p,
-                    ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                        });
-                    };
-                    *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            2u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
             {
                 {
-                    let span_lo = *p as u32;
-                    let Some(match_len) = __regex_scan_CssPrettyParser(
-                        "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
-                        input,
-                        *p,
-                    ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                        });
-                    };
-                    *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            2u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                }
-            }
-            {
-                let at = *p;
-                let end = at + 1usize;
-                if input.len() < end || input[at..end] != [58u8] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        2u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-            }
-            {
-                {
-                    let span_lo = *p as u32;
-                    let Some(match_len) = __regex_scan_CssPrettyParser(
-                        "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
-                        input,
-                        *p,
-                    ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                        });
-                    };
-                    *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            2u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                }
-            }
-            {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let iter_save_p = *p;
-                let iter_save_cols = builder.position();
-                let iter_lo = *p as u32;
-                let iter_child = builder.enter_post_order_children();
-                let opt_attempt: ::core::result::Result<
-                    (),
-                    crate::runtime::tape::DtaError,
-                > = (|| {
-                    {
-                        let span_lo = *p as u32;
-                        let Some(match_len) = __regex_scan_CssPrettyParser(
-                            "[^;{}!,]+",
-                            input,
-                            *p,
-                        ) else {
-                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                offset: span_lo,
-                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                            });
-                        };
-                        *p += match_len as usize;
-                        let span_hi = *p as u32;
-                        let _ = builder
-                            .push_leaf_with(
-                                crate::runtime::tape::TapeKind::Span,
-                                span_lo,
-                                span_hi,
-                                2u8,
-                                0,
-                                crate::runtime::tape::PayloadData::None,
-                            );
-                    }
-                    let repeat_lo = *p as u32;
-                    let repeat_child = builder.enter_post_order_children();
-                    let mut iter_count: u32 = 0;
+                    let mut __iter_count: u32 = 0;
                     loop {
-                        let save_p = *p;
-                        let save_cols = builder.position();
-                        let iter_lo = *p as u32;
-                        let iter_child = builder.enter_post_order_children();
-                        let attempt = (|| -> ::core::result::Result<
+                        if __iter_count >= 4294967295u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_result: ::core::result::Result<
                             (),
                             crate::runtime::tape::DtaError,
-                        > {
+                        > = (|| {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [44u8] {
-                                return Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                     offset: at as u32,
                                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Literal,
-                                    at as u32,
-                                    end as u32,
-                                    2u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
                             {
-                                let span_lo = *p as u32;
+                                let __scan_start = *p;
                                 let Some(match_len) = __regex_scan_CssPrettyParser(
                                     "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
                                     input,
                                     *p,
                                 ) else {
                                     return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                        offset: span_lo,
+                                        offset: __scan_start as u32,
                                         failing_state: crate::runtime::tape::DtaStateId::NONE,
                                         failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
-                                let span_hi = *p as u32;
-                                let _ = builder
-                                    .push_leaf_with(
-                                        crate::runtime::tape::TapeKind::Span,
-                                        span_lo,
-                                        span_hi,
-                                        2u8,
-                                        0,
-                                        crate::runtime::tape::PayloadData::None,
-                                    );
                             }
                             {
-                                let span_lo = *p as u32;
+                                let __scan_start = *p;
                                 let Some(match_len) = __regex_scan_CssPrettyParser(
                                     "[^;{}!,]+",
                                     input,
                                     *p,
                                 ) else {
                                     return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                        offset: span_lo,
+                                        offset: __scan_start as u32,
                                         failing_state: crate::runtime::tape::DtaStateId::NONE,
                                         failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
-                                let span_hi = *p as u32;
-                                let _ = builder
-                                    .push_leaf_with(
-                                        crate::runtime::tape::TapeKind::Span,
-                                        span_lo,
-                                        span_hi,
-                                        2u8,
-                                        0,
-                                        crate::runtime::tape::PayloadData::None,
-                                    );
                             }
                             Ok(())
                         })();
-                        if attempt.is_err() {
-                            *p = save_p;
-                            builder.rollback_to(save_cols);
-                            builder.exit_post_order_children();
-                            break;
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    break;
+                                }
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                break;
+                            }
                         }
-                        if *p == save_p {
-                            builder.rollback_to(save_cols);
-                            builder.exit_post_order_children();
-                            break;
-                        }
-                        let iter_hi = *p as u32;
-                        let __iter_off = builder
-                            .begin_compound_post(
-                                crate::runtime::tape::TapeKind::Seq,
-                                iter_lo,
-                                0u8,
-                                0u8,
-                                0u16,
-                            );
-                        builder
-                            .end_compound_post_order(
-                                __iter_off,
-                                iter_hi,
-                                crate::runtime::tape::TapeOffset(iter_child),
-                            );
-                        iter_count = iter_count.saturating_add(1);
                     }
-                    if iter_count < (0usize as u32) {
-                        builder.exit_post_order_children();
-                        return Err(crate::runtime::tape::DtaError::Syntax {
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                             offset: *p as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
-                    let repeat_hi = *p as u32;
-                    let __repeat_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Repeat,
-                            repeat_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __repeat_off,
-                            repeat_hi,
-                            crate::runtime::tape::TapeOffset(repeat_child),
-                        );
-                    Ok(())
-                })();
-                let matched = opt_attempt.is_ok();
-                if !matched {
-                    *p = iter_save_p;
-                    builder.rollback_to(iter_save_cols);
-                    builder.exit_post_order_children();
-                } else {
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
                 }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
             }
             {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let iter_save_p = *p;
-                let iter_save_cols = builder.position();
-                let iter_lo = *p as u32;
-                let iter_child = builder.enter_post_order_children();
-                let opt_attempt: ::core::result::Result<
-                    (),
-                    crate::runtime::tape::DtaError,
-                > = (|| {
-                    let _ = ({
-                        let _ = __shape_support_CssPrettyParser::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
-                        parse_flat_CssPrettyParser_important(input, p, state, builder)
-                    })?;
-                    Ok(())
-                })();
-                let matched = opt_attempt.is_ok();
-                if !matched {
-                    *p = iter_save_p;
-                    builder.rollback_to(iter_save_cols);
-                    builder.exit_post_order_children();
-                } else {
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [59u8] {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
                 }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
+                *p = end;
             }
+            ::core::result::Result::Ok(())
+        })();
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __importRule_handle);
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_CssPrettyParser_declaration<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_CssPrettyParser::ScanState,
+        builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let __declaration_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 2u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("declaration"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __declaration_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__declaration_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
             {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let iter_save_p = *p;
-                let iter_save_cols = builder.position();
-                let iter_lo = *p as u32;
-                let iter_child = builder.enter_post_order_children();
-                let opt_attempt: ::core::result::Result<
-                    (),
-                    crate::runtime::tape::DtaError,
-                > = (|| {
-                    let at = *p;
-                    let end = at + 1usize;
-                    if input.len() < end || input[at..end] != [59u8] {
-                        return Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: at as u32,
+                {
+                    let __scan_start = *p;
+                    let Some(match_len) = __regex_scan_CssPrettyParser(
+                        "[a-zA-Z_][\\w-]*|--[\\w-]+|-[a-zA-Z][\\w-]*",
+                        input,
+                        *p,
+                    ) else {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
-                    }
-                    *p = end;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Literal,
-                            at as u32,
-                            end as u32,
-                            2u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                    Ok(())
-                })();
-                let matched = opt_attempt.is_ok();
-                if !matched {
-                    *p = iter_save_p;
-                    builder.rollback_to(iter_save_cols);
-                    builder.exit_post_order_children();
-                } else {
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
+                    };
+                    *p += match_len as usize;
                 }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
             }
             {
                 {
-                    let span_lo = *p as u32;
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_CssPrettyParser(
                         "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            2u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
-            Ok(())
+            {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() < end || input[at..end] != [58u8] {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        offset: at as u32,
+                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                    });
+                }
+                *p = end;
+            }
+            {
+                {
+                    let __scan_start = *p;
+                    let Some(match_len) = __regex_scan_CssPrettyParser(
+                        "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
+                        input,
+                        *p,
+                    ) else {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: __scan_start as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    };
+                    *p += match_len as usize;
+                }
+            }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 1u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_CssPrettyParser(
+                                    "[^;{}!,]+",
+                                    input,
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    });
+                                };
+                                *p += match_len as usize;
+                            }
+                            {
+                                let mut __iter_count: u32 = 0;
+                                loop {
+                                    if __iter_count >= 4294967295u32 {
+                                        break;
+                                    }
+                                    let __iter_save_p = *p;
+                                    if input.get(*p).is_none() {
+                                        break;
+                                    }
+                                    let __iter_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::tape::DtaError,
+                                    > = (|| {
+                                        let at = *p;
+                                        let end = at + 1usize;
+                                        if input.len() < end || input[at..end] != [44u8] {
+                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                offset: at as u32,
+                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                            });
+                                        }
+                                        *p = end;
+                                        {
+                                            let __scan_start = *p;
+                                            let Some(match_len) = __regex_scan_CssPrettyParser(
+                                                "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
+                                                input,
+                                                *p,
+                                            ) else {
+                                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                    offset: __scan_start as u32,
+                                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                                });
+                                            };
+                                            *p += match_len as usize;
+                                        }
+                                        {
+                                            let __scan_start = *p;
+                                            let Some(match_len) = __regex_scan_CssPrettyParser(
+                                                "[^;{}!,]+",
+                                                input,
+                                                *p,
+                                            ) else {
+                                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                    offset: __scan_start as u32,
+                                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                                });
+                                            };
+                                            *p += match_len as usize;
+                                        }
+                                        Ok(())
+                                    })();
+                                    match __iter_result {
+                                        Ok(()) => {
+                                            if *p == __iter_save_p {
+                                                break;
+                                            }
+                                            __iter_count += 1;
+                                        }
+                                        Err(_) => {
+                                            *p = __iter_save_p;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if __iter_count < 0u32 {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        offset: *p as u32,
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    });
+                                }
+                            }
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    break;
+                                }
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                }
+            }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 1u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let _ = ({
+                                let _ = __shape_support_CssPrettyParser::skip_space(
+                                    input,
+                                    p,
+                                    state,
+                                );
+                                parse_flat_CssPrettyParser_important(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                )
+                            })?;
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    break;
+                                }
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                }
+            }
+            {
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 1u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [59u8] {
+                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    offset: at as u32,
+                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                });
+                            }
+                            *p = end;
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    break;
+                                }
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                }
+            }
+            {
+                {
+                    let __scan_start = *p;
+                    let Some(match_len) = __regex_scan_CssPrettyParser(
+                        "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
+                        input,
+                        *p,
+                    ) else {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: __scan_start as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    };
+                    *p += match_len as usize;
+                }
+            }
+            ::core::result::Result::Ok(())
         })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                2u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __declaration_handle);
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_genericAtRule(
-        input: &[u8],
+    pub fn parse_flat_CssPrettyParser_genericAtRule<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __genericAtRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 3u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("genericAtRule"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __genericAtRule_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__genericAtRule_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
             {
                 {
-                    let span_lo = *p as u32;
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_CssPrettyParser(
                         "@[a-zA-Z][\\w-]*",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            3u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
             {
                 {
-                    let span_lo = *p as u32;
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_CssPrettyParser(
                         "[^;{}]*",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            3u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
             {
@@ -2352,115 +2067,95 @@ mod __cssprettyparser_emit_impl {
                     )
                 })?;
             }
-            Ok(())
+            ::core::result::Result::Ok(())
         })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                3u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(
+            builder,
+            __genericAtRule_handle,
+        );
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_qualifiedRule(
-        input: &[u8],
+    pub fn parse_flat_CssPrettyParser_qualifiedRule<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __qualifiedRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 4u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("qualifiedRule"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __qualifiedRule_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__qualifiedRule_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
             {
                 {
-                    let span_lo = *p as u32;
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_CssPrettyParser(
                         "[^{};]+",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            4u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
             {
                 {
-                    let span_lo = *p as u32;
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_CssPrettyParser(
                         "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            4u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
             {
@@ -2469,62 +2164,62 @@ mod __cssprettyparser_emit_impl {
                     parse_flat_CssPrettyParser_ruleBlock(input, p, state, builder)
                 })?;
             }
-            Ok(())
+            ::core::result::Result::Ok(())
         })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                4u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(
+            builder,
+            __qualifiedRule_handle,
+        );
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_mediaRule(
-        input: &[u8],
+    pub fn parse_flat_CssPrettyParser_mediaRule<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __mediaRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 5u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("mediaRule"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __mediaRule_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__mediaRule_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
             {
                 let at = *p;
@@ -2532,48 +2227,29 @@ mod __cssprettyparser_emit_impl {
                 if input.len() < end
                     || input[at..end] != [64u8, 109u8, 101u8, 100u8, 105u8, 97u8]
                 {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: at as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
                         failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        5u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
             }
             {
                 {
-                    let span_lo = *p as u32;
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_CssPrettyParser(
                         "[^{]+",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            5u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
             {
@@ -2582,62 +2258,59 @@ mod __cssprettyparser_emit_impl {
                     parse_flat_CssPrettyParser_ruleBlock(input, p, state, builder)
                 })?;
             }
-            Ok(())
+            ::core::result::Result::Ok(())
         })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                5u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __mediaRule_handle);
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_supportsRule(
-        input: &[u8],
+    pub fn parse_flat_CssPrettyParser_supportsRule<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __supportsRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 6u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("supportsRule"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __supportsRule_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__supportsRule_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
             {
                 let at = *p;
@@ -2646,48 +2319,29 @@ mod __cssprettyparser_emit_impl {
                     || input[at..end]
                         != [64u8, 115u8, 117u8, 112u8, 112u8, 111u8, 114u8, 116u8, 115u8]
                 {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: at as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
                         failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        6u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
             }
             {
                 {
-                    let span_lo = *p as u32;
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_CssPrettyParser(
                         "[^{]+",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            6u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
             {
@@ -2696,62 +2350,62 @@ mod __cssprettyparser_emit_impl {
                     parse_flat_CssPrettyParser_ruleBlock(input, p, state, builder)
                 })?;
             }
-            Ok(())
+            ::core::result::Result::Ok(())
         })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                6u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(
+            builder,
+            __supportsRule_handle,
+        );
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_fontFaceRule(
-        input: &[u8],
+    pub fn parse_flat_CssPrettyParser_fontFaceRule<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __fontFaceRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 7u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("fontFaceRule"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __fontFaceRule_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__fontFaceRule_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
             {
                 let at = *p;
@@ -2763,48 +2417,29 @@ mod __cssprettyparser_emit_impl {
                             101u8,
                         ]
                 {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: at as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
                         failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        7u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
             }
             {
                 {
-                    let span_lo = *p as u32;
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_CssPrettyParser(
                         "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            7u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
             {
@@ -2813,52 +2448,40 @@ mod __cssprettyparser_emit_impl {
                     parse_flat_CssPrettyParser_ruleBlock(input, p, state, builder)
                 })?;
             }
-            Ok(())
+            ::core::result::Result::Ok(())
         })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                7u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(
+            builder,
+            __fontFaceRule_handle,
+        );
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W3.2 — per-grammar Keyword-shape parse function
-    /// (Alt of literal-led or Ref-led branches).
+    /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
+    /// (Alt of literal-led, Ref-led, or Seq-led branches).
     ///
-    /// AX.W0a.2.g — admits Ref-led branches whose target
-    /// resolves to a literal-prefix body (per `leading_
-    /// literal_bytes`). For each first-byte group, each
-    /// candidate's full prefix is checked before committing:
-    /// Literal branches emit the legacy leaf push;
-    /// Ref branches delegate to the target's shape fn via
-    /// [`emit_ref_call_tape`], threading `state` through.
+    /// Literal branches push leaves through
+    /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
+    /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
+    /// untyped). Ref branches delegate to the target shape
+    /// fn so the target's records bubble up unchanged.
+    /// Returns `TapeOffset::NONE` for compositional
+    /// uniformity.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_keyword_CssPrettyParser_atRuleBody(
-        input: &[u8],
+    pub fn parse_keyword_CssPrettyParser_atRuleBody<'p>(
+        input: &'p [u8],
         p: &mut usize,
         first_byte: u8,
         state: &mut __shape_support_CssPrettyParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
             59u8 => {
@@ -2866,18 +2489,12 @@ mod __cssprettyparser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    let off = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            at as u32,
-                            end as u32,
-                            8u8,
-                            0u8,
-                            crate::runtime::tape::PayloadData::None,
-                        );
-                    return Ok(off);
+                    builder.push_leaf_with_unit();
+                    return ::core::result::Result::Ok(
+                        crate::runtime::tape::TapeOffset::NONE,
+                    );
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -2886,7 +2503,6 @@ mod __cssprettyparser_emit_impl {
             123u8 => {
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [123u8] {
                     let __ref_save_p = *p;
-                    let __ref_save_cols = builder.position();
                     match ({
                         let _ = __shape_support_CssPrettyParser::skip_space(
                             input,
@@ -2900,18 +2516,17 @@ mod __cssprettyparser_emit_impl {
                         }
                         ::core::result::Result::Err(_) => {
                             *p = __ref_save_p;
-                            builder.rollback_to(__ref_save_cols);
                         }
                     }
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                Err(crate::runtime::tape::DtaError::Syntax {
+                ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -2919,85 +2534,79 @@ mod __cssprettyparser_emit_impl {
             }
         }
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_ruleBlock(
-        input: &[u8],
+    pub fn parse_flat_CssPrettyParser_ruleBlock<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __ruleBlock_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 9u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("ruleBlock"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __ruleBlock_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__ruleBlock_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
             {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [123u8] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: at as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
                         failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        9u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
             }
             {
                 {
-                    let span_lo = *p as u32;
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_CssPrettyParser(
                         "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            9u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
             {
@@ -3008,326 +2617,234 @@ mod __cssprettyparser_emit_impl {
             }
             {
                 {
-                    let span_lo = *p as u32;
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_CssPrettyParser(
                         "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            9u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
             {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [125u8] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                         offset: at as u32,
                         failing_state: crate::runtime::tape::DtaStateId::NONE,
                         failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
-                let _ = builder
-                    .push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        at as u32,
-                        end as u32,
-                        9u8,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
             }
-            Ok(())
+            ::core::result::Result::Ok(())
         })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                9u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __ruleBlock_handle);
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_blockContent(
-        input: &[u8],
+    pub fn parse_flat_CssPrettyParser_blockContent<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __blockContent_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 10u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("blockContent"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __blockContent_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__blockContent_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
             {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let mut iter_count: u32 = 0;
-                loop {
-                    let save_p = *p;
-                    let save_cols = builder.position();
-                    let iter_lo = *p as u32;
-                    let iter_child = builder.enter_post_order_children();
-                    let attempt = (|| -> ::core::result::Result<
-                        (),
-                        crate::runtime::tape::DtaError,
-                    > {
-                        {
-                            let span_lo = *p as u32;
-                            let Some(match_len) = __regex_scan_CssPrettyParser(
-                                "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
-                                input,
-                                *p,
-                            ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: span_lo,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
-                            };
-                            *p += match_len as usize;
-                            let span_hi = *p as u32;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Span,
-                                    span_lo,
-                                    span_hi,
-                                    10u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
+                {
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
                         }
-                        {
-                            let first = __shape_support_CssPrettyParser::skip_space(
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_CssPrettyParser(
+                                    "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
                                     input,
-                                    p,
-                                    state,
-                                )
-                                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
-                                    offset: *p as u32,
-                                })?;
-                            let alt_lo = *p as u32;
-                            let alt_child = builder.enter_post_order_children();
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    });
+                                };
+                                *p += match_len as usize;
+                            }
                             'try_branches: loop {
-                                match first {
-                                    _ => {}
-                                }
                                 {
-                                    let attempt_p = *p;
-                                    let attempt_len = builder.position();
-                                    match {
-                                        let _ = __shape_support_CssPrettyParser::skip_space(
-                                            input,
-                                            p,
-                                            state,
-                                        );
-                                        parse_flat_CssPrettyParser_declaration(
-                                            input,
-                                            p,
-                                            state,
-                                            builder,
-                                        )
-                                    } {
-                                        Ok(_) => break 'try_branches,
+                                    let __alt_save_p = *p;
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::tape::DtaError,
+                                    > = (|| {
+                                        let _ = ({
+                                            let _ = __shape_support_CssPrettyParser::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            );
+                                            parse_flat_CssPrettyParser_declaration(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                            )
+                                        })?;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => break 'try_branches,
                                         Err(_) => {
-                                            *p = attempt_p;
-                                            builder.rollback_to(attempt_len);
+                                            *p = __alt_save_p;
                                         }
                                     }
                                 }
                                 {
-                                    let attempt_p = *p;
-                                    let attempt_len = builder.position();
-                                    match {
-                                        parse_wrap_CssPrettyParser_ruleItem(
-                                            input,
-                                            p,
-                                            state,
-                                            builder,
-                                        )
-                                    } {
-                                        Ok(_) => break 'try_branches,
+                                    let __alt_save_p = *p;
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::tape::DtaError,
+                                    > = (|| {
+                                        let _ = ({
+                                            parse_wrap_CssPrettyParser_ruleItem(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                            )
+                                        })?;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => break 'try_branches,
                                         Err(_) => {
-                                            *p = attempt_p;
-                                            builder.rollback_to(attempt_len);
+                                            *p = __alt_save_p;
                                         }
                                     }
                                 }
-                                builder.exit_post_order_children();
                                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                                     offset: *p as u32,
                                     failing_state: crate::runtime::tape::DtaStateId::NONE,
                                     failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
-                            let alt_hi = *p as u32;
-                            let __alt_off = builder
-                                .begin_compound_post(
-                                    crate::runtime::tape::TapeKind::Alt,
-                                    alt_lo,
-                                    10u8,
-                                    0u8,
-                                    0u16,
-                                );
-                            builder
-                                .end_compound_post_order(
-                                    __alt_off,
-                                    alt_hi,
-                                    crate::runtime::tape::TapeOffset(alt_child),
-                                );
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    break;
+                                }
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                break;
+                            }
                         }
-                        Ok(())
-                    })();
-                    if attempt.is_err() {
-                        *p = save_p;
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
                     }
-                    if *p == save_p {
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
                     }
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
-                    iter_count = iter_count.saturating_add(1);
                 }
-                if iter_count < (0usize as u32) {
-                    builder.exit_post_order_children();
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
             }
-            Ok(())
+            ::core::result::Result::Ok(())
         })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                10u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(
+            builder,
+            __blockContent_handle,
+        );
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Wrap-shape parse function.
+    /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
-    /// Transparent dispatcher — skip leading ws, byte-dispatch
-    /// to the chosen branch's shape fn, return that shape fn's
-    /// offset unchanged. No outer compound emission; the
-    /// branch's own shape fn owns the tape record.
+    /// Opens a Wrap frame on the builder, dispatches to the matched
+    /// branch's shape fn (which carries its own
+    /// begin_compound/end_compound for compound branches and the
+    /// matching push_leaf_with_* for scalar branches), stamps the
+    /// chosen branch index via push_branch_tag, then closes the
+    /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
+    /// forward-the-single-child semantics.
     ///
-    /// AX.W0a.2.f — compound; see `flat.rs` emission for the
-    /// `#[inline]` downgrade rationale (LLVM inline-cycle
-    /// collapse vs hard-requirement inliner abort).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_CssPrettyParser_atRule(
-        input: &[u8],
+    pub fn parse_wrap_CssPrettyParser_atRule<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let mut __wrap_chosen_meta: u8 = 0;
         let first = __shape_support_CssPrettyParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
@@ -3337,96 +2854,81 @@ mod __cssprettyparser_emit_impl {
                 64u8 => {
                     {
                         let attempt_p = *p;
-                        let attempt_len = builder.position();
                         match parse_flat_CssPrettyParser_mediaRule(
                             input,
                             p,
                             state,
                             builder,
                         ) {
-                            Ok(_) => {
-                                __wrap_chosen_meta = 0u8;
+                            ::core::result::Result::Ok(_) => {
                                 break 'try_branches;
                             }
-                            Err(_) => {
+                            ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
-                                builder.rollback_to(attempt_len);
                             }
                         }
                     }
                     {
                         let attempt_p = *p;
-                        let attempt_len = builder.position();
                         match parse_flat_CssPrettyParser_supportsRule(
                             input,
                             p,
                             state,
                             builder,
                         ) {
-                            Ok(_) => {
-                                __wrap_chosen_meta = 1u8;
+                            ::core::result::Result::Ok(_) => {
                                 break 'try_branches;
                             }
-                            Err(_) => {
+                            ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
-                                builder.rollback_to(attempt_len);
                             }
                         }
                     }
                     {
                         let attempt_p = *p;
-                        let attempt_len = builder.position();
                         match parse_flat_CssPrettyParser_fontFaceRule(
                             input,
                             p,
                             state,
                             builder,
                         ) {
-                            Ok(_) => {
-                                __wrap_chosen_meta = 2u8;
+                            ::core::result::Result::Ok(_) => {
                                 break 'try_branches;
                             }
-                            Err(_) => {
+                            ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
-                                builder.rollback_to(attempt_len);
                             }
                         }
                     }
                     {
                         let attempt_p = *p;
-                        let attempt_len = builder.position();
                         match parse_flat_CssPrettyParser_importRule(
                             input,
                             p,
                             state,
                             builder,
                         ) {
-                            Ok(_) => {
-                                __wrap_chosen_meta = 3u8;
+                            ::core::result::Result::Ok(_) => {
                                 break 'try_branches;
                             }
-                            Err(_) => {
+                            ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
-                                builder.rollback_to(attempt_len);
                             }
                         }
                     }
                     {
                         let attempt_p = *p;
-                        let attempt_len = builder.position();
                         match parse_flat_CssPrettyParser_genericAtRule(
                             input,
                             p,
                             state,
                             builder,
                         ) {
-                            Ok(_) => {
-                                __wrap_chosen_meta = 4u8;
+                            ::core::result::Result::Ok(_) => {
                                 break 'try_branches;
                             }
-                            Err(_) => {
+                            ::core::result::Result::Err(_) => {
                                 *p = attempt_p;
-                                builder.rollback_to(attempt_len);
                             }
                         }
                     }
@@ -3439,33 +2941,33 @@ mod __cssprettyparser_emit_impl {
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        let _ = __wrap_chosen_meta;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Wrap-shape parse function.
+    /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
-    /// Transparent dispatcher — skip leading ws, byte-dispatch
-    /// to the chosen branch's shape fn, return that shape fn's
-    /// offset unchanged. No outer compound emission; the
-    /// branch's own shape fn owns the tape record.
+    /// Opens a Wrap frame on the builder, dispatches to the matched
+    /// branch's shape fn (which carries its own
+    /// begin_compound/end_compound for compound branches and the
+    /// matching push_leaf_with_* for scalar branches), stamps the
+    /// chosen branch index via push_branch_tag, then closes the
+    /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
+    /// forward-the-single-child semantics.
     ///
-    /// AX.W0a.2.f — compound; see `flat.rs` emission for the
-    /// `#[inline]` downgrade rationale (LLVM inline-cycle
-    /// collapse vs hard-requirement inliner abort).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_wrap_CssPrettyParser_ruleItem(
-        input: &[u8],
+    pub fn parse_wrap_CssPrettyParser_ruleItem<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let mut __wrap_chosen_meta: u8 = 0;
-        let first = *input
-            .get(*p)
+        let first = __shape_support_CssPrettyParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -3473,15 +2975,12 @@ mod __cssprettyparser_emit_impl {
             match first {
                 64u8 => {
                     let attempt_p = *p;
-                    let attempt_len = builder.position();
                     match parse_wrap_CssPrettyParser_atRule(input, p, state, builder) {
-                        Ok(_) => {
-                            __wrap_chosen_meta = 1u8;
+                        ::core::result::Result::Ok(_) => {
                             break 'try_branches;
                         }
-                        Err(_) => {
+                        ::core::result::Result::Err(_) => {
                             *p = attempt_p;
-                            builder.rollback_to(attempt_len);
                         }
                     }
                 }
@@ -3489,20 +2988,17 @@ mod __cssprettyparser_emit_impl {
             }
             {
                 let attempt_p = *p;
-                let attempt_len = builder.position();
                 match parse_flat_CssPrettyParser_qualifiedRule(
                     input,
                     p,
                     state,
                     builder,
                 ) {
-                    Ok(_) => {
-                        __wrap_chosen_meta = 0u8;
+                    ::core::result::Result::Ok(_) => {
                         break 'try_branches;
                     }
-                    Err(_) => {
+                    ::core::result::Result::Err(_) => {
                         *p = attempt_p;
-                        builder.rollback_to(attempt_len);
                     }
                 }
             }
@@ -3512,219 +3008,182 @@ mod __cssprettyparser_emit_impl {
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        let _ = __wrap_chosen_meta;
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
     ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
     ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_ruleList(
-        input: &[u8],
+    pub fn parse_flat_CssPrettyParser_ruleList<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
     > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
-            {
-                let repeat_lo = *p as u32;
-                let repeat_child = builder.enter_post_order_children();
-                let mut iter_count: u32 = 0;
-                loop {
-                    let save_p = *p;
-                    let save_cols = builder.position();
-                    let iter_lo = *p as u32;
-                    let iter_child = builder.enter_post_order_children();
-                    let attempt = (|| -> ::core::result::Result<
-                        (),
-                        crate::runtime::tape::DtaError,
-                    > {
-                        {
-                            let span_lo = *p as u32;
-                            let Some(match_len) = __regex_scan_CssPrettyParser(
-                                "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
-                                input,
-                                *p,
-                            ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                                    offset: span_lo,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                                });
-                            };
-                            *p += match_len as usize;
-                            let span_hi = *p as u32;
-                            let _ = builder
-                                .push_leaf_with(
-                                    crate::runtime::tape::TapeKind::Span,
-                                    span_lo,
-                                    span_hi,
-                                    13u8,
-                                    0,
-                                    crate::runtime::tape::PayloadData::None,
-                                );
-                        }
-                        let _ = ({
-                            parse_wrap_CssPrettyParser_ruleItem(input, p, state, builder)
-                        })?;
-                        Ok(())
-                    })();
-                    if attempt.is_err() {
-                        *p = save_p;
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    if *p == save_p {
-                        builder.rollback_to(save_cols);
-                        builder.exit_post_order_children();
-                        break;
-                    }
-                    let iter_hi = *p as u32;
-                    let __iter_off = builder
-                        .begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
-                            iter_lo,
-                            0u8,
-                            0u8,
-                            0u16,
-                        );
-                    builder
-                        .end_compound_post_order(
-                            __iter_off,
-                            iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
-                        );
-                    iter_count = iter_count.saturating_add(1);
-                }
-                if iter_count < (0usize as u32) {
-                    builder.exit_post_order_children();
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                let repeat_hi = *p as u32;
-                let __repeat_off = builder
-                    .begin_compound_post(
-                        crate::runtime::tape::TapeKind::Repeat,
-                        repeat_lo,
-                        0u8,
-                        0u8,
-                        0u16,
-                    );
-                builder
-                    .end_compound_post_order(
-                        __repeat_off,
-                        repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
-                    );
-            }
-            Ok(())
-        })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                13u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
-    }
-    /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-    /// walker-tape-identical.
-    ///
-    /// Emits one outer Seq compound plus per-position inner
-    /// records. Ref / Regex / Alt positions recurse through the
-    /// grammar's value-position dispatcher (the walker's
-    /// authoritative state path).
-    ///
-    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-    /// sits on a cross-shape recursive edge
-    /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-    /// peer shape fn → back here through the grammar's `__value`
-    /// discriminant). LLVM's inliner collapses plain `#[inline]`
-    /// candidates only when profitable and bails cleanly on
-    /// detected recursion; `#[inline(always)]` would recurse the
-    /// inliner until stack exhaustion (observed SIGBUS in
-    /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-    pub fn parse_flat_CssPrettyParser_stylesheet(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_CssPrettyParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let span_lo = *p as u32;
-        let __save_cols = builder.position();
-        let outer_child = builder.enter_post_order_children();
-        let __post_body: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        let __ruleList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 13u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("ruleList"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __ruleList_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(builder, &__ruleList_layout);
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
         {
             {
                 {
-                    let span_lo = *p as u32;
+                    let mut __iter_count: u32 = 0;
+                    loop {
+                        if __iter_count >= 4294967295u32 {
+                            break;
+                        }
+                        let __iter_save_p = *p;
+                        if input.get(*p).is_none() {
+                            break;
+                        }
+                        let __iter_result: ::core::result::Result<
+                            (),
+                            crate::runtime::tape::DtaError,
+                        > = (|| {
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_CssPrettyParser(
+                                    "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
+                                    input,
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    });
+                                };
+                                *p += match_len as usize;
+                            }
+                            let _ = ({
+                                parse_wrap_CssPrettyParser_ruleItem(
+                                    input,
+                                    p,
+                                    state,
+                                    builder,
+                                )
+                            })?;
+                            Ok(())
+                        })();
+                        match __iter_result {
+                            Ok(()) => {
+                                if *p == __iter_save_p {
+                                    break;
+                                }
+                                __iter_count += 1;
+                            }
+                            Err(_) => {
+                                *p = __iter_save_p;
+                                break;
+                            }
+                        }
+                    }
+                    if __iter_count < 0u32 {
+                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            offset: *p as u32,
+                            failing_state: crate::runtime::tape::DtaStateId::NONE,
+                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
+                        });
+                    }
+                }
+            }
+            ::core::result::Result::Ok(())
+        })();
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __ruleList_handle);
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+    }
+    /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
+    /// **struct-direct body**. Targets the grammar's concrete
+    /// `StructBuilder` (JSON / CSS L4 / Sheets per the
+    /// resolver's `SubstrateBinding`).
+    ///
+    /// Walker-tape compound emission is replaced by typed
+    /// `begin_compound` / `end_compound` calls against the in-flight
+    /// frame stack. Per-position pushes (string keys, recursive
+    /// value calls, byte literals) land directly on the topmost
+    /// open frame.
+    ///
+    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// with sibling shape fns under struct-direct mode; the
+    /// offset is unused by struct-direct callers.
+    ///
+    /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
+    /// cross-shape recursive edge (Flat → Wrap → Flat through
+    /// the grammar's `__value` discriminant). LLVM's inliner
+    /// collapses plain `#[inline]` candidates only when
+    /// profitable and bails cleanly on detected recursion.
+    #[inline]
+    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
+    pub fn parse_flat_CssPrettyParser_stylesheet<'p>(
+        input: &'p [u8],
+        p: &mut usize,
+        state: &mut __shape_support_CssPrettyParser::ScanState,
+        builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
+    ) -> ::core::result::Result<
+        crate::runtime::tape::TapeOffset,
+        crate::runtime::tape::DtaError,
+    > {
+        let __stylesheet_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
+            rule_id: 14u32 as ::bbnf_ir::RuleId,
+            rule_name: ::std::string::String::from("stylesheet"),
+            kind: ::bbnf_ir::registry::LayoutKind::Struct,
+            rule_type: ::bbnf_ir::TypeDesc::Span,
+            fields: ::std::vec::Vec::new(),
+        };
+        let __stylesheet_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::begin_compound(
+            builder,
+            &__stylesheet_layout,
+        );
+        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
+        {
+            {
+                {
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_CssPrettyParser(
                         "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            14u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
             {
@@ -3735,54 +3194,28 @@ mod __cssprettyparser_emit_impl {
             }
             {
                 {
-                    let span_lo = *p as u32;
+                    let __scan_start = *p;
                     let Some(match_len) = __regex_scan_CssPrettyParser(
                         "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*",
                         input,
                         *p,
                     ) else {
                         return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
-                            offset: span_lo,
+                            offset: __scan_start as u32,
                             failing_state: crate::runtime::tape::DtaStateId::NONE,
                             failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
-                    let span_hi = *p as u32;
-                    let _ = builder
-                        .push_leaf_with(
-                            crate::runtime::tape::TapeKind::Span,
-                            span_lo,
-                            span_hi,
-                            14u8,
-                            0,
-                            crate::runtime::tape::PayloadData::None,
-                        );
                 }
             }
-            Ok(())
+            ::core::result::Result::Ok(())
         })();
-        if let ::core::result::Result::Err(__err) = __post_body {
-            builder.rollback_to(__save_cols);
-            builder.exit_post_order_children();
-            return ::core::result::Result::Err(__err);
-        }
-        let span_hi = *p as u32;
-        let outer_off = builder
-            .begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                14u8,
-                0u8,
-                0u16,
-            );
-        builder
-            .end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-        Ok(crate::runtime::tape::TapeOffset(outer_off))
+        <crate::runtime::css_pretty::CssPrettyStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::end_compound(builder, __stylesheet_handle);
+        __body_result?;
+        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AW-V.W4-fix — visitor-path Flat-shape parse function.
     ///
@@ -5082,11 +4515,11 @@ mod __cssprettyparser_emit_impl {
     /// recursion rationale.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_CssPrettyParser_stylesheet(
-        input: &[u8],
+    pub fn parse_CssPrettyParser_stylesheet<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -5099,11 +4532,11 @@ mod __cssprettyparser_emit_impl {
     /// AX.W0a.2.f — compound; plain `#[inline]`.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_CssPrettyParser_stylesheet__value(
-        input: &[u8],
+    pub fn parse_CssPrettyParser_stylesheet__value<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -9538,21 +8971,19 @@ mod __cssprettyparser_emit_impl {
         pub fn parse(
             input: &str,
         ) -> ::core::result::Result<
-            crate::runtime::Parsed<'_, Self>,
+            crate::runtime::css_pretty::CssPrettyDocument<'_>,
             crate::runtime::ParseErr,
         > {
             let __input_bytes = input.as_bytes();
             let mut state = __shape_support_CssPrettyParser::ScanState::new();
-            let mut tape = crate::runtime::tape::Tape::<
-                (),
-            >::with_capacity(GRAMMAR_PROFILE.capacity_for(input.len()));
-            let root_off = {
+            let mut builder = crate::runtime::css_pretty::CssPrettyStructBuilder::new();
+            {
                 let mut pos: usize = 0;
-                let off = parse_CssPrettyParser_stylesheet(
+                parse_CssPrettyParser_stylesheet(
                         __input_bytes,
                         &mut pos,
                         &mut state,
-                        &mut tape,
+                        &mut builder,
                     )
                     .map_err(|e| match e {
                         crate::runtime::tape::DtaError::Syntax { offset, .. } => {
@@ -9585,17 +9016,8 @@ mod __cssprettyparser_emit_impl {
                         rule: None,
                     });
                 }
-                off
-            };
-            let tape: crate::runtime::tape::Tape<()> = tape
-                .finish(root_off.0)
-                .map_err(crate::runtime::ParseErr::Tape)?;
-            let tape: crate::runtime::tape::Tape<Self> = unsafe {
-                ::core::mem::transmute(tape)
-            };
-            ::core::result::Result::Ok(
-                crate::runtime::Parsed::new(tape, input, root_off),
-            )
+            }
+            ::core::result::Result::Ok(builder.finalise(input))
         }
     }
     #[inline]

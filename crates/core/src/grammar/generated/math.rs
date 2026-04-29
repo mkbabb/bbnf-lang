@@ -495,19 +495,22 @@ mod __mathparser_emit_impl {
             true
         }
     }
-    /// AW-V.W4-fix — per-grammar HRegex-shape parse function.
+    /// AZ-I.W2-act.B3 — per-grammar HRegex-shape parse function,
+    /// **struct-direct body**.
     ///
-    /// Regex scan via the per-grammar adapter; emits a
-    /// `TapeKind::Regex` leaf carrying the matched span. Decoder
-    /// hooks (host_fn payloads) are wired at the dispatcher level
-    /// post-scan; the raw Span-leaf path is the default.
-    #[inline(always)]
+    /// Runs the per-grammar regex scan, decodes the matched bytes
+    /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
+    /// or Expr { Input, return_type }), and routes the decoded
+    /// value through the StructBuilder trait. Returns
+    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// shape fns under struct-direct mode.
+    #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_MathParser_number(
-        input: &[u8],
+    pub fn parse_hregex_MathParser_number<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::math::MathStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -526,16 +529,14 @@ mod __mathparser_emit_impl {
         };
         *p += match_len as usize;
         let span_hi = *p as u32;
-        let leaf_off = builder
-            .push_leaf_with(
-                crate::runtime::tape::TapeKind::Regex,
-                span_lo,
-                span_hi,
-                0u8,
-                0,
-                crate::runtime::tape::PayloadData::None,
-            );
-        Ok(leaf_off)
+        <crate::runtime::math::MathStructBuilder<
+            'p,
+        > as crate::runtime::StructBuilder>::push_leaf_with_str(
+            builder,
+            core::str::from_utf8(&input[span_lo as usize..span_hi as usize])
+                .unwrap_or(""),
+        );
+        Ok(crate::runtime::tape::TapeOffset::NONE)
     }
     /// AW-V.W4-fix — visitor-path HRegex-shape parse function.
     ///
@@ -616,11 +617,11 @@ mod __mathparser_emit_impl {
     /// recursion rationale.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_MathParser_number(
-        input: &[u8],
+    pub fn parse_MathParser_number<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::math::MathStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -633,11 +634,11 @@ mod __mathparser_emit_impl {
     /// AX.W0a.2.f — compound; plain `#[inline]`.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_MathParser_number__value(
-        input: &[u8],
+    pub fn parse_MathParser_number__value<'p>(
+        input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
-        builder: &mut crate::runtime::tape::Tape<()>,
+        builder: &mut crate::runtime::math::MathStructBuilder<'p>,
     ) -> ::core::result::Result<
         crate::runtime::tape::TapeOffset,
         crate::runtime::tape::DtaError,
@@ -1485,21 +1486,19 @@ mod __mathparser_emit_impl {
         pub fn parse(
             input: &str,
         ) -> ::core::result::Result<
-            crate::runtime::Parsed<'_, Self>,
+            crate::runtime::math::MathDocument<'_>,
             crate::runtime::ParseErr,
         > {
             let __input_bytes = input.as_bytes();
             let mut state = __shape_support_MathParser::ScanState::new();
-            let mut tape = crate::runtime::tape::Tape::<
-                (),
-            >::with_capacity(GRAMMAR_PROFILE.capacity_for(input.len()));
-            let root_off = {
+            let mut builder = crate::runtime::math::MathStructBuilder::new();
+            {
                 let mut pos: usize = 0;
-                let off = parse_MathParser_number(
+                parse_MathParser_number(
                         __input_bytes,
                         &mut pos,
                         &mut state,
-                        &mut tape,
+                        &mut builder,
                     )
                     .map_err(|e| match e {
                         crate::runtime::tape::DtaError::Syntax { offset, .. } => {
@@ -1532,17 +1531,8 @@ mod __mathparser_emit_impl {
                         rule: None,
                     });
                 }
-                off
-            };
-            let tape: crate::runtime::tape::Tape<()> = tape
-                .finish(root_off.0)
-                .map_err(crate::runtime::ParseErr::Tape)?;
-            let tape: crate::runtime::tape::Tape<Self> = unsafe {
-                ::core::mem::transmute(tape)
-            };
-            ::core::result::Result::Ok(
-                crate::runtime::Parsed::new(tape, input, root_off),
-            )
+            }
+            ::core::result::Result::Ok(builder.finalise(input))
         }
     }
     #[inline]

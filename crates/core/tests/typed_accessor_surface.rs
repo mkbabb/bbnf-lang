@@ -607,24 +607,17 @@ fn bbnf_compile_time_accessors() {
 
 #[test]
 fn ebnf_compile_time_accessors() {
-    // EBNF's shape-emitter parse path has a pre-existing regression
-    // at master (see ebnf_prettify::parse_single_rule — broken before
-    // this wave landed). The compile-time gate remains the
-    // `the proc-macro derive (retired B2)` above: if the emitter drops a view type or
-    // accessor method, the file fails to compile. We prove the
-    // generated types exist by referencing them in a never-executed
-    // closure below — the closure body compiles under Rust's type
-    // checker but runtime hits `return early` so broken parse paths
-    // don't propagate.
+    // AZ-II.cutover.M Phase 3c — EBNF flipped to struct-direct; the
+    // root view is the typed `EbnfView` document focus, not a tape
+    // cursor. We exercise the struct-direct surface (`kind()`, the
+    // typed children/value path) via the closure body, plus the
+    // legacy cursor-backed `EbnfParserNodeView` accessors that remain
+    // emitted alongside for tape consumers.
     let _never_called = || -> Option<()> {
-        let parsed = EbnfParser::parse("letter = \"a\";").ok()?;
-        let view = parsed.view();
-        let _ = view.cursor();
+        let doc = EbnfParser::parse("letter = \"a\";").ok()?;
+        let view = doc.view();
         let _ = view.input();
         let _ = view.kind();
-        let _ = view.span();
-        let _ = view.rule_kind();
-        let _: Vec<_> = view.children().collect();
         Some(())
     };
     // Direct compile-time proof that the view structs exist:
@@ -637,16 +630,13 @@ fn ebnf_compile_time_accessors() {
 
 #[test]
 fn bnf_compile_time_accessors() {
-    // Same rationale as EBNF: the derive is the compile-time gate.
+    // AZ-II.cutover.M Phase 3c — BNF flipped to struct-direct; same
+    // surface narrowing as EBNF above.
     let _never_called = || -> Option<()> {
-        let parsed = BnfParser::parse("<foo> ::= \"a\"\n").ok()?;
-        let view = parsed.view();
-        let _ = view.cursor();
+        let doc = BnfParser::parse("<foo> ::= \"a\"\n").ok()?;
+        let view = doc.view();
         let _ = view.input();
         let _ = view.kind();
-        let _ = view.span();
-        let _ = view.rule_kind();
-        let _: Vec<_> = view.children().collect();
         Some(())
     };
     fn _require_view_types<'p>(

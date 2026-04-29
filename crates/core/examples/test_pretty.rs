@@ -11,14 +11,17 @@ use ::bbnf::grammar::generated::css_pretty::*;
 /// at the stylesheet level and reports whether the parse succeeded
 /// and, on failure, the byte offset the tape-first parser halted at.
 fn probe(label: &str, input: &str) {
+    // AZ-II.cutover.M Phase 3 — `CssPrettyParser::parse` is on the
+    // struct-direct path; the returned `CssPrettyDocument`'s `view()`
+    // exposes `kind()` directly without a tape cursor.
     match CssPrettyParser::parse(input) {
-        Ok(parsed) => {
-            let view = parsed.view();
+        Ok(doc) => {
+            let view = doc.view();
             eprintln!(
                 "{:20} ok len={} root_kind={:?}",
                 label,
                 input.len(),
-                view.cursor().kind()
+                view.kind()
             );
         }
         Err(ParseErr::Syntax { offset, rule }) => {

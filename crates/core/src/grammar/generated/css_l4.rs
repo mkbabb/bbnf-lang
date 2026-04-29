@@ -4911,26 +4911,206 @@ mod __cssl4parser_emit_impl {
         };
         let __handle = builder.begin_compound(&__layout);
         'try_branches: loop {
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
+            {
+                let at = *p;
+                let end = at + 6usize;
+                if input.len() >= end
+                    && input[at..end] == [118u8, 105u8, 111u8, 108u8, 101u8, 116u8]
+                {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 5usize;
+                if input.len() >= end
+                    && input[at..end] == [107u8, 104u8, 97u8, 107u8, 105u8]
+                {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                let save_p = *p;
+                let attempt: ::core::result::Result<(), ()> = (|| {
+                    {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [102u8] {
+                            return ::core::result::Result::Err(());
+                        }
+                        *p = end;
+                    }
+                    Ok(())
+                })();
+                match attempt {
+                    Ok(()) => {
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(6u32);
+                        break 'try_branches;
+                    }
+                    Err(()) => {
+                        *p = save_p;
+                    }
+                }
+            }
+            {
+                let save_p = *p;
+                let attempt: ::core::result::Result<(), ()> = (|| {
+                    {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [104u8] {
+                            return ::core::result::Result::Err(());
+                        }
+                        *p = end;
+                    }
+                    {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [111u8] {
+                            return ::core::result::Result::Err(());
+                        }
+                        *p = end;
+                    }
+                    Ok(())
+                })();
+                match attempt {
+                    Ok(()) => {
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(8u32);
+                        break 'try_branches;
+                    }
+                    Err(()) => {
+                        *p = save_p;
+                    }
+                }
+            }
+            {
+                let save_p = *p;
+                let attempt: ::core::result::Result<(), ()> = (|| {
+                    {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [110u8] {
+                            return ::core::result::Result::Err(());
+                        }
+                        *p = end;
+                    }
+                    {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [97u8] {
+                            return ::core::result::Result::Err(());
+                        }
+                        *p = end;
+                    }
+                    {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [118u8] {
+                            return ::core::result::Result::Err(());
+                        }
+                        *p = end;
+                    }
+                    Ok(())
+                })();
+                match attempt {
+                    Ok(()) => {
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(12u32);
+                        break 'try_branches;
+                    }
+                    Err(()) => {
+                        *p = save_p;
+                    }
+                }
+            }
+            {
+                let save_p = *p;
+                let attempt: ::core::result::Result<(), ()> = (|| {
+                    {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [116u8] {
+                            return ::core::result::Result::Err(());
+                        }
+                        *p = end;
+                    }
+                    Ok(())
+                })();
+                match attempt {
+                    Ok(()) => {
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(17u32);
+                        break 'try_branches;
+                    }
+                    Err(()) => {
+                        *p = save_p;
+                    }
+                }
+            }
+            {
+                let save_p = *p;
+                let attempt: ::core::result::Result<(), ()> = (|| {
+                    {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [121u8] {
+                            return ::core::result::Result::Err(());
+                        }
+                        *p = end;
+                    }
+                    {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [101u8] {
+                            return ::core::result::Result::Err(());
+                        }
+                        *p = end;
+                    }
+                    {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [108u8] {
+                            return ::core::result::Result::Err(());
+                        }
+                        *p = end;
+                    }
+                    {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [108u8] {
+                            return ::core::result::Result::Err(());
+                        }
+                        *p = end;
+                    }
+                    {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [111u8] {
+                            return ::core::result::Result::Err(());
+                        }
+                        *p = end;
+                    }
+                    Ok(())
+                })();
+                match attempt {
+                    Ok(()) => {
+                        builder.push_leaf_with_unit();
+                        builder.push_branch_tag(19u32);
+                        break 'try_branches;
+                    }
+                    Err(()) => {
+                        *p = save_p;
+                    }
+                }
+            }
             return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -10091,11 +10271,62 @@ mod __cssl4parser_emit_impl {
         };
         let __handle = builder.begin_compound(&__layout);
         'try_branches: loop {
-            {}
-            {}
-            {}
-            {}
-            {}
+            {
+                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                    "[-+]?\\d*n\\s*[+-]\\s*\\d+",
+                    input,
+                    *p,
+                ) {
+                    *p += match_len as usize;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                    "[-+]?\\d*n",
+                    input,
+                    *p,
+                ) {
+                    *p += match_len as usize;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                    "[-+]?\\d+",
+                    input,
+                    *p,
+                ) {
+                    *p += match_len as usize;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(2u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 4usize;
+                if input.len() >= end && input[at..end] == [101u8, 118u8, 101u8, 110u8] {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(3u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 3usize;
+                if input.len() >= end && input[at..end] == [111u8, 100u8, 100u8] {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(4u32);
+                    break 'try_branches;
+                }
+            }
             return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -10584,9 +10815,38 @@ mod __cssl4parser_emit_impl {
         };
         let __handle = builder.begin_compound(&__layout);
         'try_branches: loop {
-            {}
-            {}
-            {}
+            {
+                let at = *p;
+                let end = at + 4usize;
+                if input.len() >= end && input[at..end] == [102u8, 114u8, 111u8, 109u8] {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 2usize;
+                if input.len() >= end && input[at..end] == [116u8, 111u8] {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                if let ::core::option::Option::Some(match_len) = __regex_scan_CssL4Parser(
+                    "\\d+%",
+                    input,
+                    *p,
+                ) {
+                    *p += match_len as usize;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(2u32);
+                    break 'try_branches;
+                }
+            }
             return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -14456,7 +14716,6 @@ mod __cssl4parser_emit_impl {
                     }
                 }
             }
-            {}
             return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -18966,7 +19225,6 @@ mod __cssl4parser_emit_impl {
                     }
                 }
             }
-            {}
             {
                 let attempt_p = *p;
                 match {
@@ -19224,8 +19482,26 @@ mod __cssl4parser_emit_impl {
                     }
                 }
             }
-            {}
-            {}
+            {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() >= end && input[at..end] == [44u8] {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(11u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 1usize;
+                if input.len() >= end && input[at..end] == [47u8] {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(12u32);
+                    break 'try_branches;
+                }
+            }
             {
                 let attempt_p = *p;
                 match {

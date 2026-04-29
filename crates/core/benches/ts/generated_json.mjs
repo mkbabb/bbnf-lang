@@ -21,182 +21,186 @@ const __RE0 = new RegExp("\"(?:[^\"\\\\]|\\\\(?:[\"\\\\\\/bfnrt]|u[0-9a-fA-F]{4}
 
 // ── Parser functions ─────────────────────────────────────────────
 
-function __bool(s) {
-  let __lit_alt4 = null;
-if (__lit_alt4 === null && s.input.startsWith("false", s.offset)) { __lit_alt4 = ((() => { let __lit0 = null;
-if (s.input.startsWith("false", s.offset)) {
-  __lit0 = span(s.offset, s.offset + 5);
-  s.offset += 5;
-}
-const __map1 = (__lit0) !== null ? false : null;
-return __map1; })()); }
-if (__lit_alt4 === null && s.input.startsWith("true", s.offset)) { __lit_alt4 = ((() => { let __lit2 = null;
-if (s.input.startsWith("true", s.offset)) {
-  __lit2 = span(s.offset, s.offset + 4);
+function __null(s) {
+  let __lit0 = null;
+if (s.input.startsWith("null", s.offset)) {
+  __lit0 = span(s.offset, s.offset + 4);
   s.offset += 4;
 }
-const __map3 = (__lit2) !== null ? true : null;
-return __map3; })()); }
+const __map1 = (__lit0) !== null ? 0 : null;
 
-  return __lit_alt4;
+  return __map1;
+}
+
+function __bool(s) {
+  let __lit_alt6 = null;
+if (__lit_alt6 === null && s.input.startsWith("false", s.offset)) { __lit_alt6 = ((() => { let __lit2 = null;
+if (s.input.startsWith("false", s.offset)) {
+  __lit2 = span(s.offset, s.offset + 5);
+  s.offset += 5;
+}
+const __map3 = (__lit2) !== null ? false : null;
+return __map3; })()); }
+if (__lit_alt6 === null && s.input.startsWith("true", s.offset)) { __lit_alt6 = ((() => { let __lit4 = null;
+if (s.input.startsWith("true", s.offset)) {
+  __lit4 = span(s.offset, s.offset + 4);
+  s.offset += 4;
+}
+const __map5 = (__lit4) !== null ? true : null;
+return __map5; })()); }
+
+  return __lit_alt6;
 }
 
 function __string(s) {
   __RE0.lastIndex = s.offset;
-const __re5_m = __RE0.exec(s.input);
-let __re5 = null;
-if (__re5_m) { __re5 = span(s.offset, __RE0.lastIndex); s.offset = __RE0.lastIndex; }
-const __map6 = (__re5) !== null ? decode_json_string_to_arena(__input) : null;
+const __re7_m = __RE0.exec(s.input);
+let __re7 = null;
+if (__re7_m) { __re7 = span(s.offset, __RE0.lastIndex); s.offset = __RE0.lastIndex; }
+const __map8 = (__re7) !== null ? decode_json_string_to_arena(__input) : null;
 
-  return __map6;
+  return __map8;
 }
 
-function __array(s) {
-  let __lit7 = null;
-if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 91) {
-  __lit7 = span(s.offset, s.offset + 1);
-  s.offset += 1;
-}
-const ___14 = __lit7;
-if (___14 === null) return null;
-while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
-const __start10 = s.offset;
-let __count11 = 0;
-if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 93) break;
-    {
-  const __r = __value(s);
-  if (__r !== null) __count11++;
-}
-if (__count11 > 0) {
-  while (true) {
-    if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 93) break;
-    const __cp13 = s.offset;
-    const __sep = ((() => { while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
-let __lit8 = null;
-if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 44) {
-  __lit8 = span(s.offset, s.offset + 1);
-  s.offset += 1;
-}
-const __ws_inner = __lit8;
-if (__ws_inner === null) return null;
-while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
-return __ws_inner; })());
-    if (__sep === null) break;
-    const __r = __value(s);
-    if (__r !== null) { __count11++; } else { s.offset = __cp13; break; }
-  }
-}
-const __sep12 = __count11 >= 0 ? span(__start10, s.offset) : null;
-const __ws_inner = __sep12;
-if (__ws_inner === null) return null;
-while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
-const __kept15 = __ws_inner;
-if (__kept15 === null) return null;
-let __lit9 = null;
-if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 93) {
+function __object(s) {
+  let __lit9 = null;
+if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 123) {
   __lit9 = span(s.offset, s.offset + 1);
   s.offset += 1;
 }
 const ___16 = __lit9;
 if (___16 === null) return null;
-
-  return __kept15;
-}
-
-function __pair(s) {
-  const __v19 = __string(s);
-if (__v19 === null) return null;
 while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
-let __lit17 = null;
-if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 58) {
-  __lit17 = span(s.offset, s.offset + 1);
-  s.offset += 1;
-}
-const __ws_inner = __lit17;
-if (__ws_inner === null) return null;
-while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
-const ___18 = __ws_inner;
-if (___18 === null) return null;
-const __v20 = __value(s);
-if (__v20 === null) return null;
-
-  return [__v19, __v20];
-}
-
-function __object(s) {
-  let __lit21 = null;
-if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 123) {
-  __lit21 = span(s.offset, s.offset + 1);
-  s.offset += 1;
-}
-const ___28 = __lit21;
-if (___28 === null) return null;
-while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
-const __start24 = s.offset;
-let __count25 = 0;
+const __start12 = s.offset;
+let __count13 = 0;
 if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 125) break;
     {
   const __r = __pair(s);
-  if (__r !== null) __count25++;
+  if (__r !== null) __count13++;
 }
-if (__count25 > 0) {
+if (__count13 > 0) {
   while (true) {
     if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 125) break;
-    const __cp27 = s.offset;
+    const __cp15 = s.offset;
     const __sep = ((() => { while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
-let __lit22 = null;
+let __lit10 = null;
 if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 44) {
-  __lit22 = span(s.offset, s.offset + 1);
+  __lit10 = span(s.offset, s.offset + 1);
   s.offset += 1;
 }
-const __ws_inner = __lit22;
+const __ws_inner = __lit10;
 if (__ws_inner === null) return null;
 while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
 return __ws_inner; })());
     if (__sep === null) break;
     const __r = __pair(s);
-    if (__r !== null) { __count25++; } else { s.offset = __cp27; break; }
+    if (__r !== null) { __count13++; } else { s.offset = __cp15; break; }
   }
 }
-const __sep26 = __count25 >= 0 ? span(__start24, s.offset) : null;
-const __ws_inner = __sep26;
+const __sep14 = __count13 >= 0 ? span(__start12, s.offset) : null;
+const __ws_inner = __sep14;
 if (__ws_inner === null) return null;
 while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
-const __kept29 = __ws_inner;
-if (__kept29 === null) return null;
-let __lit23 = null;
+const __kept17 = __ws_inner;
+if (__kept17 === null) return null;
+let __lit11 = null;
 if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 125) {
-  __lit23 = span(s.offset, s.offset + 1);
+  __lit11 = span(s.offset, s.offset + 1);
   s.offset += 1;
 }
-const ___30 = __lit23;
-if (___30 === null) return null;
+const ___18 = __lit11;
+if (___18 === null) return null;
 
-  return __kept29;
+  return __kept17;
+}
+
+function __array(s) {
+  let __lit19 = null;
+if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 91) {
+  __lit19 = span(s.offset, s.offset + 1);
+  s.offset += 1;
+}
+const ___26 = __lit19;
+if (___26 === null) return null;
+while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
+const __start22 = s.offset;
+let __count23 = 0;
+if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 93) break;
+    {
+  const __r = __value(s);
+  if (__r !== null) __count23++;
+}
+if (__count23 > 0) {
+  while (true) {
+    if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 93) break;
+    const __cp25 = s.offset;
+    const __sep = ((() => { while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
+let __lit20 = null;
+if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 44) {
+  __lit20 = span(s.offset, s.offset + 1);
+  s.offset += 1;
+}
+const __ws_inner = __lit20;
+if (__ws_inner === null) return null;
+while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
+return __ws_inner; })());
+    if (__sep === null) break;
+    const __r = __value(s);
+    if (__r !== null) { __count23++; } else { s.offset = __cp25; break; }
+  }
+}
+const __sep24 = __count23 >= 0 ? span(__start22, s.offset) : null;
+const __ws_inner = __sep24;
+if (__ws_inner === null) return null;
+while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
+const __kept27 = __ws_inner;
+if (__kept27 === null) return null;
+let __lit21 = null;
+if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 93) {
+  __lit21 = span(s.offset, s.offset + 1);
+  s.offset += 1;
+}
+const ___28 = __lit21;
+if (___28 === null) return null;
+
+  return __kept27;
+}
+
+function __pair(s) {
+  const __v31 = __string(s);
+if (__v31 === null) return null;
+while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
+let __lit29 = null;
+if (s.offset < s.input.length && s.input.charCodeAt(s.offset) === 58) {
+  __lit29 = span(s.offset, s.offset + 1);
+  s.offset += 1;
+}
+const __ws_inner = __lit29;
+if (__ws_inner === null) return null;
+while (s.offset < s.input.length) { const __c = s.input.charCodeAt(s.offset); if (__c === 32 || __c === 9 || __c === 10 || __c === 13) s.offset++; else break; }
+const ___30 = __ws_inner;
+if (___30 === null) return null;
+const __v32 = __value(s);
+if (__v32 === null) return null;
+
+  return [__v31, __v32];
 }
 
 function __value(s) {
-  let __dispatch36 = null;
+  let __dispatch35 = null;
 if (s.offset < s.input.length) {
   switch (s.input.charCodeAt(s.offset)) {
     case 123:
-      __dispatch36 = __object(s); break;
+      __dispatch35 = __object(s); break;
     case 91:
-      __dispatch36 = __array(s); break;
+      __dispatch35 = __array(s); break;
     case 34:
-      __dispatch36 = __string(s); break;
+      __dispatch35 = __string(s); break;
     case 110:
-      __dispatch36 = ((() => { let __lit31 = null;
-if (s.input.startsWith("null", s.offset)) {
-  __lit31 = span(s.offset, s.offset + 4);
-  s.offset += 4;
-}
-const __map32 = (__lit31) !== null ? 0 : null;
-const __iw33 = __map32;
-return __iw33 !== null ? { tag: "null", value: __iw33 } : null; })()); break;
+      __dispatch35 = __null(s); break;
     case 102:
     case 116:
-      __dispatch36 = __bool(s); break;
+      __dispatch35 = __bool(s); break;
     case 45:
     case 48:
     case 49:
@@ -208,18 +212,18 @@ return __iw33 !== null ? { tag: "null", value: __iw33 } : null; })()); break;
     case 55:
     case 56:
     case 57:
-      __dispatch36 = ((() => { const __numRe = /[-+]?(?:[0-9]*\.)?[0-9]+(?:[eE][-+]?[0-9]+)?/y;
+      __dispatch35 = ((() => { const __numRe = /[-+]?(?:[0-9]*\.)?[0-9]+(?:[eE][-+]?[0-9]+)?/y;
 __numRe.lastIndex = s.offset;
 const __numM = __numRe.exec(s.input);
-let __num34 = null;
-if (__numM) { __num34 = parseFloat(__numM[0]); s.offset = __numRe.lastIndex; }
-const __iw35 = __num34;
-return __iw35 !== null ? { tag: "number", value: __iw35 } : null; })()); break;
+let __num33 = null;
+if (__numM) { __num33 = parseFloat(__numM[0]); s.offset = __numRe.lastIndex; }
+const __iw34 = __num33;
+return __iw34 !== null ? { tag: "number", value: __iw34 } : null; })()); break;
     default: break;
   }
 }
 
-  return __dispatch36;
+  return __dispatch35;
 }
 
 // ── Public API ──────────────────────────────────────────────────

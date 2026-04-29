@@ -147,68 +147,58 @@ fn json_rt(input: &str) {
 #[test] fn json_nested()    { json_rt(r#"{"a": [1, 2], "b": {"c": true}}"#); }
 
 // ── CSV ──────────────────────────────────────────────────────────────────────
+//
+// AZ-II.cutover.L Phase 3c — CSV flipped to the struct-direct path; the
+// pre-flip cursor + `serialize_compact` infrastructure lived on the tape
+// substrate and retires alongside W2-act.recovery's JSON / Sheets / CSS L4
+// retirements. The smoke test asserts parse succeeds and the typed
+// document's `input()` returns the source slice — the canonical span-fold
+// invariant the typed runtime carries.
 
-fn csv_emit(input: &str) -> String {
-    let parsed = CsvParser::parse(input).expect("CSV parse failed");
-    let view = parsed.view();
-    let node = CsvParserNodeView::from_cursor(view.cursor(), parsed.input());
-    CsvParser::serialize_compact(node)
+fn csv_parses(input: &str) {
+    let doc = CsvParser::parse(input).expect("CSV parse failed");
+    assert_eq!(doc.input(), input);
 }
 
-fn csv_rt(input: &str) {
-    let s1 = csv_emit(input);
-    let s2 = csv_emit(&s1);
-    assert_eq!(s1, s2, "CSV serialize not idempotent:\n  s1={s1:?}\n  s2={s2:?}");
-}
-
-#[test] fn csv_simple()     { csv_rt("a,b,c"); }
-#[test] fn csv_multi()      { csv_rt("a,b,c\n1,2,3"); }
-#[test] fn csv_quoted()     { csv_rt(r#""hello","world""#); }
-#[test] fn csv_single()     { csv_rt("hello"); }
+#[test] fn csv_simple()     { csv_parses("a,b,c"); }
+#[test] fn csv_multi()      { csv_parses("a,b,c\n1,2,3"); }
+#[test] fn csv_quoted()     { csv_parses(r#""hello","world""#); }
+#[test] fn csv_single()     { csv_parses("hello"); }
 
 // ── BNF ──────────────────────────────────────────────────────────────────────
-
-fn bnf_emit(input: &str) -> String {
-    let parsed = BnfParser::parse(input).expect("BNF parse failed");
-    let view = parsed.view();
-    let node = BnfParserNodeView::from_cursor(view.cursor(), parsed.input());
-    BnfParser::serialize_compact(node)
-}
+//
+// AZ-II.cutover.L Phase 3c — BNF flipped to struct-direct; same retirement
+// as CSV above.
 
 #[test]
 fn bnf_rule() {
-    let e = bnf_emit("<expr> ::= <term> | <expr> \"+\" <term>\n");
-    assert!(!e.is_empty(), "BNF empty");
+    let input = "<expr> ::= <term> | <expr> \"+\" <term>\n";
+    let doc = BnfParser::parse(input).expect("BNF parse failed");
+    assert_eq!(doc.input(), input);
 }
 
 // ── EBNF ─────────────────────────────────────────────────────────────────────
-
-fn ebnf_emit(input: &str) -> String {
-    let parsed = EbnfParser::parse(input).expect("EBNF parse failed");
-    let view = parsed.view();
-    let node = EbnfParserNodeView::from_cursor(view.cursor(), parsed.input());
-    EbnfParser::serialize_compact(node)
-}
+//
+// AZ-II.cutover.L Phase 3c — EBNF flipped to struct-direct; same retirement
+// as CSV above.
 
 #[test]
 fn ebnf_rule() {
-    let e = ebnf_emit("digit = \"0\" | \"1\" | \"2\" ;\n");
-    assert!(!e.is_empty(), "EBNF empty");
+    let input = "digit = \"0\" | \"1\" | \"2\" ;\n";
+    let doc = EbnfParser::parse(input).expect("EBNF parse failed");
+    assert_eq!(doc.input(), input);
 }
 
 // ── Math ─────────────────────────────────────────────────────────────────────
-
-fn math_emit(input: &str) -> String {
-    let parsed = MathParser::parse(input).expect("Math parse failed");
-    let view = parsed.view();
-    let node = MathParserNodeView::from_cursor(view.cursor(), parsed.input());
-    MathParser::serialize_compact(node)
-}
+//
+// AZ-II.cutover.L Phase 3c — Math flipped to struct-direct; same retirement
+// as CSV above.
 
 #[test]
 fn math_num() {
-    let e = math_emit("42");
-    assert!(!e.is_empty(), "Math empty");
+    let input = "42";
+    let doc = MathParser::parse(input).expect("Math parse failed");
+    assert_eq!(doc.input(), input);
 }
 
 // ── Google Sheets ────────────────────────────────────────────────────────────
@@ -266,23 +256,15 @@ fn bbnf_rule() {
 }
 
 // ── CSS Pretty ───────────────────────────────────────────────────────────────
-
-fn css_pretty_emit(input: &str) -> String {
-    let parsed = CssPrettyParser::parse(input).expect("CSS Pretty parse failed");
-    let view = parsed.view();
-    let node = CssPrettyParserNodeView::from_cursor(view.cursor(), parsed.input());
-    CssPrettyParser::serialize_compact(node)
-}
-
-fn css_pretty_rt(input: &str) {
-    let s1 = css_pretty_emit(input);
-    let s2 = css_pretty_emit(&s1);
-    assert_eq!(s1, s2, "CSS Pretty serialize not idempotent:\n  s1={s1:?}\n  s2={s2:?}");
-}
+//
+// AZ-II.cutover.L Phase 3c — CSS Pretty flipped to struct-direct; same
+// retirement as CSV above.
 
 #[test]
 fn css_simple() {
-    css_pretty_rt("body { color: red; }");
+    let input = "body { color: red; }";
+    let doc = CssPrettyParser::parse(input).expect("CSS Pretty parse failed");
+    assert_eq!(doc.input(), input);
 }
 
 // ── CSS L4 (@import-based grammar with host types) ──────────────────────────

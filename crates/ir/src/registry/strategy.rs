@@ -214,20 +214,60 @@ impl EmitStrategy {
                 ts: None,
                 wasm: None,
             },
-            // AZ-II.cutover.E DEFERRED — the CSV / math / BNF / EBNF /
-            // CSS pretty struct-direct substrates exist on disk under
-            // `crates/core/src/runtime/{csv,math,bnf,ebnf,css_pretty}/`
-            // but the resolver-arm activations stay disabled until the
-            // BBNF struct-direct emitter regression (cutover.E
-            // Discovery 1) is repaired. Activating any of these arms
-            // now triggers a regen which depends on a working
-            // BbnfBootstrap::parse — chicken-and-egg locked.
-            //
-            // ("CsvParser", true) => StructDirect { … },
-            // ("MathParser", true) => StructDirect { … },
-            // ("BnfParser", true) => StructDirect { … },
-            // ("EbnfParser", true) => StructDirect { … },
-            // ("CssPrettyParser", true) => StructDirect { … },
+            // AZ-II.cutover.L Phase 3c — non-BBNF struct-direct
+            // activation. cutover.E deferred these arms until the BBNF
+            // struct-direct emitter regression was repaired; cutover.K
+            // Phases 0-2 + cutover.L Phase 3a closed the chicken-and-egg
+            // (BbnfBootstrap::parse self-hosts; pseudoClass /
+            // pseudoElement Alt-of-Ref dispatch lands). The remaining
+            // five arms now activate together — every grammar's
+            // substrate types (`<Grammar>StructBuilder` / `<Grammar>Document`)
+            // already exist under `crates/core/src/runtime/<grammar>/`.
+            ("CsvParser" | "CsvGrammar", true) => EmitStrategy::StructDirect {
+                rust: SubstrateBinding {
+                    builder_path: "crate::runtime::csv::CsvStructBuilder",
+                    document_path: "crate::runtime::csv::CsvDocument",
+                },
+                ts: None,
+                wasm: None,
+            },
+            ("MathParser" | "MathGrammar", true) => EmitStrategy::StructDirect {
+                rust: SubstrateBinding {
+                    builder_path: "crate::runtime::math::MathStructBuilder",
+                    document_path: "crate::runtime::math::MathDocument",
+                },
+                ts: None,
+                wasm: None,
+            },
+            ("BnfParser" | "BnfGrammar", true) => EmitStrategy::StructDirect {
+                rust: SubstrateBinding {
+                    builder_path: "crate::runtime::bnf::BnfStructBuilder",
+                    document_path: "crate::runtime::bnf::BnfDocument",
+                },
+                ts: None,
+                wasm: None,
+            },
+            // AZ-II.cutover.M Phase 3 — EBNF struct-direct activation
+            // is DEFERRED. The grammar's `letter` / `digit` / `symbol`
+            // AltDispatch rules require a deeper struct-direct emitter
+            // surgery (the Alt-of-many-literals pattern with `Minus`
+            // and `-` constraints around `terminal = "'" , character -
+            // "'" , …`). The literal-attempt arm landed in this phase
+            // produces the per-byte dispatch shells correctly, but
+            // EBNF's higher rules consume the per-letter pushes
+            // through layouts the in-flight `EbnfStructBuilder` does
+            // not yet route. EBNF stays on TapeDirect through cutover.M;
+            // a follow-on tranche admits it once the layout-routing
+            // gap closes.
+            // ("EbnfParser" | "EbnfGrammar", true) => StructDirect {…},
+            ("CssPrettyParser" | "CssPrettyGrammar", true) => EmitStrategy::StructDirect {
+                rust: SubstrateBinding {
+                    builder_path: "crate::runtime::css_pretty::CssPrettyStructBuilder",
+                    document_path: "crate::runtime::css_pretty::CssPrettyDocument",
+                },
+                ts: None,
+                wasm: None,
+            },
             // Catch-all — every grammar not yet activated stays on the
             // legacy tape substrate. The `_ => TapeDirect` close is
             // the wave-local revert per W2.md §Reversal — per

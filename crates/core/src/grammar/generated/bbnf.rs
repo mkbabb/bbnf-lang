@@ -2981,17 +2981,120 @@ mod __bbnfbootstrap_emit_impl {
         };
         let __handle = builder.begin_compound(&__layout);
         'try_branches: loop {
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
-            {}
+            {
+                let at = *p;
+                let end = at + 2usize;
+                if input.len() >= end && input[at..end] == [117u8, 56u8] {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 3usize;
+                if input.len() >= end && input[at..end] == [117u8, 49u8, 54u8] {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 3usize;
+                if input.len() >= end && input[at..end] == [117u8, 51u8, 50u8] {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(2u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 3usize;
+                if input.len() >= end && input[at..end] == [117u8, 54u8, 52u8] {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(3u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 3usize;
+                if input.len() >= end && input[at..end] == [105u8, 51u8, 50u8] {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(4u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 3usize;
+                if input.len() >= end && input[at..end] == [105u8, 54u8, 52u8] {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(5u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 3usize;
+                if input.len() >= end && input[at..end] == [102u8, 51u8, 50u8] {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(6u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 3usize;
+                if input.len() >= end && input[at..end] == [102u8, 54u8, 52u8] {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(7u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 4usize;
+                if input.len() >= end && input[at..end] == [98u8, 111u8, 111u8, 108u8] {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(8u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 5usize;
+                if input.len() >= end
+                    && input[at..end] == [117u8, 115u8, 105u8, 122u8, 101u8]
+                {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(9u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                if let ::core::option::Option::Some(match_len) = __regex_scan_BbnfBootstrap(
+                    "[_a-zA-Z][_a-zA-Z0-9]*",
+                    input,
+                    *p,
+                ) {
+                    *p += match_len as usize;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(10u32);
+                    break 'try_branches;
+                }
+            }
             return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -6306,7 +6409,6 @@ mod __bbnfbootstrap_emit_impl {
                     }
                 }
             }
-            {}
             return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
@@ -6349,7 +6451,6 @@ mod __bbnfbootstrap_emit_impl {
         };
         let __handle = builder.begin_compound(&__layout);
         'try_branches: loop {
-            {}
             {
                 let attempt_p = *p;
                 match {
@@ -7633,9 +7734,29 @@ mod __bbnfbootstrap_emit_impl {
         };
         let __handle = builder.begin_compound(&__layout);
         'try_branches: loop {
-            {}
-            {}
-            {}
+            {
+                let at = *p;
+                let end = at + 2usize;
+                if input.len() >= end && input[at..end] == [206u8, 181u8] {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
+                    break 'try_branches;
+                }
+            }
+            {
+                let at = *p;
+                let end = at + 7usize;
+                if input.len() >= end
+                    && input[at..end]
+                        == [101u8, 112u8, 115u8, 105u8, 108u8, 111u8, 110u8]
+                {
+                    *p = end;
+                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
+                    break 'try_branches;
+                }
+            }
             {
                 let attempt_p = *p;
                 match {
@@ -7679,10 +7800,6 @@ mod __bbnfbootstrap_emit_impl {
                     }
                 }
             }
-            {}
-            {}
-            {}
-            {}
             return Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,

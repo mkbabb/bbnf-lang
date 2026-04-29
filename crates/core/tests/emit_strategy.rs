@@ -281,16 +281,21 @@ fn google_sheets_parser_with_empty_registry_routes_tape_direct() {
 #[test]
 fn unknown_grammar_with_populated_registry_routes_tape_direct() {
     // Default fallthrough: any grammar the resolver does not explicitly
-    // admit (CsvParser, EbnfParser, MathParser, BnfParser, BbnfBootstrap)
-    // routes TapeDirect regardless of registry shape. This pins the
-    // negative default so an accidental wildcard match-all in a future
-    // refactor fails here.
+    // admit routes TapeDirect regardless of registry shape. This pins
+    // the negative default so an accidental wildcard match-all in a
+    // future refactor fails here.
+    //
+    // AZ-II.cutover.M Phase 3c — CsvParser, EbnfParser, MathParser,
+    // BnfParser, CssPrettyParser are now all admitted onto StructDirect
+    // alongside JSON / Sheets / CSS L4 / BBNF. The negative-default test
+    // therefore probes a synthetic grammar ident the resolver does not
+    // know about; the catch-all `_ => TapeDirect` arm must still hold.
     let registry = populated_registry();
-    let strategy = EmitStrategy::for_grammar("CsvParser", &registry);
+    let strategy = EmitStrategy::for_grammar("UnknownFutureGrammar", &registry);
     assert_eq!(
         strategy,
         EmitStrategy::TapeDirect,
-        "CsvParser must route TapeDirect (no struct-direct migration in AZ-I)",
+        "UnknownFutureGrammar must route TapeDirect (catch-all default)",
     );
 }
 

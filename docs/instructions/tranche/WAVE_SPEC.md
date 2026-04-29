@@ -42,7 +42,7 @@ Immediately after the header, exactly four lines:
 
 ```
 **Opens after**: <prior wave label, or "tranche open">
-**Agents**: <count> <serial | parallel>
+**Agents**: <count or up-to count> <serial | parallel>
 **Hard gate**: <one-line summary>
 **Status**: <planned | in_progress | complete | complete_with_misses | blocked | superseded>
 ```

@@ -3,7 +3,7 @@
 Use this file to launch an architecture research wave. A research
 wave precedes plan-authoring when a tranche's scope is open-ended
 enough that the design space needs exploration before phases and
-hard gates can be committed. Six worktree-isolated sub-agents
+hard gates can be committed. Up to ten worktree-isolated sub-agents
 brainstorm in parallel; the orchestrator peer-reviews and
 synthesises.
 
@@ -15,11 +15,12 @@ tranches before folding findings into a plan.
 
 ## Sub-agent fan-out
 
-Six sub-agents per wave, isolated worktrees, fastidiously disjoint
-research angles. The concrete angles are chosen per tranche, but
-the shape is canonical:
+Up to ten sub-agents per wave, isolated worktrees, fastidiously
+disjoint research angles. Choose the exact count from the tranche's
+independent lanes; the concrete angles are tranche-specific, but the
+shape is canonical:
 
-- **Four agents** deepen the current architectural substrate —
+- **Four to eight agents** deepen the current architectural substrate —
   for example caching and prefetching, SIMD and scanner kernels,
   bit-packing and information density, parallelism and
   algorithmic transpositions compatible with the current
@@ -44,7 +45,7 @@ standing set; the orchestrator swaps them as the tranche requires.
 Launch an architecture research wave for tranche `{LETTER}`.
 
 You are the orchestrator. Read `docs/instructions/README.md` and
-this file before dispatching. Dispatch six parallel sub-agents in
+this file before dispatching. Dispatch up to ten parallel sub-agents in
 isolated sibling worktrees, each with self-contained context and
 explicit, fastidious file bounds. Every agent reads the current
 state of the codebase and relevant prior tranches; every agent
@@ -94,7 +95,7 @@ Save every sub-agent's verbatim deliverable to
 `docs/tranches/{LETTER}/research/NN-topic.md`. Do not paraphrase
 — the source material is what the agent actually produced.
 
-After all six complete, peer-review fastidiously:
+After all dispatched agents complete, peer-review fastidiously:
 
 - Cross-score each novel idea on feasibility, elegance, and
   impact. Reject ideas unbacked by saved evidence.
@@ -104,7 +105,7 @@ After all six complete, peer-review fastidiously:
   tried and failed, identify the specific failure modes and
   state which of them the new proposal addresses.
 - Surface duplication and subsumption between proposals. The
-  synthesis does not carry six independent proposals — it
+  synthesis does not carry unrelated independent proposals — it
   picks the ones that compose and drops the ones that another
   proposal subsumes.
 - Present the synthesis to the user for discussion before

@@ -28,7 +28,7 @@ Normative documents for tranche authoring and execution. Composes
 
 1. **Close predecessor**. Author predecessor tranche's `FINAL.md` +
    `post-{LETTER}.json` per `SPEC.md` §Closing ceremony.
-2. **Research wave** (conditional). Dispatch 3–6 parallel research
+2. **Research wave** (conditional). Dispatch 3-10 parallel research
    agents per `RESEARCH.md` when the design space is open-ended.
    Artefacts land in `docs/tranches/{LETTER}/research/`.
 3. **Author plan**. Write `{LETTER}.md` per `SPEC.md` §Plan structure.

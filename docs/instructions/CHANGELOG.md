@@ -10,6 +10,8 @@ live terminal sequence is AZ-II `cutover.O.0` through `cutover.O.7`:
 tooling preflight, StructDirect builder transactions, EBNF direct
 projection, generated view purge, `Parsed<R>` / `TapeDirect` deletion,
 `crates/tape` deletion, semantic/perf refresh, and FINAL conversion.
+Wave fan-out language is now capped at up to 10 parallel
+worktree-isolated agents with disjoint file bounds.
 
 ## 2026-04-28 — AZ-I W0/W1/W2-substrate close
 

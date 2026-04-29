@@ -62,7 +62,7 @@ A tranche owns a directory `docs/tranches/{LETTER}/`:
 
 1. **Read predecessor's FINAL.md** — what deferred into this
    letter; what chronic debt carries forward.
-2. **Run the research wave.** Dispatch 3–6 parallel research
+2. **Run the research wave.** Dispatch 3-10 parallel research
    agents per `RESEARCH.md` template. Artefacts land in
    `research/` before the plan's waves dispatch. Waive with
    rationale if the design space is tight.
@@ -106,7 +106,7 @@ noted", style notes.
 
 ### Parallelism
 
-- **Max 6 parallel agents per wave.** Larger sets degrade
+- **Max 10 parallel agents per wave.** Larger sets degrade
   orchestrator conflict-resolution.
 - **Disjoint file bounds.** No two agents in the same wave share
   write access to the same file. `mod.rs` entries are "disjoint
@@ -118,7 +118,7 @@ noted", style notes.
 - **Maximise parallelism.** When a wave's work decomposes into
   independent file bounds, prefer more agents over fewer.
   Ceremonial 1-agent-per-wave execution of a plan that declared
-  6-agent parallelism violates the plan.
+  10-agent parallelism violates the plan.
 
 ### Sequencing
 

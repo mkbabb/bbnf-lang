@@ -133,7 +133,7 @@ The orchestrator runs the tranche. Sub-agents execute isolated,
 bounded work in parallel.
 
 **Wave structure.** A tranche decomposes into **waves** — sets of up
-to six parallel agents with no overlapping file bounds. The
+to 10 parallel agents with no overlapping file bounds. The
 orchestrator defines waves at tranche start and updates them in
 `PROGRESS.md`. Wave N+1 depends on wave N completing and being
 cherry-picked onto master.

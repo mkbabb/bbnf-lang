@@ -13,13 +13,9 @@
 //! ([`SubstrateBinding::rust`] today; `ts` / `wasm` populated at
 //! BA-host-bindings time).
 //!
-//! The Rust emitter writes one of two disjoint parse-fn bodies per
-//! grammar:
+//! The Rust emitter writes the struct-builder parse-fn body for every
+//! production grammar:
 //!
-//! - [`EmitStrategy::TapeDirect`] — the legacy fused `Tape<()>` path.
-//!   The dispatcher writes structural columns + paired value frames
-//!   into a single `Tape<R>` substrate, finalises with `Tape::finish`,
-//!   and returns `Parsed<Self>`.
 //! - [`EmitStrategy::StructDirect`] — the AZ-I.W2 struct-builder path.
 //!   The dispatcher writes typed compound / leaf records into a
 //!   grammar-specific concrete `StructBuilder` (e.g. `JsonStructBuilder`)
@@ -36,9 +32,8 @@
 //! Per `feedback_pluggable-components`, the resolver
 //! [`EmitStrategy::for_grammar`] is data-driven: the variant carries
 //! per-backend [`SubstrateBinding`] records as `&'static str` data;
-//! future grammars (Sheets in W2-act.B2, CSS L4 in W2-act.B3) extend
-//! the resolver match by adding new arms — they do not modify
-//! existing call sites.
+//! future grammars extend the resolver match by adding new arms —
+//! they do not modify existing call sites.
 //!
 //! # Wire contract
 //!
@@ -103,8 +98,8 @@ pub struct SubstrateBinding {
 /// the per-backend native runtime types land. Today's resolver
 /// returns `None` for `ts` / `wasm` on every arm — the BA wave
 /// extends the resolver with backend-specific bindings; backends
-/// failing to find their slot fall back to TapeDirect at codegen
-/// time.
+/// failing to find their slot fail codegen loudly; there is no
+/// production TapeDirect fallback after AZ-II.cutover.O4.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum EmitStrategy {
     /// Generated `parse()` builds the grammar's typed document via a
@@ -121,10 +116,9 @@ pub enum EmitStrategy {
         /// same dynamic as `ts`.
         wasm: Option<SubstrateBinding>,
     },
-    /// Generated `parse()` writes through the `Tape<()>` substrate
-    /// and returns `Parsed<Self>`. The pre-AZ-I.W2 default for every
-    /// grammar; remains the default for BBNF, BNF, EBNF, CSV, math
-    /// throughout AZ-I.
+    /// Legacy tape-direct substrate. Retained only while O4/O5 delete
+    /// explicit shape-golden and tape-crate surfaces; [`Self::for_grammar`]
+    /// never selects this variant for production grammars.
     TapeDirect,
 }
 
@@ -140,34 +134,30 @@ impl EmitStrategy {
     ///
     /// `registry` is the rule-id → layout map populated by
     /// `bbnf_ir::passes::project_types`. The struct-direct path
-    /// requires a populated registry — an empty registry on a
-    /// nominally struct-direct grammar resolves to [`Self::TapeDirect`]
-    /// rather than emitting a structurally-broken parse body.
+    /// requires a populated registry; an empty registry is a hard
+    /// generation error rather than a tape fallback.
     ///
     /// # AZ-I.W2-act admission rules
     ///
-    /// - W2-act.A landed the substrate hoist with the catch-all
-    ///   `_ => TapeDirect` intact.
-    /// - W2-act.B1 (this revision) flips `JsonParser` / `JsonGrammar`
-    ///   to `StructDirect` once the struct registry is populated; the
-    ///   negative default holds for every other grammar.
-    /// - W2-act.B2 (Sheets) and W2-act.B3 (CSS L4) extend the resolver
-    ///   with their own positive arms in the same wave; each new arm
-    ///   precedes the catch-all.
+    /// - AZ-I.W2-act introduced per-grammar positive arms.
+    /// - AZ-II.cutover.A through O2 activated every production
+    ///   grammar onto StructDirect.
+    /// - AZ-II.cutover.O4 removes the catch-all tape fallback; unknown
+    ///   grammars and empty registries fail loudly.
     pub fn for_grammar(grammar_ident: &str, registry: &StructRegistry) -> Self {
-        // The struct-direct path requires the registry to carry at
-        // least one layout — projection ran and produced something.
-        // An empty registry signals project_types saw no Named rules
-        // worth recording; downgrade to tape rather than emit a
-        // body that calls `begin_compound` against a missing layout.
-        let registry_populated = !registry.is_empty();
+        if registry.is_empty() {
+            panic!(
+                "EmitStrategy::for_grammar: `{grammar_ident}` has an empty StructRegistry; \
+                 StructDirect generation requires project_types registry closure"
+            );
+        }
 
-        match (grammar_ident, registry_populated) {
+        match grammar_ident {
             // AZ-I.W2-act.B1: JSON activates onto the struct-direct
             // path. The grammar-emitted `JsonParser::parse` returns
             // `Result<JsonDocument<'_>, ParseErr>` after the
             // orchestrator's post-flip regen consumes this strategy.
-            ("JsonParser" | "JsonGrammar", true) => EmitStrategy::StructDirect {
+            "JsonParser" | "JsonGrammar" => EmitStrategy::StructDirect {
                 rust: SubstrateBinding {
                     builder_path: "crate::runtime::json::JsonStructBuilder",
                     document_path: "crate::runtime::json::JsonDocument",
@@ -176,7 +166,7 @@ impl EmitStrategy {
                 wasm: None,
             },
             // AZ-I.W2-act.B2: Google Sheets struct-direct activation.
-            ("GoogleSheetsParser" | "GoogleSheetsGrammar", true) => EmitStrategy::StructDirect {
+            "GoogleSheetsParser" | "GoogleSheetsGrammar" => EmitStrategy::StructDirect {
                 rust: SubstrateBinding {
                     builder_path: "crate::runtime::google_sheets::SheetsStructBuilder",
                     document_path: "crate::runtime::google_sheets::SheetsDocument",
@@ -188,7 +178,7 @@ impl EmitStrategy {
             // L4 grammar projects through the `bbnf::runtime::css_l4`
             // typed-value enum family + `CssStructBuilder` /
             // `CssDocument` substrate authored at W2-act.B3.
-            ("CssL4Parser", true) => EmitStrategy::StructDirect {
+            "CssL4Parser" => EmitStrategy::StructDirect {
                 rust: SubstrateBinding {
                     builder_path: "crate::runtime::css_l4::CssStructBuilder",
                     document_path: "crate::runtime::css_l4::CssDocument",
@@ -206,7 +196,7 @@ impl EmitStrategy {
             // `shapes/mod.rs:202` together with this resolver-arm
             // re-flip. The regen pipeline is now self-hosting via the
             // generated parser.
-            ("BbnfBootstrap" | "BbnfParser", true) => EmitStrategy::StructDirect {
+            "BbnfBootstrap" | "BbnfParser" => EmitStrategy::StructDirect {
                 rust: SubstrateBinding {
                     builder_path: "crate::runtime::bbnf::BbnfStructBuilder",
                     document_path: "crate::runtime::bbnf::BbnfDocument",
@@ -223,7 +213,7 @@ impl EmitStrategy {
             // five arms now activate together — every grammar's
             // substrate types (`<Grammar>StructBuilder` / `<Grammar>Document`)
             // already exist under `crates/core/src/runtime/<grammar>/`.
-            ("CsvParser" | "CsvGrammar", true) => EmitStrategy::StructDirect {
+            "CsvParser" | "CsvGrammar" => EmitStrategy::StructDirect {
                 rust: SubstrateBinding {
                     builder_path: "crate::runtime::csv::CsvStructBuilder",
                     document_path: "crate::runtime::csv::CsvDocument",
@@ -231,7 +221,7 @@ impl EmitStrategy {
                 ts: None,
                 wasm: None,
             },
-            ("MathParser" | "MathGrammar", true) => EmitStrategy::StructDirect {
+            "MathParser" | "MathGrammar" => EmitStrategy::StructDirect {
                 rust: SubstrateBinding {
                     builder_path: "crate::runtime::math::MathStructBuilder",
                     document_path: "crate::runtime::math::MathDocument",
@@ -239,7 +229,7 @@ impl EmitStrategy {
                 ts: None,
                 wasm: None,
             },
-            ("BnfParser" | "BnfGrammar", true) => EmitStrategy::StructDirect {
+            "BnfParser" | "BnfGrammar" => EmitStrategy::StructDirect {
                 rust: SubstrateBinding {
                     builder_path: "crate::runtime::bnf::BnfStructBuilder",
                     document_path: "crate::runtime::bnf::BnfDocument",
@@ -252,7 +242,7 @@ impl EmitStrategy {
             // high-branch `letter` / `digit` / `symbol` alternate
             // attempts can now speculatively mutate builder state
             // without leaking failed branches into parent layouts.
-            ("EbnfParser" | "EbnfGrammar", true) => EmitStrategy::StructDirect {
+            "EbnfParser" | "EbnfGrammar" => EmitStrategy::StructDirect {
                 rust: SubstrateBinding {
                     builder_path: "crate::runtime::ebnf::EbnfStructBuilder",
                     document_path: "crate::runtime::ebnf::EbnfDocument",
@@ -260,7 +250,7 @@ impl EmitStrategy {
                 ts: None,
                 wasm: None,
             },
-            ("CssPrettyParser" | "CssPrettyGrammar", true) => EmitStrategy::StructDirect {
+            "CssPrettyParser" | "CssPrettyGrammar" => EmitStrategy::StructDirect {
                 rust: SubstrateBinding {
                     builder_path: "crate::runtime::css_pretty::CssPrettyStructBuilder",
                     document_path: "crate::runtime::css_pretty::CssPrettyDocument",
@@ -268,12 +258,10 @@ impl EmitStrategy {
                 ts: None,
                 wasm: None,
             },
-            // Catch-all — every grammar not yet activated stays on the
-            // legacy tape substrate. The `_ => TapeDirect` close is
-            // the wave-local revert per W2.md §Reversal — per
-            // `feedback_no-orthogonal-codepaths` it is the single
-            // negative default, not a fallback path.
-            _ => EmitStrategy::TapeDirect,
+            _ => panic!(
+                "EmitStrategy::for_grammar: unknown production grammar `{grammar_ident}`; \
+                 add an explicit StructDirect substrate binding"
+            ),
         }
     }
 

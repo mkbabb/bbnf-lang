@@ -11,16 +11,12 @@
 //!    registry routes the same way (forward-compat with hand-
 //!    written test fixtures per the W2-EMITTER-REWIRE plan §1).
 //! 3. BBNF (`"BbnfBootstrap"`) + populated registry routes to
-//!    `EmitStrategy::TapeDirect` — only JSON gets struct-direct
-//!    in W2-act.B1; the resolver explicitly filters by grammar
-//!    identity, not just by registry-emptiness.
-//! 4. BBNF + empty registry routes to `EmitStrategy::TapeDirect`
-//!    (registry-emptiness can never escalate a grammar to
-//!    struct-direct).
-//! 5. JSON + empty registry routes to `EmitStrategy::TapeDirect`
-//!    (the activation guard prevents emitting a body that calls
-//!    `begin_compound` against a missing layout — the substrate-
-//!    with-consumer rule from instructions/SPEC §Activation-gate).
+//!    `EmitStrategy::StructDirect` — AZ-II.cutover.A activated the
+//!    self-host grammar.
+//! 4. Known production grammars + empty registry panic loudly rather
+//!    than downgrading to tape.
+//! 5. Unknown grammars + populated registry panic loudly rather than
+//!    taking a catch-all tape fallback.
 //!
 //! Per `feedback_no-orthogonal-codepaths` the resolver is the single
 //! decision surface; per `feedback_pluggable-components` adding a
@@ -59,6 +55,22 @@ fn populated_registry() -> StructRegistry {
 /// recording.
 fn empty_registry() -> StructRegistry {
     StructRegistry::new()
+}
+
+fn assert_for_grammar_panics(grammar_ident: &str, registry: &StructRegistry, needle: &str) {
+    let err = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        EmitStrategy::for_grammar(grammar_ident, registry);
+    }))
+    .unwrap_err();
+    let msg = err
+        .downcast_ref::<String>()
+        .map(String::as_str)
+        .or_else(|| err.downcast_ref::<&'static str>().copied())
+        .unwrap_or("<non-string panic>");
+    assert!(
+        msg.contains(needle),
+        "expected `{grammar_ident}` resolver panic to contain `{needle}`, got `{msg}`"
+    );
 }
 
 #[test]
@@ -148,46 +160,28 @@ fn bbnf_with_populated_registry_routes_struct_direct() {
                 "BbnfBootstrap StructDirect arm binds the BBNF runtime document",
             );
         }
-        EmitStrategy::TapeDirect => panic!(
-            "BbnfBootstrap with populated registry must route StructDirect post-cutover.A; got TapeDirect"
+        other => panic!(
+            "BbnfBootstrap with populated registry must route StructDirect post-cutover.A; got {:?}",
+            other,
         ),
     }
 }
 
 #[test]
-fn bbnf_with_empty_registry_routes_tape_direct() {
-    // The activation guard in EmitStrategy::for_grammar downgrades a
-    // nominally-struct-direct grammar to TapeDirect when the registry
-    // is empty. BBNF + empty registry therefore stays on TapeDirect
-    // — the closure-substrate gate is the same one JSON / CSS L4 /
-    // Sheets respect.
+fn bbnf_with_empty_registry_panics() {
+    // AZ-II.cutover.O4: registry closure is mandatory. An empty
+    // registry is a generation error, not an implicit tape fallback.
     let registry = empty_registry();
-    let strategy = EmitStrategy::for_grammar("BbnfBootstrap", &registry);
-    assert_eq!(
-        strategy,
-        EmitStrategy::TapeDirect,
-        "BbnfBootstrap + empty registry routes TapeDirect (default fallthrough)",
-    );
+    assert_for_grammar_panics("BbnfBootstrap", &registry, "empty StructRegistry");
 }
 
 #[test]
-fn json_parser_with_empty_registry_routes_tape_direct() {
-    // The activation guard in EmitStrategy::for_grammar downgrades
-    // a nominally-struct-direct grammar to TapeDirect when the
-    // registry is empty. Per instructions/SPEC §Activation-gate
-    // the substrate (registry) and the consumer (struct-direct
-    // body emission) must land in lockstep; an empty registry
-    // signals project_types saw no Named rules worth recording,
-    // and emitting a body that calls `begin_compound` against a
-    // missing layout would be a runtime crash dressed as a
-    // codegen success.
+fn json_parser_with_empty_registry_panics() {
+    // Per instructions/SPEC §Activation-gate the substrate
+    // (registry) and the consumer (struct-direct body emission) must
+    // land in lockstep; an empty registry is a compile-time fault.
     let registry = empty_registry();
-    let strategy = EmitStrategy::for_grammar("JsonParser", &registry);
-    assert_eq!(
-        strategy,
-        EmitStrategy::TapeDirect,
-        "JsonParser + empty registry must downgrade to TapeDirect (activation guard)",
-    );
+    assert_for_grammar_panics("JsonParser", &registry, "empty StructRegistry");
 }
 
 #[test]
@@ -209,18 +203,11 @@ fn css_l4_parser_with_populated_registry_routes_struct_direct() {
 }
 
 #[test]
-fn css_l4_parser_with_empty_registry_routes_tape_direct() {
+fn css_l4_parser_with_empty_registry_panics() {
     // The struct-direct path requires a populated registry — an empty
-    // registry on a nominally struct-direct grammar resolves to
-    // TapeDirect rather than emitting a body that calls
-    // begin_compound against a missing layout.
+    // registry is a compile-time fault before any shape body can emit.
     let registry = bbnf_ir::registry::StructRegistry::default();
-    let strategy = EmitStrategy::for_grammar("CssL4Parser", &registry);
-    assert_eq!(
-        strategy,
-        EmitStrategy::TapeDirect,
-        "CssL4Parser + empty registry must downgrade to TapeDirect (activation guard)",
-    );
+    assert_for_grammar_panics("CssL4Parser", &registry, "empty StructRegistry");
 }
 
 #[test]
@@ -266,36 +253,22 @@ fn google_sheets_grammar_alias_routes_struct_direct() {
 }
 
 #[test]
-fn google_sheets_parser_with_empty_registry_routes_tape_direct() {
-    // The activation guard downgrades a nominally-struct-direct
-    // grammar to TapeDirect when the registry is empty.
+fn google_sheets_parser_with_empty_registry_panics() {
+    // The activation guard fails closed when the registry is empty.
     let registry = empty_registry();
-    let strategy = EmitStrategy::for_grammar("GoogleSheetsParser", &registry);
-    assert_eq!(
-        strategy,
-        EmitStrategy::TapeDirect,
-        "GoogleSheetsParser + empty registry must downgrade to TapeDirect (activation guard)",
-    );
+    assert_for_grammar_panics("GoogleSheetsParser", &registry, "empty StructRegistry");
 }
 
 #[test]
-fn unknown_grammar_with_populated_registry_routes_tape_direct() {
-    // Default fallthrough: any grammar the resolver does not explicitly
-    // admit routes TapeDirect regardless of registry shape. This pins
-    // the negative default so an accidental wildcard match-all in a
-    // future refactor fails here.
-    //
-    // AZ-II.cutover.M Phase 3c — CsvParser, EbnfParser, MathParser,
-    // BnfParser, CssPrettyParser are now all admitted onto StructDirect
-    // alongside JSON / Sheets / CSS L4 / BBNF. The negative-default test
-    // therefore probes a synthetic grammar ident the resolver does not
-    // know about; the catch-all `_ => TapeDirect` arm must still hold.
+fn unknown_grammar_with_populated_registry_panics() {
+    // AZ-II.cutover.O4: every production grammar must have an
+    // explicit StructDirect substrate binding. A synthetic unknown
+    // grammar with a populated registry still fails closed.
     let registry = populated_registry();
-    let strategy = EmitStrategy::for_grammar("UnknownFutureGrammar", &registry);
-    assert_eq!(
-        strategy,
-        EmitStrategy::TapeDirect,
-        "UnknownFutureGrammar must route TapeDirect (catch-all default)",
+    assert_for_grammar_panics(
+        "UnknownFutureGrammar",
+        &registry,
+        "unknown production grammar",
     );
 }
 

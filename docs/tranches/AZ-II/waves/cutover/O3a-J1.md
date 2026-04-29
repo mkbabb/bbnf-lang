@@ -2,7 +2,12 @@
 **Opens after**: AZ-II.cutover.O3a baseline capture and six-agent audit synthesis
 **Agents**: up to 10 parallel
 **Hard gate**: every JSON failure and the `json_monolithic::data_xl` timeout have a proved root cause, a source-redress owner, and a post-redress verification command before O6 claims JSON parity or throughput.
-**Status**: planned
+**Status**: complete_with_misses
+
+2026-04-29 Round 1 triad complete: research, plan, and redress/probe
+artifacts exist under `docs/tranches/AZ-II/audit/O3a-J1-*.md`.
+Source redress is routed to O3/O4/O6 and remains blocked until those
+owning wave amendments are integrated.
 
 ## Scope
 

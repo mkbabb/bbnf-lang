@@ -1,7 +1,8 @@
 # AZ-II — Progress Log
 
 **Status**: interim manifest routed through cutover.O; `cutover.O.0`,
-`cutover.O.1`, and `cutover.O.2` landed, O3a active.
+`cutover.O.1`, and `cutover.O.2` landed; O3a Round 1
+J1/C1/S1 triads integrated; O3a Round 2 P1/A1 remains active.
 Implemented-state record:
 [`PROGRESS-SNAPSHOT-2026-04-29.md`](PROGRESS-SNAPSHOT-2026-04-29.md).
 Live terminal sequence: `cutover.O.0` through `cutover.O.7`, specified
@@ -9,7 +10,7 @@ for dispatch at [`waves/cutover/O0.md`](waves/cutover/O0.md) through
 [`waves/cutover/O7.md`](waves/cutover/O7.md).
 `cutover.O3a` is the active failure-baseline and triumvirate redress
 prelude inserted before O3 implementation continues; O3 is blocked
-until O3a closes P1 routing and child-wave ownership.
+until O3a closes P1 routing and A1 ownership.
 
 **Date**: 2026-04-23
 
@@ -335,9 +336,9 @@ cross-crate refs).
 | [cutover.O.1](waves/cutover/O1.md) | StructDirect builder transaction ABI across speculative branches | LANDED |
 | [cutover.O.2](waves/cutover/O2.md) | EBNF diagnosis + generic AltDispatch structural-Seq repair | LANDED |
 | [cutover.O.3a](waves/cutover/O3a.md) | Failure baseline + research/plan/redress cohort dispatch | in_progress |
-| [cutover.O.3a-J1](waves/cutover/O3a-J1.md) | JSON materialization, parity, and throughput cohort | planned |
-| [cutover.O.3a-C1](waves/cutover/O3a-C1.md) | CSS admission, payloads, and lightningcss cohort | planned |
-| [cutover.O.3a-S1](waves/cutover/O3a-S1.md) | Sheets branch payload and serialization cohort | planned |
+| [cutover.O.3a-J1](waves/cutover/O3a-J1.md) | JSON materialization, parity, and throughput cohort | complete_with_misses — bool payload to O4, projection accounting to O3, parity/`data_xl` to O6 |
+| [cutover.O.3a-C1](waves/cutover/O3a-C1.md) | CSS admission, payloads, and lightningcss cohort | complete_with_misses — C1 source owners block O6 CSS truth until green |
+| [cutover.O.3a-S1](waves/cutover/O3a-S1.md) | Sheets branch payload and serialization cohort | complete_with_misses — S1-E1/S1-R1/S1-SER1 block O6 Sheets truth until green |
 | [cutover.O.3a-P1](waves/cutover/O3a-P1.md) | Projection totality and generated-view residue cohort | planned |
 | [cutover.O.3a-A1](waves/cutover/O3a-A1.md) | Analysis/LSP/prototype/bootstrap disposition cohort | planned |
 | [cutover.O.3](waves/cutover/O3.md) | Generated tape-view / `ValueRoot` residue purge for StructDirect | blocked until O3a close |
@@ -495,12 +496,30 @@ wave specs before any source redress. Those deployable specs now exist:
 
 | Child spec | Owned surface | Blocks |
 |---|---|---|
-| [O3a-J1](waves/cutover/O3a-J1.md) | 24 JSON tests plus `json_monolithic::data_xl` timeout | O3/O4/O6 depending root cause |
-| [O3a-C1](waves/cutover/O3a-C1.md) | 17 CSS/lightningcss tests | O6 CSS parity |
-| [O3a-S1](waves/cutover/O3a-S1.md) | 33 Sheets tests | O4/O6 depending root cause |
+| [O3a-J1](waves/cutover/O3a-J1.md) | 24 JSON tests plus `json_monolithic::data_xl` timeout | O3/O4/O6: `O3a-J1-{research,plan,redress}.md` integrated |
+| [O3a-C1](waves/cutover/O3a-C1.md) | 17 CSS/lightningcss tests | O6 CSS parity: `O3a-C1-{research,plan,redress}.md` integrated |
+| [O3a-S1](waves/cutover/O3a-S1.md) | 33 Sheets tests | S1-E1/S1-R1/S1-SER1 then O6: `O3a-S1-{research,plan,redress}.md` integrated |
 | [O3a-P1](waves/cutover/O3a-P1.md) | 1 projection-totality test plus generated-view residue | O3 close |
 | [O3a-A1](waves/cutover/O3a-A1.md) | 2 analysis/LSP tests, 7 json-prototype tests, bootstrap/JIT disposition | O5/O7 |
 
-Current instruction: implementation remains halted until the child
-triads are explicitly dispatched from these specs. O3 is blocked, not
+Round 1 integration:
+
+- J1 research proves JSON bool branches materialize as null, numeric
+  parity has oracle-witness drift, JSON accessor/structural tests need
+  document-owned projection accounting, and `data_xl` is a full
+  materialization timeout. The J1 plan routes bool payload repair to
+  O4, projection accounting to O3, and corpus parity plus `data_xl`
+  measurement to O6.
+- C1 research/probes separate CSS corpus admission from payload loss.
+  Hex host-function payloads, named-color literal payloads, and
+  `:dir(...)` selector materialization are source-owned before O6.
+  Bootstrap/tailwind admission and lightningcss parity block O6 CSS
+  truth while red.
+- S1 research/probes assign all 33 Sheets failures outside O4's return
+  model: S1-E1 owns mapped branch payloads, S1-R1 owns sheet-prefix and
+  range admission, and S1-SER1 owns compact serializer fixed points.
+  O6 verifies Sheets health after those source owners land.
+
+Current instruction: implementation remains halted until Round 2 P1/A1
+triads are explicitly dispatched and integrated. O3 is blocked, not
 active.

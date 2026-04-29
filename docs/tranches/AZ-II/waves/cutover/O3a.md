@@ -4,6 +4,12 @@
 **Hard gate**: all 84 post-O2 test failures and the failed JSON bench baseline are assigned to root-cause cohorts with research, plan, wave-spec, and redress ownership.
 **Status**: in_progress
 
+2026-04-29 Round 1 status: J1, C1, and S1 triads are dispatched and
+closed as routed evidence. Their research, plan, and redress/probe
+artifacts are committed under `docs/tranches/AZ-II/audit/O3a-{J1,C1,S1}-*.md`.
+Source redress remains gated by the amended owning O3/O4/O6 waves.
+Round 2 still owns P1 and A1 before O3 can unblock.
+
 ## Scope
 
 1. Record the post-documentation test baseline:
@@ -167,6 +173,23 @@ and the existing child wave files named above.
 Sub-gate: P1/A1 destinations are integrated into O3/O4/O5/O6 or new
 child wave specs.
 
+### AZ-II.cutover.O3a.8a Round 1 Integration
+
+Mechanism: integrate the returned J1/C1/S1 triad artifacts into the
+main worktree and amend O3/O4/O6 so the source redress owners are
+written before code changes continue.
+
+Files touched: `docs/tranches/AZ-II/audit/O3a-{J1,C1,S1}-*.md`,
+`docs/tranches/AZ-II/waves/cutover/O3.md`,
+`docs/tranches/AZ-II/waves/cutover/O4.md`,
+`docs/tranches/AZ-II/waves/cutover/O6.md`,
+`docs/tranches/AZ-II/waves/cutover/README.md`,
+`docs/tranches/AZ-II/PROGRESS.md`.
+
+Sub-gate: J1/C1/S1 are marked `complete_with_misses` in their child
+specs, and the misses are named source owners rather than silent
+deferrals.
+
 ### AZ-II.cutover.O3a.9 Cutover Item Augmentation
 
 Mechanism: update O3-O7 specs with the cohort outcomes so every failure
@@ -206,6 +229,8 @@ cohort wave owners.
 5. P1/A1 triads are queued or dispatched before O3 closes.
 6. O3-O7 specs are amended with cohort child waves before
    implementation resumes.
+7. Round 1 artifacts for J1/C1/S1 are integrated and every named miss
+   is routed to O3, O4, O6, or an explicit source child owner.
 
 ## Verification artefacts
 

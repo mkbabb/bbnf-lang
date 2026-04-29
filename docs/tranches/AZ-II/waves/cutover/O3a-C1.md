@@ -2,7 +2,13 @@
 **Opens after**: AZ-II.cutover.O3a baseline capture and six-agent audit synthesis
 **Agents**: up to 10 parallel
 **Hard gate**: every CSS parse, color, pseudo, selector, and lightningcss failure has a proved root cause and source owner before O6 claims CSS parity.
-**Status**: planned
+**Status**: complete_with_misses
+
+2026-04-29 Round 1 triad complete: research, plan, and redress/probe
+artifacts exist under `docs/tranches/AZ-II/audit/O3a-C1-*.md`.
+Source redress is routed to CSS admission/payload owners and O6 CSS
+truth remains blocked until the focused C1 suites and lightningcss
+parity are green.
 
 ## Scope
 

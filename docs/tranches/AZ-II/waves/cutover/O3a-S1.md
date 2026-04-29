@@ -2,7 +2,12 @@
 **Opens after**: AZ-II.cutover.O3a baseline capture and six-agent audit synthesis
 **Agents**: up to 10 parallel
 **Hard gate**: every Sheets branch, literal, operator, range, unary, corpus, and serializer failure has a proved root cause and source owner before O6 claims Sheets health.
-**Status**: planned
+**Status**: complete_with_misses
+
+2026-04-29 Round 1 triad complete: research, plan, and redress/probe
+artifacts exist under `docs/tranches/AZ-II/audit/O3a-S1-*.md`.
+S1 is not return-model-owned; source redress is routed to S1-E1,
+S1-R1, and S1-SER1 before O6 may claim Sheets health.
 
 ## Scope
 

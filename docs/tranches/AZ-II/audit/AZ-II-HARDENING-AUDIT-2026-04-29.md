@@ -33,8 +33,9 @@ This is not an AZ-III by default. The active work is AZ-II
 `cutover.O`, a terminal hardening wave. O0 tooling preflight, O1
 StructDirect builder transactions, and O2 EBNF direct projection have
 landed; the active gate is O3a failure-baseline triage and child-wave
-dispatch. O3 generated view purge is blocked until O3a closes P1 and
-failure-cohort ownership. Open AZ-III only if a later `cutover.O` gate
+dispatch. O3a Round 1 J1/C1/S1 triads are integrated; O3 generated
+view purge remains blocked until O3a closes P1 and A1 ownership. Open
+AZ-III only if a later `cutover.O` gate
 proves that new grammar-general
 inference/layout substrate cannot land inside AZ-II without hiding a
 larger architectural transposition.
@@ -227,9 +228,13 @@ fully-contained sibling worktree agents and explicit file bounds:
 3. **[O2 - EBNF generalization](../waves/cutover/O2.md).** LANDED: shared structural
    AltDispatch emission flips EBNF to `EbnfDocument`.
 4. **[O3a - Failure baseline and triumvirate redress](../waves/cutover/O3a.md).**
-   in_progress: assign all post-O2 failures to research/plan/redress
-   cohorts and require wave creation/amendment before redress lands.
-   Child specs now own the five cohorts:
+   in_progress: Round 1 J1/C1/S1 triads are integrated under
+   `O3a-{J1,C1,S1}-{research,plan,redress}.md`. J1 routes JSON bool
+   payload to O4, JSON projection accounting to O3, and JSON parity /
+   `data_xl` to O6. C1 routes CSS admission/payload/selector failures
+   to source owners before O6. S1 routes Sheets to S1-E1/S1-R1/S1-SER1
+   and records that O4 is not the return-model owner. Round 2 still
+   owns P1/A1. Child specs now own the five cohorts:
    [`J1`](../waves/cutover/O3a-J1.md),
    [`C1`](../waves/cutover/O3a-C1.md),
    [`S1`](../waves/cutover/O3a-S1.md),

@@ -225,9 +225,9 @@ Child wave specs:
 | [`O1.md`](O1.md) | complete | up to 10 parallel worktree-isolated lanes; orchestrator-owned regen |
 | [`O2.md`](O2.md) | complete | up to 10 parallel worktree-isolated lanes; orchestrator-owned regen |
 | [`O3a.md`](O3a.md) | in_progress | up to 10 parallel worktree-isolated lanes; failure cohort triumvirates |
-| [`O3a-J1.md`](O3a-J1.md) | planned | JSON materialization, parity, and throughput triad |
-| [`O3a-C1.md`](O3a-C1.md) | planned | CSS admission, payload, and lightningcss triad |
-| [`O3a-S1.md`](O3a-S1.md) | planned | Sheets branch payload and serializer triad |
+| [`O3a-J1.md`](O3a-J1.md) | complete_with_misses | JSON triad closed; bool payload to O4, projection accounting to O3, parity/`data_xl` to O6 |
+| [`O3a-C1.md`](O3a-C1.md) | complete_with_misses | CSS triad closed; admission/payload/selector owners block O6 CSS truth until green |
+| [`O3a-S1.md`](O3a-S1.md) | complete_with_misses | Sheets triad closed; S1-E1/S1-R1/S1-SER1 source owners block O6 Sheets truth |
 | [`O3a-P1.md`](O3a-P1.md) | planned | projection totality and generated-view residue triad |
 | [`O3a-A1.md`](O3a-A1.md) | planned | analysis/LSP/prototype/bootstrap bridge disposition triad |
 | [`O3.md`](O3.md) | blocked | up to 10 parallel worktree-isolated lanes; generated view purge |

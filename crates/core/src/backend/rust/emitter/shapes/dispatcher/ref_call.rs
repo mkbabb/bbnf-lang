@@ -13,8 +13,7 @@
 //! per-site specialisation. Every shape emitter that previously
 //! called `#dispatcher_ident(input, p, state, builder)?` for a Ref-
 //! position recursion now receives the Ref's target `RuleId` at
-//! emission time and emits via [`emit_ref_call_shape`] /
-//! [`emit_ref_call_visitor`].
+//! emission time and emits via [`emit_ref_call_shape`].
 //!
 //! The helpers return `None` when the target is unclassified
 //! (`ShapeTag::None`) — in that case the grammar is not admissible
@@ -22,13 +21,13 @@
 //! [`super::super::has_shape_dispatcher_entrypoint`] gates
 //! accordingly.
 
-use bbnf_ir::GrammarIR;
 use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
+use bbnf_ir::GrammarIR;
 use proc_macro2::TokenStream;
 use quote::quote;
 
 use super::support_mod_ident;
-use super::symbol_composition::{shape_fn_ident, visitor_shape_fn_ident};
+use super::symbol_composition::shape_fn_ident;
 
 /// Direct shape Ref-call emitter: resolves `target_rid`'s shape and
 /// emits the direct call. Returns `None` when the target is
@@ -180,71 +179,6 @@ fn target_rule_accepts_leading_ws_bounded(
         }
         _ => false,
     }
-}
-
-/// Visitor-path Ref-call emitter: resolves `target_rid`'s shape and
-/// emits the direct visitor-path call. Returns `None` when the target
-/// is unclassified.
-pub fn emit_ref_call_visitor(
-    grammar_suffix: &str,
-    target_rid: bbnf_ir::RuleId,
-    ir: &GrammarIR,
-) -> Option<TokenStream> {
-    let target = ir.rules.iter().find(|r| r.id == target_rid)?;
-    let tag = ir.shape_assignments.get(target_rid);
-    let shape_name = match tag {
-        ShapeTag::Object => "object",
-        ShapeTag::Array => "array",
-        ShapeTag::String => "string",
-        ShapeTag::Number => "number",
-        ShapeTag::Keyword => "keyword",
-        ShapeTag::Scalar => "scalar",
-        ShapeTag::Pratt => "pratt",
-        ShapeTag::Unordered => "unordered",
-        ShapeTag::ArgList => "arglist",
-        ShapeTag::Flat => "flat",
-        ShapeTag::Wrap => "wrap",
-        ShapeTag::HRegex => "hregex",
-        ShapeTag::AltDispatch => "altdispatch",
-        ShapeTag::None => return None,
-    };
-    let target_fn = visitor_shape_fn_ident(shape_name, grammar_suffix, ir.get_string(target.name));
-    let support_mod = support_mod_ident(grammar_suffix);
-    // AX.W0a.2.g — visitor-path Keyword signature extended with
-    // `state` (see direct shape emit_ref_call_shape).
-    let expr = match tag {
-        ShapeTag::Number => quote! {
-            {
-                let __first = #support_mod::skip_space(input, p, state)
-                    .ok_or(crate::runtime::ParseErr::Syntax {
-                        offset: *p as u32, rule: None,
-                    })?;
-                #target_fn(input, p, __first, visitor)
-            }
-        },
-        ShapeTag::Keyword => quote! {
-            {
-                let __first = #support_mod::skip_space(input, p, state)
-                    .ok_or(crate::runtime::ParseErr::Syntax {
-                        offset: *p as u32, rule: None,
-                    })?;
-                #target_fn(input, p, __first, state, visitor)
-            }
-        },
-        ShapeTag::String => quote! {
-            {
-                let _ = #support_mod::skip_space(input, p, state);
-                #target_fn(input, p, state, visitor, /*is_key=*/ false)
-            }
-        },
-        _ => quote! {
-            {
-                let _ = #support_mod::skip_space(input, p, state);
-                #target_fn(input, p, state, visitor)
-            }
-        },
-    };
-    Some(expr)
 }
 
 /// Walk `node` and collect the target `RuleId` of every `Ref(rid)` at a

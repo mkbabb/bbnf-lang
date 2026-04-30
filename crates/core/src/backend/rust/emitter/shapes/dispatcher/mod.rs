@@ -22,16 +22,15 @@
 //!
 //! Module layout (B5.W3):
 //! - [`symbol_composition`] — `parse_<...>` ident generators
-//!   (tape + visitor dispatchers, per-shape entry points).
+//!   (dispatcher and per-shape entry points).
 //! - [`support`]             — per-grammar SIMD/scan support module
 //!   (`ScanState`, `skip_space*`, `first_quote_or_backslash`,
 //!   bitmap kernels, CTNS probe).
 //! - [`cross_shape`]         — top-level dispatcher fns
-//!   (`emit_dispatcher`, `emit_visitor_dispatcher`) + Alt-byte-
-//!   dispatch body emission.
+//!   (`emit_dispatcher`) + Alt-byte-dispatch body emission.
 //! - [`ref_call`]            — per-Ref value-position routing
-//!   (`emit_ref_call_shape`, `emit_ref_call_visitor`, leading-ws
-//!   admission analysis, `collect_value_refs`).
+//!   (`emit_ref_call_shape`, leading-ws admission analysis,
+//!   `collect_value_refs`).
 //! - [`scan_policy`]         — grammar-activated structural-scan
 //!   admission facts (`lookup_scan_policy`).
 
@@ -45,13 +44,11 @@ mod scan_policy;
 mod support;
 mod symbol_composition;
 
-pub use cross_shape::{emit_dispatcher, emit_visitor_dispatcher, has_w4_classified};
-pub use ref_call::{collect_value_refs, emit_ref_call_shape, emit_ref_call_visitor};
-pub(crate) use scan_policy::{ScanActivationFlags, lookup_scan_policy};
+pub use cross_shape::emit_dispatcher;
+pub use ref_call::{collect_value_refs, emit_ref_call_shape};
+pub(crate) use scan_policy::{lookup_scan_policy, ScanActivationFlags};
 pub use support::emit_support_module;
-pub use symbol_composition::{
-    dispatcher_fn_ident, shape_fn_ident, visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
-};
+pub use symbol_composition::{dispatcher_fn_ident, shape_fn_ident};
 
 /// Helper: derive the `__shape_support_<grammar>` module identifier.
 /// Kept as a fn so `quote!` interpolation works cleanly.

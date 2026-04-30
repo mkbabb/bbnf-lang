@@ -450,10 +450,10 @@ impl RustEmitter {
         // Grammar string const array.
         let grammar_arr = crate::backend::rust::ir_enums::generate_grammar_arr(parser_attrs, ident);
 
-        // Tranche AV Phase 1 — consolidated per-grammar fingerprint.
-        // Lowers `GrammarIR::profile()` to a single `const
-        // GRAMMAR_PROFILE: GrammarProfile = GrammarProfile { ... };`
-        // literal emitted alongside the grammar string array.
+        // Tranche AV Phase 1 / AZ-II.O5 — structural scan constants
+        // emitted alongside the grammar string array. The generated
+        // runtime no longer constructs the tape crate's
+        // `GrammarProfile` carrier.
         let profile = ir.profile();
         let grammar_profile = super::profile::emit_grammar_profile(&profile);
 
@@ -469,7 +469,8 @@ impl RustEmitter {
 
         // AW-III.W6.2 — emit PHF keyword tables for every literal-led
         // Alt whose mined branch count exceeds the threshold. The
-        // emitted statics live at module scope alongside GRAMMAR_PROFILE
+        // emitted statics live at module scope alongside the profile
+        // constants
         // so the specialised walker's `AltLinear` arm (or future
         // ClassifyByte specialisations) can consult them via a binary
         // search helper fn. Per §6, the mechanism runs over every
@@ -665,19 +666,6 @@ impl RustEmitter {
             impl #ident {
                 #depth_counter
                 #extra
-
-                /// AW-IV.W1.δ — associated-constant accessor for the
-                /// grammar's consolidated codegen fingerprint. Alias
-                /// of the module-scope `GRAMMAR_PROFILE` const; the
-                /// underlying bytes live in `.rodata` once. Downstream
-                /// consumers (wire-contract tests, per-grammar
-                /// introspection, cross-grammar harnesses) use
-                /// `<Grammar>::GRAMMAR_PROFILE` to disambiguate when
-                /// multiple grammars coexist in the same test file —
-                /// the module-scope `pub use ...::*` would otherwise
-                /// collide on the unqualified `GRAMMAR_PROFILE` name.
-                pub const GRAMMAR_PROFILE: crate::runtime::tape::GrammarProfile =
-                    GRAMMAR_PROFILE;
 
                 #projection_associated_consts
 

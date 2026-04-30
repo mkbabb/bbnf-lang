@@ -36,12 +36,12 @@ mod __cssl4parser_emit_impl {
             concat!(env!("CARGO_MANIFEST_DIR"), "/../../grammar/css/l4/stylesheet.bbnf")
         ),
     ];
-    static __GRAMMAR_PROFILE_ALPHABET: [u8; 53usize] = [
+    static __GRAMMAR_STRUCTURAL_ALPHABET: [u8; 53usize] = [
         32, 33, 35, 36, 37, 40, 41, 42, 43, 44, 45, 46, 47, 53, 54, 58, 59, 61, 72, 81,
         91, 93, 94, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
         111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126,
     ];
-    static __GRAMMAR_PROFILE_DIGRAPHS: [(u8, u8); 32usize] = [
+    static __GRAMMAR_STRUCTURAL_DIGRAPHS: [(u8, u8); 32usize] = [
         (36, 61),
         (42, 61),
         (42, 124),
@@ -75,19 +75,12 @@ mod __cssl4parser_emit_impl {
         (124, 61),
         (126, 61),
     ];
-    /// Per-grammar codegen fingerprint — consolidated static
-    /// profile emitted by Tranche AV Phase 1. Every downstream
-    /// consumer (tape capacity, scanner dispatch) reads the
-    /// matching field.
-    pub const GRAMMAR_PROFILE: crate::runtime::tape::GrammarProfile = crate::runtime::tape::GrammarProfile {
-        compounds_per_input_byte: 1f32,
-        leaves_per_input_byte: 0f32,
-        parallel_break_even_bytes: 1048576u32,
-        structural_alphabet: &__GRAMMAR_PROFILE_ALPHABET,
-        structural_digraphs: &__GRAMMAR_PROFILE_DIGRAPHS,
-        structural_digraph_mask: [315256440681922560, 5770715216710992128, 0, 0],
-        structural_quote_classes: &[],
-    };
+    pub const GRAMMAR_STRUCTURAL_ALPHABET: &[u8] = &__GRAMMAR_STRUCTURAL_ALPHABET;
+    pub const GRAMMAR_STRUCTURAL_DIGRAPHS: &[(u8, u8)] = &__GRAMMAR_STRUCTURAL_DIGRAPHS;
+    pub const GRAMMAR_STRUCTURAL_DIGRAPH_MASK: [u64; 4] = [
+        315256440681922560, 5770715216710992128, 0, 0,
+    ];
+    pub const GRAMMAR_STRUCTURAL_QUOTE_CLASSES: &[u8] = &[];
     /// AW-III.W6.2 — PHF keyword table.
     ///
     /// Mined literal-led Alt branches, sorted lexicographically.
@@ -4449,7 +4442,7 @@ mod __cssl4parser_emit_impl {
             }
         }
         /// AY.W4.3 — lazy-init the per-parse structural index
-        /// against the grammar's mined `structural_alphabet`.
+        /// against the grammar's mined structural alphabet.
         /// Idempotent; consumers may call freely.
         #[inline]
         pub(crate) fn ensure_structural_index<'a>(
@@ -4460,10 +4453,10 @@ mod __cssl4parser_emit_impl {
                 .structural_index
                 .get_or_init(|| {
                     let alphabet = ::simd_scan::StructuralAlphabet {
-                        singletons: super::GRAMMAR_PROFILE.structural_alphabet,
-                        digraph_mask: super::GRAMMAR_PROFILE.structural_digraph_mask,
-                        digraph_pairs: super::GRAMMAR_PROFILE.structural_digraphs,
-                        quote_classes: super::GRAMMAR_PROFILE.structural_quote_classes,
+                        singletons: super::GRAMMAR_STRUCTURAL_ALPHABET,
+                        digraph_mask: super::GRAMMAR_STRUCTURAL_DIGRAPH_MASK,
+                        digraph_pairs: super::GRAMMAR_STRUCTURAL_DIGRAPHS,
+                        quote_classes: super::GRAMMAR_STRUCTURAL_QUOTE_CLASSES,
                     };
                     ::simd_scan::scan_structural(input, &alphabet)
                 })
@@ -86247,17 +86240,6 @@ mod __cssl4parser_emit_impl {
                 Some(__builder.finish())
             })
         }
-        /// AW-IV.W1.δ — associated-constant accessor for the
-        /// grammar's consolidated codegen fingerprint. Alias
-        /// of the module-scope `GRAMMAR_PROFILE` const; the
-        /// underlying bytes live in `.rodata` once. Downstream
-        /// consumers (wire-contract tests, per-grammar
-        /// introspection, cross-grammar harnesses) use
-        /// `<Grammar>::GRAMMAR_PROFILE` to disambiguate when
-        /// multiple grammars coexist in the same test file —
-        /// the module-scope `pub use ...::*` would otherwise
-        /// collide on the unqualified `GRAMMAR_PROFILE` name.
-        pub const GRAMMAR_PROFILE: crate::runtime::tape::GrammarProfile = GRAMMAR_PROFILE;
         /// Parse an input string and return the grammar-specific
         /// document that owns the StructDirect runtime arena.
         pub fn parse(

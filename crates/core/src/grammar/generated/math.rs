@@ -36,19 +36,6 @@ mod __mathparser_emit_impl {
             concat!(env!("CARGO_MANIFEST_DIR"), "/../../grammar/misc/math.bbnf")
         ),
     ];
-    /// Per-grammar codegen fingerprint — consolidated static
-    /// profile emitted by Tranche AV Phase 1. Every downstream
-    /// consumer (tape capacity, scanner dispatch) reads the
-    /// matching field.
-    pub const GRAMMAR_PROFILE: crate::runtime::tape::GrammarProfile = crate::runtime::tape::GrammarProfile {
-        compounds_per_input_byte: 0.5f32,
-        leaves_per_input_byte: 0f32,
-        parallel_break_even_bytes: 1048576u32,
-        structural_alphabet: &[],
-        structural_digraphs: &[],
-        structural_digraph_mask: [0, 0, 0, 0],
-        structural_quote_classes: &[],
-    };
     /// AW-III.W6.5 — aggregate dense Pratt precedence LUT.
     ///
     /// Union of every Pratt rule's packed LUT (last-write-wins
@@ -666,17 +653,6 @@ mod __mathparser_emit_impl {
         parse_hregex_visitor_MathParser_number(input, p, state, visitor)
     }
     impl MathParser {
-        /// AW-IV.W1.δ — associated-constant accessor for the
-        /// grammar's consolidated codegen fingerprint. Alias
-        /// of the module-scope `GRAMMAR_PROFILE` const; the
-        /// underlying bytes live in `.rodata` once. Downstream
-        /// consumers (wire-contract tests, per-grammar
-        /// introspection, cross-grammar harnesses) use
-        /// `<Grammar>::GRAMMAR_PROFILE` to disambiguate when
-        /// multiple grammars coexist in the same test file —
-        /// the module-scope `pub use ...::*` would otherwise
-        /// collide on the unqualified `GRAMMAR_PROFILE` name.
-        pub const GRAMMAR_PROFILE: crate::runtime::tape::GrammarProfile = GRAMMAR_PROFILE;
         /// Parse an input string and return the grammar-specific
         /// document that owns the StructDirect runtime arena.
         pub fn parse(

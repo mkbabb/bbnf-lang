@@ -416,16 +416,13 @@ fn emit_skip_space_comment_aware_inner(ctns_probe: TokenStream) -> TokenStream {
 ///
 /// # Structural-scan consumer (AY.W4.3 — W1 absorption)
 ///
-/// When the grammar's mined `GRAMMAR_PROFILE.structural_alphabet`
-/// has > 0 cardinality, ScanState carries a lazy
-/// `OnceCell<StructuralIndex>` — populated on first per-parse
-/// query via `scan_structural(input, alphabet)`. Consumer sites
-/// (currently the comment-aware `skip_space_slow`'s post-comment
-/// resume + `__regex_scan_<grammar>` adapter cold-path) probe via
-/// `next_structural_at_or_after` to fast-skip to the next
-/// structural delimiter when the in-stripe SIMD scan would
-/// otherwise iterate byte-by-byte. Lazy-init keeps the cold-path
-/// cost amortised — empty-alphabet grammars never pay the scan.
+/// When the grammar has a mined structural alphabet, ScanState
+/// carries a lazy `OnceCell<StructuralIndex>` populated on first
+/// per-parse query via `scan_structural(input, alphabet)`. Consumer
+/// sites probe via `next_structural_at_or_after` to fast-skip to the
+/// next structural delimiter when the in-stripe SIMD scan would
+/// otherwise iterate byte-by-byte. Lazy-init keeps the cold-path cost
+/// amortised; empty-alphabet grammars never pay the scan.
 pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
     let mod_ident = format_ident!("__shape_support_{}", grammar_suffix);
     let comment_aware = ws_is_comment_aware(ir);
@@ -469,7 +466,7 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
     let ensure_structural_fn = if has_structural {
         quote! {
             /// AY.W4.3 — lazy-init the per-parse structural index
-            /// against the grammar's mined `structural_alphabet`.
+            /// against the grammar's mined structural alphabet.
             /// Idempotent; consumers may call freely.
             #[inline]
             pub(crate) fn ensure_structural_index<'a>(
@@ -478,10 +475,10 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
             ) -> &'a ::simd_scan::StructuralIndex {
                 state.structural_index.get_or_init(|| {
                     let alphabet = ::simd_scan::StructuralAlphabet {
-                        singletons: super::GRAMMAR_PROFILE.structural_alphabet,
-                        digraph_mask: super::GRAMMAR_PROFILE.structural_digraph_mask,
-                        digraph_pairs: super::GRAMMAR_PROFILE.structural_digraphs,
-                        quote_classes: super::GRAMMAR_PROFILE.structural_quote_classes,
+                        singletons: super::GRAMMAR_STRUCTURAL_ALPHABET,
+                        digraph_mask: super::GRAMMAR_STRUCTURAL_DIGRAPH_MASK,
+                        digraph_pairs: super::GRAMMAR_STRUCTURAL_DIGRAPHS,
+                        quote_classes: super::GRAMMAR_STRUCTURAL_QUOTE_CLASSES,
                     };
                     ::simd_scan::scan_structural(input, &alphabet)
                 })

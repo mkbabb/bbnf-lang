@@ -795,9 +795,9 @@ pub fn emit_regex_scan_adapter(
     // ── AY.W4.3 — structural-scan consumer (W1 absorption) ────────
     //
     // Per audit `AYW1-structural-scan-consumer-coverage.md` + W4.md
-    // §Scope point 6. Grammars whose `GRAMMAR_PROFILE.structural_alphabet`
-    // has > 0 cardinality benefit from a CTNS-style probe at adapter
-    // entry: skip ahead to the next structural byte instead of
+    // §Scope point 6. Grammars with a structural alphabet benefit
+    // from a CTNS-style probe at adapter entry: skip ahead to the
+    // next structural byte instead of
     // walking the regex character-by-character. The structural index
     // is lazy-init via OnceCell on the per-grammar ScanState (see
     // `dispatcher.rs::emit_support_module`).

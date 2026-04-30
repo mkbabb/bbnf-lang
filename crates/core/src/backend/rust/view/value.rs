@@ -824,19 +824,19 @@ fn sanitise_ident(name: &str) -> String {
 /// `PathSegment::Field` / `PathSegment::Index` steps and extracting
 /// the leaf on exact match.
 ///
-/// # AY-II.W0'.c — STRUCTURAL_SCAN_POLICY emission-time splice
+/// # AY-II.W0'.c — structural-scan emission-time splice
 ///
 /// The emitted `__path_walk` is policy-driven: at each step the
 /// current record's `rule_kind()` dispatches through a compile-time
 /// match arm whose body inlines the matching cursor primitive. Rules
-/// whose [`ScanActivationFlags`] admit `OBJECT_KEY_SEEK` emit a
+/// whose structural-scan facts admit `OBJECT_KEY_SEEK` emit a
 /// `cursor.bounded_lookahead(...)` iteration paired with
 /// `cursor.object_key_seek(...)` for the value-position seek; rules
 /// admitting `SCAN_STRUCTURAL_BOUNDED` emit a
 /// `cursor.scan_structural_bounded(...)` indexed walk for positional
-/// access. Rules whose policy alphabet class is
-/// [`ScanAlphabetClass::Empty`][empty] retain the generic
-/// children-iteration walker (the default used pre-AY-II.W0'.c).
+/// access. Rules without admitted structural-scan facts retain the
+/// generic children-iteration walker (the default used
+/// pre-AY-II.W0'.c).
 ///
 /// The per-rule dispatch resolves at compile time — the match arms
 /// below fold to the admitted primitive for that rule without any
@@ -844,8 +844,6 @@ fn sanitise_ident(name: &str) -> String {
 /// carries only primitives the rule's policy actually admits; non-
 /// admitted rules fall through to the default arm.
 ///
-/// [`ScanActivationFlags`]: tape::ScanActivationFlags
-/// [empty]: tape::ScanAlphabetClass::Empty
 fn emit_path_query_impls(
     ir: &GrammarIR,
     grammar_ident: &syn::Ident,
@@ -854,8 +852,9 @@ fn emit_path_query_impls(
     rule_kind_ident: &syn::Ident,
     variants: &[VariantEntry],
 ) -> TokenStream {
-    use crate::backend::rust::emitter::shapes::dispatcher::lookup_scan_policy;
-    use tape::ScanActivationFlags;
+    use crate::backend::rust::emitter::shapes::dispatcher::{
+        ScanActivationFlags, lookup_scan_policy,
+    };
 
     // Partition non-transparent rules by the primitives their scan
     // policy admits. The sets may overlap (a rule can admit both
@@ -870,7 +869,7 @@ fn emit_path_query_impls(
     let mut scan_structural_rks: Vec<syn::Ident> = Vec::new();
     let mut bounded_lookahead_rks: Vec<syn::Ident> = Vec::new();
     for v in variants {
-        let Some((_, flags)) = lookup_scan_policy(ir, v.rule_id) else {
+        let Some(flags) = lookup_scan_policy(ir, v.rule_id) else {
             continue;
         };
         let rule = ir
@@ -1028,17 +1027,16 @@ fn emit_path_query_impls(
         /// NodeView on hit or `None` when any step misses.
         ///
         /// The per-step dispatch reads `cur.rule_kind()` and
-        /// resolves to the structural-scan primitive the rule's
-        /// [`STRUCTURAL_SCAN_POLICY`] entry admits: rules admitting
+        /// resolves to the structural-scan primitive admitted by the
+        /// rule's emission-time structural-scan facts: rules admitting
         /// `OBJECT_KEY_SEEK` use
         /// [`TapeCursor::bounded_lookahead`] + [`TapeCursor::object_key_seek`]
         /// for the key-match + value-hop sequence; rules admitting
         /// `SCAN_STRUCTURAL_BOUNDED` use
         /// [`TapeCursor::scan_structural_bounded`] for positional
-        /// access. Rules outside the policy's admission fall
+        /// access. Rules outside structural-scan admission fall
         /// through to a generic children iteration.
         ///
-        /// [`STRUCTURAL_SCAN_POLICY`]: crate::STRUCTURAL_SCAN_POLICY
         /// [`TapeCursor::bounded_lookahead`]: crate::runtime::tape::TapeCursor::bounded_lookahead
         /// [`TapeCursor::object_key_seek`]: crate::runtime::tape::TapeCursor::object_key_seek
         /// [`TapeCursor::scan_structural_bounded`]: crate::runtime::tape::TapeCursor::scan_structural_bounded

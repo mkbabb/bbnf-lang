@@ -573,28 +573,6 @@ mod __mathparser_emit_impl {
                 }
             })
     }
-    /// AY-II.W0.e — Grammar-activated structural-scan policy table.
-    ///
-    /// One entry per non-transparent rule, derived at codegen from
-    /// CSP-inferred FIRST-set facts intersected with the grammar's
-    /// mined `structural_alphabet` + `structural_digraph_mask`.
-    /// Consumed at emission time by document/path-query code that
-    /// inlines the matching structural seek, bounded lookahead, or
-    /// bounded structural scan path per the entry's `activation`
-    /// bitmap.
-    ///
-    /// No runtime flag; no hand-routed grammar specialisation.
-    /// AY-II.W0'.c retires the `#[allow(dead_code)]` that
-    /// previously guarded this surface — the emitted grammar now
-    /// carries a same-translation-unit consumer through
-    /// `__path_walk`'s dispatch.
-    pub const STRUCTURAL_SCAN_POLICY: &[crate::runtime::tape::ScanPolicyEntry] = &[
-        crate::runtime::tape::ScanPolicyEntry {
-            rule_id: 0u32,
-            alphabet_class: crate::runtime::tape::ScanAlphabetClass::Empty,
-            activation: crate::runtime::tape::ScanActivationFlags::from_bits(0),
-        },
-    ];
     /// AW-V.W3.2 — top-level shape dispatcher.
     ///
     /// Mirrors the walker's `value` rule ByteDispatch: skip leading

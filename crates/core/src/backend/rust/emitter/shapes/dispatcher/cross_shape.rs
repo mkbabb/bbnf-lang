@@ -152,15 +152,7 @@ pub fn emit_dispatcher(
     let nonroot_ident = format_ident!("{}__value", dispatcher_ident);
     let _ = entry;
 
-    // AY-II.W0.e — Grammar-activated structural-scan policy table.
-    // Emitted at module scope alongside the dispatcher so the policy
-    // is visible to every shape emitter's consumer site without
-    // requiring cross-module path fix-up.
-    let scan_policy = super::scan_policy::emit_structural_scan_policy(grammar_suffix, ir);
-
     quote! {
-        #scan_policy
-
         /// AW-V.W3.2 — top-level shape dispatcher.
         ///
         /// Mirrors the walker's `value` rule ByteDispatch: skip leading

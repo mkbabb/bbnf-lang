@@ -119,7 +119,7 @@ impl<'p> SheetsDocument<'p> {
     ///
     /// Pre-W2-act this surface lived as
     /// `GoogleSheetsParser::serialize_compact(node)` against the
-    /// cursor-backed [`crate::runtime::tape::TapeCursor`]; that
+    /// cursor-backed [`::tape::TapeCursor`]; that
     /// emitter retired alongside the tape substrate when the
     /// struct-direct flip activated. The struct-tree walker is the
     /// substrate-with-consumer authentic equivalent.

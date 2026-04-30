@@ -228,7 +228,7 @@ pub(super) fn emit_alt_tape_dispatch(
             // `enter_post_order_children`.
             let __wrap_exit_p = *p as u32;
             let __wrap_off = builder.begin_compound_post(
-                crate::runtime::tape::TapeKind::Rule,
+                ::tape::TapeKind::Rule,
                 __wrap_enter_p,
                 #rule_variant_idx,
                 __wrap_chosen_meta,
@@ -245,7 +245,7 @@ pub(super) fn emit_alt_tape_dispatch(
             builder.end_compound_post_order(
                 __wrap_off,
                 __wrap_exit_p,
-                crate::runtime::tape::TapeOffset(__wrap_enter_child),
+                ::tape::TapeOffset(__wrap_enter_child),
             );
             Ok(())
         }
@@ -365,7 +365,7 @@ fn emit_wrap_branch_call_tape(
                                         1u32,
                                     );
                                     ::core::result::Result::<
-                                        crate::runtime::tape::TapeOffset,
+                                        ::tape::TapeOffset,
                                         crate::runtime::DtaError,
                                     >::Ok(())
                                 }
@@ -390,15 +390,15 @@ fn emit_wrap_branch_call_tape(
                                 ::core::option::Option::Some(len) => {
                                     *p += len as usize;
                                     let _ = builder.push_leaf_with(
-                                        crate::runtime::tape::TapeKind::Span,
+                                        ::tape::TapeKind::Span,
                                         span_lo,
                                         *p as u32,
                                         0,
                                         0,
-                                        crate::runtime::tape::PayloadData::None,
+                                        ::tape::PayloadData::None,
                                     );
                                     ::core::result::Result::<
-                                        crate::runtime::tape::TapeOffset,
+                                        ::tape::TapeOffset,
                                         crate::runtime::DtaError,
                                     >::Ok(())
                                 }

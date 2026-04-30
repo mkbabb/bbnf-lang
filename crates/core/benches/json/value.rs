@@ -48,7 +48,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-use bbnf::runtime::tape::{
+use tape::{
     ArrayVisitor, GrammarVisitor, KeywordVisitor, NumberVisitor, ObjectVisitor, StringVisitor,
     Tape, TapeCursor, TapeKind, TapeOffset,
 };

@@ -29,7 +29,7 @@ use ::bbnf::grammar::generated::google_sheets::*;
 /// AZ-I.W2-act.close B2 — migrated from the cursor-backed
 /// `GoogleSheetsParser::serialize_compact(node)` route to the
 /// struct-tree walker on [`bbnf::runtime::SheetsDocument`]. The
-/// pre-W2-act emitter consulted [`crate::runtime::tape::TapeCursor`]
+/// pre-W2-act emitter consulted [`::tape::TapeCursor`]
 /// span text via `GoogleSheetsParserNodeView::from_cursor`; under the
 /// struct-direct flip the parse output IS the typed tree, so the
 /// equivalent surface is `doc.serialize_compact()`.

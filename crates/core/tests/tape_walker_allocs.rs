@@ -15,7 +15,7 @@
 //! enumeration lands on every child without skipping or recursing
 //! into grandchildren.
 
-use bbnf::runtime::tape::{ChildIter, Tape, TapeCursor, TapeKind, TapeOffset};
+use tape::{ChildIter, Tape, TapeCursor, TapeKind, TapeOffset};
 
 /// AU.3.2: the iterator's footprint must stay small. Two
 /// [`TapeOffset`]s (`u32` each) plus one shared `&Tape` reference

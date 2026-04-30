@@ -137,7 +137,7 @@ pub fn emit_leaf_accessors(rule: &IrRule, rule_name: &str, type_desc: &TypeDesc)
 /// whose tape record carries a packed multi-field payload.
 ///
 /// The accessor reads `layout.total_bytes` bytes via
-/// [`bbnf::runtime::tape::Tape::payload_bytes`] and constructs a
+/// [`tape::Tape::payload_bytes`] and constructs a
 /// tuple of typed scalars via per-field `<T>::from_le_bytes`
 /// conversions at the layout-recorded offsets. When no payload was
 /// written (the rule completed without producing scalars), the

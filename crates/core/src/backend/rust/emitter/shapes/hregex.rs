@@ -97,9 +97,9 @@ fn hregex_typed_payload_body(
         )
     );
     let leaf_kind = if kind_is_kv {
-        quote! { crate::runtime::tape::TapeKind::KvPair }
+        quote! { ::tape::TapeKind::KvPair }
     } else {
-        quote! { crate::runtime::tape::TapeKind::Span }
+        quote! { ::tape::TapeKind::Span }
     };
 
     match fd {
@@ -324,7 +324,7 @@ pub fn emit_parse_hregex(
                 input: &[u8],
                 p: &mut usize,
                 state: &mut #support_mod::ScanState,
-                builder: &mut crate::runtime::tape::Tape<()>,
+                builder: &mut ::tape::Tape<()>,
             ) -> ::core::result::Result<(), crate::runtime::DtaError> {
                 #body
             }
@@ -344,7 +344,7 @@ pub fn emit_parse_hregex(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::tape::Tape<()>,
+            builder: &mut ::tape::Tape<()>,
         ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let span_lo = *p as u32;
             let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
@@ -355,12 +355,12 @@ pub fn emit_parse_hregex(
             *p += match_len as usize;
             let span_hi = *p as u32;
             let leaf_off = builder.push_leaf_with(
-                crate::runtime::tape::TapeKind::Regex,
+                ::tape::TapeKind::Regex,
                 span_lo,
                 span_hi,
                 #variant_idx,
                 0,
-                crate::runtime::tape::PayloadData::None,
+                ::tape::PayloadData::None,
             );
             Ok(leaf_off)
         }
@@ -446,7 +446,7 @@ pub fn emit_parse_number_via_hregex(
                 input: &[u8],
                 p: &mut usize,
                 first_byte: u8,
-                builder: &mut crate::runtime::tape::Tape<()>,
+                builder: &mut ::tape::Tape<()>,
             ) -> ::core::result::Result<(), crate::runtime::DtaError> {
                 let _ = (input, p, first_byte, builder);
                 Err(crate::runtime::DtaError::Syntax {
@@ -476,9 +476,9 @@ pub fn emit_parse_number_via_hregex(
         )
     );
     let leaf_kind = if kind_is_kv {
-        quote! { crate::runtime::tape::TapeKind::KvPair }
+        quote! { ::tape::TapeKind::KvPair }
     } else {
-        quote! { crate::runtime::tape::TapeKind::Span }
+        quote! { ::tape::TapeKind::Span }
     };
 
     quote! {
@@ -497,7 +497,7 @@ pub fn emit_parse_number_via_hregex(
             input: &[u8],
             p: &mut usize,
             first_byte: u8,
-            builder: &mut crate::runtime::tape::Tape<()>,
+            builder: &mut ::tape::Tape<()>,
         ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let _ = first_byte;
             let span_lo = *p as u32;
@@ -557,7 +557,7 @@ pub fn emit_parse_number_visitor_via_hregex(
                 visitor: &mut V,
             ) -> ::core::result::Result<(), crate::runtime::ParseErr>
             where
-                V: crate::runtime::tape::NumberVisitor,
+                V: ::tape::NumberVisitor,
             {
                 let _ = (input, p, first_byte, visitor);
                 Err(crate::runtime::ParseErr::Syntax {
@@ -582,7 +582,7 @@ pub fn emit_parse_number_visitor_via_hregex(
             visitor: &mut V,
         ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: crate::runtime::tape::NumberVisitor,
+            V: ::tape::NumberVisitor,
         {
             let _ = first_byte;
             let span_lo = *p;
@@ -622,18 +622,18 @@ fn emit_unsupported_stub(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::tape::Tape<()>,
+            builder: &mut ::tape::Tape<()>,
         ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let _ = state;
             let span_lo = *p as u32;
             let span_hi = *p as u32;
             let leaf_off = builder.push_leaf_with(
-                crate::runtime::tape::TapeKind::Regex,
+                ::tape::TapeKind::Regex,
                 span_lo,
                 span_hi,
                 #variant_idx,
                 0,
-                crate::runtime::tape::PayloadData::None,
+                ::tape::PayloadData::None,
             );
             Ok(leaf_off)
         }
@@ -686,7 +686,7 @@ pub fn emit_parse_hregex_visitor(
                 visitor: &mut V,
             ) -> ::core::result::Result<(), crate::runtime::ParseErr>
             where
-                V: crate::runtime::tape::StringVisitor,
+                V: ::tape::StringVisitor,
             {
                 let _ = (input, p, state, visitor);
                 Ok(())
@@ -713,7 +713,7 @@ pub fn emit_parse_hregex_visitor(
             visitor: &mut V,
         ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: crate::runtime::tape::StringVisitor,
+            V: ::tape::StringVisitor,
         {
             let span_lo = *p;
             let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {

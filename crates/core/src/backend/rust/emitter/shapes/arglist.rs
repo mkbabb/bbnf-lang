@@ -115,7 +115,7 @@ pub fn emit_parse_arglist(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::tape::Tape<()>,
+            builder: &mut ::tape::Tape<()>,
         ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let span_lo = *p as u32;
             // AY-II.W0.b — walker-parity post-order outer Rule compound.
@@ -145,7 +145,7 @@ pub fn emit_parse_arglist(
 
             let span_hi = *p as u32;
             let outer_off = builder.begin_compound_post(
-                crate::runtime::tape::TapeKind::Rule,
+                ::tape::TapeKind::Rule,
                 span_lo,
                 #variant_idx,
                 0u8,
@@ -154,7 +154,7 @@ pub fn emit_parse_arglist(
             builder.end_compound_post_order(
                 outer_off,
                 span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
+                ::tape::TapeOffset(outer_child),
             );
             Ok(())
         }
@@ -272,12 +272,12 @@ fn emit_tape_position_core(
                 }
                 *p = end;
                 let _ = builder.push_leaf_with(
-                    crate::runtime::tape::TapeKind::Literal,
+                    ::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     #variant_idx,
                     0,
-                    crate::runtime::tape::PayloadData::None,
+                    ::tape::PayloadData::None,
                 );
             }
         }
@@ -336,7 +336,7 @@ fn emit_tape_position_core(
                     } else {
                         let iter_hi = *p as u32;
                         let __iter_off = builder.begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
+                            ::tape::TapeKind::Seq,
                             iter_lo,
                             0,
                             0u8,
@@ -345,7 +345,7 @@ fn emit_tape_position_core(
                         builder.end_compound_post_order(
                             __iter_off,
                             iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
+                            ::tape::TapeOffset(iter_child),
                         );
                     }
                 }
@@ -382,7 +382,7 @@ fn emit_tape_position_core(
                         }
                         let iter_hi = *p as u32;
                         let __iter_off = builder.begin_compound_post(
-                            crate::runtime::tape::TapeKind::Seq,
+                            ::tape::TapeKind::Seq,
                             iter_lo,
                             0,
                             0u8,
@@ -391,7 +391,7 @@ fn emit_tape_position_core(
                         builder.end_compound_post_order(
                             __iter_off,
                             iter_hi,
-                            crate::runtime::tape::TapeOffset(iter_child),
+                            ::tape::TapeOffset(iter_child),
                         );
                         iter_count = iter_count.saturating_add(1);
                     }
@@ -403,7 +403,7 @@ fn emit_tape_position_core(
                     }
                     let repeat_hi = *p as u32;
                     let __repeat_off = builder.begin_compound_post(
-                        crate::runtime::tape::TapeKind::Rule,
+                        ::tape::TapeKind::Rule,
                         repeat_lo,
                         0,
                         0u8,
@@ -412,7 +412,7 @@ fn emit_tape_position_core(
                     builder.end_compound_post_order(
                         __repeat_off,
                         repeat_hi,
-                        crate::runtime::tape::TapeOffset(repeat_child),
+                        ::tape::TapeOffset(repeat_child),
                     );
                 }
             }
@@ -456,7 +456,7 @@ fn emit_tape_position_core(
                 }
                 let seq_hi = *p as u32;
                 let __seq_off = builder.begin_compound_post(
-                    crate::runtime::tape::TapeKind::Seq,
+                    ::tape::TapeKind::Seq,
                     seq_lo,
                     0,
                     0u8,
@@ -465,7 +465,7 @@ fn emit_tape_position_core(
                 builder.end_compound_post_order(
                     __seq_off,
                     seq_hi,
-                    crate::runtime::tape::TapeOffset(seq_child),
+                    ::tape::TapeOffset(seq_child),
                 );
             }
         }
@@ -540,11 +540,11 @@ pub fn emit_parse_arglist_visitor(
             visitor: &mut V,
         ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: crate::runtime::tape::ObjectVisitor
-                + crate::runtime::tape::ArrayVisitor
-                + crate::runtime::tape::StringVisitor
-                + crate::runtime::tape::NumberVisitor
-                + crate::runtime::tape::KeywordVisitor,
+            V: ::tape::ObjectVisitor
+                + ::tape::ArrayVisitor
+                + ::tape::StringVisitor
+                + ::tape::NumberVisitor
+                + ::tape::KeywordVisitor,
         {
             #body_emission
             Ok(())

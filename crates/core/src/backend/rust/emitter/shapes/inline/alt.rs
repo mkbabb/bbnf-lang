@@ -180,7 +180,7 @@ pub(super) fn emit_alt_tape(
             }
             let alt_hi = *p as u32;
             let __alt_off = builder.begin_compound_post(
-                crate::runtime::tape::TapeKind::Alt,
+                ::tape::TapeKind::Alt,
                 alt_lo,
                 #variant_lit,
                 0u8,
@@ -189,7 +189,7 @@ pub(super) fn emit_alt_tape(
             builder.end_compound_post_order(
                 __alt_off,
                 alt_hi,
-                crate::runtime::tape::TapeOffset(alt_child),
+                ::tape::TapeOffset(alt_child),
             );
         }
     }
@@ -294,7 +294,7 @@ fn emit_literal_branch_tape(sid: u32, ir: &GrammarIR) -> TokenStream {
             if input.len() >= end && input[at..end] == [#(#byte_lits),*] {
                 *p = end;
                 let _ = builder.push_leaf(
-                    crate::runtime::tape::TapeKind::Literal,
+                    ::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     0,
@@ -330,7 +330,7 @@ fn emit_regex_branch_tape(sid: u32, grammar_suffix: &str, ir: &GrammarIR) -> Tok
             {
                 *p += match_len as usize;
                 let _ = builder.push_leaf(
-                    crate::runtime::tape::TapeKind::Span,
+                    ::tape::TapeKind::Span,
                     span_lo,
                     *p as u32,
                     0,
@@ -363,7 +363,7 @@ fn emit_seq_branch_tape(seq: &IrNode, ir: &GrammarIR) -> TokenStream {
                     let seq_lo = save_p as u32;
                     let seq_hi = *p as u32;
                     let _ = builder.push_leaf(
-                        crate::runtime::tape::TapeKind::Literal,
+                        ::tape::TapeKind::Literal,
                         seq_lo,
                         seq_hi,
                         0,

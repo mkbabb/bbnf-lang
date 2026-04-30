@@ -8,7 +8,7 @@
 //!
 //! Tranche AC.2 landing surface. For every rule in the IR, this
 //! module emits a `<Rule>View<'p>` wrapper struct that holds a
-//! [`crate::runtime::tape::TapeCursor`] plus a borrow of the
+//! [`::tape::TapeCursor`] plus a borrow of the
 //! original input string. The `input` borrow lets view accessors
 //! lazily materialize scalar projections (numeric conversion, hex
 //! conversion, constant lookups, etc.) from the source bytes —
@@ -213,26 +213,26 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
             impl<'p> #view_ident<'p> {
                 #[inline]
                 pub fn new(
-                    tape: &'p crate::runtime::tape::Tape,
+                    tape: &'p ::tape::Tape,
                     input: &'p str,
-                    offset: crate::runtime::tape::TapeOffset,
+                    offset: ::tape::TapeOffset,
                 ) -> Self {
                     Self {
-                        cursor: crate::runtime::tape::TapeCursor::new(tape, offset),
+                        cursor: ::tape::TapeCursor::new(tape, offset),
                         input,
                     }
                 }
 
                 #[inline]
                 pub fn from_cursor(
-                    cursor: crate::runtime::tape::TapeCursor<'p>,
+                    cursor: ::tape::TapeCursor<'p>,
                     input: &'p str,
                 ) -> Self {
                     Self { cursor, input }
                 }
 
                 #[inline]
-                pub fn cursor(&self) -> crate::runtime::tape::TapeCursor<'p> {
+                pub fn cursor(&self) -> ::tape::TapeCursor<'p> {
                     self.cursor
                 }
 
@@ -240,7 +240,7 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
                 pub fn input(&self) -> &'p str { self.input }
 
                 #[inline]
-                pub fn kind(&self) -> crate::runtime::tape::TapeKind {
+                pub fn kind(&self) -> ::tape::TapeKind {
                     self.cursor.kind()
                 }
 
@@ -313,7 +313,7 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
             /// Generated view over a tape record produced by this rule.
             #[derive(Clone, Copy, Debug)]
             pub struct #view_ident<'p> {
-                cursor: crate::runtime::tape::TapeCursor<'p>,
+                cursor: ::tape::TapeCursor<'p>,
                 input: &'p str,
             }
 
@@ -331,7 +331,7 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
         /// Generic node view over any tape record for this grammar.
         #[derive(Clone, Copy, Debug)]
         pub struct #node_view_ident<'p> {
-            cursor: crate::runtime::tape::TapeCursor<'p>,
+            cursor: ::tape::TapeCursor<'p>,
             input: &'p str,
         }
 
@@ -381,9 +381,9 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
 
                 #[inline]
                 fn make_view<'p>(
-                    tape: &'p crate::runtime::tape::Tape<()>,
+                    tape: &'p ::tape::Tape<()>,
                     input: &'p str,
-                    root: crate::runtime::tape::TapeOffset,
+                    root: ::tape::TapeOffset,
                 ) -> Self::View<'p> {
                     #root_view_ident::new(tape, input, root)
                 }

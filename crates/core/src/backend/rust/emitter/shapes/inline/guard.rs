@@ -257,12 +257,12 @@ pub(super) fn emit_primary_tape(
                 }
                 *p = end;
                 let _ = builder.push_leaf_with(
-                    crate::runtime::tape::TapeKind::Literal,
+                    ::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     #variant_lit,
                     0,
-                    crate::runtime::tape::PayloadData::None,
+                    ::tape::PayloadData::None,
                 );
             }
         }

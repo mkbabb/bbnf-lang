@@ -27,7 +27,7 @@
 //! ```
 //!
 //! The helper reads from the fused slab (W0'.a-published
-//! [`Tape<R>`](crate::runtime::tape::Tape)) via:
+//! [`Tape<R>`](::tape::Tape)) via:
 //!
 //! - `output.frame(offset)` — the admission's own frame,
 //!   carrying its `span_lo`/`span_hi` + `variant_idx`.
@@ -195,7 +195,7 @@ fn emit_projection_fn(
         quote! {
             let __tape = output;
             let __tape_rec = __tape
-                .try_get(crate::runtime::tape::TapeOffset(offset))?;
+                .try_get(::tape::TapeOffset(offset))?;
             let __bytes = __tape.payload_bytes(__tape_rec, #total_bytes_lit)?;
         }
     };
@@ -221,7 +221,7 @@ fn emit_projection_fn(
     quote! {
         /// AY-II.W0'.b — grammar-derived direct-to-struct projection
         /// helper. Reads the admitted rule's frame from the
-        /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
+        /// fused-pipeline [`Tape<R>`](::tape::Tape)
         /// slab and constructs the matching projection struct;
         /// returns `None` when the slab's frame is absent or the
         /// tape's aggregate buffer is too short.
@@ -235,7 +235,7 @@ fn emit_projection_fn(
         #[inline]
         #[doc(hidden)]
         pub fn #fn_ident<'p>(
-            output: &crate::runtime::tape::Tape<#grammar_ident>,
+            output: &::tape::Tape<#grammar_ident>,
             input: &'p str,
             offset: u32,
         ) -> ::core::option::Option<#return_ty> {

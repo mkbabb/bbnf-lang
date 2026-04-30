@@ -204,8 +204,8 @@ pub fn emit_parse_string_visitor(
             is_key: bool,
         ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: crate::runtime::tape::StringVisitor
-                + crate::runtime::tape::ObjectVisitor,
+            V: ::tape::StringVisitor
+                + ::tape::ObjectVisitor,
         {
             let open = *p;
             if input.get(open).copied() != Some(b'"') {
@@ -281,8 +281,8 @@ pub fn emit_visitor_escape_helper(grammar_suffix: &str) -> TokenStream {
             open: usize,
         ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: crate::runtime::tape::StringVisitor
-                + crate::runtime::tape::ObjectVisitor,
+            V: ::tape::StringVisitor
+                + ::tape::ObjectVisitor,
         {
             let mut buf: Vec<u8> = Vec::with_capacity(
                 input.len().saturating_sub(body_start),

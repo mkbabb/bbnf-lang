@@ -29,7 +29,7 @@
 //!    A canada.json-fixture check runs when the file is present under
 //!    `data/json/canada.json`; otherwise the synthetic input is used.
 
-use bbnf::runtime::tape::{
+use tape::{
     ColumnTag, Columns, Count, MaxF64, MinF64, PayAggU8, PayNarrowU32, PayWideF64, PayWideU64,
     Reducer, SumF64, SumU32, SumU64,
 };
@@ -600,7 +600,7 @@ fn reduce_column_ignores_structural_columns() {
     // child_off) are irrelevant. Building a tape with structural
     // rows and a different-count payload column must still produce
     // the correct sum over just the payload column.
-    use bbnf::runtime::tape::TapeKind;
+    use tape::TapeKind;
 
     let mut cols = Columns::new();
     // 10 structural compound rows — these should NOT affect the

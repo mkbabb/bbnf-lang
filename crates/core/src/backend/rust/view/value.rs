@@ -21,7 +21,7 @@
 //! 2. `impl crate::runtime::ValueRoot for <Grammar>` — the GAT
 //!    binding with `type Value<'p> = <Grammar>Value<'p>` + the
 //!    `project_value_output` entry-point that consumes the
-//!    W0'.a-published [`Tape<R>`](crate::runtime::tape::Tape)
+//!    W0'.a-published [`Tape<R>`](::tape::Tape)
 //!    slab and drives the grammar's per-admission
 //!    `materialize_projection_<rule>_<Grammar>(output, input, offset)`
 //!    helpers. Non-admitted rules fall through to the existing
@@ -429,7 +429,7 @@ fn emit_value_root_impl(
         /// invariant — pre-B5.W0.6 the codegen ignored it.
         #[inline(always)]
         fn #dispatch_fn(
-            kind: crate::runtime::tape::TapeKind,
+            kind: ::tape::TapeKind,
             variant_idx: u8,
         ) -> #rule_kind_ident {
             // Intermediate compound — non-rule structural frame stamped
@@ -471,13 +471,13 @@ fn emit_value_root_impl(
         /// payload reads on leaves with a payload tag.
         #[inline]
         fn #push_children_fn<'p>(
-            output: &crate::runtime::tape::Tape<#grammar_ident>,
+            output: &::tape::Tape<#grammar_ident>,
             input: &'p str,
             offset: u32,
             out: &mut ::std::vec::Vec<#value_ident<'p>>,
         ) {
             let __tape = output;
-            let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(offset)) {
+            let __rec = match __tape.try_get(::tape::TapeOffset(offset)) {
                 ::core::option::Option::Some(r) => r,
                 ::core::option::Option::None => return,
             };
@@ -485,9 +485,9 @@ fn emit_value_root_impl(
             // children without surfacing a wrapper variant. Leaves and
             // rule-bound compounds project as a single value.
             if __rec.variant_idx() == 0 && __rec.kind().is_compound() {
-                let __cur = crate::runtime::tape::TapeCursor::new(
+                let __cur = ::tape::TapeCursor::new(
                     __tape,
-                    crate::runtime::tape::TapeOffset(offset),
+                    ::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     #push_children_fn(output, input, __child.offset().0, out);
@@ -498,7 +498,7 @@ fn emit_value_root_impl(
         }
 
         /// AY-II.W0'.b — per-frame projector. Reads one record from the
-        /// fused-pipeline [`Tape<R>`](crate::runtime::tape::Tape)
+        /// fused-pipeline [`Tape<R>`](::tape::Tape)
         /// tape and constructs the matching `<Grammar>Value` variant.
         /// Admitted rules tail-call their grammar-derived materializer;
         /// non-admitted rules construct the variant inline. Compound
@@ -511,12 +511,12 @@ fn emit_value_root_impl(
         /// payload — that path remains in the scalar arm.
         #[inline]
         fn #frame_fn<'p>(
-            output: &crate::runtime::tape::Tape<#grammar_ident>,
+            output: &::tape::Tape<#grammar_ident>,
             input: &'p str,
             offset: u32,
         ) -> #value_ident<'p> {
             let __tape = output;
-            let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(offset)) {
+            let __rec = match __tape.try_get(::tape::TapeOffset(offset)) {
                 ::core::option::Option::Some(r) => r,
                 ::core::option::Option::None => {
                     ::core::panic!(
@@ -553,7 +553,7 @@ fn emit_value_root_impl(
         /// invariant.
         #[inline]
         fn #root_fn<'p>(
-            output: &crate::runtime::tape::Tape<#grammar_ident>,
+            output: &::tape::Tape<#grammar_ident>,
             input: &'p str,
         ) -> #value_ident<'p> {
             let root_off = output.root_offset();
@@ -567,7 +567,7 @@ fn emit_value_root_impl(
             // of the value tree.
             let mut __cur_off = root_off;
             loop {
-                let __rec = match __tape.try_get(crate::runtime::tape::TapeOffset(__cur_off)) {
+                let __rec = match __tape.try_get(::tape::TapeOffset(__cur_off)) {
                     ::core::option::Option::Some(r) => r,
                     ::core::option::Option::None => break,
                 };
@@ -592,7 +592,7 @@ fn emit_value_root_impl(
 
             #[inline]
             fn project_value_output<'p>(
-                output: &crate::runtime::tape::Tape<#grammar_ident>,
+                output: &::tape::Tape<#grammar_ident>,
                 input: &'p str,
             ) -> Self::Value<'p>
             where
@@ -682,9 +682,9 @@ fn emit_project_arm(
                 // reading `kind` / `variant_idx` from the tape record.
                 let mut children: ::std::vec::Vec<#value_ident<'p>> =
                     ::std::vec::Vec::new();
-                let __cur = crate::runtime::tape::TapeCursor::new(
+                let __cur = ::tape::TapeCursor::new(
                     __tape,
-                    crate::runtime::tape::TapeOffset(offset),
+                    ::tape::TapeOffset(offset),
                 );
                 for __child in __cur.children() {
                     #push_children_fn(output, input, __child.offset().0, &mut children);
@@ -1037,9 +1037,9 @@ fn emit_path_query_impls(
         /// access. Rules outside structural-scan admission fall
         /// through to a generic children iteration.
         ///
-        /// [`TapeCursor::bounded_lookahead`]: crate::runtime::tape::TapeCursor::bounded_lookahead
-        /// [`TapeCursor::object_key_seek`]: crate::runtime::tape::TapeCursor::object_key_seek
-        /// [`TapeCursor::scan_structural_bounded`]: crate::runtime::tape::TapeCursor::scan_structural_bounded
+        /// [`TapeCursor::bounded_lookahead`]: ::tape::TapeCursor::bounded_lookahead
+        /// [`TapeCursor::object_key_seek`]: ::tape::TapeCursor::object_key_seek
+        /// [`TapeCursor::scan_structural_bounded`]: ::tape::TapeCursor::scan_structural_bounded
         #[inline]
         fn __path_walk<'p>(
             view: #node_view_ident<'p>,

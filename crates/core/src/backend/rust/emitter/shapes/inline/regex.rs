@@ -40,12 +40,12 @@ pub(super) fn emit_regex_tape(
             *p += match_len as usize;
             let span_hi = *p as u32;
             let _ = builder.push_leaf_with(
-                crate::runtime::tape::TapeKind::Span,
+                ::tape::TapeKind::Span,
                 span_lo,
                 span_hi,
                 #variant_lit,
                 0,
-                crate::runtime::tape::PayloadData::None,
+                ::tape::PayloadData::None,
             );
         }
     }

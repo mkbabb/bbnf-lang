@@ -21,7 +21,7 @@
 //!
 //! # AZ-I.W2-act.close B2 — struct-direct migration
 //!
-//! Pre-W2-act this file walked the parser's [`crate::runtime::tape::Tape`]
+//! Pre-W2-act this file walked the parser's [`::tape::Tape`]
 //! looking for `Span` / `KvPair` records whose `payload_u8` /
 //! `payload_bytes(rec, 8)` columns carried the typed leaves. Under the
 //! struct-direct flip the tape substrate retired alongside the
@@ -49,7 +49,7 @@ use bbnf::runtime::{
 /// root).
 ///
 /// AZ-I.W2-act.close B2 — replaces the pre-flip `walk(tape, cursor,
-/// out)` worklist that consumed [`crate::runtime::tape::TapeCursor`]
+/// out)` worklist that consumed [`::tape::TapeCursor`]
 /// records. The struct-tree walker uses an iterative `Vec` worklist
 /// over the arena's compound slabs — deeply-nested formulae
 /// (`=IF(A1>10, SUM(B1:B10), 0)`, the nested LET / LAMBDA chains in

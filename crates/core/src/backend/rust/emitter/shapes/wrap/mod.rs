@@ -139,8 +139,8 @@ pub(super) fn wrap_rule_leaf_kind(rule: &IrRule, ir: &GrammarIR) -> TokenStream 
         }
     });
     match ty {
-        Some(TypeDesc::U8) => quote! { crate::runtime::tape::TapeKind::KvPair },
-        _ => quote! { crate::runtime::tape::TapeKind::Span },
+        Some(TypeDesc::U8) => quote! { ::tape::TapeKind::KvPair },
+        _ => quote! { ::tape::TapeKind::Span },
     }
 }
 
@@ -303,7 +303,7 @@ pub fn emit_parse_wrap(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::tape::Tape<()>,
+            builder: &mut ::tape::Tape<()>,
         ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             #dispatch
         }

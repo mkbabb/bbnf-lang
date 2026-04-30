@@ -107,12 +107,12 @@ pub fn emit_parse_pratt_visitor(
             visitor: &mut V,
         ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: crate::runtime::tape::PrattVisitor
-                + crate::runtime::tape::ObjectVisitor
-                + crate::runtime::tape::ArrayVisitor
-                + crate::runtime::tape::StringVisitor
-                + crate::runtime::tape::NumberVisitor
-                + crate::runtime::tape::KeywordVisitor,
+            V: ::tape::PrattVisitor
+                + ::tape::ObjectVisitor
+                + ::tape::ArrayVisitor
+                + ::tape::StringVisitor
+                + ::tape::NumberVisitor
+                + ::tape::KeywordVisitor,
         {
             // Local op stack — same layout as the tape-path emitter's
             // `LocalOpEntry` but carries only the data the visitor

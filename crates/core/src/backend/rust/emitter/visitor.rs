@@ -48,10 +48,10 @@
 //! pub fn sum_of_f64(col: &[f64]) -> f64 { /* 4-lane reordered */ }
 //!
 //! // AW-IV.W5.1 — column wrapper, dispatches through reduce_column.
-//! pub fn reduce_sum_of_f64(cols: &bbnf::runtime::tape::Columns) -> f64 {
+//! pub fn reduce_sum_of_f64(cols: &tape::Columns) -> f64 {
 //!     cols.reduce_column::<
-//!         bbnf::runtime::tape::PayWideF64,
-//!         bbnf::runtime::tape::SumF64,
+//!         tape::PayWideF64,
+//!         tape::SumF64,
 //!     >()
 //! }
 //! ```
@@ -111,12 +111,12 @@ fn emit_column_wrapper(desc: &VisitorDescriptor) -> TokenStream {
     quote! {
         /// AW-IV.W5.1 — column-coupled consumer of the tape's
         /// typed-payload substrate. Dispatches through
-        /// [`Columns::reduce_column<C, R>`][bbnf::runtime::tape::Columns::reduce_column],
+        /// [`Columns::reduce_column<C, R>`][tape::Columns::reduce_column],
         /// which resolves to the arch-intrinsic SIMD kernel (NEON
         /// `vaddq_f64` pairs / AVX2 `_mm256_add_pd` / reordered-scalar
         /// 4-lane fold) at monomorphisation.
         #[inline]
-        pub fn #wrapper_name(cols: &crate::runtime::tape::Columns) -> #out_ty {
+        pub fn #wrapper_name(cols: &::tape::Columns) -> #out_ty {
             cols.reduce_column::<#tag_path, #reducer_path>()
         }
     }
@@ -130,20 +130,20 @@ fn emit_column_wrapper(desc: &VisitorDescriptor) -> TokenStream {
 /// the other column tags route through `pay_narrow` / `pay_wide`.
 fn column_tag_and_reducer(desc: &VisitorDescriptor) -> (TokenStream, TokenStream) {
     let tag = match desc.column {
-        VisitorColumn::F64 => quote! { crate::runtime::tape::PayWideF64 },
-        VisitorColumn::U32 => quote! { crate::runtime::tape::PayNarrowU32 },
-        VisitorColumn::U64 => quote! { crate::runtime::tape::PayWideU64 },
-        VisitorColumn::U8 => quote! { crate::runtime::tape::PayAggU8 },
+        VisitorColumn::F64 => quote! { ::tape::PayWideF64 },
+        VisitorColumn::U32 => quote! { ::tape::PayNarrowU32 },
+        VisitorColumn::U64 => quote! { ::tape::PayWideU64 },
+        VisitorColumn::U8 => quote! { ::tape::PayAggU8 },
     };
     let reducer = match (desc.reduce, desc.column) {
         (VisitorReduce::Sum, VisitorColumn::F64) => {
-            quote! { crate::runtime::tape::SumF64 }
+            quote! { ::tape::SumF64 }
         }
         (VisitorReduce::Sum, VisitorColumn::U32) => {
-            quote! { crate::runtime::tape::SumU32 }
+            quote! { ::tape::SumU32 }
         }
         (VisitorReduce::Sum, VisitorColumn::U64) => {
-            quote! { crate::runtime::tape::SumU64 }
+            quote! { ::tape::SumU64 }
         }
         (VisitorReduce::Sum, VisitorColumn::U8) => {
             // `SumU8` is not in the tape crate's reducer suite today
@@ -151,13 +151,13 @@ fn column_tag_and_reducer(desc: &VisitorDescriptor) -> (TokenStream, TokenStream
             // is rare). Fall back to `Count` which is the sensible
             // shape here; mining will not emit a Sum/U8 descriptor
             // in practice.
-            quote! { crate::runtime::tape::Count }
+            quote! { ::tape::Count }
         }
         (VisitorReduce::Min, VisitorColumn::F64) => {
-            quote! { crate::runtime::tape::MinF64 }
+            quote! { ::tape::MinF64 }
         }
         (VisitorReduce::Max, VisitorColumn::F64) => {
-            quote! { crate::runtime::tape::MaxF64 }
+            quote! { ::tape::MaxF64 }
         }
         (VisitorReduce::Min, _) | (VisitorReduce::Max, _) => {
             // Min/Max over integer columns — not yet in the tape
@@ -165,10 +165,10 @@ fn column_tag_and_reducer(desc: &VisitorDescriptor) -> (TokenStream, TokenStream
             // emitted wrapper still compiles. Extension point: add
             // `MinU32`, `MaxU32`, etc. to `tape::columns` when
             // the mining signals a need.
-            quote! { crate::runtime::tape::Count }
+            quote! { ::tape::Count }
         }
         (VisitorReduce::Count, _) => {
-            quote! { crate::runtime::tape::Count }
+            quote! { ::tape::Count }
         }
     };
     (tag, reducer)

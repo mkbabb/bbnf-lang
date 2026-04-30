@@ -94,11 +94,11 @@ pub fn emit_parse_keyword_visitor(
                     visitor: &mut V,
                 ) -> ::core::result::Result<(), crate::runtime::ParseErr>
                 where
-                    V: crate::runtime::tape::KeywordVisitor
-                       + crate::runtime::tape::ObjectVisitor
-                       + crate::runtime::tape::ArrayVisitor
-                       + crate::runtime::tape::StringVisitor
-                       + crate::runtime::tape::NumberVisitor,
+                    V: ::tape::KeywordVisitor
+                       + ::tape::ObjectVisitor
+                       + ::tape::ArrayVisitor
+                       + ::tape::StringVisitor
+                       + ::tape::NumberVisitor,
                 {
                     let at = *p;
                     let end = at + #len;
@@ -245,11 +245,11 @@ pub fn emit_parse_keyword_visitor(
                     visitor: &mut V,
                 ) -> ::core::result::Result<(), crate::runtime::ParseErr>
                 where
-                    V: crate::runtime::tape::KeywordVisitor
-                       + crate::runtime::tape::ObjectVisitor
-                       + crate::runtime::tape::ArrayVisitor
-                       + crate::runtime::tape::StringVisitor
-                       + crate::runtime::tape::NumberVisitor,
+                    V: ::tape::KeywordVisitor
+                       + ::tape::ObjectVisitor
+                       + ::tape::ArrayVisitor
+                       + ::tape::StringVisitor
+                       + ::tape::NumberVisitor,
                 {
                     let _ = state;
                     match first_byte {

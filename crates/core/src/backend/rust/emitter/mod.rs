@@ -202,7 +202,7 @@ impl Emitter for RustEmitter {
             let class = RustEmitter::materialization_for_rule_pub(ir, rule);
             if class == MaterializationClass::MustTape {
                 ctx.tape_surgery = Some(crate::backend::rust::emitter_types::TapeSurgeryCtx {
-                    tape_kind: quote::quote! { crate::runtime::tape::TapeKind::Rule },
+                    tape_kind: quote::quote! { ::tape::TapeKind::Rule },
                 });
             } else {
                 ctx.tape_surgery = None;

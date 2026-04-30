@@ -337,7 +337,7 @@ pub fn emit_parse_unordered(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::tape::Tape<()>,
+            builder: &mut ::tape::Tape<()>,
         ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let span_lo = *p as u32;
             // AY-II.W0.b — walker-parity post-order Repeat Rule
@@ -396,7 +396,7 @@ pub fn emit_parse_unordered(
             }
             let span_hi = *p as u32;
             let outer_off = builder.begin_compound_post(
-                crate::runtime::tape::TapeKind::Rule,
+                ::tape::TapeKind::Rule,
                 span_lo,
                 #variant_idx,
                 0u8,
@@ -405,7 +405,7 @@ pub fn emit_parse_unordered(
             builder.end_compound_post_order(
                 outer_off,
                 span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
+                ::tape::TapeOffset(outer_child),
             );
             ::core::result::Result::Ok(())
         }
@@ -447,7 +447,7 @@ fn emit_parse_unordered_fallback(
             input: &[u8],
             p: &mut usize,
             state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::tape::Tape<()>,
+            builder: &mut ::tape::Tape<()>,
         ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let _ = state;
             let span_lo = *p as u32;
@@ -457,7 +457,7 @@ fn emit_parse_unordered_fallback(
             let span_hi = *p as u32;
             let _ = input;
             let outer_off = builder.begin_compound_post(
-                crate::runtime::tape::TapeKind::Rule,
+                ::tape::TapeKind::Rule,
                 span_lo,
                 #variant_idx,
                 0u8,
@@ -466,7 +466,7 @@ fn emit_parse_unordered_fallback(
             builder.end_compound_post_order(
                 outer_off,
                 span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
+                ::tape::TapeOffset(outer_child),
             );
             ::core::result::Result::Ok(())
         }
@@ -548,11 +548,11 @@ pub fn emit_parse_unordered_visitor(
             visitor: &mut V,
         ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: crate::runtime::tape::ObjectVisitor
-                + crate::runtime::tape::ArrayVisitor
-                + crate::runtime::tape::StringVisitor
-                + crate::runtime::tape::NumberVisitor
-                + crate::runtime::tape::KeywordVisitor,
+            V: ::tape::ObjectVisitor
+                + ::tape::ArrayVisitor
+                + ::tape::StringVisitor
+                + ::tape::NumberVisitor
+                + ::tape::KeywordVisitor,
         {
             let mut iters: u32 = 0;
             loop {
@@ -598,11 +598,11 @@ fn emit_parse_unordered_visitor_fallback(
             visitor: &mut V,
         ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: crate::runtime::tape::ObjectVisitor
-                + crate::runtime::tape::ArrayVisitor
-                + crate::runtime::tape::StringVisitor
-                + crate::runtime::tape::NumberVisitor
-                + crate::runtime::tape::KeywordVisitor,
+            V: ::tape::ObjectVisitor
+                + ::tape::ArrayVisitor
+                + ::tape::StringVisitor
+                + ::tape::NumberVisitor
+                + ::tape::KeywordVisitor,
         {
             let _ = (input, p, state, visitor);
             ::core::result::Result::Ok(())

@@ -232,7 +232,7 @@ pub fn emit_parse_number_visitor(
             visitor: &mut V,
         ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: crate::runtime::tape::NumberVisitor,
+            V: ::tape::NumberVisitor,
         {
             const POW10_U64: [u64; 17] = [
                 1, 10, 100, 1_000, 10_000, 100_000, 1_000_000,

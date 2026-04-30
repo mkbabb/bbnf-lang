@@ -115,7 +115,7 @@ pub(super) fn emit_token_dispatch_tape(
             }
             let td_hi = *p as u32;
             let __td_off = builder.begin_compound_post(
-                crate::runtime::tape::TapeKind::TokenDispatch,
+                ::tape::TapeKind::TokenDispatch,
                 td_lo,
                 #variant_lit,
                 0u8,
@@ -124,7 +124,7 @@ pub(super) fn emit_token_dispatch_tape(
             builder.end_compound_post_order(
                 __td_off,
                 td_hi,
-                crate::runtime::tape::TapeOffset(td_child),
+                ::tape::TapeOffset(td_child),
             );
         }
     }

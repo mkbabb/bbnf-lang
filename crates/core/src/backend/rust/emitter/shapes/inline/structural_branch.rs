@@ -124,12 +124,12 @@ fn emit_branch_position_core(
                 }
                 *p = end;
                 let _ = builder.push_leaf_with(
-                    crate::runtime::tape::TapeKind::Literal,
+                    ::tape::TapeKind::Literal,
                     at as u32,
                     end as u32,
                     0,
                     0,
-                    crate::runtime::tape::PayloadData::None,
+                    ::tape::PayloadData::None,
                 );
             }
         }
@@ -152,12 +152,12 @@ fn emit_branch_position_core(
                 *p += match_len as usize;
                 let span_hi = *p as u32;
                 let _ = builder.push_leaf_with(
-                    crate::runtime::tape::TapeKind::Span,
+                    ::tape::TapeKind::Span,
                     span_lo,
                     span_hi,
                     0,
                     0,
-                    crate::runtime::tape::PayloadData::None,
+                    ::tape::PayloadData::None,
                 );
             }
         }

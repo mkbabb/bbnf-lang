@@ -61,11 +61,11 @@ pub fn emit_parse_array_visitor(
             visitor: &mut V,
         ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: crate::runtime::tape::ObjectVisitor
-                + crate::runtime::tape::ArrayVisitor
-                + crate::runtime::tape::StringVisitor
-                + crate::runtime::tape::NumberVisitor
-                + crate::runtime::tape::KeywordVisitor,
+            V: ::tape::ObjectVisitor
+                + ::tape::ArrayVisitor
+                + ::tape::StringVisitor
+                + ::tape::NumberVisitor
+                + ::tape::KeywordVisitor,
         {
             let begin_at = *p;
             if input.get(*p).copied() != Some(b'[') {

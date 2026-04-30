@@ -44,11 +44,11 @@ pub fn emit_parse_alt_dispatch_visitor(
             visitor: &mut V,
         ) -> ::core::result::Result<(), crate::runtime::ParseErr>
         where
-            V: crate::runtime::tape::ObjectVisitor
-                + crate::runtime::tape::ArrayVisitor
-                + crate::runtime::tape::StringVisitor
-                + crate::runtime::tape::NumberVisitor
-                + crate::runtime::tape::KeywordVisitor,
+            V: ::tape::ObjectVisitor
+                + ::tape::ArrayVisitor
+                + ::tape::StringVisitor
+                + ::tape::NumberVisitor
+                + ::tape::KeywordVisitor,
         {
             let first = #support_mod::skip_space(input, p, state)
                 .ok_or(crate::runtime::ParseErr::Syntax {

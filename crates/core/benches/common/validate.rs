@@ -6,7 +6,7 @@
 
 #![allow(dead_code)]
 
-use bbnf::runtime::tape::{TapeCursor, TapeKind};
+use tape::{TapeCursor, TapeKind};
 
 /// Extract the span text for a cursor from the input.
 fn cursor_text<'a>(cursor: &TapeCursor<'_>, input: &'a str) -> &'a str {
@@ -26,7 +26,7 @@ fn count_reachable(cursor: TapeCursor<'_>) -> usize {
 /// Assert that the tape record count falls in `[min, max]`.
 /// Panics with `label` context if the assertion fails.
 pub fn assert_record_count_range(
-    tape: &bbnf::runtime::tape::Tape,
+    tape: &tape::Tape,
     min: usize,
     max: usize,
     label: &str,

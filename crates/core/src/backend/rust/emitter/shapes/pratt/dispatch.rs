@@ -1,13 +1,12 @@
 //! Pratt emitter dispatch.
 //!
-//! AZ-II.cutover.O4 routes production Pratt emission to the
-//! struct-builder implementation. The historical tape body was retired
-//! with the strategy variant that selected it.
-
-use bbnf_ir::{GrammarIR, IrRule};
-use proc_macro2::TokenStream;
+//! AZ-II/O4 routes production Pratt emission to the StructDirect
+//! implementation. The retired column-body strategy no longer has a
+//! selectable `EmitStrategy` variant.
 
 use bbnf_ir::registry::EmitStrategy;
+use bbnf_ir::{GrammarIR, IrRule};
+use proc_macro2::TokenStream;
 
 /// Emit `pub fn parse_pratt_<grammar>_<rule>(input, p, state, builder)`.
 pub fn emit_parse_pratt(

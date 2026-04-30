@@ -1,6 +1,6 @@
-//! Pratt-shape emitter — `parse_pratt_<grammar>_<rule>`.
+//! Pratt-shape emitter.
 //!
-//! # Role — AW-V.W4.1 (substrate) / AY.W6.c (write-time retarget)
+//! # Role
 //!
 //! Emits per-grammar Pratt-shape parse functions for operator-chain
 //! head rules. The emitted body is driven entirely by grammar-derived
@@ -9,8 +9,7 @@
 //! declared operator precedence + associativity at codegen time; no
 //! grammar-name dispatch survives in the runtime body.
 //!
-//! Unlike the walker's indirected `dispatch_one` arm, the emitted
-//! code is a monolithic inline body:
+//! The emitted code is a monolithic StructDirect body:
 //!
 //! - Operand dispatch calls through the per-grammar value-position
 //!   dispatcher — the same dispatcher Object / Array shape emitters
@@ -18,43 +17,14 @@
 //! - Operator reduction uses the per-grammar `PRECEDENCE_LUT` const
 //!   the [`crate::backend::rust::emitter::precedence`] emitter
 //!   already lowers.
-//! - The outer Pratt compound opens pre-order via
-//!   [`Tape<R>::begin_compound`] and closes via
-//!   [`Tape<R>::end_compound_with_child_off`] (B5.W4 substrate), so
-//!   its direct children (operands, op-leaf Spans, reducer compounds)
-//!   land with write-time `sib_skip` stamping. The close primitive
-//!   stamps the outer row's `child_off` directly to the final reducer
-//!   root — preserving the walker's ShuntingYard invariant (outer
-//!   compound's `child_off` names the reduced operator-tree root) in
-//!   one substrate call, with no post-close surgery.
-//! - Reducer inner compounds remain `push_compound` post-order: a
-//!   reducer is synthesised at reduce time, AFTER its lhs + op-leaf +
-//!   rhs have already been pushed, with its `child_off` pointing at
-//!   the lhs row. The reducer shape is inherently post-order; open/
-//!   close does not fit.
-//!
-//! # Tape shape (for `a + b * c`)
-//!
-//! ```text
-//! [ 0] Rule    (Pratt outer)         span=0..N  child=<final-reducer-idx>
-//! [ 1] ...operand 'a' records...
-//! [ N] Span    variant=0 payload='+' span=p..p+1
-//! [N+1] ...operand 'b' records...
-//! [ M] Span    variant=0 payload='*' span=q..q+1
-//! [M+1] ...operand 'c' records...
-//! [ K] Rule    (reducer b*c)         child=pointer-to-'b'  variant='*'_disc
-//! [K+1] Rule    (reducer a+(b*c))    child=pointer-to-'a'  variant='+'_disc
-//! ```
-//!
-//! The outer compound lands at the TOP of the run (pre-order) with
-//! `open_compound`; its `child_off` is overridden post-close to name
-//! record `[K+1]` — the final reducer. Intermediate rows (operands,
-//! op leaves, reducers) carry W5.b `SIB_SKIP_STAMPED_BIT` stamping.
+//! - Reducer nodes are built through the StructBuilder surface so the
+//!   operator tree is projected directly into the target typed
+//!   structure without an intermediate column substrate.
 
+mod dispatch;
 mod struct_direct;
-mod tape;
 
-pub use tape::emit_parse_pratt;
+pub use dispatch::emit_parse_pratt;
 
 /// Find the operand-position Ref in a Pratt rule's body for direct
 /// shape-fn dispatch.

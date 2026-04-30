@@ -139,15 +139,14 @@ fn quote_layout_literal(rule: &IrRule, ir: &GrammarIR) -> TokenStream {
 
 /// Emit the struct-direct Pratt-shape parse function.
 ///
-/// Mirrors the tape-path entry's outer structure (operand dispatch +
-/// LUT-driven operator loop) but routes structural emission through
-/// the grammar's concrete `StructBuilder`'s
+/// Mirrors the operand dispatch + LUT-driven operator loop structure,
+/// routing structural emission through the grammar's concrete
+/// `StructBuilder`'s
 /// `begin_compound(&__layout)` /
 /// `push_branch_tag(op_discriminant)` /
 /// `end_compound(handle)` calls. Per-rule operand calls thread the
-/// same `&mut <BuilderTy>` argument the tape path threads as
-/// `&mut Tape<()>`; the call signature is consistent across both
-/// substrates because [`super::super::dispatcher::emit_ref_call_shape`]
+/// same `&mut <BuilderTy>` argument throughout; the call signature
+/// stays consistent because [`super::super::dispatcher::emit_ref_call_shape`]
 /// resolves the target shape's parse fn name uniformly.
 pub(super) fn emit_parse_pratt_struct_direct(
     grammar_suffix: &str,
@@ -262,14 +261,14 @@ pub(super) fn emit_parse_pratt_struct_direct(
 
             // ── Operator + RHS loop ─────────────────────────────────
             //
-            // Same structural shape as the tape-path emitter (peek →
-            // LUT consult → reduce-or-push); the StructDirect path
-            // omits the op-stack reducer because the linear
-            // children projection captures the operator chain
-            // directly. Every matched operator stamps a branch tag
-            // (carrying the op_discriminant byte) and re-dispatches
-            // the RHS operand. Lower-precedence / EOF operators
-            // terminate the loop, closing the rule compound below.
+            // Peek, consult the LUT, then append the matched operator
+            // and RHS operand directly into the StructBuilder frame.
+            // The linear children projection captures the operator
+            // chain without an intermediate reducer stack. Every
+            // matched operator stamps a branch tag carrying the
+            // op_discriminant byte and re-dispatches the RHS operand.
+            // Lower-precedence / EOF operators terminate the loop,
+            // closing the rule compound below.
             loop {
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = #rule_lut_ident[op_byte as usize];

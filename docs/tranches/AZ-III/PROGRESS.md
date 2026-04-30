@@ -24,7 +24,7 @@ grammar-general fact/type/CSP/projection authority substrate.
 
 | Wave | Status | Notes |
 |---|---|---|
-| W0 - Quarantine and Dispatch Repair | planned | quarantine, state repair, commit/orchestration discipline |
+| W0 - Quarantine and Dispatch Repair | in_progress | state ledger, commit history repair, and lint/format baseline recorded |
 | W1 - O5 Reclose | planned | AZ-II.O5 reclose |
 | W2 - Semantic Parity and Bootstrap Canonicalization | planned | semantic parity and BBNF self-host canonicalization |
 | W3 - Fact, Type, CSP, and Projection Authority | planned | fact/type/CSP/projection authority |
@@ -33,8 +33,24 @@ grammar-general fact/type/CSP/projection authority substrate.
 
 ## Current Blockers
 
-1. Main worktree is dirty and contains unrelated staged/submodule
-   migration state; implementation dispatch is blocked until W0.
+1. Main worktree is dirty with the restored AZ-II implementation/source
+   slice and two untracked docs artefacts; implementation dispatch remains
+   blocked until W0 slices or routes that work.
 2. AZ-II O5 close artifact is stale and must be regenerated under W1.
-3. Parity and benchmark truth are stale or partial until W2/W4.
-4. BA/BB remain blocked until W5 terminal close.
+3. Root, parse-that, and pprint format checks are green, but clippy is red
+   across all three workspaces; see `audit/W0-state-ledger.txt`.
+4. Parity and benchmark truth are stale or partial until W2/W4.
+5. BA/BB remain blocked until W5 terminal close.
+
+## 2026-04-30 - W0 Quarantine Evidence
+
+Recorded W0 state, history repair, and dispatch packet evidence:
+
+- `audit/W0-state-ledger.txt`
+- `audit/W0-commit-repair-plan.md`
+- `audit/W0-dispatch-packets.md`
+
+Root commit history from `53d3e6b2..HEAD` was rewritten message-only to
+replace terse AZ-II subjects and missing bodies with concrete scopes and
+evidence-bearing bodies. The backup branch is
+`codex/az-history-before-reword-20260430-114057`.

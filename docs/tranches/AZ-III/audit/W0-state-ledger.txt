@@ -1,0 +1,78 @@
+# AZ-III W0 State Ledger - 2026-04-30
+
+HEAD after history repair:
+
+```text
+b20ea61b docs(az-iii.waves): harden continuation wave gates and triumvirate dispatch
+```
+
+Backup and preservation:
+
+```text
+backup branch: codex/az-history-before-reword-20260430-114057
+stash: stash@{0} pre-az-history-reword 2026-04-30T11:40:57-04:00
+stale sequencer backup: /tmp/bbnf-reword/stale-sequencer-20260430-115015
+```
+
+The stash was applied back to the main worktree after the message-only
+history rewrite. The stash remains as a safety copy.
+
+Root worktree:
+
+- staged: none;
+- dirty: restored AZ-II implementation/source slice, now formatted by
+  `cargo fmt --all`;
+- untracked: `docs/benchmarks/AZ-II/cutover/O5-tape-delete-scan.txt`,
+  `docs/precepts-plan.md`;
+- stale `.git/sequencer` state was saved under `/tmp/bbnf-reword` and
+  cleared with `git cherry-pick --quit`; no tree changes were made by
+  that cleanup.
+
+Sibling repo state:
+
+- `/Users/mkbabb/Programming/parse-that`: pre-existing staged
+  `.gitmodules`, `docs/instructions/README.md`, and `docs/precepts`
+  remain staged; rust formatting and lock refresh were committed; untracked
+  `rust/.cargo/` and rustc ICE file remain.
+- `/Users/mkbabb/Programming/pprint`: rust formatting committed; untracked
+  `pprint` and `rust/.cargo/` remain.
+
+Format and lint baseline:
+
+```text
+bbnf-lang: cargo fmt --all -- --check PASS
+bbnf-lang: cargo iter-clippy FAIL
+parse-that/rust: cargo fmt --all -- --check PASS
+parse-that/rust: cargo clippy --workspace -- -D warnings FAIL
+pprint/rust: cargo fmt --all -- --check PASS
+pprint/rust: cargo clippy --all-targets -- -D warnings FAIL
+```
+
+Root clippy failure surface:
+
+- `crates/ser/src/writer.rs`: collapsible nested error checks.
+- `crates/egraph-derive/src/lib.rs`: collapsible path/type check.
+- `crates/simd-scan/src/compaction.rs`, `parity.rs`, `neon.rs`:
+  doc continuation, `is_multiple_of`, needless borrows, and iterator
+  lints.
+- `crates/csp-solver/**`: collapsible checks, type complexity,
+  `Result<(), ()>`, argument-count, div-ceil, range-loop, and closure lints.
+
+parse-that clippy failure surface:
+
+- registry dependency conflict with published `parse_that 0.3.3` expecting
+  old `pprint::Doc` / `pprint::Join`;
+- `rust/regex/**`: range-loop, mutable range-bound, collapsible-if,
+  duplicate branch, manual range contains, redundant closure, unwrap
+  default, counter-loop, div-ceil, and UTF-8 loop lints.
+
+pprint clippy failure surface:
+
+- `benches/digit_count.rs`: generic benchmark samples need `Sync`;
+- tests: approximate constants, unused skipped enum field, and useless
+  `.into_iter()` calls;
+- benches: redundant `RcDoc::as_string` closures.
+
+W0 close remains blocked until the dirty root implementation slice is either
+committed in owned batches or routed into W1/W2/W3 dispatch worktrees, and
+until the clippy surfaces are assigned to the relevant waves.

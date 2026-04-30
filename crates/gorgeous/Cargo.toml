@@ -57,7 +57,7 @@ required-features = ["vm"]
 
 [features]
 # Default builds ONLY the feature-independent surface (PrinterConfig,
-# the builtin/jit glue, and the vm module when `vm` is enabled). Every
+# the builtin glue, and the vm module when `vm` is enabled). Every
 # grammar derive site is opt-in so a downstream consumer pays only for
 # the grammars it imports.
 default = []

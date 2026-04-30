@@ -113,4 +113,4 @@ remaining runtime::tape primitives, simd-scan tape-owned structures,
 visitor/tape-only emitters, json-prototype, Gorgeous JIT, manifests,
 and crates/tape without compatibility shims.
 
-Close commit: pending at artifact creation.
+Close commit: 8040bd69 (`fix(az-ii): remove StructDirect tape offsets`).

@@ -17,9 +17,9 @@ full BBNF fixture corpus; `crates/tape/` deleted; `cargo build -p bbnf
 **Status**: interim manifest routed through cutover.O — substrate canonical; 9/9 grammars
 StructDirect after O2; BBNF self-parity 56/56; reproducibility CI gate
 green; cutover.O.0 tooling preflight, O1 builder transactions, O2
-EBNF direct projection, O3a failure-baseline triage, and O3 generated
-view purge have landed; current work is O4 `Parsed<R>` / `TapeDirect`
-deletion.
+EBNF direct projection, O3a failure-baseline triage, O3 generated
+view purge, and O4 `Parsed<R>` / `TapeDirect` deletion have landed;
+current work is O5 tape-crate deletion.
 
 **2026-04-29 hardening amendment**: cutover.O must begin with the
 grammar-general StructDirect builder transaction gap. EBNF activation
@@ -42,6 +42,16 @@ generated StructDirect fleet has zero `TapeCursor`, generated
 `PROJECTION_MATERIALIZERS`, `PROJECTION_CONSUMERS`, or node-view
 serializer residue. Remaining generated `crate::runtime::tape`
 references are O4/O5-owned return-model/tape-substrate deletion work.
+
+**2026-04-30 O4 close addendum**: O4 landed through `c51f9742`,
+`815fbcea`, `3165e52f`, `58ea61a6`, `97061c41`, and `8040bd69`.
+Production Rust has no `Parsed<R>`, `Parsed::new`, `TapeDirect`, or
+`EmitStrategy::TapeDirect` hits; generated grammars have no
+`TapeOffset` return payloads; StructDirect shape success returns unit.
+The close scan is archived at
+[`docs/benchmarks/AZ-II/cutover/O4-parsed-tapedirect-scan.txt`](../../../../benchmarks/AZ-II/cutover/O4-parsed-tapedirect-scan.txt).
+Remaining `runtime::tape` references are O5-owned substrate deletion,
+not O4 return-model residue.
 
 **Trajectory snapshot**: see [`../PROGRESS-SNAPSHOT-2026-04-29.md`](../../PROGRESS-SNAPSHOT-2026-04-29.md)
 for per-substage commit-by-commit detail across cutover.A through
@@ -217,9 +227,9 @@ Required order:
 5. **[O3 generated view purge](O3.md)** — LANDED: remove tape-backed `TapeCursor`,
    node-view, and `ValueRoot` residue from StructDirect generated output
    unless it is consumed through a document API.
-6. **[O4 Parsed/TapeDirect deletion](O4.md)** — next active: delete `Parsed<R>` as a
+6. **[O4 Parsed/TapeDirect deletion](O4.md)** — LANDED: delete `Parsed<R>` as a
    production parser result and remove `TapeDirect` fallback semantics.
-7. **[O5 tape crate deletion](O5.md)** — delete `crates/tape` after relocating
+7. **[O5 tape crate deletion](O5.md)** — next active: delete `crates/tape` after relocating
    only genuinely non-tape scan/index primitives to their natural owner.
 8. **[O6 semantic/perf close](O6.md)** — refresh JSON `sonic-rs` parity, CSS
    `lightningcss` typed parity, and the 17-entry close matrix.
@@ -240,8 +250,8 @@ Child wave specs:
 | [`O3a-P1.md`](O3a-P1.md) | complete_with_misses | P1 triad closed; projection totality closes inside O3, no O3b required |
 | [`O3a-A1.md`](O3a-A1.md) | complete_with_misses | A1 triad closed; live repairs/archive/JIT/bootstrap gates routed to O5/O6/O7 |
 | [`O3.md`](O3.md) | complete | up to 10 parallel worktree-isolated lanes; generated view purge |
-| [`O4.md`](O4.md) | next active | up to 10 parallel worktree-isolated lanes; return-model deletion |
-| [`O5.md`](O5.md) | planned | up to 10 parallel worktree-isolated lanes; tape crate deletion |
+| [`O4.md`](O4.md) | complete | up to 10 parallel worktree-isolated lanes; return-model deletion; close commits `c51f9742` / `815fbcea` / `3165e52f` / `58ea61a6` / `97061c41` / `8040bd69` |
+| [`O5.md`](O5.md) | next active | up to 10 parallel worktree-isolated lanes; tape crate deletion |
 | [`O6.md`](O6.md) | planned | up to 10 parallel worktree-isolated lanes; sequential bench execution |
 | [`O7.md`](O7.md) | planned | up to 10 parallel worktree-isolated lanes; close-doc reconciliation |
 

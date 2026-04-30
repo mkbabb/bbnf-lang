@@ -1,9 +1,9 @@
 # AZ-II — Progress Log
 
 **Status**: interim manifest routed through cutover.O; `cutover.O.0`,
-`cutover.O.1`, `cutover.O.2`, and `cutover.O.3` landed; O3a
-J1/C1/S1/P1/A1 triads integrated as routed evidence; O4
-`Parsed<R>` / `TapeDirect` deletion is the next active substage.
+`cutover.O.1`, `cutover.O.2`, `cutover.O.3`, and `cutover.O.4`
+landed; O3a J1/C1/S1/P1/A1 triads integrated as routed evidence;
+O5 tape-crate deletion is the next active substage.
 Implemented-state record:
 [`PROGRESS-SNAPSHOT-2026-04-29.md`](PROGRESS-SNAPSHOT-2026-04-29.md).
 Live terminal sequence: `cutover.O.0` through `cutover.O.7`, specified
@@ -103,7 +103,7 @@ The cutover wave runs in three sequential sub-stages:
 | W0 | superseded (2026-04-28) | Folded into cutover.A (substrate hoist + BBNF runtime + decay sweep) |
 | W1 | superseded (2026-04-28) | Folded into cutover.B (Stage A + Stage B byte-equal cycle) |
 | W2 | superseded (2026-04-28) | Folded into cutover.C (`crates/tape/` deletion + recode + FINAL) |
-| cutover | interim-manifest (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; [O0](waves/cutover/O0.md) tooling preflight, [O1](waves/cutover/O1.md) builder transactions, [O2](waves/cutover/O2.md) EBNF direct projection, [O3a](waves/cutover/O3a.md) failure routing, and [O3](waves/cutover/O3.md) generated-view purge landed) | 9/9 grammars StructDirect; generated view residue is zero; terminal hardening now routes through [cutover.O4-O7](waves/cutover/README.md) for return-model deletion, tape deletion, semantic/perf truth, and close conversion |
+| cutover | interim-manifest (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; [O0](waves/cutover/O0.md) tooling preflight, [O1](waves/cutover/O1.md) builder transactions, [O2](waves/cutover/O2.md) EBNF direct projection, [O3a](waves/cutover/O3a.md) failure routing, [O3](waves/cutover/O3.md) generated-view purge, and [O4](waves/cutover/O4.md) return-model deletion landed) | 9/9 grammars StructDirect; generated view residue is zero; `Parsed<R>` / `TapeDirect` are gone from production Rust; terminal hardening now routes through [cutover.O5-O7](waves/cutover/README.md) for tape deletion, semantic/perf truth, and close conversion |
 
 ## 2026-04-28 — cutover.G partial close
 
@@ -345,8 +345,8 @@ cross-crate refs).
 | [cutover.O.3a-P1](waves/cutover/O3a-P1.md) | Projection totality and generated-view residue cohort | complete_with_misses — closes inside O3, no O3b required |
 | [cutover.O.3a-A1](waves/cutover/O3a-A1.md) | Analysis/LSP/prototype/bootstrap disposition cohort | complete_with_misses — live repairs and archive/delete/bootstrap gates routed to O5/O6/O7 |
 | [cutover.O.3](waves/cutover/O3.md) | Generated tape-view / `ValueRoot` residue purge for StructDirect | LANDED — `6a7e0f06`, zero-hit O3 scan, 32-test focused gate green |
-| [cutover.O.4](waves/cutover/O4.md) | `Parsed<R>` deletion and `TapeDirect` fallback removal | next active — 90 min |
-| [cutover.O.5](waves/cutover/O5.md) | `crates/tape` deletion after relocating non-tape scan/index primitives | 120 min |
+| [cutover.O.4](waves/cutover/O4.md) | `Parsed<R>` deletion and `TapeDirect` fallback removal | LANDED — `c51f9742`, `815fbcea`, `3165e52f`, `58ea61a6`, `97061c41`, `8040bd69` |
+| [cutover.O.5](waves/cutover/O5.md) | `crates/tape` deletion after relocating non-tape scan/index primitives | next active — 120 min |
 | [cutover.O.6](waves/cutover/O6.md) | 17-entry close matrix + JSON sonic-rs / CSS lightningcss parity refresh | 90 min |
 | [cutover.O.7](waves/cutover/O7.md) | AZ-II FINAL.md interim manifest -> terminal close conversion | 30 min |
 
@@ -580,7 +580,54 @@ Evidence:
   `cargo nextest run -p bbnf --test typed_accessor_surface --test structural --cargo-profile ax-iter --no-fail-fast json_accessor_surface structural_object_two_pairs -- --nocapture`
   ran 2 tests: 2 passed.
 
-Next instruction: open O4 under `waves/cutover/O4.md`. O4 owns
-`Parsed<R>` and `TapeDirect` deletion plus the JSON bool branch payload
-route from J1. O5/O6/O7 must still consume A1 before claiming tape
-deletion, semantic close, or terminal close.
+Next instruction at O3 close was O4: delete `Parsed<R>` and
+`TapeDirect`, then route remaining tape-substrate deletion to O5.
+
+## 2026-04-30 — cutover.O4 Parsed/TapeDirect deletion
+
+O4 closed the live production return-model surface without adding a
+compatibility wrapper.
+
+Implementation commits:
+
+- `c51f9742` repairs JSON bool branch payload deposition through the
+  concrete document builder.
+- `815fbcea` makes unknown production grammar strategy selection fail
+  closed instead of falling back.
+- `3165e52f`, `58ea61a6`, and `97061c41` delete the generated
+  `Parsed` parse return surface, purge generated imports, and remove
+  the runtime `Parsed` module/export.
+- `8040bd69` removes StructDirect tape-offset success/control payloads,
+  renames the direct Ref-call helper to `emit_ref_call_shape`, deletes
+  obsolete tape-only shape emitter helpers, regenerates all nine
+  grammars, refreshes shape-dispatch goldens, and archives the O4 scan.
+
+Evidence:
+
+- `docs/benchmarks/AZ-II/cutover/O4-parsed-tapedirect-scan.txt`
+  records zero production hits for `Parsed`, `Parsed::new`,
+  `TapeDirect`, `EmitStrategy::TapeDirect`, generated `TapeOffset`,
+  `emit_ref_call_tape`, `TapeOffset::NONE`, and `Option<TapeOffset>`
+  return payloads in the O4-owned source scopes.
+- `cargo check -p bbnf --lib --profile ax-iter` passed.
+- `cargo xtask regen --check` passed across all 9 grammars.
+- `cargo nextest run -p bbnf --test emit_strategy --test
+  typed_accessor_surface --test keyword_ref_branch_wire_contract
+  --cargo-profile ax-iter --no-fail-fast -- --nocapture` ran 30
+  tests: 30 passed.
+- `cargo test -p bbnf --test shape_dispatch_emission --profile
+  ax-iter -- --nocapture` ran 29 tests: 29 passed.
+
+O3a disposition:
+
+- J1's JSON bool payload failure is O4-owned and closed by
+  `c51f9742`; no adapter return path was introduced.
+- S1 remains non-return-model-owned per
+  `docs/tranches/AZ-II/audit/O3a-S1-plan.md`; O4's Sheets return-model
+  scan has zero `Parsed` / `TapeDirect` hits.
+
+Next instruction: open O5 under `waves/cutover/O5.md`. O5 owns
+`crates/tape`, remaining `runtime::tape` primitives, simd-scan index
+relocation, tape-only tests/benches/examples, `json-prototype`,
+Gorgeous JIT, manifest severance, and the no-shim deletion scan. O6/O7
+must not claim semantic close or terminal close until O5 is green.

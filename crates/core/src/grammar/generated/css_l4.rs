@@ -4435,7 +4435,7 @@ mod __cssl4parser_emit_impl {
             /// at parse-entry (AY.W1-fix demonstrated eager scans
             /// regress JSON twitter -64%).
             pub(crate) structural_index: ::core::cell::OnceCell<
-                crate::runtime::tape::StructuralIndex,
+                ::simd_scan::StructuralIndex,
             >,
         }
         impl ScanState {
@@ -4455,14 +4455,17 @@ mod __cssl4parser_emit_impl {
         pub(crate) fn ensure_structural_index<'a>(
             state: &'a mut ScanState,
             input: &[u8],
-        ) -> &'a crate::runtime::tape::StructuralIndex {
+        ) -> &'a ::simd_scan::StructuralIndex {
             state
                 .structural_index
                 .get_or_init(|| {
-                    crate::runtime::tape::scan_structural(
-                        input,
-                        super::GRAMMAR_PROFILE.structural_alphabet,
-                    )
+                    let alphabet = ::simd_scan::StructuralAlphabet {
+                        singletons: super::GRAMMAR_PROFILE.structural_alphabet,
+                        digraph_mask: super::GRAMMAR_PROFILE.structural_digraph_mask,
+                        digraph_pairs: super::GRAMMAR_PROFILE.structural_digraphs,
+                        quote_classes: super::GRAMMAR_PROFILE.structural_quote_classes,
+                    };
+                    ::simd_scan::scan_structural(input, &alphabet)
                 })
         }
         /// Skip whitespace AND `/* ... */` block comments at `*p`,

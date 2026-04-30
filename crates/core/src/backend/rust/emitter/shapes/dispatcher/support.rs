@@ -105,9 +105,7 @@ fn ctns_probe_tokens() -> TokenStream {
         // per-call cost is O(log N) binary search + a bounds test.
         let __ctns_idx = ensure_structural_index(state, input);
         if let ::core::option::Option::Some(__next_struct) =
-            crate::runtime::tape::next_structural_at_or_after(
-                __ctns_idx, *p as u32,
-            )
+            __ctns_idx.next_structural_at_or_after(*p as u32)
         {
             let __next = __next_struct as usize;
             let __gap = __next.saturating_sub(*p);
@@ -457,7 +455,7 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
             /// at parse-entry (AY.W1-fix demonstrated eager scans
             /// regress JSON twitter -64%).
             pub(crate) structural_index: ::core::cell::OnceCell<
-                crate::runtime::tape::StructuralIndex,
+                ::simd_scan::StructuralIndex,
             >,
         }
     } else {
@@ -477,12 +475,15 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
             pub(crate) fn ensure_structural_index<'a>(
                 state: &'a mut ScanState,
                 input: &[u8],
-            ) -> &'a crate::runtime::tape::StructuralIndex {
+            ) -> &'a ::simd_scan::StructuralIndex {
                 state.structural_index.get_or_init(|| {
-                    crate::runtime::tape::scan_structural(
-                        input,
-                        super::GRAMMAR_PROFILE.structural_alphabet,
-                    )
+                    let alphabet = ::simd_scan::StructuralAlphabet {
+                        singletons: super::GRAMMAR_PROFILE.structural_alphabet,
+                        digraph_mask: super::GRAMMAR_PROFILE.structural_digraph_mask,
+                        digraph_pairs: super::GRAMMAR_PROFILE.structural_digraphs,
+                        quote_classes: super::GRAMMAR_PROFILE.structural_quote_classes,
+                    };
+                    ::simd_scan::scan_structural(input, &alphabet)
                 })
             }
         }

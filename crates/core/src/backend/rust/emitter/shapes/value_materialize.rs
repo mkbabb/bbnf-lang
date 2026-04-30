@@ -3,7 +3,7 @@
 //! AZ-II.cutover.O4: these materializers are no longer emitted.
 //! StructDirect grammars return document-owned runtime values and
 //! must not emit `materialize_projection_*` functions against
-//! `runtime::tape::Tape`.
+//! `tape::Tape`.
 //!
 //! Post-W0'.b the materialize family collapses to a single emission
 //! path: one `materialize_projection_<rule>_<Grammar>` helper per
@@ -205,7 +205,7 @@ fn emit_projection_fn(
             // Rich admission with cursor-child fields — walk the
             // value slab's direct-child iterator so per-field reads
             // can index into the collected slice by `child_idx`.
-            let __children: ::std::vec::Vec<(u32, &crate::runtime::ValueFrame)> =
+            let __children: ::std::vec::Vec<(u32, &::tape::ValueFrame)> =
                 output.children(offset).collect();
         }
     } else {

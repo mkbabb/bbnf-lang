@@ -72,19 +72,6 @@ pub use json::{
 pub use path::{IntoPathSegment, Path, PathSegment};
 pub use root::{PathQuery, Root, ValueRoot};
 
-// B5.W1 — the unified [`tape::Tape<R>`] substrate is the sole write
-// + read + projection surface the grammar-emitted parse entry uses.
-// The pre-B5.W1 builder/output/value-output triumvirate retired
-// alongside the welded boundary.
-pub use tape::{PayloadTag, PayloadValue, ValueChildren, ValueFrame};
-
-/// Re-export the remaining tape public surface from `bbnf::runtime`.
-///
-/// O5 keeps this temporarily while residual generated helper bodies
-/// are recoded or deleted. New generated dispatcher errors route
-/// through [`DtaError`] instead of the tape crate.
-pub use tape;
-
 /// AZ-I.W2-act.close A.fix — re-export the grammar-agnostic
 /// [`view::RuntimeView`] trait at the stable `crate::runtime` path.
 pub use view::RuntimeView;

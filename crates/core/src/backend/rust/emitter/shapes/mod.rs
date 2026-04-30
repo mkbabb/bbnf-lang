@@ -85,7 +85,6 @@ pub mod scalar;
 pub mod string;
 pub mod substrate;
 pub mod unordered;
-pub mod value_materialize;
 pub mod wrap;
 
 use bbnf_ir::GrammarIR;

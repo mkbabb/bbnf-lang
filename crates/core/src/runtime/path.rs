@@ -1,11 +1,11 @@
-//! AY.W3a — path-query types for the lazy `get_by_path` lane.
+//! Path-query input types shared by document-owned runtime surfaces.
 //!
-//! The lazy lane mirrors `sonic_rs::get_by_path(src, path)`: instead
-//! of materialising the entire parsed tree, the caller walks a
-//! narrow `[PathSegment]` slice against the tape and extracts a
-//! single leaf. `PathSegment` is the finite alphabet of steps; a
-//! [`Path`] is a borrowed slice of those steps, kept `Copy`-ish so
-//! bench call sites re-use the literal without re-allocating.
+//! Generated parse entry points return concrete grammar documents.
+//! Each document module owns its typed path-query trait; this module
+//! only defines the borrowed path alphabet consumed by those traits.
+//! `PathSegment` is the finite alphabet of steps, and [`Path`] is a
+//! borrowed slice of those steps so bench and call sites can reuse
+//! literals without allocation.
 //!
 //! The [`path!`] macro sugars the common literal case:
 //!
@@ -18,27 +18,11 @@
 //! let p = path!["statuses", 0, "text"];
 //! ```
 //!
-//! Grammars that participate in path queries implement
-//! `runtime::PathQuery<T>` via emitted code in AY.W3b; this module
-//! defines the input side and small leaf-extraction helpers the
-//! emitter calls into for typed-leaf decoding on a resolved offset.
-//!
-//! # Substrate navigation history (AY.W6.c → AY-II.W0.c)
-//!
-//! A substrate-level tape-walker helper landed at AY.W6.c to walk a
-//! compound subtree from a substrate-level `(Tape, input, root)`
-//! triple — intended to back the emitted `PathQuery` impls. AUDIT-B
-//! §7 classified it DEAD at AY close: the emitted `__path_walk` in
-//! the view layer continued to drive generic child-walk iteration
-//! and no production consumer called it. AY-II.W0.c retires the
-//! helper; path navigation routes exclusively through the
-//! view-layer `TapeCursor` surface via the emitted `__path_walk` +
-//! `PathQuery<T>` impls, with the structural-scan policy (W0.e)
-//! gating the hot-path fast lane per grammar.
+//! Grammar documents expose path lookups through their own
+//! document-level traits, such as `JsonPathQuery`, `CssPathQuery`,
+//! or `BbnfPathQuery`.
 
 use core::fmt;
-
-use tape::{Tape, TapeKind, TapeOffset};
 
 /// One step in a lazy path query. `Field` names a record field
 /// (object key / struct field); `Index` picks an element in a
@@ -176,78 +160,4 @@ macro_rules! path {
             )*
         ]
     };
-}
-/// Resolve a leaf [`TapeOffset`] to its source-text span. Returns
-/// `None` when the span is empty. Convenience wrapper for substrate
-/// callers that want `&'p str` without routing through the view layer.
-///
-/// JSON-string-style quote trimming is NOT applied here — this is a
-/// raw span accessor. Callers that need a trimmed value call
-/// [`leaf_str_trim_quotes`] instead.
-#[inline]
-pub fn leaf_str<'p>(tape: &'p Tape, input: &'p str, leaf: TapeOffset) -> Option<&'p str> {
-    let (lo, hi) = tape.columns().span_at(leaf.0);
-    if lo > hi {
-        return None;
-    }
-    let bytes = input.as_bytes();
-    if (hi as usize) > bytes.len() {
-        return None;
-    }
-    // SAFETY: `input` is a `&str`; slicing by byte offsets that
-    // originate from the tape's span column preserves UTF-8 validity
-    // because the emitter only records span endpoints at character
-    // boundaries (parser positions are byte offsets aligned by
-    // preceding token scanners).
-    Some(&input[lo as usize..hi as usize])
-}
-
-/// Resolve a leaf tape offset, trimming JSON-style `"..."` quotes
-/// when present. Returns `None` when the span is empty or malformed.
-#[inline]
-pub fn leaf_str_trim_quotes<'p>(
-    tape: &'p Tape,
-    input: &'p str,
-    leaf: TapeOffset,
-) -> Option<&'p str> {
-    let raw = leaf_str(tape, input, leaf)?;
-    let bytes = raw.as_bytes();
-    if bytes.len() >= 2 && bytes[0] == b'"' && bytes[bytes.len() - 1] == b'"' {
-        Some(&raw[1..raw.len() - 1])
-    } else {
-        Some(raw)
-    }
-}
-
-/// Look up a scalar leaf's `f64` payload via the tape's packed
-/// numeric column, falling back to parsing the span text. Returns
-/// `None` when the offset is not a numeric leaf.
-#[inline]
-pub fn leaf_f64(tape: &Tape, input: &str, leaf: TapeOffset) -> Option<f64> {
-    // SAFETY: leaf offsets originate from `TapeCursor` walks on the
-    // same tape (via the emitted `PathQuery<T>::query` impls) —
-    // never the `NONE` sentinel.
-    let rec = unsafe { tape.get_unchecked(leaf) };
-    if rec.kind() == TapeKind::Regex {
-        if let Some(v) = tape.payload_f64(rec) {
-            return Some(v);
-        }
-    }
-    leaf_str(tape, input, leaf).and_then(|s| s.parse::<f64>().ok())
-}
-
-/// Look up a boolean leaf's payload — the `payload_bool` accessor on
-/// the tape, falling back to span-text parse for literal-bodied rules.
-#[inline]
-pub fn leaf_bool(tape: &Tape, input: &str, leaf: TapeOffset) -> Option<bool> {
-    // SAFETY: see `leaf_f64`.
-    let rec = unsafe { tape.get_unchecked(leaf) };
-    if let Some(v) = tape.payload_bool(rec) {
-        return Some(v);
-    }
-    match leaf_str(tape, input, leaf)? {
-        "true" => Some(true),
-        "false" => Some(false),
-        _ => None,
-    }
 }

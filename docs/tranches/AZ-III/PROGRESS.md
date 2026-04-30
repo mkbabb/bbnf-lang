@@ -38,13 +38,15 @@ grammar-general fact/type/CSP/projection authority substrate.
 
 1. Main worktree is dirty with the restored AZ-II implementation/source
    slice and two untracked docs artefacts; implementation dispatch remains
-   blocked until W0 slices or routes that work.
-2. AZ-II O5 close artifact is stale and must be regenerated under W1.
+   blocked until W0 - Quarantine and Dispatch Repair slices or routes that
+   work.
+2. AZ-II O5 close artifact is stale and must be regenerated under W1 - O5
+   Reclose.
 3. Root, parse-that, and pprint format checks are green. Root compile
    passes. Root tests, root clippy, parse-that tests/clippy, and pprint
    clippy are red; pprint tests pass. See `audit/W0-state-ledger.txt`.
 4. Parity and benchmark truth are stale or partial until W2/W4.
-5. BA/BB remain blocked until W5 terminal close.
+5. BA/BB remain blocked until W5 - Terminal Close and Handoff lands.
 
 ## 2026-04-30 - W0 Quarantine Evidence
 

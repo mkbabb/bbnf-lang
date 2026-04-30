@@ -2,7 +2,7 @@
 
 **Name**: W3c - Projection Consumption and Registry Authority
 **Opens after**: W3a - Fact and Type Authority and W3b - CSP Strategy Globalization.
-**Agents**: up to 10 parallel.
+**Agents**: up to 6 parallel.
 **Hard gate**: StructDirect emitter fallbacks deleted; the pipeline registry has explicit StructDirect bindings (or documented fixture verdicts) for every grammar identified in `W3a-0-pipeline-registry-research.md`; EBNF/CSS/Sheets/BBNF projection tests fail without the new authority and pass with it.
 **Status**: planned
 

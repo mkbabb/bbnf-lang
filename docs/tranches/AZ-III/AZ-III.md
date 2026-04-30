@@ -76,15 +76,15 @@ AZ-III has two duties:
 
 | Wave | Agents | Closes on | Status |
 |---|---:|---|---|
-| [W0 - Quarantine and Dispatch Repair](waves/W0.md) | up to 10 parallel | clean state, commit/orchestration repair, AZ-II handoff docs, dispatch packets, W0.5 commit-body sample, W0.6 sibling triage | planned |
+| [W0 - Quarantine and Dispatch Repair](waves/W0.md) | up to 6 parallel | clean state, commit/orchestration repair, AZ-II handoff docs, dispatch packets, W0.5 commit-body sample, W0.6 sibling triage | planned |
 | [W0p - Throughput Substrate](waves/W0p.md) | up to 5 parallel | bench-iter profile, regen `--staged`, `make doctor`, profile redundancy resolved, nextest partition wired, 5-harness sweep measured | planned |
-| [W1 - O5 Reclose](waves/W1.md) | up to 10 parallel | O5 close packet green: regen, no-default build, metadata, deletion scans | planned |
-| [W2 - Semantic Parity and Bootstrap Canonicalization](waves/W2.md) | up to 10 parallel | semantic parity and canonical generated BBNF self-host (or same-tranche `bootstrap_parser.rs` removal commit) | planned |
-| [W3a - Fact and Type Authority](waves/W3a.md) | up to 10 parallel | durable fact authority consumed by production passes; type obligation solver replaces silent `BoxedEnum` fallbacks; W3a.0 pipeline registry research doc | planned |
-| [W3b - CSP Strategy Globalization](waves/W3b.md) | up to 10 parallel | CSP shape/layout/dispatch constraints installed and consumed; `shape_dict::install` no-op replaced | planned |
-| [W3c - Projection Consumption and Registry Authority](waves/W3c.md) | up to 10 parallel | StructDirect emitter fallbacks deleted; pipeline registry holes resolved; EBNF/CSS/Sheets/BBNF projection tests fail without authority | planned |
-| [W4 - Benchmark, Profile, and Workspace Truth](waves/W4.md) | up to 10 parallel | workspace, structural, profile, and 17-entry benchmark truth | planned |
-| [W5 - Terminal Close and Handoff](waves/W5.md) | up to 10 parallel | terminal AZ close docs, BA/BB handoff, archive decisions | planned |
+| [W1 - O5 Reclose](waves/W1.md) | up to 6 parallel | O5 close packet green: regen, no-default build, metadata, deletion scans | planned |
+| [W2 - Semantic Parity and Bootstrap Canonicalization](waves/W2.md) | up to 6 parallel | semantic parity and canonical generated BBNF self-host (or same-tranche `bootstrap_parser.rs` removal commit) | planned |
+| [W3a - Fact and Type Authority](waves/W3a.md) | up to 6 parallel | durable fact authority consumed by production passes; type obligation solver replaces silent `BoxedEnum` fallbacks; W3a.0 pipeline registry research doc | planned |
+| [W3b - CSP Strategy Globalization](waves/W3b.md) | up to 6 parallel | CSP shape/layout/dispatch constraints installed and consumed; `shape_dict::install` no-op replaced | planned |
+| [W3c - Projection Consumption and Registry Authority](waves/W3c.md) | up to 6 parallel | StructDirect emitter fallbacks deleted; pipeline registry holes resolved; EBNF/CSS/Sheets/BBNF projection tests fail without authority | planned |
+| [W4 - Benchmark, Profile, and Workspace Truth](waves/W4.md) | up to 6 parallel | workspace, structural, profile, and 17-entry benchmark truth | planned |
+| [W5 - Terminal Close and Handoff](waves/W5.md) | up to 6 parallel | terminal AZ close docs, BA/BB handoff, archive decisions | planned |
 
 ## Triumvirate Discipline
 

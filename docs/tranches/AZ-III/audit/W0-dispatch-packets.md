@@ -7,7 +7,7 @@ bounds without triggering the wave triumvirate.
 
 ## W1 - O5 Reclose
 
-Dispatch up to 10 agents after the root dirty slice is assigned.
+Dispatch up to 6 agents after the root dirty slice is assigned.
 
 - W1.1 Regen drift: own `xtask/**`, generator source, and generated grammar
   files required by `cargo xtask regen --check`.

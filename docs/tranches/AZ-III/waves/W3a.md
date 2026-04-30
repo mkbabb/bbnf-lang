@@ -2,7 +2,7 @@
 
 **Name**: W3a - Fact and Type Authority
 **Opens after**: W0p - Throughput Substrate, W1 - O5 Reclose.
-**Agents**: up to 10 parallel.
+**Agents**: up to 6 parallel.
 **Hard gate**: durable egraph/recognizer/node/projection facts are consumed by production passes, and the type obligation solver replaces every silent `BoxedEnum` fallback for cyclic and heterogeneous alternation with a named obligation or grammar-general type.
 **Status**: planned
 

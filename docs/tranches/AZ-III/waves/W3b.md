@@ -2,7 +2,7 @@
 
 **Name**: W3b - CSP Strategy Globalization
 **Opens after**: W3a - Fact and Type Authority.
-**Agents**: up to 10 parallel.
+**Agents**: up to 6 parallel.
 **Hard gate**: shape, layout, and dispatch CSP constraints are installed AND consumed by production passes; `shape_dict::install` is no longer a no-op; emitter/dispatch decisions cite CSP facts.
 **Status**: planned
 

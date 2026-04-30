@@ -15,25 +15,19 @@
 //!    branch's FIRST admits exits the Kleene loop.
 //! 4. Enforce `iters >= lo` — an Unordered with `lo: 1` that saw no
 //!    branches is a syntax error.
-//! 5. Close the outer compound with a single `push_compound(Rule, …,
-//!    variant_idx = rule.id & 0xFF, …)` — walker-parity with the DTA
-//!    `Repeat` state's `push_compound_fused(Rule, *pos)` on entry
-//!    plus `close_compound` at exit.
+//! 5. Close the outer StructDirect compound after all admitted
+//!    branches have been consumed.
 //!
 //! Canonical: CSS `compoundSelector = (classSelector | idSelector |
 //!   attrSelector | colonSelector | typeSelector) +` per
 //! `grammar/css/l4/selectors.bbnf:87-88`. Five branches with disjoint
 //! FIRST bytes.
 //!
-//! # Walker-tape parity
+//! # StructDirect parity
 //!
-//! The walker pushes exactly one compound for the Repeat rule — the
-//! Alt state under it is a ByteDispatch that pushes no compound, so
-//! each iteration's record stream is whatever the chosen branch Ref's
-//! rule entry emits. The emitted body mirrors that decomposition:
-//! one outer `push_compound(TapeKind::Rule, …)` wrapping the per-
-//! iteration branch records, with `variant_idx = rule.id & 0xFF` the
-//! walker's `stack.pending_variant_idx` captures at Repeat entry.
+//! The builder opens one compound for the Repeat rule. The Alt state
+//! under it is a byte dispatch that adds no separate frame, so each
+//! iteration's record stream is whatever the chosen branch Ref emits.
 
 use std::collections::HashSet;
 
@@ -52,8 +46,8 @@ use bbnf_ir::registry::EmitStrategy;
 
 /// Walker-parity decomposition of an Unordered rule's body.
 ///
-/// Extracted once at emit time so both the tape-path and visitor-path
-/// emitters share the same branch projection + FIRST byte computation.
+/// Extracted once at emit time so the StructDirect emitter has a
+/// single branch projection + FIRST byte computation.
 /// The FIRST byte set per branch is projected from the IR by the same
 /// structural walk the Unordered detector uses (see
 /// [`bbnf_ir::passes::recognizers::shape_dispatch::unordered`] — the
@@ -242,7 +236,7 @@ fn emit_byte_match_arm(set: &CharSet128) -> TokenStream {
     quote! { #(#arms)|* }
 }
 
-// ─── Tape-path emitter ──────────────────────────────────────────────
+// ─── StructDirect emitter ──────────────────────────────────────────
 
 /// Emit `pub fn parse_unordered_<grammar>_<rule>(input, p, state,
 /// builder) -> Result<(), DtaError>`.
@@ -250,237 +244,25 @@ fn emit_byte_match_arm(set: &CharSet128) -> TokenStream {
 /// # AZ-I.W2.RE — strategy gate
 ///
 /// `strategy` is the codegen-time substrate selector resolved by
-/// [`EmitStrategy::for_grammar`] in `shapes/mod.rs`. Unordered-shape
-/// rules are tape-only in W2; JSON does not exercise this shape. On
-/// [`EmitStrategy::StructDirect`] this emitter panics at codegen time
-/// (unreachable assertion preventing silent codegen drift; W3 / W2.B
-/// extend the per-shape struct-direct path before activating
-/// StructDirect for any grammar that exercises this shape).
+/// [`EmitStrategy::for_grammar`] in `shapes/mod.rs`. AZ-II O5 leaves
+/// only the StructDirect substrate.
 pub fn emit_parse_unordered(
     strategy: &EmitStrategy,
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    if matches!(strategy, EmitStrategy::StructDirect { .. }) {
-        // AZ-I.W2-act.B3 — Unordered struct-direct body. The W2.RE panic
-        // retires by surfacing a real body that opens a SelectorList /
-        // value-list compound on the StructBuilder, runs the byte-
-        // dispatch sub-loop, and closes. The body is grammar-general.
-        return emit_parse_unordered_struct_direct(strategy, grammar_suffix, rule, ir);
-    }
-    let rule_name = ir.get_string(rule.name);
-    let fn_ident = shape_fn_ident("unordered", grammar_suffix, rule_name);
-    let variant_idx = (rule.id & 0xFF) as u8;
-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
-
-    let dispatcher_ident = match root_rule_name(ir) {
-        Some(root) => {
-            let root_disp = dispatcher_fn_ident(grammar_suffix, &root);
-            format_ident!("{}__value", root_disp)
-        }
-        None => {
-            return quote! {};
-        }
-    };
-
-    let Some(body_info) = introspect_unordered(rule, ir) else {
-        return emit_parse_unordered_fallback(grammar_suffix, rule, ir);
-    };
-
-    // Build per-branch byte-match arms. AW-V.W5.2 — when the branch is
-    // a Ref to a classified target, emit a direct call to that
-    // target's shape fn; otherwise fall back to the grammar's
-    // value-position dispatcher. This produces tight monomorphic
-    // dispatch without per-byte cross-crate boundaries for the hot
-    // path while preserving walker-parity fallback when a branch's
-    // target is unclassified.
-    let mut branch_arms = Vec::with_capacity(body_info.first_sets.len());
-    for (first_set, branch_ref) in body_info
-        .first_sets
-        .iter()
-        .zip(body_info.branch_refs.iter())
-    {
-        let pattern = emit_byte_match_arm(first_set);
-        let call = branch_ref
-            .and_then(|rid| emit_ref_call_shape(grammar_suffix, rid, ir))
-            .map(|call| quote! { let _ = (#call)?; })
-            .unwrap_or_else(|| {
-                quote! { let _ = #dispatcher_ident(input, p, state, builder)?; }
-            });
-        branch_arms.push(quote! {
-            #pattern => {
-                #call
-                iters += 1;
-            }
-        });
-    }
-
-    let iters_lo_lit = proc_macro2::Literal::u32_unsuffixed(body_info.iters_lo);
-
-    quote! {
-        /// AW-V.W4-fix — per-grammar Unordered-shape parse function,
-        /// **walker-tape-identical**.
-        ///
-        /// Byte-dispatch over the mined disjoint-FIRST Alt branches
-        /// inside a Kleene-plus sub-loop. Emits one `TapeKind::Rule`
-        /// outer compound for the full Unordered span; each admitted
-        /// branch contributes its own sub-compound through the per-
-        /// grammar value-position dispatcher.
-        ///
-        /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-        /// recursion rationale.
-        #[inline]
-        #[allow(non_snake_case, clippy::too_many_arguments)]
-        pub fn #fn_ident(
-            input: &[u8],
-            p: &mut usize,
-            state: &mut #support_mod::ScanState,
-            builder: &mut ::tape::Tape<()>,
-        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-            let span_lo = *p as u32;
-            // AY-II.W0.b — walker-parity post-order Repeat Rule
-            // compound via begin_compound_post/end_compound_post_order.
-            //
-            // B5.W6 — bracket the post-order children scope so child
-            // records stamp `frame_depth` at the correct (parent + 1)
-            // depth at push time.
-            //
-            // B5.W6b — IIFE-wrap the loop body so `?`-propagation from
-            // per-arm ref / dispatcher calls cannot bypass the
-            // `end_compound_post_order` close. The Err-arm rolls back
-            // partial pushes BEFORE exit (Order B): the rollback
-            // restores `current_depth` to the bracket-bumped depth (via
-            // `frame_depth[__save_cols]`), then `exit_post_order_children`
-            // decrements once to the outer frame.
-            let __save_cols = builder.position();
-            let outer_child = builder.enter_post_order_children();
-            // The walker's Repeat entry doesn't skip leading ws on
-            // its own — the Alt's ByteDispatch does. Mirror that: the
-            // per-grammar value-position dispatcher does its own
-            // `skip_space`, so we do NOT pre-skip here. Any leading
-            // trim is applied by the first dispatch arm's skip.
-            let mut iters: u32 = 0;
-            let __post_body: ::core::result::Result<
-                (),
-                crate::runtime::DtaError,
-            > = (|| {
-                loop {
-                    let Some(b) = input.get(*p).copied() else { break; };
-                    match b {
-                        #(#branch_arms)*
-                        _ => break,
-                    }
-                }
-                Ok(())
-            })();
-            if let ::core::result::Result::Err(__err) = __post_body {
-                builder.rollback_to(__save_cols);
-                builder.exit_post_order_children();
-                return ::core::result::Result::Err(__err);
-            }
-            if iters < #iters_lo_lit {
-                // B5.W6 — close the bracket before returning the error.
-                builder.exit_post_order_children();
-                return ::core::result::Result::Err(
-                    match input.get(*p).copied() {
-                        None => crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        },
-                        _ => crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        },
-                    },
-                );
-            }
-            let span_hi = *p as u32;
-            let outer_off = builder.begin_compound_post(
-                ::tape::TapeKind::Rule,
-                span_lo,
-                #variant_idx,
-                0u8,
-                0u16,
-            );
-            builder.end_compound_post_order(
-                outer_off,
-                span_hi,
-                ::tape::TapeOffset(outer_child),
-            );
-            ::core::result::Result::Ok(())
-        }
-    }
-}
-
-/// Emit a walker-fallback body for a rule the Unordered detector did
-/// not admit — the Ref shape the `emit_shapes_for_grammar` dispatch
-/// would use at the call site.
-///
-/// This form ships only as a defensive fallback: the public emission
-/// path (`emit_shapes_for_grammar`) gates on the detector's
-/// admission, so callers only instantiate the emitter for rules whose
-/// bodies match the Unordered predicate. Tests that exercise the
-/// emitter directly on non-Unordered fixtures (the parsable-tokens
-/// regression) exercise this branch.
-fn emit_parse_unordered_fallback(
-    grammar_suffix: &str,
-    rule: &IrRule,
-    ir: &GrammarIR,
-) -> TokenStream {
-    let rule_name = ir.get_string(rule.name);
-    let fn_ident = shape_fn_ident("unordered", grammar_suffix, rule_name);
-    let variant_idx = (rule.id & 0xFF) as u8;
-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
-
-    quote! {
-        /// AW-V.W4-fix — Unordered-shape emitter fallback. Called
-        /// only when a fixture invokes the emitter on a non-Unordered
-        /// rule (the detector's admission would otherwise route this
-        /// call elsewhere). Emits an empty compound + `UnexpectedEnd`
-        /// so the parsability gate passes without asserting parse
-        /// semantics on a shape the rule doesn't match.
-        ///
-        /// AX.W0a.2.f — compound; plain `#[inline]`.
-        #[inline]
-        #[allow(non_snake_case, clippy::too_many_arguments)]
-        pub fn #fn_ident(
-            input: &[u8],
-            p: &mut usize,
-            state: &mut #support_mod::ScanState,
-            builder: &mut ::tape::Tape<()>,
-        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
-            let _ = state;
-            let span_lo = *p as u32;
-            // AY-II.W0.b — empty-compound fallback via begin/end.
-            // B5.W6 — bracket the (empty) post-order children scope.
-            let outer_child = builder.enter_post_order_children();
-            let span_hi = *p as u32;
-            let _ = input;
-            let outer_off = builder.begin_compound_post(
-                ::tape::TapeKind::Rule,
-                span_lo,
-                #variant_idx,
-                0u8,
-                0u16,
-            );
-            builder.end_compound_post_order(
-                outer_off,
-                span_hi,
-                ::tape::TapeOffset(outer_child),
-            );
-            ::core::result::Result::Ok(())
-        }
-    }
+    emit_parse_unordered_struct_direct(strategy, grammar_suffix, rule, ir)
 }
 
 // ─────────────────────────────────────────────────────────────────────
 // AZ-I.W2-act.B3 — Unordered struct-direct body.
 // ─────────────────────────────────────────────────────────────────────
 
-/// Emit the struct-direct Unordered body. Mirrors the tape-path
-/// dispatch (byte-match sub-loop iterating the Repeat) but routes the
-/// outer compound through `begin_compound(&__layout)` /
-/// `end_compound(handle)`. Each branch's per-Ref call passes the
-/// `&mut <builder_ty>` argument.
+/// Emit the struct-direct Unordered body. Byte-matches the Repeat's
+/// branch FIRST sets and routes the outer compound through
+/// `begin_compound(&__layout)` / `end_compound(handle)`. Each
+/// branch's per-Ref call passes the `&mut <builder_ty>` argument.
 fn emit_parse_unordered_struct_direct(
     strategy: &EmitStrategy,
     grammar_suffix: &str,

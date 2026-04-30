@@ -62,20 +62,27 @@ AZ-III has two duties:
 | AZ-II.O6 | 17-entry matrix, workspace health, structural audits, profile truth | W4 - Benchmark, Profile, and Workspace Truth |
 | AZ-II.O7 | FINAL conversion and trajectory handoff | W5 - Terminal Close and Handoff |
 | AZ-II audit | generated BBNF self-host canonicalization vs `bootstrap_parser` | W2 - Semantic Parity and Bootstrap Canonicalization |
-| AZ-II audit | CSP `shape_dict` no-op / under-consumed global decisions | W3 - Fact, Type, CSP, and Projection Authority |
-| AZ-II audit | silent `BoxedEnum` fallback for cyclic and heterogeneous typing | W3 - Fact, Type, CSP, and Projection Authority |
-| AZ-II audit | durable egraph/node/projection fact authority | W3 - Fact, Type, CSP, and Projection Authority |
-| AZ-II audit | StructDirect fallback/deferred emitter surfaces | W3 - Fact, Type, CSP, and Projection Authority |
+| AZ-II audit | CSP `shape_dict` no-op / under-consumed global decisions | W3b - CSP Strategy Globalization |
+| AZ-II audit | silent `BoxedEnum` fallback for cyclic and heterogeneous typing | W3a - Fact and Type Authority |
+| AZ-II audit | durable egraph/node/projection fact authority | W3a - Fact and Type Authority |
+| AZ-II audit | StructDirect fallback/deferred emitter surfaces | W3c - Projection Consumption and Registry Authority |
+| AZ-II audit | pipeline registry holes (`MultiPathParser`, `ImportPrettyParser`, `SplitPrettyParser`) | W3a.0 research + W3c registry binding |
+| REAUDIT 2026-04-30 | bench-iter profile, regen `--staged`, `make doctor`, profile redundancy, nextest partition | W0p - Throughput Substrate |
+| REAUDIT 2026-04-30 | sibling-repo (parse-that, pprint, gorgeous, bbnf-buddy) red-state triage | W0.6 sub-unit (triage doc only; sibling source edits routed elsewhere) |
+| REAUDIT 2026-04-30 | commit-body truth sample over the 68-commit AZ-III W0 rewrite span | W0.5 sub-unit (sample doc; orchestrator decides re-rewrite) |
 | Prior tranches | substrate-only closes and stale benchmark consumption | W0 - Quarantine and Dispatch Repair; W4 - Benchmark, Profile, and Workspace Truth |
 
 ## Wave Table
 
 | Wave | Agents | Closes on | Status |
 |---|---:|---|---|
-| [W0 - Quarantine and Dispatch Repair](waves/W0.md) | up to 10 parallel | clean state, commit/orchestration repair, AZ-II handoff docs, dispatch packets | planned |
+| [W0 - Quarantine and Dispatch Repair](waves/W0.md) | up to 10 parallel | clean state, commit/orchestration repair, AZ-II handoff docs, dispatch packets, W0.5 commit-body sample, W0.6 sibling triage | planned |
+| [W0p - Throughput Substrate](waves/W0p.md) | up to 5 parallel | bench-iter profile, regen `--staged`, `make doctor`, profile redundancy resolved, nextest partition wired, 5-harness sweep measured | planned |
 | [W1 - O5 Reclose](waves/W1.md) | up to 10 parallel | O5 close packet green: regen, no-default build, metadata, deletion scans | planned |
-| [W2 - Semantic Parity and Bootstrap Canonicalization](waves/W2.md) | up to 10 parallel | semantic parity and generated BBNF canonical path proof | planned |
-| [W3 - Fact, Type, CSP, and Projection Authority](waves/W3.md) | up to 10 parallel | durable fact/type/CSP/projection authority consumed by emitters/tests | planned |
+| [W2 - Semantic Parity and Bootstrap Canonicalization](waves/W2.md) | up to 10 parallel | semantic parity and canonical generated BBNF self-host (or same-tranche `bootstrap_parser.rs` removal commit) | planned |
+| [W3a - Fact and Type Authority](waves/W3a.md) | up to 10 parallel | durable fact authority consumed by production passes; type obligation solver replaces silent `BoxedEnum` fallbacks; W3a.0 pipeline registry research doc | planned |
+| [W3b - CSP Strategy Globalization](waves/W3b.md) | up to 10 parallel | CSP shape/layout/dispatch constraints installed and consumed; `shape_dict::install` no-op replaced | planned |
+| [W3c - Projection Consumption and Registry Authority](waves/W3c.md) | up to 10 parallel | StructDirect emitter fallbacks deleted; pipeline registry holes resolved; EBNF/CSS/Sheets/BBNF projection tests fail without authority | planned |
 | [W4 - Benchmark, Profile, and Workspace Truth](waves/W4.md) | up to 10 parallel | workspace, structural, profile, and 17-entry benchmark truth | planned |
 | [W5 - Terminal Close and Handoff](waves/W5.md) | up to 10 parallel | terminal AZ close docs, BA/BB handoff, archive decisions | planned |
 

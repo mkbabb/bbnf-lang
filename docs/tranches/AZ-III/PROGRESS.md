@@ -24,10 +24,13 @@ grammar-general fact/type/CSP/projection authority substrate.
 
 | Wave | Status | Notes |
 |---|---|---|
-| W0 - Quarantine and Dispatch Repair | in_progress | state ledger, commit history repair, and lint/format baseline recorded |
+| W0 - Quarantine and Dispatch Repair | in_progress | state ledger, commit history repair, and lint/format baseline recorded; W0.5 commit-body sample and W0.6 sibling triage now in scope |
+| W0p - Throughput Substrate | planned | bench-iter profile, regen `--staged`, `make doctor`, profile redundancy, nextest partition |
 | W1 - O5 Reclose | planned | AZ-II.O5 reclose |
-| W2 - Semantic Parity and Bootstrap Canonicalization | planned | semantic parity and BBNF self-host canonicalization |
-| W3 - Fact, Type, CSP, and Projection Authority | planned | fact/type/CSP/projection authority |
+| W2 - Semantic Parity and Bootstrap Canonicalization | planned | semantic parity and canonical generated BBNF self-host (or same-tranche removal of `bootstrap_parser.rs`) |
+| W3a - Fact and Type Authority | planned | durable fact authority + type obligation solver; W3a.0 pipeline registry research |
+| W3b - CSP Strategy Globalization | planned | shape/layout/dispatch constraints installed and consumed |
+| W3c - Projection Consumption and Registry Authority | planned | StructDirect emitter authority + registry binding |
 | W4 - Benchmark, Profile, and Workspace Truth | planned | bench/profile/workspace truth |
 | W5 - Terminal Close and Handoff | planned | terminal close and BA/BB handoff |
 
@@ -64,3 +67,49 @@ Additional W0 gate runs:
 - parse-that `cargo test --workspace`: fail on published `parse_that 0.3.3`
   expecting old `pprint::Doc` / `pprint::Join`.
 - pprint `cargo test`: pass with one warning and two ignored doctests.
+
+## 2026-04-30 - REAUDIT Wave Refinements
+
+Per `docs/tranches/AZ-III/audit/REAUDIT-2026-04-30/SYNTHESIS.md` and the
+six lane reports under that directory, the AZ-III wave plan absorbs the
+following refinements:
+
+- **R1**: New `W0p - Throughput Substrate` wave opens between W0 and W1
+  to land bench-iter profile, regen `--staged`, `make doctor`, profile
+  redundancy cleanup, and nextest partition before any source
+  implementation wave dispatches. Per `feedback_build_infra_first` and
+  REAUDIT lane 6's >10 min/harness fat-LTO finding (the W4 throughput
+  blocker).
+- **R2**: New `W0.5 Commit Body Truth Sample` sub-unit under W0
+  produces a sampled report over the 68 templated-body commits;
+  orchestrator decides re-rewrite scope only after user acknowledgment.
+- **R3**: New `W0.6 Sibling Repo Triage Packet` sub-unit under W0
+  catalogs parse-that, pprint, gorgeous, and bbnf-buddy red surfaces
+  with explicit dispositions (registry pin, sibling tranche, or AZ-III
+  blocker carry).
+- **R4**: The single `W3 - Fact, Type, CSP, and Projection Authority`
+  wave is split into three: `W3a - Fact and Type Authority` (egraph
+  facts + type obligation solver; deletes silent `BoxedEnum` fallbacks
+  at `crates/ir/src/passes/types/constraint/reference.rs:74` and
+  `revise.rs:123`), `W3b - CSP Strategy Globalization` (shape, layout,
+  dispatch constraints; replaces `shape_dict::install` no-op), and
+  `W3c - Projection Consumption and Registry Authority` (StructDirect
+  emitter authority + pipeline registry holes for `MultiPathParser` /
+  `ImportPrettyParser` / `SplitPrettyParser`).
+- **R5**: The W2 vs W3.4 emitter file-bounds race is resolved by
+  carving `crates/core/src/backend/rust/emitter/shapes/**/struct_direct.rs`
+  to W2 (parity-driven shape-specific fixes) and the rest of
+  `crates/core/src/backend/rust/emitter/**` to W3c (projection-authority
+  work). Both wave specs document the carve in their File Bounds.
+- **R6**: New `W3a.0 Pipeline Registry Research` sub-unit produces
+  `audit/W3a-0-pipeline-registry-research.md` with a per-caller verdict
+  for `MultiPathParser`, `ImportPrettyParser`, and `SplitPrettyParser`;
+  W3c registry binding work consumes this verdict.
+- **R7**: W2.4 BBNF Bootstrap Canonical Path closes ONLY by canonical
+  generated self-host or by a same-tranche `bootstrap_parser.rs`
+  removal commit. Deferral to BA, BB, or any future tranche letter is
+  forbidden as a closure path.
+- **R8**: AZ-III wave table and PROGRESS wave-status table reshape into
+  nine rows (W0, W0p, W1, W2, W3a, W3b, W3c, W4, W5) and the Carried
+  Work Ledger in `AZ-III.md` reroutes its W3-owned items to W3a / W3b /
+  W3c.

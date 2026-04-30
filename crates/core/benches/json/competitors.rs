@@ -1,4 +1,3 @@
-
 //! JSON parsing competitor benchmarks — comprehensive shootout.
 //!
 //! 9 external parsers on the same 4 datasets. Each parser validates once
@@ -57,7 +56,9 @@ macro_rules! bench_serde_borrow {
             serde_json::from_str::<serde_json_borrow::Value>(&input)
                 .expect(concat!($file, ": serde_json_borrow parse failed"));
             b.with_inputs(|| input.clone()).bench_values(|input| {
-                serde_json::from_str::<serde_json_borrow::Value>(black_box(&input)).unwrap()
+                let value =
+                    serde_json::from_str::<serde_json_borrow::Value>(black_box(&input)).unwrap();
+                black_box(value);
             });
         }
     };
@@ -127,7 +128,8 @@ macro_rules! bench_jiter {
             jiter::JsonValue::parse(input.as_bytes(), false)
                 .expect(concat!($file, ": jiter parse failed"));
             b.with_inputs(|| input.clone()).bench_values(|input| {
-                jiter::JsonValue::parse(black_box(input.as_bytes()), false).unwrap()
+                let value = jiter::JsonValue::parse(black_box(input.as_bytes()), false).unwrap();
+                black_box(value);
             });
         }
     };
@@ -486,7 +488,7 @@ macro_rules! bench_tree_sitter {
                 parser.parse(&input, None).is_some(),
                 concat!($file, ": tree-sitter parse failed")
             );
-            b.with_inputs(|| input.clone()).bench_local(|input| {
+            b.with_inputs(|| input.clone()).bench_local_values(|input| {
                 let mut parser = tree_sitter::Parser::new();
                 parser
                     .set_language(&tree_sitter_json::LANGUAGE.into())

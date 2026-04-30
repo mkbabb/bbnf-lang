@@ -1,0 +1,116 @@
+AZ-II.cutover.O4 Parsed/TapeDirect closure scan
+Captured: 2026-04-30
+
+Scope
+-----
+
+This artifact covers the O4 production return-model cut:
+
+- Rust sources under crates/core, crates/ir, and xtask.
+- Generated grammar Rust under crates/core/src/grammar/generated.
+- Shape-dispatch fixtures that bless StructDirect success as unit.
+- Historical tranche docs are intentionally outside the zero-hit
+  source scan.
+
+This artifact does not claim that runtime::tape is gone. The remaining
+DtaError, scan-policy, profile, StructuralIndex, simd-scan, visitor,
+and tape-crate surfaces are O5 deletion work.
+
+Static closure scans
+--------------------
+
+Command:
+
+    rg -n "TapeDirect|is_tape_direct|EmitStrategy::TapeDirect|\bParsed\b|Parsed::new|Parsed<'" crates/core crates/ir xtask -g '*.rs'
+
+Result: zero hits.
+
+Command:
+
+    rg -n "TapeOffset" crates/core/src/grammar/generated -g '*.rs'
+
+Result: zero hits.
+
+Command:
+
+    rg -n "emit_ref_call_tape|TapeOffset::NONE|Option<TapeOffset>|None::<crate::runtime::tape::TapeOffset>|Result<[^\n]*TapeOffset" crates/core/src/backend/rust/ir_types.rs crates/core/src/backend/rust/emitter/shapes crates/core/src/grammar/generated -g '*.rs'
+
+Result: zero hits.
+
+Command:
+
+    rg -n "emit_parse_(object|alt_dispatch|array_list|array_wrapped|keyword)_tape|emit_element_position_tape|emit_seq_branch_structural_tape|emit_map_regex_host_fn|alt_branches_carry_typed_payloads|emit_alt_typed_payload_tape|literal_payload_for|rule_keyword_leaf_kind" crates/core/src/backend/rust/emitter/shapes -g '*.rs'
+
+Result: zero hits.
+
+Command:
+
+    git diff --check -- crates/core crates/ir xtask docs/benchmarks/AZ-II/cutover
+
+Result: clean.
+
+Build and focused tests
+-----------------------
+
+Command:
+
+    cargo check -p bbnf --lib --profile ax-iter
+
+Result: passed. Warnings are the existing generated labeled-break /
+unused-comparison warnings plus lower_string_lit.
+
+Command:
+
+    cargo xtask regen --check
+
+Result: passed; regen --check reported clean for 9 grammars.
+
+Command:
+
+    cargo nextest run -p bbnf --test emit_strategy --test typed_accessor_surface --test keyword_ref_branch_wire_contract --cargo-profile ax-iter --no-fail-fast -- --nocapture
+
+Result: passed; 30 tests run, 30 passed.
+
+Command:
+
+    cargo test -p bbnf --test shape_dispatch_emission --profile ax-iter -- --nocapture
+
+Result: passed; 29 tests run, 29 passed.
+
+O3a J1/S1 disposition
+---------------------
+
+J1 JSON bool branch payloads are O4-owned and closed in commit c51f9742
+(`fix(az-ii): type JSON bool branch payloads`). Generated JSON bool
+branches now deposit concrete bool leaves through the document builder;
+no Parsed adapter or fallback return path was introduced.
+
+S1 is non-return-model-owned per docs/tranches/AZ-II/audit/O3a-S1-plan.md.
+The Sheets failures remain assigned to S1-E1, S1-R1, S1-SER1, and O6
+verification. The return-model scan was:
+
+    rg '\bParsed\b|TapeDirect' crates/core/tests/sheets_*.rs crates/core/src/grammar/generated/google_sheets.rs --type rust
+
+Result: zero hits. O4 did not add a Parsed compatibility adapter,
+fallback document wrapper, or shim return surface to hide S1 failures.
+
+O4 conclusion
+-------------
+
+O4 closes the live generated/strategy/return-model surface:
+
+- EmitStrategy is StructDirect-only for production grammars.
+- Unknown production grammars fail closed instead of falling back.
+- Generated parse entrypoints return concrete documents.
+- StructDirect shape success returns unit, not TapeOffset.
+- Parsed is absent from production Rust code.
+- Generated grammars have no TapeOffset return payloads.
+- The direct Ref-call helper is named emit_ref_call_shape, not the
+  tape-era emit_ref_call_tape.
+
+O5 is unblocked but remains mandatory. It must delete or relocate the
+remaining runtime::tape primitives, simd-scan tape-owned structures,
+visitor/tape-only emitters, json-prototype, Gorgeous JIT, manifests,
+and crates/tape without compatibility shims.
+
+Close commit: pending at artifact creation.

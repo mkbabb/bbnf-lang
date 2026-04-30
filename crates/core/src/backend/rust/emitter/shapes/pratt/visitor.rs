@@ -13,12 +13,12 @@ use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use bbnf_ir::registry::EmitStrategy;
 use super::super::dispatcher::{
     emit_ref_call_visitor, visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
 };
 use super::super::root_rule_name;
 use super::extract_first_ref;
+use bbnf_ir::registry::EmitStrategy;
 
 /// Emit `pub fn parse_pratt_visitor_<grammar>_<rule><V>(input, p,
 /// state, visitor) -> Result<(), ParseErr>`.

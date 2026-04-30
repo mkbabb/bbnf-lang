@@ -72,8 +72,7 @@ fn emit_dispatch_arms_visitor(
         enumerated.push((first_bytes, body));
     }
 
-    let mut per_byte_arms: std::collections::BTreeMap<u8, Vec<TokenStream>> =
-        Default::default();
+    let mut per_byte_arms: std::collections::BTreeMap<u8, Vec<TokenStream>> = Default::default();
     let mut fallback_arms: Vec<TokenStream> = Vec::new();
 
     for (first_bytes, body) in &enumerated {
@@ -112,11 +111,7 @@ fn emit_dispatch_arms_visitor(
     }
 }
 
-fn emit_branch_body_visitor(
-    node: &IrNode,
-    grammar_suffix: &str,
-    ir: &GrammarIR,
-) -> TokenStream {
+fn emit_branch_body_visitor(node: &IrNode, grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
     let inner = unwrap_trivia(node);
     match inner {
         IrNode::Ref(rid) => match emit_ref_call_visitor(grammar_suffix, *rid, ir) {
@@ -134,8 +129,7 @@ fn emit_branch_body_visitor(
         IrNode::Literal(sid) => {
             let bytes = ir.get_string(*sid).as_bytes();
             let len = bytes.len();
-            let byte_lits: Vec<TokenStream> =
-                bytes.iter().map(|b| quote! { #b }).collect();
+            let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
             quote! {
                 {
                     let at = *p;

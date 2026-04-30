@@ -17,7 +17,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use super::super::super::dfa_codegen::regex_scan_adapter_ident;
-use super::super::dispatcher::emit_ref_call_tape;
+use super::super::dispatcher::emit_ref_call_shape;
 use super::super::sanitise_grammar;
 use super::branch_analysis::{branch_first_bytes, flatten, unwrap_trivia};
 use super::structural_branch::emit_structural_branch_tape;
@@ -47,8 +47,7 @@ pub(super) fn emit_alt_byte_dispatch_tape(
         enumerated.push((first_bytes, body));
     }
 
-    let mut per_byte_arms: std::collections::BTreeMap<u8, Vec<TokenStream>> =
-        Default::default();
+    let mut per_byte_arms: std::collections::BTreeMap<u8, Vec<TokenStream>> = Default::default();
     let mut fallback_arms: Vec<TokenStream> = Vec::new();
 
     for (first_bytes, body) in &enumerated {
@@ -122,8 +121,7 @@ pub(super) fn emit_alt_tape(
         enumerated.push((first_bytes, body));
     }
 
-    let mut per_byte_arms: std::collections::BTreeMap<u8, Vec<TokenStream>> =
-        Default::default();
+    let mut per_byte_arms: std::collections::BTreeMap<u8, Vec<TokenStream>> = Default::default();
     let mut fallback_arms: Vec<TokenStream> = Vec::new();
 
     for (first_bytes, body) in &enumerated {
@@ -224,7 +222,7 @@ fn emit_alt_branch_body_tape(
 ) -> TokenStream {
     let inner = unwrap_trivia(node);
     match inner {
-        IrNode::Ref(rid) => match emit_ref_call_tape(grammar_suffix, *rid, ir) {
+        IrNode::Ref(rid) => match emit_ref_call_shape(grammar_suffix, *rid, ir) {
             Some(call) => quote! {
                 {
                     let attempt_p = *p;
@@ -277,14 +275,12 @@ fn emit_alt_branch_body_tape(
 fn seq_is_pure_literal_chain(seq: &IrNode) -> bool {
     let mut positions: Vec<&IrNode> = Vec::new();
     flatten(seq, &mut positions);
-    positions.iter().all(|pos| {
-        match unwrap_trivia(pos) {
-            IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => true,
-            IrNode::Alt(branches, _) => branches.iter().all(|b| {
-                matches!(unwrap_trivia(&b.node), IrNode::Literal(_))
-            }),
-            _ => false,
-        }
+    positions.iter().all(|pos| match unwrap_trivia(pos) {
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => true,
+        IrNode::Alt(branches, _) => branches
+            .iter()
+            .all(|b| matches!(unwrap_trivia(&b.node), IrNode::Literal(_))),
+        _ => false,
     })
 }
 
@@ -327,11 +323,7 @@ fn emit_literal_branch_tape(sid: u32, ir: &GrammarIR) -> TokenStream {
 /// branch honours the IR's pattern SID via the grammar-specific
 /// regex-scan adapter, mirroring the
 /// [`super::super::alt_dispatch::emit_regex_pattern_attempt`] contract.
-fn emit_regex_branch_tape(
-    sid: u32,
-    grammar_suffix: &str,
-    ir: &GrammarIR,
-) -> TokenStream {
+fn emit_regex_branch_tape(sid: u32, grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
     let pattern = ir.get_string(sid).to_string();
     let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
     quote! {
@@ -394,8 +386,7 @@ fn emit_seq_position(node: &IrNode, ir: &GrammarIR) -> TokenStream {
         IrNode::Literal(sid) => {
             let bytes = ir.get_string(*sid).as_bytes();
             let len = bytes.len();
-            let byte_lits: Vec<TokenStream> =
-                bytes.iter().map(|b| quote! { #b }).collect();
+            let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
             quote! {
                 let at = *p;
                 let end = at + #len;
@@ -478,8 +469,7 @@ pub(super) fn emit_alt_visitor(
         enumerated.push((first_bytes, body));
     }
 
-    let mut per_byte_arms: std::collections::BTreeMap<u8, Vec<TokenStream>> =
-        Default::default();
+    let mut per_byte_arms: std::collections::BTreeMap<u8, Vec<TokenStream>> = Default::default();
     let mut fallback_arms: Vec<TokenStream> = Vec::new();
 
     for (first_bytes, body) in &enumerated {
@@ -549,8 +539,7 @@ fn emit_alt_branch_body_visitor(
         IrNode::Literal(sid) => {
             let bytes = ir.get_string(*sid).as_bytes();
             let len = bytes.len();
-            let byte_lits: Vec<TokenStream> =
-                bytes.iter().map(|b| quote! { #b }).collect();
+            let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
             quote! {
                 {
                     let at = *p;

@@ -88,16 +88,14 @@ pub mod unordered;
 pub mod value_materialize;
 pub mod wrap;
 
-use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
 use bbnf_ir::GrammarIR;
+use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
 use proc_macro2::TokenStream;
 use quote::quote;
 
 use bbnf_ir::registry::EmitStrategy;
 
-pub use dispatcher::{
-    dispatcher_fn_ident, has_w4_classified, visitor_dispatcher_fn_ident,
-};
+pub use dispatcher::{dispatcher_fn_ident, has_w4_classified, visitor_dispatcher_fn_ident};
 
 // AZ-I.W2-act.A — `registry_observer` deleted per audit/AUDIT-2 §6.C.
 // The sub-module's docstring (lines 31-34 pre-delete) self-documented
@@ -149,42 +147,15 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
     // (JSON Alt-of-Refs) or inline per-Ref routing.
     let grammar_suffix = sanitise_grammar(grammar_ident_str);
 
-    // AZ-I.W2.RA — codegen-time substrate selection.
-    //
-    // `EmitStrategy::for_grammar` resolves the grammar identity +
-    // registry-population state to one of:
-    //
-    // - `EmitStrategy::StructDirect { rust: SubstrateBinding { .. }, .. }`
-    //   for JSON post-W2 activation; the per-shape emitters key on
-    //   this variant to emit `builder.*` calls instead of `tape.*`.
-    //   Per `audit/AUDIT-6-ARCHITECTURE.md` §4 + §8.1 the strategy
-    //   lives in `bbnf_ir::registry::strategy`; the Rust emitter
-    //   reads its `rust: SubstrateBinding` field for the codegen-
-    //   time builder/document type paths.
-    // - `EmitStrategy::TapeDirect` for every other grammar; the
-    //   per-shape emitters emit the legacy `tape.*` calls unchanged.
-    //
-    // The strategy is bound here once and propagated to per-shape
-    // emitter call sites (B/C/D/E in stage 2 extend each per-shape
-    // fn signature to accept `&EmitStrategy`; in this stage A's wire
-    // is the binding plus parse_body's two-path emission). Per
-    // `feedback_no-orthogonal-codepaths` the strategy decision lives
-    // at codegen time — there is no runtime conditional inside a
-    // single emitted parse fn.
+    // AZ-I.W2.RA / AZ-II.cutover.O4 — codegen-time substrate
+    // selection is fail-closed. `EmitStrategy::for_grammar` resolves
+    // the grammar identity plus registry-population state to the
+    // concrete StructDirect binding. The strategy is bound here once
+    // and propagated to per-shape emitter call sites; the strategy
+    // decision lives at codegen time, with no runtime conditional
+    // inside a single emitted parse fn.
     let strategy = EmitStrategy::for_grammar(grammar_ident_str, &ir.struct_registry);
-    // The strategy is bound for stage-2 per-shape redress agents
-    // (B/C/D/E) to extend per-shape fn signatures to accept
-    // `&EmitStrategy` and emit `builder.*` calls inside StructDirect
-    // arms. Stage 1 (this dispatch) wires the binding + the
-    // parse_body two-path emission in `grammar.rs`; the per-shape
-    // emitters retain their existing tape bodies until B/C/D/E
-    // land. Reading the strategy variant here (via
-    // `is_struct_direct()`) preserves the binding through the
-    // emit-loop without the compiler eliding it as dead.
-    debug_assert!(
-        matches!(strategy, EmitStrategy::TapeDirect | EmitStrategy::StructDirect { .. }),
-        "EmitStrategy resolver must produce one of the documented variants",
-    );
+    debug_assert!(strategy.is_struct_direct());
 
     let mut per_rule: Vec<TokenStream> = Vec::new();
     let mut per_rule_visitor: Vec<TokenStream> = Vec::new();
@@ -219,13 +190,9 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
         // transparent. Cross-rule references to transparent rules
         // therefore fail to link when the per-shape fn isn't emitted.
         //
-        // - **Wrap** transparent rules: TapeDirect's
-        //   `wrap_can_elide_compound` returns true and the regular Wrap
-        //   emitter emits an elided-compound body. StructDirect emits
-        //   `emit_alt_struct_dispatch_transparent` (also no outer
-        //   compound). CSS Pretty's `ruleItem = qualifiedRule | atRule`
-        //   and `atRule = mediaRule | … | genericAtRule` are the
-        //   canonical TapeDirect cases.
+        // - **Wrap** transparent rules: the StructDirect emitter uses
+        //   `emit_alt_struct_dispatch_transparent`, so no outer
+        //   compound is opened for alias-only rules.
         //
         // - **Keyword** transparent rules: CSS L4's `pseudoClass = isPseudo
         //   | … | classicPseudo` (transparent, Alt-of-Ref-led, classifies
@@ -312,9 +279,7 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
             ShapeTag::Unordered => {
                 unordered::emit_parse_unordered(&strategy, &grammar_suffix, rule, ir)
             }
-            ShapeTag::ArgList => {
-                arglist::emit_parse_arglist(&strategy, &grammar_suffix, rule, ir)
-            }
+            ShapeTag::ArgList => arglist::emit_parse_arglist(&strategy, &grammar_suffix, rule, ir),
             ShapeTag::Flat => flat::emit_parse_flat(&strategy, &grammar_suffix, rule, ir),
             ShapeTag::Wrap => wrap::emit_parse_wrap(&grammar_suffix, rule, ir, &strategy),
             ShapeTag::HRegex => hregex::emit_parse_hregex(&strategy, &grammar_suffix, rule, ir),
@@ -346,7 +311,10 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
                     // through the HRegex-backed regex-scan path.
                     if hregex::number_rule_allows_leading_dot(rule, ir) {
                         hregex::emit_parse_number_visitor_via_hregex(
-                            &strategy, &grammar_suffix, rule, ir,
+                            &strategy,
+                            &grammar_suffix,
+                            rule,
+                            ir,
                         )
                     } else {
                         number::emit_parse_number_visitor(&grammar_suffix, rule, ir)
@@ -359,7 +327,9 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
                 ShapeTag::Flat => {
                     flat::emit_parse_flat_visitor(&strategy, &grammar_suffix, rule, ir)
                 }
-                ShapeTag::Wrap => wrap::emit_parse_wrap_visitor(&grammar_suffix, rule, ir, &strategy),
+                ShapeTag::Wrap => {
+                    wrap::emit_parse_wrap_visitor(&grammar_suffix, rule, ir, &strategy)
+                }
                 ShapeTag::ArgList => {
                     arglist::emit_parse_arglist_visitor(&strategy, &grammar_suffix, rule, ir)
                 }
@@ -400,15 +370,13 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
     }
 }
 
-
 /// Returns `true` when `ir` has at least one shape-classified rule.
 /// Used internally by [`dispatcher`] to choose between root-delegation
 /// and Alt-dispatch bodies.
 pub(super) fn has_shape_dispatch(ir: &GrammarIR) -> bool {
-    ir.rules.iter().any(|rule| {
-        !rule.meta.is_transparent
-            && ir.shape_assignments.get(rule.id).is_classified()
-    })
+    ir.rules
+        .iter()
+        .any(|rule| !rule.meta.is_transparent && ir.shape_assignments.get(rule.id).is_classified())
 }
 
 /// Resolve the grammar's root rule per [`GrammarIR::entry`]. Returns

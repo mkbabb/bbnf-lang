@@ -1,19 +1,21 @@
-/// AW-V.W3.2 — per-grammar Number-shape parse function.
+/// AZ-I.W2.RC — per-grammar Number-shape parse function
+/// (struct-direct substrate).
 ///
-/// Mirrors `json_prototype::number::parse_number_body`.
-/// `first_byte` is the byte the dispatcher already matched;
-/// passing it avoids a redundant re-read for the sign check.
+/// Mirrors `json_prototype::number::parse_number_body` for the
+/// scan body; the trailing leaf push routes through
+/// `builder.push_leaf_with_f64(value)` against the
+/// grammar-specific concrete `StructBuilder` impl. `first_byte`
+/// is the byte the dispatcher already matched; passing it
+/// avoids a redundant re-read for the sign check.
 #[inline(always)]
-#[allow(non_snake_case, clippy::too_many_arguments)]
-pub fn parse_number_JsonFixture_number(
-    input: &[u8],
+#[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+pub fn parse_number_JsonFixture_number<'p>(
+    input: &'p [u8],
     p: &mut usize,
     first_byte: u8,
-    builder: &mut crate::runtime::tape::Tape<()>,
-) -> ::core::result::Result<
-    crate::runtime::tape::TapeOffset,
-    crate::runtime::tape::DtaError,
-> {
+    builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
+) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    use crate::runtime::builder::StructBuilder as _;
     const POW10_U64: [u64; 17] = [
         1, 10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000,
         1_000_000_000, 10_000_000_000, 100_000_000_000, 1_000_000_000_000,
@@ -124,13 +126,6 @@ pub fn parse_number_JsonFixture_number(
             None => parse_number_fallback(bytes),
         }
     };
-    let off = builder
-        .push_leaf_with_f64_direct(
-            crate::runtime::tape::TapeKind::Span,
-            start as u32,
-            end as u32,
-            2u8,
-            value.to_bits(),
-        );
-    Ok(off)
+    builder.push_leaf_with_f64(value);
+    Ok(())
 }

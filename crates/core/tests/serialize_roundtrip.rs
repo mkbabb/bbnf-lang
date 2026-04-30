@@ -1,25 +1,18 @@
 //! Serialize round-trip tests — ALL grammars must compile and round-trip.
 //!
-//! Each test verifies idempotence: parse → serialize → reparse →
-//! serialize → assert eq. Post-AC.2 the parse call returns a
-//! `Parsed<Grammar>`; the serializer still takes the generated
-//! `<Grammar>NodeView<'a>` Copy wrapper, constructed via
-//! `NodeView::from_cursor` from the root view's cursor + input.
+//! Each test verifies idempotence: parse -> serialize -> reparse ->
+//! serialize -> assert eq. Post-cutover parse calls return concrete
+//! grammar documents.
 
 use ::bbnf::grammar::generated::json::*;
 
-
 use ::bbnf::grammar::generated::csv::*;
-
 
 use ::bbnf::grammar::generated::bnf::*;
 
-
 use ::bbnf::grammar::generated::ebnf::*;
 
-
 use ::bbnf::grammar::generated::math::*;
-
 
 // AZ-II.cutover.I (Phase 5) — `BbnfBootstrap::serialize_compact` is
 // a tape-substrate symbol that retired with the StructDirect flip;
@@ -27,10 +20,8 @@ use ::bbnf::grammar::generated::math::*;
 // serialize_compact_doc` instead. The generated `BbnfBootstrap` ident
 // is therefore unused at test-link time.
 
-
 // CSS pretty grammar (no @import)
 use ::bbnf::grammar::generated::css_pretty::*;
-
 
 // AZ-I.W2-act.recovery — the `google_sheets`, `css_l4` re-exports
 // and the `css_types` host-type module retired alongside the Sheets
@@ -38,7 +29,6 @@ use ::bbnf::grammar::generated::css_pretty::*;
 // time inputs to the pre-flip cursor-backed serialize_compact
 // emission, none survives the struct-direct flip's removal of the
 // tape-shaped serializer infrastructure.
-
 
 // ── JSON ─────────────────────────────────────────────────────────────────────
 //
@@ -132,19 +122,52 @@ fn write_json_value<'p>(
 fn json_rt(input: &str) {
     let s1 = json_emit(input);
     let s2 = json_emit(&s1);
-    assert_eq!(s1, s2, "JSON serialize not idempotent:\n  s1={s1:?}\n  s2={s2:?}");
+    assert_eq!(
+        s1, s2,
+        "JSON serialize not idempotent:\n  s1={s1:?}\n  s2={s2:?}"
+    );
 }
 
-#[test] fn json_null()      { assert_eq!(json_emit("null"), "null"); }
-#[test] fn json_true()      { assert_eq!(json_emit("true"), "true"); }
-#[test] fn json_false()     { assert_eq!(json_emit("false"), "false"); }
-#[test] fn json_number()    { json_rt("42"); }
-#[test] fn json_string()    { assert_eq!(json_emit(r#""hello""#), r#""hello""#); }
-#[test] fn json_empty_arr() { json_rt("[]"); }
-#[test] fn json_array()     { json_rt("[1, 2, 3]"); }
-#[test] fn json_empty_obj() { json_rt("{}"); }
-#[test] fn json_object()    { json_rt(r#"{"key": "value"}"#); }
-#[test] fn json_nested()    { json_rt(r#"{"a": [1, 2], "b": {"c": true}}"#); }
+#[test]
+fn json_null() {
+    assert_eq!(json_emit("null"), "null");
+}
+#[test]
+fn json_true() {
+    assert_eq!(json_emit("true"), "true");
+}
+#[test]
+fn json_false() {
+    assert_eq!(json_emit("false"), "false");
+}
+#[test]
+fn json_number() {
+    json_rt("42");
+}
+#[test]
+fn json_string() {
+    assert_eq!(json_emit(r#""hello""#), r#""hello""#);
+}
+#[test]
+fn json_empty_arr() {
+    json_rt("[]");
+}
+#[test]
+fn json_array() {
+    json_rt("[1, 2, 3]");
+}
+#[test]
+fn json_empty_obj() {
+    json_rt("{}");
+}
+#[test]
+fn json_object() {
+    json_rt(r#"{"key": "value"}"#);
+}
+#[test]
+fn json_nested() {
+    json_rt(r#"{"a": [1, 2], "b": {"c": true}}"#);
+}
 
 // ── CSV ──────────────────────────────────────────────────────────────────────
 //
@@ -160,10 +183,22 @@ fn csv_parses(input: &str) {
     assert_eq!(doc.input(), input);
 }
 
-#[test] fn csv_simple()     { csv_parses("a,b,c"); }
-#[test] fn csv_multi()      { csv_parses("a,b,c\n1,2,3"); }
-#[test] fn csv_quoted()     { csv_parses(r#""hello","world""#); }
-#[test] fn csv_single()     { csv_parses("hello"); }
+#[test]
+fn csv_simple() {
+    csv_parses("a,b,c");
+}
+#[test]
+fn csv_multi() {
+    csv_parses("a,b,c\n1,2,3");
+}
+#[test]
+fn csv_quoted() {
+    csv_parses(r#""hello","world""#);
+}
+#[test]
+fn csv_single() {
+    csv_parses("hello");
+}
 
 // ── BNF ──────────────────────────────────────────────────────────────────────
 //
@@ -240,8 +275,7 @@ fn math_num() {
 use bbnf::runtime::bbnf::serialize_compact_doc;
 
 fn bbnf_emit(input: &str) -> String {
-    let doc = bbnf::grammar::bootstrap_parser::parse(input)
-        .expect("BBNF grammar parse failed");
+    let doc = bbnf::grammar::bootstrap_parser::parse(input).expect("BBNF grammar parse failed");
     serialize_compact_doc(&doc)
 }
 
@@ -252,7 +286,10 @@ fn bbnf_rule() {
     assert!(!e.is_empty(), "BBNF serialize empty");
     // Idempotence: parse → serialize → reparse → serialize → equality.
     let e2 = bbnf_emit(&e);
-    assert_eq!(e, e2, "BBNF serialize not idempotent:\n  s1={e:?}\n  s2={e2:?}");
+    assert_eq!(
+        e, e2,
+        "BBNF serialize not idempotent:\n  s1={e:?}\n  s2={e2:?}"
+    );
 }
 
 // ── CSS Pretty ───────────────────────────────────────────────────────────────

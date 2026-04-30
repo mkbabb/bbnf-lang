@@ -1,12 +1,10 @@
 //! Payload-extraction helpers for Keyword-shape rules.
 //!
 //! Recovers the leading literal byte-sequence from a branch body
-//! (mirroring the recognizer's `leading_literal_rec` walk), extracts
-//! the rule-level and per-branch `-> <const>` payloads from the IR's
-//! `FnDescriptor` table, and decides the leaf kind (`KvPair` for U8
-//! scalar rules, `Span` for Bool / payload-less branches).
+//! (mirroring the recognizer's `leading_literal_rec` walk) and extracts
+//! per-branch `-> <const>` payloads from the IR's `FnDescriptor` table.
 
-use bbnf_ir::{GrammarIR, IrNode, IrRule};
+use bbnf_ir::{GrammarIR, IrNode};
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -49,54 +47,6 @@ pub(super) fn leading_literal_bytes(node: &IrNode, ir: &GrammarIR) -> Option<Vec
     rec(node, ir, 0, &mut visited)
 }
 
-/// Extract the rule's `-> <const>` scalar payload if present. Returns
-/// `Some(u32)` for `InlineScalar` form; `None` when the rule has no
-/// `-> ` annotation or carries a non-scalar payload.
-pub(super) fn literal_payload_for(rule: &IrRule, ir: &GrammarIR) -> Option<TokenStream> {
-    // Walk the rule body looking for Map { inner: Literal, fn_id }.
-    fn find_map_fn(node: &IrNode) -> Option<u32> {
-        match node {
-            IrNode::Map { fn_id, .. } => Some(*fn_id),
-            IrNode::OptionalWhitespace(inner) => find_map_fn(inner),
-            _ => None,
-        }
-    }
-    let fn_id = find_map_fn(&rule.body)?;
-    let fn_desc = ir.fns.get(fn_id as usize)?;
-    payload_from_fn(fn_desc, ir)
-}
-
-/// AX.W0a.2.p — choose the leaf `TapeKind` for a Keyword rule's
-/// payload-bearing emission.
-///
-/// Policy:
-///
-/// - `TypeDesc::U8` scalar rules emit `TapeKind::KvPair`. Matches the
-///   walker's Seq-promotion output for `Tuple([Span, U8])`-shaped
-///   rules (CSS `dir_pseudo_*`, Sheets `compare_op` / `add_op` /
-///   `mul_op` in parent context).
-/// - Every other admissible type (chiefly `Bool`) emits
-///   `TapeKind::Span`. JSON's `bool`/`null` rules ride this branch;
-///   `json_parity::every_declared_leaf_reaches_the_tape` asserts
-///   typed-bool leaves are Span-kinded.
-///
-/// Non-typed rules (no `->` annotation) never hit the payload-bearing
-/// branch here; their emission stays on a payload-less Span leaf.
-pub(super) fn rule_keyword_leaf_kind(rule: &IrRule, ir: &GrammarIR) -> TokenStream {
-    use bbnf_ir::TypeDesc;
-    let ty = ir.types.iter().find_map(|(rid, t)| {
-        if *rid == rule.id {
-            Some(t.clone())
-        } else {
-            None
-        }
-    });
-    match ty {
-        Some(TypeDesc::U8) => quote! { crate::runtime::tape::TapeKind::KvPair },
-        _ => quote! { crate::runtime::tape::TapeKind::Span },
-    }
-}
-
 /// Per-branch payload for an Alt-of-literals. Branch index is passed
 /// so we can discriminate (e.g. `true`→1, `false`→0).
 /// AX.W0a.2.p — extract the branch's typed-byte payload (if any) from
@@ -129,10 +79,7 @@ pub(super) fn alt_branch_payload_value(
 
 /// Return the boolean literal carried by a branch-level `-> true` /
 /// `-> false` mapping.
-pub(super) fn alt_branch_bool_payload(
-    branch: &bbnf_ir::AltBranch,
-    ir: &GrammarIR,
-) -> Option<bool> {
+pub(super) fn alt_branch_bool_payload(branch: &bbnf_ir::AltBranch, ir: &GrammarIR) -> Option<bool> {
     fn find_map_fn(node: &IrNode) -> Option<u32> {
         match node {
             IrNode::Map { fn_id, .. } => Some(*fn_id),

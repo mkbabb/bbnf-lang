@@ -51,16 +51,16 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use bbnf_ir::registry::EmitStrategy;
 use super::dispatcher::{
-    dispatcher_fn_ident, emit_ref_call_tape, emit_ref_call_visitor, shape_fn_ident,
+    dispatcher_fn_ident, emit_ref_call_shape, emit_ref_call_visitor, shape_fn_ident,
     visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
 };
 use super::root_rule_name;
 use super::substrate::builder_ty_with_lifetime;
+use bbnf_ir::registry::EmitStrategy;
 
 /// Emit `pub fn parse_arglist_<grammar>_<rule>(input, p, state,
-/// builder) -> Result<TapeOffset, DtaError>`.
+/// builder) -> Result<(), DtaError>`.
 ///
 /// # AZ-I.W2.RE — strategy gate
 ///
@@ -77,13 +77,7 @@ pub fn emit_parse_arglist(
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    if let EmitStrategy::StructDirect { .. } = strategy {
-        // AZ-I.W2-act.B3 — ArgList struct-direct body. The W2.RE panic
-        // retires by surfacing a real body that opens a Function
-        // compound on the StructBuilder, walks each position
-        // (head / `(` / args / `)`), and closes. The body is grammar-
-        // general — the SubstrateBinding's builder type splices via
-        // `super::substrate::builder_ty_with_lifetime`.
+    if matches!(strategy, EmitStrategy::StructDirect { .. }) {
         return emit_parse_arglist_struct_direct(strategy, grammar_suffix, rule, ir);
     }
     let rule_name = ir.get_string(rule.name);
@@ -102,13 +96,8 @@ pub fn emit_parse_arglist(
     // Flatten the rule body into positional IR nodes.
     let positions = collect_positions(&rule.body);
 
-    let body_emission = emit_tape_body(
-        &positions,
-        variant_idx,
-        &support_mod,
-        &dispatcher_ident,
-        ir,
-    );
+    let body_emission =
+        emit_tape_body(&positions, variant_idx, &support_mod, &dispatcher_ident, ir);
 
     quote! {
         /// AW-V.W4-fix — per-grammar ArgList-shape parse function.
@@ -127,10 +116,7 @@ pub fn emit_parse_arglist(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             let span_lo = *p as u32;
             // AY-II.W0.b — walker-parity post-order outer Rule compound.
             // B5.W6 — bracket the post-order children scope.
@@ -170,7 +156,7 @@ pub fn emit_parse_arglist(
                 span_hi,
                 crate::runtime::tape::TapeOffset(outer_child),
             );
-            Ok(crate::runtime::tape::TapeOffset(outer_off))
+            Ok(())
         }
     }
 }
@@ -203,9 +189,7 @@ fn walk_positions<'a>(
 ) {
     match node {
         IrNode::Map { inner, .. } => walk_positions(inner, leading, trailing, out),
-        IrNode::OptionalWhitespace(inner) => {
-            walk_positions(inner, true, true, out)
-        }
+        IrNode::OptionalWhitespace(inner) => walk_positions(inner, true, true, out),
         IrNode::Seq(children) => {
             for child in children {
                 walk_positions(child, leading, trailing, out);
@@ -244,13 +228,8 @@ fn emit_tape_body(
         } else {
             quote! {}
         };
-        let core = emit_tape_position_core(
-            pos.node,
-            variant_idx,
-            support_mod,
-            dispatcher_ident,
-            ir,
-        );
+        let core =
+            emit_tape_position_core(pos.node, variant_idx, support_mod, dispatcher_ident, ir);
         emissions.push(quote! {
             {
                 #leading
@@ -282,8 +261,7 @@ fn emit_tape_position_core(
         IrNode::Literal(sid) => {
             let bytes = ir.get_string(*sid).as_bytes();
             let len = bytes.len();
-            let byte_lits: Vec<TokenStream> =
-                bytes.iter().map(|b| quote! { #b }).collect();
+            let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
             quote! {
                 let at = *p;
                 let end = at + #len;
@@ -307,7 +285,7 @@ fn emit_tape_position_core(
         }
         IrNode::Ref(rid) => {
             // AW-V.W5.2 — direct per-Ref routing.
-            if let Some(call) = emit_ref_call_tape(&grammar_suffix, *rid, ir) {
+            if let Some(call) = emit_ref_call_shape(&grammar_suffix, *rid, ir) {
                 quote! { let _ = (#call)?; }
             } else {
                 quote! {
@@ -315,23 +293,24 @@ fn emit_tape_position_core(
                 }
             }
         }
-        IrNode::Regex(_) | IrNode::Alt(_, _)
-        | IrNode::Negate(_) | IrNode::Minus(_, _)
+        IrNode::Regex(_)
+        | IrNode::Alt(_, _)
+        | IrNode::Negate(_)
+        | IrNode::Minus(_, _)
         | IrNode::TokenDispatch { .. } => {
             // AX.W0a.2.e — inline-position emission (tape path).
             let _ = dispatcher_ident;
             super::inline::emit_inline_position_tape(
-                node, variant_idx, support_mod, &grammar_suffix, ir,
+                node,
+                variant_idx,
+                support_mod,
+                &grammar_suffix,
+                ir,
             )
         }
         IrNode::Repeat { inner, lo, hi } => {
-            let inner_emit = emit_tape_position_core(
-                inner,
-                variant_idx,
-                support_mod,
-                dispatcher_ident,
-                ir,
-            );
+            let inner_emit =
+                emit_tape_position_core(inner, variant_idx, support_mod, dispatcher_ident, ir);
             let lo_lit = *lo as usize;
             if *hi == 1 && *lo == 0 {
                 // Optional — attempt once, restore on failure.
@@ -495,37 +474,16 @@ fn emit_tape_position_core(
             }
         }
         IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
-            let l = emit_tape_position_core(
-                lhs,
-                variant_idx,
-                support_mod,
-                dispatcher_ident,
-                ir,
-            );
-            let r = emit_tape_position_core(
-                rhs,
-                variant_idx,
-                support_mod,
-                dispatcher_ident,
-                ir,
-            );
+            let l = emit_tape_position_core(lhs, variant_idx, support_mod, dispatcher_ident, ir);
+            let r = emit_tape_position_core(rhs, variant_idx, support_mod, dispatcher_ident, ir);
             quote! { #l #r }
         }
-        IrNode::Map { inner, .. } => emit_tape_position_core(
-            inner,
-            variant_idx,
-            support_mod,
-            dispatcher_ident,
-            ir,
-        ),
+        IrNode::Map { inner, .. } => {
+            emit_tape_position_core(inner, variant_idx, support_mod, dispatcher_ident, ir)
+        }
         IrNode::OptionalWhitespace(inner) => {
-            let inner_emit = emit_tape_position_core(
-                inner,
-                variant_idx,
-                support_mod,
-                dispatcher_ident,
-                ir,
-            );
+            let inner_emit =
+                emit_tape_position_core(inner, variant_idx, support_mod, dispatcher_ident, ir);
             quote! {
                 let _ = #support_mod::skip_space(input, p, state);
                 #inner_emit
@@ -553,10 +511,7 @@ pub fn emit_parse_arglist_visitor(
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    if let EmitStrategy::StructDirect { .. } = strategy {
-        // AZ-I.W2-act.B3 — visitor path is substrate-orthogonal; the
-        // panic retires per the strategy-agnostic emission contract.
-    }
+    let _ = strategy;
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("arglist", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
@@ -570,12 +525,7 @@ pub fn emit_parse_arglist_visitor(
     };
 
     let positions = collect_positions(&rule.body);
-    let body_emission = emit_visitor_body(
-        &positions,
-        &support_mod,
-        &dispatcher_ident,
-        ir,
-    );
+    let body_emission = emit_visitor_body(&positions, &support_mod, &dispatcher_ident, ir);
 
     quote! {
         /// AW-V.W4-fix — visitor-path ArgList-shape parse function.
@@ -624,12 +574,7 @@ fn emit_visitor_body(
         } else {
             quote! {}
         };
-        let core = emit_visitor_position_core(
-            pos.node,
-            support_mod,
-            dispatcher_ident,
-            ir,
-        );
+        let core = emit_visitor_position_core(pos.node, support_mod, dispatcher_ident, ir);
         emissions.push(quote! {
             {
                 #leading
@@ -657,8 +602,7 @@ fn emit_visitor_position_core(
         IrNode::Literal(sid) => {
             let bytes = ir.get_string(*sid).as_bytes();
             let len = bytes.len();
-            let byte_lits: Vec<TokenStream> =
-                bytes.iter().map(|b| quote! { #b }).collect();
+            let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
             quote! {
                 let at = *p;
                 let end = at + #len;
@@ -680,22 +624,17 @@ fn emit_visitor_position_core(
                 }
             }
         }
-        IrNode::Regex(_) | IrNode::Alt(_, _)
-        | IrNode::Negate(_) | IrNode::Minus(_, _)
+        IrNode::Regex(_)
+        | IrNode::Alt(_, _)
+        | IrNode::Negate(_)
+        | IrNode::Minus(_, _)
         | IrNode::TokenDispatch { .. } => {
             // AX.W0a.2.e — inline-position emission (visitor path).
             let _ = dispatcher_ident;
-            super::inline::emit_inline_position_visitor(
-                node, support_mod, &grammar_suffix, ir,
-            )
+            super::inline::emit_inline_position_visitor(node, support_mod, &grammar_suffix, ir)
         }
         IrNode::Repeat { inner, lo, hi } => {
-            let inner_emit = emit_visitor_position_core(
-                inner,
-                support_mod,
-                dispatcher_ident,
-                ir,
-            );
+            let inner_emit = emit_visitor_position_core(inner, support_mod, dispatcher_ident, ir);
             let lo_lit = *lo as usize;
             if *hi == 1 && *lo == 0 {
                 quote! {
@@ -745,33 +684,15 @@ fn emit_visitor_position_core(
             quote! { #(#out)* }
         }
         IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
-            let l = emit_visitor_position_core(
-                lhs,
-                support_mod,
-                dispatcher_ident,
-                ir,
-            );
-            let r = emit_visitor_position_core(
-                rhs,
-                support_mod,
-                dispatcher_ident,
-                ir,
-            );
+            let l = emit_visitor_position_core(lhs, support_mod, dispatcher_ident, ir);
+            let r = emit_visitor_position_core(rhs, support_mod, dispatcher_ident, ir);
             quote! { #l #r }
         }
-        IrNode::Map { inner, .. } => emit_visitor_position_core(
-            inner,
-            support_mod,
-            dispatcher_ident,
-            ir,
-        ),
+        IrNode::Map { inner, .. } => {
+            emit_visitor_position_core(inner, support_mod, dispatcher_ident, ir)
+        }
         IrNode::OptionalWhitespace(inner) => {
-            let inner_emit = emit_visitor_position_core(
-                inner,
-                support_mod,
-                dispatcher_ident,
-                ir,
-            );
+            let inner_emit = emit_visitor_position_core(inner, support_mod, dispatcher_ident, ir);
             quote! {
                 let _ = #support_mod::skip_space(input, p, state);
                 #inner_emit
@@ -817,8 +738,13 @@ fn emit_parse_arglist_struct_direct(
     };
 
     let positions = collect_positions(&rule.body);
-    let body_emission =
-        emit_struct_direct_body(&positions, &support_mod, &dispatcher_ident, grammar_suffix, ir);
+    let body_emission = emit_struct_direct_body(
+        &positions,
+        &support_mod,
+        &dispatcher_ident,
+        grammar_suffix,
+        ir,
+    );
 
     quote! {
         /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
@@ -837,10 +763,7 @@ fn emit_parse_arglist_struct_direct(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             let __layout: ::bbnf_ir::registry::StructLayout =
                 ::bbnf_ir::registry::StructLayout {
                     rule_id: #rule_id_lit as ::bbnf_ir::RuleId,
@@ -869,7 +792,7 @@ fn emit_parse_arglist_struct_direct(
                     <
                         #builder_ty as crate::runtime::StructBuilder
                     >::end_compound(builder, __handle);
-                    Ok(crate::runtime::tape::TapeOffset::NONE)
+                    Ok(())
                 }
                 ::core::result::Result::Err(__err) => {
                     <
@@ -902,8 +825,13 @@ fn emit_struct_direct_body(
         } else {
             quote! {}
         };
-        let core =
-            emit_struct_direct_position_core(pos.node, support_mod, dispatcher_ident, grammar_suffix, ir);
+        let core = emit_struct_direct_position_core(
+            pos.node,
+            support_mod,
+            dispatcher_ident,
+            grammar_suffix,
+            ir,
+        );
         emissions.push(quote! { #leading #core #trailing });
     }
     quote! { #(#emissions)* }
@@ -938,7 +866,7 @@ fn emit_struct_direct_position_core(
             }
         }
         IrNode::Ref(rid) => {
-            if let Some(call) = emit_ref_call_tape(grammar_suffix, *rid, ir) {
+            if let Some(call) = emit_ref_call_shape(grammar_suffix, *rid, ir) {
                 quote! { let _ = (#call)?; }
             } else {
                 quote! {
@@ -948,7 +876,11 @@ fn emit_struct_direct_position_core(
         }
         IrNode::OptionalWhitespace(inner) => {
             let inner_emit = emit_struct_direct_position_core(
-                inner, support_mod, dispatcher_ident, grammar_suffix, ir,
+                inner,
+                support_mod,
+                dispatcher_ident,
+                grammar_suffix,
+                ir,
             );
             quote! {
                 let _ = #support_mod::skip_space(input, p, state);
@@ -958,10 +890,18 @@ fn emit_struct_direct_position_core(
         }
         IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
             let l = emit_struct_direct_position_core(
-                lhs, support_mod, dispatcher_ident, grammar_suffix, ir,
+                lhs,
+                support_mod,
+                dispatcher_ident,
+                grammar_suffix,
+                ir,
             );
             let r = emit_struct_direct_position_core(
-                rhs, support_mod, dispatcher_ident, grammar_suffix, ir,
+                rhs,
+                support_mod,
+                dispatcher_ident,
+                grammar_suffix,
+                ir,
             );
             quote! { #l #r }
         }
@@ -969,13 +909,21 @@ fn emit_struct_direct_position_core(
             let mut out = Vec::with_capacity(children.len());
             for child in children {
                 out.push(emit_struct_direct_position_core(
-                    child, support_mod, dispatcher_ident, grammar_suffix, ir,
+                    child,
+                    support_mod,
+                    dispatcher_ident,
+                    grammar_suffix,
+                    ir,
                 ));
             }
             quote! { #(#out)* }
         }
         IrNode::Map { inner, .. } => emit_struct_direct_position_core(
-            inner, support_mod, dispatcher_ident, grammar_suffix, ir,
+            inner,
+            support_mod,
+            dispatcher_ident,
+            grammar_suffix,
+            ir,
         ),
         IrNode::Epsilon => quote! {},
         IrNode::Repeat { inner, .. } => {
@@ -983,7 +931,11 @@ fn emit_struct_direct_position_core(
             // it errs, then catch and proceed. Mirrors the value-list
             // pattern in the tape body.
             let inner_emit = emit_struct_direct_position_core(
-                inner, support_mod, dispatcher_ident, grammar_suffix, ir,
+                inner,
+                support_mod,
+                dispatcher_ident,
+                grammar_suffix,
+                ir,
             );
             quote! {
                 loop {

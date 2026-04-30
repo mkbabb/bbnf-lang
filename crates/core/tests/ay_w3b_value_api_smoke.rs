@@ -1,11 +1,10 @@
-//! AY.W3b — smoke test for the grammar-emitted `<Grammar>Value`
-//! enum + `Parsed::to_value()` + `Parsed::get::<T>(path)` API.
+//! AY.W3b — smoke test for the document-owned value and path API.
 //!
 //! Verifies the three emission artefacts wire through the runtime:
 //!
-//! 1. `parsed.to_value()` returns a `<Grammar>Value<'p>` enum.
-//! 2. `parsed.get::<f64>(path)` resolves lazy scalar leaves.
-//! 3. `parsed.get::<bool>(path)` resolves lazy bool leaves.
+//! 1. `doc.to_value()` returns the grammar-owned value root.
+//! 2. `doc.get::<f64>(path)` resolves lazy scalar leaves.
+//! 3. `doc.get::<bool>(path)` resolves lazy bool leaves.
 //!
 //! The test intentionally avoids asserting tree shape — the per-shape
 //! materialise fns are `#[inline(always)]` so LLVM collapses the walk
@@ -13,9 +12,8 @@
 //! confirms the emission type-checks and executes; the BEAT-sonic
 //! speed claim is W3c's bench-lane responsibility.
 
-use bbnf::runtime::{Path, PathSegment};
 use ::bbnf::grammar::generated::json::*;
-
+use bbnf::runtime::{Path, PathSegment};
 
 #[test]
 fn to_value_returns_value_enum() {

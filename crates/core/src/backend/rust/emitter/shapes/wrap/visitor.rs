@@ -9,10 +9,10 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use bbnf_ir::registry::EmitStrategy;
 use super::super::dispatcher::{visitor_dispatcher_fn_ident, visitor_shape_fn_ident};
 use super::super::root_rule_name;
 use super::{shape_tag_name, unwrap_outer};
+use bbnf_ir::registry::EmitStrategy;
 
 /// Emit `pub fn parse_wrap_visitor_<grammar>_<rule><V>(input, p,
 /// state, visitor) -> Result<(), ParseErr>`.
@@ -42,12 +42,9 @@ pub fn emit_parse_wrap_visitor(
 
     let body = unwrap_outer(&rule.body);
     let dispatch = match body {
-        IrNode::Alt(branches, _) => emit_alt_visitor_dispatch(
-            branches,
-            grammar_suffix,
-            &dispatcher_ident,
-            ir,
-        ),
+        IrNode::Alt(branches, _) => {
+            emit_alt_visitor_dispatch(branches, grammar_suffix, &dispatcher_ident, ir)
+        }
         _ => quote! {
             #dispatcher_ident(input, p, state, visitor)
         },
@@ -103,16 +100,16 @@ fn emit_alt_visitor_dispatch(
         };
         let tag = ir.shape_assignments.get(*rid);
         let shape_name = shape_tag_name(tag);
-        let Some(shape_name) = shape_name else { continue };
+        let Some(shape_name) = shape_name else {
+            continue;
+        };
         let target_fn =
             visitor_shape_fn_ident(shape_name, grammar_suffix, ir.get_string(target.name));
-        let first_bytes: Vec<u8> =
-            target.meta.first_set.iter().collect();
+        let first_bytes: Vec<u8> = target.meta.first_set.iter().collect();
         if first_bytes.is_empty() || first_bytes.len() > 16 {
             continue;
         }
-        let byte_pats: Vec<TokenStream> =
-            first_bytes.iter().map(|b| quote! { #b }).collect();
+        let byte_pats: Vec<TokenStream> = first_bytes.iter().map(|b| quote! { #b }).collect();
         // AX.W0a.2.g — visitor-path Keyword signature extended with
         // `state` (see tape-path call).
         let call = match tag {

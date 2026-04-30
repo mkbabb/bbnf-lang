@@ -1,25 +1,22 @@
-/// AW-V.W3.2 — per-grammar Keyword-shape parse function
-/// (Alt of literal-led or Ref-led branches).
+/// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
+/// (Alt of literal-led, Ref-led, or Seq-led branches).
 ///
-/// AX.W0a.2.g — admits Ref-led branches whose target
-/// resolves to a literal-prefix body (per `leading_
-/// literal_bytes`). For each first-byte group, each
-/// candidate's full prefix is checked before committing:
-/// Literal branches emit the legacy leaf push;
-/// Ref branches delegate to the target's shape fn via
-/// [`emit_ref_call_tape`], threading `state` through.
+/// Literal branches push leaves through
+/// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
+/// `builder.push_leaf_with_unit` (TypeDesc::U8 /
+/// untyped). Ref branches delegate to the target shape
+/// fn so the target writes directly into the same
+/// builder. Returns unit for StructDirect composition.
 #[inline(always)]
 #[allow(non_snake_case, clippy::too_many_arguments)]
-pub fn parse_keyword_JsonFixture_bool(
-    input: &[u8],
+pub fn parse_keyword_JsonFixture_bool<'p>(
+    input: &'p [u8],
     p: &mut usize,
     first_byte: u8,
     state: &mut __shape_support_JsonFixture::ScanState,
-    builder: &mut crate::runtime::tape::Tape<()>,
-) -> ::core::result::Result<
-    crate::runtime::tape::TapeOffset,
-    crate::runtime::tape::DtaError,
-> {
+    builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
+) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    use crate::runtime::builder::StructBuilder as _;
     let _ = state;
     match first_byte {
         102u8 => {
@@ -29,21 +26,10 @@ pub fn parse_keyword_JsonFixture_bool(
                 let at = *p;
                 let end = at + 5usize;
                 *p = end;
-                let __arena_off: u32 = builder.arena_mut().len() as u32;
-                builder.arena_mut().push((0u32) as u8);
-                let off = builder
-                    .push_leaf_with_arena_payload(
-                        crate::runtime::tape::TapeKind::Span,
-                        at as u32,
-                        end as u32,
-                        1u8,
-                        0u8,
-                        __arena_off,
-                        1u32,
-                    );
-                return Ok(off);
+                builder.push_leaf_with_bool(false);
+                return ::core::result::Result::Ok(());
             }
-            return Err(crate::runtime::tape::DtaError::Syntax {
+            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
@@ -56,28 +42,17 @@ pub fn parse_keyword_JsonFixture_bool(
                 let at = *p;
                 let end = at + 4usize;
                 *p = end;
-                let __arena_off: u32 = builder.arena_mut().len() as u32;
-                builder.arena_mut().push((1u32) as u8);
-                let off = builder
-                    .push_leaf_with_arena_payload(
-                        crate::runtime::tape::TapeKind::Span,
-                        at as u32,
-                        end as u32,
-                        1u8,
-                        0u8,
-                        __arena_off,
-                        1u32,
-                    );
-                return Ok(off);
+                builder.push_leaf_with_bool(true);
+                return ::core::result::Result::Ok(());
             }
-            return Err(crate::runtime::tape::DtaError::Syntax {
+            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         _ => {
-            Err(crate::runtime::tape::DtaError::Syntax {
+            ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,
                 failing_state: crate::runtime::tape::DtaStateId::NONE,
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),

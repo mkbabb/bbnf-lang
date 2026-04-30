@@ -2396,7 +2396,7 @@ mod __bbnfbootstrap_emit_impl {
     /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
     /// or Expr { Input, return_type }), and routes the decoded
     /// value through the StructBuilder trait. Returns
-    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// unit for StructDirect composition with sibling
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
@@ -2405,10 +2405,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_BbnfBootstrap(
             "0[xX][0-9a-fA-F]+\\w*|[0-9]+\\w*",
@@ -2430,7 +2427,7 @@ mod __bbnfbootstrap_emit_impl {
         <crate::runtime::bbnf::BbnfStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::push_leaf_with_i64(builder, __i64);
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AZ-I.W2-act.B3 — per-grammar HRegex-shape parse function,
     /// **struct-direct body**.
@@ -2439,7 +2436,7 @@ mod __bbnfbootstrap_emit_impl {
     /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
     /// or Expr { Input, return_type }), and routes the decoded
     /// value through the StructBuilder trait. Returns
-    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// unit for StructDirect composition with sibling
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
@@ -2448,10 +2445,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_BbnfBootstrap(
             "[0-9]*\\.[0-9]+([eE][+-]?[0-9]+)?\\w*",
@@ -2473,7 +2467,7 @@ mod __bbnfbootstrap_emit_impl {
         <crate::runtime::bbnf::BbnfStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::push_leaf_with_f64(builder, __f64);
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -2482,9 +2476,8 @@ mod __bbnfbootstrap_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_BbnfBootstrap_bool_lit<'p>(
@@ -2493,10 +2486,7 @@ mod __bbnfbootstrap_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -2508,9 +2498,7 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 5usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -2526,9 +2514,7 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -2556,7 +2542,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -2572,10 +2558,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __string_lit_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2644,7 +2627,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __string_lit_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -2659,7 +2642,7 @@ mod __bbnfbootstrap_emit_impl {
     /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
     /// or Expr { Input, return_type }), and routes the decoded
     /// value through the StructBuilder trait. Returns
-    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// unit for StructDirect composition with sibling
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
@@ -2668,10 +2651,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_BbnfBootstrap(
             "[_a-zA-Z][_a-zA-Z0-9]*",
@@ -2693,7 +2673,7 @@ mod __bbnfbootstrap_emit_impl {
             core::str::from_utf8(&input[span_lo as usize..span_hi as usize])
                 .unwrap_or(""),
         );
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -2702,9 +2682,8 @@ mod __bbnfbootstrap_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_BbnfBootstrap_mul_op<'p>(
@@ -2713,10 +2692,7 @@ mod __bbnfbootstrap_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -2726,9 +2702,7 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -2742,9 +2716,7 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -2758,9 +2730,7 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -2784,9 +2754,8 @@ mod __bbnfbootstrap_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_BbnfBootstrap_add_op<'p>(
@@ -2795,10 +2764,7 @@ mod __bbnfbootstrap_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -2808,9 +2774,7 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -2824,9 +2788,7 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -2850,9 +2812,8 @@ mod __bbnfbootstrap_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_BbnfBootstrap_cmp_op<'p>(
@@ -2861,10 +2822,7 @@ mod __bbnfbootstrap_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -2874,9 +2832,7 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -2890,18 +2846,14 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [60u8] {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -2915,9 +2867,7 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -2931,18 +2881,14 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [62u8] {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3139,7 +3085,7 @@ mod __bbnfbootstrap_emit_impl {
     /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
     /// or Expr { Input, return_type }), and routes the decoded
     /// value through the StructBuilder trait. Returns
-    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// unit for StructDirect composition with sibling
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
@@ -3148,10 +3094,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_BbnfBootstrap(
             "[_a-zA-Z][_a-zA-Z0-9-]*",
@@ -3173,7 +3116,7 @@ mod __bbnfbootstrap_emit_impl {
             core::str::from_utf8(&input[span_lo as usize..span_hi as usize])
                 .unwrap_or(""),
         );
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -3182,9 +3125,8 @@ mod __bbnfbootstrap_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_BbnfBootstrap_literal<'p>(
@@ -3193,10 +3135,7 @@ mod __bbnfbootstrap_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -3259,9 +3198,7 @@ mod __bbnfbootstrap_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -3335,9 +3272,7 @@ mod __bbnfbootstrap_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -3411,9 +3346,7 @@ mod __bbnfbootstrap_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -3448,7 +3381,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -3464,10 +3397,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __regex_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3533,7 +3463,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __regex_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -3552,7 +3482,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -3568,10 +3498,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __big_comment_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3646,7 +3573,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __big_comment_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -3665,7 +3592,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -3681,10 +3608,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __comment_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3739,7 +3663,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __comment_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -3754,9 +3678,8 @@ mod __bbnfbootstrap_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_BbnfBootstrap_modifier<'p>(
@@ -3765,10 +3688,7 @@ mod __bbnfbootstrap_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -3778,9 +3698,7 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3794,9 +3712,7 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3811,18 +3727,14 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [63u8] {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3846,9 +3758,8 @@ mod __bbnfbootstrap_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_BbnfBootstrap_binary_operators<'p>(
@@ -3857,10 +3768,7 @@ mod __bbnfbootstrap_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -3870,9 +3778,7 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3886,9 +3792,7 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3902,9 +3806,7 @@ mod __bbnfbootstrap_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3932,7 +3834,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -3948,10 +3850,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __import_path_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4020,7 +3919,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __import_path_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -4042,7 +3941,7 @@ mod __bbnfbootstrap_emit_impl {
     /// consumer-side projection (the runtime exposes
     /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
     ///
     /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -4060,10 +3959,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_path_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 17u32 as ::bbnf_ir::RuleId,
@@ -4153,7 +4049,7 @@ mod __bbnfbootstrap_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __value_path_handle);
         __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -4166,7 +4062,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -4182,10 +4078,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __value_input_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4293,7 +4186,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __value_input_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -4312,7 +4205,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -4328,10 +4221,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __type_annotation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4379,7 +4269,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __type_annotation_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -4391,8 +4281,8 @@ mod __bbnfbootstrap_emit_impl {
     /// function (transparent-Ref body, struct-direct
     /// substrate). Delegates to the target's
     /// strategy-resolved shape fn; the inner call
-    /// expression names `builder` against the
-    /// concrete struct-builder.
+    /// expression names `builder` against the concrete
+    /// struct-builder.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_scalar_BbnfBootstrap_lhs<'p>(
@@ -4400,10 +4290,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         {
             let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             parse_hregex_BbnfBootstrap_identifier(input, p, state, builder)
@@ -4420,7 +4307,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -4436,10 +4323,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __import_items_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4579,7 +4463,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __import_items_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -4598,7 +4482,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -4614,10 +4498,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __pretty_hint_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4729,7 +4610,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __pretty_hint_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -4748,7 +4629,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -4764,10 +4645,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __token_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4929,7 +4807,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __token_directive_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -4948,7 +4826,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -4964,10 +4842,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __debug_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5195,7 +5070,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __debug_directive_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -5214,7 +5089,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -5230,10 +5105,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __host_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5481,7 +5353,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __host_directive_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -5500,7 +5372,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -5516,10 +5388,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __ws_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5679,7 +5548,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __ws_directive_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -5701,7 +5570,7 @@ mod __bbnfbootstrap_emit_impl {
     /// consumer-side projection (the runtime exposes
     /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
     ///
     /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -5719,10 +5588,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_mul_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 27u32 as ::bbnf_ir::RuleId,
@@ -5812,7 +5678,7 @@ mod __bbnfbootstrap_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __value_mul_handle);
         __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
@@ -5828,7 +5694,7 @@ mod __bbnfbootstrap_emit_impl {
     /// consumer-side projection (the runtime exposes
     /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
     ///
     /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -5846,10 +5712,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_or_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 28u32 as ::bbnf_ir::RuleId,
@@ -5936,7 +5799,7 @@ mod __bbnfbootstrap_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __value_or_handle);
         __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
@@ -5952,7 +5815,7 @@ mod __bbnfbootstrap_emit_impl {
     /// consumer-side projection (the runtime exposes
     /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
     ///
     /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -5970,10 +5833,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_add_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 29u32 as ::bbnf_ir::RuleId,
@@ -6063,7 +5923,7 @@ mod __bbnfbootstrap_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __value_add_handle);
         __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
@@ -6079,7 +5939,7 @@ mod __bbnfbootstrap_emit_impl {
     /// consumer-side projection (the runtime exposes
     /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
     ///
     /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -6097,10 +5957,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_cmp_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 30u32 as ::bbnf_ir::RuleId,
@@ -6190,7 +6047,7 @@ mod __bbnfbootstrap_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __value_cmp_handle);
         __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
@@ -6206,7 +6063,7 @@ mod __bbnfbootstrap_emit_impl {
     /// consumer-side projection (the runtime exposes
     /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
     ///
     /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -6224,10 +6081,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_and_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 31u32 as ::bbnf_ir::RuleId,
@@ -6317,7 +6171,7 @@ mod __bbnfbootstrap_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __value_and_handle);
         __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -6330,7 +6184,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -6346,10 +6200,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __value_closure_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -6489,7 +6340,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __value_closure_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -6513,10 +6364,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 33u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_fn_call"),
@@ -6628,7 +6476,7 @@ mod __bbnfbootstrap_emit_impl {
                 <crate::runtime::bbnf::BbnfStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::bbnf::BbnfStructBuilder<
@@ -6651,7 +6499,7 @@ mod __bbnfbootstrap_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -6661,10 +6509,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
@@ -6713,7 +6558,7 @@ mod __bbnfbootstrap_emit_impl {
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RB — per-grammar AltDispatch-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -7203,7 +7048,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -7219,10 +7064,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __import_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -7498,7 +7340,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __import_directive_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -7517,7 +7359,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -7533,10 +7375,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __pretty_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -7830,7 +7669,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __pretty_directive_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -7849,7 +7688,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -7865,10 +7704,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __alternation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -8013,7 +7849,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __alternation_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -8032,7 +7868,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -8048,10 +7884,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __call_arg_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -8193,7 +8026,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __call_arg_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -8212,7 +8045,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -8228,10 +8061,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __concatenation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -8376,7 +8206,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __concatenation_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -8395,7 +8225,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -8411,10 +8241,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __closure_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -8553,7 +8380,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __closure_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -9155,7 +8982,7 @@ mod __bbnfbootstrap_emit_impl {
     /// consumer-side projection (the runtime exposes
     /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
     ///
     /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -9173,10 +9000,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __binary_factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 44u32 as ::bbnf_ir::RuleId,
@@ -9269,7 +9093,7 @@ mod __bbnfbootstrap_emit_impl {
             __binary_factor_handle,
         );
         __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -9281,7 +9105,7 @@ mod __bbnfbootstrap_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -9291,10 +9115,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
@@ -9338,7 +9159,7 @@ mod __bbnfbootstrap_emit_impl {
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -9351,7 +9172,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -9367,10 +9188,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -9575,7 +9393,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __factor_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -9594,7 +9412,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -9610,10 +9428,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __mapped_factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -9777,7 +9592,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __mapped_factor_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -9796,7 +9611,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -9812,10 +9627,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __rule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -9937,7 +9749,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __rule_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -9956,7 +9768,7 @@ mod __bbnfbootstrap_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -9972,10 +9784,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __recover_directive_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -10146,7 +9955,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __recover_directive_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -10161,9 +9970,8 @@ mod __bbnfbootstrap_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_BbnfBootstrap_directive<'p>(
@@ -10172,10 +9980,7 @@ mod __bbnfbootstrap_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -10395,7 +10200,7 @@ mod __bbnfbootstrap_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -10405,10 +10210,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -10532,7 +10334,7 @@ mod __bbnfbootstrap_emit_impl {
                     builder,
                     __wrap_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(e) => {
                 <crate::runtime::bbnf::BbnfStructBuilder<
@@ -10560,10 +10362,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 52u32 as ::bbnf_ir::RuleId,
@@ -10607,7 +10406,7 @@ mod __bbnfbootstrap_emit_impl {
             }
         }
         builder.end_compound(__handle);
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AY-II.W0.e — Grammar-activated structural-scan policy table.
     ///
@@ -10885,7 +10684,7 @@ mod __bbnfbootstrap_emit_impl {
     ///
     /// Mirrors the walker's `value` rule ByteDispatch: skip leading
     /// whitespace, dispatch on the first byte to the chosen branch
-    /// shape fn, return its `TapeOffset` unchanged. No outer Rule /
+    /// shape fn, return unit after the chosen shape succeeds. No outer Rule /
     /// Alt compound is pushed — the DTA's ByteDispatch state for
     /// `value` emits no compound either, and the target rule's Ref
     /// overwrites any `pending_variant_idx` en route, so the chosen
@@ -10900,10 +10699,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         parse_BbnfBootstrap_grammar__value(input, p, state, builder)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
@@ -10917,10 +10713,7 @@ mod __bbnfbootstrap_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BbnfBootstrap::ScanState,
         builder: &mut crate::runtime::bbnf::BbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         parse_array_BbnfBootstrap_grammar(input, p, state, builder)
     }

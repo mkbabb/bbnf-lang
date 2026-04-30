@@ -1,17 +1,16 @@
-//! AX.W0a.2.f — one-shot TapeDirect golden regen helper plus O3
-//! StructDirect generated-residue guard.
+//! AX.W0a.2.f / AZ-II.cutover.O4 — one-shot shape golden regen helper
+//! plus StructDirect generated-residue guard.
 //!
 //! Rewrites the shape_dispatch_emission golden files from the live
 //! emitter output. Exists solely so the inline-attr downgrade + array
 //! structural rewrite can propagate into the committed goldens without
-//! hand-transcription. After the goldens are regenerated and
-//! `shape_dispatch_emission` tests pass, this helper is retained as a
-//! TapeDirect-only legacy utility until O4 removes that surface.
+//! hand-transcription.
 
 use std::fs;
 
-use bbnf::backend::rust::emitter::shapes::{array, keyword, number, object, scalar, string};
 use bbnf::backend::rust::emitter::EmitStrategy;
+use bbnf::backend::rust::emitter::shapes::{array, keyword, number, object, scalar, string};
+use bbnf_ir::registry::SubstrateBinding;
 
 #[path = "shape_dispatch_emission/fixtures.rs"]
 mod fixtures;
@@ -40,6 +39,17 @@ fn generated_path(name: &str) -> std::path::PathBuf {
         .join("grammar")
         .join("generated")
         .join(name)
+}
+
+fn json_strategy() -> EmitStrategy {
+    EmitStrategy::StructDirect {
+        rust: SubstrateBinding {
+            builder_path: "crate::runtime::json::JsonStructBuilder",
+            document_path: "crate::runtime::json::JsonDocument",
+        },
+        ts: None,
+        wasm: None,
+    }
 }
 
 #[test]
@@ -102,20 +112,10 @@ fn struct_direct_generated_files_have_no_tape_view_residue() {
 }
 
 #[test]
-#[ignore = "TapeDirect regen-only — run with `--ignored` to refresh legacy goldens before O4"]
+#[ignore = "regen-only — run with `--ignored` to refresh shape goldens"]
 fn regen_shape_goldens() {
     let (ir, rules) = build_json_ir();
-    // AZ-I.W2.RB — pin TapeDirect for golden regen (the goldens
-    // capture the legacy tape body; struct-direct goldens are a
-    // future-tranche concern).
-    let strategy = EmitStrategy::TapeDirect;
-
-    // AZ-I.W2.RC — per-shape Number / String / Scalar emitters now
-    // dual-emit via `&EmitStrategy`. The regen helper exercises the
-    // legacy TapeDirect path so the goldens reflect the same byte
-    // surface they captured before per-shape rewire; the StructDirect
-    // path's emission is captured under
-    // `tests/struct_direct_snapshots/`.
+    let strategy = json_strategy();
 
     let object_ts = object::emit_parse_object(
         "JsonFixture",

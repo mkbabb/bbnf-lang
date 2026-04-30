@@ -8,7 +8,7 @@
 //! `IrNode::Alt`, `IrNode::Regex`, `IrNode::Negate`, `IrNode::Minus`,
 //! `IrNode::TokenDispatch`. Literal / Ref positions are directly
 //! emitted: Literal byte-matches, Ref dispatches via
-//! [`super::dispatcher::emit_ref_call_tape`] (per-Ref routing, W5.2).
+//! [`super::dispatcher::emit_ref_call_shape`] (per-Ref routing, W5.2).
 //!
 //! The remaining five — `Alt`, `Regex`, `Negate`, `Minus`,
 //! `TokenDispatch` — historically fell back to the grammar's
@@ -47,7 +47,7 @@
 //!   each branch's first-byte set (port of
 //!   [`super::alt_dispatch::emit_dispatch_arms`]), falling back to
 //!   linear retry on overlap. Ref branches call the target's shape fn
-//!   via [`super::dispatcher::emit_ref_call_tape`]; Literal branches
+//!   via [`super::dispatcher::emit_ref_call_shape`]; Literal branches
 //!   byte-match and push a `Literal` leaf; Regex branches scan the
 //!   grammar's regex adapter and push a `Span` leaf; Seq branches
 //!   match a flattened literal sequence. Mirrors the walker's
@@ -91,9 +91,7 @@ mod regex;
 mod structural_branch;
 mod token_dispatch;
 
-pub(super) use structural_branch::{
-    emit_seq_branch_structural_struct_direct, emit_seq_branch_structural_tape,
-};
+pub(super) use structural_branch::emit_seq_branch_structural_struct_direct;
 
 // ─────────────────────────────────────────────────────────────────────
 // Tape-path entry point.
@@ -114,13 +112,11 @@ pub(super) use structural_branch::{
 ///
 /// Inline emission is shape-agnostic structural infrastructure: each
 /// inline node emits Refs / scans / byte-matches via the dispatcher's
-/// `emit_ref_call_tape` (which resolves to the strategy-aware
+/// `emit_ref_call_shape` (which resolves to the strategy-aware
 /// generated `parse_<shape>_<grammar>_<rule>` symbol at codegen time)
 /// or via inline byte/regex emission. Strategy is therefore
-/// committed at the per-shape entry boundary upstream of this fn —
-/// reaching here implies the caller's per-shape entry resolved the
-/// strategy and emitted its TapeDirect body. No strategy parameter
-/// is needed in the inline interface.
+/// committed at the per-shape entry boundary upstream of this fn.
+/// No strategy parameter is needed in the inline interface.
 pub(super) fn emit_inline_position_tape(
     node: &IrNode,
     variant_idx: u8,
@@ -137,18 +133,27 @@ pub(super) fn emit_inline_position_tape(
         // compound push when a dispatch table is present. The
         // `AltLinear` variant (no dispatch table) continues to push
         // the Alt compound to preserve its walker parity.
-        IrNode::Alt(branches, Some(_)) => alt::emit_alt_byte_dispatch_tape(
-            branches, support_mod, grammar_suffix, ir,
-        ),
+        IrNode::Alt(branches, Some(_)) => {
+            alt::emit_alt_byte_dispatch_tape(branches, support_mod, grammar_suffix, ir)
+        }
         IrNode::Alt(branches, None) => {
             alt::emit_alt_tape(branches, variant_idx, support_mod, grammar_suffix, ir)
         }
         IrNode::Regex(sid) => regex::emit_regex_tape(*sid, variant_idx, grammar_suffix, ir),
         IrNode::Negate(inner) => guard::emit_negate_tape(inner, support_mod, grammar_suffix, ir),
-        IrNode::Minus(primary, excluded) => {
-            guard::emit_minus_tape(primary, excluded, variant_idx, support_mod, grammar_suffix, ir)
-        }
-        IrNode::TokenDispatch { token, arms, fallback } => token_dispatch::emit_token_dispatch_tape(
+        IrNode::Minus(primary, excluded) => guard::emit_minus_tape(
+            primary,
+            excluded,
+            variant_idx,
+            support_mod,
+            grammar_suffix,
+            ir,
+        ),
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => token_dispatch::emit_token_dispatch_tape(
             token,
             arms,
             fallback,
@@ -191,17 +196,15 @@ pub(super) fn emit_inline_position_visitor(
             alt::emit_alt_visitor(branches, support_mod, grammar_suffix, ir)
         }
         IrNode::Regex(sid) => regex::emit_regex_visitor(*sid, grammar_suffix, ir),
-        IrNode::Negate(inner) => {
-            guard::emit_negate_visitor(inner, support_mod, grammar_suffix, ir)
+        IrNode::Negate(inner) => guard::emit_negate_visitor(inner, support_mod, grammar_suffix, ir),
+        IrNode::Minus(primary, excluded) => {
+            guard::emit_minus_visitor(primary, excluded, support_mod, grammar_suffix, ir)
         }
-        IrNode::Minus(primary, excluded) => guard::emit_minus_visitor(
-            primary,
-            excluded,
-            support_mod,
-            grammar_suffix,
-            ir,
-        ),
-        IrNode::TokenDispatch { token, arms, fallback } => token_dispatch::emit_token_dispatch_visitor(
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => token_dispatch::emit_token_dispatch_visitor(
             token,
             arms,
             fallback,

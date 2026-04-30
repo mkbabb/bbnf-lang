@@ -2,13 +2,12 @@
 //!
 //! Provides the context object consumed by all IR codegen modules.
 //!
-//! Tranche AC.2 — the Rust backend is tape-first. The enum + slab
-//! allocation surface this module used to expose is gone. The
-//! `emit_alloc` / `emit_alloc_let` family and the scratch-Vec
-//! helpers in the former `alloc_emit.rs` module have been deleted.
-//! Every rule returns `Option<TapeOffset>`; every sub-expression
-//! returns either `Option<()>` (side-effecting) or
-//! `Option<TapeOffset>` (tape-pushing).
+//! Tranche AZ-II.cutover.O4 — production Rust parsing is
+//! StructDirect. The enum + slab allocation surface this module used
+//! to expose is gone. The `emit_alloc` / `emit_alloc_let` family and
+//! the scratch-Vec helpers in the former `alloc_emit.rs` module have
+//! been deleted. Rule bodies now write through the grammar-specific
+//! builder and return unit on success.
 //!
 //! `type_desc_to_syn_raw` panics on `BoxedEnum` — a live BoxedEnum
 //! request on the Rust backend is a driver bug under AC.2.
@@ -95,10 +94,10 @@ impl ParserAttributes {
 
 /// Central context for IR-based code generation.
 ///
-/// Holds the per-rule type projection plus the grammar marker
-/// ident. Under AC.2 tape-first there is no longer a slab context
-/// struct and no scratch-Vec allocation; the tape records are the
-/// only storage medium.
+/// Holds the per-rule type projection plus the grammar marker ident.
+/// Under AZ-II.cutover.O4 there is no longer a slab context struct or
+/// scratch-Vec allocation for the production Rust path; generated
+/// parse bodies write through the concrete document builder.
 pub struct IrCodegenCtx<'a> {
     pub ir: &'a GrammarIR,
     /// Parser struct name (e.g., `Json`).
@@ -157,13 +156,7 @@ impl<'a> IrCodegenCtx<'a> {
 
         let mut rule_types = HashMap::new();
         for (rule_id, type_desc) in &ir.types {
-            let ty = type_desc_to_syn_raw(
-                type_desc,
-                &enum_type,
-                &boxed_enum_type,
-                ir,
-                true,
-            );
+            let ty = type_desc_to_syn_raw(type_desc, &enum_type, &boxed_enum_type, ir, true);
             rule_types.insert(*rule_id, ty);
         }
 
@@ -282,17 +275,14 @@ impl<'a> IrCodegenCtx<'a> {
             .find_map(|(id, ty)| (*id == rule_id).then_some(ty))
     }
 
-    // ─── Tape-first stubs for prettify compatibility ──────────────
+    // ─── Prettify compatibility stubs ─────────────────────────────
     //
     // The prettify emitter still calls `emit_scratch_*`,
     // `emit_alloc*`, `recovered_static_ident`, and
-    // `generate_alloc_ctx`. Under AC.2 the monolithic rule path no
+    // `generate_alloc_ctx`. The production StructDirect path no
     // longer uses any of these; they remain as thin stubs so
-    // `backend/rust/emitter/prettify/` continues to compile
-    // unchanged. Each stub returns the minimum viable token stream;
-    // prettify grammars that still depend on the allocating enum
-    // model must be migrated alongside the eventual prettify
-    // rewrite.
+    // `backend/rust/emitter/prettify/` continues to compile until the
+    // prettify rewrite absorbs the remaining allocation model.
 
     pub fn scratch_index_for_elem(&self, elem_desc: &TypeDesc) -> usize {
         self.scratch_types
@@ -322,10 +312,11 @@ impl<'a> IrCodegenCtx<'a> {
     }
 
     pub fn recover_sentinel(&self, _rule_id: RuleId) -> TokenStream {
-        // AC.2: recovery uses TapeKind::Recovered at the emit site;
-        // no static enum sentinel is needed. Returning `None` keeps
-        // any residual call-site that weaves this in compile-safe.
-        quote::quote! { None::<crate::runtime::tape::TapeOffset> }
+        // StructDirect recovery has no static enum sentinel. Returning
+        // unit-typed `None` keeps any residual call-site that weaves
+        // this in compile-safe without reintroducing a tape return
+        // payload.
+        quote::quote! { None::<()> }
     }
 
     pub fn collection_builder_type_from_elem_desc(&self, elem_desc: &TypeDesc) -> Type {
@@ -341,13 +332,7 @@ impl<'a> IrCodegenCtx<'a> {
 }
 
 pub fn type_desc_to_syn(desc: &TypeDesc, ctx: &IrCodegenCtx<'_>) -> Type {
-    type_desc_to_syn_raw(
-        desc,
-        &ctx.enum_type,
-        &ctx.boxed_enum_type,
-        ctx.ir,
-        true,
-    )
+    type_desc_to_syn_raw(desc, &ctx.enum_type, &ctx.boxed_enum_type, ctx.ir, true)
 }
 
 fn type_desc_to_syn_raw(
@@ -393,11 +378,10 @@ fn type_desc_to_syn_raw(
             }
         }
         TypeDesc::BoxedEnum => {
-            // Tranche AC.2: under tape-first, BoxedEnum maps to
+            // Tranche AZ-II.cutover.O4: BoxedEnum maps to
             // `<Grammar>NodeView<'a>` (the generic Copy wrapper).
-            // The legacy `&'a <Grammar>Enum<'a>` indirection is
-            // gone because every rule returns `Option<TapeOffset>`
-            // and the typed surface lives in the view layer.
+            // The legacy `&'a <Grammar>Enum<'a>` indirection is gone;
+            // the typed surface lives in the view layer.
             boxed_enum_type.clone()
         }
         TypeDesc::Enum => enum_type.clone(),

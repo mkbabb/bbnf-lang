@@ -26,17 +26,12 @@ use super::dispatcher::{shape_fn_ident, visitor_shape_fn_ident};
 use bbnf_ir::registry::EmitStrategy;
 
 /// Emit `pub fn parse_number_<grammar>_<rule>(input, p, first_byte,
-/// builder) -> Result<TapeOffset, DtaError>`.
+/// builder) -> Result<(), DtaError>`.
 ///
-/// AZ-I.W2.RC — `strategy` selects the substrate at codegen time:
-///
-/// - [`EmitStrategy::TapeDirect`] — body takes `&mut Tape<()>` and
-///   pushes via `tape.push_leaf_with_f64_direct(TapeKind::Span, …)`.
-/// - [`EmitStrategy::StructDirect`] — body takes the concrete
-///   builder type (e.g. `&mut JsonStructBuilder<'_>`) and pushes via
-///   `builder.push_leaf_with_f64(value)`. The Eisel-Lemire body is
-///   identical on both substrates; only the consumer of the parsed
-///   `f64` differs.
+/// AZ-I.W2.RC / AZ-II.cutover.O4 — emits the struct-builder body.
+/// The Eisel-Lemire body is shared in spirit with the old tape path,
+/// but production code now routes the parsed `f64` directly into the
+/// resolved grammar builder.
 pub fn emit_parse_number(
     grammar_suffix: &str,
     rule: &IrRule,
@@ -48,169 +43,12 @@ pub fn emit_parse_number(
     let variant_idx = (rule.id & 0xFF) as u8;
     let _ = grammar_suffix;
 
-    // AZ-I.W2.RC — emit one of two disjoint parse-fn bodies keyed on
-    // `strategy`. The shared Eisel-Lemire scan body produces a `value:
-    // f64`; the trailing leaf push and the parameter signature differ
-    // per substrate.
-    match strategy {
-        EmitStrategy::TapeDirect => emit_parse_number_tape(
-            &fn_ident,
-            variant_idx,
-        ),
-        EmitStrategy::StructDirect { rust, .. } => {
-            emit_parse_number_struct_direct(&fn_ident, rust.builder_path)
-        }
-    }
+    let _ = variant_idx;
+    let EmitStrategy::StructDirect { rust, .. } = strategy;
+    emit_parse_number_struct_direct(&fn_ident, rust.builder_path)
 }
 
-/// AZ-I.W2.RC — TapeDirect Number body. Mirrors the pre-RC shape; the
-/// `builder` parameter is the legacy `Tape<()>` substrate.
-fn emit_parse_number_tape(
-    fn_ident: &proc_macro2::Ident,
-    variant_idx: u8,
-) -> TokenStream {
-    quote! {
-        /// AW-V.W3.2 — per-grammar Number-shape parse function.
-        ///
-        /// Mirrors `json_prototype::number::parse_number_body`.
-        /// `first_byte` is the byte the dispatcher already matched;
-        /// passing it avoids a redundant re-read for the sign check.
-        #[inline(always)]
-        #[allow(non_snake_case, clippy::too_many_arguments)]
-        pub fn #fn_ident(
-            input: &[u8],
-            p: &mut usize,
-            first_byte: u8,
-            builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
-            const POW10_U64: [u64; 17] = [
-                1, 10, 100, 1_000, 10_000, 100_000, 1_000_000,
-                10_000_000, 100_000_000, 1_000_000_000,
-                10_000_000_000, 100_000_000_000, 1_000_000_000_000,
-                10_000_000_000_000, 100_000_000_000_000,
-                1_000_000_000_000_000, 10_000_000_000_000_000,
-            ];
-            let _ = POW10_U64;
-            let start = *p;
-            let len = input.len();
-            let negative = first_byte == b'-';
-            if negative { *p += 1; }
-
-            let int_start = *p;
-            let mut mantissa: u64 = 0;
-            let mut many_digits = false;
-            while *p < len {
-                let b = input[*p];
-                if b.is_ascii_digit() {
-                    mantissa = mantissa.wrapping_mul(10)
-                        .wrapping_add((b - b'0') as u64);
-                    *p += 1;
-                } else { break; }
-            }
-            if *p == int_start {
-                return Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: start as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                });
-            }
-            let int_digit_count = *p - int_start;
-            if int_digit_count > 19 { many_digits = true; }
-
-            let mut fractional_digit_count: i64 = 0;
-            if input.get(*p) == Some(&b'.') {
-                *p += 1;
-                let frac_start = *p;
-                while *p < len {
-                    let b = input[*p];
-                    if b.is_ascii_digit() {
-                        mantissa = mantissa.wrapping_mul(10)
-                            .wrapping_add((b - b'0') as u64);
-                        *p += 1;
-                    } else { break; }
-                }
-                fractional_digit_count = (*p - frac_start) as i64;
-                if fractional_digit_count == 0 {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: start as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                if int_digit_count as i64 + fractional_digit_count > 19 {
-                    many_digits = true;
-                }
-            }
-
-            let mut exponent: i64 = -fractional_digit_count;
-            // Direct equality rather than `matches!`: nightly's
-            // `matches!` expansion decorates the inner `match` with
-            // `#[allow(non_exhaustive_omitted_patterns)]` — an
-            // attribute on an expression (unstable, E0658) — which
-            // `cargo expand` surfaces in the bootstrap-emitted
-            // `generated.rs`.
-            let exp_byte = input.get(*p).copied();
-            if exp_byte == Some(b'e') || exp_byte == Some(b'E') {
-                *p += 1;
-                let exp_negative = match input.get(*p) {
-                    Some(b'+') => { *p += 1; false }
-                    Some(b'-') => { *p += 1; true }
-                    _ => false,
-                };
-                let exp_start = *p;
-                let mut exp_val: i64 = 0;
-                while *p < len {
-                    let b = input[*p];
-                    if b.is_ascii_digit() {
-                        exp_val = exp_val.saturating_mul(10)
-                            .saturating_add((b - b'0') as i64);
-                        *p += 1;
-                    } else { break; }
-                }
-                if *p == exp_start {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: start as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                exponent += if exp_negative { -exp_val } else { exp_val };
-            }
-
-            let end = *p;
-            let bytes = &input[start..end];
-            let value = if many_digits {
-                parse_number_fallback(bytes)
-            } else {
-                match ::parse_that::parsers::eisel_lemire::compute_f64(
-                    exponent, mantissa, negative,
-                ) {
-                    Some(v) => v,
-                    None => parse_number_fallback(bytes),
-                }
-            };
-
-            // AY.W4.2 — direct-column f64 emit. Eisel-Lemire bits
-            // land straight into `Columns::pay_f64`; the leaf carries
-            // `TapeRec::PAYLOAD_F64_DIRECT_BIT` so the reader projects
-            // via `f64::from_bits(cols.pay_f64_at(child_off))` without
-            // the `pay_wide` / arena round-trip.
-            let off = builder.push_leaf_with_f64_direct(
-                crate::runtime::tape::TapeKind::Span,
-                start as u32,
-                end as u32,
-                #variant_idx,
-                value.to_bits(),
-            );
-            Ok(off)
-        }
-    }
-}
-
-/// AZ-I.W2.RC — StructDirect Number body. Mirrors the TapeDirect scan
+/// AZ-I.W2.RC — StructDirect Number body. Mirrors the scalar scan
 /// (Eisel-Lemire mantissa + decimal exponent accumulator); the leaf
 /// emission routes through `builder.push_leaf_with_f64(value)` against
 /// the resolved struct-builder type. The `'p` lifetime threads through
@@ -220,9 +58,8 @@ fn emit_parse_number_struct_direct(
     fn_ident: &proc_macro2::Ident,
     builder_path: &str,
 ) -> TokenStream {
-    let builder_ty: syn::Path = syn::parse_str(builder_path).expect(
-        "EmitStrategy::StructDirect.builder_path must parse as a Rust path",
-    );
+    let builder_ty: syn::Path = syn::parse_str(builder_path)
+        .expect("EmitStrategy::StructDirect.builder_path must parse as a Rust path");
     quote! {
         /// AZ-I.W2.RC — per-grammar Number-shape parse function
         /// (struct-direct substrate).
@@ -240,10 +77,7 @@ fn emit_parse_number_struct_direct(
             p: &mut usize,
             first_byte: u8,
             builder: &mut #builder_ty<'p>,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             use crate::runtime::builder::StructBuilder as _;
             const POW10_U64: [u64; 17] = [
                 1, 10, 100, 1_000, 10_000, 100_000, 1_000_000,
@@ -352,7 +186,7 @@ fn emit_parse_number_struct_direct(
             // frame on the builder's stack already carries the
             // discriminating shape).
             builder.push_leaf_with_f64(value);
-            Ok(crate::runtime::tape::TapeOffset::NONE)
+            Ok(())
         }
     }
 }

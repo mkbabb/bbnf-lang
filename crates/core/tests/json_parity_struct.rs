@@ -24,8 +24,8 @@ use bbnf::runtime::{
     JsonArrayId, JsonDocument, JsonNumber, JsonObjectId, JsonStructBuilder, JsonValue,
     StructBuilder,
 };
-use bbnf_ir::registry::{FieldSource, LayoutKind, StructField, StructLayout};
 use bbnf_ir::TypeDesc;
+use bbnf_ir::registry::{FieldSource, LayoutKind, StructField, StructLayout};
 
 /// Convenience: synthesise a `StructLayout` for a Named rule.
 ///
@@ -361,7 +361,10 @@ fn wire_contract_field_provenance_on_synth_layout() {
     assert!(layout.is_struct());
     assert_eq!(layout.field_count(), 2);
     assert_eq!(layout.field("key").map(|f| f.seq_position()), Some(Some(0)));
-    assert_eq!(layout.field("value").map(|f| f.seq_position()), Some(Some(1)));
+    assert_eq!(
+        layout.field("value").map(|f| f.seq_position()),
+        Some(Some(1))
+    );
 }
 
 #[test]
@@ -437,12 +440,10 @@ fn assert_doc_eq_serde(
 
 fn parity_serde(fixture: &str) {
     let path = format!("../../data/json/{}", fixture);
-    let src = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
-    let doc = JsonParser::parse(&src)
-        .unwrap_or_else(|e| panic!("{fixture}: bbnf parse failed: {e:?}"));
-    let oracle: serde_json::Value =
-        serde_json::from_str(&src).expect("serde_json parse");
+    let src = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
+    let doc =
+        JsonParser::parse(&src).unwrap_or_else(|e| panic!("{fixture}: bbnf parse failed: {e:?}"));
+    let oracle: serde_json::Value = serde_json::from_str(&src).expect("serde_json parse");
     assert_doc_eq_serde(&doc, doc.to_value(), &oracle, "$");
 }
 
@@ -469,9 +470,8 @@ fn native_parity_serde_citm_catalog_json() {
 #[test]
 fn native_parity_struct_direct_returns_jsondocument() {
     // Pin the post-flip return type. Compile-time proof that
-    // `JsonParser::parse` lifts to `JsonDocument<'_>` (the
-    // struct-direct path), not `Parsed<'_, JsonParser>`. The
-    // `JsonDocument` accessor surface is reachable on the result.
+    // `JsonParser::parse` returns `JsonDocument<'_>` and that the
+    // accessor surface is reachable on the result.
     let input = r#"{"k": [1, 2]}"#;
     let doc: JsonDocument<'_> = JsonParser::parse(input).expect("parse");
     let _: &JsonValue<'_> = doc.to_value();

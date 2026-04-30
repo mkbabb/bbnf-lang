@@ -1,21 +1,19 @@
 //! Top-level dispatcher fns + Alt-byte-dispatch body emission.
 //!
-//! Two parallel families of dispatcher live here: tape-path
+//! Two parallel families of dispatcher live here: struct-direct
 //! (`emit_dispatcher`) and visitor-path (`emit_visitor_dispatcher`).
-//! Both follow the same JSON-shaped layout — skip leading whitespace,
-//! dispatch on the next byte to the appropriate per-shape fn — and
-//! each carries a sibling Alt-body emitter
-//! (`emit_alt_dispatch_body`, `emit_visitor_alt_dispatch_body`) for
-//! root rules whose body is `Alt(Ref, Ref, …)` of classified
-//! branches.
+//! Both follow the same JSON-shaped layout: skip leading whitespace,
+//! dispatch on the next byte to the appropriate per-shape fn, and
+//! carry a sibling Alt-body emitter for root rules whose body is
+//! `Alt(Ref, Ref, ...)` of classified branches.
 //!
 //! The Pratt/Unordered detector (`has_w4_classified`) gates visitor-
 //! path emission: those shapes invoke trait methods outside the
 //! dispatcher's W3 visitor bound set, so grammars carrying them emit
-//! the tape path only.
+//! only the struct-direct path.
 
-use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
 use bbnf_ir::GrammarIR;
+use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::parse_str;
@@ -28,13 +26,10 @@ use super::symbol_composition::{
 use bbnf_ir::registry::EmitStrategy;
 
 /// Build the dispatcher's `builder: &mut <Type>` parameter for the
-/// active emit strategy. TapeDirect grammars carry the legacy
-/// `crate::runtime::tape::Tape<()>` substrate; StructDirect grammars
-/// carry the per-grammar concrete struct-builder declared in the
-/// strategy variant (e.g. `crate::runtime::JsonStructBuilder<'_>`).
+/// active emit strategy. StructDirect grammars carry the per-grammar
+/// concrete struct-builder declared in the strategy variant.
 fn dispatcher_builder_type(strategy: &EmitStrategy) -> TokenStream {
     match strategy {
-        EmitStrategy::TapeDirect => quote! { crate::runtime::tape::Tape<()> },
         EmitStrategy::StructDirect { rust, .. } => {
             let path: syn::Path = parse_str(rust.builder_path).unwrap_or_else(|_| {
                 panic!(
@@ -64,10 +59,7 @@ pub fn emit_dispatcher(
     strategy: &EmitStrategy,
 ) -> TokenStream {
     let builder_ty = dispatcher_builder_type(strategy);
-    let (lifetime_params, input_lifetime) = match strategy {
-        EmitStrategy::TapeDirect => (quote! {}, quote! { & }),
-        EmitStrategy::StructDirect { .. } => (quote! { <'p> }, quote! { &'p }),
-    };
+    let (lifetime_params, input_lifetime) = (quote! { <'p> }, quote! { &'p });
     let Some(root_name) = root_rule_name(ir) else {
         return quote! {};
     };
@@ -173,7 +165,7 @@ pub fn emit_dispatcher(
         ///
         /// Mirrors the walker's `value` rule ByteDispatch: skip leading
         /// whitespace, dispatch on the first byte to the chosen branch
-        /// shape fn, return its `TapeOffset` unchanged. No outer Rule /
+        /// shape fn, return unit after the chosen shape succeeds. No outer Rule /
         /// Alt compound is pushed — the DTA's ByteDispatch state for
         /// `value` emits no compound either, and the target rule's Ref
         /// overwrites any `pending_variant_idx` en route, so the chosen
@@ -188,10 +180,7 @@ pub fn emit_dispatcher(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             #nonroot_ident(input, p, state, builder)
         }
 
@@ -206,10 +195,7 @@ pub fn emit_dispatcher(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             #dispatch_body
         }
     }
@@ -249,7 +235,9 @@ pub(super) fn emit_alt_dispatch_body(
     let mut keyword_null_fn: Option<proc_macro2::Ident> = None;
 
     for branch in branches {
-        let IrNode::Ref(rid) = &branch.node else { continue };
+        let IrNode::Ref(rid) = &branch.node else {
+            continue;
+        };
         let Some(rule) = ir.rules.iter().find(|r| r.id == *rid) else {
             continue;
         };
@@ -302,7 +290,7 @@ pub(super) fn emit_alt_dispatch_body(
         .unwrap_or_else(|| quote! {});
     // AX.W0a.2.g — Keyword fn signature extended with `state: &mut
     // ScanState` so Ref-led Alt branches can delegate via
-    // `emit_ref_call_tape`. Threading `state` here is a no-op for the
+    // `emit_ref_call_shape`. Threading `state` here is a no-op for the
     // JSON true_arm / null_arm single-literal forms (they ignore the
     // argument via `_state`), and carries the Ref-branch delegation
     // path for grammars that admit Ref-led Keyword branches.
@@ -391,45 +379,44 @@ pub fn emit_visitor_dispatcher(grammar_suffix: &str, ir: &GrammarIR) -> TokenStr
 
     let root_tag = ir.shape_assignments.get(entry);
 
-    let dispatch_body = if matches!(&entry_rule.body, bbnf_ir::IrNode::Alt(_, _))
-        && has_shape_dispatch(ir)
-    {
-        emit_visitor_alt_dispatch_body(grammar_suffix, entry_rule, ir)
-    } else if root_tag.is_classified() {
-        // AW-V.W4-activation — root is itself a W3 or W4 shape.
-        let shape_name = shape_tag_name(root_tag);
-        let target_ident = visitor_shape_fn_ident(shape_name, grammar_suffix, &root_name);
-        match root_tag {
-            // AX.W0a.2.g — visitor-path Keyword signature extended with
-            // `state` for Ref-branch delegation (see tape-path).
-            ShapeTag::Number => quote! {
-                let first = #support_mod::skip_space(input, p, state)
-                    .ok_or(crate::runtime::ParseErr::Syntax {
-                        offset: *p as u32, rule: None,
-                    })?;
-                #target_ident(input, p, first, visitor)
-            },
-            ShapeTag::Keyword => quote! {
-                let first = #support_mod::skip_space(input, p, state)
-                    .ok_or(crate::runtime::ParseErr::Syntax {
-                        offset: *p as u32, rule: None,
-                    })?;
-                #target_ident(input, p, first, state, visitor)
-            },
-            _ => quote! {
-                let _ = #support_mod::skip_space(input, p, state);
-                #target_ident(input, p, state, visitor)
-            },
-        }
-    } else if matches!(root_tag, ShapeTag::None) && has_shape_dispatch(ir) {
-        emit_visitor_alt_dispatch_body(grammar_suffix, entry_rule, ir)
-    } else {
-        quote! {
-            Err(crate::runtime::ParseErr::Syntax {
-                offset: *p as u32, rule: None,
-            })
-        }
-    };
+    let dispatch_body =
+        if matches!(&entry_rule.body, bbnf_ir::IrNode::Alt(_, _)) && has_shape_dispatch(ir) {
+            emit_visitor_alt_dispatch_body(grammar_suffix, entry_rule, ir)
+        } else if root_tag.is_classified() {
+            // AW-V.W4-activation — root is itself a W3 or W4 shape.
+            let shape_name = shape_tag_name(root_tag);
+            let target_ident = visitor_shape_fn_ident(shape_name, grammar_suffix, &root_name);
+            match root_tag {
+                // AX.W0a.2.g — visitor-path Keyword signature extended with
+                // `state` for Ref-branch delegation (see tape-path).
+                ShapeTag::Number => quote! {
+                    let first = #support_mod::skip_space(input, p, state)
+                        .ok_or(crate::runtime::ParseErr::Syntax {
+                            offset: *p as u32, rule: None,
+                        })?;
+                    #target_ident(input, p, first, visitor)
+                },
+                ShapeTag::Keyword => quote! {
+                    let first = #support_mod::skip_space(input, p, state)
+                        .ok_or(crate::runtime::ParseErr::Syntax {
+                            offset: *p as u32, rule: None,
+                        })?;
+                    #target_ident(input, p, first, state, visitor)
+                },
+                _ => quote! {
+                    let _ = #support_mod::skip_space(input, p, state);
+                    #target_ident(input, p, state, visitor)
+                },
+            }
+        } else if matches!(root_tag, ShapeTag::None) && has_shape_dispatch(ir) {
+            emit_visitor_alt_dispatch_body(grammar_suffix, entry_rule, ir)
+        } else {
+            quote! {
+                Err(crate::runtime::ParseErr::Syntax {
+                    offset: *p as u32, rule: None,
+                })
+            }
+        };
 
     let nonroot_ident = format_ident!("{}__value", dispatcher_ident);
     quote! {
@@ -552,7 +539,9 @@ pub(super) fn emit_visitor_alt_dispatch_body(
     let mut keyword_null_fn: Option<proc_macro2::Ident> = None;
 
     for branch in branches {
-        let IrNode::Ref(rid) = &branch.node else { continue };
+        let IrNode::Ref(rid) = &branch.node else {
+            continue;
+        };
         let Some(rule) = ir.rules.iter().find(|r| r.id == *rid) else {
             continue;
         };
@@ -574,11 +563,9 @@ pub(super) fn emit_visitor_alt_dispatch_body(
             ShapeTag::Keyword => {
                 let is_null = rule_is_single_null_keyword(rule, ir);
                 if is_null {
-                    keyword_null_fn =
-                        Some(visitor_shape_fn_ident("keyword", grammar_suffix, name));
+                    keyword_null_fn = Some(visitor_shape_fn_ident("keyword", grammar_suffix, name));
                 } else {
-                    keyword_bool_fn =
-                        Some(visitor_shape_fn_ident("keyword", grammar_suffix, name));
+                    keyword_bool_fn = Some(visitor_shape_fn_ident("keyword", grammar_suffix, name));
                 }
             }
             _ => {}

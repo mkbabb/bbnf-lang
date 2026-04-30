@@ -45,7 +45,7 @@ use super::{RustEmitCtx, RustEmitter};
 ///   `compare_op` / `boolean`, CSS L4 `*Unit`s, …).
 ///
 /// All admission arms are unified in the IR layout pass; this module
-/// keeps only the shared plan consumed by the remaining TapeDirect
+/// keeps only the shared plan consumed by the remaining projection
 /// cleanup targets. O4 stops emitting the historical projection
 /// structs, marker functions, and `PROJECTION_*` metadata from the
 /// grammar impl path; production parsers return StructDirect
@@ -273,9 +273,9 @@ fn to_upper_camel(name: &str) -> String {
 }
 
 /// AW-V.W3.2 — emit the per-grammar shared helpers the shape fns
-/// consume — JSON string escape decoder, number fallback, etc.
-/// Emitted once per grammar; unused helpers are dead-code-eliminated
-/// by LLVM.
+/// consume — JSON visitor string escape decoder, number fallback,
+/// etc. Emitted once per grammar; unused helpers are dead-code-
+/// eliminated by LLVM.
 fn emit_shape_helpers(grammar_ident_str: &str, ir: &GrammarIR) -> TokenStream {
     use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
     let grammar_suffix = super::shapes::sanitise_grammar(grammar_ident_str);
@@ -287,10 +287,9 @@ fn emit_shape_helpers(grammar_ident_str: &str, ir: &GrammarIR) -> TokenStream {
         .iter()
         .any(|r| matches!(ir.shape_assignments.get(r.id), ShapeTag::String))
     {
-        helpers.push(super::shapes::string::emit_escape_helper(&grammar_suffix));
-        // AW-V.W3-bench-fix — visitor-path escape helper (separate fn
-        // so visitor-generic instantiation lives alongside the tape
-        // path without reusing the monomorphised tape-path body).
+        // AZ-II.cutover.O4 — the production StructDirect string path
+        // decodes escapes inline into the document builder. Do not
+        // emit the old tape-returning escape helper.
         helpers.push(super::shapes::string::emit_visitor_escape_helper(
             &grammar_suffix,
         ));
@@ -306,9 +305,7 @@ fn emit_shape_helpers(grammar_ident_str: &str, ir: &GrammarIR) -> TokenStream {
         // AW-V.W3-bench-fix — aarch64 NEON fraction SIMD accumulator.
         // Mirrors the prototype's `simd_str2int`; canada.json's
         // 15-digit fractions amortise across the 16-byte stripe.
-        helpers.push(
-            super::shapes::number::emit_number_simd_fraction_helper(),
-        );
+        helpers.push(super::shapes::number::emit_number_simd_fraction_helper());
     }
     quote! { #(#helpers)* }
 }
@@ -365,16 +362,11 @@ impl RustEmitter {
     ///
     /// Public via [`Self::materialization_for_rule_pub`] for the
     /// `pre_compile_rule_body` hook in `mod.rs`.
-    fn materialization_for_rule(
-        ir: &GrammarIR,
-        rule: &IrRule,
-    ) -> MaterializationClass {
+    fn materialization_for_rule(ir: &GrammarIR, rule: &IrRule) -> MaterializationClass {
         // `preserve_identity` rules must always push a compound.
         // The entry rule is NOT forced — its body classification
         // determines whether it uses push_leaf (TapeSpanOnly) or
-        // push_compound (MustTape). Both produce a TapeOffset
-        // valid for `Parsed::root_offset`. The view layer reads
-        // variant_idx from flags, which both paths store.
+        // push_compound (MustTape). Both produce a materialized record whose flags carry the variant_idx the view layer reads.
         if rule.meta.preserve_identity {
             return MaterializationClass::MustTape;
         }
@@ -434,9 +426,7 @@ impl RustEmitter {
             &ir.struct_registry,
         );
 
-        let bbnf_ir::registry::EmitStrategy::StructDirect { .. } = strategy else {
-            unreachable!("EmitStrategy::for_grammar no longer selects TapeDirect")
-        };
+        let bbnf_ir::registry::EmitStrategy::StructDirect { .. } = strategy;
 
         // O3.P1-G1 / O4 — StructDirect parse output is the
         // document-owned runtime surface. Do not emit the legacy
@@ -458,8 +448,7 @@ impl RustEmitter {
         let parser_attrs = ir_ctx.parser_attrs;
 
         // Grammar string const array.
-        let grammar_arr =
-            crate::backend::rust::ir_enums::generate_grammar_arr(parser_attrs, ident);
+        let grammar_arr = crate::backend::rust::ir_enums::generate_grammar_arr(parser_attrs, ident);
 
         // Tranche AV Phase 1 — consolidated per-grammar fingerprint.
         // Lowers `GrammarIR::profile()` to a single `const
@@ -475,11 +464,8 @@ impl RustEmitter {
         // set; the table is NOT emitted as runtime data.
         let grammar_name = ident.to_string();
         let dta_walker_table = bbnf_ir::passes::lift_dta(ir);
-        let regex_scan_adapter = dfa_codegen::emit_regex_scan_adapter(
-            grammar_name.as_str(),
-            ir,
-            &dta_walker_table,
-        );
+        let regex_scan_adapter =
+            dfa_codegen::emit_regex_scan_adapter(grammar_name.as_str(), ir, &dta_walker_table);
 
         // AW-III.W6.2 — emit PHF keyword tables for every literal-led
         // Alt whose mined branch count exceeds the threshold. The
@@ -499,7 +485,9 @@ impl RustEmitter {
                     continue;
                 }
                 let Some(dag) = ir.dag.as_ref() else { continue };
-                let Some(body_id) = dag.node_for(&rule.body) else { continue };
+                let Some(body_id) = dag.node_for(&rule.body) else {
+                    continue;
+                };
                 if let Some(branches) = ir.keyword_branches.get(&body_id) {
                     let lits: Vec<super::keyword_dispatch::LiteralBranch> = branches
                         .iter()
@@ -514,10 +502,7 @@ impl RustEmitter {
             for (rid, lits) in owned.iter() {
                 tables.push((*rid, lits.as_slice()));
             }
-            super::keyword_dispatch::emit_keyword_tables(
-                ident.to_string().as_str(),
-                tables,
-            )
+            super::keyword_dispatch::emit_keyword_tables(ident.to_string().as_str(), tables)
         };
 
         // AW-III.W6.5 — per-grammar Pratt precedence LUT. Mines every
@@ -526,12 +511,8 @@ impl RustEmitter {
         // plus a sparse `PRECEDENCE_ENTRIES` slice. Consulted inline by
         // the shape-dispatch Pratt body.
         let precedence_lut = {
-            let chain_facts =
-                bbnf_ir::passes::collect_operator_chains(ir, &dta_walker_table);
-            super::precedence::emit_precedence_lut(
-                ident.to_string().as_str(),
-                &chain_facts,
-            )
+            let chain_facts = bbnf_ir::passes::collect_operator_chains(ir, &dta_walker_table);
+            super::precedence::emit_precedence_lut(ident.to_string().as_str(), &chain_facts)
         };
 
         // Debug trace depth counter (only emitted if any rule
@@ -562,22 +543,15 @@ impl RustEmitter {
         // walker tax on the hot path. Grammars with unshaped rules
         // (CSS / Sheets / BBNF until W4 extends the detectors)
         // continue to call `dta_run_<grammar>`.
-        let shape_emitters = super::shapes::emit_shapes_for_grammar(
-            ident.to_string().as_str(),
-            ir,
-        );
+        let shape_emitters = super::shapes::emit_shapes_for_grammar(ident.to_string().as_str(), ir);
         let shape_helpers = emit_shape_helpers(ident.to_string().as_str(), ir);
         // AX.W0b — every grammar routes through the shape dispatcher
         // post-W0a.2.h; the gate predicates retired with the walker.
-        let shape_dispatcher_ident = super::shapes::root_rule_name(ir).map(|root| {
-            super::shapes::dispatcher_fn_ident(ident.to_string().as_str(), &root)
-        });
+        let shape_dispatcher_ident = super::shapes::root_rule_name(ir)
+            .map(|root| super::shapes::dispatcher_fn_ident(ident.to_string().as_str(), &root));
         // AW-V.W3-bench-fix — visitor-path dispatcher ident.
         let visitor_dispatcher_ident = super::shapes::root_rule_name(ir).map(|root| {
-            super::shapes::visitor_dispatcher_fn_ident(
-                ident.to_string().as_str(),
-                &root,
-            )
+            super::shapes::visitor_dispatcher_fn_ident(ident.to_string().as_str(), &root)
         });
 
         // AW-I.W3: `parse()` dispatches through `dta_run` wholesale.
@@ -614,9 +588,7 @@ impl RustEmitter {
             ident.to_string().as_str(),
             &ir.struct_registry,
         );
-        let bbnf_ir::registry::EmitStrategy::StructDirect { rust, .. } = strategy else {
-            unreachable!("EmitStrategy::for_grammar no longer selects TapeDirect")
-        };
+        let bbnf_ir::registry::EmitStrategy::StructDirect { rust, .. } = strategy;
         let parse_body: TokenStream = {
             let dispatcher = shape_dispatcher_ident
                 .as_ref()
@@ -752,9 +724,8 @@ fn emit_parse_body_struct_direct(
     builder_path: &str,
     _document_path: &str,
 ) -> TokenStream {
-    let builder_ty: syn::Path = syn::parse_str(builder_path).expect(
-        "EmitStrategy::StructDirect.builder_path must parse as a Rust path",
-    );
+    let builder_ty: syn::Path = syn::parse_str(builder_path)
+        .expect("EmitStrategy::StructDirect.builder_path must parse as a Rust path");
     quote! {
         let __input_bytes = input.as_bytes();
         // AZ-I.W2.RA — struct-direct parse body. The builder owns a

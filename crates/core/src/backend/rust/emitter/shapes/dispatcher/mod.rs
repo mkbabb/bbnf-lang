@@ -30,7 +30,7 @@
 //!   (`emit_dispatcher`, `emit_visitor_dispatcher`) + Alt-byte-
 //!   dispatch body emission.
 //! - [`ref_call`]            — per-Ref value-position routing
-//!   (`emit_ref_call_tape`, `emit_ref_call_visitor`, leading-ws
+//!   (`emit_ref_call_shape`, `emit_ref_call_visitor`, leading-ws
 //!   admission analysis, `collect_value_refs`).
 //! - [`scan_policy`]         — grammar-activated structural-scan
 //!   policy table (`emit_structural_scan_policy`, `lookup_scan_policy`).
@@ -46,7 +46,7 @@ mod support;
 mod symbol_composition;
 
 pub use cross_shape::{emit_dispatcher, emit_visitor_dispatcher, has_w4_classified};
-pub use ref_call::{collect_value_refs, emit_ref_call_tape, emit_ref_call_visitor};
+pub use ref_call::{collect_value_refs, emit_ref_call_shape, emit_ref_call_visitor};
 pub use scan_policy::{emit_structural_scan_policy, lookup_scan_policy};
 pub use support::emit_support_module;
 pub use symbol_composition::{

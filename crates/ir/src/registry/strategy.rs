@@ -99,7 +99,7 @@ pub struct SubstrateBinding {
 /// returns `None` for `ts` / `wasm` on every arm — the BA wave
 /// extends the resolver with backend-specific bindings; backends
 /// failing to find their slot fail codegen loudly; there is no
-/// production TapeDirect fallback after AZ-II.cutover.O4.
+/// production fallback substrate after AZ-II.cutover.O4.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum EmitStrategy {
     /// Generated `parse()` builds the grammar's typed document via a
@@ -116,10 +116,6 @@ pub enum EmitStrategy {
         /// same dynamic as `ts`.
         wasm: Option<SubstrateBinding>,
     },
-    /// Legacy tape-direct substrate. Retained only while O4/O5 delete
-    /// explicit shape-golden and tape-crate surfaces; [`Self::for_grammar`]
-    /// never selects this variant for production grammars.
-    TapeDirect,
 }
 
 impl EmitStrategy {
@@ -271,12 +267,5 @@ impl EmitStrategy {
     #[inline]
     pub fn is_struct_direct(&self) -> bool {
         matches!(self, EmitStrategy::StructDirect { .. })
-    }
-
-    /// Returns `true` when the strategy emits the legacy tape-direct
-    /// parse-body path.
-    #[inline]
-    pub fn is_tape_direct(&self) -> bool {
-        matches!(self, EmitStrategy::TapeDirect)
     }
 }

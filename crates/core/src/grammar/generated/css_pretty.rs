@@ -1338,7 +1338,7 @@ mod __cssprettyparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -1354,10 +1354,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __important_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1429,7 +1426,7 @@ mod __cssprettyparser_emit_impl {
                     builder,
                     __important_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -1448,7 +1445,7 @@ mod __cssprettyparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -1464,10 +1461,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __importRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1621,7 +1615,7 @@ mod __cssprettyparser_emit_impl {
                     builder,
                     __importRule_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -1640,7 +1634,7 @@ mod __cssprettyparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -1656,10 +1650,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __declaration_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2015,7 +2006,7 @@ mod __cssprettyparser_emit_impl {
                     builder,
                     __declaration_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -2034,7 +2025,7 @@ mod __cssprettyparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -2050,10 +2041,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __genericAtRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2134,7 +2122,7 @@ mod __cssprettyparser_emit_impl {
                     builder,
                     __genericAtRule_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -2153,7 +2141,7 @@ mod __cssprettyparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -2169,10 +2157,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __qualifiedRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2240,7 +2225,7 @@ mod __cssprettyparser_emit_impl {
                     builder,
                     __qualifiedRule_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -2259,7 +2244,7 @@ mod __cssprettyparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -2275,10 +2260,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __mediaRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2343,7 +2325,7 @@ mod __cssprettyparser_emit_impl {
                     builder,
                     __mediaRule_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -2362,7 +2344,7 @@ mod __cssprettyparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -2378,10 +2360,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __supportsRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2447,7 +2426,7 @@ mod __cssprettyparser_emit_impl {
                     builder,
                     __supportsRule_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -2466,7 +2445,7 @@ mod __cssprettyparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -2482,10 +2461,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __fontFaceRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2554,7 +2530,7 @@ mod __cssprettyparser_emit_impl {
                     builder,
                     __fontFaceRule_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -2569,9 +2545,8 @@ mod __cssprettyparser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssPrettyParser_atRuleBody<'p>(
@@ -2580,10 +2555,7 @@ mod __cssprettyparser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -2593,9 +2565,7 @@ mod __cssprettyparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -2651,7 +2621,7 @@ mod __cssprettyparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -2667,10 +2637,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __ruleBlock_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2762,7 +2729,7 @@ mod __cssprettyparser_emit_impl {
                     builder,
                     __ruleBlock_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -2781,7 +2748,7 @@ mod __cssprettyparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -2797,10 +2764,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __blockContent_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2954,7 +2918,7 @@ mod __cssprettyparser_emit_impl {
                     builder,
                     __blockContent_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -2972,7 +2936,7 @@ mod __cssprettyparser_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -2982,10 +2946,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_CssPrettyParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
@@ -3098,7 +3059,7 @@ mod __cssprettyparser_emit_impl {
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -3110,7 +3071,7 @@ mod __cssprettyparser_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -3120,10 +3081,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_CssPrettyParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
@@ -3172,7 +3130,7 @@ mod __cssprettyparser_emit_impl {
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -3185,7 +3143,7 @@ mod __cssprettyparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -3201,10 +3159,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __ruleList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3295,7 +3250,7 @@ mod __cssprettyparser_emit_impl {
                     builder,
                     __ruleList_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -3314,7 +3269,7 @@ mod __cssprettyparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -3330,10 +3285,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __stylesheet_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3401,7 +3353,7 @@ mod __cssprettyparser_emit_impl {
                     builder,
                     __stylesheet_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -4693,7 +4645,7 @@ mod __cssprettyparser_emit_impl {
     ///
     /// Mirrors the walker's `value` rule ByteDispatch: skip leading
     /// whitespace, dispatch on the first byte to the chosen branch
-    /// shape fn, return its `TapeOffset` unchanged. No outer Rule /
+    /// shape fn, return unit after the chosen shape succeeds. No outer Rule /
     /// Alt compound is pushed — the DTA's ByteDispatch state for
     /// `value` emits no compound either, and the target rule's Ref
     /// overwrites any `pending_variant_idx` en route, so the chosen
@@ -4708,10 +4660,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         parse_CssPrettyParser_stylesheet__value(input, p, state, builder)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
@@ -4725,10 +4674,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_CssPrettyParser::skip_space(input, p, state);
         parse_flat_CssPrettyParser_stylesheet(input, p, state, builder)
     }

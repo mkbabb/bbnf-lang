@@ -49,176 +49,38 @@
 //! path until W4.2 / W4.3 wire per-grammar consumers.
 //!
 //! Module layout (B5.W3):
-//! - [`tape`]            — tape-path per-position emission
+//! - [`struct_direct`]   — StructBuilder per-position emission
 //! - [`visitor`]         — visitor-path per-position emission
-//! - [`typed_payload`]   — typed-payload Alt-branch byte-dispatch
-//!   (Sheets `error_literal` factored-Alt shape)
-//! - [`map_regex_host`]  — `Map { Regex, host-fn }` position emission
-//!   (CSS `hex` host-fn pattern + `NumberConvert` f64 scan)
 
 use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use bbnf_ir::registry::EmitStrategy;
-use super::dispatcher::{
-    dispatcher_fn_ident, shape_fn_ident, visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
-};
+use super::dispatcher::{visitor_dispatcher_fn_ident, visitor_shape_fn_ident};
 use super::root_rule_name;
+use bbnf_ir::registry::EmitStrategy;
 
-mod map_regex_host;
 mod struct_direct;
-mod tape;
-mod typed_payload;
 mod visitor;
 
 /// Emit `pub fn parse_flat_<grammar>_<rule>(input, p, state,
-/// builder) -> Result<TapeOffset, DtaError>`.
+/// builder) -> Result<(), DtaError>`.
 ///
 /// # AZ-I.W2.RF — strategy dispatch
 ///
 /// `strategy` is the codegen-time substrate selector resolved by
-/// [`EmitStrategy::for_grammar`] in `shapes/mod.rs`. Two disjoint
-/// emission templates:
-///
-/// - [`EmitStrategy::TapeDirect`] — the legacy fused-tape body emitted
-///   by [`tape::emit_tape_positions`] under the post-order Seq compound
-///   bracket pattern.
-/// - [`EmitStrategy::StructDirect`] — the AZ-I.W2 struct-direct body
-///   that resolves the rule's layout via
-///   `ir.struct_registry.layout(rule.id)`, opens a Flat frame on the
-///   builder via `begin_compound(&__layout)`, walks each position
-///   through [`struct_direct::emit_parse_flat_struct_direct`], and
-///   closes via `end_compound(handle)`. Per the W2-EMITTER-REWIRE
-///   §3 redress F dispatch this restores JSON activation for the
-///   `pair` Flat-classified rule (W2.RE asserted Flat as JSON-orthogonal
-///   under contact; the assertion missed `pair`'s Flat classification).
+/// [`EmitStrategy::for_grammar`] in `shapes/mod.rs`. O4 emits the
+/// AZ-I.W2 struct-direct body: resolve the rule layout, open a Flat
+/// frame via `begin_compound(&__layout)`, walk positions through
+/// [`struct_direct::emit_parse_flat_struct_direct`], and close via
+/// `end_compound(handle)`.
 pub fn emit_parse_flat(
     strategy: &EmitStrategy,
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    if strategy.is_struct_direct() {
-        return struct_direct::emit_parse_flat_struct_direct(
-            grammar_suffix,
-            rule,
-            ir,
-            strategy,
-        );
-    }
-    let rule_name = ir.get_string(rule.name);
-    let fn_ident = shape_fn_ident("flat", grammar_suffix, rule_name);
-    let variant_idx = (rule.id & 0xFF) as u8;
-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
-
-    // Resolve dispatcher ident for Ref-recursion. Missing root means
-    // the emitter can't route recursion; emit nothing so the grammar
-    // stays on the walker fallback.
-    let dispatcher_ident = match root_rule_name(ir) {
-        Some(root) => {
-            let root_disp = dispatcher_fn_ident(grammar_suffix, &root);
-            format_ident!("{}__value", root_disp)
-        }
-        None => return quote! {},
-    };
-
-    // Flatten the rule body into positional IR nodes.
-    let positions = collect_positions(&rule.body);
-
-    // AX.W0a.2.p — the owning rule's id drives leaf-kind selection
-    // for `Map { Regex, host-fn }` positions (KvPair when the rule
-    // type is `Tuple([Span, scalar])`; Span otherwise). Thread it
-    // through emission.
-    let rule_id = rule.id;
-
-    let body_emission = tape::emit_tape_positions(
-        &positions,
-        variant_idx,
-        rule_id,
-        &support_mod,
-        &dispatcher_ident,
-        ir,
-    );
-
-    quote! {
-        /// AW-V.W4-fix — per-grammar Flat-shape parse function,
-        /// walker-tape-identical.
-        ///
-        /// Emits one outer Seq compound plus per-position inner
-        /// records. Ref / Regex / Alt positions recurse through the
-        /// grammar's value-position dispatcher (the walker's
-        /// authoritative state path).
-        ///
-        /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`): this fn
-        /// sits on a cross-shape recursive edge
-        /// (`parse_flat_<grammar>_<rule>` → `emit_ref_call_tape` →
-        /// peer shape fn → back here through the grammar's `__value`
-        /// discriminant). LLVM's inliner collapses plain `#[inline]`
-        /// candidates only when profitable and bails cleanly on
-        /// detected recursion; `#[inline(always)]` would recurse the
-        /// inliner until stack exhaustion (observed SIGBUS in
-        /// BbnfBootstrap's `grammar_item` triangle during W0a.2.e).
-        #[inline]
-        #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-        pub fn #fn_ident(
-            input: &[u8],
-            p: &mut usize,
-            state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
-            let span_lo = *p as u32;
-            // AY-II.W0.b — walker-parity POST-ORDER outer Seq compound.
-            // B5.W6 — bracket the post-order children scope so child
-            // records stamp `frame_depth` at the correct (parent + 1)
-            // depth at push time. The matching `end_compound_post_order`
-            // absorbs the bracket bump; `begin_compound_post` stamps the
-            // outer row at the outer-frame depth without bumping.
-            //
-            // B5.W6b — IIFE-wrap the body so `?`-propagation from inner
-            // shape calls (refs, regex scans, dispatcher routes) cannot
-            // leak past `end_compound_post_order` and leave
-            // `current_depth` permanently bumped. The Err-arm rolls
-            // back partial pushes FIRST (which may clobber
-            // `current_depth` to the bracket-bumped depth via
-            // `frame_depth[__save_cols]`), then `exit_post_order_children`
-            // decrements once to the outer frame. The order is critical:
-            // rollback before exit, so the rolled-back row's
-            // bracket-bumped depth is corrected to the outer depth.
-            let __save_cols = builder.position();
-            let outer_child = builder.enter_post_order_children();
-            let __post_body: ::core::result::Result<
-                (),
-                crate::runtime::tape::DtaError,
-            > = (|| {
-                #body_emission
-                Ok(())
-            })();
-            if let ::core::result::Result::Err(__err) = __post_body {
-                builder.rollback_to(__save_cols);
-                builder.exit_post_order_children();
-                return ::core::result::Result::Err(__err);
-            }
-
-            let span_hi = *p as u32;
-            let outer_off = builder.begin_compound_post(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                #variant_idx,
-                0u8,
-                0u16,
-            );
-            builder.end_compound_post_order(
-                outer_off,
-                span_hi,
-                crate::runtime::tape::TapeOffset(outer_child),
-            );
-            Ok(crate::runtime::tape::TapeOffset(outer_off))
-        }
-    }
+    struct_direct::emit_parse_flat_struct_direct(grammar_suffix, rule, ir, strategy)
 }
 
 /// Emit `pub fn parse_flat_visitor_<grammar>_<rule><V>(input, p,
@@ -228,8 +90,8 @@ pub fn emit_parse_flat(
 ///
 /// The visitor path operates against an external `&mut V: ObjectVisitor
 /// + ArrayVisitor + …` argument that is substrate-orthogonal to the
-/// tape-vs-struct-builder distinction the StructDirect / TapeDirect
-/// strategies select. Visitor emission is therefore strategy-agnostic;
+/// builder distinction production code uses. Visitor emission is
+/// therefore strategy-agnostic;
 /// the parameter is retained on the API surface for symmetry with
 /// [`emit_parse_flat`] (and to keep the call-site in `shapes/mod.rs`
 /// uniform across shape emitters that DO require the discriminator),
@@ -253,12 +115,8 @@ pub fn emit_parse_flat_visitor(
     };
 
     let positions = collect_positions(&rule.body);
-    let body_emission = visitor::emit_visitor_positions(
-        &positions,
-        &support_mod,
-        &dispatcher_ident,
-        ir,
-    );
+    let body_emission =
+        visitor::emit_visitor_positions(&positions, &support_mod, &dispatcher_ident, ir);
 
     quote! {
         /// AW-V.W4-fix — visitor-path Flat-shape parse function.
@@ -332,9 +190,7 @@ fn walk_positions<'a>(
             });
         }
         IrNode::Map { inner, .. } => walk_positions(inner, leading, trailing, out),
-        IrNode::OptionalWhitespace(inner) => {
-            walk_positions(inner, true, true, out)
-        }
+        IrNode::OptionalWhitespace(inner) => walk_positions(inner, true, true, out),
         IrNode::Seq(children) => {
             for child in children {
                 walk_positions(child, leading, trailing, out);

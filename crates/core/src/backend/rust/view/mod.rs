@@ -1,9 +1,10 @@
 //! Per-rule tape-view codegen for the Rust backend.
 //!
-//! AZ-II.cutover.O3.P1-V1: this module is now a TapeDirect-only
-//! emitter. StructDirect grammars return concrete runtime documents
-//! and must not receive generated `TapeCursor`, node-view, or
-//! `ValueRoot` compatibility surfaces from this layer.
+//! AZ-II.cutover.O4 leaves this module resident only as historical
+//! codegen substrate until O5 removes the tape crate. Production
+//! grammars return concrete runtime documents and must not receive
+//! generated `TapeCursor`, node-view, or `ValueRoot` compatibility
+//! surfaces from this layer.
 //!
 //! Tranche AC.2 landing surface. For every rule in the IR, this
 //! module emits a `<Rule>View<'p>` wrapper struct that holds a
@@ -24,7 +25,7 @@
 //! `leaves.rs` each build a further View wrapper over
 //! `cursor.child(i)` or `cursor.children()` without constructing
 //! any tree, index, or Vec between the caller and the canonical
-//! packed substrate. The consumer path is: `Parsed::view()` →
+//! packed substrate. The historical consumer path was:
 //! `Root::make_view` → `<Root>View::new(tape, input, root)` →
 //! `TapeCursor::new(tape, offset)`. No rebuild, no shadow surface,
 //! no routing branch.
@@ -58,11 +59,9 @@
 //! - **Grammar** (`grammar.rs`): root-rule name binding on the
 //!   grammar marker struct.
 //!
-//! The top-level grammar-view binding ties the grammar marker
-//! struct's [`crate::runtime::Root`] GAT `type View<'p>` to the
-//! root rule's view type. Generated `Parsed<Grammar>::view(&self)`
-//! calls the `Root::make_view` constructor to lend the root view
-//! with a `&self` lifetime.
+//! The top-level grammar-view binding tied the grammar marker struct's
+//! [`crate::runtime::Root`] GAT `type View<'p>` to the root rule's
+//! view type.
 //!
 //! # Ownership of generation
 //!
@@ -75,8 +74,8 @@
 //!   inlined at every call site during parser emission, so the
 //!   view layer never sees them.
 
-use bbnf_ir::{GrammarIR, IrNode, TypeDesc};
 use bbnf_ir::passes::is_kv_pair_shape;
+use bbnf_ir::{GrammarIR, IrNode, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -92,25 +91,17 @@ mod repeat;
 mod seq;
 pub mod value;
 
-pub use color::{Color, ColorSpace, COLOR_PAYLOAD_BYTES};
+pub use color::{COLOR_PAYLOAD_BYTES, Color, ColorSpace};
 pub use named_types::RustNamedTypes;
-pub use value::{emit_value_surface, variant_entries_for, VariantInfo, VariantInfoShape};
+pub use value::{VariantInfo, VariantInfoShape, emit_value_surface, variant_entries_for};
 
 /// Return whether the legacy tape-view/value surface may emit.
 ///
-/// O3.P1 carves these producers to TapeDirect. StructDirect parse
-/// outputs expose document-owned projection APIs, so emitting an
-/// empty `NodeView`/`ValueRoot` shim would keep the retired surface
-/// alive.
-pub(crate) fn should_emit_tape_direct_surface(
-    ir: &GrammarIR,
-    grammar_name: &str,
-) -> bool {
-    bbnf_ir::registry::EmitStrategy::for_grammar(
-        grammar_name,
-        &ir.struct_registry,
-    )
-    .is_tape_direct()
+/// StructDirect parse outputs expose document-owned projection APIs,
+/// so emitting an empty `NodeView`/`ValueRoot` shim would keep the
+/// retired surface alive.
+pub(crate) fn should_emit_legacy_tape_surface(_ir: &GrammarIR, _grammar_name: &str) -> bool {
+    false
 }
 
 /// Generate the full view-type surface for a grammar.
@@ -136,7 +127,7 @@ pub(crate) fn should_emit_tape_direct_surface(
 /// user's intent without needing a separate annotation.
 pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
     let grammar_name = ctx.ident.to_string();
-    if !should_emit_tape_direct_surface(ir, grammar_name.as_str()) {
+    if !should_emit_legacy_tape_surface(ir, grammar_name.as_str()) {
         return TokenStream::new();
     }
 
@@ -160,11 +151,8 @@ pub fn generate_views(ir: &GrammarIR, ctx: &IrCodegenCtx<'_>) -> TokenStream {
 
     // Non-transparent rules in declaration order (used for emit
     // AND for the RuleKind variant list).
-    let non_transparent_rules: Vec<&bbnf_ir::IrRule> = ir
-        .rules
-        .iter()
-        .filter(|r| !r.meta.is_transparent)
-        .collect();
+    let non_transparent_rules: Vec<&bbnf_ir::IrRule> =
+        ir.rules.iter().filter(|r| !r.meta.is_transparent).collect();
 
     let mut rule_kind_variants: Vec<TokenStream> = Vec::new();
     let mut rule_kind_dispatch: Vec<TokenStream> = Vec::new();
@@ -474,9 +462,7 @@ fn emit_typed_accessors(
     match body {
         IrNode::Seq(_) => seq::emit_seq_accessors(rule, rule_name, ir, grammar_name),
         IrNode::Alt(_, _) => alt::emit_alt_accessors(rule, rule_name, ir, grammar_name),
-        IrNode::Repeat { .. } => {
-            repeat::emit_repeat_accessors(rule, rule_name, ir, grammar_name)
-        }
+        IrNode::Repeat { .. } => repeat::emit_repeat_accessors(rule, rule_name, ir, grammar_name),
         // Leaves: Literal, Regex, Epsilon, Ref, and any body that
         // doesn't match the compound shapes above.
         _ => {

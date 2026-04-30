@@ -41,13 +41,13 @@ use bbnf_ir::{CharSet128, GrammarIR, IrNode, IrRule, RuleId};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use bbnf_ir::registry::EmitStrategy;
 use super::dispatcher::{
-    dispatcher_fn_ident, emit_ref_call_tape, emit_ref_call_visitor, shape_fn_ident,
+    dispatcher_fn_ident, emit_ref_call_shape, emit_ref_call_visitor, shape_fn_ident,
     visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
 };
 use super::root_rule_name;
 use super::substrate::builder_ty_with_lifetime;
+use bbnf_ir::registry::EmitStrategy;
 
 // ─── Unordered body introspection ───────────────────────────────────
 
@@ -150,7 +150,9 @@ fn is_nullable(node: &IrNode, ir: &GrammarIR, visited: &mut HashSet<RuleId>) -> 
             is_nullable(a, ir, visited) && is_nullable(b, ir, visited)
         }
         IrNode::Minus(a, _) => is_nullable(a, ir, visited),
-        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => is_nullable(inner, ir, visited),
+        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
+            is_nullable(inner, ir, visited)
+        }
         IrNode::TokenDispatch { token, .. } => is_nullable(token, ir, visited),
     }
 }
@@ -161,11 +163,7 @@ fn is_nullable(node: &IrNode, ir: &GrammarIR, visited: &mut HashSet<RuleId>) -> 
 /// projection — the two walks produce the same set per branch so the
 /// emitter's byte-dispatch arms cover the same byte space the
 /// detector admitted.
-fn node_first(
-    node: &IrNode,
-    ir: &GrammarIR,
-    visited: &mut HashSet<RuleId>,
-) -> Option<CharSet128> {
+fn node_first(node: &IrNode, ir: &GrammarIR, visited: &mut HashSet<RuleId>) -> Option<CharSet128> {
     match node {
         IrNode::Literal(sid) => {
             let bytes = ir.get_string(*sid).as_bytes();
@@ -248,7 +246,7 @@ fn emit_byte_match_arm(set: &CharSet128) -> TokenStream {
 // ─── Tape-path emitter ──────────────────────────────────────────────
 
 /// Emit `pub fn parse_unordered_<grammar>_<rule>(input, p, state,
-/// builder) -> Result<TapeOffset, DtaError>`.
+/// builder) -> Result<(), DtaError>`.
 ///
 /// # AZ-I.W2.RE — strategy gate
 ///
@@ -265,7 +263,7 @@ pub fn emit_parse_unordered(
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    if let EmitStrategy::StructDirect { .. } = strategy {
+    if matches!(strategy, EmitStrategy::StructDirect { .. }) {
         // AZ-I.W2-act.B3 — Unordered struct-direct body. The W2.RE panic
         // retires by surfacing a real body that opens a SelectorList /
         // value-list compound on the StructBuilder, runs the byte-
@@ -306,7 +304,7 @@ pub fn emit_parse_unordered(
     {
         let pattern = emit_byte_match_arm(first_set);
         let call = branch_ref
-            .and_then(|rid| emit_ref_call_tape(grammar_suffix, rid, ir))
+            .and_then(|rid| emit_ref_call_shape(grammar_suffix, rid, ir))
             .map(|call| quote! { let _ = (#call)?; })
             .unwrap_or_else(|| {
                 quote! { let _ = #dispatcher_ident(input, p, state, builder)?; }
@@ -340,10 +338,7 @@ pub fn emit_parse_unordered(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             let span_lo = *p as u32;
             // AY-II.W0.b — walker-parity post-order Repeat Rule
             // compound via begin_compound_post/end_compound_post_order.
@@ -414,7 +409,7 @@ pub fn emit_parse_unordered(
                 span_hi,
                 crate::runtime::tape::TapeOffset(outer_child),
             );
-            ::core::result::Result::Ok(crate::runtime::tape::TapeOffset(outer_off))
+            ::core::result::Result::Ok(())
         }
     }
 }
@@ -455,10 +450,7 @@ fn emit_parse_unordered_fallback(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             let _ = state;
             let span_lo = *p as u32;
             // AY-II.W0.b — empty-compound fallback via begin/end.
@@ -478,7 +470,7 @@ fn emit_parse_unordered_fallback(
                 span_hi,
                 crate::runtime::tape::TapeOffset(outer_child),
             );
-            ::core::result::Result::Ok(crate::runtime::tape::TapeOffset(outer_off))
+            ::core::result::Result::Ok(())
         }
     }
 }
@@ -498,9 +490,7 @@ pub fn emit_parse_unordered_visitor(
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    if let EmitStrategy::StructDirect { .. } = strategy {
-        // AZ-I.W2-act.B3 — visitor path is substrate-orthogonal.
-    }
+    let _ = strategy;
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("unordered", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
@@ -665,12 +655,9 @@ fn emit_parse_unordered_struct_direct(
                 p: &mut usize,
                 state: &mut #support_mod::ScanState,
                 builder: &mut #builder_ty,
-            ) -> ::core::result::Result<
-                crate::runtime::tape::TapeOffset,
-                crate::runtime::tape::DtaError,
-            > {
+            ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
                 let _ = #dispatcher_ident(input, p, state, builder)?;
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
         };
     };
@@ -683,7 +670,7 @@ fn emit_parse_unordered_struct_direct(
     {
         let pattern = emit_byte_match_arm(first_set);
         let call = branch_ref
-            .and_then(|rid| emit_ref_call_tape(grammar_suffix, rid, ir))
+            .and_then(|rid| emit_ref_call_shape(grammar_suffix, rid, ir))
             .map(|call| quote! { let _ = (#call)?; })
             .unwrap_or_else(|| {
                 quote! { let _ = #dispatcher_ident(input, p, state, builder)?; }
@@ -713,10 +700,7 @@ fn emit_parse_unordered_struct_direct(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             let __layout: ::bbnf_ir::registry::StructLayout =
                 ::bbnf_ir::registry::StructLayout {
                     rule_id: #rule_id_lit as ::bbnf_ir::RuleId,
@@ -766,7 +750,7 @@ fn emit_parse_unordered_struct_direct(
                     <
                         #builder_ty as crate::runtime::StructBuilder
                     >::end_compound(builder, __handle);
-                    Ok(crate::runtime::tape::TapeOffset::NONE)
+                    Ok(())
                 }
                 ::core::result::Result::Err(__err) => {
                     <

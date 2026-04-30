@@ -45,10 +45,7 @@ use super::unwrap_outer;
 /// `(LayoutKind::TaggedEnum, rule_name)` carries the Wrap dispatch
 /// without losing the rule name (`JsonStructBuilder::begin_compound`
 /// only needs the name to fall through to `OpenFrame::Wrap`).
-fn resolve_layout_meta<'a>(
-    rule: &IrRule,
-    ir: &'a GrammarIR,
-) -> (LayoutKind, &'a str) {
+fn resolve_layout_meta<'a>(rule: &IrRule, ir: &'a GrammarIR) -> (LayoutKind, &'a str) {
     if let Some(layout) = ir.struct_registry.layout(rule.id) {
         return (layout.kind, layout.rule_name.as_str());
     }
@@ -81,10 +78,7 @@ fn quote_layout_kind(kind: LayoutKind) -> TokenStream {
 /// `fields` / `rule_type` slots are defaulted because
 /// `JsonStructBuilder::begin_compound`'s dispatch only consults
 /// `kind` + `rule_name` for the Wrap routing.
-fn quote_layout_literal(
-    rule: &IrRule,
-    ir: &GrammarIR,
-) -> TokenStream {
+fn quote_layout_literal(rule: &IrRule, ir: &GrammarIR) -> TokenStream {
     let (kind, rule_name) = resolve_layout_meta(rule, ir);
     let kind_tokens = quote_layout_kind(kind);
     let rule_id_lit = rule.id;
@@ -115,8 +109,7 @@ fn emit_wrap_branch_call_struct_direct(
             let target = ir.rules.iter().find(|r| r.id == *rid)?;
             let tag = ir.shape_assignments.get(*rid);
             let shape_name = shape_tag_name(tag)?;
-            let target_fn =
-                shape_fn_ident(shape_name, grammar_suffix, ir.get_string(target.name));
+            let target_fn = shape_fn_ident(shape_name, grammar_suffix, ir.get_string(target.name));
             let call = match tag {
                 ShapeTag::Number => quote! {
                     #target_fn(input, p, first, builder)
@@ -204,8 +197,7 @@ pub(super) fn emit_parse_wrap_struct_direct(
             // must NOT open a compound — the consumer of the
             // transparent rule (the Ref's host) does not expect a
             // record for the alias itself; it expects the chosen
-            // branch's record to bubble up directly. Mirrors the
-            // TapeDirect `wrap_can_elide_compound` semantics.
+            // branch's record to bubble up directly.
             emit_alt_struct_dispatch_transparent(branches, grammar_suffix, ir, strategy)
         }
         IrNode::Alt(branches, _) => {
@@ -215,11 +207,9 @@ pub(super) fn emit_parse_wrap_struct_direct(
             // Single-Ref Wrap — emit a direct delegation. No outer
             // begin/end_compound; the target shape fn carries its own
             // layout opening.
-            match super::super::dispatcher::emit_ref_call_tape(
-                grammar_suffix, *rid, ir,
-            ) {
+            match super::super::dispatcher::emit_ref_call_shape(grammar_suffix, *rid, ir) {
                 Some(call) => quote! {
-                    #call.map(|_| crate::runtime::tape::TapeOffset::NONE)
+                    #call
                 },
                 None => quote! {
                     ::core::result::Result::Err(
@@ -258,7 +248,7 @@ pub(super) fn emit_parse_wrap_struct_direct(
         /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
         /// forward-the-single-child semantics.
         ///
-        /// Returns `TapeOffset::NONE` for compositional uniformity
+        /// Returns unit for StructDirect composition
         /// with sibling shape fns under struct-direct mode; the
         /// offset is unused by struct-direct callers.
         #[inline]
@@ -268,10 +258,7 @@ pub(super) fn emit_parse_wrap_struct_direct(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             use crate::runtime::builder::StructBuilder as _;
 
             #dispatch
@@ -380,7 +367,7 @@ fn emit_alt_struct_dispatch(
                 <
                     #builder_ty_e as crate::runtime::StructBuilder
                 >::end_compound(builder, __wrap_handle);
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(e) => {
                 <
@@ -464,7 +451,7 @@ fn emit_alt_struct_dispatch_transparent(
                 },
             );
         }
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
 }
 

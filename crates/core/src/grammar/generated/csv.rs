@@ -638,7 +638,7 @@ mod __csvparser_emit_impl {
     /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
     /// or Expr { Input, return_type }), and routes the decoded
     /// value through the StructBuilder trait. Returns
-    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// unit for StructDirect composition with sibling
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
@@ -647,10 +647,7 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_CsvParser("[^,\"\\r\\n]+", input, *p) else {
             return Err(crate::runtime::tape::DtaError::Syntax {
@@ -668,7 +665,7 @@ mod __csvparser_emit_impl {
             core::str::from_utf8(&input[span_lo as usize..span_hi as usize])
                 .unwrap_or(""),
         );
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -681,7 +678,7 @@ mod __csvparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -697,10 +694,7 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __escaped_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -763,7 +757,7 @@ mod __csvparser_emit_impl {
                     builder,
                     __escaped_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -782,7 +776,7 @@ mod __csvparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -798,10 +792,7 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __record_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -997,7 +988,7 @@ mod __csvparser_emit_impl {
                     builder,
                     __record_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -1016,7 +1007,7 @@ mod __csvparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -1032,10 +1023,7 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __csv_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1121,7 +1109,7 @@ mod __csvparser_emit_impl {
                 <crate::runtime::csv::CsvStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __csv_handle);
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -1509,7 +1497,7 @@ mod __csvparser_emit_impl {
     ///
     /// Mirrors the walker's `value` rule ByteDispatch: skip leading
     /// whitespace, dispatch on the first byte to the chosen branch
-    /// shape fn, return its `TapeOffset` unchanged. No outer Rule /
+    /// shape fn, return unit after the chosen shape succeeds. No outer Rule /
     /// Alt compound is pushed — the DTA's ByteDispatch state for
     /// `value` emits no compound either, and the target rule's Ref
     /// overwrites any `pending_variant_idx` en route, so the chosen
@@ -1524,10 +1512,7 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         parse_CsvParser_csv__value(input, p, state, builder)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
@@ -1541,10 +1526,7 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_CsvParser::skip_space(input, p, state);
         parse_flat_CsvParser_csv(input, p, state, builder)
     }

@@ -34,7 +34,10 @@ fn ws_is_comment_aware(ir: &GrammarIR) -> bool {
         return false;
     };
     let pattern = ir.get_string(ws_sid);
-    matches!(classify_regex(pattern), RegexClass::WhitespaceWithBlockComment)
+    matches!(
+        classify_regex(pattern),
+        RegexClass::WhitespaceWithBlockComment
+    )
 }
 
 /// AY.W4.3 — whether the grammar's mined `structural_alphabet` is
@@ -69,7 +72,10 @@ fn ctns_probe_admits(ir: &GrammarIR) -> bool {
     if alphabet.is_empty() {
         return false;
     }
-    if alphabet.iter().any(|&b| b == b' ' || b == b'\t' || b == b'\n' || b == b'\r') {
+    if alphabet
+        .iter()
+        .any(|&b| b == b' ' || b == b'\t' || b == b'\n' || b == b'\r')
+    {
         return false;
     }
     // Sparse-alphabet threshold: at least 12 bytes to beat the

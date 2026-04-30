@@ -68,9 +68,7 @@ pub(super) fn extract_first_ref(node: &bbnf_ir::IrNode) -> Option<bbnf_ir::RuleI
     use bbnf_ir::IrNode;
     match node {
         IrNode::Ref(rid) => Some(*rid),
-        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
-            extract_first_ref(inner)
-        }
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => extract_first_ref(inner),
         IrNode::Seq(children) => children.iter().find_map(extract_first_ref),
         IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
             extract_first_ref(lhs).or_else(|| extract_first_ref(rhs))

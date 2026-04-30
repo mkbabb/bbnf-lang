@@ -778,7 +778,7 @@ mod __bnfparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -794,10 +794,7 @@ mod __bnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         builder: &mut crate::runtime::bnf::BnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __terminal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -863,7 +860,7 @@ mod __bnfparser_emit_impl {
                     builder,
                     __terminal_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -882,7 +879,7 @@ mod __bnfparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -898,10 +895,7 @@ mod __bnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         builder: &mut crate::runtime::bnf::BnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __nonterminal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -970,7 +964,7 @@ mod __bnfparser_emit_impl {
                     builder,
                     __nonterminal_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -989,7 +983,7 @@ mod __bnfparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -1005,10 +999,7 @@ mod __bnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         builder: &mut crate::runtime::bnf::BnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __alternation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1359,7 +1350,7 @@ mod __bnfparser_emit_impl {
                     builder,
                     __alternation_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -1378,7 +1369,7 @@ mod __bnfparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -1394,10 +1385,7 @@ mod __bnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         builder: &mut crate::runtime::bnf::BnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __rule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1546,7 +1534,7 @@ mod __bnfparser_emit_impl {
                     builder,
                     __rule_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -1569,10 +1557,7 @@ mod __bnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         builder: &mut crate::runtime::bnf::BnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 4u32 as ::bbnf_ir::RuleId,
@@ -1616,7 +1601,7 @@ mod __bnfparser_emit_impl {
             }
         }
         builder.end_compound(__handle);
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AW-V.W4-fix — visitor-path Flat-shape parse function.
     ///
@@ -2246,7 +2231,7 @@ mod __bnfparser_emit_impl {
     ///
     /// Mirrors the walker's `value` rule ByteDispatch: skip leading
     /// whitespace, dispatch on the first byte to the chosen branch
-    /// shape fn, return its `TapeOffset` unchanged. No outer Rule /
+    /// shape fn, return unit after the chosen shape succeeds. No outer Rule /
     /// Alt compound is pushed — the DTA's ByteDispatch state for
     /// `value` emits no compound either, and the target rule's Ref
     /// overwrites any `pending_variant_idx` en route, so the chosen
@@ -2261,10 +2246,7 @@ mod __bnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         builder: &mut crate::runtime::bnf::BnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         parse_BnfParser_grammar__value(input, p, state, builder)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
@@ -2278,10 +2260,7 @@ mod __bnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_BnfParser::ScanState,
         builder: &mut crate::runtime::bnf::BnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_BnfParser::skip_space(input, p, state);
         parse_array_BnfParser_grammar(input, p, state, builder)
     }

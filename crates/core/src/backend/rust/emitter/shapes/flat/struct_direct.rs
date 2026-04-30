@@ -60,12 +60,12 @@ use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::dispatcher::{emit_ref_call_tape, shape_fn_ident};
+use super::super::dispatcher::{emit_ref_call_shape, shape_fn_ident};
 use super::super::root_rule_name;
 use super::super::substrate::{builder_ty_elided, builder_ty_with_lifetime};
-use bbnf_ir::registry::EmitStrategy;
-use super::collect_positions;
 use super::PositionedNode;
+use super::collect_positions;
+use bbnf_ir::registry::EmitStrategy;
 
 /// Codegen-time inspection of the rule's registered layout. Returns the
 /// registry entry's `(kind, rule_name)` when present; otherwise the
@@ -75,10 +75,7 @@ use super::PositionedNode;
 /// `JsonStructBuilder::begin_compound` consults `(kind, rule_name)`
 /// only; the literal's `fields` / `rule_type` slots default at the
 /// emission site.
-fn resolve_layout_meta<'a>(
-    rule: &IrRule,
-    ir: &'a GrammarIR,
-) -> (LayoutKind, &'a str) {
+fn resolve_layout_meta<'a>(rule: &IrRule, ir: &'a GrammarIR) -> (LayoutKind, &'a str) {
     if let Some(layout) = ir.struct_registry.layout(rule.id) {
         return (layout.kind, layout.rule_name.as_str());
     }
@@ -196,7 +193,7 @@ pub(super) fn emit_parse_flat_struct_direct(
         /// value calls, byte literals) land directly on the topmost
         /// open frame.
         ///
-        /// Returns `TapeOffset::NONE` for compositional uniformity
+        /// Returns unit for StructDirect composition
         /// with sibling shape fns under struct-direct mode; the
         /// offset is unused by struct-direct callers.
         ///
@@ -212,10 +209,7 @@ pub(super) fn emit_parse_flat_struct_direct(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             use crate::runtime::builder::StructBuilder as _;
 
             // AZ-I.W2.RF — open the Flat compound. The layout literal is
@@ -253,7 +247,7 @@ pub(super) fn emit_parse_flat_struct_direct(
                     <
                         #builder_ty_elided as crate::runtime::StructBuilder
                     >::end_compound(builder, #handle_var);
-                    ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                    ::core::result::Result::Ok(())
                 }
                 ::core::result::Result::Err(__err) => {
                     builder.rollback(__flat_checkpoint);
@@ -307,7 +301,7 @@ fn emit_position_struct_direct(
 ///   surrounding compound already opens its own frame; the literal is
 ///   structural punctuation that the JsonStructBuilder doesn't store).
 /// - `Ref(rid)` — direct call to the target's per-shape struct-direct
-///   fn (resolved at codegen time via `emit_ref_call_tape`'s shape
+///   fn (resolved at codegen time via `emit_ref_call_shape`'s shape
 ///   classification; the call signature is identical between tape and
 ///   struct-direct because `&mut builder` is the only argument that
 ///   differs and is threaded transparently).
@@ -336,12 +330,12 @@ fn emit_position_core_struct_direct(
     match node {
         IrNode::Literal(sid) => emit_literal_match_struct_direct(*sid, ir),
         IrNode::Ref(rid) => {
-            // emit_ref_call_tape resolves the target's shape and emits
+            // emit_ref_call_shape resolves the target's shape and emits
             // a direct call to the matching `parse_<shape>_<grammar>_<rule>`
             // fn. Under StructDirect every shape emitter produces a
             // body whose builder argument is &mut JsonStructBuilder<'_>;
             // the call signature differs only in that argument's type.
-            if let Some(call) = emit_ref_call_tape(grammar_suffix, *rid, ir) {
+            if let Some(call) = emit_ref_call_shape(grammar_suffix, *rid, ir) {
                 quote! { let _ = (#call)?; }
             } else {
                 // Unclassified target — fall back to the dispatcher.
@@ -449,12 +443,9 @@ fn emit_position_core_struct_direct(
         // Falls back to the dispatcher for the non-StructDirect
         // case where regex_info is missing, which on activated
         // struct-direct grammars is structurally unreachable.
-        IrNode::Regex(sid) => emit_inline_regex_struct_direct(
-            *sid,
-            support_mod,
-            grammar_suffix,
-            ir,
-        ),
+        IrNode::Regex(sid) => {
+            emit_inline_regex_struct_direct(*sid, support_mod, grammar_suffix, ir)
+        }
         // AZ-II.cutover.F — Negate guard. Try the inner; on
         // success return Err (the negation rejects), on failure
         // continue. Mirrors the walker's NotFollowedBy semantics.
@@ -629,13 +620,8 @@ fn emit_inline_repeat_struct_direct(
     grammar_suffix: &str,
     ir: &GrammarIR,
 ) -> TokenStream {
-    let inner_emit = emit_position_core_struct_direct(
-        inner,
-        support_mod,
-        dispatcher_ident,
-        grammar_suffix,
-        ir,
-    );
+    let inner_emit =
+        emit_position_core_struct_direct(inner, support_mod, dispatcher_ident, grammar_suffix, ir);
     let lo_lit = lo as u32;
     // `hi == 0` represents unbounded iteration in the IR convention.
     let hi_check = if hi == 0 {
@@ -742,8 +728,7 @@ fn emit_inline_regex_struct_direct(
 fn emit_literal_match_struct_direct(sid: u32, ir: &GrammarIR) -> TokenStream {
     let bytes = ir.get_string(sid).as_bytes();
     let len = bytes.len();
-    let byte_lits: Vec<TokenStream> =
-        bytes.iter().map(|b| quote! { #b }).collect();
+    let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
     quote! {
         let at = *p;
         let end = at + #len;

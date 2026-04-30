@@ -1,6 +1,6 @@
 //! AY-II.W0'.b — projection materializer emission.
 //!
-//! AZ-II.cutover.O3.P1-M1: these materializers are TapeDirect-only.
+//! AZ-II.cutover.O4: these materializers are no longer emitted.
 //! StructDirect grammars return document-owned runtime values and
 //! must not emit `materialize_projection_*` functions against
 //! `runtime::tape::Tape`.
@@ -13,8 +13,8 @@
 //! per-shape family retired when the fused-pipeline projection routed
 //! every admission through the grammar-derived helpers — the per-shape
 //! fns had no call sites outside the retired `materialize_value_*`
-//! root, which is itself dead post-W0'.b because
-//! [`Parsed::to_value()`] consumes `project_value_<Grammar>` directly.
+//! root, which is itself dead after document-owned value surfaces
+//! became the production parse result.
 //!
 //! # Materializer signature
 //!
@@ -71,10 +71,7 @@ use super::super::grammar::{
 /// Returns an empty [`TokenStream`] for StructDirect grammars or when
 /// the grammar has no admissions.
 pub fn emit_materialize_fns(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
-    if !crate::backend::rust::view::should_emit_tape_direct_surface(
-        ir,
-        grammar_name,
-    ) {
+    if !crate::backend::rust::view::should_emit_legacy_tape_surface(ir, grammar_name) {
         return quote! {};
     }
 
@@ -182,10 +179,12 @@ fn emit_projection_fn(
     // fields + `CursorChild` fields never require the aggregate
     // buffer — Span reads from the frame's own span slots; cursor
     // reads walk the value children.
-    let needs_tape_bytes = plan.fields.iter().any(|k| matches!(
-        k,
-        ProjectionFieldKind::Scalar { ty, .. } if !matches!(ty, TypeDesc::Span)
-    ));
+    let needs_tape_bytes = plan.fields.iter().any(|k| {
+        matches!(
+            k,
+            ProjectionFieldKind::Scalar { ty, .. } if !matches!(ty, TypeDesc::Span)
+        )
+    });
 
     let bytes_read: TokenStream = if !needs_tape_bytes || total_bytes == 0 {
         quote! {
@@ -261,10 +260,7 @@ fn emit_projection_fn(
 ///   at runtime (the current admission corpus does not exercise this
 ///   kind — resolver-backed rich admissions like CSS `colorFn` are
 ///   scalar-only tuples).
-fn emit_projection_field_read(
-    idx: usize,
-    kind: &ProjectionFieldKind,
-) -> TokenStream {
+fn emit_projection_field_read(idx: usize, kind: &ProjectionFieldKind) -> TokenStream {
     let field_ident = format_ident!("field_{}", idx);
     let (ty, offset) = match kind {
         ProjectionFieldKind::Scalar { ty, offset } => (ty, *offset as usize),
@@ -304,8 +300,7 @@ fn emit_projection_field_read(
             }
         }
         TypeDesc::Bool => {
-            let end_lit =
-                proc_macro2::Literal::usize_unsuffixed(offset + 1);
+            let end_lit = proc_macro2::Literal::usize_unsuffixed(offset + 1);
             quote! {
                 let #field_ident: bool = {
                     let __b = *__bytes.get(#offset_lit)?;
@@ -316,8 +311,7 @@ fn emit_projection_field_read(
         }
         TypeDesc::I8 | TypeDesc::U8 => {
             let ty_tokens = projection_field_primitive(ty);
-            let end_lit =
-                proc_macro2::Literal::usize_unsuffixed(offset + 1);
+            let end_lit = proc_macro2::Literal::usize_unsuffixed(offset + 1);
             quote! {
                 let #field_ident: #ty_tokens = {
                     let __b = *__bytes.get(#offset_lit)?;
@@ -328,8 +322,7 @@ fn emit_projection_field_read(
         }
         TypeDesc::I16 | TypeDesc::U16 => {
             let ty_tokens = projection_field_primitive(ty);
-            let end_lit =
-                proc_macro2::Literal::usize_unsuffixed(offset + 2);
+            let end_lit = proc_macro2::Literal::usize_unsuffixed(offset + 2);
             quote! {
                 let #field_ident: #ty_tokens = {
                     let __arr = <[u8; 2]>::try_from(
@@ -341,8 +334,7 @@ fn emit_projection_field_read(
         }
         TypeDesc::I32 | TypeDesc::U32 => {
             let ty_tokens = projection_field_primitive(ty);
-            let end_lit =
-                proc_macro2::Literal::usize_unsuffixed(offset + 4);
+            let end_lit = proc_macro2::Literal::usize_unsuffixed(offset + 4);
             quote! {
                 let #field_ident: #ty_tokens = {
                     let __arr = <[u8; 4]>::try_from(
@@ -354,8 +346,7 @@ fn emit_projection_field_read(
         }
         TypeDesc::I64 | TypeDesc::U64 => {
             let ty_tokens = projection_field_primitive(ty);
-            let end_lit =
-                proc_macro2::Literal::usize_unsuffixed(offset + 8);
+            let end_lit = proc_macro2::Literal::usize_unsuffixed(offset + 8);
             quote! {
                 let #field_ident: #ty_tokens = {
                     let __arr = <[u8; 8]>::try_from(
@@ -366,8 +357,7 @@ fn emit_projection_field_read(
             }
         }
         TypeDesc::F64 => {
-            let end_lit =
-                proc_macro2::Literal::usize_unsuffixed(offset + 8);
+            let end_lit = proc_macro2::Literal::usize_unsuffixed(offset + 8);
             quote! {
                 let #field_ident: f64 = {
                     let __arr = <[u8; 8]>::try_from(
@@ -390,12 +380,10 @@ fn emit_projection_field_read(
 /// field-read codegen. Span is handled separately in
 /// [`emit_projection_field_read`].
 fn projection_field_primitive(ty: &TypeDesc) -> TokenStream {
-    let ident = ty
-        .rust_ident()
-        .expect(
-            "AY-II.W0'.b: projection field primitive type must map via \
+    let ident = ty.rust_ident().expect(
+        "AY-II.W0'.b: projection field primitive type must map via \
              TypeDesc::rust_ident",
-        );
+    );
     let ty_ident = format_ident!("{}", ident);
     quote! { #ty_ident }
 }

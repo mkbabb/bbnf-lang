@@ -26,8 +26,8 @@ use ::bbnf::grammar::generated::google_sheets::*;
 use bbnf::runtime::{
     SheetsCompoundKind, SheetsDocument, SheetsStructBuilder, SheetsValue, StructBuilder,
 };
-use bbnf_ir::registry::{LayoutKind, StructLayout};
 use bbnf_ir::TypeDesc;
+use bbnf_ir::registry::{LayoutKind, StructLayout};
 
 /// Convenience: synthesise a `StructLayout` for a Sheets named rule.
 /// W2-act.B2's wire-contract tests build layouts ad-hoc; the live
@@ -42,7 +42,6 @@ fn synth_layout(rule_id: u32, rule_name: &str, kind: LayoutKind) -> StructLayout
         fields: Vec::new(),
     }
 }
-
 
 /// Parse a formula and assert success. The tape-first parser
 /// rejects trailing garbage automatically, so parse success
@@ -145,11 +144,8 @@ fn prettify_index_match_formula() {
 //
 // The wire-contract tests exercise the SheetsStructBuilder against the
 // StructBuilder trait, then finalise into a SheetsDocument. They prove
-// the substrate is wired before the orchestrator regens the parser to
-// emit struct-direct bodies; pre-regen the GoogleSheetsParser::parse()
-// path still returns Parsed<...> from the tape, but the W2-act.B2
-// substrate (this builder + arena + document) compiles + behaves
-// correctly under the trait surface.
+// the substrate is wired through the builder + arena + document under
+// the trait surface.
 
 #[test]
 fn wire_contract_number_is_f64_leaf() {

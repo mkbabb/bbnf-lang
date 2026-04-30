@@ -42,15 +42,15 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::super::dfa_codegen::regex_scan_adapter_ident;
-use bbnf_ir::registry::EmitStrategy;
 use super::dispatcher::{shape_fn_ident, visitor_shape_fn_ident};
 use super::sanitise_grammar;
+use bbnf_ir::registry::EmitStrategy;
 
 /// AX.W0a.2.q — resolve the typed-payload emission shape for an
 /// HRegex rule whose body is `Map { Regex, <FnDescriptor> }`.
 ///
-/// Mirrors the flat.rs `emit_map_regex_host_fn` pattern, but adapted
-/// for HRegex's shape-fn signature (no leading `first_byte`) and the
+/// Applies the whole-rule typed-payload pattern to HRegex's shape-fn
+/// signature (no leading `first_byte`) and the
 /// rule-level payload policy: owner-rule-type decides KvPair vs Span;
 /// rules typed `F64` write 8 LE bytes; `U32` rules (host-fn decode)
 /// write 4 LE bytes; `U8` discriminant rules write 1 byte.
@@ -81,7 +81,7 @@ fn hregex_typed_payload_body(
     let fd = ir.fns.get(fn_id as usize)?;
 
     // Rule type drives leaf kind (KvPair for Tuple-shaped; Span
-    // otherwise) — mirrors flat.rs `emit_map_regex_host_fn` policy so
+    // otherwise) — mirrors the HRegex typed-payload policy so
     // walker-parity readers see a consistent kind shape.
     let kind_is_kv = matches!(
         ir.types.iter().find_map(|(rid, t)| {
@@ -103,7 +103,9 @@ fn hregex_typed_payload_body(
     };
 
     match fd {
-        FnDescriptor::NumberConvert { allow_leading_dot: _ } => Some(quote! {
+        FnDescriptor::NumberConvert {
+            allow_leading_dot: _,
+        } => Some(quote! {
             {
                 let span_lo = *p as u32;
                 let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
@@ -256,14 +258,12 @@ fn hregex_typed_payload_body(
                 _ => None,
             }
         }
-        FnDescriptor::EnumWrap { .. }
-        | FnDescriptor::BoxWrap
-        | FnDescriptor::SpanCapture => None,
+        FnDescriptor::EnumWrap { .. } | FnDescriptor::BoxWrap | FnDescriptor::SpanCapture => None,
     }
 }
 
 /// Emit `pub fn parse_hregex_<grammar>_<rule>(input, p, state,
-/// builder) -> Result<TapeOffset, DtaError>`.
+/// builder) -> Result<(), DtaError>`.
 ///
 /// # AZ-I.W2.RE — strategy gate
 ///
@@ -280,7 +280,7 @@ pub fn emit_parse_hregex(
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    if let EmitStrategy::StructDirect { .. } = strategy {
+    if matches!(strategy, EmitStrategy::StructDirect { .. }) {
         // AZ-I.W2-act.B3 — HRegex struct-direct body. The W2.RE panic
         // retires by surfacing a real body that scans, decodes per
         // host fn, and pushes via the StructBuilder trait. The body
@@ -333,10 +333,7 @@ pub fn emit_parse_hregex(
                 p: &mut usize,
                 state: &mut #support_mod::ScanState,
                 builder: &mut crate::runtime::tape::Tape<()>,
-            ) -> ::core::result::Result<
-                crate::runtime::tape::TapeOffset,
-                crate::runtime::tape::DtaError,
-            > {
+            ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
                 #body
             }
         };
@@ -356,10 +353,7 @@ pub fn emit_parse_hregex(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             let span_lo = *p as u32;
             let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
                 return Err(crate::runtime::tape::DtaError::Syntax {
@@ -429,7 +423,7 @@ pub fn number_rule_allows_leading_dot(rule: &IrRule, ir: &GrammarIR) -> bool {
 ///
 /// The emitted fn name is `parse_number_<grammar>_<rule>` — the
 /// Number-shape naming convention — so every existing call site
-/// (`emit_ref_call_tape`, Wrap dispatch, AltDispatch dispatch)
+/// (`emit_ref_call_shape`, Wrap dispatch, AltDispatch dispatch)
 /// resolves unchanged. `first_byte` is ignored (regex-scan doesn't
 /// need the pre-read byte); retained so the caller's emission stays
 /// identical.
@@ -439,16 +433,11 @@ pub fn emit_parse_number_via_hregex(
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    if let EmitStrategy::StructDirect { .. } = strategy {
+    if matches!(strategy, EmitStrategy::StructDirect { .. }) {
         // AZ-I.W2-act.B3 — Number-via-HRegex struct-direct body. CSS
         // L4's `number` rule lands here (admits leading-dot literals
         // per its regex classification).
-        return emit_parse_number_via_hregex_struct_direct(
-            strategy,
-            grammar_suffix,
-            rule,
-            ir,
-        );
+        return emit_parse_number_via_hregex_struct_direct(strategy, grammar_suffix, rule, ir);
     }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("number", grammar_suffix, rule_name);
@@ -468,10 +457,7 @@ pub fn emit_parse_number_via_hregex(
                 p: &mut usize,
                 first_byte: u8,
                 builder: &mut crate::runtime::tape::Tape<()>,
-            ) -> ::core::result::Result<
-                crate::runtime::tape::TapeOffset,
-                crate::runtime::tape::DtaError,
-            > {
+            ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
                 let _ = (input, p, first_byte, builder);
                 Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -515,7 +501,7 @@ pub fn emit_parse_number_via_hregex(
         /// default Number emitter enforces.
         ///
         /// Writes 8 LE f64 bytes into the tape arena; the leaf kind
-        /// mirrors `emit_map_regex_host_fn`'s policy (KvPair when the
+        /// mirrors the HRegex typed-payload policy (KvPair when the
         /// rule projects as `Tuple([Span, scalar])`; Span otherwise).
         #[inline(always)]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
@@ -524,10 +510,7 @@ pub fn emit_parse_number_via_hregex(
             p: &mut usize,
             first_byte: u8,
             builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             let _ = first_byte;
             let span_lo = *p as u32;
             let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
@@ -573,10 +556,7 @@ pub fn emit_parse_number_visitor_via_hregex(
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    if let EmitStrategy::StructDirect { .. } = strategy {
-        // AZ-I.W2-act.B3 — visitor path is substrate-orthogonal per
-        // the strategy-agnostic emission contract; the panic retires.
-    }
+    let _ = strategy;
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("number", grammar_suffix, rule_name);
 
@@ -657,10 +637,7 @@ fn emit_unsupported_stub(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             let _ = state;
             let span_lo = *p as u32;
             let span_hi = *p as u32;
@@ -706,14 +683,7 @@ pub fn emit_parse_hregex_visitor(
     rule: &IrRule,
     ir: &GrammarIR,
 ) -> TokenStream {
-    if let EmitStrategy::StructDirect { .. } = strategy {
-        // AZ-I.W2-act.B3 — visitor path is substrate-orthogonal per
-        // the strategy-agnostic emission contract documented at
-        // shapes/flat/mod.rs:227-236; the visitor body is identical
-        // between TapeDirect / StructDirect because the visitor V is
-        // not a substrate. Strip the panic and fall through to the
-        // existing emission below.
-    }
+    let _ = strategy;
     let rule_name = ir.get_string(rule.name);
     let fn_ident = visitor_shape_fn_ident("hregex", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
@@ -930,7 +900,7 @@ fn emit_parse_hregex_struct_direct(
         /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
         /// or Expr { Input, return_type }), and routes the decoded
         /// value through the StructBuilder trait. Returns
-        /// TapeOffset::NONE for compositional uniformity with sibling
+        /// unit for StructDirect composition with sibling
         /// shape fns under struct-direct mode.
         #[inline]
         #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
@@ -939,10 +909,7 @@ fn emit_parse_hregex_struct_direct(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             let span_lo = *p as u32;
             let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
                 return Err(crate::runtime::tape::DtaError::Syntax {
@@ -954,7 +921,7 @@ fn emit_parse_hregex_struct_direct(
             *p += match_len as usize;
             let span_hi = *p as u32;
             #push_call
-            Ok(crate::runtime::tape::TapeOffset::NONE)
+            Ok(())
         }
     }
 }
@@ -984,10 +951,7 @@ fn emit_parse_number_via_hregex_struct_direct(
                 p: &mut usize,
                 first_byte: u8,
                 builder: &mut #builder_ty,
-            ) -> ::core::result::Result<
-                crate::runtime::tape::TapeOffset,
-                crate::runtime::tape::DtaError,
-            > {
+            ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
                 let _ = (input, p, first_byte, builder);
                 Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -1013,10 +977,7 @@ fn emit_parse_number_via_hregex_struct_direct(
             p: &mut usize,
             first_byte: u8,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             let _ = first_byte;
             let span_lo = *p as u32;
             let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
@@ -1037,7 +998,7 @@ fn emit_parse_number_via_hregex_struct_direct(
             <#builder_ty as crate::runtime::StructBuilder>::push_leaf_with_f64(
                 builder, __f64,
             );
-            Ok(crate::runtime::tape::TapeOffset::NONE)
+            Ok(())
         }
     }
 }
@@ -1073,10 +1034,7 @@ fn emit_struct_direct_unsupported_stub(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             let _ = (input, state, builder);
             Err(crate::runtime::tape::DtaError::Syntax {
                 offset: *p as u32,

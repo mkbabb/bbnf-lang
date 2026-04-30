@@ -3,7 +3,6 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use ::bbnf::grammar::generated::json::*;
 
-
 fn bench_file(name: &str) {
     let candidates = [
         format!("../../data/json/{}", name),
@@ -31,10 +30,9 @@ fn bench_file(name: &str) {
         JsonParser::parse(std::hint::black_box(&input)).expect("parse failed"),
     );
 
-    // Cold — fresh tape + parser state per iteration. Tranche AC.2
-    // collapsed the former span/slab split into a single tape-first
-    // path; the parser returns an owning `Parsed<JsonParser>` whose
-    // tape is allocated inside the generated `parse` entry point.
+    // Cold — fresh document + parser state per iteration. The parser
+    // returns an owning `JsonDocument` from the generated `parse`
+    // entry point.
     let n = if len > 1_000_000 { 5 } else { 20 };
     let start = std::time::Instant::now();
     for _ in 0..n {
@@ -44,12 +42,7 @@ fn bench_file(name: &str) {
     let cold = start.elapsed() / n as u32;
 
     let mb = |d: std::time::Duration| len as f64 / d.as_secs_f64() / 1e6;
-    println!(
-        "{:25} {:>8}B  cold:{:>6.0} MB/s",
-        name,
-        len,
-        mb(cold)
-    );
+    println!("{:25} {:>8}B  cold:{:>6.0} MB/s", name, len, mb(cold));
 }
 
 fn main() {

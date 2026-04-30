@@ -16,7 +16,7 @@
 //!     p: &mut usize,
 //!     state: &mut <support>::ScanState,
 //!     builder: &mut <builder_ty>,
-//! ) -> Result<TapeOffset, DtaError> {
+//! ) -> Result<(), DtaError> {
 //!     let __layout = StructLayout { … };
 //!     <<builder_ty> as StructBuilder>::begin_compound(builder, &__layout);
 //!     // …
@@ -35,10 +35,7 @@ use quote::quote;
 use bbnf_ir::registry::SubstrateBinding;
 
 /// Resolve the rust-backend builder path token-stream from an
-/// [`EmitStrategy`]. Returns the JSON builder under `TapeDirect` so
-/// per-shape emitters falling through the StructDirect arm panic at
-/// the matching codegen site rather than silently emitting wrong
-/// types.
+/// [`EmitStrategy`].
 ///
 /// The returned TokenStream is the bare type path (no lifetime
 /// parameters). The per-shape emitters splice `<builder_path><'p>` to
@@ -47,7 +44,6 @@ use bbnf_ir::registry::SubstrateBinding;
 pub fn builder_path(strategy: &EmitStrategy) -> TokenStream {
     match strategy {
         EmitStrategy::StructDirect { rust, .. } => substrate_path(rust.builder_path),
-        EmitStrategy::TapeDirect => quote! { ::bbnf::runtime::JsonStructBuilder },
     }
 }
 
@@ -60,7 +56,6 @@ pub fn builder_path(strategy: &EmitStrategy) -> TokenStream {
 pub fn document_path(strategy: &EmitStrategy) -> TokenStream {
     match strategy {
         EmitStrategy::StructDirect { rust, .. } => substrate_path(rust.document_path),
-        EmitStrategy::TapeDirect => quote! { ::bbnf::runtime::JsonDocument },
     }
 }
 
@@ -98,10 +93,7 @@ pub fn builder_ty_with_lifetime(
     lifetime: &proc_macro2::Ident,
 ) -> TokenStream {
     let path = builder_path(strategy);
-    let lt = syn::Lifetime::new(
-        &format!("'{}", lifetime),
-        proc_macro2::Span::call_site(),
-    );
+    let lt = syn::Lifetime::new(&format!("'{}", lifetime), proc_macro2::Span::call_site());
     quote! { #path<#lt> }
 }
 
@@ -153,13 +145,6 @@ mod tests {
     }
 
     #[test]
-    fn tape_direct_falls_back() {
-        let strategy = EmitStrategy::TapeDirect;
-        let ts = builder_path(&strategy).to_string();
-        assert!(ts.contains("JsonStructBuilder"), "got {}", ts);
-    }
-
-    #[test]
     fn builder_ty_with_lifetime_emits_apostrophe() {
         // AZ-I.W2-act.recovery — gap #1 regression. `quote!` splicing
         // a bare proc_macro2::Ident produces `<p>` (a generic type
@@ -172,11 +157,7 @@ mod tests {
         );
         let lt_ident = proc_macro2::Ident::new("p", proc_macro2::Span::call_site());
         let ts = builder_ty_with_lifetime(&strategy, &lt_ident).to_string();
-        assert!(
-            ts.contains("'p"),
-            "expected lifetime apostrophe in {}",
-            ts
-        );
+        assert!(ts.contains("'p"), "expected lifetime apostrophe in {}", ts);
         assert!(
             !ts.contains("< p >") && !ts.contains("<p>"),
             "expected lifetime, not generic type, in {}",

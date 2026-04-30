@@ -50,7 +50,7 @@
 //! and are skipped from the audit.
 
 use bbnf::pipeline::{
-    compile_paths_request, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
+    CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
 };
 use bbnf_ir::passes::is_kv_pair_shape;
 use bbnf_ir::{GrammarIR, IrNode, IrRule, TypeDesc};
@@ -563,7 +563,7 @@ fn css_l4_compile_time_accessors() {
     // `CssL4Parser::parse` returns `CssDocument<'_>` and `doc.view()`
     // yields the struct-tree `CssView` (not the cursor-backed
     // `stylesheetView`). The cursor / rule_kind / input / span /
-    // children surface from the pre-W2-act `Parsed::view()` is replaced
+    // children surface from the pre-W2-act cursor view is replaced
     // by the [`bbnf::runtime::RuntimeView`] trait surface, exercised
     // here in lockstep with the JSON / Sheets sibling tests.
     let src = "a { color: red; }";
@@ -656,9 +656,11 @@ fn ebnf_compile_time_accessors() {
         view.compound_kind(),
         Some(bbnf::runtime::EbnfCompoundKind::Grammar)
     );
-    assert!(!bbnf::runtime::RuntimeView::children(&view)
-        .collect::<Vec<_>>()
-        .is_empty());
+    assert!(
+        !bbnf::runtime::RuntimeView::children(&view)
+            .collect::<Vec<_>>()
+            .is_empty()
+    );
 
     fn _require_document_types<'p>(
         _doc: bbnf::runtime::EbnfDocument<'p>,
@@ -680,9 +682,11 @@ fn bnf_compile_time_accessors() {
         view.compound_kind(),
         Some(bbnf::runtime::BnfCompoundKind::Grammar)
     );
-    assert!(!bbnf::runtime::RuntimeView::children(&view)
-        .collect::<Vec<_>>()
-        .is_empty());
+    assert!(
+        !bbnf::runtime::RuntimeView::children(&view)
+            .collect::<Vec<_>>()
+            .is_empty()
+    );
 
     fn _require_document_types<'p>(
         _doc: bbnf::runtime::BnfDocument<'p>,

@@ -42,9 +42,9 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use bbnf_ir::registry::EmitStrategy;
 use super::dispatcher::{dispatcher_fn_ident, shape_fn_ident};
 use super::root_rule_name;
+use bbnf_ir::registry::EmitStrategy;
 
 mod struct_direct;
 mod tape_dispatch;
@@ -109,9 +109,11 @@ fn accepts_leading_ws_bounded(node: &IrNode, ir: &GrammarIR, budget: usize) -> b
                 Some(r) => r,
                 None => return false,
             };
-            target.meta.first_set.iter().any(|b| {
-                matches!(b, b' ' | b'\t' | b'\n' | b'\r' | 0x0C)
-            })
+            target
+                .meta
+                .first_set
+                .iter()
+                .any(|b| matches!(b, b' ' | b'\t' | b'\n' | b'\r' | 0x0C))
         }
         _ => false,
     }
@@ -195,35 +197,24 @@ fn wrap_can_elide_compound(rule: &IrRule, ir: &GrammarIR) -> bool {
     if branches.is_empty() {
         return false;
     }
-    branches.iter().all(|b| {
-        match unwrap_outer(&b.node) {
-            IrNode::Ref(rid) => {
-                let tag = ir.shape_assignments.get(*rid);
-                !matches!(tag, ShapeTag::None)
-            }
-            IrNode::Regex(_) => true,
-            _ => false,
+    branches.iter().all(|b| match unwrap_outer(&b.node) {
+        IrNode::Ref(rid) => {
+            let tag = ir.shape_assignments.get(*rid);
+            !matches!(tag, ShapeTag::None)
         }
+        IrNode::Regex(_) => true,
+        _ => false,
     })
 }
 
 /// Emit `pub fn parse_wrap_<grammar>_<rule>(input, p, state, builder)
-/// -> Result<TapeOffset, DtaError>`.
+/// -> Result<(), DtaError>`.
 ///
-/// AZ-I.W2.RD — `strategy` selects the emission template:
-///
-/// - [`EmitStrategy::TapeDirect`] — pre-AZ-I.W2 fused-tape body with
-///   post-order Rule-compound emission via the existing
-///   `emit_alt_tape_dispatch` machinery.
-/// - [`EmitStrategy::StructDirect`] — AZ-I.W2 struct-direct body that
-///   resolves the wrap's own layout via
-///   `ir.struct_registry.layout(rule.id)`, opens a Wrap frame on the
-///   builder via `begin_compound(&__layout)`, stamps the chosen branch
-///   index via `push_branch_tag(idx)`, dispatches into the matched
-///   Ref's per-shape body (which carries its own `begin_compound` /
-///   `end_compound`), and closes via `end_compound(handle)` per the
-///   `JsonStructBuilder::OpenFrame::Wrap` contract documented at
-///   `crates/core/src/runtime/json/builder.rs:80`.
+/// AZ-I.W2.RD / AZ-II.cutover.O4 — emits the struct-direct body:
+/// resolve the wrap's own layout, open a Wrap frame via
+/// `begin_compound(&__layout)`, stamp the chosen branch index via
+/// `push_branch_tag(idx)`, dispatch into the matched Ref's per-shape
+/// body, and close via `end_compound(handle)`.
 pub fn emit_parse_wrap(
     grammar_suffix: &str,
     rule: &IrRule,
@@ -231,12 +222,7 @@ pub fn emit_parse_wrap(
     strategy: &EmitStrategy,
 ) -> TokenStream {
     if strategy.is_struct_direct() {
-        return struct_direct::emit_parse_wrap_struct_direct(
-            grammar_suffix,
-            rule,
-            ir,
-            strategy,
-        );
+        return struct_direct::emit_parse_wrap_struct_direct(grammar_suffix, rule, ir, strategy);
     }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("wrap", grammar_suffix, rule_name);
@@ -274,7 +260,7 @@ pub fn emit_parse_wrap(
             // AX.W0a.2.e — never delegate to `#dispatcher_ident` which
             // for non-Alt-rooted grammars loops through the root.
             let _ = dispatcher_ident;
-            match super::dispatcher::emit_ref_call_tape(grammar_suffix, *rid, ir) {
+            match super::dispatcher::emit_ref_call_shape(grammar_suffix, *rid, ir) {
                 Some(call) => quote! { #call },
                 None => quote! {
                     ::core::result::Result::Err(
@@ -326,10 +312,7 @@ pub fn emit_parse_wrap(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             #dispatch
         }
     }
@@ -339,9 +322,7 @@ pub fn emit_parse_wrap(
 /// / Ref body.
 pub(super) fn unwrap_outer(node: &IrNode) -> &IrNode {
     match node {
-        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
-            unwrap_outer(inner)
-        }
+        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => unwrap_outer(inner),
         _ => node,
     }
 }

@@ -50,13 +50,10 @@ use quote::{format_ident, quote};
 ///
 /// Returns an empty stream when the grammar has no non-transparent
 /// rules (i.e. every rule is a transparent alias).
-pub fn emit_structural_scan_policy(
-    grammar_suffix: &str,
-    ir: &GrammarIR,
-) -> TokenStream {
+pub fn emit_structural_scan_policy(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream {
     use crate::generate::regex::byte_class::classify_rule_alphabet;
-    use tape::{ScanActivationFlags, ScanAlphabetClass};
     use bbnf_ir::IrNode;
+    use tape::{ScanActivationFlags, ScanAlphabetClass};
 
     let profile = ir.profile();
     let structural_alphabet = profile.structural_alphabet.to_vec();
@@ -205,8 +202,8 @@ pub fn lookup_scan_policy<'ir>(
     rule_id: bbnf_ir::RuleId,
 ) -> Option<(tape::ScanAlphabetClass, tape::ScanActivationFlags)> {
     use crate::generate::regex::byte_class::classify_rule_alphabet;
-    use tape::{ScanActivationFlags, ScanAlphabetClass};
     use bbnf_ir::IrNode;
+    use tape::{ScanActivationFlags, ScanAlphabetClass};
 
     let rule = ir.rules.iter().find(|r| r.id == rule_id)?;
     if rule.meta.is_transparent {
@@ -220,10 +217,7 @@ pub fn lookup_scan_policy<'ir>(
     let first_bytes: Vec<u8> = rule.meta.first_set.iter().collect();
     let is_compound = matches!(
         &rule.body,
-        IrNode::Seq(_)
-            | IrNode::Alt(_, _)
-            | IrNode::Repeat { .. }
-            | IrNode::TokenDispatch { .. }
+        IrNode::Seq(_) | IrNode::Alt(_, _) | IrNode::Repeat { .. } | IrNode::TokenDispatch { .. }
     );
 
     let facts = classify_rule_alphabet(

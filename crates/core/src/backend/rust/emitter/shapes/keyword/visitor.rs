@@ -11,10 +11,10 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use bbnf_ir::registry::EmitStrategy;
 use super::super::dispatcher::{emit_ref_call_visitor, visitor_shape_fn_ident};
 use super::payload::leading_literal_bytes;
 use super::unwrap_trivia;
+use bbnf_ir::registry::EmitStrategy;
 
 /// Emit `pub fn parse_keyword_visitor_<grammar>_<rule><V: JsonVisitor>(
 /// input, p, first_byte, state, visitor) -> Result<(), ParseErr>`.
@@ -143,8 +143,10 @@ pub fn emit_parse_keyword_visitor(
                     })
                     .collect();
 
-            let mut by_first: BTreeMap<u8, Vec<&(Vec<u8>, Option<bbnf_ir::RuleId>, usize, &bbnf_ir::AltBranch)>> =
-                BTreeMap::new();
+            let mut by_first: BTreeMap<
+                u8,
+                Vec<&(Vec<u8>, Option<bbnf_ir::RuleId>, usize, &bbnf_ir::AltBranch)>,
+            > = BTreeMap::new();
             for entry in &per_branch {
                 by_first.entry(entry.0[0]).or_default().push(entry);
             }
@@ -156,20 +158,24 @@ pub fn emit_parse_keyword_visitor(
                         .iter()
                         .map(|(bytes, target_ref, _branch_idx, _branch)| {
                             let len = bytes.len();
-                            let byte_lits: Vec<TokenStream> =
-                                bytes.iter().map(|b| {
+                            let byte_lits: Vec<TokenStream> = bytes
+                                .iter()
+                                .map(|b| {
                                     let lit = *b;
                                     quote! { #lit }
-                                }).collect();
+                                })
+                                .collect();
                             if let Some(target_rid) = target_ref {
                                 let ref_call =
                                     emit_ref_call_visitor(grammar_suffix, *target_rid, ir)
-                                        .unwrap_or_else(|| quote! {
-                                            ::core::result::Result::Err(
-                                                crate::runtime::ParseErr::Syntax {
-                                                    offset: *p as u32, rule: None,
-                                                },
-                                            )
+                                        .unwrap_or_else(|| {
+                                            quote! {
+                                                ::core::result::Result::Err(
+                                                    crate::runtime::ParseErr::Syntax {
+                                                        offset: *p as u32, rule: None,
+                                                    },
+                                                )
+                                            }
                                         });
                                 quote! {
                                     if input.len() >= *p + #len
@@ -179,8 +185,7 @@ pub fn emit_parse_keyword_visitor(
                                     }
                                 }
                             } else {
-                                let literal_str =
-                                    std::str::from_utf8(bytes).unwrap_or("");
+                                let literal_str = std::str::from_utf8(bytes).unwrap_or("");
                                 let emit = match literal_str {
                                     "true" => quote! {
                                         visitor.bool(true).map_err(

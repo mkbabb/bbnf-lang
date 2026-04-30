@@ -42,21 +42,14 @@ pub fn shape_fn_ident(shape: &str, grammar_suffix: &str, rule_name: &str) -> Ide
 /// `number_f64`, etc.) in place of tape record pushes. Monomorphised
 /// per visitor at the call site; zero structural / PSI overhead on
 /// the hot path. Matches `json-prototype`'s perf shape.
-pub fn visitor_shape_fn_ident(
-    shape: &str,
-    grammar_suffix: &str,
-    rule_name: &str,
-) -> Ident {
+pub fn visitor_shape_fn_ident(shape: &str, grammar_suffix: &str, rule_name: &str) -> Ident {
     let rule = sanitise_grammar(rule_name);
     format_ident!("parse_{}_visitor_{}_{}", shape, grammar_suffix, rule)
 }
 
 /// Compose the visitor-path dispatcher symbol —
 /// `parse_<grammar>_<root>_visitor`.
-pub fn visitor_dispatcher_fn_ident(
-    grammar_ident_str: &str,
-    root_rule: &str,
-) -> Ident {
+pub fn visitor_dispatcher_fn_ident(grammar_ident_str: &str, root_rule: &str) -> Ident {
     let grammar = sanitise_grammar(grammar_ident_str);
     let root = sanitise_grammar(root_rule);
     format_ident!("parse_{}_{}_visitor", grammar, root)

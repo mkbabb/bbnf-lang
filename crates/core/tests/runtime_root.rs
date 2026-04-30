@@ -1,9 +1,9 @@
 //! O3 runtime-root tests for StructDirect document-owned APIs.
 //!
-//! These tests intentionally avoid the legacy `Parsed`, `Root`,
-//! `TapeCursor`, generated `NodeView`, and `ValueRoot` surfaces. O4
-//! owns the remaining TapeDirect public API; StructDirect roots are
-//! proven here through concrete `*Document` roots, typed view kinds,
+//! These tests intentionally avoid legacy wrapper, `Root`,
+//! `TapeCursor`, generated `NodeView`, and `ValueRoot` surfaces.
+//! StructDirect roots are proven here through concrete `*Document`
+//! roots, typed view kinds,
 //! arena-backed accessors, and the grammar-agnostic `RuntimeView`
 //! traversal surface.
 

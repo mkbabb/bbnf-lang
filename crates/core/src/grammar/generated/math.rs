@@ -501,7 +501,7 @@ mod __mathparser_emit_impl {
     /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
     /// or Expr { Input, return_type }), and routes the decoded
     /// value through the StructBuilder trait. Returns
-    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// unit for StructDirect composition with sibling
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
@@ -510,10 +510,7 @@ mod __mathparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
         builder: &mut crate::runtime::math::MathStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_MathParser(
             "(\\d+)?(\\.\\d+)?([eE][-+]?\\d+)?",
@@ -535,7 +532,7 @@ mod __mathparser_emit_impl {
             core::str::from_utf8(&input[span_lo as usize..span_hi as usize])
                 .unwrap_or(""),
         );
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AW-V.W4-fix — visitor-path HRegex-shape parse function.
     ///
@@ -602,7 +599,7 @@ mod __mathparser_emit_impl {
     ///
     /// Mirrors the walker's `value` rule ByteDispatch: skip leading
     /// whitespace, dispatch on the first byte to the chosen branch
-    /// shape fn, return its `TapeOffset` unchanged. No outer Rule /
+    /// shape fn, return unit after the chosen shape succeeds. No outer Rule /
     /// Alt compound is pushed — the DTA's ByteDispatch state for
     /// `value` emits no compound either, and the target rule's Ref
     /// overwrites any `pending_variant_idx` en route, so the chosen
@@ -617,10 +614,7 @@ mod __mathparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
         builder: &mut crate::runtime::math::MathStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         parse_MathParser_number__value(input, p, state, builder)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
@@ -634,10 +628,7 @@ mod __mathparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
         builder: &mut crate::runtime::math::MathStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_MathParser::skip_space(input, p, state);
         parse_hregex_MathParser_number(input, p, state, builder)
     }

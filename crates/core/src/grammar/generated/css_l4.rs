@@ -4814,10 +4814,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         first_byte: u8,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = first_byte;
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_CssL4Parser(
@@ -4840,14 +4837,14 @@ mod __cssl4parser_emit_impl {
         <crate::runtime::css_l4::CssStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::push_leaf_with_f64(builder, __f64);
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (single-literal body).
     ///
     /// Matches the literal byte sequence and routes the
     /// rule's projected payload through the `StructBuilder`
-    /// trait surface. Returns `TapeOffset::NONE` on success
+    /// trait surface. Returns unit on success
     /// for compositional uniformity with the tape-path
     /// emission; the offset is unused by struct-direct
     /// callers (the dispatcher discards `Ok(_)` payloads).
@@ -4859,10 +4856,7 @@ mod __cssl4parser_emit_impl {
         _first_byte: u8,
         _state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'_>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let at = *p;
         let end = at + 1usize;
@@ -4875,7 +4869,7 @@ mod __cssl4parser_emit_impl {
         }
         *p = end;
         builder.push_leaf_with_unit();
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RB — per-grammar AltDispatch-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -12823,7 +12817,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -12839,10 +12833,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __hex_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -12893,7 +12884,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __hex_handle);
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -12908,9 +12899,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_colorSpace<'p>(
@@ -12919,10 +12909,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -12935,9 +12922,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 7usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -12957,9 +12942,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 10usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -12979,9 +12962,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 12usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -12998,9 +12979,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 7usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -13138,9 +13117,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -13365,9 +13342,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -13398,7 +13373,7 @@ mod __cssl4parser_emit_impl {
     /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
     /// or Expr { Input, return_type }), and routes the decoded
     /// value through the StructBuilder trait. Returns
-    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// unit for StructDirect composition with sibling
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
@@ -13407,10 +13382,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_CssL4Parser(
             "\"(?:[^\"\\\\]|\\\\[\\s\\S])*\"|'(?:[^'\\\\]|\\\\[\\s\\S])*'",
@@ -13432,7 +13404,7 @@ mod __cssl4parser_emit_impl {
             core::str::from_utf8(&input[span_lo as usize..span_hi as usize])
                 .unwrap_or(""),
         );
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -13441,9 +13413,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_mathProductOp<'p>(
@@ -13452,10 +13423,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -13465,9 +13433,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -13481,9 +13447,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -13507,9 +13471,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_mathSumOp<'p>(
@@ -13518,10 +13481,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -13531,9 +13491,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -13547,9 +13505,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -13573,9 +13529,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_absoluteLengthUnit<'p>(
@@ -13584,10 +13539,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -13597,9 +13549,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -13614,9 +13564,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -13631,9 +13579,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -13648,9 +13594,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -13665,9 +13609,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [112u8] {
                     let __seq_span_lo = *p;
@@ -13771,9 +13713,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -13804,9 +13744,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_fontLengthUnit<'p>(
@@ -13815,10 +13754,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -13830,9 +13766,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 3usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 2usize && input[*p..*p + 2usize] == [99u8, 104u8]
                 {
@@ -13840,9 +13774,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -13953,9 +13885,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -13977,9 +13907,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -13994,9 +13922,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -14012,9 +13938,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 3usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 3usize
                     && input[*p..*p + 3usize] == [114u8, 108u8, 104u8]
@@ -14023,9 +13947,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 3usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [114u8] {
                     let __seq_span_lo = *p;
@@ -14195,9 +14117,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -14228,9 +14148,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_viewportLengthUnit<'p>(
@@ -14239,10 +14158,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -14528,9 +14444,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -14827,9 +14741,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -15126,9 +15038,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -15413,9 +15323,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -15450,7 +15358,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -15466,10 +15374,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __containerLengthUnit_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -15747,7 +15652,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __containerLengthUnit_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -15762,9 +15667,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_angleUnit<'p>(
@@ -15773,10 +15677,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -15788,9 +15689,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 3usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -15806,9 +15705,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -15824,9 +15721,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 3usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -15842,9 +15737,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -15868,9 +15761,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_timeUnit<'p>(
@@ -15879,10 +15771,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -15893,9 +15782,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -15909,9 +15796,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -15935,9 +15820,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_frequencyUnit<'p>(
@@ -15946,10 +15830,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -15960,9 +15841,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -15978,9 +15857,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 3usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -16004,9 +15881,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_resolutionUnit<'p>(
@@ -16015,10 +15891,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -16169,9 +16042,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -16192,9 +16063,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -16216,7 +16085,7 @@ mod __cssl4parser_emit_impl {
     ///
     /// Matches the literal byte sequence and routes the
     /// rule's projected payload through the `StructBuilder`
-    /// trait surface. Returns `TapeOffset::NONE` on success
+    /// trait surface. Returns unit on success
     /// for compositional uniformity with the tape-path
     /// emission; the offset is unused by struct-direct
     /// callers (the dispatcher discards `Ok(_)` payloads).
@@ -16228,10 +16097,7 @@ mod __cssl4parser_emit_impl {
         _first_byte: u8,
         _state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'_>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let at = *p;
         let end = at + 2usize;
@@ -16244,7 +16110,7 @@ mod __cssl4parser_emit_impl {
         }
         *p = end;
         builder.push_leaf_with_unit();
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -16253,9 +16119,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_displayKeyword<'p>(
@@ -16264,10 +16129,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -16279,9 +16141,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 5usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -16298,9 +16158,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 8usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -16317,9 +16175,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 9usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 4usize
                     && input[*p..*p + 4usize] == [102u8, 108u8, 101u8, 120u8]
@@ -16328,9 +16184,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -16346,9 +16200,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -16628,9 +16480,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -16654,9 +16504,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 9usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -16672,9 +16520,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -16908,9 +16754,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -16941,9 +16785,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_positionKeyword<'p>(
@@ -16952,10 +16795,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -16968,9 +16808,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 8usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -16986,9 +16824,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 5usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -17005,9 +16841,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 8usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -17023,9 +16857,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 6usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 6usize
                     && input[*p..*p + 6usize]
@@ -17035,9 +16867,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 6usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -17061,9 +16891,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_overflowKeyword<'p>(
@@ -17072,10 +16901,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -17087,9 +16913,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -17105,9 +16929,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -17124,9 +16946,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 6usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -17143,9 +16963,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 6usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -17162,9 +16980,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 7usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -17188,9 +17004,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_visibilityKeyword<'p>(
@@ -17199,10 +17014,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -17215,9 +17027,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 8usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -17234,9 +17044,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 6usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -17253,9 +17061,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 7usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -17279,9 +17085,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_flexDirKeyword<'p>(
@@ -17290,10 +17095,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -17453,9 +17255,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -17590,9 +17390,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -17623,9 +17421,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_flexWrapKeyword<'p>(
@@ -17634,10 +17431,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -17650,9 +17444,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 6usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -17792,9 +17584,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -17825,9 +17615,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_alignKeyword<'p>(
@@ -17836,10 +17625,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -17852,9 +17638,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 8usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -17871,9 +17655,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 6usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -17889,9 +17671,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 3usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -18054,9 +17834,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -18080,9 +17858,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 7usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [115u8] {
                     let __seq_span_lo = *p;
@@ -18348,9 +18124,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -18381,9 +18155,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_borderStyleKeyword<'p>(
@@ -18392,10 +18165,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -18579,9 +18349,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -18605,9 +18373,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 6usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -18624,9 +18390,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 6usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -18642,9 +18406,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 5usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -18660,9 +18422,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -18679,9 +18439,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 6usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -18697,9 +18455,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 5usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -18715,9 +18471,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 5usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -18741,9 +18495,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_borderWidthKeyword<'p>(
@@ -18752,10 +18505,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -18768,9 +18518,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 6usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -18786,9 +18534,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 5usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 4usize
                     && input[*p..*p + 4usize] == [116u8, 104u8, 105u8, 110u8]
@@ -18797,9 +18543,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -18823,9 +18567,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_fontWeightKeyword<'p>(
@@ -18834,10 +18577,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -18850,9 +18590,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 6usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 4usize
                     && input[*p..*p + 4usize] == [98u8, 111u8, 108u8, 100u8]
@@ -18861,9 +18599,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -18880,9 +18616,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 7usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -18899,9 +18633,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 6usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -18925,9 +18657,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_textAlignKeyword<'p>(
@@ -18936,10 +18667,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -18952,9 +18680,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 6usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -18970,9 +18696,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 3usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -18989,9 +18713,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 7usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19007,9 +18729,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19025,9 +18745,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 5usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19043,9 +18761,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 5usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19069,9 +18785,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_boxSizingKeyword<'p>(
@@ -19080,10 +18795,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -19099,9 +18811,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 10usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19121,9 +18831,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 11usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19147,9 +18855,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_cursorKeyword<'p>(
@@ -19158,10 +18865,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -19173,9 +18877,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19192,9 +18894,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 9usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19211,9 +18911,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 7usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19350,9 +19048,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -19375,9 +19071,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19393,9 +19087,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19415,9 +19107,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 11usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 4usize
                     && input[*p..*p + 4usize] == [110u8, 111u8, 110u8, 101u8]
@@ -19426,9 +19116,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19445,9 +19133,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 7usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19463,9 +19149,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19481,9 +19165,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19507,9 +19189,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_globalKeyword<'p>(
@@ -19518,10 +19199,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -19644,9 +19322,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -19673,9 +19349,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 12usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 6usize
                     && input[*p..*p + 6usize]
@@ -19685,9 +19359,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 6usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19703,9 +19375,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 5usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19729,9 +19399,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_mediaType<'p>(
@@ -19740,10 +19409,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -19755,9 +19421,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 3usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19773,9 +19437,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 5usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19890,9 +19552,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -19923,9 +19583,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_mediaQualifier<'p>(
@@ -19934,10 +19593,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -19949,9 +19605,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 3usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19967,9 +19621,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -19993,7 +19645,7 @@ mod __cssl4parser_emit_impl {
     /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
     /// or Expr { Input, return_type }), and routes the decoded
     /// value through the StructBuilder trait. Returns
-    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// unit for StructDirect composition with sibling
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
@@ -20002,10 +19654,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_CssL4Parser(
             "[a-zA-Z_\\x80-\\xff][\\w\\x80-\\xff-]*",
@@ -20027,7 +19676,7 @@ mod __cssl4parser_emit_impl {
             core::str::from_utf8(&input[span_lo as usize..span_hi as usize])
                 .unwrap_or(""),
         );
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -20040,7 +19689,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -20056,10 +19705,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __importantSuffix_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -20165,7 +19811,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __importantSuffix_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -20180,7 +19826,7 @@ mod __cssl4parser_emit_impl {
     /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
     /// or Expr { Input, return_type }), and routes the decoded
     /// value through the StructBuilder trait. Returns
-    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// unit for StructDirect composition with sibling
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
@@ -20189,10 +19835,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_CssL4Parser(
             "\"(?:[^\"\\\\]|\\\\[\\s\\S])*\"|'(?:[^'\\\\]|\\\\[\\s\\S])*'",
@@ -20214,7 +19857,7 @@ mod __cssl4parser_emit_impl {
             core::str::from_utf8(&input[span_lo as usize..span_hi as usize])
                 .unwrap_or(""),
         );
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AZ-I.W2-act.B3 — per-grammar HRegex-shape parse function,
     /// **struct-direct body**.
@@ -20223,7 +19866,7 @@ mod __cssl4parser_emit_impl {
     /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
     /// or Expr { Input, return_type }), and routes the decoded
     /// value through the StructBuilder trait. Returns
-    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// unit for StructDirect composition with sibling
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
@@ -20232,10 +19875,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_CssL4Parser("-[a-zA-Z][\\w-]*", input, *p)
         else {
@@ -20254,7 +19894,7 @@ mod __cssl4parser_emit_impl {
             core::str::from_utf8(&input[span_lo as usize..span_hi as usize])
                 .unwrap_or(""),
         );
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -20263,9 +19903,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_colorProps<'p>(
@@ -20274,10 +19913,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -20293,9 +19929,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 12usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -20664,9 +20298,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -20693,9 +20325,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 11usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 5usize
                     && input[*p..*p + 5usize] == [99u8, 111u8, 108u8, 111u8, 114u8]
@@ -20704,9 +20334,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 5usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -20726,9 +20354,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 13usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -20749,9 +20375,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 21usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -20775,9 +20399,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_sizeProps<'p>(
@@ -20786,10 +20409,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -20805,9 +20425,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 10usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -20827,9 +20445,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 10usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -20846,9 +20462,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 6usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -20868,9 +20482,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 11usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -21213,9 +20825,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -21238,9 +20848,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 5usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -21264,9 +20872,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_spacingProps<'p>(
@@ -21275,10 +20882,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -21291,9 +20895,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 6usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -21313,9 +20915,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 10usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -21331,9 +20931,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 3usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -21349,9 +20947,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 5usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -21367,9 +20963,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 4usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -21684,9 +21278,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -22020,9 +21612,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -22046,9 +21636,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 7usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 5usize
                     && input[*p..*p + 5usize] == [114u8, 105u8, 103u8, 104u8, 116u8]
@@ -22057,9 +21645,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 5usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -22075,9 +21661,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 3usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -22101,9 +21685,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_fontProps<'p>(
@@ -22112,10 +21695,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -22369,9 +21949,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -22395,9 +21973,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 7usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -22417,9 +21993,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 14usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -22439,9 +22013,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 13usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -22896,9 +22468,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -23063,9 +22633,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -23092,9 +22660,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 10usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [119u8] {
                     let __seq_span_lo = *p;
@@ -23210,9 +22776,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -23247,7 +22811,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -23263,10 +22827,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __bgProps_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -23752,7 +23313,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __bgProps_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -23767,9 +23328,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_transformProps<'p>(
@@ -23778,10 +23338,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -23798,9 +23355,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 19usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -24022,9 +23577,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -24314,9 +23867,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -24347,9 +23898,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_transitionProps<'p>(
@@ -24358,10 +23908,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -24862,9 +24409,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -25239,9 +24784,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -25272,9 +24815,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_listTableProps<'p>(
@@ -25283,10 +24825,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -25471,9 +25010,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -25500,9 +25037,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 12usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -25522,9 +25057,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 11usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -25853,9 +25386,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -25882,9 +25413,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 12usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -25904,9 +25433,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 14usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -25930,7 +25457,7 @@ mod __cssl4parser_emit_impl {
     /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
     /// or Expr { Input, return_type }), and routes the decoded
     /// value through the StructBuilder trait. Returns
-    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// unit for StructDirect composition with sibling
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
@@ -25939,10 +25466,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_CssL4Parser(
             "#(?:[\\w\\x80-\\xff-]|\\\\[^\\n])+",
@@ -25964,7 +25488,7 @@ mod __cssl4parser_emit_impl {
             core::str::from_utf8(&input[span_lo as usize..span_hi as usize])
                 .unwrap_or(""),
         );
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AZ-I.W2-act.B3 — per-grammar HRegex-shape parse function,
     /// **struct-direct body**.
@@ -25973,7 +25497,7 @@ mod __cssl4parser_emit_impl {
     /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
     /// or Expr { Input, return_type }), and routes the decoded
     /// value through the StructBuilder trait. Returns
-    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// unit for StructDirect composition with sibling
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
@@ -25982,10 +25506,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_CssL4Parser(
             "(?:-?[a-zA-Z_\\x80-\\xff]|\\\\[^\\n])(?:[\\w\\x80-\\xff-]|\\\\[^\\n])*",
@@ -26007,7 +25528,7 @@ mod __cssl4parser_emit_impl {
             core::str::from_utf8(&input[span_lo as usize..span_hi as usize])
                 .unwrap_or(""),
         );
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -26016,9 +25537,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_attrMatcher<'p>(
@@ -26027,10 +25547,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -26040,9 +25557,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -26056,9 +25571,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -26072,9 +25585,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -26088,9 +25599,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -26105,9 +25614,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -26122,9 +25629,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -26266,7 +25771,7 @@ mod __cssl4parser_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -26276,10 +25781,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -26325,7 +25827,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __wrap_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(e) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -26349,7 +25851,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -26365,10 +25867,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __nthFunctionName_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -26660,7 +26159,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __nthFunctionName_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -26675,9 +26174,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_dirKeyword<'p>(
@@ -26686,10 +26184,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -26701,9 +26196,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 3usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -26719,9 +26212,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 3usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -26840,7 +26331,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -26856,10 +26347,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __percentage_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -26919,7 +26407,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __percentage_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -26938,7 +26426,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -26954,10 +26442,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __funcBody_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -27143,7 +26628,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __funcBody_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -27167,10 +26652,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 55u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("urlFunction"),
@@ -27224,7 +26706,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -27247,7 +26729,7 @@ mod __cssl4parser_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -27257,10 +26739,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -27519,7 +26998,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __wrap_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(e) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -27543,7 +27022,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -27559,10 +27038,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __angle_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -27619,7 +27095,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __angle_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -27638,7 +27114,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -27654,10 +27130,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __time_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -27708,7 +27181,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __time_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -27727,7 +27200,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -27743,10 +27216,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __frequency_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -27806,7 +27276,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __frequency_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -27825,7 +27295,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -27841,10 +27311,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __resolution_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -27904,7 +27371,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __resolution_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -27923,7 +27390,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -27939,10 +27406,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __flex_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -27993,7 +27457,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __flex_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -28012,7 +27476,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -28028,10 +27492,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __customPropertyDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -28166,7 +27627,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __customPropertyDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -28185,7 +27646,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -28201,10 +27662,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __genericDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -28344,7 +27802,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __genericDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -28363,7 +27821,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -28379,10 +27837,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __nsPrefix_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -28491,7 +27946,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __nsPrefix_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -28510,7 +27965,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -28526,10 +27981,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __classSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -28575,7 +28027,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __classSelector_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -28599,10 +28051,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 66u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("partPseudo"),
@@ -28686,7 +28135,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -28715,10 +28164,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 67u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("highlightPseudo"),
@@ -28781,7 +28227,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -28805,7 +28251,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -28821,10 +28267,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __simplePseudoElement_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -28870,7 +28313,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __simplePseudoElement_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -28894,10 +28337,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 69u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("langPseudo"),
@@ -28979,7 +28419,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -29003,7 +28443,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -29019,10 +28459,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __simplePseudoClass_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -29068,7 +28505,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __simplePseudoClass_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -29092,10 +28529,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 71u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("dirPseudo"),
@@ -29155,7 +28589,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -29179,7 +28613,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -29195,10 +28629,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __keyframeSel_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -29303,7 +28734,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __keyframeSel_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -29327,10 +28758,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 73u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("genericFunction"),
@@ -29378,7 +28806,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -29402,7 +28830,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -29418,10 +28846,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __mediaFeature_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -29571,7 +28996,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __mediaFeature_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -29590,7 +29015,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -29606,10 +29031,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __wqName_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -29691,7 +29113,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __wqName_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -29710,7 +29132,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -29726,10 +29148,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __attrSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -30173,7 +29592,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __attrSelector_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -30197,10 +29616,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 77u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("varFunction"),
@@ -30279,7 +29695,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -30308,10 +29724,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 78u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("envFunction"),
@@ -30390,7 +29803,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -30414,7 +29827,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -30430,10 +29843,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __length_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -30550,7 +29960,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __length_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -30569,7 +29979,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -30585,10 +29995,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __mediaNot_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -30646,7 +30053,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __mediaNot_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -30665,7 +30072,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -30681,10 +30088,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __mediaAnd_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -30810,7 +30214,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __mediaAnd_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -30829,7 +30233,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -30845,10 +30249,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __mediaOr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -30972,7 +30373,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __mediaOr_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -30990,7 +30391,7 @@ mod __cssl4parser_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -31000,10 +30401,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
@@ -31081,7 +30479,7 @@ mod __cssl4parser_emit_impl {
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -31090,9 +30488,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_mediaInParens<'p>(
@@ -31101,10 +30498,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -31186,9 +30580,7 @@ mod __cssl4parser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -31385,10 +30777,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 86u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("colorFn"),
@@ -31506,7 +30895,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -31529,7 +30918,7 @@ mod __cssl4parser_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -31539,10 +30928,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -33564,7 +32950,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __wrap_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(e) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -33588,7 +32974,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -33604,10 +32990,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __mediaQuery_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -33837,7 +33220,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __mediaQuery_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -33861,10 +33244,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 89u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("isPseudo"),
@@ -33921,7 +33301,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -33950,10 +33330,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 90u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("wherePseudo"),
@@ -34012,7 +33389,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -34041,10 +33418,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 91u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("notPseudo"),
@@ -34101,7 +33475,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -34130,10 +33504,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 92u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("hasPseudo"),
@@ -34190,7 +33561,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -34214,7 +33585,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -34230,10 +33601,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __nthPseudo_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -34375,7 +33743,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __nthPseudo_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -34394,7 +33762,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -34410,10 +33778,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __relativeSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -34493,7 +33858,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __relativeSelector_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -34512,7 +33877,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -34528,10 +33893,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __relativeSelectorList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -34636,7 +33998,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __relativeSelectorList_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -34655,7 +34017,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -34671,10 +34033,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __selectorList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -34779,7 +34138,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __selectorList_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -34794,9 +34153,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_pseudoElement<'p>(
@@ -34805,10 +34163,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -34933,10 +34288,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 98u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("slottedPseudo"),
@@ -34996,7 +34348,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -35020,7 +34372,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -35036,10 +34388,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __complexSelector_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -35137,7 +34486,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __complexSelector_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -35152,9 +34501,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_pseudoClass<'p>(
@@ -35163,10 +34511,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -35355,10 +34700,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 101u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("compoundSelector"),
@@ -35476,7 +34818,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -35499,7 +34841,7 @@ mod __cssl4parser_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -35509,10 +34851,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
@@ -35570,7 +34909,7 @@ mod __cssl4parser_emit_impl {
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
@@ -35586,7 +34925,7 @@ mod __cssl4parser_emit_impl {
     /// consumer-side projection (the runtime exposes
     /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
     ///
     /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -35604,10 +34943,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
         let __mediaQueryList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 103u32 as ::bbnf_ir::RuleId,
@@ -35700,7 +35036,7 @@ mod __cssl4parser_emit_impl {
             __mediaQueryList_handle,
         );
         __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
@@ -35716,7 +35052,7 @@ mod __cssl4parser_emit_impl {
     /// consumer-side projection (the runtime exposes
     /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
     ///
     /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -35734,10 +35070,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
         let __mathExpr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 104u32 as ::bbnf_ir::RuleId,
@@ -35824,7 +35157,7 @@ mod __cssl4parser_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __mathExpr_handle);
         __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -35842,10 +35175,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 105u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("calcFunction"),
@@ -35902,7 +35232,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -35931,10 +35261,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 106u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("minFunction"),
@@ -36016,7 +35343,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -36045,10 +35372,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 107u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("maxFunction"),
@@ -36130,7 +35454,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -36159,10 +35483,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 108u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("clampFunction"),
@@ -36247,7 +35568,7 @@ mod __cssl4parser_emit_impl {
                 <crate::runtime::css_l4::CssStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -36274,7 +35595,7 @@ mod __cssl4parser_emit_impl {
     /// consumer-side projection (the runtime exposes
     /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
     ///
     /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -36292,10 +35613,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
         let __mathProduct_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 109u32 as ::bbnf_ir::RuleId,
@@ -36385,7 +35703,7 @@ mod __cssl4parser_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __mathProduct_handle);
         __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RB — per-grammar AltDispatch-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -37000,7 +36318,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -37016,10 +36334,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __colorDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -37205,7 +36520,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __colorDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -37224,7 +36539,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -37240,10 +36555,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __sizeDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -37426,7 +36738,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __sizeDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -37445,7 +36757,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -37461,10 +36773,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __spacingDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -37650,7 +36959,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __spacingDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -37669,7 +36978,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -37685,10 +36994,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __fontDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -37935,7 +37241,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __fontDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -37954,7 +37260,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -37970,10 +37276,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __bgDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -38143,7 +37446,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __bgDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -38162,7 +37465,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -38178,10 +37481,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __transformDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -38367,7 +37667,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __transformDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -38386,7 +37686,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -38402,10 +37702,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __transitionDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -38591,7 +37888,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __transitionDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -38610,7 +37907,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -38626,10 +37923,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __listTableDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -38815,7 +38109,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __listTableDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -38834,7 +38128,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -38850,10 +38144,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __displayDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -39098,7 +38389,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __displayDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -39117,7 +38408,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -39133,10 +38424,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __positionDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -39382,7 +38670,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __positionDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -39401,7 +38689,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -39417,10 +38705,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __overflowDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -39871,7 +39156,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __overflowDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -39890,7 +39175,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -39906,10 +39191,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __visibilityDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -40158,7 +39440,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __visibilityDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -40177,7 +39459,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -40193,10 +39475,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __flexDirDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -40445,7 +39724,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __flexDirDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -40464,7 +39743,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -40480,10 +39759,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __flexWrapDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -40729,7 +40005,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __flexWrapDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -40748,7 +40024,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -40764,10 +40040,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __alignDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -41398,7 +40671,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __alignDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -41417,7 +40690,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -41433,10 +40706,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __flexNumDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -41819,7 +41089,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __flexNumDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -41838,7 +41108,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -41854,10 +41124,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __fontSizeDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -42039,7 +41306,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __fontSizeDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -42058,7 +41325,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -42074,10 +41341,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __fontWeightDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -42326,7 +41590,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __fontWeightDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -42345,7 +41609,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -42361,10 +41625,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __lineHeightDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -42549,7 +41810,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __lineHeightDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -42568,7 +41829,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -42584,10 +41845,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __borderWidthDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -43086,7 +42344,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __borderWidthDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -43105,7 +42363,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -43121,10 +42379,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __borderStyleDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -43623,7 +42878,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __borderStyleDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -43642,7 +42897,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -43658,10 +42913,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __borderRadiusDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -44262,7 +43514,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __borderRadiusDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -44281,7 +43533,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -44297,10 +43549,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __opacityDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -44481,7 +43730,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __opacityDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -44500,7 +43749,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -44516,10 +43765,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __textAlignDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -44768,7 +44014,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __textAlignDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -44787,7 +44033,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -44803,10 +44049,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __boxSizingDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -45055,7 +44298,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __boxSizingDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -45074,7 +44317,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -45090,10 +44333,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __cursorDecl_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -45338,7 +44578,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __cursorDecl_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -45356,7 +44596,7 @@ mod __cssl4parser_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -45366,10 +44606,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -46656,7 +45893,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __wrap_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(e) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -46680,7 +45917,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -46696,10 +45933,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __keyframesRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -46941,7 +46175,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __keyframesRule_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -46956,9 +46190,8 @@ mod __cssl4parser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_CssL4Parser_atRuleBody<'p>(
@@ -46967,10 +46200,7 @@ mod __cssl4parser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -46980,9 +46210,7 @@ mod __cssl4parser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -47034,7 +46262,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -47050,10 +46278,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __genericAtRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -47131,7 +46356,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __genericAtRule_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -47150,7 +46375,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -47166,10 +46391,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __ruleBlock_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -47229,7 +46451,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __ruleBlock_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -47248,7 +46470,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -47264,10 +46486,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __qualifiedRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -47311,7 +46530,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __qualifiedRule_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -47330,7 +46549,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -47346,10 +46565,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __mediaRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -47407,7 +46623,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __mediaRule_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -47425,7 +46641,7 @@ mod __cssl4parser_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -47435,10 +46651,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
@@ -47606,7 +46819,7 @@ mod __cssl4parser_emit_impl {
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -47618,7 +46831,7 @@ mod __cssl4parser_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -47628,10 +46841,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_CssL4Parser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
@@ -47675,7 +46885,7 @@ mod __cssl4parser_emit_impl {
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -47688,7 +46898,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -47704,10 +46914,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __blockContent_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -47851,7 +47058,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __blockContent_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -47870,7 +47077,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -47886,10 +47093,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __ruleList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -47975,7 +47179,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __ruleList_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -47987,8 +47191,8 @@ mod __cssl4parser_emit_impl {
     /// function (transparent-Ref body, struct-direct
     /// substrate). Delegates to the target's
     /// strategy-resolved shape fn; the inner call
-    /// expression names `builder` against the
-    /// concrete struct-builder.
+    /// expression names `builder` against the concrete
+    /// struct-builder.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_scalar_CssL4Parser_stylesheet<'p>(
@@ -47996,10 +47200,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         {
             let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             parse_flat_CssL4Parser_ruleList(input, p, state, builder)
@@ -48015,7 +47216,7 @@ mod __cssl4parser_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -48025,10 +47226,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -48620,7 +47818,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     __wrap_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(e) => {
                 <crate::runtime::css_l4::CssStructBuilder<
@@ -48644,7 +47842,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -48660,10 +47858,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____calcFunction_cont_151_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -48721,7 +47916,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____calcFunction_cont_151_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -48740,7 +47935,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -48756,10 +47951,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____minFunction_cont_152_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -48878,7 +48070,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____minFunction_cont_152_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -48897,7 +48089,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -48913,10 +48105,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____maxFunction_cont_153_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -49035,7 +48224,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____maxFunction_cont_153_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -49054,7 +48243,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -49070,10 +48259,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____clampFunction_cont_154_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -49167,7 +48353,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____clampFunction_cont_154_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -49186,7 +48372,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -49202,10 +48388,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____varFunction_cont_155_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -49335,7 +48518,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____varFunction_cont_155_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -49354,7 +48537,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -49370,10 +48553,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____envFunction_cont_156_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -49503,7 +48683,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____envFunction_cont_156_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -49522,7 +48702,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -49538,10 +48718,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____varFunction_cont_157_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -49671,7 +48848,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____varFunction_cont_157_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -49690,7 +48867,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -49706,10 +48883,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____calcFunction_cont_158_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -49767,7 +48941,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____calcFunction_cont_158_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -49786,7 +48960,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -49802,10 +48976,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____urlFunction_cont_159_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -49929,7 +49100,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____urlFunction_cont_159_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -49948,7 +49119,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -49964,10 +49135,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____genericFunction_cont_160_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -50025,7 +49193,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____genericFunction_cont_160_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -50044,7 +49212,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -50060,10 +49228,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____colorDecl_cont_161_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -50230,7 +49395,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____colorDecl_cont_161_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -50249,7 +49414,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -50265,10 +49430,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____sizeDecl_cont_162_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -50435,7 +49597,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____sizeDecl_cont_162_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -50454,7 +49616,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -50470,10 +49632,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____spacingDecl_cont_163_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -50640,7 +49799,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____spacingDecl_cont_163_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -50659,7 +49818,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -50675,10 +49834,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____fontDecl_cont_164_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -50909,7 +50065,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____fontDecl_cont_164_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -50928,7 +50084,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -50944,10 +50100,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____bgDecl_cont_165_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -51114,7 +50267,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____bgDecl_cont_165_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -51133,7 +50286,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -51149,10 +50302,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____transformDecl_cont_166_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -51319,7 +50469,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____transformDecl_cont_166_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -51338,7 +50488,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -51354,10 +50504,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____transitionDecl_cont_167_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -51524,7 +50671,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____transitionDecl_cont_167_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -51543,7 +50690,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -51559,10 +50706,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____listTableDecl_cont_168_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -51729,7 +50873,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____listTableDecl_cont_168_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -51748,7 +50892,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -51764,10 +50908,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____displayDecl_cont_169_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -51998,7 +51139,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____displayDecl_cont_169_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -52017,7 +51158,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -52033,10 +51174,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____positionDecl_cont_170_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -52267,7 +51405,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____positionDecl_cont_170_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -52286,7 +51424,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -52302,10 +51440,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____overflowDecl_cont_171_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -52536,7 +51671,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____overflowDecl_cont_171_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -52555,7 +51690,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -52571,10 +51706,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____visibilityDecl_cont_172_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -52805,7 +51937,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____visibilityDecl_cont_172_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -52824,7 +51956,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -52840,10 +51972,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____flexDirDecl_cont_173_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -53074,7 +52203,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____flexDirDecl_cont_173_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -53093,7 +52222,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -53109,10 +52238,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____flexWrapDecl_cont_174_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -53343,7 +52469,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____flexWrapDecl_cont_174_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -53362,7 +52488,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -53378,10 +52504,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____alignDecl_cont_175_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -53612,7 +52735,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____alignDecl_cont_175_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -53631,7 +52754,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -53647,10 +52770,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____flexNumDecl_cont_176_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -53817,7 +52937,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____flexNumDecl_cont_176_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -53836,7 +52956,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -53852,10 +52972,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____fontSizeDecl_cont_177_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -54022,7 +53139,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____fontSizeDecl_cont_177_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -54041,7 +53158,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -54057,10 +53174,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____fontWeightDecl_cont_178_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -54291,7 +53405,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____fontWeightDecl_cont_178_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -54310,7 +53424,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -54326,10 +53440,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____lineHeightDecl_cont_179_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -54496,7 +53607,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____lineHeightDecl_cont_179_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -54515,7 +53626,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -54531,10 +53642,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____borderWidthDecl_cont_180_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -54765,7 +53873,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____borderWidthDecl_cont_180_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -54784,7 +53892,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -54800,10 +53908,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____borderStyleDecl_cont_181_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -55034,7 +54139,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____borderStyleDecl_cont_181_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -55053,7 +54158,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -55069,10 +54174,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____borderRadiusDecl_cont_182_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -55239,7 +54341,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____borderRadiusDecl_cont_182_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -55258,7 +54360,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -55274,10 +54376,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____opacityDecl_cont_183_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -55444,7 +54543,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____opacityDecl_cont_183_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -55463,7 +54562,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -55479,10 +54578,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____textAlignDecl_cont_184_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -55713,7 +54809,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____textAlignDecl_cont_184_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -55732,7 +54828,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -55748,10 +54844,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____boxSizingDecl_cont_185_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -55982,7 +55075,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____boxSizingDecl_cont_185_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -56001,7 +55094,7 @@ mod __cssl4parser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -56017,10 +55110,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let ____cursorDecl_cont_186_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -56251,7 +55341,7 @@ mod __cssl4parser_emit_impl {
                     builder,
                     ____cursorDecl_cont_186_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -57185,7 +56275,7 @@ mod __cssl4parser_emit_impl {
     ///
     /// Mirrors the walker's `value` rule ByteDispatch: skip leading
     /// whitespace, dispatch on the first byte to the chosen branch
-    /// shape fn, return its `TapeOffset` unchanged. No outer Rule /
+    /// shape fn, return unit after the chosen shape succeeds. No outer Rule /
     /// Alt compound is pushed — the DTA's ByteDispatch state for
     /// `value` emits no compound either, and the target rule's Ref
     /// overwrites any `pending_variant_idx` en route, so the chosen
@@ -57200,10 +56290,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         parse_CssL4Parser_stylesheet__value(input, p, state, builder)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
@@ -57217,10 +56304,7 @@ mod __cssl4parser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssL4Parser::ScanState,
         builder: &mut crate::runtime::css_l4::CssStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
         parse_scalar_CssL4Parser_stylesheet(input, p, state, builder)
     }

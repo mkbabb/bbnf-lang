@@ -22,12 +22,10 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::payload::{
-    alt_branch_bool_payload, alt_branch_payload_value, leading_literal_bytes,
-};
-use super::unwrap_trivia;
-use super::super::dispatcher::{emit_ref_call_tape, shape_fn_ident};
+use super::super::dispatcher::{emit_ref_call_shape, shape_fn_ident};
 use super::super::substrate::{builder_ty_elided, builder_ty_with_lifetime};
+use super::payload::{alt_branch_bool_payload, alt_branch_payload_value, leading_literal_bytes};
+use super::unwrap_trivia;
 
 /// Resolve the rule's projected `TypeDesc`. Returns `None` when the
 /// rule is absent from `ir.types` (untyped) — the caller treats this as
@@ -134,7 +132,7 @@ pub(super) fn emit_parse_keyword_struct_direct(
                 ///
                 /// Matches the literal byte sequence and routes the
                 /// rule's projected payload through the `StructBuilder`
-                /// trait surface. Returns `TapeOffset::NONE` on success
+                /// trait surface. Returns unit on success
                 /// for compositional uniformity with the tape-path
                 /// emission; the offset is unused by struct-direct
                 /// callers (the dispatcher discards `Ok(_)` payloads).
@@ -146,10 +144,7 @@ pub(super) fn emit_parse_keyword_struct_direct(
                     _first_byte: u8,
                     _state: &mut #support_mod::ScanState,
                     builder: &mut #builder_ty_e,
-                ) -> ::core::result::Result<
-                    crate::runtime::tape::TapeOffset,
-                    crate::runtime::tape::DtaError,
-                > {
+                ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
                     use crate::runtime::builder::StructBuilder as _;
                     let at = *p;
                     let end = at + #len;
@@ -166,9 +161,7 @@ pub(super) fn emit_parse_keyword_struct_direct(
                     }
                     *p = end;
                     #leaf_emit
-                    ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    )
+                    ::core::result::Result::Ok(())
                 }
             }
         }
@@ -230,22 +223,28 @@ pub(super) fn emit_parse_keyword_struct_direct(
                 })
                 .collect();
 
-            let mut by_first: BTreeMap<u8, Vec<&(Vec<u8>, BranchKind<'_>, usize, &bbnf_ir::AltBranch)>> =
-                BTreeMap::new();
+            let mut by_first: BTreeMap<
+                u8,
+                Vec<&(Vec<u8>, BranchKind<'_>, usize, &bbnf_ir::AltBranch)>,
+            > = BTreeMap::new();
             for entry in &per_branch {
                 by_first.entry(entry.0[0]).or_default().push(entry);
             }
 
-            let arms: Vec<TokenStream> = by_first
-                .iter()
-                .map(|(first, group)| {
-                    // Descending prefix length — longer literals try first.
-                    let mut group_sorted: Vec<&(Vec<u8>, BranchKind<'_>, usize, &bbnf_ir::AltBranch)> =
-                        group.iter().copied().collect();
-                    group_sorted.sort_by_key(|entry| {
-                        (std::cmp::Reverse(entry.0.len()), entry.2)
-                    });
-                    let tries: Vec<TokenStream> = group_sorted
+            let arms: Vec<TokenStream> =
+                by_first
+                    .iter()
+                    .map(|(first, group)| {
+                        // Descending prefix length — longer literals try first.
+                        let mut group_sorted: Vec<&(
+                            Vec<u8>,
+                            BranchKind<'_>,
+                            usize,
+                            &bbnf_ir::AltBranch,
+                        )> = group.iter().copied().collect();
+                        group_sorted
+                            .sort_by_key(|entry| (std::cmp::Reverse(entry.0.len()), entry.2));
+                        let tries: Vec<TokenStream> = group_sorted
                         .iter()
                         .map(|(bytes, kind, _branch_idx, branch)| {
                             let len = bytes.len();
@@ -274,9 +273,7 @@ pub(super) fn emit_parse_keyword_struct_direct(
                                             let end = at + #len;
                                             *p = end;
                                             #leaf_emit
-                                            return ::core::result::Result::Ok(
-                                                crate::runtime::tape::TapeOffset::NONE,
-                                            );
+                                            return ::core::result::Result::Ok(());
                                         }
                                     }
                                 }
@@ -294,13 +291,13 @@ pub(super) fn emit_parse_keyword_struct_direct(
                                     // the fallback `classicPseudo` Ref
                                     // claims it).
                                     //
-                                    // `emit_ref_call_tape` returns the
+                                    // `emit_ref_call_shape` returns the
                                     // call expression irrespective of
                                     // strategy; the only difference at
                                     // the codegen level is the concrete
                                     // `builder` type, threaded through
                                     // by the caller's signature.
-                                    let ref_call = emit_ref_call_tape(
+                                    let ref_call = emit_ref_call_shape(
                                         grammar_suffix, *target_rid, ir,
                                     ).unwrap_or_else(|| quote! {
                                         ::core::result::Result::Err(
@@ -363,9 +360,7 @@ pub(super) fn emit_parse_keyword_struct_direct(
                                                         )
                                                     };
                                                     builder.push_leaf_with_str(__seq_text);
-                                                    return ::core::result::Result::Ok(
-                                                        crate::runtime::tape::TapeOffset::NONE,
-                                                    );
+                                                    return ::core::result::Result::Ok(());
                                                 }
                                                 ::core::result::Result::Err(__err) => {
                                                     *p = __seq_span_lo;
@@ -379,22 +374,22 @@ pub(super) fn emit_parse_keyword_struct_direct(
                             }
                         })
                         .collect();
-                    quote! {
-                        #first => {
-                            #(#tries)*
-                            return ::core::result::Result::Err(
-                                crate::runtime::tape::DtaError::Syntax {
-                                    offset: *p as u32,
-                                    failing_state:
-                                        crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule:
-                                        crate::runtime::tape::DtaRuleId(u32::MAX),
-                                },
-                            );
+                        quote! {
+                            #first => {
+                                #(#tries)*
+                                return ::core::result::Result::Err(
+                                    crate::runtime::tape::DtaError::Syntax {
+                                        offset: *p as u32,
+                                        failing_state:
+                                            crate::runtime::tape::DtaStateId::NONE,
+                                        failing_rule:
+                                            crate::runtime::tape::DtaRuleId(u32::MAX),
+                                    },
+                                );
+                            }
                         }
-                    }
-                })
-                .collect();
+                    })
+                    .collect();
             quote! {
                 /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
                 /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -403,9 +398,8 @@ pub(super) fn emit_parse_keyword_struct_direct(
                 /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
                 /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
                 /// untyped). Ref branches delegate to the target shape
-                /// fn so the target's records bubble up unchanged.
-                /// Returns `TapeOffset::NONE` for compositional
-                /// uniformity.
+                /// fn so the target writes directly into the same
+                /// builder. Returns unit for StructDirect composition.
                 #[inline(always)]
                 #[allow(non_snake_case, clippy::too_many_arguments)]
                 pub fn #fn_ident<'p>(
@@ -414,10 +408,7 @@ pub(super) fn emit_parse_keyword_struct_direct(
                     first_byte: u8,
                     state: &mut #support_mod::ScanState,
                     builder: &mut #builder_ty_p,
-                ) -> ::core::result::Result<
-                    crate::runtime::tape::TapeOffset,
-                    crate::runtime::tape::DtaError,
-                > {
+                ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
                     use crate::runtime::builder::StructBuilder as _;
                     let _ = state;
                     match first_byte {

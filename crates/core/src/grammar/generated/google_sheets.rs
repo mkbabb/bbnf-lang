@@ -2221,97 +2221,6 @@ mod __googlesheetsparser_emit_impl {
         }
         ::core::option::Option::None
     }
-    /// AY.W4.1 — string escape-path decoder. Cold path; routes
-    /// through `parse_that::parsers::scan::decode_json_string_to_arena`,
-    /// a fully-SIMD scan + escape-decode kernel. The kernel
-    /// internally does its own SIMD `u8x16` re-scan from `open`
-    /// (a few dozen bytes of redundant work vs. the fast-path
-    /// SIMD scan that already located the first `\\`), then
-    /// performs SIMD-stride copies of escape-free runs between
-    /// each escape sequence.
-    ///
-    /// The arena layout is `(len: u32 LE, bytes: [u8; len])` per
-    /// `Tape::payload_string_bytes`'s contract. We reserve 4
-    /// bytes for the length prefix before invoking the kernel,
-    /// then back-stamp the decoded length once the kernel
-    /// returns.
-    ///
-    /// In the rare case where the SIMD fast-path scan flagged a
-    /// backslash that was actually escaped (impossible given
-    /// odd-parity tracking but defensive), the kernel may return
-    /// `StringPayload::Borrowed` — we rewind the reserved prefix
-    /// bytes and push a borrow-safe leaf instead.
-    #[cold]
-    #[inline(never)]
-    #[allow(non_snake_case)]
-    fn parse_string_escaped(
-        input: &[u8],
-        p: &mut usize,
-        open: usize,
-        builder: &mut crate::runtime::tape::Tape<()>,
-        variant_idx: u8,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
-        let arena = builder.arena_mut();
-        let frame_offset = arena.len() as u32;
-        arena.extend_from_slice(&[0u8; 4]);
-        let body_start_in_arena = arena.len();
-        match ::parse_that::parsers::scan::decode_json_string_to_arena(
-            input,
-            open,
-            arena,
-        ) {
-            Some(
-                (::parse_that::parsers::scan::StringPayload::Owned { .. }, end_pos),
-            ) => {
-                *p = end_pos;
-                let arena_final = builder.arena_mut();
-                let decoded_len = (arena_final.len() - body_start_in_arena) as u32;
-                let prefix = frame_offset as usize;
-                arena_final[prefix..prefix + 4]
-                    .copy_from_slice(&decoded_len.to_le_bytes());
-                let lo = open as u32;
-                let hi = *p as u32;
-                let leaf = builder
-                    .push_leaf_with_arena_frame(
-                        crate::runtime::tape::TapeKind::Span,
-                        lo,
-                        hi,
-                        variant_idx,
-                        0,
-                        frame_offset,
-                    );
-                Ok(leaf)
-            }
-            Some(
-                (::parse_that::parsers::scan::StringPayload::Borrowed { .. }, end_pos),
-            ) => {
-                let arena_final = builder.arena_mut();
-                arena_final.truncate(frame_offset as usize);
-                *p = end_pos;
-                let leaf = builder
-                    .push_leaf_borrowed_string(
-                        crate::runtime::tape::TapeKind::Span,
-                        open as u32,
-                        *p as u32,
-                        variant_idx,
-                        0,
-                    );
-                Ok(leaf)
-            }
-            None => {
-                let arena_final = builder.arena_mut();
-                arena_final.truncate(frame_offset as usize);
-                Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: open as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                })
-            }
-        }
-    }
     /// AY.W4.1 — visitor-path escape decoder. Cold path.
     ///
     /// Reuses the SIMD-fused `decode_json_string_to_arena` kernel
@@ -2775,7 +2684,7 @@ mod __googlesheetsparser_emit_impl {
     /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
     /// or Expr { Input, return_type }), and routes the decoded
     /// value through the StructBuilder trait. Returns
-    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// unit for StructDirect composition with sibling
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
@@ -2784,10 +2693,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_GoogleSheetsParser(
             "(\\d+\\.?\\d*|\\.\\d+)([eE][+-]?\\d+)?",
@@ -2809,7 +2715,7 @@ mod __googlesheetsparser_emit_impl {
         <crate::runtime::google_sheets::SheetsStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::push_leaf_with_f64(builder, __f64);
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AZ-I.W2.RC — per-grammar String-shape parse function
     /// (struct-direct substrate).
@@ -2828,10 +2734,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         _state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let open = *p;
         if input.get(open).copied() != Some(b'"') {
@@ -2858,7 +2761,7 @@ mod __googlesheetsparser_emit_impl {
                     ::core::str::from_utf8_unchecked(&input[body_start..end])
                 };
                 builder.push_leaf_with_str(body);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             Some((_off, b'\\')) => {
                 let mut buf: Vec<u8> = Vec::with_capacity(
@@ -2882,7 +2785,7 @@ mod __googlesheetsparser_emit_impl {
                             ::core::str::from_utf8_unchecked(leaked)
                         };
                         builder.push_leaf_with_str(leaked_str);
-                        Ok(crate::runtime::tape::TapeOffset::NONE)
+                        Ok(())
                     }
                     Some(
                         (
@@ -2900,7 +2803,7 @@ mod __googlesheetsparser_emit_impl {
                             )
                         };
                         builder.push_leaf_with_str(body);
-                        Ok(crate::runtime::tape::TapeOffset::NONE)
+                        Ok(())
                     }
                     None => {
                         Err(crate::runtime::tape::DtaError::Syntax {
@@ -2929,7 +2832,7 @@ mod __googlesheetsparser_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -2939,10 +2842,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2988,7 +2888,7 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                     __wrap_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(e) => {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
@@ -3012,7 +2912,7 @@ mod __googlesheetsparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -3028,10 +2928,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __error_literal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3403,7 +3300,7 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                     __error_literal_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -3421,7 +3318,7 @@ mod __googlesheetsparser_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -3431,10 +3328,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3480,7 +3374,7 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                     __wrap_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(e) => {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
@@ -3500,7 +3394,7 @@ mod __googlesheetsparser_emit_impl {
     /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
     /// or Expr { Input, return_type }), and routes the decoded
     /// value through the StructBuilder trait. Returns
-    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// unit for StructDirect composition with sibling
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
@@ -3509,10 +3403,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_GoogleSheetsParser(
             "\\$?[A-Za-z]{1,3}\\$?\\d+",
@@ -3534,7 +3425,7 @@ mod __googlesheetsparser_emit_impl {
             core::str::from_utf8(&input[span_lo as usize..span_hi as usize])
                 .unwrap_or(""),
         );
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AZ-I.W2-act.B3 — per-grammar HRegex-shape parse function,
     /// **struct-direct body**.
@@ -3543,7 +3434,7 @@ mod __googlesheetsparser_emit_impl {
     /// per the rule's host-fn descriptor (HexConvert, NumberConvert,
     /// or Expr { Input, return_type }), and routes the decoded
     /// value through the StructBuilder trait. Returns
-    /// TapeOffset::NONE for compositional uniformity with sibling
+    /// unit for StructDirect composition with sibling
     /// shape fns under struct-direct mode.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
@@ -3552,10 +3443,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_GoogleSheetsParser(
             "[A-Za-z_][A-Za-z0-9_.]*",
@@ -3577,7 +3465,7 @@ mod __googlesheetsparser_emit_impl {
             core::str::from_utf8(&input[span_lo as usize..span_hi as usize])
                 .unwrap_or(""),
         );
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
     /// (Alt of literal-led, Ref-led, or Seq-led branches).
@@ -3586,9 +3474,8 @@ mod __googlesheetsparser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_GoogleSheetsParser_compare_op<'p>(
@@ -3597,10 +3484,7 @@ mod __googlesheetsparser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -3707,9 +3591,7 @@ mod __googlesheetsparser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -3723,9 +3605,7 @@ mod __googlesheetsparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3739,9 +3619,7 @@ mod __googlesheetsparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3755,18 +3633,14 @@ mod __googlesheetsparser_emit_impl {
                     let end = at + 2usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [62u8] {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3790,9 +3664,8 @@ mod __googlesheetsparser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_GoogleSheetsParser_unary_prefix<'p>(
@@ -3801,10 +3674,7 @@ mod __googlesheetsparser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -3814,9 +3684,7 @@ mod __googlesheetsparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3830,9 +3698,7 @@ mod __googlesheetsparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3856,9 +3722,8 @@ mod __googlesheetsparser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_GoogleSheetsParser_mul_op<'p>(
@@ -3867,10 +3732,7 @@ mod __googlesheetsparser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -3880,9 +3742,7 @@ mod __googlesheetsparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3896,9 +3756,7 @@ mod __googlesheetsparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3922,9 +3780,8 @@ mod __googlesheetsparser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_GoogleSheetsParser_add_op<'p>(
@@ -3933,10 +3790,7 @@ mod __googlesheetsparser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -3946,9 +3800,7 @@ mod __googlesheetsparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3962,9 +3814,7 @@ mod __googlesheetsparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -3992,7 +3842,7 @@ mod __googlesheetsparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -4008,10 +3858,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __cell_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4102,7 +3949,7 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                     __cell_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -4121,7 +3968,7 @@ mod __googlesheetsparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -4137,10 +3984,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __func_open_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4190,7 +4034,7 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                     __func_open_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -4209,7 +4053,7 @@ mod __googlesheetsparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -4225,10 +4069,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __range_ref_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4548,7 +4389,7 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                     __range_ref_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -4566,7 +4407,7 @@ mod __googlesheetsparser_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -4576,10 +4417,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4660,7 +4498,7 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                     __wrap_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(e) => {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
@@ -4687,7 +4525,7 @@ mod __googlesheetsparser_emit_impl {
     /// consumer-side projection (the runtime exposes
     /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
     ///
     /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -4705,10 +4543,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __comparison_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 15u32 as ::bbnf_ir::RuleId,
@@ -4809,7 +4644,7 @@ mod __googlesheetsparser_emit_impl {
             __comparison_expr_handle,
         );
         __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
@@ -4825,7 +4660,7 @@ mod __googlesheetsparser_emit_impl {
     /// consumer-side projection (the runtime exposes
     /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
     ///
     /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -4843,10 +4678,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __mul_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 16u32 as ::bbnf_ir::RuleId,
@@ -4941,7 +4773,7 @@ mod __googlesheetsparser_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __mul_expr_handle);
         __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -4954,7 +4786,7 @@ mod __googlesheetsparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -4970,10 +4802,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __unary_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5071,7 +4900,7 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                     __unary_expr_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -5090,7 +4919,7 @@ mod __googlesheetsparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -5106,10 +4935,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __paren_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5173,7 +4999,7 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                     __paren_expr_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -5192,7 +5018,7 @@ mod __googlesheetsparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -5208,10 +5034,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __arg_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5289,7 +5112,7 @@ mod __googlesheetsparser_emit_impl {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     '_,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __arg_handle);
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -5308,7 +5131,7 @@ mod __googlesheetsparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -5324,10 +5147,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __func_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5467,7 +5287,7 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                     __func_args_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -5486,7 +5306,7 @@ mod __googlesheetsparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -5502,10 +5322,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __let_binding_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5567,7 +5384,7 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                     __let_binding_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -5586,7 +5403,7 @@ mod __googlesheetsparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -5602,10 +5419,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __lambda_params_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5750,7 +5564,7 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                     __lambda_params_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -5772,7 +5586,7 @@ mod __googlesheetsparser_emit_impl {
     /// consumer-side projection (the runtime exposes
     /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
     ///
     /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -5790,10 +5604,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __array_row_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 23u32 as ::bbnf_ir::RuleId,
@@ -5891,7 +5702,7 @@ mod __googlesheetsparser_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __array_row_handle);
         __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
@@ -5907,7 +5718,7 @@ mod __googlesheetsparser_emit_impl {
     /// consumer-side projection (the runtime exposes
     /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
     ///
     /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -5925,10 +5736,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __array_rows_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 24u32 as ::bbnf_ir::RuleId,
@@ -6026,7 +5834,7 @@ mod __googlesheetsparser_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __array_rows_handle);
         __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -6039,7 +5847,7 @@ mod __googlesheetsparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -6055,10 +5863,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __array_literal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -6122,7 +5927,7 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                     __array_literal_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -6144,7 +5949,7 @@ mod __googlesheetsparser_emit_impl {
     /// consumer-side projection (the runtime exposes
     /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
     ///
     /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -6162,10 +5967,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __concat_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 26u32 as ::bbnf_ir::RuleId,
@@ -6263,7 +6065,7 @@ mod __googlesheetsparser_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __concat_expr_handle);
         __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
@@ -6279,7 +6081,7 @@ mod __googlesheetsparser_emit_impl {
     /// consumer-side projection (the runtime exposes
     /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
     ///
     /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -6297,10 +6099,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __add_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 27u32 as ::bbnf_ir::RuleId,
@@ -6395,7 +6194,7 @@ mod __googlesheetsparser_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __add_expr_handle);
         __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2-act.recovery — per-grammar Pratt-shape parse
     /// function, **struct-direct body**. Targets the grammar's
@@ -6411,7 +6210,7 @@ mod __googlesheetsparser_emit_impl {
     /// consumer-side projection (the runtime exposes
     /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
     ///
     /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -6429,10 +6228,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __exp_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 28u32 as ::bbnf_ir::RuleId,
@@ -6527,7 +6323,7 @@ mod __googlesheetsparser_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __exp_expr_handle);
         __body_result?;
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2-act.B3 — per-grammar ArgList-shape parse function,
     /// **struct-direct body**.
@@ -6545,10 +6341,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 29u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("lambda_call"),
@@ -6588,7 +6381,7 @@ mod __googlesheetsparser_emit_impl {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
@@ -6605,8 +6398,8 @@ mod __googlesheetsparser_emit_impl {
     /// function (transparent-Ref body, struct-direct
     /// substrate). Delegates to the target's
     /// strategy-resolved shape fn; the inner call
-    /// expression names `builder` against the
-    /// concrete struct-builder.
+    /// expression names `builder` against the concrete
+    /// struct-builder.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_scalar_GoogleSheetsParser_expression<'p>(
@@ -6614,10 +6407,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         {
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
@@ -6639,10 +6429,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 31u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("func_call"),
@@ -6700,7 +6487,7 @@ mod __googlesheetsparser_emit_impl {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
@@ -6724,7 +6511,7 @@ mod __googlesheetsparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -6740,10 +6527,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __let_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -6854,7 +6638,7 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                     __let_args_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -6878,10 +6662,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 33u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("let_call"),
@@ -6921,7 +6702,7 @@ mod __googlesheetsparser_emit_impl {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
                     'p,
                 > as crate::runtime::StructBuilder>::end_compound(builder, __handle);
-                Ok(crate::runtime::tape::TapeOffset::NONE)
+                Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 <crate::runtime::google_sheets::SheetsStructBuilder<
@@ -6944,7 +6725,7 @@ mod __googlesheetsparser_emit_impl {
     /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
     /// forward-the-single-child semantics.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     #[inline]
@@ -6954,10 +6735,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
             .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
@@ -7471,7 +7249,7 @@ mod __googlesheetsparser_emit_impl {
                 failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
-        ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+        ::core::result::Result::Ok(())
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -7484,7 +7262,7 @@ mod __googlesheetsparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -7500,10 +7278,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __postfix_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -7594,7 +7369,7 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                     __postfix_expr_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -7613,7 +7388,7 @@ mod __googlesheetsparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -7629,10 +7404,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __formula_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -7684,7 +7456,7 @@ mod __googlesheetsparser_emit_impl {
                     builder,
                     __formula_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -7893,7 +7665,7 @@ mod __googlesheetsparser_emit_impl {
     ///
     /// Mirrors the walker's `value` rule ByteDispatch: skip leading
     /// whitespace, dispatch on the first byte to the chosen branch
-    /// shape fn, return its `TapeOffset` unchanged. No outer Rule /
+    /// shape fn, return unit after the chosen shape succeeds. No outer Rule /
     /// Alt compound is pushed — the DTA's ByteDispatch state for
     /// `value` emits no compound either, and the target rule's Ref
     /// overwrites any `pending_variant_idx` en route, so the chosen
@@ -7908,10 +7680,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         parse_GoogleSheetsParser_formula__value(input, p, state, builder)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
@@ -7925,10 +7694,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         parse_flat_GoogleSheetsParser_formula(input, p, state, builder)
     }

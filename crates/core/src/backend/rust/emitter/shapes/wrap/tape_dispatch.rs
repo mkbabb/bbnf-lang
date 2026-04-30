@@ -14,8 +14,7 @@ use quote::{format_ident, quote};
 
 use super::super::dispatcher::shape_fn_ident;
 use super::{
-    alt_branch_payload_value_for_wrap, shape_tag_name, unwrap_outer,
-    wrap_rule_accepts_leading_ws,
+    alt_branch_payload_value_for_wrap, shape_tag_name, unwrap_outer, wrap_rule_accepts_leading_ws,
 };
 
 /// Emit the Alt-dispatch body for the Wrap tape-path emitter.
@@ -161,10 +160,9 @@ pub(super) fn emit_alt_tape_dispatch(
     if elide_compound {
         // AY.W2.6 — wrap-compound elision. Every branch's call already
         // pushes its own tape record; the outer Rule-compound would
-        // merely double-wrap. Skip the `mark_children` bracket, the
-        // `push_compound` emission, and return the branch's own offset
-        // (`TapeOffset::NONE` — wrap is transparent at the call site
-        // per AW-V.W4-fix).
+        // merely double-wrap. Skip the `mark_children` bracket and
+        // the `push_compound` emission; wrap is transparent at the
+        // call site per AW-V.W4-fix and returns unit on success.
         let _ = (rule_variant_idx, quote! { __wrap_chosen_meta });
         quote! {
             let mut __wrap_chosen_meta: u8 = 0;
@@ -184,7 +182,7 @@ pub(super) fn emit_alt_tape_dispatch(
                 );
             }
             let _ = __wrap_chosen_meta;
-            Ok(crate::runtime::tape::TapeOffset::NONE)
+            Ok(())
         }
     } else {
         quote! {
@@ -253,7 +251,7 @@ pub(super) fn emit_alt_tape_dispatch(
                 __wrap_exit_p,
                 crate::runtime::tape::TapeOffset(__wrap_enter_child),
             );
-            Ok(crate::runtime::tape::TapeOffset(__wrap_off))
+            Ok(())
         }
     }
 }
@@ -301,8 +299,7 @@ fn emit_wrap_branch_call_tape(
             let target = ir.rules.iter().find(|r| r.id == *rid)?;
             let tag = ir.shape_assignments.get(*rid);
             let shape_name = shape_tag_name(tag)?;
-            let target_fn =
-                shape_fn_ident(shape_name, grammar_suffix, ir.get_string(target.name));
+            let target_fn = shape_fn_ident(shape_name, grammar_suffix, ir.get_string(target.name));
             // AX.W0a.2.g — Keyword fn signature extended with `state`.
             let call = match tag {
                 ShapeTag::Number => quote! {
@@ -374,7 +371,7 @@ fn emit_wrap_branch_call_tape(
                                     ::core::result::Result::<
                                         crate::runtime::tape::TapeOffset,
                                         crate::runtime::tape::DtaError,
-                                    >::Ok(crate::runtime::tape::TapeOffset::NONE)
+                                    >::Ok(())
                                 }
                                 ::core::option::Option::None => {
                                     ::core::result::Result::Err(
@@ -411,7 +408,7 @@ fn emit_wrap_branch_call_tape(
                                     ::core::result::Result::<
                                         crate::runtime::tape::TapeOffset,
                                         crate::runtime::tape::DtaError,
-                                    >::Ok(crate::runtime::tape::TapeOffset::NONE)
+                                    >::Ok(())
                                 }
                                 ::core::option::Option::None => {
                                     ::core::result::Result::Err(

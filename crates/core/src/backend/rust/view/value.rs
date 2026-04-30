@@ -1,6 +1,6 @@
 //! AY-II.W0'.b — projection-consumer wiring for the fused pipeline.
 //!
-//! AZ-II.cutover.O3.P1-V1: this value surface is TapeDirect-only.
+//! AZ-II.cutover.O4: this value surface is no longer emitted.
 //! StructDirect grammars materialize through document-owned runtime
 //! APIs; they must not keep generated `<Grammar>Value`,
 //! `ValueRoot`, or node-view fallback surfaces.
@@ -51,9 +51,7 @@ use quote::{format_ident, quote};
 
 use super::named_types::RustNamedTypes;
 use super::peel;
-use crate::backend::rust::emitter::grammar::{
-    collect_projection_admissions, ProjectionAdmission,
-};
+use crate::backend::rust::emitter::grammar::{ProjectionAdmission, collect_projection_admissions};
 
 /// Shape the variant's payload takes in `<Grammar>Value`.
 ///
@@ -95,15 +93,12 @@ enum VariantShape {
 /// Returns an empty [`TokenStream`] for StructDirect grammars or when
 /// the grammar has no non-transparent rules.
 pub fn emit_value_surface(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
-    if !super::should_emit_tape_direct_surface(ir, grammar_name) {
+    if !super::should_emit_legacy_tape_surface(ir, grammar_name) {
         return quote! {};
     }
 
-    let non_transparent: Vec<&IrRule> = ir
-        .rules
-        .iter()
-        .filter(|r| !r.meta.is_transparent)
-        .collect();
+    let non_transparent: Vec<&IrRule> =
+        ir.rules.iter().filter(|r| !r.meta.is_transparent).collect();
     if non_transparent.is_empty() {
         return quote! {};
     }
@@ -112,12 +107,7 @@ pub fn emit_value_surface(ir: &GrammarIR, grammar_name: &str) -> TokenStream {
     let admissions = collect_projection_admissions(ir, &resolver);
     let grammar_prefix = to_upper_camel(grammar_name);
 
-    let variants = collect_variant_classes(
-        ir,
-        &non_transparent,
-        &admissions,
-        &grammar_prefix,
-    );
+    let variants = collect_variant_classes(ir, &non_transparent, &admissions, &grammar_prefix);
     let value_ident = format_ident!("{}Value", grammar_name);
     let grammar_ident = format_ident!("{}", grammar_name);
     let node_view_ident = format_ident!("{}NodeView", grammar_name);
@@ -356,7 +346,7 @@ fn emit_enum_decl(
 
     quote! {
         /// AY-II.W0'.b — grammar-emitted value enum. Eager
-        /// materialisation target for `Parsed::to_value()`. Variants
+        /// materialisation target for document value APIs. Variants
         /// enumerate non-transparent rules; admitted rules carry the
         /// matching `<Grammar><RuleCamel>Projection` struct directly,
         /// non-admitted rules carry their shape-classified payload.
@@ -406,7 +396,15 @@ fn emit_value_root_impl(
     // from the frame + input.
     let project_arms: Vec<TokenStream> = variants
         .iter()
-        .map(|v| emit_project_arm(v, value_ident, rule_kind_ident, &push_children_fn, grammar_name))
+        .map(|v| {
+            emit_project_arm(
+                v,
+                value_ident,
+                rule_kind_ident,
+                &push_children_fn,
+                grammar_name,
+            )
+        })
         .collect();
 
     quote! {
@@ -761,9 +759,7 @@ fn emit_scalar_project_arm(
             }
         },
         _ => {
-            let ident = td
-                .rust_ident()
-                .expect("scalar TypeDesc has rust_ident");
+            let ident = td.rust_ident().expect("scalar TypeDesc has rust_ident");
             let ty_ident = format_ident!("{}", ident);
             quote! {
                 #rule_kind_ident::#kind_variant => {
@@ -874,9 +870,7 @@ fn emit_path_query_impls(
     let mut scan_structural_rks: Vec<syn::Ident> = Vec::new();
     let mut bounded_lookahead_rks: Vec<syn::Ident> = Vec::new();
     for v in variants {
-        let Some((_, flags)) =
-            lookup_scan_policy(ir, v.rule_id)
-        else {
+        let Some((_, flags)) = lookup_scan_policy(ir, v.rule_id) else {
             continue;
         };
         let rule = ir
@@ -1203,11 +1197,8 @@ fn emit_path_query_impls(
 /// `emit_value_surface`; downstream consumers inspect only
 /// `has_cursor_fields`.
 pub fn variant_entries_for(ir: &GrammarIR) -> Vec<VariantInfo> {
-    let non_transparent: Vec<&IrRule> = ir
-        .rules
-        .iter()
-        .filter(|r| !r.meta.is_transparent)
-        .collect();
+    let non_transparent: Vec<&IrRule> =
+        ir.rules.iter().filter(|r| !r.meta.is_transparent).collect();
     let resolver = RustNamedTypes::from_ir(ir);
     let admissions = collect_projection_admissions(ir, &resolver);
     let mut out: Vec<VariantInfo> = Vec::with_capacity(non_transparent.len());
@@ -1221,9 +1212,7 @@ pub fn variant_entries_for(ir: &GrammarIR) -> Vec<VariantInfo> {
             idx += 1;
             name = format!("{}_{}", raw_name, idx);
         }
-        let shape = if let Some(admission) =
-            admissions.iter().find(|a| a.rule_name() == raw_name)
-        {
+        let shape = if let Some(admission) = admissions.iter().find(|a| a.rule_name() == raw_name) {
             VariantInfoShape::Projection {
                 has_cursor_fields: admission.plan().has_cursor_fields,
             }

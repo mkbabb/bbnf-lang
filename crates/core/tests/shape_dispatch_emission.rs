@@ -26,14 +26,14 @@
 //! `w4_<shape>_emitter_produces_parsable_tokens` tests. The per-
 //! grammar consumer wiring for CSS / Sheets lands in W4.2 / W4.3.
 
-use bbnf::backend::rust::emitter::shapes::{
-    arglist, array, flat, hregex, keyword, number, object, pratt, scalar,
-    string, unordered, wrap,
-};
 use bbnf::backend::rust::emitter::EmitStrategy;
-use bbnf_ir::passes::recognizers::shape_dispatch::{
-    scalar as scalar_detect, shape_dispatch, ShapeTag,
+use bbnf::backend::rust::emitter::shapes::{
+    arglist, array, flat, hregex, keyword, number, object, pratt, scalar, string, unordered, wrap,
 };
+use bbnf_ir::passes::recognizers::shape_dispatch::{
+    ShapeTag, scalar as scalar_detect, shape_dispatch,
+};
+use bbnf_ir::registry::SubstrateBinding;
 use bbnf_ir::{IrNode, RuleId};
 
 #[path = "shape_dispatch_emission/fixtures.rs"]
@@ -43,6 +43,17 @@ use fixtures::*;
 
 // ─── Shared helpers ──────────────────────────────────────────────────
 
+fn json_strategy() -> EmitStrategy {
+    EmitStrategy::StructDirect {
+        rust: SubstrateBinding {
+            builder_path: "crate::runtime::json::JsonStructBuilder",
+            document_path: "crate::runtime::json::JsonDocument",
+        },
+        ts: None,
+        wasm: None,
+    }
+}
+
 /// Format a `TokenStream` into a readable string via `prettyplease`.
 ///
 /// The emitters produce top-level `pub fn`/`pub(crate) mod` items, so
@@ -50,8 +61,8 @@ use fixtures::*;
 /// output is deterministic and survives round-trip — regenerating a
 /// golden from the same emitter output yields byte-identical text.
 fn format_tokens(ts: &proc_macro2::TokenStream) -> String {
-    let file: syn::File = syn::parse2(ts.clone())
-        .expect("emitter output must parse as a syn::File");
+    let file: syn::File =
+        syn::parse2(ts.clone()).expect("emitter output must parse as a syn::File");
     prettyplease::unparse(&file)
 }
 
@@ -71,8 +82,7 @@ fn assert_matches_golden(actual: &str, expected: &str, golden_name: &str) {
             "{}/tests/fixtures/shape_dispatch_emission/{golden_name}.expected",
             env!("CARGO_MANIFEST_DIR"),
         );
-        std::fs::write(&path, a)
-            .unwrap_or_else(|err| panic!("write {path}: {err}"));
+        std::fs::write(&path, a).unwrap_or_else(|err| panic!("write {path}: {err}"));
         return;
     }
     assert_eq!(
@@ -94,11 +104,10 @@ fn object_shape_classifies_correctly() {
 fn object_shape_emit_matches_golden() {
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.object as usize];
-    let ts = object::emit_parse_object("JsonFixture", rule, &ir, &EmitStrategy::TapeDirect);
+    let strategy = json_strategy();
+    let ts = object::emit_parse_object("JsonFixture", rule, &ir, &strategy);
     let actual = format_tokens(&ts);
-    let expected = include_str!(
-        "fixtures/shape_dispatch_emission/object.rs.expected"
-    );
+    let expected = include_str!("fixtures/shape_dispatch_emission/object.rs.expected");
     assert_matches_golden(&actual, expected, "object.rs");
 }
 
@@ -114,11 +123,10 @@ fn array_shape_classifies_correctly() {
 fn array_shape_emit_matches_golden() {
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.array as usize];
-    let ts = array::emit_parse_array("JsonFixture", rule, &ir, &EmitStrategy::TapeDirect);
+    let strategy = json_strategy();
+    let ts = array::emit_parse_array("JsonFixture", rule, &ir, &strategy);
     let actual = format_tokens(&ts);
-    let expected = include_str!(
-        "fixtures/shape_dispatch_emission/array.rs.expected"
-    );
+    let expected = include_str!("fixtures/shape_dispatch_emission/array.rs.expected");
     assert_matches_golden(&actual, expected, "array.rs");
 }
 
@@ -134,16 +142,10 @@ fn string_shape_classifies_correctly() {
 fn string_shape_emit_matches_golden() {
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.string as usize];
-    let ts = string::emit_parse_string(
-        "JsonFixture",
-        rule,
-        &ir,
-        &bbnf::backend::rust::emitter::EmitStrategy::TapeDirect,
-    );
+    let strategy = json_strategy();
+    let ts = string::emit_parse_string("JsonFixture", rule, &ir, &strategy);
     let actual = format_tokens(&ts);
-    let expected = include_str!(
-        "fixtures/shape_dispatch_emission/string.rs.expected"
-    );
+    let expected = include_str!("fixtures/shape_dispatch_emission/string.rs.expected");
     assert_matches_golden(&actual, expected, "string.rs");
 }
 
@@ -159,16 +161,10 @@ fn number_shape_classifies_correctly() {
 fn number_shape_emit_matches_golden() {
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.number as usize];
-    let ts = number::emit_parse_number(
-        "JsonFixture",
-        rule,
-        &ir,
-        &bbnf::backend::rust::emitter::EmitStrategy::TapeDirect,
-    );
+    let strategy = json_strategy();
+    let ts = number::emit_parse_number("JsonFixture", rule, &ir, &strategy);
     let actual = format_tokens(&ts);
-    let expected = include_str!(
-        "fixtures/shape_dispatch_emission/number.rs.expected"
-    );
+    let expected = include_str!("fixtures/shape_dispatch_emission/number.rs.expected");
     assert_matches_golden(&actual, expected, "number.rs");
 }
 
@@ -189,15 +185,10 @@ fn keyword_shape_classifies_correctly() {
 fn keyword_shape_emit_matches_golden() {
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.bool_rule as usize];
-    // AZ-I.W2.RD — `JsonFixture` is not in the StructDirect resolver
-    // admission list (`JsonParser` / `JsonGrammar`); the fixture
-    // continues to exercise the tape-direct golden.
-    let strategy = EmitStrategy::TapeDirect;
+    let strategy = json_strategy();
     let ts = keyword::emit_parse_keyword("JsonFixture", rule, &ir, &strategy);
     let actual = format_tokens(&ts);
-    let expected = include_str!(
-        "fixtures/shape_dispatch_emission/keyword.rs.expected"
-    );
+    let expected = include_str!("fixtures/shape_dispatch_emission/keyword.rs.expected");
     assert_matches_golden(&actual, expected, "keyword.rs");
 }
 
@@ -243,10 +234,7 @@ fn scalar_shape_classifier_routes_literal_to_keyword() {
         "Keyword precedes Scalar — `comma` routes to Keyword under the \
          dispatch ordering",
     );
-    assert_eq!(
-        ir.shape_assignments.get(rules.colon),
-        ShapeTag::Keyword,
-    );
+    assert_eq!(ir.shape_assignments.get(rules.colon), ShapeTag::Keyword,);
 }
 
 #[test]
@@ -257,16 +245,10 @@ fn scalar_shape_emit_matches_golden() {
     // match + push_leaf(Literal) path.
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.comma as usize];
-    let ts = scalar::emit_parse_scalar(
-        "JsonFixture",
-        rule,
-        &ir,
-        &bbnf::backend::rust::emitter::EmitStrategy::TapeDirect,
-    );
+    let strategy = json_strategy();
+    let ts = scalar::emit_parse_scalar("JsonFixture", rule, &ir, &strategy);
     let actual = format_tokens(&ts);
-    let expected = include_str!(
-        "fixtures/shape_dispatch_emission/scalar.rs.expected"
-    );
+    let expected = include_str!("fixtures/shape_dispatch_emission/scalar.rs.expected");
     assert_matches_golden(&actual, expected, "scalar.rs");
 }
 
@@ -337,10 +319,7 @@ fn w4_hregex_no_hits_on_json_fixture() {
 
 #[test]
 fn w4_pratt_emitter_produces_parsable_tokens() {
-    // AZ-I.W2.RE — strategy gate. JSON does not exercise Pratt; the
-    // tape-direct strategy keeps the existing emitter body intact for
-    // this parsable-tokens check.
-    let strategy = EmitStrategy::TapeDirect;
+    let strategy = json_strategy();
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.number as usize];
     let ts = pratt::emit_parse_pratt(&strategy, "JsonFixture", rule, &ir);
@@ -351,7 +330,7 @@ fn w4_pratt_emitter_produces_parsable_tokens() {
 
 #[test]
 fn w4_unordered_emitter_produces_parsable_tokens() {
-    let strategy = EmitStrategy::TapeDirect;
+    let strategy = json_strategy();
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.array as usize];
     let ts = unordered::emit_parse_unordered(&strategy, "JsonFixture", rule, &ir);
@@ -362,7 +341,7 @@ fn w4_unordered_emitter_produces_parsable_tokens() {
 
 #[test]
 fn w4_arglist_emitter_produces_parsable_tokens() {
-    let strategy = EmitStrategy::TapeDirect;
+    let strategy = json_strategy();
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.object as usize];
     let ts = arglist::emit_parse_arglist(&strategy, "JsonFixture", rule, &ir);
@@ -373,7 +352,7 @@ fn w4_arglist_emitter_produces_parsable_tokens() {
 
 #[test]
 fn w4_flat_emitter_produces_parsable_tokens() {
-    let strategy = EmitStrategy::TapeDirect;
+    let strategy = json_strategy();
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.pair as usize];
     let ts = flat::emit_parse_flat(&strategy, "JsonFixture", rule, &ir);
@@ -386,7 +365,7 @@ fn w4_flat_emitter_produces_parsable_tokens() {
 fn w4_wrap_emitter_produces_parsable_tokens() {
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.value as usize];
-    let strategy = EmitStrategy::TapeDirect;
+    let strategy = json_strategy();
     let ts = wrap::emit_parse_wrap("JsonFixture", rule, &ir, &strategy);
     let _ = format_tokens(&ts);
     let ts_v = wrap::emit_parse_wrap_visitor("JsonFixture", rule, &ir, &strategy);
@@ -395,7 +374,7 @@ fn w4_wrap_emitter_produces_parsable_tokens() {
 
 #[test]
 fn w4_hregex_emitter_produces_parsable_tokens() {
-    let strategy = EmitStrategy::TapeDirect;
+    let strategy = json_strategy();
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.string as usize];
     let ts = hregex::emit_parse_hregex(&strategy, "JsonFixture", rule, &ir);
@@ -494,4 +473,3 @@ fn _fixtures_type_touch() {
     let _: RuleId = 0;
     let _ = IrNode::Epsilon;
 }
-

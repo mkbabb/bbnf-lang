@@ -38,18 +38,16 @@ use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use bbnf_ir::registry::EmitStrategy;
 use super::dispatcher::{
-    dispatcher_fn_ident, emit_ref_call_tape, emit_ref_call_visitor, shape_fn_ident,
+    dispatcher_fn_ident, emit_ref_call_shape, emit_ref_call_visitor, shape_fn_ident,
     visitor_dispatcher_fn_ident, visitor_shape_fn_ident,
 };
 use super::root_rule_name;
 use super::substrate::{builder_ty_elided, builder_ty_with_lifetime};
+use bbnf_ir::registry::EmitStrategy;
 
-/// Emit `pub fn parse_object_<grammar>_<rule>(input, p, state, builder)
-/// -> Result<TapeOffset, DtaError>` for [`EmitStrategy::TapeDirect`], or
-/// the matching `JsonStructBuilder`-targeted body for
-/// [`EmitStrategy::StructDirect`].
+/// Emit the `parse_object_<grammar>_<rule>` body for the resolved
+/// struct-builder substrate.
 ///
 /// AZ-I.W2.RB — strategy match is at codegen time, not at runtime: the
 /// emitter produces ONE function body per `(grammar, rule)` and selects
@@ -61,367 +59,7 @@ pub fn emit_parse_object(
     ir: &GrammarIR,
     strategy: &EmitStrategy,
 ) -> TokenStream {
-    match strategy {
-        EmitStrategy::StructDirect { .. } => {
-            emit_parse_object_struct_direct(grammar_suffix, rule, ir, strategy)
-        }
-        EmitStrategy::TapeDirect => emit_parse_object_tape(grammar_suffix, rule, ir),
-    }
-}
-
-fn emit_parse_object_tape(
-    grammar_suffix: &str,
-    rule: &IrRule,
-    ir: &GrammarIR,
-) -> TokenStream {
-    let rule_name = ir.get_string(rule.name);
-    let fn_ident = shape_fn_ident("object", grammar_suffix, rule_name);
-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
-    let variant_idx = (rule.id & 0xFF) as u8;
-
-    let dispatcher_ident = match root_rule_name(ir) {
-        Some(root) => {
-            let root_disp = dispatcher_fn_ident(grammar_suffix, &root);
-            format_ident!("{}__value", root_disp)
-        }
-        None => return quote! {},
-    };
-
-    // Locate the string rule and its variant_idx so we can call its
-    // shape fn + stamp the pair's `Ref(string)` correctly.
-    let (string_fn, string_variant, pair_variant, value_ref) =
-        resolve_pair_context(grammar_suffix, ir);
-
-    // AW-V.W5.2 — per-Ref value-position routing. If the pair rule has a
-    // classified value Ref target, emit a direct call to that target's
-    // shape fn; otherwise fall back to the dispatcher (__value).
-    let value_call = value_ref
-        .and_then(|rid| emit_ref_call_tape(grammar_suffix, rid, ir))
-        .map(|call| quote! { let _value_off = (#call)?; })
-        .unwrap_or_else(|| {
-            quote! {
-                let _value_off = #dispatcher_ident(input, p, state, builder)?;
-            }
-        });
-
-    quote! {
-        /// AW-V.W3.2 — per-grammar Object-shape parse function,
-        /// **walker-tape-identical**.
-        ///
-        /// AX.W0a.2.f — compound; plain `#[inline]` per cross-shape
-        /// recursion rationale (object → value → object).
-        #[inline]
-        #[allow(non_snake_case, clippy::too_many_arguments)]
-        pub fn #fn_ident(
-            input: &[u8],
-            p: &mut usize,
-            state: &mut #support_mod::ScanState,
-            builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
-            let span_lo = *p as u32;
-            if input.get(*p).copied() != Some(b'{') {
-                return Err(crate::runtime::tape::DtaError::Syntax {
-                    offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                });
-            }
-
-            // AY-II.W0.b — unified pre-order emission via begin_compound.
-            // W0.a retires the open_compound/close_compound pair and
-            // publishes begin_compound/end_compound against a
-            // rollback-aware Columns primitive. Every compound this
-            // shape emits lands at write-time; the matching end_compound
-            // back-patches span_hi + child_off + HAS_CHILDREN on the
-            // parent row. Direct children participate in the open
-            // frame's push hook automatically (no mark_children needed).
-            //
-            // Outer object Seq compound opens pre-order; children are
-            // pushed after.
-            let outer_off = builder.begin_compound(
-                crate::runtime::tape::TapeKind::Seq,
-                span_lo,
-                #variant_idx,
-                0u8,
-                0u16,
-            );
-
-            // Next("{" , rest) Seq compound — pre-order open.
-            let lbrace_open = *p as u32;
-            let next_off = builder.begin_compound(
-                crate::runtime::tape::TapeKind::Seq,
-                lbrace_open,
-                0,
-                0u8,
-                0u16,
-            );
-
-            // Leaf: "{" Literal — walker stamps variant_idx with the
-            // enclosing rule's id (object, here) from the Ref's pending
-            // stamp inherited into the Literal arm.
-            *p += 1;
-            let brace_close = *p as u32;
-            let _ = builder.push_leaf_with(
-                crate::runtime::tape::TapeKind::Literal,
-                lbrace_open,
-                brace_close,
-                #variant_idx,
-                0,
-                crate::runtime::tape::PayloadData::None,
-            );
-
-            // OptionalWhitespace Seq compound — pre-order open.
-            let opt_ws_open = *p as u32;
-            let opt_ws_off = builder.begin_compound(
-                crate::runtime::tape::TapeKind::Seq,
-                opt_ws_open,
-                0,
-                0u8,
-                0u16,
-            );
-
-            let _ = #support_mod::skip_space(input, p, state);
-            let repeat_open = *p as u32;
-            let repeat_off = builder.begin_compound(
-                crate::runtime::tape::TapeKind::Rule,
-                repeat_open,
-                0,
-                0u8,
-                0u16,
-            );
-
-            if input.get(*p).copied() == Some(b'}') {
-                // Empty object — close the Repeat (0 iters), OptionalWhitespace, Next, outer.
-                let repeat_close = *p as u32;
-                builder.end_compound(repeat_off, repeat_close);
-                let opt_ws_close = *p as u32;
-                builder.end_compound(opt_ws_off, opt_ws_close);
-                *p += 1;
-                let rbrace_hi = *p as u32;
-                let _ = builder.push_leaf_with(
-                    crate::runtime::tape::TapeKind::Literal,
-                    opt_ws_close,
-                    rbrace_hi,
-                    #variant_idx,
-                    0,
-                    crate::runtime::tape::PayloadData::None,
-                );
-                let next_close = rbrace_hi;
-                builder.end_compound(next_off, next_close);
-                let outer_close = *p as u32;
-                builder.end_compound(outer_off, outer_close);
-                return Ok(crate::runtime::tape::TapeOffset(outer_off));
-            }
-
-            // Non-empty: loop per iter (Skip(pair, Repeat(,?))).
-            //
-            // Walker-parity decomposition of `(pair << comma?) *` with
-            //   `pair = string, colon >> value`
-            //   `colon = ":" ?w` → `OptionalWhitespace(Literal(":"))`
-            //   `comma = "," ?w` → `OptionalWhitespace(Literal(","))`
-            //
-            //  - pair body is `Seq[Ref(string), Next(Ref(colon), Ref(value))]`.
-            //    No OW between `string` and `Next`; the ws between the
-            //    closing `"` and `:` lives in `colon`'s OW-Seq leading
-            //    WsTrim. The ws between `:` and value lives in `colon`'s
-            //    OW-Seq trailing WsTrim.
-            //  - Same comma-repeat shape as array; see `array.rs` for the
-            //    full commentary.
-            loop {
-                let iter_open = *p as u32;
-                let iter_off = builder.begin_compound(
-                    crate::runtime::tape::TapeKind::Seq,
-                    iter_open,
-                    0,
-                    0u8,
-                    0u16,
-                );
-
-                // pair Seq compound — pre-order open with its pair
-                // variant stamp.
-                let pair_open = *p as u32;
-                let pair_off = builder.begin_compound(
-                    crate::runtime::tape::TapeKind::Seq,
-                    pair_open,
-                    #pair_variant,
-                    0u8,
-                    0u16,
-                );
-
-                // Ref(string) — emit string shape fn (its own Span leaf).
-                if input.get(*p).copied() != Some(b'"') {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                let _key_off = #string_fn(input, p, state, builder)?;
-
-                // Next(colon, value) Seq compound — pre-order open.
-                // span_lo captured AT `*p` immediately after the key,
-                // BEFORE colon's leading WsTrim consumes any ws
-                // (walker: no OW between `string` and `Next(colon, value)`).
-                let colon_next_open = *p as u32;
-                let colon_next_off = builder.begin_compound(
-                    crate::runtime::tape::TapeKind::Seq,
-                    colon_next_open,
-                    0,
-                    0u8,
-                    0u16,
-                );
-
-                // colon = OptionalWhitespace(Literal(":")) — DTA Seq
-                // `[WsTrim, ":", WsTrim]`. span_lo at entry (BEFORE
-                // leading WsTrim), span_hi after trailing WsTrim.
-                let opt_colon_open = *p as u32;
-                let opt_colon_off = builder.begin_compound(
-                    crate::runtime::tape::TapeKind::Seq,
-                    opt_colon_open,
-                    0,
-                    0u8,
-                    0u16,
-                );
-                // Leading WsTrim inside colon's OW Seq.
-                let _ = #support_mod::skip_space(input, p, state);
-                if input.get(*p).copied() != Some(b':') {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
-                        offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                    });
-                }
-                let colon_lo = *p as u32;
-                *p += 1;
-                let colon_hi = *p as u32;
-                let _ = builder.push_leaf_with(
-                    crate::runtime::tape::TapeKind::Literal,
-                    colon_lo,
-                    colon_hi,
-                    #pair_variant,
-                    0,
-                    crate::runtime::tape::PayloadData::None,
-                );
-                // Trailing WsTrim inside colon's OW Seq.
-                let _ = #support_mod::skip_space(input, p, state);
-                let opt_colon_close = *p as u32;
-                builder.end_compound(opt_colon_off, opt_colon_close);
-
-                // Ref(value) — AW-V.W5.2 per-Ref direct call when the
-                // target is classified, else fall back to the dispatcher.
-                // Value branches are leaves (string/number/bool/null) or
-                // nested object/array shape fns; both participate in
-                // this open frame's push hook automatically.
-                #value_call
-
-                // Close Next(colon, value) Seq compound.
-                let colon_next_close = *p as u32;
-                builder.end_compound(colon_next_off, colon_next_close);
-
-                // Close pair Seq compound.
-                let pair_close = *p as u32;
-                builder.end_compound(pair_off, pair_close);
-
-                // comma_repeat Rule — walker-parity: span_lo at `*p`
-                // BEFORE any leading ws comma's OW would trim. Attempt
-                // one iter; on failure, rollback `*p`.
-                let comma_repeat_open = *p as u32;
-                let comma_repeat_off = builder.begin_compound(
-                    crate::runtime::tape::TapeKind::Rule,
-                    comma_repeat_open,
-                    0,
-                    0u8,
-                    0u16,
-                );
-
-                let comma_iter_save_p = *p;
-                let _ = #support_mod::skip_space(input, p, state);
-                let has_comma = input.get(*p).copied() == Some(b',');
-                if has_comma {
-                    let comma_iter_open = comma_iter_save_p as u32;
-                    let comma_iter_off = builder.begin_compound(
-                        crate::runtime::tape::TapeKind::Seq,
-                        comma_iter_open,
-                        0,
-                        0u8,
-                        0u16,
-                    );
-                    let comma_lo = *p as u32;
-                    *p += 1;
-                    let comma_hi = *p as u32;
-                    // Walker-parity: inlined comma has no Ref-stamp so the
-                    // `,` Literal inherits the nearest non-anon frame's
-                    // `variant_idx` — the object rule's own (not pair's).
-                    let _ = builder.push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        comma_lo,
-                        comma_hi,
-                        #variant_idx,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-                    let _ = #support_mod::skip_space(input, p, state);
-                    let comma_iter_close = *p as u32;
-                    builder.end_compound(comma_iter_off, comma_iter_close);
-                } else {
-                    *p = comma_iter_save_p;
-                }
-                let comma_repeat_close = *p as u32;
-                builder.end_compound(comma_repeat_off, comma_repeat_close);
-
-                let iter_close = *p as u32;
-                builder.end_compound(iter_off, iter_close);
-
-                // Outer Repeat continue/close decision — walker-parity:
-                // the pair iter's first state is the Ref(string) whose
-                // ByteDispatch matches only `"`. If `*p` is not `"`,
-                // close the Repeat at `*p` (BEFORE OW-Seq trailing ws).
-                let is_pair_start = input.get(*p).copied() == Some(b'"');
-                if !is_pair_start {
-                    let repeat_close = *p as u32;
-                    builder.end_compound(repeat_off, repeat_close);
-                    // OW-Seq trailing WsTrim
-                    let _ = #support_mod::skip_space(input, p, state);
-                    let opt_ws_close = *p as u32;
-                    builder.end_compound(opt_ws_off, opt_ws_close);
-                    if input.get(*p).copied() != Some(b'}') {
-                        return Err(match input.get(*p).copied() {
-                            None => crate::runtime::tape::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            },
-                            _ => crate::runtime::tape::DtaError::Syntax {
-                                offset: *p as u32,
-                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
-                            },
-                        });
-                    }
-                    *p += 1;
-                    let rbrace_hi = *p as u32;
-                    let _ = builder.push_leaf_with(
-                        crate::runtime::tape::TapeKind::Literal,
-                        opt_ws_close,
-                        rbrace_hi,
-                        #variant_idx,
-                        0,
-                        crate::runtime::tape::PayloadData::None,
-                    );
-                    let next_close = rbrace_hi;
-                    builder.end_compound(next_off, next_close);
-                    let outer_close = *p as u32;
-                    builder.end_compound(outer_off, outer_close);
-                    let _ = #string_variant;
-                    return Ok(crate::runtime::tape::TapeOffset(outer_off));
-                }
-                // Continue: next iter. The key-start check above is the
-                // loop's only exit other than EOF/garbage (which the
-                // next iter's `"` check handles).
-            }
-        }
-    }
+    emit_parse_object_struct_direct(grammar_suffix, rule, ir, strategy)
 }
 
 /// AZ-I.W2.RB — struct-direct body for the Object shape.
@@ -432,7 +70,7 @@ fn emit_parse_object_tape(
 /// recursive value calls, and `end_compound(handle)` closes it. The
 /// function takes `&mut crate::runtime::JsonStructBuilder<'p>` instead
 /// of `&mut Tape<()>` and returns `Result<(), DtaError>` (no
-/// TapeOffset — the builder owns the in-flight stack and finalises into
+/// unit — the builder owns the in-flight stack and finalises into
 /// `JsonDocument` at the call boundary in `parse()`).
 ///
 /// The `__layout` lookup is asserted (not fall-back). Per the W2-EMITTER-
@@ -470,7 +108,7 @@ fn emit_parse_object_struct_direct(
     // emitters land. On struct-direct, all Ref calls take the
     // JsonStructBuilder argument unchanged from this fn's `builder`.
     let value_call = value_ref
-        .and_then(|rid| emit_ref_call_tape(grammar_suffix, rid, ir))
+        .and_then(|rid| emit_ref_call_shape(grammar_suffix, rid, ir))
         .map(|call| quote! { (#call)?; })
         .unwrap_or_else(|| {
             quote! {
@@ -493,10 +131,7 @@ fn emit_parse_object_struct_direct(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             use crate::runtime::builder::StructBuilder;
 
             if input.get(*p).copied() != Some(b'{') {
@@ -527,7 +162,7 @@ fn emit_parse_object_struct_direct(
             if input.get(*p).copied() == Some(b'}') {
                 *p += 1;
                 builder.end_compound(__handle);
-                return Ok(crate::runtime::tape::TapeOffset::NONE);
+                return Ok(());
             }
 
             loop {
@@ -566,7 +201,7 @@ fn emit_parse_object_struct_direct(
                     Some(b'}') => {
                         *p += 1;
                         builder.end_compound(__handle);
-                        return Ok(crate::runtime::tape::TapeOffset::NONE);
+                        return Ok(());
                     }
                     _ => return Err(crate::runtime::tape::DtaError::Syntax {
                         offset: *p as u32,
@@ -596,8 +231,8 @@ fn resolve_pair_context(
     grammar_suffix: &str,
     ir: &GrammarIR,
 ) -> (proc_macro2::Ident, u8, u8, Option<bbnf_ir::RuleId>) {
-    use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
     use bbnf_ir::IrNode;
+    use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
 
     // Find the String-shape rule.
     let string_rule = ir
@@ -623,9 +258,8 @@ fn resolve_pair_context(
     // body. Canonical JSON pair body:
     //   Seq[Ref(string), Next(Ref(colon), Ref(value))]
     // Walk to find the non-string, non-colon Ref — that's the value.
-    let value_ref = pair_rule.and_then(|pair| {
-        extract_value_ref_from_pair_body(&pair.body, string_rule.id, ir)
-    });
+    let value_ref =
+        pair_rule.and_then(|pair| extract_value_ref_from_pair_body(&pair.body, string_rule.id, ir));
 
     (string_fn, string_variant, pair_variant, value_ref)
 }
@@ -655,11 +289,7 @@ fn extract_value_ref_from_pair_body(
         }
         matches!(unwrap(&rule.body), IrNode::Literal(_))
     }
-    fn walk(
-        node: &IrNode,
-        string_rid: bbnf_ir::RuleId,
-        ir: &GrammarIR,
-    ) -> Option<bbnf_ir::RuleId> {
+    fn walk(node: &IrNode, string_rid: bbnf_ir::RuleId, ir: &GrammarIR) -> Option<bbnf_ir::RuleId> {
         match node {
             IrNode::Ref(rid) => {
                 if *rid == string_rid {
@@ -702,10 +332,7 @@ fn extract_value_ref_from_pair_body(
 
 /// Resolve the grammar's String-shape visitor-path fn ident for key
 /// parsing.
-fn resolve_visitor_pair_context(
-    grammar_suffix: &str,
-    ir: &GrammarIR,
-) -> proc_macro2::Ident {
+fn resolve_visitor_pair_context(grammar_suffix: &str, ir: &GrammarIR) -> proc_macro2::Ident {
     use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
 
     let string_rule = ir

@@ -17,7 +17,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use super::super::super::dfa_codegen::regex_scan_adapter_ident;
-use super::super::dispatcher::emit_ref_call_tape;
+use super::super::dispatcher::emit_ref_call_shape;
 use super::super::sanitise_grammar;
 use super::branch_analysis::unwrap_trivia;
 use super::regex::{emit_regex_tape, emit_regex_visitor};
@@ -60,8 +60,7 @@ pub(super) fn emit_negate_visitor(
     grammar_suffix: &str,
     ir: &GrammarIR,
 ) -> TokenStream {
-    let inner_attempt =
-        emit_guard_attempt_visitor(inner, support_mod, grammar_suffix, ir);
+    let inner_attempt = emit_guard_attempt_visitor(inner, support_mod, grammar_suffix, ir);
     quote! {
         {
             let save_p = *p;
@@ -92,10 +91,8 @@ pub(super) fn emit_minus_tape(
     grammar_suffix: &str,
     ir: &GrammarIR,
 ) -> TokenStream {
-    let excluded_attempt =
-        emit_guard_attempt_tape(excluded, support_mod, grammar_suffix, ir);
-    let primary_emit =
-        emit_primary_tape(primary, variant_idx, support_mod, grammar_suffix, ir);
+    let excluded_attempt = emit_guard_attempt_tape(excluded, support_mod, grammar_suffix, ir);
+    let primary_emit = emit_primary_tape(primary, variant_idx, support_mod, grammar_suffix, ir);
     quote! {
         {
             let save_p = *p;
@@ -125,10 +122,8 @@ pub(super) fn emit_minus_visitor(
     grammar_suffix: &str,
     ir: &GrammarIR,
 ) -> TokenStream {
-    let excluded_attempt =
-        emit_guard_attempt_visitor(excluded, support_mod, grammar_suffix, ir);
-    let primary_emit =
-        emit_primary_visitor(primary, support_mod, grammar_suffix, ir);
+    let excluded_attempt = emit_guard_attempt_visitor(excluded, support_mod, grammar_suffix, ir);
+    let primary_emit = emit_primary_visitor(primary, support_mod, grammar_suffix, ir);
     quote! {
         {
             let save_p = *p;
@@ -162,8 +157,7 @@ fn emit_guard_attempt_tape(
         IrNode::Literal(sid) => {
             let bytes = ir.get_string(*sid).as_bytes();
             let len = bytes.len();
-            let byte_lits: Vec<TokenStream> =
-                bytes.iter().map(|b| quote! { #b }).collect();
+            let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
             quote! {
                 let at = *p;
                 let end = at + #len;
@@ -175,8 +169,7 @@ fn emit_guard_attempt_tape(
         }
         IrNode::Regex(sid) => {
             let pattern = ir.get_string(*sid).to_string();
-            let regex_scan_ident =
-                regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
+            let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
             quote! {
                 let Some(match_len) = #regex_scan_ident(#pattern, input, *p) else {
                     return Err(());
@@ -184,7 +177,7 @@ fn emit_guard_attempt_tape(
                 *p += match_len as usize;
             }
         }
-        IrNode::Ref(rid) => match emit_ref_call_tape(grammar_suffix, *rid, ir) {
+        IrNode::Ref(rid) => match emit_ref_call_shape(grammar_suffix, *rid, ir) {
             Some(call) => quote! {
                 if (#call).is_err() {
                     return Err(());
@@ -207,8 +200,7 @@ fn emit_guard_attempt_visitor(
         IrNode::Literal(sid) => {
             let bytes = ir.get_string(*sid).as_bytes();
             let len = bytes.len();
-            let byte_lits: Vec<TokenStream> =
-                bytes.iter().map(|b| quote! { #b }).collect();
+            let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
             quote! {
                 let at = *p;
                 let end = at + #len;
@@ -220,8 +212,7 @@ fn emit_guard_attempt_visitor(
         }
         IrNode::Regex(sid) => {
             let pattern = ir.get_string(*sid).to_string();
-            let regex_scan_ident =
-                regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
+            let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
             quote! {
                 let Some(match_len) = #regex_scan_ident(#pattern, input, *p) else {
                     return Err(());
@@ -256,8 +247,7 @@ pub(super) fn emit_primary_tape(
         IrNode::Literal(sid) => {
             let bytes = ir.get_string(*sid).as_bytes();
             let len = bytes.len();
-            let byte_lits: Vec<TokenStream> =
-                bytes.iter().map(|b| quote! { #b }).collect();
+            let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
             let variant_lit = variant_idx;
             quote! {
                 let at = *p;
@@ -282,7 +272,7 @@ pub(super) fn emit_primary_tape(
                 );
             }
         }
-        IrNode::Ref(rid) => match emit_ref_call_tape(grammar_suffix, *rid, ir) {
+        IrNode::Ref(rid) => match emit_ref_call_shape(grammar_suffix, *rid, ir) {
             // Walker-parity: on Ref-call failure inside a Minus-primary
             // we are already in a failure-commit state (the caller
             // propagates `?`), so the enclosing rule will itself fail
@@ -301,7 +291,10 @@ pub(super) fn emit_primary_tape(
             },
         },
         IrNode::Regex(sid) => emit_regex_tape(*sid, variant_idx, grammar_suffix, ir),
-        inner @ (IrNode::Alt(_, _) | IrNode::Negate(_) | IrNode::Minus(_, _) | IrNode::TokenDispatch { .. }) => {
+        inner @ (IrNode::Alt(_, _)
+        | IrNode::Negate(_)
+        | IrNode::Minus(_, _)
+        | IrNode::TokenDispatch { .. }) => {
             emit_inline_position_tape(inner, variant_idx, support_mod, grammar_suffix, ir)
         }
         _ => quote! {},
@@ -319,8 +312,7 @@ pub(super) fn emit_primary_visitor(
         IrNode::Literal(sid) => {
             let bytes = ir.get_string(*sid).as_bytes();
             let len = bytes.len();
-            let byte_lits: Vec<TokenStream> =
-                bytes.iter().map(|b| quote! { #b }).collect();
+            let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
             quote! {
                 let at = *p;
                 let end = at + #len;
@@ -345,7 +337,10 @@ pub(super) fn emit_primary_visitor(
             },
         },
         IrNode::Regex(sid) => emit_regex_visitor(*sid, grammar_suffix, ir),
-        inner @ (IrNode::Alt(_, _) | IrNode::Negate(_) | IrNode::Minus(_, _) | IrNode::TokenDispatch { .. }) => {
+        inner @ (IrNode::Alt(_, _)
+        | IrNode::Negate(_)
+        | IrNode::Minus(_, _)
+        | IrNode::TokenDispatch { .. }) => {
             emit_inline_position_visitor(inner, support_mod, grammar_suffix, ir)
         }
         _ => quote! {},

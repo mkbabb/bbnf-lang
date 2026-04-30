@@ -15,8 +15,8 @@
 //! track 2 reads `GrammarIR + BackendPreparation`. The final TokenStream
 //! is the concatenation of both outputs.
 
-pub mod serialize;
 pub mod regex;
+pub mod serialize;
 pub use crate::backend::rust::ir_enums;
 pub use crate::backend::rust::ir_types;
 pub use crate::backend::rust::ir_types::ParserAttributes;
@@ -39,7 +39,8 @@ pub fn generate_all(
 ) -> proc_macro2::TokenStream {
     let ir = &prepared.ir;
 
-    let mut ir_ctx = ir_types::IrCodegenCtx::new(ir, ident, parser_attrs, prepared.prep.effective_prettify);
+    let mut ir_ctx =
+        ir_types::IrCodegenCtx::new(ir, ident, parser_attrs, prepared.prep.effective_prettify);
     ir_ctx.sp_method_rules = prepared.prep.analysis.sp_method_rules.clone();
     ir_ctx.fused_number_rules = prepared.prep.analysis.fused_number_rules.clone();
     ir_ctx.operator_chain_rules = prepared.prep.analysis.operator_chain_rules.clone();
@@ -54,30 +55,17 @@ pub fn generate_all(
     if prepared.prep.effective_prettify {
         let mut prettify_ctx = RustEmitCtx::new(&ir_ctx);
         let prettify_methods = crate::backend::driver::prettify::compile_prettify_grammar(
-            ir, &mut emitter, &mut prettify_ctx,
+            ir,
+            &mut emitter,
+            &mut prettify_ctx,
         );
         emitter.extra_impl_methods = prettify_methods;
     }
 
-    // Generate Serializer-based methods when `#[parser(serialize)]` is set.
-    //
-    // O3.P1-SER1: this generator is explicitly tape-first; every
-    // emitted method accepts `<Grammar>NodeView<'_>`. StructDirect
-    // grammars own serialization through runtime document APIs, so
-    // they must not reintroduce a generated node-view surface here.
-    let serialize_strategy = bbnf_ir::registry::EmitStrategy::for_grammar(
-        ident.to_string().as_str(),
-        &ir.struct_registry,
-    );
-    if parser_attrs.serialize
-        && matches!(
-            serialize_strategy,
-            bbnf_ir::registry::EmitStrategy::TapeDirect
-        )
-    {
-        let ser_tokens = serialize::generate_serialize_methods(ir, &ir_ctx);
-        emitter.extra_impl_methods.extend(ser_tokens);
-    }
+    // StructDirect grammars own serialization through runtime
+    // document APIs. The old generated node-view serializer methods
+    // are not emitted because they would recreate a retired parse
+    // surface.
 
     let mut emit_ctx = RustEmitCtx::new(&ir_ctx);
 
@@ -105,11 +93,8 @@ pub fn generate_all(
     );
 
     // Track 1 — frontend CST helpers from CstSchema.
-    let has_recovered = ir
-        .rules
-        .iter()
-        .any(|r| r.meta.directives.recover.is_some())
-        && !parser_attrs.skip_recover;
+    let has_recovered =
+        ir.rules.iter().any(|r| r.meta.directives.recover.is_some()) && !parser_attrs.skip_recover;
     let schema = CstSchema::from_ir(ir, enum_ident.to_string(), has_recovered);
     let schema_output = crate::grammar::schema::emit::rust::generate(
         &schema,

@@ -13,7 +13,7 @@
 //! per-site specialisation. Every shape emitter that previously
 //! called `#dispatcher_ident(input, p, state, builder)?` for a Ref-
 //! position recursion now receives the Ref's target `RuleId` at
-//! emission time and emits via [`emit_ref_call_tape`] /
+//! emission time and emits via [`emit_ref_call_shape`] /
 //! [`emit_ref_call_visitor`].
 //!
 //! The helpers return `None` when the target is unclassified
@@ -22,21 +22,22 @@
 //! [`super::super::has_shape_dispatcher_entrypoint`] gates
 //! accordingly.
 
-use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
 use bbnf_ir::GrammarIR;
+use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
 use proc_macro2::TokenStream;
 use quote::quote;
 
 use super::support_mod_ident;
 use super::symbol_composition::{shape_fn_ident, visitor_shape_fn_ident};
 
-/// Tape-path Ref-call emitter: resolves `target_rid`'s shape and emits
-/// the direct call. Returns `None` when the target is unclassified.
+/// Direct shape Ref-call emitter: resolves `target_rid`'s shape and
+/// emits the direct call. Returns `None` when the target is
+/// unclassified.
 ///
 /// Used by every shape emitter at value-position Ref sites. The emitted
 /// stream is a single expression ending in a `Result`; the caller wraps
 /// with `?` or `.map(|_| ...)` as appropriate.
-pub fn emit_ref_call_tape(
+pub fn emit_ref_call_shape(
     grammar_suffix: &str,
     target_rid: bbnf_ir::RuleId,
     ir: &GrammarIR,
@@ -72,8 +73,8 @@ pub fn emit_ref_call_tape(
     let pre_skip_needed = !target_rule_accepts_leading_ws(&target.body, ir);
     // AX.W0a.2.g — Keyword's signature gained a `state` parameter so
     // Ref-led Alt branches can delegate via this helper. Number keeps
-    // the legacy `(input, p, first, builder)` shape since its body
-    // never recurses.
+    // the `(input, p, first, builder)` shape since its body never
+    // recurses.
     let expr = match tag {
         ShapeTag::Number => quote! {
             {
@@ -109,7 +110,7 @@ pub fn emit_ref_call_tape(
 }
 
 /// Returns `true` if `body` can match an ASCII-whitespace byte as its
-/// first input byte. Used by [`emit_ref_call_tape`] to suppress the
+/// first input byte. Used by [`emit_ref_call_shape`] to suppress the
 /// pre-skip ws step when the rule itself handles whitespace (CSS
 /// `combinator`, where `/\s+/` IS a combinator branch).
 ///
@@ -207,11 +208,10 @@ pub fn emit_ref_call_visitor(
         ShapeTag::AltDispatch => "altdispatch",
         ShapeTag::None => return None,
     };
-    let target_fn =
-        visitor_shape_fn_ident(shape_name, grammar_suffix, ir.get_string(target.name));
+    let target_fn = visitor_shape_fn_ident(shape_name, grammar_suffix, ir.get_string(target.name));
     let support_mod = support_mod_ident(grammar_suffix);
     // AX.W0a.2.g — visitor-path Keyword signature extended with
-    // `state` (see tape-path emit_ref_call_tape).
+    // `state` (see direct shape emit_ref_call_shape).
     let expr = match tag {
         ShapeTag::Number => quote! {
             {

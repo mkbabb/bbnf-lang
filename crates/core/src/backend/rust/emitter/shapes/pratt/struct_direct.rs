@@ -80,9 +80,7 @@ use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::super::dispatcher::{
-    dispatcher_fn_ident, emit_ref_call_tape, shape_fn_ident,
-};
+use super::super::dispatcher::{dispatcher_fn_ident, emit_ref_call_shape, shape_fn_ident};
 use super::super::root_rule_name;
 use super::super::substrate::{builder_ty_elided, builder_ty_with_lifetime};
 use super::extract_first_ref;
@@ -91,10 +89,7 @@ use super::extract_first_ref;
 /// the registry entry's `(kind, rule_name)` when present; otherwise
 /// the structural fallback `(LayoutKind::Struct, rule_name)` keyed by
 /// the grammar-registered identifier.
-fn resolve_layout_meta<'a>(
-    rule: &IrRule,
-    ir: &'a GrammarIR,
-) -> (LayoutKind, &'a str) {
+fn resolve_layout_meta<'a>(rule: &IrRule, ir: &'a GrammarIR) -> (LayoutKind, &'a str) {
     if let Some(layout) = ir.struct_registry.layout(rule.id) {
         return (layout.kind, layout.rule_name.as_str());
     }
@@ -152,7 +147,7 @@ fn quote_layout_literal(rule: &IrRule, ir: &GrammarIR) -> TokenStream {
 /// `end_compound(handle)` calls. Per-rule operand calls thread the
 /// same `&mut <BuilderTy>` argument the tape path threads as
 /// `&mut Tape<()>`; the call signature is consistent across both
-/// substrates because [`super::super::dispatcher::emit_ref_call_tape`]
+/// substrates because [`super::super::dispatcher::emit_ref_call_shape`]
 /// resolves the target shape's parse fn name uniformly.
 pub(super) fn emit_parse_pratt_struct_direct(
     grammar_suffix: &str,
@@ -185,7 +180,7 @@ pub(super) fn emit_parse_pratt_struct_direct(
     // known at codegen time; no runtime byte-dispatch needed).
     let operand_ref = extract_first_ref(&rule.body);
     let operand_call = operand_ref
-        .and_then(|rid| emit_ref_call_tape(grammar_suffix, rid, ir))
+        .and_then(|rid| emit_ref_call_shape(grammar_suffix, rid, ir))
         .map(|call| quote! { let _ = (#call)?; })
         .unwrap_or_else(|| {
             quote! {
@@ -193,7 +188,7 @@ pub(super) fn emit_parse_pratt_struct_direct(
             }
         });
     let rhs_call = operand_ref
-        .and_then(|rid| emit_ref_call_tape(grammar_suffix, rid, ir))
+        .and_then(|rid| emit_ref_call_shape(grammar_suffix, rid, ir))
         .map(|call| quote! { let _ = (#call)?; })
         .unwrap_or_else(|| {
             quote! {
@@ -227,7 +222,7 @@ pub(super) fn emit_parse_pratt_struct_direct(
         /// consumer-side projection (the runtime exposes
         /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
         ///
-        /// Returns `TapeOffset::NONE` for compositional uniformity
+        /// Returns unit for StructDirect composition
         /// with sibling shape fns under struct-direct mode.
         ///
         /// AX.W0a.2.f — `#[inline]` (not `#[inline(always)]`):
@@ -239,10 +234,7 @@ pub(super) fn emit_parse_pratt_struct_direct(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<
-            crate::runtime::tape::TapeOffset,
-            crate::runtime::tape::DtaError,
-        > {
+        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
             let _ = #support_mod::skip_space(input, p, state);
 
             // ── Open the rule compound ──────────────────────────────
@@ -361,7 +353,7 @@ pub(super) fn emit_parse_pratt_struct_direct(
             >::end_compound(builder, #handle_var);
 
             __body_result?;
-            ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+            ::core::result::Result::Ok(())
         }
     }
 }

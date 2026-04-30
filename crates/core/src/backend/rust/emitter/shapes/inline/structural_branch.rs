@@ -14,17 +14,17 @@
 //! per-position attempt closure's `Err(())` via
 //! [`wrap_dta_err_to_unit`].
 //!
-//! [`emit_seq_branch_structural_tape`] is the sibling entry consumed
-//! by the Keyword emitter's Seq-branch arm — it bypasses the outer
-//! attempt wrapper so the Keyword emitter can replace inner records
-//! with one Span leaf.
+//! [`emit_seq_branch_structural_struct_direct`] is the sibling entry
+//! consumed by the Keyword emitter's Seq-branch arm — it bypasses the
+//! outer attempt wrapper so the Keyword emitter can package matched
+//! branch text through the StructBuilder surface.
 
 use bbnf_ir::{GrammarIR, IrNode};
 use proc_macro2::TokenStream;
 use quote::quote;
 
 use super::super::super::dfa_codegen::regex_scan_adapter_ident;
-use super::super::dispatcher::emit_ref_call_tape;
+use super::super::dispatcher::emit_ref_call_shape;
 use super::super::sanitise_grammar;
 use super::guard::{emit_minus_tape, emit_negate_tape};
 use super::token_dispatch::emit_token_dispatch_tape;
@@ -73,20 +73,6 @@ pub(super) fn emit_structural_branch_tape(
     }
 }
 
-/// AX.W0a.2.h — sibling entry for the Keyword emitter's Seq-branch
-/// arm. Emits the raw structural body of a Seq (per-position tape
-/// emission) without the `break 'try_branches` / attempt wrapper —
-/// the Keyword emitter packages the result under its own success
-/// semantics (replacing inner records with ONE Span leaf).
-pub(in crate::backend::rust::emitter::shapes) fn emit_seq_branch_structural_tape(
-    seq: &IrNode,
-    support_mod: &proc_macro2::Ident,
-    grammar_suffix: &str,
-    ir: &GrammarIR,
-) -> TokenStream {
-    emit_branch_position_core(seq, support_mod, grammar_suffix, ir)
-}
-
 /// StructDirect sibling for Keyword Seq branches.
 ///
 /// The caller owns attempt rollback and final payload emission. This
@@ -129,8 +115,7 @@ fn emit_branch_position_core(
         IrNode::Literal(sid) => {
             let bytes = ir.get_string(*sid).as_bytes();
             let len = bytes.len();
-            let byte_lits: Vec<TokenStream> =
-                bytes.iter().map(|b| quote! { #b }).collect();
+            let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
             quote! {
                 let at = *p;
                 let end = at + #len;
@@ -148,7 +133,7 @@ fn emit_branch_position_core(
                 );
             }
         }
-        IrNode::Ref(rid) => match emit_ref_call_tape(grammar_suffix, *rid, ir) {
+        IrNode::Ref(rid) => match emit_ref_call_shape(grammar_suffix, *rid, ir) {
             Some(call) => quote! {
                 if (#call).is_err() {
                     return Err(());
@@ -158,8 +143,7 @@ fn emit_branch_position_core(
         },
         IrNode::Regex(sid) => {
             let pattern = ir.get_string(*sid).to_string();
-            let regex_scan_ident =
-                regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
+            let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
             quote! {
                 let span_lo = *p as u32;
                 let Some(match_len) = #regex_scan_ident(#pattern, input, *p) else {
@@ -202,8 +186,7 @@ fn emit_branch_position_core(
             emit_branch_position_core(inner, support_mod, grammar_suffix, ir)
         }
         IrNode::Repeat { inner, lo, hi } => {
-            let inner_emit =
-                emit_branch_position_core(inner, support_mod, grammar_suffix, ir);
+            let inner_emit = emit_branch_position_core(inner, support_mod, grammar_suffix, ir);
             let lo_lit = *lo;
             let hi_is_finite = *hi != u32::MAX;
             let hi_lit = *hi;
@@ -252,43 +235,29 @@ fn emit_branch_position_core(
         // the owning rule's Alt / Keyword compound stamps the rule
         // discriminant on the outer record.
         IrNode::Alt(branches, Some(_)) => {
-            let inner = super::alt::emit_alt_byte_dispatch_tape(
-                branches, support_mod, grammar_suffix, ir,
-            );
+            let inner =
+                super::alt::emit_alt_byte_dispatch_tape(branches, support_mod, grammar_suffix, ir);
             wrap_dta_err_to_unit(inner)
         }
         IrNode::Alt(branches, None) => {
-            let inner = super::alt::emit_alt_tape(
-                branches, 0, support_mod, grammar_suffix, ir,
-            );
+            let inner = super::alt::emit_alt_tape(branches, 0, support_mod, grammar_suffix, ir);
             wrap_dta_err_to_unit(inner)
         }
         IrNode::Negate(inner_node) => {
-            let inner =
-                emit_negate_tape(inner_node, support_mod, grammar_suffix, ir);
+            let inner = emit_negate_tape(inner_node, support_mod, grammar_suffix, ir);
             wrap_dta_err_to_unit(inner)
         }
         IrNode::Minus(primary, excluded) => {
-            let inner = emit_minus_tape(
-                primary,
-                excluded,
-                0,
-                support_mod,
-                grammar_suffix,
-                ir,
-            );
+            let inner = emit_minus_tape(primary, excluded, 0, support_mod, grammar_suffix, ir);
             wrap_dta_err_to_unit(inner)
         }
-        IrNode::TokenDispatch { token, arms, fallback } => {
-            let inner = emit_token_dispatch_tape(
-                token,
-                arms,
-                fallback,
-                0,
-                support_mod,
-                grammar_suffix,
-                ir,
-            );
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
+            let inner =
+                emit_token_dispatch_tape(token, arms, fallback, 0, support_mod, grammar_suffix, ir);
             wrap_dta_err_to_unit(inner)
         }
     }
@@ -304,8 +273,7 @@ fn emit_branch_position_core_struct_direct(
         IrNode::Literal(sid) => {
             let bytes = ir.get_string(*sid).as_bytes();
             let len = bytes.len();
-            let byte_lits: Vec<TokenStream> =
-                bytes.iter().map(|b| quote! { #b }).collect();
+            let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
             quote! {
                 {
                     let at = *p;
@@ -323,7 +291,7 @@ fn emit_branch_position_core_struct_direct(
                 }
             }
         }
-        IrNode::Ref(rid) => match emit_ref_call_tape(grammar_suffix, *rid, ir) {
+        IrNode::Ref(rid) => match emit_ref_call_shape(grammar_suffix, *rid, ir) {
             Some(call) => quote! {
                 let _ = (#call)?;
             },
@@ -339,8 +307,7 @@ fn emit_branch_position_core_struct_direct(
         },
         IrNode::Regex(sid) => {
             let pattern = ir.get_string(*sid).to_string();
-            let regex_scan_ident =
-                regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
+            let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
             quote! {
                 {
                     let __scan_start = *p;
@@ -361,32 +328,19 @@ fn emit_branch_position_core_struct_direct(
         IrNode::Seq(children) => {
             let inner: Vec<TokenStream> = children
                 .iter()
-                .map(|c| emit_branch_position_core_struct_direct(c, support_mod, grammar_suffix, ir))
+                .map(|c| {
+                    emit_branch_position_core_struct_direct(c, support_mod, grammar_suffix, ir)
+                })
                 .collect();
             quote! { #(#inner)* }
         }
         IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
-            let l = emit_branch_position_core_struct_direct(
-                lhs,
-                support_mod,
-                grammar_suffix,
-                ir,
-            );
-            let r = emit_branch_position_core_struct_direct(
-                rhs,
-                support_mod,
-                grammar_suffix,
-                ir,
-            );
+            let l = emit_branch_position_core_struct_direct(lhs, support_mod, grammar_suffix, ir);
+            let r = emit_branch_position_core_struct_direct(rhs, support_mod, grammar_suffix, ir);
             quote! { #l #r }
         }
         IrNode::OptionalWhitespace(inner) => {
-            let i = emit_branch_position_core_struct_direct(
-                inner,
-                support_mod,
-                grammar_suffix,
-                ir,
-            );
+            let i = emit_branch_position_core_struct_direct(inner, support_mod, grammar_suffix, ir);
             quote! {
                 let _ = #support_mod::skip_space(input, p, state);
                 #i
@@ -397,12 +351,8 @@ fn emit_branch_position_core_struct_direct(
             emit_branch_position_core_struct_direct(inner, support_mod, grammar_suffix, ir)
         }
         IrNode::Repeat { inner, lo, hi } => {
-            let inner_emit = emit_branch_position_core_struct_direct(
-                inner,
-                support_mod,
-                grammar_suffix,
-                ir,
-            );
+            let inner_emit =
+                emit_branch_position_core_struct_direct(inner, support_mod, grammar_suffix, ir);
             let lo_lit = *lo;
             let hi_is_finite = *hi != u32::MAX;
             let hi_lit = *hi;
@@ -509,12 +459,8 @@ fn emit_branch_position_core_struct_direct(
             }
         }
         IrNode::Negate(inner) => {
-            let inner_emit = emit_branch_position_core_struct_direct(
-                inner,
-                support_mod,
-                grammar_suffix,
-                ir,
-            );
+            let inner_emit =
+                emit_branch_position_core_struct_direct(inner, support_mod, grammar_suffix, ir);
             quote! {
                 {
                     let __neg_save_p = *p;
@@ -541,18 +487,10 @@ fn emit_branch_position_core_struct_direct(
             }
         }
         IrNode::Minus(primary, excluded) => {
-            let primary_emit = emit_branch_position_core_struct_direct(
-                primary,
-                support_mod,
-                grammar_suffix,
-                ir,
-            );
-            let excluded_emit = emit_branch_position_core_struct_direct(
-                excluded,
-                support_mod,
-                grammar_suffix,
-                ir,
-            );
+            let primary_emit =
+                emit_branch_position_core_struct_direct(primary, support_mod, grammar_suffix, ir);
+            let excluded_emit =
+                emit_branch_position_core_struct_direct(excluded, support_mod, grammar_suffix, ir);
             quote! {
                 {
                     let __minus_save_p = *p;
@@ -601,9 +539,8 @@ fn emit_branch_position_core_struct_direct(
 /// The inner closure isolates the rule-level `return Err(DtaError)`
 /// exits: on success the outer attempt continues with the records
 /// already pushed to `builder`; on rejection the outer attempt
-/// returns `Err(())`, and the caller (`emit_structural_branch_tape`
-/// / `emit_seq_branch_structural_tape`) handles rollback of `*p` +
-/// `builder.rollback_to(...)`.
+/// returns `Err(())`, and the caller (`emit_structural_branch_tape`)
+/// handles rollback of `*p` + `builder.rollback_to(...)`.
 fn wrap_dta_err_to_unit(rule_emit: TokenStream) -> TokenStream {
     quote! {
         {

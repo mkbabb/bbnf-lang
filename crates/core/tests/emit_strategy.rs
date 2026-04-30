@@ -29,9 +29,9 @@
 // re-exports the IR-level enum so existing
 // `bbnf::backend::rust::emitter::EmitStrategy` paths continue to
 // resolve, but the canonical home is the IR registry.
+use bbnf_ir::TypeDesc;
 use bbnf_ir::registry::EmitStrategy;
 use bbnf_ir::registry::{LayoutKind, StructLayout, StructRegistry};
-use bbnf_ir::TypeDesc;
 
 /// Construct a `StructRegistry` with a single synthetic layout —
 /// just enough to test the populated-registry branch of
@@ -83,30 +83,23 @@ fn json_parser_with_populated_registry_routes_struct_direct() {
     // `parse()` body that returns `Result<JsonDocument<'_>, ParseErr>`.
     let registry = populated_registry();
     let strategy = EmitStrategy::for_grammar("JsonParser", &registry);
-    match strategy {
-        EmitStrategy::StructDirect { rust, ts, wasm } => {
-            assert_eq!(
-                rust.builder_path, "crate::runtime::json::JsonStructBuilder",
-                "JsonParser StructDirect must wire the canonical builder path",
-            );
-            assert_eq!(
-                rust.document_path, "crate::runtime::json::JsonDocument",
-                "JsonParser StructDirect must wire the canonical document path",
-            );
-            assert!(
-                ts.is_none(),
-                "TS binding stays None until BA host-bindings populate it",
-            );
-            assert!(
-                wasm.is_none(),
-                "WASM binding stays None until BA host-bindings populate it",
-            );
-        }
-        other => panic!(
-            "AZ-I.W2-act.B1: JsonParser + populated registry must route StructDirect; got {:?}",
-            other,
-        ),
-    }
+    let EmitStrategy::StructDirect { rust, ts, wasm } = strategy;
+    assert_eq!(
+        rust.builder_path, "crate::runtime::json::JsonStructBuilder",
+        "JsonParser StructDirect must wire the canonical builder path",
+    );
+    assert_eq!(
+        rust.document_path, "crate::runtime::json::JsonDocument",
+        "JsonParser StructDirect must wire the canonical document path",
+    );
+    assert!(
+        ts.is_none(),
+        "TS binding stays None until BA host-bindings populate it",
+    );
+    assert!(
+        wasm.is_none(),
+        "WASM binding stays None until BA host-bindings populate it",
+    );
 }
 
 #[test]
@@ -116,22 +109,15 @@ fn json_grammar_alias_routes_struct_direct() {
     // reach the same struct-direct binding pair.
     let registry = populated_registry();
     let strategy = EmitStrategy::for_grammar("JsonGrammar", &registry);
-    match strategy {
-        EmitStrategy::StructDirect { rust, .. } => {
-            assert_eq!(
-                rust.builder_path, "crate::runtime::json::JsonStructBuilder",
-                "JsonGrammar alias must wire the same builder path as JsonParser",
-            );
-            assert_eq!(
-                rust.document_path, "crate::runtime::json::JsonDocument",
-                "JsonGrammar alias must wire the same document path as JsonParser",
-            );
-        }
-        other => panic!(
-            "AZ-I.W2-act.B1: JsonGrammar (alias) + populated registry must route StructDirect; got {:?}",
-            other,
-        ),
-    }
+    let EmitStrategy::StructDirect { rust, .. } = strategy;
+    assert_eq!(
+        rust.builder_path, "crate::runtime::json::JsonStructBuilder",
+        "JsonGrammar alias must wire the same builder path as JsonParser",
+    );
+    assert_eq!(
+        rust.document_path, "crate::runtime::json::JsonDocument",
+        "JsonGrammar alias must wire the same document path as JsonParser",
+    );
 }
 
 #[test]
@@ -142,29 +128,19 @@ fn bbnf_with_populated_registry_routes_struct_direct() {
     // registry is populated. cutover.B regens the parser onto the
     // struct-direct path; cutover.C deletes the tape crate.
     //
-    // Pre-AZ-II.cutover.A this test asserted TapeDirect routing per
-    // AZ-I §Invariant 4 ("BBNF continues on tape" — frozen for AZ-I).
-    // AZ-II.cutover lifts that freeze.
+    // Pre-AZ-II.cutover.A this test asserted AZ-I's temporary BBNF
+    // tape freeze. AZ-II.cutover lifts that freeze.
     let registry = populated_registry();
     let strategy = EmitStrategy::for_grammar("BbnfBootstrap", &registry);
-    match strategy {
-        EmitStrategy::StructDirect { rust, .. } => {
-            assert_eq!(
-                rust.builder_path,
-                "crate::runtime::bbnf::BbnfStructBuilder",
-                "BbnfBootstrap StructDirect arm binds the BBNF runtime builder",
-            );
-            assert_eq!(
-                rust.document_path,
-                "crate::runtime::bbnf::BbnfDocument",
-                "BbnfBootstrap StructDirect arm binds the BBNF runtime document",
-            );
-        }
-        other => panic!(
-            "BbnfBootstrap with populated registry must route StructDirect post-cutover.A; got {:?}",
-            other,
-        ),
-    }
+    let EmitStrategy::StructDirect { rust, .. } = strategy;
+    assert_eq!(
+        rust.builder_path, "crate::runtime::bbnf::BbnfStructBuilder",
+        "BbnfBootstrap StructDirect arm binds the BBNF runtime builder",
+    );
+    assert_eq!(
+        rust.document_path, "crate::runtime::bbnf::BbnfDocument",
+        "BbnfBootstrap StructDirect arm binds the BBNF runtime document",
+    );
 }
 
 #[test]
@@ -192,14 +168,12 @@ fn css_l4_parser_with_populated_registry_routes_struct_direct() {
     // into the generated parse fn body.
     let registry = populated_registry();
     let strategy = EmitStrategy::for_grammar("CssL4Parser", &registry);
-    assert!(
-        matches!(strategy, EmitStrategy::StructDirect { .. }),
-        "CssL4Parser + populated registry must route StructDirect (W2-act.B3 activation)"
+    let EmitStrategy::StructDirect { rust, .. } = strategy;
+    assert_eq!(
+        rust.builder_path,
+        "crate::runtime::css_l4::CssStructBuilder"
     );
-    if let EmitStrategy::StructDirect { rust, .. } = strategy {
-        assert_eq!(rust.builder_path, "crate::runtime::css_l4::CssStructBuilder");
-        assert_eq!(rust.document_path, "crate::runtime::css_l4::CssDocument");
-    }
+    assert_eq!(rust.document_path, "crate::runtime::css_l4::CssDocument");
 }
 
 #[test]
@@ -218,20 +192,13 @@ fn google_sheets_parser_with_populated_registry_routes_struct_direct() {
     // splices into the generated `parse()` body.
     let registry = populated_registry();
     let strategy = EmitStrategy::for_grammar("GoogleSheetsParser", &registry);
-    let EmitStrategy::StructDirect { rust, ts, wasm } = strategy else {
-        panic!(
-            "GoogleSheetsParser + populated registry must route StructDirect; got {:?}",
-            strategy
-        );
-    };
+    let EmitStrategy::StructDirect { rust, ts, wasm } = strategy;
     assert_eq!(
-        rust.builder_path,
-        "crate::runtime::google_sheets::SheetsStructBuilder",
+        rust.builder_path, "crate::runtime::google_sheets::SheetsStructBuilder",
         "Sheets rust builder path must address SheetsStructBuilder",
     );
     assert_eq!(
-        rust.document_path,
-        "crate::runtime::google_sheets::SheetsDocument",
+        rust.document_path, "crate::runtime::google_sheets::SheetsDocument",
         "Sheets rust document path must address SheetsDocument",
     );
     assert!(ts.is_none(), "Sheets ts binding reserved for BA");
@@ -245,10 +212,10 @@ fn google_sheets_grammar_alias_routes_struct_direct() {
     // JsonGrammar). Forward-compat with hand-authored test fixtures.
     let registry = populated_registry();
     let strategy = EmitStrategy::for_grammar("GoogleSheetsGrammar", &registry);
-    assert!(
-        matches!(strategy, EmitStrategy::StructDirect { .. }),
-        "GoogleSheetsGrammar (alias) + populated registry routes StructDirect; got {:?}",
-        strategy,
+    let EmitStrategy::StructDirect { rust, .. } = strategy;
+    assert_eq!(
+        rust.builder_path,
+        "crate::runtime::google_sheets::SheetsStructBuilder",
     );
 }
 
@@ -285,8 +252,7 @@ fn pipeline_resolver_matches_emitter_resolver() {
     ir.struct_registry = registry;
 
     let pipeline_strategy = bbnf::pipeline::compile::resolve_emit_strategy("JsonParser", &ir);
-    let emitter_strategy =
-        EmitStrategy::for_grammar("JsonParser", &ir.struct_registry);
+    let emitter_strategy = EmitStrategy::for_grammar("JsonParser", &ir.struct_registry);
     assert_eq!(
         pipeline_strategy, emitter_strategy,
         "pipeline-side resolver must match emitter-side resolver byte-for-byte",

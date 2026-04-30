@@ -16,7 +16,6 @@
 use ::bbnf::grammar::generated::google_sheets::*;
 use bbnf::runtime::{RuntimeView, SheetsValue};
 
-
 // ─── Reference projection ─────────────────────────────────────────────
 
 /// Hand-written reference of a Sheets formula.
@@ -36,10 +35,7 @@ enum RefExpr {
     /// A cell or range reference.
     Cell(String),
     /// A function / let / lambda call.
-    FnCall {
-        name: String,
-        args: Vec<RefExpr>,
-    },
+    FnCall { name: String, args: Vec<RefExpr> },
     /// An operator-containing expression. Coarse — we only record
     /// that operators are present + their operand count.
     BinOp {
@@ -302,13 +298,7 @@ impl<'s> Oracle<'s> {
     fn parse_number(&mut self) -> f64 {
         let start = self.pos;
         while let Some(b) = self.peek() {
-            if b.is_ascii_digit()
-                || b == b'.'
-                || b == b'e'
-                || b == b'E'
-                || b == b'+'
-                || b == b'-'
-            {
+            if b.is_ascii_digit() || b == b'.' || b == b'e' || b == b'E' || b == b'+' || b == b'-' {
                 // Only accept +/- if immediately after e/E.
                 if b == b'+' || b == b'-' {
                     if self.pos == start {
@@ -627,8 +617,8 @@ mod struct_direct_wire {
     use bbnf::runtime::{
         SheetsCompoundKind, SheetsDocument, SheetsStructBuilder, SheetsValue, StructBuilder,
     };
-    use bbnf_ir::registry::{LayoutKind, StructLayout};
     use bbnf_ir::TypeDesc;
+    use bbnf_ir::registry::{LayoutKind, StructLayout};
 
     fn synth_layout(rule_id: u32, rule_name: &str, kind: LayoutKind) -> StructLayout {
         StructLayout {
@@ -641,9 +631,8 @@ mod struct_direct_wire {
     }
 
     /// Build a `SheetsDocument` whose root value is a single Number
-    /// leaf, then verify the document API mirrors the
-    /// pre-W2-act `Parsed::view()` / `Parsed::to_value()` /
-    /// `Parsed::get(path)` surfaces.
+    /// leaf, then verify the document API exposes view, value, and
+    /// path-query surfaces.
     #[test]
     fn document_number_leaf_round_trip() {
         let mut b = SheetsStructBuilder::new();
@@ -725,9 +714,9 @@ mod struct_direct_wire {
         // The oracle's projection shape parallel: confirm the wire-
         // contract produces a Vec-shape mappable to RefExpr::FnCall.
         let _: Option<RefExpr> = None; // type-name used in module
-                                       // reference; concrete mapping
-                                       // is performed against the
-                                       // same surface in the
-                                       // parse_via_view tests above.
+        // reference; concrete mapping
+        // is performed against the
+        // same surface in the
+        // parse_via_view tests above.
     }
 }

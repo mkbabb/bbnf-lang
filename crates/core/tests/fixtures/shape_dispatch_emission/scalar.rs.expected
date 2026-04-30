@@ -1,16 +1,18 @@
-/// AW-V.W3.2 — per-grammar Scalar-shape parse function
-/// (single-literal body).
+/// AZ-I.W2.RC — per-grammar Scalar-shape parse
+/// function (single-literal body, struct-direct
+/// substrate). The literal's bytes select the
+/// matching `builder.push_leaf_with_*` call at
+/// codegen time; structural separators emit no
+/// builder call.
 #[inline(always)]
-#[allow(non_snake_case, clippy::too_many_arguments)]
-pub fn parse_scalar_JsonFixture_comma(
-    input: &[u8],
+#[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+pub fn parse_scalar_JsonFixture_comma<'p>(
+    input: &'p [u8],
     p: &mut usize,
     _state: &mut __shape_support_JsonFixture::ScanState,
-    builder: &mut crate::runtime::tape::Tape<()>,
-) -> ::core::result::Result<
-    crate::runtime::tape::TapeOffset,
-    crate::runtime::tape::DtaError,
-> {
+    builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
+) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    use crate::runtime::builder::StructBuilder as _;
     let at = *p;
     let end = at + 1usize;
     if input.len() < end || input[at..end] != [44u8] {
@@ -21,13 +23,5 @@ pub fn parse_scalar_JsonFixture_comma(
         });
     }
     *p = end;
-    let off = builder
-        .push_leaf(
-            crate::runtime::tape::TapeKind::Literal,
-            at as u32,
-            end as u32,
-            3u8,
-            0,
-        );
-    Ok(off)
+    Ok(())
 }

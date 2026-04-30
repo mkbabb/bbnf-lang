@@ -22,7 +22,7 @@
 //!    structural BBNF pipeline.
 //! 2. `emit_parse_keyword` on `directive` produces a token stream that
 //!    references each admitted directive target's shape fn. Concretely
-//!    the emission delegates via `emit_ref_call_tape` to
+//!    the emission delegates via the shared Ref-call helper to
 //!    `parse_<shape>_<grammar>_<import_directive | recover_directive |
 //!    ...>` for each Ref branch.
 //! 3. The emitted fn's signature carries the `state: &mut ScanState`
@@ -31,12 +31,12 @@
 //! Hard gate 1 of W0a.2.g: this test must pass.
 
 use bbnf::backend::rust::emitter::shapes::keyword::emit_parse_keyword;
-use bbnf_ir::registry::EmitStrategy;
 use bbnf::pipeline::{
-    compile_paths_request, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
+    CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
 };
-use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
 use bbnf_ir::GrammarIR;
+use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
+use bbnf_ir::registry::{EmitStrategy, SubstrateBinding};
 use std::path::PathBuf;
 
 /// Compile the BBNF grammar (non-structural pipeline).
@@ -52,6 +52,17 @@ fn compile_bbnf() -> GrammarIR {
     match out {
         CompileOutput::Vm(ir) => ir,
         other => panic!("expected Vm output, got {other:?}"),
+    }
+}
+
+fn bbnf_strategy() -> EmitStrategy {
+    EmitStrategy::StructDirect {
+        rust: SubstrateBinding {
+            builder_path: "crate::runtime::bbnf::BbnfStructBuilder",
+            document_path: "crate::runtime::bbnf::BbnfDocument",
+        },
+        ts: None,
+        wasm: None,
     }
 }
 
@@ -85,9 +96,7 @@ fn bbnf_directive_keyword_emitter_delegates_to_ref_targets() {
         .iter()
         .find(|r| ir.get_string(r.name) == "directive")
         .expect("BBNF grammar must contain `directive` rule");
-    // BBNF resolves to TapeDirect — the existing wire contract scrutinises
-    // the tape-path emission unchanged.
-    let strategy = EmitStrategy::TapeDirect;
+    let strategy = bbnf_strategy();
     let tokens = emit_parse_keyword("BbnfGrammar", directive, &ir, &strategy);
     let emitted = tokens.to_string();
 
@@ -100,8 +109,8 @@ fn bbnf_directive_keyword_emitter_delegates_to_ref_targets() {
     );
 
     // Each of the seven directive branches must appear as a downstream
-    // target shape-fn reference. `emit_ref_call_tape` embeds the target
-    // fn ident (e.g. `parse_<shape>_BbnfGrammar_import_directive`).
+    // target shape-fn reference. The shared Ref-call helper embeds
+    // the target fn ident.
     let expected_targets = [
         "import_directive",
         "recover_directive",
@@ -140,7 +149,7 @@ fn bbnf_directive_keyword_emitter_produces_named_fn() {
         .iter()
         .find(|r| ir.get_string(r.name) == "directive")
         .expect("BBNF grammar must contain `directive` rule");
-    let strategy = EmitStrategy::TapeDirect;
+    let strategy = bbnf_strategy();
     let tokens = emit_parse_keyword("BbnfGrammar", directive, &ir, &strategy);
     let emitted = tokens.to_string();
     assert!(

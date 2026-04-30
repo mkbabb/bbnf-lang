@@ -33,8 +33,7 @@ pub(super) fn emit_token_dispatch_tape(
     grammar_suffix: &str,
     ir: &GrammarIR,
 ) -> TokenStream {
-    let token_emit =
-        emit_primary_tape(token, variant_idx, support_mod, grammar_suffix, ir);
+    let token_emit = emit_primary_tape(token, variant_idx, support_mod, grammar_suffix, ir);
 
     let mut per_arm: Vec<TokenStream> = Vec::with_capacity(arms.len());
     for arm in arms {
@@ -50,8 +49,7 @@ pub(super) fn emit_token_dispatch_tape(
             .iter()
             .map(|sid| {
                 let bytes = ir.get_string(*sid).as_bytes();
-                let byte_lits: Vec<TokenStream> =
-                    bytes.iter().map(|b| quote! { #b }).collect();
+                let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
                 quote! { &[#(#byte_lits),*][..] }
             })
             .collect();
@@ -71,13 +69,7 @@ pub(super) fn emit_token_dispatch_tape(
         });
     }
 
-    let fallback_emit = emit_primary_tape(
-        fallback,
-        variant_idx,
-        support_mod,
-        grammar_suffix,
-        ir,
-    );
+    let fallback_emit = emit_primary_tape(fallback, variant_idx, support_mod, grammar_suffix, ir);
     let variant_lit = variant_idx;
 
     quote! {
@@ -149,19 +141,13 @@ pub(super) fn emit_token_dispatch_visitor(
     let token_emit = emit_primary_visitor(token, support_mod, grammar_suffix, ir);
     let mut per_arm: Vec<TokenStream> = Vec::with_capacity(arms.len());
     for arm in arms {
-        let cont = emit_primary_visitor(
-            &arm.continuation,
-            support_mod,
-            grammar_suffix,
-            ir,
-        );
+        let cont = emit_primary_visitor(&arm.continuation, support_mod, grammar_suffix, ir);
         let pattern_literals: Vec<TokenStream> = arm
             .patterns
             .iter()
             .map(|sid| {
                 let bytes = ir.get_string(*sid).as_bytes();
-                let byte_lits: Vec<TokenStream> =
-                    bytes.iter().map(|b| quote! { #b }).collect();
+                let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
                 quote! { &[#(#byte_lits),*][..] }
             })
             .collect();
@@ -180,8 +166,7 @@ pub(super) fn emit_token_dispatch_visitor(
             }
         });
     }
-    let fallback_emit =
-        emit_primary_visitor(fallback, support_mod, grammar_suffix, ir);
+    let fallback_emit = emit_primary_visitor(fallback, support_mod, grammar_suffix, ir);
     quote! {
         {
             let token_lo = *p;

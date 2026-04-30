@@ -1,4 +1,3 @@
-
 //! JSON value benchmark — honest side-by-side comparison.
 //!
 //! Puts BBNF monolithic parse + full tape walk next to sonic-rs
@@ -31,13 +30,12 @@
 //!
 //! - **Lazy lane** (`bbnf_get_twitter` vs `sonic_get_twitter`): parses
 //!   `twitter.json` and extracts a single scalar via path query
-//!   `["statuses", 0, "text"]`. bbnf uses the grammar-emitted
-//!   `Parsed::get::<&str>(path)`; sonic uses `sonic_rs::get` (the
+//!   `["statuses", 0, "text"]`. bbnf uses the document-owned
+//!   `get::<&str>(path)`; sonic uses `sonic_rs::get` (the
 //!   lazy get-by-path entry). 2 bench entries — twitter only.
 //! - **Eager lane** (`bbnf_value_<fx>` vs `sonic_value_<fx>`):
-//!   materialises the full typed value tree. bbnf uses
-//!   `Parsed::to_value()` dispatching through the per-shape inline
-//!   `materialize_*` fns emitted by W3b; sonic uses
+//!   materialises the full typed value tree. bbnf uses the
+//!   document-owned `to_value()` API; sonic uses
 //!   `sonic_rs::from_str::<sonic_rs::Value>`. 10 bench entries — 5
 //!   fixtures × 2 parsers.
 //!
@@ -54,15 +52,14 @@ use bbnf::runtime::tape::{
     ArrayVisitor, GrammarVisitor, KeywordVisitor, NumberVisitor, ObjectVisitor, StringVisitor,
     Tape, TapeCursor, TapeKind, TapeOffset,
 };
-use json_prototype::{self as proto, parse_json};
 use divan::black_box;
+use json_prototype::{self as proto, parse_json};
 
 #[path = "../common/timeout.rs"]
 mod timeout;
 use timeout::{bench_with_timeout, limits};
 
 use ::bbnf::grammar::generated::json::*;
-
 
 fn load(name: &str) -> String {
     let path = format!("../../data/json/{}", name);
@@ -396,20 +393,17 @@ macro_rules! bench_bbnf_visitor {
             let input = load($file);
             {
                 let mut visitor = ValueVisitor::with_input(input.as_bytes());
-                JsonParser::parse_with_visitor(&input, &mut visitor)
-                    .unwrap_or_else(|e| {
-                        panic!(concat!($file, ": parse_with_visitor failed: {:?}"), e)
-                    });
+                JsonParser::parse_with_visitor(&input, &mut visitor).unwrap_or_else(|e| {
+                    panic!(concat!($file, ": parse_with_visitor failed: {:?}"), e)
+                });
                 black_box(visitor.finish());
             }
             bench_with_timeout(
                 b,
                 limits::JSON_PARSE,
                 |input: String| {
-                    let mut visitor =
-                        ValueVisitor::with_input(black_box(input.as_bytes()));
-                    JsonParser::parse_with_visitor(black_box(&input), &mut visitor)
-                        .unwrap();
+                    let mut visitor = ValueVisitor::with_input(black_box(input.as_bytes()));
+                    JsonParser::parse_with_visitor(black_box(&input), &mut visitor).unwrap();
                     let doc: proto::Document = visitor.finish();
                     black_box(doc);
                 },
@@ -443,8 +437,7 @@ macro_rules! bench_proto_value {
                 black_box(visitor.finish());
             }
             b.with_inputs(|| input.clone()).bench_values(|input| {
-                let mut visitor =
-                    proto::ValueVisitor::with_input(black_box(input.as_bytes()));
+                let mut visitor = proto::ValueVisitor::with_input(black_box(input.as_bytes()));
                 parse_json(black_box(input.as_bytes()), &mut visitor).unwrap();
                 let doc: proto::Document = visitor.finish();
                 black_box(doc);
@@ -459,15 +452,14 @@ bench_proto_value!(proto_value_citm, "citm_catalog.json");
 bench_proto_value!(proto_value_canada, "canada.json");
 bench_proto_value!(proto_value_data_xl, "data_xl.json");
 
-// ── AY.W3c.1 Lazy lane (`Parsed::get::<&str>` vs `sonic_rs::get`) ───────────
+// ── AY.W3c.1 Lazy lane (`Document::get::<&str>` vs `sonic_rs::get`) ─────────
 //
 // Twitter-only: path `["statuses", 0, "text"]` extracts a single `&str`
 // leaf. Both parties do the minimum work: parse enough of the input to
 // reach the leaf, then return it. sonic's `get` is its lazy-query API
 // (pointer-walk without materialising downstream nodes); bbnf's
-// `Parsed::get::<T>(path)` is the grammar-emitted `PathQuery<T>` impl
-// emitted by W3b. The bench pairs the two so the per-iter wall time is
-// directly comparable.
+// `Document::get::<T>(path)` is the grammar-emitted path-query surface.
+// The bench pairs the two so the per-iter wall time is directly comparable.
 //
 // Note: bbnf's `parse()` currently builds the full tape — the "lazy"
 // aspect is in the post-parse scalar extraction; W5+ may introduce a
@@ -522,16 +514,18 @@ fn sonic_get_twitter(b: divan::Bencher) {
         // Use `sonic_rs::get` with a path iterator — the idiomatic
         // lazy-extract entry. `JsonInput::from_subset` slices `&input`
         // so the returned `LazyValue<'_>` borrows from it.
-        let got = sonic_rs::get(black_box(&input), sonic_rs::pointer!["statuses", 0usize, "text"]);
+        let got = sonic_rs::get(
+            black_box(&input),
+            sonic_rs::pointer!["statuses", 0usize, "text"],
+        );
         let _ = black_box(got);
     });
 }
 
-// ── AY.W3c.1 Eager lane (`Parsed::to_value` vs `sonic_rs::from_str`) ────────
+// ── AY.W3c.1 Eager lane (`Document::to_value` vs `sonic_rs::from_str`) ──────
 //
 // Materialises the full typed value tree on both sides. bbnf uses
-// `Parsed::to_value()` dispatching through the per-shape inline
-// `materialize_*` fns (W3b); sonic uses `from_str::<sonic_rs::Value>`.
+// `Document::to_value()`; sonic uses `from_str::<sonic_rs::Value>`.
 // The ratio `bbnf_value_twitter / sonic_value_twitter` is AY's headline
 // BEAT-sonic metric. Cold per-parse discipline (no warm benches per
 // `feedback_no_warm_benches`): every iter reparses + rematerialises.

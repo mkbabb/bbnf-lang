@@ -1271,9 +1271,8 @@ mod __ebnfparser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_EbnfParser_digit<'p>(
@@ -1282,10 +1281,7 @@ mod __ebnfparser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -1295,9 +1291,7 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -1311,9 +1305,7 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -1327,9 +1319,7 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -1343,9 +1333,7 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -1359,9 +1347,7 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -1375,9 +1361,7 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -1391,9 +1375,7 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -1407,9 +1389,7 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -1423,9 +1403,7 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -1439,9 +1417,7 @@ mod __ebnfparser_emit_impl {
                     let end = at + 1usize;
                     *p = end;
                     builder.push_leaf_with_unit();
-                    return ::core::result::Result::Ok(
-                        crate::runtime::tape::TapeOffset::NONE,
-                    );
+                    return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
                     offset: *p as u32,
@@ -1776,7 +1752,7 @@ mod __ebnfparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -1792,10 +1768,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __identifier_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1979,7 +1952,7 @@ mod __ebnfparser_emit_impl {
                     builder,
                     __identifier_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -2131,9 +2104,8 @@ mod __ebnfparser_emit_impl {
     /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
     /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
     /// untyped). Ref branches delegate to the target shape
-    /// fn so the target's records bubble up unchanged.
-    /// Returns `TapeOffset::NONE` for compositional
-    /// uniformity.
+    /// fn so the target writes directly into the same
+    /// builder. Returns unit for StructDirect composition.
     #[inline(always)]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_keyword_EbnfParser_terminal<'p>(
@@ -2142,10 +2114,7 @@ mod __ebnfparser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -2309,9 +2278,7 @@ mod __ebnfparser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -2486,9 +2453,7 @@ mod __ebnfparser_emit_impl {
                                 )
                             };
                             builder.push_leaf_with_str(__seq_text);
-                            return ::core::result::Result::Ok(
-                                crate::runtime::tape::TapeOffset::NONE,
-                            );
+                            return ::core::result::Result::Ok(());
                         }
                         ::core::result::Result::Err(__err) => {
                             *p = __seq_span_lo;
@@ -2523,7 +2488,7 @@ mod __ebnfparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -2539,10 +2504,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __concatenation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2702,7 +2664,7 @@ mod __ebnfparser_emit_impl {
                     builder,
                     __concatenation_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -2721,7 +2683,7 @@ mod __ebnfparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -2737,10 +2699,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __alternation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2900,7 +2859,7 @@ mod __ebnfparser_emit_impl {
                     builder,
                     __alternation_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -2912,8 +2871,8 @@ mod __ebnfparser_emit_impl {
     /// function (transparent-Ref body, struct-direct
     /// substrate). Delegates to the target's
     /// strategy-resolved shape fn; the inner call
-    /// expression names `builder` against the
-    /// concrete struct-builder.
+    /// expression names `builder` against the concrete
+    /// struct-builder.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
     pub fn parse_scalar_EbnfParser_rhs<'p>(
@@ -2921,10 +2880,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         { parse_flat_EbnfParser_alternation(input, p, state, builder) }
     }
     /// AZ-I.W2.RB — per-grammar AltDispatch-shape parse function,
@@ -3278,7 +3234,7 @@ mod __ebnfparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -3294,10 +3250,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3515,7 +3468,7 @@ mod __ebnfparser_emit_impl {
                     builder,
                     __factor_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -3534,7 +3487,7 @@ mod __ebnfparser_emit_impl {
     /// value calls, byte literals) land directly on the topmost
     /// open frame.
     ///
-    /// Returns `TapeOffset::NONE` for compositional uniformity
+    /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode; the
     /// offset is unused by struct-direct callers.
     ///
@@ -3550,10 +3503,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __rule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3719,7 +3669,7 @@ mod __ebnfparser_emit_impl {
                     builder,
                     __rule_handle,
                 );
-                ::core::result::Result::Ok(crate::runtime::tape::TapeOffset::NONE)
+                ::core::result::Result::Ok(())
             }
             ::core::result::Result::Err(__err) => {
                 builder.rollback(__flat_checkpoint);
@@ -3742,10 +3692,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         use crate::runtime::builder::StructBuilder;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 12u32 as ::bbnf_ir::RuleId,
@@ -3789,7 +3736,7 @@ mod __ebnfparser_emit_impl {
             }
         }
         builder.end_compound(__handle);
-        Ok(crate::runtime::tape::TapeOffset::NONE)
+        Ok(())
     }
     /// AX.W0a.2.b — visitor-path AltDispatch-shape parse function.
     ///
@@ -6308,7 +6255,7 @@ mod __ebnfparser_emit_impl {
     ///
     /// Mirrors the walker's `value` rule ByteDispatch: skip leading
     /// whitespace, dispatch on the first byte to the chosen branch
-    /// shape fn, return its `TapeOffset` unchanged. No outer Rule /
+    /// shape fn, return unit after the chosen shape succeeds. No outer Rule /
     /// Alt compound is pushed — the DTA's ByteDispatch state for
     /// `value` emits no compound either, and the target rule's Ref
     /// overwrites any `pending_variant_idx` en route, so the chosen
@@ -6323,10 +6270,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         parse_EbnfParser_grammar__value(input, p, state, builder)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
@@ -6340,10 +6284,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<
-        crate::runtime::tape::TapeOffset,
-        crate::runtime::tape::DtaError,
-    > {
+    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
         let _ = __shape_support_EbnfParser::skip_space(input, p, state);
         parse_array_EbnfParser_grammar(input, p, state, builder)
     }

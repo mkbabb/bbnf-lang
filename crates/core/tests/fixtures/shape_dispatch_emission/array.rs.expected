@@ -7,13 +7,11 @@ pub fn parse_array_JsonFixture_array<'p>(
     p: &mut usize,
     state: &mut __shape_support_JsonFixture::ScanState,
     builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+) -> ::core::result::Result<(), crate::runtime::DtaError> {
     use crate::runtime::builder::StructBuilder;
     if input.get(*p).copied() != Some(b'[') {
-        return Err(crate::runtime::tape::DtaError::Syntax {
+        return Err(crate::runtime::DtaError::Syntax {
             offset: *p as u32,
-            failing_state: crate::runtime::tape::DtaStateId::NONE,
-            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
         });
     }
     let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -25,7 +23,7 @@ pub fn parse_array_JsonFixture_array<'p>(
     };
     let __array_checkpoint = builder.checkpoint();
     let __handle = builder.begin_compound(&__layout);
-    let __array_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (|| {
+    let __array_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
         *p += 1;
         let _ = __shape_support_JsonFixture::skip_space(input, p, state);
         if input.get(*p).copied() == Some(b']') {
@@ -48,10 +46,8 @@ pub fn parse_array_JsonFixture_array<'p>(
                     return Ok(());
                 }
                 _ => {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return Err(crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
             }

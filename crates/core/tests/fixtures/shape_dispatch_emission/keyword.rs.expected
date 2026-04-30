@@ -15,7 +15,7 @@ pub fn parse_keyword_JsonFixture_bool<'p>(
     first_byte: u8,
     state: &mut __shape_support_JsonFixture::ScanState,
     builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+) -> ::core::result::Result<(), crate::runtime::DtaError> {
     use crate::runtime::builder::StructBuilder as _;
     let _ = state;
     match first_byte {
@@ -29,10 +29,8 @@ pub fn parse_keyword_JsonFixture_bool<'p>(
                 builder.push_leaf_with_bool(false);
                 return ::core::result::Result::Ok(());
             }
-            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         116u8 => {
@@ -45,17 +43,13 @@ pub fn parse_keyword_JsonFixture_bool<'p>(
                 builder.push_leaf_with_bool(true);
                 return ::core::result::Result::Ok(());
             }
-            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         _ => {
-            ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+            ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             })
         }
     }

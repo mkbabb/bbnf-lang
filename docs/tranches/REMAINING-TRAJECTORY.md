@@ -4,12 +4,15 @@ Status: planning canon. This file explains the remaining path after
 B0-B7, AZ-I, and the AZ-II partial close. It does not authorize
 execution.
 
-**2026-04-29 hardening update.** AZ-II is open through terminal
-`cutover.O`. The current state is 9/9 StructDirect grammars after O2;
-`Parsed<R>`, `TapeDirect`, generated tape-view residue, and
-`crates/tape` remain blockers. BA and BB remain blocked on AZ-II
-terminal close. AZ-III opens only if a later `cutover.O` gate proves a
-new grammar-general inference/layout substrate is required.
+**2026-04-30 continuation update.** AZ-II is closed as a continuation
+handoff to AZ-III, not as terminal success. The current state is 9/9
+StructDirect grammars after O2; O3 removed generated tape-view residue
+and O4 removed `Parsed<R>` / `TapeDirect`. O5 did not close green, O6
+did not run, and O7 did not run. AZ-III owns O5 reclose, semantic
+parity, generated BBNF self-host canonicalization, benchmark/profile
+truth, terminal close conversion, and the grammar-general
+fact/type/CSP/projection authority substrate surfaced by the audit. BA
+and BB remain blocked on AZ-III terminal close.
 
 **2026-04-28 status update.** AZ-I.W0 + W1 + W2-substrate closed.
 W2 substrate landed nine per-shape struct-direct emitters with the
@@ -33,19 +36,19 @@ folds W4 into AZ-II.W0 to retire the ceremonial wave overhead.
 | `Parsed<R>` | Delete production runtime surface and generated return path |
 | `TapeDirect` | Remove fallback strategy; generation must fail loudly instead |
 | generated tape views | Stop emitting `TapeCursor` / `ValueRoot` / node-view residues for StructDirect grammars unless consumed through a document API |
-| `crates/tape` | Delete workspace crate after relocating only non-tape scan/index primitives |
-| BBNF bootstrap bridge | Retire `bootstrap_parser.rs` as canonical entry once generated self-hosting is repaired |
-| sonic-rs parity | JSON semantic parity plus fresh throughput baseline |
-| lightningcss parity | CSS typed semantic parity, including known color/value divergences |
-| perf truth | Refresh post-`cutover.O` numbers before BB optimization |
-| legacy/dead substrate | Audit tape cursor helpers, visitor placeholders, legacy recognizers, schema emit stubs, stale derive/JIT paths |
+| `crates/tape` | AZ-III.W1 - O5 Reclose closes refreshed O5 deletion evidence after regen/no-default/metadata proof |
+| BBNF bootstrap bridge | AZ-III.W2 - Semantic Parity and Bootstrap Canonicalization retires `bootstrap_parser.rs` as canonical entry or blocks terminal close |
+| sonic-rs parity | AZ-III.W2 - Semantic Parity and Bootstrap Canonicalization closes JSON semantic parity; AZ-III.W4 - Benchmark, Profile, and Workspace Truth refreshes throughput |
+| lightningcss parity | AZ-III.W2 - Semantic Parity and Bootstrap Canonicalization closes CSS typed semantic parity, including known color/value divergences |
+| perf truth | AZ-III.W4 - Benchmark, Profile, and Workspace Truth refreshes post-AZ-III numbers before BB optimization |
+| legacy/dead substrate | AZ-III.W1 - O5 Reclose and AZ-III.W3 - Fact, Type, CSP, and Projection Authority audit tape cursor helpers, visitor placeholders, legacy recognizers, schema emit stubs, stale derive/JIT paths |
 
 ## 1. Path Change From The Redress
 
 The runway picks up four predecessor tranches between B1 and AY-II:
 
 ```text
-B1 -> B3 -> B4 -> B2 -> B5 -> B6 -> B7 -> AZ-I -> AZ-II -> BA -> BB
+B1 -> B3 -> B4 -> B2 -> B5 -> B6 -> B7 -> AZ-I -> AZ-II -> AZ-III -> BA -> BB
                                              |
                                              AY-III deferred (gates absorb into AZ-I close + AZ-II cutover.O)
 ```
@@ -97,11 +100,11 @@ post-B5 wall expectations, not the destination order beyond AY-II:
    `Columns` carrying the unified value/structural state and
    `Tape::position()` / `Tape::rollback_to()` as the two-method
    parser-substrate boundary.
-8. **AZ-II remains mandatory.** Full `crates/tape/` deletion is still
-   binding repo policy. Post-B5 the substrate is cleaner (one type,
-   one rollback, single-writer `frame_depth` invariant), so the
-   AZ-II tape-deletion path runs against a smaller, sharper surface;
-   byte-equal reproducibility cycles cost seconds.
+8. **AZ-II closes into AZ-III.** Full `crates/tape/` deletion remains
+   binding repo policy. AZ-II landed O0-O4 and partial O5
+   implementation, then closed as a continuation handoff. AZ-III owns
+   the terminal O5/O6/O7 evidence plus grammar-general authority
+   substrate needed for a real close.
 9. **B1 linker posture is normalized.** macOS lld is opt-in through
    `brew install lld`; default is Apple ld64 until a developer opts in.
 10. **Preflight was executed and folded into canon.** The 2026-04-24

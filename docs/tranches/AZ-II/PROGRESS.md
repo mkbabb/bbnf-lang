@@ -1,9 +1,12 @@
 # AZ-II — Progress Log
 
-**Status**: interim manifest routed through cutover.O; `cutover.O.0`,
-`cutover.O.1`, `cutover.O.2`, `cutover.O.3`, and `cutover.O.4`
-landed; O3a J1/C1/S1/P1/A1 triads integrated as routed evidence;
-O5 tape-crate deletion is the next active substage.
+**Status**: closed as continuation handoff to
+[`AZ-III`](../AZ-III/AZ-III.md). `cutover.O.0`, `cutover.O.1`,
+`cutover.O.2`, `cutover.O.3`, and `cutover.O.4` landed; O3a
+J1/C1/S1/P1/A1 triads integrated as routed evidence; O5 did not close
+green; O6 and O7 did not run. AZ-III owns O5 reclose, semantic parity,
+benchmark truth, terminal close conversion, and grammar-general
+fact/type/CSP/projection authority.
 Implemented-state record:
 [`PROGRESS-SNAPSHOT-2026-04-29.md`](PROGRESS-SNAPSHOT-2026-04-29.md).
 Live terminal sequence: `cutover.O.0` through `cutover.O.7`, specified
@@ -65,6 +68,25 @@ and `feedback_no-orthogonal-codepaths` forbid retaining a
 tape-bearing substrate for BBNF alongside struct-only data
 grammars, even under W2 pressure.
 
+## 2026-04-30 — continuation handoff to AZ-III
+
+AZ-II is closed as a continuation handoff, not as terminal success. The
+O5 no-default build failure recorded in the stale blocked evidence was
+repaired later, but O5 still has no green close packet because
+`cargo xtask regen --check` remains red across the generated grammar
+fleet and the O5 scan artifact is stale. O6 semantic/performance truth
+and O7 close conversion are moved to AZ-III.
+
+Continuation route:
+
+- AZ-III.W1 - O5 Reclose re-runs and closes O5 evidence.
+- AZ-III.W2 - Semantic Parity and Bootstrap Canonicalization owns JSON/CSS/Sheets/BBNF semantic parity and BBNF
+  generated self-host canonicalization.
+- AZ-III.W3 - Fact, Type, CSP, and Projection Authority owns fact/type/CSP/projection authority substrate.
+- AZ-III.W4 - Benchmark, Profile, and Workspace Truth owns workspace, structural, profile, and 17-entry matrix
+  truth.
+- AZ-III.W5 - Terminal Close and Handoff owns terminal AZ close and BA/BB handoff.
+
 ## 2026-04-28 — wave plan refined per W2-CLOSE-AUDIT
 
 The original W0 / W1 / W2 / W3 four-wave shape collapses into a
@@ -100,10 +122,10 @@ The cutover wave runs in three sequential sub-stages:
 
 | Wave | Status | Headline |
 |---|---|---|
-| W0 | superseded (2026-04-28) | Folded into cutover.A (substrate hoist + BBNF runtime + decay sweep) |
-| W1 | superseded (2026-04-28) | Folded into cutover.B (Stage A + Stage B byte-equal cycle) |
-| W2 | superseded (2026-04-28) | Folded into cutover.C (`crates/tape/` deletion + recode + FINAL) |
-| cutover | interim-manifest (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; [O0](waves/cutover/O0.md) tooling preflight, [O1](waves/cutover/O1.md) builder transactions, [O2](waves/cutover/O2.md) EBNF direct projection, [O3a](waves/cutover/O3a.md) failure routing, [O3](waves/cutover/O3.md) generated-view purge, and [O4](waves/cutover/O4.md) return-model deletion landed) | 9/9 grammars StructDirect; generated view residue is zero; `Parsed<R>` / `TapeDirect` are gone from production Rust; terminal hardening now routes through [cutover.O5-O7](waves/cutover/README.md) for tape deletion, semantic/perf truth, and close conversion |
+| W0 - Bootstrap-cutover Research and Audit Baseline | superseded (2026-04-28) | Folded into cutover.A (substrate hoist + BBNF runtime + decay sweep) |
+| W1 - Stage A/B Byte-Equal Cutover | superseded (2026-04-28) | Folded into cutover.B (Stage A + Stage B byte-equal cycle) |
+| W2 - Tape Deletion, Parity Recode, FINAL | superseded (2026-04-28) | Folded into cutover.C (`crates/tape/` deletion + recode + FINAL) |
+| cutover | closed as AZ-III continuation handoff (cutover.A through cutover.M LANDED; cutover.N halted at usage limit; [O0](waves/cutover/O0.md) tooling preflight, [O1](waves/cutover/O1.md) builder transactions, [O2](waves/cutover/O2.md) EBNF direct projection, [O3a](waves/cutover/O3a.md) failure routing, [O3](waves/cutover/O3.md) generated-view purge, and [O4](waves/cutover/O4.md) return-model deletion landed; [O5](waves/cutover/O5.md), [O6](waves/cutover/O6.md), and [O7](waves/cutover/O7.md) superseded into AZ-III) | 9/9 grammars StructDirect; generated view residue is zero; `Parsed<R>` / `TapeDirect` are gone from production Rust; terminal hardening now routes through [AZ-III](../AZ-III/AZ-III.md) |
 
 ## 2026-04-28 — cutover.G partial close
 
@@ -326,7 +348,9 @@ cross-crate refs).
 - Opens on: AZ-I close (seven-point handoff contract verified).
 - Closes into: BA (pointer queries on struct tree); BA opens on
   AZ-II FINAL CLOSE (currently PARTIAL pending cutover.O).
-- BB opens on AZ-II close independently of BA's progress.
+- BB.close opens only on AZ-II FINAL CLOSE, independently of BA's
+  progress; existing BB scaffold commits are production-disconnected
+  until that gate.
 - BB.scaffold.A/B/C already landed at master `26f95469`/`4bb49ef2`/
   `9b20ded1`/`a4ca2b2f` (e-graph ruler + IR rewrites substrate);
   BB.close gates on AZ-II FINAL CLOSE.
@@ -346,14 +370,15 @@ cross-crate refs).
 | [cutover.O.3a-A1](waves/cutover/O3a-A1.md) | Analysis/LSP/prototype/bootstrap disposition cohort | complete_with_misses — live repairs and archive/delete/bootstrap gates routed to O5/O6/O7 |
 | [cutover.O.3](waves/cutover/O3.md) | Generated tape-view / `ValueRoot` residue purge for StructDirect | LANDED — `6a7e0f06`, zero-hit O3 scan, 32-test focused gate green |
 | [cutover.O.4](waves/cutover/O4.md) | `Parsed<R>` deletion and `TapeDirect` fallback removal | LANDED — `c51f9742`, `815fbcea`, `3165e52f`, `58ea61a6`, `97061c41`, `8040bd69` |
-| [cutover.O.5](waves/cutover/O5.md) | `crates/tape` deletion after relocating non-tape scan/index primitives | next active — 120 min |
+| [cutover.O.5](waves/cutover/O5.md) | `crates/tape` deletion after relocating non-tape scan/index primitives | blocked — `crates/tape` absent, but no-default-features build and regen check failed in the O5 evidence snapshot |
 | [cutover.O.6](waves/cutover/O6.md) | 17-entry close matrix + JSON sonic-rs / CSS lightningcss parity refresh | 90 min |
 | [cutover.O.7](waves/cutover/O7.md) | AZ-II FINAL.md interim manifest -> terminal close conversion | 30 min |
 
-Remaining estimate after O3: O4-O7 remain the terminal path. If a later gate
+Remaining estimate after O5 evidence: O5 blocker resolution plus O6-O7
+remain the terminal path. If a later gate
 requires a new grammar-general inference/layout substrate, author
 AZ-III for that substrate only; do not move tape deletion,
-`Parsed<R>` deletion, stale benches, or parity gaps into AZ-III.
+stale benches, or parity gaps into AZ-III.
 
 ## 2026-04-29 — Parallel hardening audit
 
@@ -631,3 +656,36 @@ Next instruction: open O5 under `waves/cutover/O5.md`. O5 owns
 relocation, tape-only tests/benches/examples, `json-prototype`,
 Gorgeous JIT, manifest severance, and the no-shim deletion scan. O6/O7
 must not claim semantic close or terminal close until O5 is green.
+
+## 2026-04-30 — cutover.O5 tape deletion evidence snapshot
+
+O5 cannot close from the current evidence. The scan artifact is archived
+at
+`docs/benchmarks/AZ-II/cutover/O5-tape-delete-scan.txt`.
+
+Passed evidence:
+
+- `crates/tape`, `crates/core/benches/json-prototype`, and
+  `crates/gorgeous/src/jit.rs` are absent on disk.
+- `cargo metadata --no-deps --format-version 1` exits 0 and has no
+  `tape` or `json-prototype` package hits.
+- The exact production scan for `runtime::tape`, `TapeCursor`,
+  `TapeRec`, `TapeOffset`, and `crates/tape` returns zero hits.
+- `cargo check -p bbnf --benches --profile ax-iter`,
+  `cargo check -p gorgeous --profile ax-iter`, and
+  `cargo test -p simd-scan --profile ax-iter` pass.
+
+Blocking evidence:
+
+- `cargo build -p bbnf --no-default-features --profile ax-iter`
+  exits 101 because `crates/core/src/lower/mod.rs` still declares
+  `pub(crate) mod tape_walk;` while `crates/core/src/lower/tape_walk.rs`
+  is absent.
+- `cargo xtask regen --check` exits 1 with drift in all 9 generated
+  grammars.
+- The A1 no-shim grep still finds comment/provenance mentions of
+  `json-prototype`, `json_prototype`, and `TapeVisitor` in generated
+  and emitter source, so the literal O5.12 grep gate is not zero.
+
+No O5 close commit hash is recorded. O6 and O7 remain blocked until the
+O5 hard gates are green.

@@ -8,7 +8,7 @@
 > preflight (15-min preface), retiring the separate BA.W-1 / BA.W0
 > wave letters.
 
-BA opens on AZ-II's settled substrate. Where AZ-II dissolved the tape in
+BA opens on AZ-III's settled substrate. Where AZ-II/AZ-III dissolve the tape in
 favor of direct-to-struct materialization — every `->` producing a
 typed node in a grammar-derived struct tree via `project_types` and
 a non-empty `StructRegistry` — BA layers lazy typed pointer-path
@@ -62,17 +62,18 @@ TypeScript, and Python bindings.
 
 ## AZ dependency (hard opening gate)
 
-BA does NOT open until AZ-II closes. AZ-II is the tranche that dissolves
-the tape, activates `project_types` across the fleet, populates
-`StructRegistry` for every production grammar, and lands the
-direct-to-struct emitter as the singular materialization path. BA
-inherits that substrate and adds navigation ergonomics atop it.
+BA does NOT open until AZ-III closes terminally. AZ-II closed as a
+continuation handoff after O0-O4 and partial O5 implementation; AZ-III
+owns the remaining tape-delete evidence, semantic parity, benchmark
+truth, generated BBNF self-host proof, and fact/type/CSP/projection
+authority substrate. BA inherits the terminal AZ substrate and adds
+navigation ergonomics atop it.
 
-AZ-II's handoff contract that BA consumes:
+AZ-III's handoff contract that BA consumes:
 
 1. `StructRegistry` populated for JSON, CSS L4, Sheets, BBNF. A
-   partial registry at AZ-II close **blocks** BA open; the remaining
-   coverage lands under an AZ-II carry wave, not a BA hedge.
+   partial registry at AZ-III close **blocks** BA open; the remaining
+   coverage lands under an AZ continuation wave, not a BA hedge.
 2. Every `->` in every production grammar reaches the direct-to-
    struct emitter (`push_*` on the struct builder, not on a tape).
    An IR audit pass holds 100% coverage.
@@ -83,7 +84,7 @@ AZ-II's handoff contract that BA consumes:
    direct-to-struct substrate; lightningcss / sonic-rs / simdjson /
    serde_json / cssparser parity harnesses green.
 
-If any of the above is missing at AZ-II close, BA remains closed and
+If any of the above is missing at AZ-III close, BA remains closed and
 re-plans against the residual gap. BA does not open on a partial
 substrate.
 

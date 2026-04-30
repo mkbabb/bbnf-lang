@@ -14,12 +14,13 @@ regen windows, cherry-pick order, and status consolidation.
 full BBNF fixture corpus; `crates/tape/` deleted; `cargo build -p bbnf
 --no-default-features` succeeds without `crates/tape/`; AZ-II FINAL.md
 + `docs/benchmarks/post-AZ-II.json` archived.
-**Status**: interim manifest routed through cutover.O — substrate canonical; 9/9 grammars
-StructDirect after O2; BBNF self-parity 56/56; reproducibility CI gate
-green; cutover.O.0 tooling preflight, O1 builder transactions, O2
-EBNF direct projection, O3a failure-baseline triage, O3 generated
-view purge, and O4 `Parsed<R>` / `TapeDirect` deletion have landed;
-current work is O5 tape-crate deletion.
+**Status**: closed as AZ-III continuation handoff — substrate
+canonical; 9/9 grammars StructDirect after O2; BBNF self-parity 56/56;
+reproducibility CI gate green; cutover.O.0 tooling preflight, O1
+builder transactions, O2 EBNF direct projection, O3a failure-baseline
+triage, O3 generated view purge, and O4 `Parsed<R>` / `TapeDirect`
+deletion have landed; O5 did not close green, O6 did not run, and O7
+did not run. AZ-III owns the continuation.
 
 **2026-04-29 hardening amendment**: cutover.O must begin with the
 grammar-general StructDirect builder transaction gap. EBNF activation
@@ -52,6 +53,14 @@ The close scan is archived at
 [`docs/benchmarks/AZ-II/cutover/O4-parsed-tapedirect-scan.txt`](../../../../benchmarks/AZ-II/cutover/O4-parsed-tapedirect-scan.txt).
 Remaining `runtime::tape` references are O5-owned substrate deletion,
 not O4 return-model residue.
+
+**2026-04-30 continuation addendum**: the O5 scan is archived at
+[`docs/benchmarks/AZ-II/cutover/O5-tape-delete-scan.txt`](../../../../benchmarks/AZ-II/cutover/O5-tape-delete-scan.txt).
+`crates/tape`, `json-prototype`, and the Gorgeous JIT source are absent,
+metadata has no `tape` or `json-prototype` package, and later audit
+found the old no-default build blocker stale-repaired. O5 remains
+unclosed because `cargo xtask regen --check` still reports fleet drift
+and no refreshed green close packet exists. AZ-III.W1 - O5 Reclose owns that packet.
 
 **Trajectory snapshot**: see [`../PROGRESS-SNAPSHOT-2026-04-29.md`](../../PROGRESS-SNAPSHOT-2026-04-29.md)
 for per-substage commit-by-commit detail across cutover.A through
@@ -229,8 +238,8 @@ Required order:
    unless it is consumed through a document API.
 6. **[O4 Parsed/TapeDirect deletion](O4.md)** — LANDED: delete `Parsed<R>` as a
    production parser result and remove `TapeDirect` fallback semantics.
-7. **[O5 tape crate deletion](O5.md)** — next active: delete `crates/tape` after relocating
-   only genuinely non-tape scan/index primitives to their natural owner.
+7. **[O5 tape crate deletion](O5.md)** — blocked: `crates/tape` is absent, but
+   no-default-features build and regen hard gates are not green.
 8. **[O6 semantic/perf close](O6.md)** — refresh JSON `sonic-rs` parity, CSS
    `lightningcss` typed parity, and the 17-entry close matrix.
 9. **[O7 final conversion](O7.md)** — convert AZ-II FINAL from
@@ -251,7 +260,7 @@ Child wave specs:
 | [`O3a-A1.md`](O3a-A1.md) | complete_with_misses | A1 triad closed; live repairs/archive/JIT/bootstrap gates routed to O5/O6/O7 |
 | [`O3.md`](O3.md) | complete | up to 10 parallel worktree-isolated lanes; generated view purge |
 | [`O4.md`](O4.md) | complete | up to 10 parallel worktree-isolated lanes; return-model deletion; close commits `c51f9742` / `815fbcea` / `3165e52f` / `58ea61a6` / `97061c41` / `8040bd69` |
-| [`O5.md`](O5.md) | next active | up to 10 parallel worktree-isolated lanes; tape crate deletion |
+| [`O5.md`](O5.md) | blocked | up to 10 parallel worktree-isolated lanes; tape crate deletion; hard gates failed in the 2026-04-30 evidence snapshot |
 | [`O6.md`](O6.md) | planned | up to 10 parallel worktree-isolated lanes; sequential bench execution |
 | [`O7.md`](O7.md) | planned | up to 10 parallel worktree-isolated lanes; close-doc reconciliation |
 

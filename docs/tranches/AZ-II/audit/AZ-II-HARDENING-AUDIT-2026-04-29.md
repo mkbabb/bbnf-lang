@@ -1,16 +1,17 @@
 # AZ-II Hardening Audit - 2026-04-29
 
-Status: live coordination ledger for resuming AZ-II. This document
-folds the parallel audit of B0-B7, AY-AZ-II, docs/instructions,
-gestalt, remaining trajectory, risk/perf, meta-audit, and codegen paths
-back into one current plan.
+Status: historical coordination ledger. Superseded on 2026-04-30 by
+the AZ-II continuation close and [`AZ-III`](../AZ-III/AZ-III.md). This
+document remains useful audit archaeology, but it no longer authorizes
+AZ-II implementation dispatch.
 
 Repo head audited: `25693310`.
 
 ## Verdict
 
-AZ-II remains open. The repository is not in a terminal direct-to-struct
-state.
+At the time of this audit, AZ-II remained open. As of 2026-04-30,
+AZ-II is closed as a continuation handoff to AZ-III and is still not in
+a terminal direct-to-struct state.
 
 The current implementation is an interim manifest, not a terminal close:
 
@@ -29,15 +30,9 @@ The current implementation is an interim manifest, not a terminal close:
   profiling scripts, IAI CI, and some docs have drifted from the actual
   bench feature matrix.
 
-This is not an AZ-III by default. The active work is AZ-II
-`cutover.O`, a terminal hardening wave. O0 tooling preflight, O1
-StructDirect builder transactions, and O2 EBNF direct projection have
-landed; O3a failure-baseline triage is closed as routed evidence across
-J1/C1/S1/P1/A1. O3 generated view purge is now active because P1
-proved it closes inside O3 with no O3b required. Open AZ-III only if a
-later `cutover.O` gate
-proves that new grammar-general
-inference/layout substrate cannot land inside AZ-II without hiding a
+This audit predated the continuation decision. AZ-III is now open as
+the AZ-II continuation, carrying O5 reclose, O6/O7 truth and close
+work, and the grammar-general inference/layout substrate without hiding a
 larger architectural transposition.
 
 ## P0 Gates

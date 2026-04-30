@@ -1,8 +1,15 @@
 # AZ-II.cutover.O - Terminal Hardening Index
 **Opens after**: AZ-II.cutover.N halt snapshot
 **Agents**: up to 10 parallel
-**Hard gate**: O0-O7 close EBNF activation, generated view purge, return-model deletion, tape deletion, semantic/perf truth, and FINAL conversion inside AZ-II.
-**Status**: in_progress
+**Hard gate**: O0-O4 landed inside AZ-II; O5-O7 are carried by AZ-III continuation waves with refreshed evidence.
+**Status**: superseded by AZ-III
+
+## Continuation Close
+
+AZ-II.cutover.O is closed as a historical index. O0 through O4 landed.
+O5 did not close green, O6 did not run, and O7 did not run. AZ-III
+continues this index as W1 (O5 reclose), W2 (semantic parity and BBNF
+bootstrap proof), W4 (benchmark/profile truth), and W5 (terminal close).
 
 ## Scope
 
@@ -119,11 +126,14 @@ Sub-gate: AZ-II FINAL is terminal and cites O0-O6 evidence.
 
 ## Hard gate
 
-1. O0, O1, and O2 are complete.
-2. O3a is in progress and blocks O3 close.
-3. O3 is in progress and blocks O4.
-4. O4-O7 remain planned and must not be bypassed.
-5. AZ-III is not opened for tape deletion, `Parsed<R>` deletion, stale
+1. O0, O1, O2, O3, and O4 are complete.
+2. O3a is routed `complete_with_misses`; child dispositions are carried
+   by O5/O6/O7 and must not be bypassed.
+3. O5 is next active and blocks O6 until its tape deletion hard gate is
+   green.
+4. O6 and O7 remain planned; O7 must not convert FINAL or unblock BA/BB
+   until O6 closes.
+5. AZ-III is not opened for tape deletion, stale
    benches, or parity gaps.
 6. Every child wave has a full wave spec before dispatch.
 

@@ -16,24 +16,51 @@ the last consumer migration + the substrate deletion.
 
 ## 2026-04-29 Hardening Amendment
 
-AZ-II remains open. The implemented progress read-of-record is
+## 2026-04-30 Continuation Close
+
+AZ-II is closed as a continuation handoff to
+[`AZ-III`](../AZ-III/AZ-III.md). This is not a terminal green close.
+It records the landed cutover work and moves the remaining AZ close
+obligations into AZ-III with named owners and hard gates.
+
+The close state is:
+
+- O0 through O4 landed.
+- O5 implementation partially landed, including tape-crate deletion
+  work, but O5 did not close because the refreshed close packet is not
+  green. The active blocker is fleet regen drift and stale O5 evidence,
+  not a completed tape-delete gate.
+- O6 semantic/performance truth did not run.
+- O7 terminal close conversion did not run.
+- BA and BB remain blocked until AZ-III publishes terminal evidence.
+
+AZ-III owns the continuation: O5 reclose, semantic parity, generated
+BBNF self-host canonicalization, benchmark/profile truth, and the
+grammar-general fact/type/CSP/projection authority substrate surfaced by
+the six-agent audit. AZ-II docs remain historical and point forward;
+they must not be read as terminal success.
+
+## 2026-04-29 Hardening Amendment
+
+Historical status before continuation close: AZ-II remained open. The
+implemented progress read-of-record is
 [`PROGRESS-SNAPSHOT-2026-04-29.md`](PROGRESS-SNAPSHOT-2026-04-29.md):
 cutover.A through cutover.M landed, cutover.N was dispatched and
 halted at organizational usage limit, and no cutover.N code commits
 landed. The current state is an interim manifest: direct-to-struct is live
-for 9/9 grammars after O2, and O3 has removed generated tape-view
-residue. `Parsed<R>`, `TapeDirect`, remaining tape-substrate
-references, and `crates/tape` remain terminal blockers.
+for 9/9 grammars after O2, O3 has removed generated tape-view
+residue, and O4 has deleted `Parsed<R>` / `TapeDirect`. Remaining
+tape-substrate references and `crates/tape` remain terminal blockers.
 
 The active AZ-II wave is `cutover.O`. It is not a workaround wave and
 not a reduced tape floor. O0 tooling preflight, O1 grammar-general
 StructDirect builder transactions, O2 EBNF direct projection, O3a
-failure routing, and O3 generated-view purge have landed. The active
-resume point is O4: delete `Parsed<R>` and `TapeDirect`, including the
-JSON bool branch payload route from J1. O5 deletes the
-standalone tape crate and A1 archive/JIT surfaces, O6 refreshes
-semantic parity/performance truth plus bootstrap proof, and O7 converts
-the interim manifest to terminal close.
+failure routing, O3 generated-view purge, and O4 `Parsed<R>` /
+`TapeDirect` deletion have landed. O5 has a blocked evidence snapshot:
+the standalone tape crate is absent, but the no-default-features build
+and regen check are not green. O6 refreshes semantic parity/performance
+truth plus bootstrap proof, and O7 converts the interim manifest to
+terminal close only after O5 closes.
 Each O substage is now specified as a dispatchable wave under
 `waves/cutover/O0.md` through `waves/cutover/O7.md`, with up to 10
 parallel sibling worktree agents and explicit file bounds.
@@ -43,11 +70,10 @@ redress prelude that fed O3 and the later O waves. Its child specs
 post-O2 failed tests and the failed JSON bench timeout, and are now
 `complete_with_misses` routed into O3/O4/O5/O6/O7.
 
-AZ-III opens only if a later O-wave gate proves new grammar-general
-inference/layout machinery spanning node facts, CSP/egraph typing, and
-projection emission cannot honestly land inside AZ-II. AZ-III must not
-carry forward tape deletion, `Parsed<R>` deletion, stale benches, or
-parity gaps as deferred work.
+The 2026-04-30 continuation decision supersedes the prior conditional
+AZ-III opening rule: AZ-III is now open as the AZ-II continuation, and
+it carries the named close blockers and audit-found substrate work
+without treating them as deferred or optional.
 
 ## Thesis
 
@@ -216,7 +242,7 @@ disk as historical record.
 
 | Wave | Headline | Opens after | Status |
 |---|---|---|---|
-| **cutover** | BBNF self-host + tape deletion ([waves/cutover/README.md](waves/cutover/README.md)) — original three-stage plan expanded under contact into 14 sub-stages cutover.A through cutover.N, then O0-O7 plus O3a child specs | AZ-I.W2-act close (AZ-I FINAL.md committed; seven-point handoff verified) | interim manifest (cutover.A→M LANDED; cutover.N halted at usage limit; [O0](waves/cutover/O0.md)/[O1](waves/cutover/O1.md)/[O2](waves/cutover/O2.md)/[O3a](waves/cutover/O3a.md)/[O3](waves/cutover/O3.md) LANDED; terminal hardening active at [O4 Parsed/TapeDirect deletion](waves/cutover/O4.md)) |
+| **cutover** | BBNF self-host + tape deletion ([waves/cutover/README.md](waves/cutover/README.md)) — original three-stage plan expanded under contact into 14 sub-stages cutover.A through cutover.N, then O0-O7 plus O3a child specs | AZ-I.W2-act close (AZ-I FINAL.md committed; seven-point handoff verified) | interim manifest (cutover.A→M LANDED; cutover.N halted at usage limit; [O0](waves/cutover/O0.md)/[O1](waves/cutover/O1.md)/[O2](waves/cutover/O2.md)/[O3a](waves/cutover/O3a.md)/[O3](waves/cutover/O3.md)/[O4](waves/cutover/O4.md) LANDED; [O5](waves/cutover/O5.md) blocked on no-default-features build and regen evidence) |
 
 The cutover wave's actual trajectory across 14 sub-stages is recorded
 in `docs/tranches/AZ-II/PROGRESS-SNAPSHOT-2026-04-29.md` (per-substage
@@ -246,7 +272,7 @@ resumed and landed in K rather than under a retroactive J label.
 | cutover.K | mapped_factor wrapper + typed-leaf source recovery + per-shape Err frame cleanup | LANDED |
 | cutover.L | keyword-shape Alt-of-Ref handler | LANDED |
 | cutover.M | non-BBNF resolver arms (CSV/Math/BNF/CSS Pretty); AltDispatch struct_direct surgery | LANDED |
-| cutover.N | EBNF activation + Phases 4/5/6 close | dispatched + halted at usage limit; routed to cutover.O; O0/O1/O2/O3a/O3 now landed and O4 is active next |
+| cutover.N | EBNF activation + Phases 4/5/6 close | dispatched + halted at usage limit; routed to cutover.O; O0/O1/O2/O3a/O3/O4 now landed and O5 is blocked on hard-gate evidence |
 
 | O spec | Headline | Status |
 |---|---|---|
@@ -260,8 +286,8 @@ resumed and landed in K rather than under a retroactive J label.
 | [cutover.O3a-P1](waves/cutover/O3a-P1.md) | Projection totality/generated-view cohort | complete_with_misses |
 | [cutover.O3a-A1](waves/cutover/O3a-A1.md) | Analysis/LSP/prototype/bootstrap disposition cohort | complete_with_misses |
 | [cutover.O3](waves/cutover/O3.md) | Generated view purge | LANDED |
-| [cutover.O4](waves/cutover/O4.md) | `Parsed<R>` / `TapeDirect` deletion | next active |
-| [cutover.O5](waves/cutover/O5.md) | `crates/tape` deletion | planned |
+| [cutover.O4](waves/cutover/O4.md) | `Parsed<R>` / `TapeDirect` deletion | LANDED |
+| [cutover.O5](waves/cutover/O5.md) | `crates/tape` deletion | blocked |
 | [cutover.O6](waves/cutover/O6.md) | Semantic/performance close | planned |
 | [cutover.O7](waves/cutover/O7.md) | FINAL conversion | planned |
 

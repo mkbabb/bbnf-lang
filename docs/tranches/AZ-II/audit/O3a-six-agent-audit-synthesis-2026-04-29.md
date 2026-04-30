@@ -1,8 +1,9 @@
 # AZ-II O3a Six-Agent Audit Synthesis - 2026-04-29
 
-Status: orchestration ledger for the halted implementation boundary.
-No source redress is authorized by this document; it specifies the next
-deployable wave series before AZ-II implementation resumes.
+Status: historical orchestration ledger for the halted implementation
+boundary. Superseded on 2026-04-30 by the AZ-II continuation close and
+[`AZ-III`](../AZ-III/AZ-III.md). No source redress is authorized by
+this document.
 
 Audited worktrees:
 
@@ -15,11 +16,10 @@ Audited worktrees:
 
 ## Verdict
 
-AZ-II remains open. The next implementation step is not a benchmark
-optimization pass; it is semantic substrate closure. O3a must close
-before O3 implementation resumes, because the post-O2 baseline exposed
-84 failed tests and one failed JSON bench lane across five owned
-cohorts.
+At the time of this synthesis, AZ-II remained open. As of 2026-04-30,
+AZ-II is closed as a continuation handoff to AZ-III. The next
+implementation step is still not a benchmark optimization pass; it is
+semantic substrate closure under AZ-III.
 
 The six audits agree on these blockers:
 

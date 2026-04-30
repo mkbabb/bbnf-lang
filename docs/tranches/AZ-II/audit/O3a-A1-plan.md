@@ -314,7 +314,8 @@ Sub-gate: O7 close scan records zero live hits for
 `json-prototype`, `json_prototype`, `TapeVisitor`, `bbnf_derive`,
 `gorgeous-jit`, `mod jit`, `format_grammar`, and
 `bootstrap_parser::parse` outside explicitly historical archive text.
-If any hit remains in live source or close docs, AZ-II remains open.
+If any hit remains in live source or close docs, AZ-III terminal close
+remains blocked.
 ```
 
 Add this hard-gate bullet:

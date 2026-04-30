@@ -25,7 +25,7 @@
         ay-expand-json ay-expand-named-type ay-asm-close-compound \
         ay-test-value-api ay-test-wire-contract ay-test-named-type \
         ay-samply-json-twitter ay-samply-json-twitter-lookup \
-        ay-bench-close ay-prepare-profile-wave \
+        ay-bench-close az-ii-bench-close ay-prepare-profile-wave \
         install package \
         bump-patch bump-minor bump-major release \
         clean clean-vsix clean-incr watch deploy
@@ -359,23 +359,38 @@ ay-samply-json-twitter-lookup:
 # for the substrate-verification pass; W1-W5 close gates use `WAVE=close`
 # or `WAVE=<wave>-close` for publish-grade peer-parity numbers.
 BENCH_PROFILE = $(if $(or $(filter close,$(WAVE)),$(filter %-close,$(WAVE))),bench,profiling-prep)
-ay-bench-close:
+BENCH_CLOSE_SERIES ?= AY
+BENCH_CLOSE_STEM = docs/benchmarks/post-$(BENCH_CLOSE_SERIES)-$(WAVE)
+BENCH_CLOSE_AGGREGATE = $(BENCH_CLOSE_STEM)-mid.json
+define RUN_BENCH_CLOSE
 	@mkdir -p docs/benchmarks
-	@echo "AY bench-close WAVE=$(WAVE) profile=$(BENCH_PROFILE)" >&2
+	@echo "$(BENCH_CLOSE_SERIES) bench-close WAVE=$(WAVE) profile=$(BENCH_PROFILE)" >&2
 	@# Cold-per-parse is a divan-harness property (sample_size = 1,
 	@# skip_ext_time = true), not a filesystem-wipe property.
 	cargo bench --profile $(BENCH_PROFILE) -p bbnf --bench json_monolithic \
-		> docs/benchmarks/post-AY-$(WAVE)-json.txt 2>&1
+		> $(BENCH_CLOSE_STEM)-json.txt 2>&1
 	cargo bench --profile $(BENCH_PROFILE) -p bbnf --bench css_l4 \
-		> docs/benchmarks/post-AY-$(WAVE)-css.txt 2>&1
+		> $(BENCH_CLOSE_STEM)-css.txt 2>&1
 	cargo bench --profile $(BENCH_PROFILE) -p bbnf --bench google_sheets_monolithic \
-		> docs/benchmarks/post-AY-$(WAVE)-sheets.txt 2>&1
+		> $(BENCH_CLOSE_STEM)-sheets.txt 2>&1
 	cargo bench --profile $(BENCH_PROFILE) -p bbnf --bench bbnf_monolithic \
-		> docs/benchmarks/post-AY-$(WAVE)-bbnf.txt 2>&1
+		> $(BENCH_CLOSE_STEM)-bbnf.txt 2>&1
 	cargo bench --profile $(BENCH_PROFILE) -p bbnf --bench compile_pipeline \
-		> docs/benchmarks/post-AY-$(WAVE)-compile.txt 2>&1
-	@echo "per-bench logs written under docs/benchmarks/post-AY-$(WAVE)-*.txt" >&2
-	@echo "aggregate docs/benchmarks/post-AY-$(WAVE)-mid.json is composed post-run" >&2
+		> $(BENCH_CLOSE_STEM)-compile.txt 2>&1
+	@echo "per-bench logs written under $(BENCH_CLOSE_STEM)-*.txt" >&2
+	@echo "aggregate $(BENCH_CLOSE_AGGREGATE) is composed post-run" >&2
+endef
+
+ay-bench-close:
+	$(RUN_BENCH_CLOSE)
+
+## AZ-II.cutover.O6 close-matrix bench. Reuses the AY close-bench
+## sequence, but writes the O6-required post-AZ-II-O6 lane logs.
+az-ii-bench-close: WAVE = O6
+az-ii-bench-close: BENCH_CLOSE_SERIES = AZ-II
+az-ii-bench-close: BENCH_CLOSE_AGGREGATE = docs/benchmarks/post-AZ-II.json
+az-ii-bench-close:
+	$(RUN_BENCH_CLOSE)
 
 ## Shared prerequisite for ay-samply-*. Wraps
 ## scripts/prepare-profile-wave.sh (idempotent per B0.W1.b). Requires

@@ -18,11 +18,9 @@
 //!
 //! # `CompoundHandle`
 //!
-//! Compound (object / array / struct) values point into the tape's
-//! AoS `Vec<TapeRec>` (restored post-W1). `tape_offset` is the
-//! absolute record offset; `record_count` is the compound's record
-//! span, matching the `sib_skip` emitted by the tape builder at
-//! `close_compound`.
+//! Compound (object / array / struct) values point into the
+//! grammar-specific struct arena. `record_offset` is the absolute
+//! arena record offset; `record_count` is the compound's record span.
 //!
 //! Both handles are `Copy`, 16-or-fewer bytes, and ABI-stable — the
 //! emitter plants them directly into `<Grammar>Value` variants.
@@ -46,17 +44,16 @@ pub struct StringHandle {
 }
 
 /// Handle pointing at a compound record span inside a parsed
-/// [`tape::Tape`](tape::Tape).
+/// grammar-specific arena.
 ///
-/// `tape_offset` is the absolute record offset of the compound's
-/// header record; `record_count` spans the entire subtree (the value
-/// that `close_compound` writes into `sib_skip`).
+/// `record_offset` is the absolute record offset of the compound's
+/// header record; `record_count` spans the entire subtree.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CompoundHandle {
     /// Absolute record offset of the compound's header record.
-    pub tape_offset: u64,
-    /// Number of tape records the compound spans, inclusive of the
-    /// header. Matches `sib_skip` at emission time.
+    pub record_offset: u64,
+    /// Number of arena records the compound spans, inclusive of the
+    /// header.
     pub record_count: u32,
 }
 
@@ -121,17 +118,17 @@ impl StringHandle {
 impl CompoundHandle {
     /// Construct a compound handle.
     #[inline]
-    pub const fn new(tape_offset: u64, record_count: u32) -> Self {
+    pub const fn new(record_offset: u64, record_count: u32) -> Self {
         Self {
-            tape_offset,
+            record_offset,
             record_count,
         }
     }
 
     /// Absolute record offset of the compound's header.
     #[inline]
-    pub const fn tape_offset(&self) -> u64 {
-        self.tape_offset
+    pub const fn record_offset(&self) -> u64 {
+        self.record_offset
     }
 
     /// Record count of the compound subtree (header inclusive).

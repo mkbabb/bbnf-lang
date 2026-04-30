@@ -110,13 +110,13 @@ opt-level = 1
 #
 # The `dev` profile carries `debuginfo=2` because samply needs DWARF
 # for symbol resolution (see feedback_samply_symbols). That same DWARF
-# cost drove AX.W0a.2.d's 26 GB-RSS single-rustc OOM (tape_parity
-# aggregate before the per-grammar split). When an agent only needs
+# cost drove AX.W0a.2.d's 26 GB-RSS single-rustc OOM in the historical
+# aggregate grammar parity binary. When an agent only needs
 # "does it compile?" / "do these tests pass?" — not a profile — the
 # DWARF budget is dead weight.
 #
 # Usage:
-#   cargo test --profile ax-iter -p bbnf --test tape_parity_json
+#   cargo test --profile ax-iter -p bbnf --test json_parity
 #   cargo check --profile ax-iter -p bbnf
 #
 # Inherits from `dev` (incremental on, per-package opt-level=1 above),

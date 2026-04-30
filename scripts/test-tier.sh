@@ -84,9 +84,9 @@ case "$TIER" in
         ;;
     grammar)
         # Each per-grammar test binary links exactly one derive-Parser
-        # expansion. Bin list audited against crates/core/tests/ — stale
-        # names (tape_parity_*, grammar_roundtrip) removed in B0.W2.a;
-        # extend as further aggregates split.
+        # expansion. Bin list audited against crates/core/tests/ after
+        # the B0.W2.a aggregate parity split; extend as further
+        # aggregates split.
         for bin in \
             bbnf_parity bbnf_ast_parity bbnf_self_parity \
             json_parity css_l4_parity sheets_parity \

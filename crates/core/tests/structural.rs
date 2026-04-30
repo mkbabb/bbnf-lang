@@ -4,19 +4,18 @@
 //! These tests parse known JSON inputs via `JsonParser::parse`, walk
 //! the resulting `JsonDocument`'s typed value tree, and assert specific
 //! structural properties: typed kind discrimination, child counts,
-//! span text recovery, and bounds. This fills the gap where
-//! `tape_parity` (BBNF-only post-AZ-I.W2-act) checks only root record +
-//! total count, and `grammar_roundtrip` checks only rule counts.
+//! span text recovery, and bounds. This covers the root record and
+//! total-count assertions that the historical aggregate parity binary
+//! could not validate deeply.
 //!
 //! # Migration history
 //!
-//! Pre-AZ-I.W2-act these tests asserted on `parsed.tape()` /
-//! `view.cursor()` accessors against the tape substrate. AZ-I.W2-act
-//! flipped JSON to the struct-direct path — `JsonParser::parse`
-//! returns a `JsonDocument` with no tape, no cursor. The migrated
+//! Pre-AZ-I.W2-act these tests asserted on parser-internal cursor
+//! accessors. AZ-I.W2-act flipped JSON to the struct-direct path:
+//! `JsonParser::parse` returns a `JsonDocument`. The migrated
 //! assertions walk the typed value tree directly: object pair lookups
 //! by key, array element indexing, scalar shape kind-tags. Tests whose
-//! pre-flip assertion was tape-shape-specific with no equivalent
+//! pre-flip assertion was internal-layout-specific with no equivalent
 //! struct-tree invariant (e.g. record-count thresholds) project to
 //! the structural invariant the typed tree exposes (object pair count,
 //! array element count, etc.).
@@ -27,7 +26,7 @@ use bbnf::runtime::{JsonValue, JsonNumber, JsonView};
 // ── Helpers ────────────────────────────────────────────────────────────
 
 /// Walk a `JsonValue` and count every reachable node (compound + leaf).
-/// Mirrors the pre-flip `count_reachable(cursor)` walker shape, lifted
+/// Mirrors the pre-flip reachability walker shape, lifted
 /// off the struct tree.
 fn count_reachable<'p>(view: &JsonView<'_, 'p>, value: &JsonValue<'p>) -> usize {
     match value {
@@ -53,8 +52,8 @@ fn count_reachable<'p>(view: &JsonView<'_, 'p>, value: &JsonValue<'p>) -> usize 
 }
 
 /// `true` if any reachable string scalar in the tree contains `needle`.
-/// Replaces the pre-flip `tape_contains_substr` walker that searched
-/// span-text on every record; the struct tree's strings are the
+/// Replaces the pre-flip substring walker that searched span-text on
+/// every record; the struct tree's strings are the
 /// scalar-projection equivalent.
 fn tree_contains_string<'p>(
     view: &JsonView<'_, 'p>,
@@ -211,7 +210,7 @@ fn structural_object_two_pairs() {
     );
 
     // Verify expected leaves appear in the tree. Pre-flip these were
-    // span-substring lookups against tape records; the struct tree's
+    // span-substring lookups against internal records; the struct tree's
     // typed scalars surface the same content directly.
     assert!(
         tree_contains_string(&view, view.root(), "hello"),

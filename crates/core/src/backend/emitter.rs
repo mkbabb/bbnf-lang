@@ -411,8 +411,8 @@ pub trait Emitter {
     /// Called before the driver compiles Alt branch bodies. Backends
     /// can use this to save per-Alt context that inner (nested) Alts
     /// might otherwise consume. The Rust backend saves
-    /// `tape_surgery` and `branch_idx_ident` so nested Alts don't
-    /// clobber the outer Alt's state.
+    /// `branch_idx_ident` so nested Alts don't clobber the outer Alt's
+    /// state.
     fn pre_compile_alt_branches(
         &mut self,
         _ctx: &mut Self::Ctx,

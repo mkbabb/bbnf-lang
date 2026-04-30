@@ -36,19 +36,6 @@ impl RustEmitter {
     }
 }
 
-/// AM.3 per-branch tape surgery context.
-///
-/// When active, the Alt emitter wraps each branch arm with its own
-/// `push_leaf` or `mark_children` + `push_compound` instead of
-/// relying on a shared epilogue. This eliminates the compound record
-/// overhead for leaf branches (literals, regex, pure-conversion maps).
-#[derive(Clone)]
-pub struct TapeSurgeryCtx {
-    /// The `TapeKind` to use in push calls (always `TapeKind::Rule`
-    /// for rule-level Alt bodies).
-    pub tape_kind: TokenStream,
-}
-
 /// Mutable context for Rust emission.
 ///
 /// Holds a pointer to `IrCodegenCtx` for type lookups and slab codegen.
@@ -64,16 +51,11 @@ pub struct RustEmitCtx {
     /// discriminator instead of the rule's global ID. Cleared after
     /// the Alt body is compiled.
     pub branch_idx_ident: Option<syn::Ident>,
-    /// AM.3: when set, the Alt emitter emits per-branch `push_leaf`
-    /// or `push_compound` calls instead of relying on a shared
-    /// epilogue. Set by `emit_tape_tier_rule` for Alt-bodied
-    /// `MustTape` rules; cleared after the body is compiled.
-    pub tape_surgery: Option<TapeSurgeryCtx>,
-    /// AN.0: stack of saved outer `branch_idx_ident` +
-    /// `tape_surgery` so arbitrarily nested Alts inside branch
-    /// bodies cannot clobber outer Alt contexts. Pushed by
-    /// `save_alt_context`, popped by `restore_alt_context`.
-    alt_context_stack: Vec<(Option<syn::Ident>, Option<TapeSurgeryCtx>)>,
+    /// AN.0: stack of saved outer `branch_idx_ident` so arbitrarily
+    /// nested Alts inside branch bodies cannot clobber outer Alt
+    /// contexts. Pushed by `save_alt_context`, popped by
+    /// `restore_alt_context`.
+    alt_context_stack: Vec<Option<syn::Ident>>,
     /// AT.1: ordered set of scalar payload types active for the
     /// current rule. For non-Alt rules with a single scalar type,
     /// this contains exactly one element. For Alt-bodied rules,
@@ -137,7 +119,6 @@ impl RustEmitCtx {
             current_rule_name: None,
             current_rule_id: None,
             branch_idx_ident: None,
-            tape_surgery: None,
             alt_context_stack: Vec::new(),
             payload_types: Vec::new(),
             payload_layout: None,
@@ -231,42 +212,21 @@ impl RustEmitCtx {
         )
     }
 
-    /// AN.0: Push `branch_idx_ident` and `tape_surgery` onto the
-    /// context stack before the driver compiles Alt branch bodies.
-    /// Inner (nested) Alts will see `None` for both fields so they
-    /// cannot clobber the outer Alt's context.
+    /// AN.0: Push `branch_idx_ident` onto the context stack before
+    /// the driver compiles Alt branch bodies. Inner (nested) Alts
+    /// will see `None` so they cannot clobber the outer Alt's
+    /// context.
     pub fn save_alt_context(&mut self) {
-        self.alt_context_stack.push((
-            self.branch_idx_ident.take(),
-            self.tape_surgery.take(),
-        ));
+        self.alt_context_stack.push(self.branch_idx_ident.take());
     }
 
-    /// AN.0: Pop `branch_idx_ident` and `tape_surgery` from the
-    /// context stack after all branch bodies are compiled, so the
-    /// emitter's `emit_alt_*` call sees the correct outer context.
+    /// AN.0: Pop `branch_idx_ident` from the context stack after all
+    /// branch bodies are compiled, so the emitter's `emit_alt_*` call
+    /// sees the correct outer context.
     pub fn restore_alt_context(&mut self) {
-        if let Some((saved_idx, saved_surgery)) = self.alt_context_stack.pop() {
+        if let Some(saved_idx) = self.alt_context_stack.pop() {
             self.branch_idx_ident = saved_idx;
-            self.tape_surgery = saved_surgery;
         }
-    }
-
-    /// AU.3.1: Check whether any outer Alt frame has tape surgery
-    /// active. During a branch body compile, `tape_surgery` is moved
-    /// from `self` onto the `alt_context_stack` by
-    /// `save_alt_context`; the branch body sees `self.tape_surgery
-    /// = None` but `alt_context_stack` has the saved state. This
-    /// peek lets leaf emitters detect the outer-rule tape-surgery
-    /// context without waiting for `restore_alt_context` (which only
-    /// runs after every branch has compiled).
-    pub fn outer_tape_surgery_active(&self) -> bool {
-        if self.tape_surgery.is_some() {
-            return true;
-        }
-        self.alt_context_stack
-            .iter()
-            .any(|(_, surgery)| surgery.is_some())
     }
 }
 

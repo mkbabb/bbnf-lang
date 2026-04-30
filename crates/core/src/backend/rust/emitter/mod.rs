@@ -187,23 +187,6 @@ impl Emitter for RustEmitter {
             ctx.branch_idx_ident = None;
         }
 
-        // AM.3: For Alt-bodied MustTape rules, enable per-branch tape
-        // surgery so each branch arm emits its own push_leaf or
-        // mark_children + push_compound.
-        if is_alt && is_visible {
-            use bbnf_ir::passes::MaterializationClass;
-            let class = RustEmitter::materialization_for_rule_pub(ir, rule);
-            if class == MaterializationClass::MustTape {
-                ctx.tape_surgery = Some(crate::backend::rust::emitter_types::TapeSurgeryCtx {
-                    tape_kind: quote::quote! { ::tape::TapeKind::Rule },
-                });
-            } else {
-                ctx.tape_surgery = None;
-            }
-        } else {
-            ctx.tape_surgery = None;
-        }
-
         // AT.1: source payload types from projected types + inlined
         // node resolution. The CSP `project_types` pass computes each
         // rule's `TypeDesc`; for Alt-bodied rules,
@@ -254,7 +237,6 @@ impl Emitter for RustEmitter {
         let result = self.emit_rule_function_impl(rule, body, sync_body, ir, ctx);
         // Clear per-rule context after the rule is emitted.
         ctx.branch_idx_ident = None;
-        ctx.tape_surgery = None;
         ctx.payload_layout = None;
         ctx.aggregate_field_cursor = 0;
         result

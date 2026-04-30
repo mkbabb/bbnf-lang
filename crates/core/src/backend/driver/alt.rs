@@ -163,7 +163,7 @@ pub(super) fn compile_alt<E: Emitter>(
         let mut fallback = None;
 
         // AN.0: save outer Alt context so inner Alts in branch
-        // bodies cannot clobber branch_idx / tape_surgery.
+        // bodies cannot clobber branch_idx.
         emitter.pre_compile_alt_branches(ctx);
         for (i, branch) in branches.iter().enumerate() {
             let pushes = branch_pushes_children(ir, &branch.node, dstate);

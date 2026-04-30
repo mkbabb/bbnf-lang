@@ -35,7 +35,7 @@ Challenge dispositions saved in `audit/challenge.md`. Key narrowing:
 ## 2026-04-29 - W1 Close
 
 `/Users/mkbabb/Programming/precepts` updated and committed at
-`458c2d1`.
+`e490e8ed39fd4899b94aba3f5977464ea8661ff4`.
 
 Verification:
 
@@ -48,7 +48,8 @@ Verification:
 
 ## 2026-04-29 - W2 Close
 
-Added `docs/precepts` submodule references at commit `458c2d1` and local
+Added `docs/precepts` submodule references at commit
+`e490e8ed39fd4899b94aba3f5977464ea8661ff4` and local
 `docs/instructions/README.md` tails for:
 
 - bbnf-lang;
@@ -75,7 +76,7 @@ Verification:
 
 - every top-level consumer has `docs/precepts/instructions/tranche/SPEC.md`;
 - every top-level consumer has `docs/instructions/README.md`;
-- every submodule points to `458c2d1`;
+- every submodule points to `e490e8ed39fd4899b94aba3f5977464ea8661ff4`;
 - no nested `crates/csp-solver/docs/precepts`;
 - old bbnf/config/speedtest tranche instruction files are absent;
 - stale six-agent and old bbnf instruction path scan over new instruction

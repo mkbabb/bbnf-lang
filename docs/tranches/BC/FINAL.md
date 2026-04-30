@@ -9,7 +9,7 @@ small and project-specific.
 `/Users/mkbabb/Programming/precepts` closed at:
 
 ```text
-458c2d1
+e490e8ed39fd4899b94aba3f5977464ea8661ff4
 ```
 
 Shared docs now state:
@@ -28,7 +28,8 @@ Shared docs now state:
 
 ## Consumers Updated
 
-Each top-level consumer now has `docs/precepts` pinned to `458c2d1` and
+Each top-level consumer now has `docs/precepts` pinned to
+`e490e8ed39fd4899b94aba3f5977464ea8661ff4` and
 `docs/instructions/README.md` as a local tail:
 
 - bbnf-lang;
@@ -71,7 +72,7 @@ was created.
 ## Verification
 
 - `git submodule status` showed every top-level consumer at
-  `458c2d1167f4e3a327edf17fc7509da533cacf1e docs/precepts`.
+  `e490e8ed39fd4899b94aba3f5977464ea8661ff4 docs/precepts`.
 - `test -e <repo>/docs/precepts/instructions/tranche/SPEC.md` and
   `test -f <repo>/docs/instructions/README.md` passed for all consumers.
 - `test ! -e crates/csp-solver/docs/precepts` passed.

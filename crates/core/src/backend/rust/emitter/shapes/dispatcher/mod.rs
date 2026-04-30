@@ -31,8 +31,6 @@
 //! - [`ref_call`]            — per-Ref value-position routing
 //!   (`emit_ref_call_shape`, leading-ws admission analysis,
 //!   `collect_value_refs`).
-//! - [`scan_policy`]         — grammar-activated structural-scan
-//!   admission facts (`lookup_scan_policy`).
 
 use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
 use proc_macro2::Ident;
@@ -40,13 +38,11 @@ use quote::format_ident;
 
 mod cross_shape;
 mod ref_call;
-mod scan_policy;
 mod support;
 mod symbol_composition;
 
 pub use cross_shape::emit_dispatcher;
 pub use ref_call::{collect_value_refs, emit_ref_call_shape};
-pub(crate) use scan_policy::{lookup_scan_policy, ScanActivationFlags};
 pub use support::emit_support_module;
 pub use symbol_composition::{dispatcher_fn_ident, shape_fn_ident};
 

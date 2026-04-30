@@ -1,6 +1,6 @@
 //! Per-branch tape-path emission: dispatch-arm assembly, branch-body
 //! emitters per IR shape (Ref / Literal / Regex / Seq), Seq position
-//! flattening, first-byte-set computation, and trivia stripping.
+//! flattening, and trivia stripping.
 
 use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
@@ -112,30 +112,8 @@ pub(super) fn emit_dispatch_arms_struct_direct(
                 if seq_is_pure_literal_chain(inner) {
                     let mut positions: Vec<&IrNode> = Vec::new();
                     flatten(inner, &mut positions);
-                    let lit_checks: Vec<TokenStream> = positions
-                        .iter()
-                        .filter_map(|pos| match pos {
-                            IrNode::Literal(sid) => {
-                                let bytes = ir.get_string(*sid).as_bytes();
-                                let len = bytes.len();
-                                let byte_lits: Vec<TokenStream> =
-                                    bytes.iter().map(|b| quote! { #b }).collect();
-                                Some(quote! {
-                                    {
-                                        let at = *p;
-                                        let end = at + #len;
-                                        if input.len() < end
-                                            || input[at..end] != [#(#byte_lits),*]
-                                        {
-                                            return ::core::result::Result::Err(());
-                                        }
-                                        *p = end;
-                                    }
-                                })
-                            }
-                            _ => None,
-                        })
-                        .collect();
+                    let lit_checks: Vec<TokenStream> =
+                        positions.iter().map(|pos| emit_seq_position(pos, ir)).collect();
                     quote! {
                         {
                             let save_p = *p;
@@ -304,47 +282,6 @@ pub(super) fn flatten<'a>(node: &'a IrNode, out: &mut Vec<&'a IrNode>) {
         }
         IrNode::Epsilon => {}
         other => out.push(other),
-    }
-}
-
-/// Compute the first-byte set for a branch body. Returns an empty
-/// Vec when the set is unbounded (Regex branches without
-/// classification, Refs without `meta.first_set`).
-pub(super) fn branch_first_bytes(node: &IrNode, ir: &GrammarIR) -> Vec<u8> {
-    match unwrap_trivia(node) {
-        IrNode::Literal(sid) => {
-            let bytes = ir.get_string(*sid).as_bytes();
-            if bytes.is_empty() {
-                Vec::new()
-            } else {
-                vec![bytes[0]]
-            }
-        }
-        IrNode::Ref(rid) => {
-            let target = match ir.rules.iter().find(|r| r.id == *rid) {
-                Some(r) => r,
-                None => return Vec::new(),
-            };
-            target.meta.first_set.iter().collect()
-        }
-        IrNode::Regex(_) => Vec::new(),
-        IrNode::Seq(children) => children
-            .first()
-            .map(|c| branch_first_bytes(c, ir))
-            .unwrap_or_default(),
-        IrNode::Next(lhs, _) => branch_first_bytes(lhs, ir),
-        IrNode::Skip(lhs, _) => branch_first_bytes(lhs, ir),
-        IrNode::Alt(inner_branches, _) => {
-            // Union of sub-branch first-byte sets.
-            let mut out: std::collections::BTreeSet<u8> = Default::default();
-            for b in inner_branches {
-                for byte in branch_first_bytes(&b.node, ir) {
-                    out.insert(byte);
-                }
-            }
-            out.into_iter().collect()
-        }
-        _ => Vec::new(),
     }
 }
 

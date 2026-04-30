@@ -7100,13 +7100,67 @@ mod __cssl4parser_emit_impl {
                 {
                     let save_p = *p;
                     let attempt: ::core::result::Result<(), ()> = (|| {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [102u8] {
+                            return Err(());
+                        }
+                        *p = end;
                         {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [102u8] {
-                                return ::core::result::Result::Err(());
+                            let mut alt_hit = false;
+                            if !alt_hit {
+                                let at = *p;
+                                let end = at + 10usize;
+                                if input.len() >= end
+                                    && input[at..end]
+                                        == [
+                                            108u8, 111u8, 114u8, 97u8, 108u8, 119u8, 104u8, 105u8,
+                                            116u8, 101u8,
+                                        ]
+                                {
+                                    *p = end;
+                                    alt_hit = true;
+                                }
                             }
-                            *p = end;
+                            if !alt_hit {
+                                let at = *p;
+                                let end = at + 10usize;
+                                if input.len() >= end
+                                    && input[at..end]
+                                        == [
+                                            111u8, 114u8, 101u8, 115u8, 116u8, 103u8, 114u8, 101u8,
+                                            101u8, 110u8,
+                                        ]
+                                {
+                                    *p = end;
+                                    alt_hit = true;
+                                }
+                            }
+                            if !alt_hit {
+                                let at = *p;
+                                let end = at + 8usize;
+                                if input.len() >= end
+                                    && input[at..end]
+                                        == [105u8, 114u8, 101u8, 98u8, 114u8, 105u8, 99u8, 107u8]
+                                {
+                                    *p = end;
+                                    alt_hit = true;
+                                }
+                            }
+                            if !alt_hit {
+                                let at = *p;
+                                let end = at + 6usize;
+                                if input.len() >= end
+                                    && input[at..end]
+                                        == [117u8, 99u8, 104u8, 115u8, 105u8, 97u8]
+                                {
+                                    *p = end;
+                                    alt_hit = true;
+                                }
+                            }
+                            if !alt_hit {
+                                return Err(());
+                            }
                         }
                         Ok(())
                     })();
@@ -7563,21 +7617,44 @@ mod __cssl4parser_emit_impl {
                 {
                     let save_p = *p;
                     let attempt: ::core::result::Result<(), ()> = (|| {
-                        {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [104u8] {
-                                return ::core::result::Result::Err(());
-                            }
-                            *p = end;
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [104u8] {
+                            return Err(());
                         }
+                        *p = end;
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [111u8] {
+                            return Err(());
+                        }
+                        *p = end;
                         {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [111u8] {
-                                return ::core::result::Result::Err(());
+                            let mut alt_hit = false;
+                            if !alt_hit {
+                                let at = *p;
+                                let end = at + 6usize;
+                                if input.len() >= end
+                                    && input[at..end]
+                                        == [110u8, 101u8, 121u8, 100u8, 101u8, 119u8]
+                                {
+                                    *p = end;
+                                    alt_hit = true;
+                                }
                             }
-                            *p = end;
+                            if !alt_hit {
+                                let at = *p;
+                                let end = at + 5usize;
+                                if input.len() >= end
+                                    && input[at..end] == [116u8, 112u8, 105u8, 110u8, 107u8]
+                                {
+                                    *p = end;
+                                    alt_hit = true;
+                                }
+                            }
+                            if !alt_hit {
+                                return Err(());
+                            }
                         }
                         Ok(())
                     })();
@@ -9733,29 +9810,48 @@ mod __cssl4parser_emit_impl {
                 {
                     let save_p = *p;
                     let attempt: ::core::result::Result<(), ()> = (|| {
-                        {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [110u8] {
-                                return ::core::result::Result::Err(());
-                            }
-                            *p = end;
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [110u8] {
+                            return Err(());
                         }
-                        {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [97u8] {
-                                return ::core::result::Result::Err(());
-                            }
-                            *p = end;
+                        *p = end;
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [97u8] {
+                            return Err(());
                         }
+                        *p = end;
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [118u8] {
+                            return Err(());
+                        }
+                        *p = end;
                         {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [118u8] {
-                                return ::core::result::Result::Err(());
+                            let mut alt_hit = false;
+                            if !alt_hit {
+                                let at = *p;
+                                let end = at + 8usize;
+                                if input.len() >= end
+                                    && input[at..end]
+                                        == [97u8, 106u8, 111u8, 119u8, 104u8, 105u8, 116u8, 101u8]
+                                {
+                                    *p = end;
+                                    alt_hit = true;
+                                }
                             }
-                            *p = end;
+                            if !alt_hit {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() >= end && input[at..end] == [121u8] {
+                                    *p = end;
+                                    alt_hit = true;
+                                }
+                            }
+                            if !alt_hit {
+                                return Err(());
+                            }
                         }
                         Ok(())
                     })();
@@ -11662,13 +11758,81 @@ mod __cssl4parser_emit_impl {
                 {
                     let save_p = *p;
                     let attempt: ::core::result::Result<(), ()> = (|| {
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [116u8] {
+                            return Err(());
+                        }
+                        *p = end;
                         {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [116u8] {
-                                return ::core::result::Result::Err(());
+                            let mut alt_hit = false;
+                            if !alt_hit {
+                                let at = *p;
+                                let end = at + 10usize;
+                                if input.len() >= end
+                                    && input[at..end]
+                                        == [
+                                            114u8, 97u8, 110u8, 115u8, 112u8, 97u8, 114u8, 101u8, 110u8,
+                                            116u8,
+                                        ]
+                                {
+                                    *p = end;
+                                    alt_hit = true;
+                                }
                             }
-                            *p = end;
+                            if !alt_hit {
+                                let at = *p;
+                                let end = at + 8usize;
+                                if input.len() >= end
+                                    && input[at..end]
+                                        == [117u8, 114u8, 113u8, 117u8, 111u8, 105u8, 115u8, 101u8]
+                                {
+                                    *p = end;
+                                    alt_hit = true;
+                                }
+                            }
+                            if !alt_hit {
+                                let at = *p;
+                                let end = at + 6usize;
+                                if input.len() >= end
+                                    && input[at..end]
+                                        == [104u8, 105u8, 115u8, 116u8, 108u8, 101u8]
+                                {
+                                    *p = end;
+                                    alt_hit = true;
+                                }
+                            }
+                            if !alt_hit {
+                                let at = *p;
+                                let end = at + 5usize;
+                                if input.len() >= end
+                                    && input[at..end] == [111u8, 109u8, 97u8, 116u8, 111u8]
+                                {
+                                    *p = end;
+                                    alt_hit = true;
+                                }
+                            }
+                            if !alt_hit {
+                                let at = *p;
+                                let end = at + 3usize;
+                                if input.len() >= end
+                                    && input[at..end] == [101u8, 97u8, 108u8]
+                                {
+                                    *p = end;
+                                    alt_hit = true;
+                                }
+                            }
+                            if !alt_hit {
+                                let at = *p;
+                                let end = at + 2usize;
+                                if input.len() >= end && input[at..end] == [97u8, 110u8] {
+                                    *p = end;
+                                    alt_hit = true;
+                                }
+                            }
+                            if !alt_hit {
+                                return Err(());
+                            }
                         }
                         Ok(())
                     })();
@@ -11870,45 +12034,60 @@ mod __cssl4parser_emit_impl {
                 {
                     let save_p = *p;
                     let attempt: ::core::result::Result<(), ()> = (|| {
-                        {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [121u8] {
-                                return ::core::result::Result::Err(());
-                            }
-                            *p = end;
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [121u8] {
+                            return Err(());
                         }
-                        {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [101u8] {
-                                return ::core::result::Result::Err(());
-                            }
-                            *p = end;
+                        *p = end;
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [101u8] {
+                            return Err(());
                         }
-                        {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [108u8] {
-                                return ::core::result::Result::Err(());
-                            }
-                            *p = end;
+                        *p = end;
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [108u8] {
+                            return Err(());
                         }
-                        {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [108u8] {
-                                return ::core::result::Result::Err(());
-                            }
-                            *p = end;
+                        *p = end;
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [108u8] {
+                            return Err(());
                         }
+                        *p = end;
+                        let at = *p;
+                        let end = at + 1usize;
+                        if input.len() < end || input[at..end] != [111u8] {
+                            return Err(());
+                        }
+                        *p = end;
                         {
-                            let at = *p;
-                            let end = at + 1usize;
-                            if input.len() < end || input[at..end] != [111u8] {
-                                return ::core::result::Result::Err(());
+                            let mut alt_hit = false;
+                            if !alt_hit {
+                                let at = *p;
+                                let end = at + 6usize;
+                                if input.len() >= end
+                                    && input[at..end]
+                                        == [119u8, 103u8, 114u8, 101u8, 101u8, 110u8]
+                                {
+                                    *p = end;
+                                    alt_hit = true;
+                                }
                             }
-                            *p = end;
+                            if !alt_hit {
+                                let at = *p;
+                                let end = at + 1usize;
+                                if input.len() >= end && input[at..end] == [119u8] {
+                                    *p = end;
+                                    alt_hit = true;
+                                }
+                            }
+                            if !alt_hit {
+                                return Err(());
+                            }
                         }
                         Ok(())
                     })();

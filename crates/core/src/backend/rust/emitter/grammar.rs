@@ -286,7 +286,6 @@ impl RustEmitter {
                 .expect("EmitStrategy::StructDirect.rust.document_path must parse as a Rust path");
             quote! { #path<'_> }
         };
-        let projection_associated_consts: TokenStream = TokenStream::new();
         let parse_docs: TokenStream = quote! {
             /// Parse an input string and return the grammar-specific
             /// document that owns the StructDirect runtime arena.
@@ -339,8 +338,6 @@ impl RustEmitter {
             impl #ident {
                 #depth_counter
                 #extra
-
-                #projection_associated_consts
 
                 #parse_docs
                 pub fn parse(

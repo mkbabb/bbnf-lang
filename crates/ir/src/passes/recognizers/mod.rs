@@ -80,7 +80,6 @@ pub mod shape_dict_bbnf;
 pub mod shape_dispatch;
 mod signature;
 mod token_led_branches;
-pub mod visitor;
 
 use std::collections::HashMap;
 

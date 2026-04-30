@@ -418,7 +418,6 @@ fn file_header(ident: &str) -> String {
              clippy::all\n\
          )]\n\
          \n\
-         use crate::runtime::tape::*;\n\
          use ::parse_that::*;\n\
          \n",
     )

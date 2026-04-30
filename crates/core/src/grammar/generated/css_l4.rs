@@ -13,7 +13,6 @@
     clippy::all
 )]
 
-use crate::runtime::tape::*;
 use ::parse_that::*;
 
 pub struct CssL4Parser;

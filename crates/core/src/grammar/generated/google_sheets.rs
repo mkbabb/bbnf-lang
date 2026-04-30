@@ -13,7 +13,6 @@
     clippy::all
 )]
 
-use crate::runtime::tape::*;
 use ::parse_that::*;
 
 pub struct GoogleSheetsParser;
@@ -2017,94 +2016,6 @@ mod __googlesheetsparser_emit_impl {
             };
         }
         ::core::option::Option::None
-    }
-    /// AY.W4.1 — visitor-path escape decoder. Cold path.
-    ///
-    /// Reuses the SIMD-fused `decode_json_string_to_arena` kernel
-    /// against a stack-local `Vec<u8>` buffer; the borrow / owned
-    /// dispatch is unified at the visitor call site.
-    #[cold]
-    #[inline(never)]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    fn parse_string_visitor_escaped_GoogleSheetsParser<V>(
-        input: &[u8],
-        p: &mut usize,
-        body_start: usize,
-        _esc_start: usize,
-        visitor: &mut V,
-        is_key: bool,
-        open: usize,
-    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
-    where
-        V: crate::runtime::tape::StringVisitor + crate::runtime::tape::ObjectVisitor,
-    {
-        let mut buf: Vec<u8> = Vec::with_capacity(
-            input.len().saturating_sub(body_start),
-        );
-        match ::parse_that::parsers::scan::decode_json_string_to_arena(
-            input,
-            open,
-            &mut buf,
-        ) {
-            Some(
-                (::parse_that::parsers::scan::StringPayload::Owned { .. }, end_pos),
-            ) => {
-                *p = end_pos;
-                if is_key {
-                    visitor
-                        .key(&buf)
-                        .map_err(|_| {
-                            crate::runtime::ParseErr::Syntax {
-                                offset: open as u32,
-                                rule: None,
-                            }
-                        })
-                } else {
-                    visitor
-                        .string(&buf)
-                        .map_err(|_| {
-                            crate::runtime::ParseErr::Syntax {
-                                offset: open as u32,
-                                rule: None,
-                            }
-                        })
-                }
-            }
-            Some(
-                (
-                    ::parse_that::parsers::scan::StringPayload::Borrowed { start, end },
-                    end_pos,
-                ),
-            ) => {
-                *p = end_pos;
-                let body = &input[start as usize..end as usize];
-                if is_key {
-                    visitor
-                        .key(body)
-                        .map_err(|_| {
-                            crate::runtime::ParseErr::Syntax {
-                                offset: open as u32,
-                                rule: None,
-                            }
-                        })
-                } else {
-                    visitor
-                        .string(body)
-                        .map_err(|_| {
-                            crate::runtime::ParseErr::Syntax {
-                                offset: open as u32,
-                                rule: None,
-                            }
-                        })
-                }
-            }
-            None => {
-                Err(crate::runtime::ParseErr::Syntax {
-                    offset: open as u32,
-                    rule: None,
-                })
-            }
-        }
     }
     /// AW-V.W3.2 — per-grammar shape-dispatch support.
     ///

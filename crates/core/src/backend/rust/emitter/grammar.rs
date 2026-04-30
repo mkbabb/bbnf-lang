@@ -272,28 +272,12 @@ fn to_upper_camel(name: &str) -> String {
     out
 }
 
-/// AW-V.W3.2 — emit the per-grammar shared helpers the shape fns
-/// consume — JSON visitor string escape decoder, number fallback,
-/// etc. Emitted once per grammar; unused helpers are dead-code-
-/// eliminated by LLVM.
-fn emit_shape_helpers(grammar_ident_str: &str, ir: &GrammarIR) -> TokenStream {
+/// AW-V.W3.2 — emit the per-grammar shared helpers the active shape
+/// fns consume. Visitor helpers retired with AZ-II.cutover.O5; only
+/// production shape-dispatch helpers remain here.
+fn emit_shape_helpers(_grammar_ident_str: &str, ir: &GrammarIR) -> TokenStream {
     use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
-    let grammar_suffix = super::shapes::sanitise_grammar(grammar_ident_str);
     let mut helpers: Vec<TokenStream> = Vec::new();
-    // String escape helper — emit when the grammar has any
-    // String-shape rule.
-    if ir
-        .rules
-        .iter()
-        .any(|r| matches!(ir.shape_assignments.get(r.id), ShapeTag::String))
-    {
-        // AZ-II.cutover.O4 — the production StructDirect string path
-        // decodes escapes inline into the document builder. Do not
-        // emit the old tape-returning escape helper.
-        helpers.push(super::shapes::string::emit_visitor_escape_helper(
-            &grammar_suffix,
-        ));
-    }
     // Number fallback helper — emit when the grammar has any
     // Number-shape rule.
     if ir
@@ -550,10 +534,6 @@ impl RustEmitter {
         // post-W0a.2.h; the gate predicates retired with the walker.
         let shape_dispatcher_ident = super::shapes::root_rule_name(ir)
             .map(|root| super::shapes::dispatcher_fn_ident(ident.to_string().as_str(), &root));
-        // AW-V.W3-bench-fix — visitor-path dispatcher ident.
-        let visitor_dispatcher_ident = super::shapes::root_rule_name(ir).map(|root| {
-            super::shapes::visitor_dispatcher_fn_ident(ident.to_string().as_str(), &root)
-        });
 
         // AW-I.W3: `parse()` dispatches through `dta_run` wholesale.
         // The per-rule `rule_functions` stream and the trailing_ws /
@@ -578,8 +558,6 @@ impl RustEmitter {
         // AW-III's runtime DFA interpreter imposed (31.92% self-time
         // on JSON twitter) is gone from the hot path entirely.
         let _ = rule_functions;
-
-        let _ = visitor_dispatcher_ident;
 
         // AZ-II.cutover.O4 — codegen-time substrate selection is
         // fail-closed. `EmitStrategy::for_grammar` must return a

@@ -95,7 +95,7 @@ use quote::quote;
 
 use bbnf_ir::registry::EmitStrategy;
 
-pub use dispatcher::{dispatcher_fn_ident, has_w4_classified, visitor_dispatcher_fn_ident};
+pub use dispatcher::dispatcher_fn_ident;
 
 // AZ-I.W2-act.A — `registry_observer` deleted per audit/AUDIT-2 §6.C.
 // The sub-module's docstring (lines 31-34 pre-delete) self-documented
@@ -158,16 +158,6 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
     debug_assert!(strategy.is_struct_direct());
 
     let mut per_rule: Vec<TokenStream> = Vec::new();
-    let mut per_rule_visitor: Vec<TokenStream> = Vec::new();
-
-    // AW-V.W4-activation — visitor-path emission gates on W4-absence.
-    // The visitor dispatcher's generic-V bound is narrow by design
-    // (W3 sub-traits only); W4 visitor sub-traits (`PrattVisitor` and
-    // similar) can't be added without rippling through every caller's
-    // bound. Grammars carrying W4-classified rules emit the tape path
-    // only; the visitor path activates for them in a follow-on wave
-    // alongside the per-Ref `__value` dispatcher refactor.
-    let emit_visitor_path = !dispatcher::has_w4_classified(ir);
 
     for rule in &ir.rules {
         // AZ-II.cutover.H Phase 1 — transparent-rule passthrough
@@ -289,65 +279,6 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
             ShapeTag::None => continue,
         };
         per_rule.push(fragment);
-
-        if emit_visitor_path {
-            // AX.W0a.1 — emit visitor-path fns for every shape whose
-            // body stays within the visitor dispatcher's W3 bound set
-            // (`ObjectVisitor + ArrayVisitor + StringVisitor +
-            // NumberVisitor + KeywordVisitor`). Flat / Wrap / ArgList /
-            // HRegex visitor emitters declare bounds that are a strict
-            // subset of that union; only Pratt / Unordered carry W4-
-            // specific bounds (`PrattVisitor` and similar) that would
-            // require widening the dispatcher's generic `V` — and
-            // grammars with those rules gate the visitor path off
-            // wholesale via [`dispatcher::has_w4_classified`].
-            let visitor_fragment = match tag {
-                ShapeTag::Object => object::emit_parse_object_visitor(&grammar_suffix, rule, ir),
-                ShapeTag::Array => array::emit_parse_array_visitor(&grammar_suffix, rule, ir),
-                ShapeTag::String => string::emit_parse_string_visitor(&grammar_suffix, rule, ir),
-                ShapeTag::Number => {
-                    // AX.W0a.2.q — parallel to the tape-path routing
-                    // above: lenient-number visitor emission routes
-                    // through the HRegex-backed regex-scan path.
-                    if hregex::number_rule_allows_leading_dot(rule, ir) {
-                        hregex::emit_parse_number_visitor_via_hregex(
-                            &strategy,
-                            &grammar_suffix,
-                            rule,
-                            ir,
-                        )
-                    } else {
-                        number::emit_parse_number_visitor(&grammar_suffix, rule, ir)
-                    }
-                }
-                ShapeTag::Keyword => {
-                    keyword::emit_parse_keyword_visitor(&grammar_suffix, rule, ir, &strategy)
-                }
-                ShapeTag::Scalar => scalar::emit_parse_scalar_visitor(&grammar_suffix, rule, ir),
-                ShapeTag::Flat => {
-                    flat::emit_parse_flat_visitor(&strategy, &grammar_suffix, rule, ir)
-                }
-                ShapeTag::Wrap => {
-                    wrap::emit_parse_wrap_visitor(&grammar_suffix, rule, ir, &strategy)
-                }
-                ShapeTag::ArgList => {
-                    arglist::emit_parse_arglist_visitor(&strategy, &grammar_suffix, rule, ir)
-                }
-                ShapeTag::HRegex => {
-                    hregex::emit_parse_hregex_visitor(&strategy, &grammar_suffix, rule, ir)
-                }
-                ShapeTag::AltDispatch => {
-                    alt_dispatch::emit_parse_alt_dispatch_visitor(&grammar_suffix, rule, ir)
-                }
-                // Pratt / Unordered need W4-specific trait bounds outside
-                // the dispatcher's W3 union; `has_w4_classified` gates
-                // the entire visitor path off before we reach this arm
-                // for grammars with those rules. The `_` is a defensive
-                // guard, not an active code path.
-                ShapeTag::Pratt | ShapeTag::Unordered | ShapeTag::None => quote! {},
-            };
-            per_rule_visitor.push(visitor_fragment);
-        }
     }
 
     if per_rule.is_empty() {
@@ -356,17 +287,10 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
 
     let support = dispatcher::emit_support_module(&grammar_suffix, ir);
     let dispatcher_fn = dispatcher::emit_dispatcher(&grammar_suffix, ir, &strategy);
-    let visitor_dispatcher_fn = if emit_visitor_path {
-        dispatcher::emit_visitor_dispatcher(&grammar_suffix, ir)
-    } else {
-        quote! {}
-    };
     quote! {
         #support
         #(#per_rule)*
-        #(#per_rule_visitor)*
         #dispatcher_fn
-        #visitor_dispatcher_fn
     }
 }
 

@@ -13,7 +13,6 @@
     clippy::all
 )]
 
-use crate::runtime::tape::*;
 use ::parse_that::*;
 
 pub struct MathParser;
@@ -529,45 +528,6 @@ mod __mathparser_emit_impl {
         );
         Ok(())
     }
-    /// AW-V.W4-fix — visitor-path HRegex-shape parse function.
-    ///
-    /// Regex scan via the per-grammar adapter; fires the
-    /// visitor's `string()` event with the matched span when
-    /// visitor is a StringVisitor. Non-string decoders (host_fn
-    /// payloads) dispatch at the per-grammar consumer wave.
-    #[inline(always)]
-    #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-    pub fn parse_hregex_visitor_MathParser_number<V>(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_MathParser::ScanState,
-        visitor: &mut V,
-    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
-    where
-        V: crate::runtime::tape::StringVisitor,
-    {
-        let span_lo = *p;
-        let Some(match_len) = __regex_scan_MathParser(
-            "(\\d+)?(\\.\\d+)?([eE][-+]?\\d+)?",
-            input,
-            *p,
-        ) else {
-            return Err(crate::runtime::ParseErr::Syntax {
-                offset: span_lo as u32,
-                rule: None,
-            });
-        };
-        let span_hi = *p + match_len as usize;
-        *p = span_hi;
-        visitor
-            .string(&input[span_lo..span_hi])
-            .map_err(|_| {
-                crate::runtime::ParseErr::Syntax {
-                    offset: span_lo as u32,
-                    rule: None,
-                }
-            })
-    }
     /// AW-V.W3.2 — top-level shape dispatcher.
     ///
     /// Mirrors the walker's `value` rule ByteDispatch: skip leading
@@ -604,63 +564,6 @@ mod __mathparser_emit_impl {
     ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_MathParser::skip_space(input, p, state);
         parse_hregex_MathParser_number(input, p, state, builder)
-    }
-    /// AW-V.W3-bench-fix — top-level visitor-path dispatcher.
-    ///
-    /// Generic over the visitor type; `V: JsonVisitor` composes all
-    /// per-shape sub-trait bounds (`ObjectVisitor`, `ArrayVisitor`,
-    /// `StringVisitor`, `NumberVisitor`, `KeywordVisitor`) so every
-    /// per-shape method invocation resolves statically at the
-    /// monomorphisation site. Bypasses the tape entirely.
-    ///
-    /// The dispatcher's bounds are narrow by design: emitted only
-    /// for grammars whose classified rules use W3-pure shapes
-    /// (Object / Array / String / Number / Keyword / Scalar).
-    /// Grammars carrying W4-classified rules (Pratt / Unordered /
-    /// ArgList / Flat / Wrap / HRegex) skip visitor dispatcher
-    /// emission entirely — the tape-path dispatcher still emits,
-    /// the per-shape fns still compile, but the generic `V`
-    /// visitor bound can't union W4 visitor sub-traits without
-    /// rippling into callers that don't have those bounds. Visitor
-    /// activation for W4-carrying grammars lands in a follow-on
-    /// wave alongside the per-Ref `__value` dispatcher refactor.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]`.
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_MathParser_number_visitor<V>(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_MathParser::ScanState,
-        visitor: &mut V,
-    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
-    where
-        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
-            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
-            + crate::runtime::tape::KeywordVisitor,
-    {
-        parse_MathParser_number_visitor__value(input, p, state, visitor)
-    }
-    /// AW-V.W3-bench-fix — value-position visitor-path dispatcher.
-    /// Called both at the grammar root and from the object / array
-    /// shape fns' value-position recursion.
-    ///
-    /// AX.W0a.2.f — compound; plain `#[inline]`.
-    #[inline]
-    #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_MathParser_number_visitor__value<V>(
-        input: &[u8],
-        p: &mut usize,
-        state: &mut __shape_support_MathParser::ScanState,
-        visitor: &mut V,
-    ) -> ::core::result::Result<(), crate::runtime::ParseErr>
-    where
-        V: crate::runtime::tape::ObjectVisitor + crate::runtime::tape::ArrayVisitor
-            + crate::runtime::tape::StringVisitor + crate::runtime::tape::NumberVisitor
-            + crate::runtime::tape::KeywordVisitor,
-    {
-        let _ = __shape_support_MathParser::skip_space(input, p, state);
-        parse_hregex_visitor_MathParser_number(input, p, state, visitor)
     }
     impl MathParser {
         /// Parse an input string and return the grammar-specific

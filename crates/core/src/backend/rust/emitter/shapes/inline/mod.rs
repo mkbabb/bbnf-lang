@@ -22,7 +22,7 @@
 //!
 //! # Wire contract
 //!
-//! This module exports two entry points consumed by every shape
+//! This module exports one entry point consumed by every shape
 //! emitter's position-core walker:
 //!
 //! - [`emit_inline_position_tape`] — tape-path emission; produces the
@@ -30,10 +30,6 @@
 //!   branch records for `IrNode::Alt`, `TapeKind::Span` leaf for
 //!   `IrNode::Regex`, guard-only for `Negate` / `Minus`, TokenDispatch
 //!   compound + matched-arm records for `IrNode::TokenDispatch`).
-//! - [`emit_inline_position_visitor`] — visitor-path emission; mirrors
-//!   the tape path structurally with visitor method calls replacing
-//!   tape pushes.
-//!
 //! Both share per-branch first-byte computation, trivia stripping, and
 //! the "try-each-branch" fallback (`'try_branches: loop { match first
 //! { ... } }`) the AltDispatch emitter pioneered.
@@ -74,7 +70,7 @@
 //!   `continuation`; on no match, emit the fallback.
 //!
 //! Module layout (B5.W3):
-//! - [`alt`]             — Alt-position dispatch (tape + visitor)
+//! - [`alt`]             — Alt-position dispatch
 //! - [`regex`]           — inline Regex Span emission
 //! - [`guard`]           — Negate / Minus guard-only emission
 //! - [`token_dispatch`]  — TokenDispatch compound emission
@@ -164,56 +160,6 @@ pub(super) fn emit_inline_position_tape(
         ),
         _ => unreachable!(
             "emit_inline_position_tape called on non-dispatch node: \
-             {:?}",
-            std::mem::discriminant(node),
-        ),
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// Visitor-path entry point.
-// ─────────────────────────────────────────────────────────────────────
-
-/// Visitor-path analog of [`emit_inline_position_tape`]. Emits the
-/// same structural dispatch with visitor method calls replacing tape
-/// pushes. Negate / Minus produce guard-only emission; Alt / Regex /
-/// TokenDispatch emit matching dispatch that calls through to
-/// visitor-path Ref calls.
-///
-/// # AZ-I.W2.RE — strategy contract
-///
-/// Mirrors [`emit_inline_position_tape`]: strategy is committed at
-/// the per-shape entry boundary upstream of this fn; inline emission
-/// itself is shape-agnostic structural infrastructure.
-pub(super) fn emit_inline_position_visitor(
-    node: &IrNode,
-    support_mod: &proc_macro2::Ident,
-    grammar_suffix: &str,
-    ir: &GrammarIR,
-) -> TokenStream {
-    match node {
-        IrNode::Alt(branches, _) => {
-            alt::emit_alt_visitor(branches, support_mod, grammar_suffix, ir)
-        }
-        IrNode::Regex(sid) => regex::emit_regex_visitor(*sid, grammar_suffix, ir),
-        IrNode::Negate(inner) => guard::emit_negate_visitor(inner, support_mod, grammar_suffix, ir),
-        IrNode::Minus(primary, excluded) => {
-            guard::emit_minus_visitor(primary, excluded, support_mod, grammar_suffix, ir)
-        }
-        IrNode::TokenDispatch {
-            token,
-            arms,
-            fallback,
-        } => token_dispatch::emit_token_dispatch_visitor(
-            token,
-            arms,
-            fallback,
-            support_mod,
-            grammar_suffix,
-            ir,
-        ),
-        _ => unreachable!(
-            "emit_inline_position_visitor called on non-dispatch node: \
              {:?}",
             std::mem::discriminant(node),
         ),

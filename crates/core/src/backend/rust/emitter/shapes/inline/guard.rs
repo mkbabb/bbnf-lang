@@ -6,11 +6,10 @@
 //!   if it would succeed at `*p`, fail. Otherwise parse the primary,
 //!   emitting its records. Mirrors walker's `emit_minus_arm`.
 //!
-//! Each helper has tape and visitor variants. The shared sub-helpers
-//! `emit_guard_attempt_*` (rewind-on-success guard pattern) and
-//! `emit_primary_*` (record-producing primary emission) are split
-//! per path because the error type differs (`DtaError` vs
-//! `ParseErr`).
+//! The shared sub-helpers `emit_guard_attempt_tape`
+//! (rewind-on-success guard pattern) and `emit_primary_tape`
+//! (record-producing primary emission) keep guard handling local to
+//! the production inline path.
 
 use bbnf_ir::{GrammarIR, IrNode};
 use proc_macro2::TokenStream;
@@ -20,8 +19,8 @@ use super::super::super::dfa_codegen::regex_scan_adapter_ident;
 use super::super::dispatcher::emit_ref_call_shape;
 use super::super::sanitise_grammar;
 use super::branch_analysis::unwrap_trivia;
-use super::regex::{emit_regex_tape, emit_regex_visitor};
-use super::{emit_inline_position_tape, emit_inline_position_visitor};
+use super::emit_inline_position_tape;
+use super::regex::emit_regex_tape;
 
 /// `Negate(inner)` — try inner; on success, fail with Syntax. No tape
 /// record pushed. Mirrors walker's NotFollowedBy. On inner failure,
@@ -45,32 +44,6 @@ pub(super) fn emit_negate_tape(
                 return ::core::result::Result::Err(
                     crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                    },
-                );
-            }
-        }
-    }
-}
-
-pub(super) fn emit_negate_visitor(
-    inner: &IrNode,
-    support_mod: &proc_macro2::Ident,
-    grammar_suffix: &str,
-    ir: &GrammarIR,
-) -> TokenStream {
-    let inner_attempt = emit_guard_attempt_visitor(inner, support_mod, grammar_suffix, ir);
-    quote! {
-        {
-            let save_p = *p;
-            let attempt: ::core::result::Result<(), ()> = (|| {
-                #inner_attempt
-                Ok(())
-            })();
-            *p = save_p;
-            if attempt.is_ok() {
-                return ::core::result::Result::Err(
-                    crate::runtime::ParseErr::Syntax {
-                        offset: *p as u32, rule: None,
                     },
                 );
             }
@@ -103,35 +76,6 @@ pub(super) fn emit_minus_tape(
                 return ::core::result::Result::Err(
                     crate::runtime::DtaError::Syntax {
                         offset: save_p as u32,
-                    },
-                );
-            }
-            #primary_emit
-        }
-    }
-}
-
-pub(super) fn emit_minus_visitor(
-    primary: &IrNode,
-    excluded: &IrNode,
-    support_mod: &proc_macro2::Ident,
-    grammar_suffix: &str,
-    ir: &GrammarIR,
-) -> TokenStream {
-    let excluded_attempt = emit_guard_attempt_visitor(excluded, support_mod, grammar_suffix, ir);
-    let primary_emit = emit_primary_visitor(primary, support_mod, grammar_suffix, ir);
-    quote! {
-        {
-            let save_p = *p;
-            let excluded_result: ::core::result::Result<(), ()> = (|| {
-                #excluded_attempt
-                Ok(())
-            })();
-            *p = save_p;
-            if excluded_result.is_ok() {
-                return ::core::result::Result::Err(
-                    crate::runtime::ParseErr::Syntax {
-                        offset: save_p as u32, rule: None,
                     },
                 );
             }
@@ -174,49 +118,6 @@ fn emit_guard_attempt_tape(
             }
         }
         IrNode::Ref(rid) => match emit_ref_call_shape(grammar_suffix, *rid, ir) {
-            Some(call) => quote! {
-                if (#call).is_err() {
-                    return Err(());
-                }
-            },
-            None => quote! { return Err(()); },
-        },
-        _ => quote! { return Err(()); },
-    }
-}
-
-fn emit_guard_attempt_visitor(
-    node: &IrNode,
-    _support_mod: &proc_macro2::Ident,
-    grammar_suffix: &str,
-    ir: &GrammarIR,
-) -> TokenStream {
-    use super::super::dispatcher::emit_ref_call_visitor;
-    match unwrap_trivia(node) {
-        IrNode::Literal(sid) => {
-            let bytes = ir.get_string(*sid).as_bytes();
-            let len = bytes.len();
-            let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
-            quote! {
-                let at = *p;
-                let end = at + #len;
-                if input.len() < end || input[at..end] != [#(#byte_lits),*] {
-                    return Err(());
-                }
-                *p = end;
-            }
-        }
-        IrNode::Regex(sid) => {
-            let pattern = ir.get_string(*sid).to_string();
-            let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
-            quote! {
-                let Some(match_len) = #regex_scan_ident(#pattern, input, *p) else {
-                    return Err(());
-                };
-                *p += match_len as usize;
-            }
-        }
-        IrNode::Ref(rid) => match emit_ref_call_visitor(grammar_suffix, *rid, ir) {
             Some(call) => quote! {
                 if (#call).is_err() {
                     return Err(());
@@ -288,52 +189,6 @@ pub(super) fn emit_primary_tape(
         | IrNode::Minus(_, _)
         | IrNode::TokenDispatch { .. }) => {
             emit_inline_position_tape(inner, variant_idx, support_mod, grammar_suffix, ir)
-        }
-        _ => quote! {},
-    }
-}
-
-pub(super) fn emit_primary_visitor(
-    node: &IrNode,
-    support_mod: &proc_macro2::Ident,
-    grammar_suffix: &str,
-    ir: &GrammarIR,
-) -> TokenStream {
-    use super::super::dispatcher::emit_ref_call_visitor;
-    match unwrap_trivia(node) {
-        IrNode::Literal(sid) => {
-            let bytes = ir.get_string(*sid).as_bytes();
-            let len = bytes.len();
-            let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
-            quote! {
-                let at = *p;
-                let end = at + #len;
-                if input.len() < end || input[at..end] != [#(#byte_lits),*] {
-                    return ::core::result::Result::Err(
-                        crate::runtime::ParseErr::Syntax {
-                            offset: at as u32, rule: None,
-                        },
-                    );
-                }
-                *p = end;
-            }
-        }
-        IrNode::Ref(rid) => match emit_ref_call_visitor(grammar_suffix, *rid, ir) {
-            Some(call) => quote! { (#call)?; },
-            None => quote! {
-                return ::core::result::Result::Err(
-                    crate::runtime::ParseErr::Syntax {
-                        offset: *p as u32, rule: None,
-                    },
-                );
-            },
-        },
-        IrNode::Regex(sid) => emit_regex_visitor(*sid, grammar_suffix, ir),
-        inner @ (IrNode::Alt(_, _)
-        | IrNode::Negate(_)
-        | IrNode::Minus(_, _)
-        | IrNode::TokenDispatch { .. }) => {
-            emit_inline_position_visitor(inner, support_mod, grammar_suffix, ir)
         }
         _ => quote! {},
     }

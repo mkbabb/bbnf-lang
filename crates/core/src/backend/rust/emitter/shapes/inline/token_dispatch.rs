@@ -1,5 +1,4 @@
-//! `TokenDispatch { token, arms, fallback }` emission — tape and
-//! visitor paths.
+//! `TokenDispatch { token, arms, fallback }` emission.
 //!
 //! Emits a `TapeKind::TokenDispatch` compound with the token's records
 //! followed by the winning arm's continuation (or the fallback on no
@@ -18,7 +17,7 @@ use bbnf_ir::{GrammarIR, IrNode};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use super::guard::{emit_primary_tape, emit_primary_visitor};
+use super::guard::emit_primary_tape;
 
 /// Emit `TokenDispatch { token, arms, fallback }` as a
 /// `TapeKind::TokenDispatch` compound with the token's records
@@ -126,57 +125,6 @@ pub(super) fn emit_token_dispatch_tape(
                 td_hi,
                 ::tape::TapeOffset(td_child),
             );
-        }
-    }
-}
-
-pub(super) fn emit_token_dispatch_visitor(
-    token: &IrNode,
-    arms: &[bbnf_ir::TokenDispatchArm],
-    fallback: &IrNode,
-    support_mod: &proc_macro2::Ident,
-    grammar_suffix: &str,
-    ir: &GrammarIR,
-) -> TokenStream {
-    let token_emit = emit_primary_visitor(token, support_mod, grammar_suffix, ir);
-    let mut per_arm: Vec<TokenStream> = Vec::with_capacity(arms.len());
-    for arm in arms {
-        let cont = emit_primary_visitor(&arm.continuation, support_mod, grammar_suffix, ir);
-        let pattern_literals: Vec<TokenStream> = arm
-            .patterns
-            .iter()
-            .map(|sid| {
-                let bytes = ir.get_string(*sid).as_bytes();
-                let byte_lits: Vec<TokenStream> = bytes.iter().map(|b| quote! { #b }).collect();
-                quote! { &[#(#byte_lits),*][..] }
-            })
-            .collect();
-        let guard_check = if let Some(g) = arm.guard_byte {
-            quote! { && input.get(*p).copied() == ::core::option::Option::Some(#g) }
-        } else {
-            quote! {}
-        };
-        per_arm.push(quote! {
-            if !td_match
-                && (#(token_span == #pattern_literals)||*)
-                #guard_check
-            {
-                #cont
-                td_match = true;
-            }
-        });
-    }
-    let fallback_emit = emit_primary_visitor(fallback, support_mod, grammar_suffix, ir);
-    quote! {
-        {
-            let token_lo = *p;
-            #token_emit
-            let token_span: &[u8] = &input[token_lo..*p];
-            let mut td_match = false;
-            #(#per_arm)*
-            if !td_match {
-                #fallback_emit
-            }
         }
     }
 }

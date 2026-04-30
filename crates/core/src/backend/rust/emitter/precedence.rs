@@ -2,7 +2,7 @@
 //!
 //! Lowers [`bbnf_ir::passes::OperatorChainFacts`] (the mined
 //! operator-chain facts) into a packed `[u8; 256]` precedence LUT
-//! plus a sparse `&'static [DtaPrecedenceEntry]` metadata slice.
+//! plus a sparse `&'static [PrattEntry]` metadata slice.
 //!
 //! ## Bit layout
 //!
@@ -36,8 +36,8 @@
 //! vs `<<` in `binary_factor`) don't leak into one another's byte
 //! dispatch. The aggregate `PRECEDENCE_LUT` + `PRECEDENCE_ENTRIES`
 //! slices remain (populated from the flat union of every rule's
-//! entries, last-write-wins per byte) for walker cold-path
-//! consumers until W0b retires the walker.
+//! entries, last-write-wins per byte) for diagnostics and uniform
+//! generated introspection.
 //!
 //! ## Const-fold guarantee
 //!
@@ -48,9 +48,7 @@
 //! for assoc, `.>> 5 & 3` for arity, `.& 0x80` for two-byte — all
 //! inlined by LLVM.
 
-use bbnf_ir::passes::{
-    Associativity, OperatorChainEntry, OperatorChainFacts,
-};
+use bbnf_ir::passes::{Associativity, OperatorChainEntry, OperatorChainFacts};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -89,14 +87,12 @@ fn pack_lut_byte(entry: &OperatorChainEntry) -> u8 {
 ///
 /// - `pub const PRECEDENCE_LUT_<rule>: [u8; 256]` — one per Pratt
 ///   rule, dense packed table for that rule's operator alphabet.
-/// - `pub const PRECEDENCE_ENTRIES_<rule>: &[DtaPrecedenceEntry]` —
+/// - `pub const PRECEDENCE_ENTRIES_<rule>: &[PrattEntry]` —
 ///   one per Pratt rule, sparse metadata slice.
 /// - `pub const PRECEDENCE_LUT: [u8; 256]` — aggregate (union of
-///   every rule's packed bytes, last-write-wins) for walker cold-
-///   path compat.
-/// - `pub const PRECEDENCE_ENTRIES: &[DtaPrecedenceEntry]` — flat
-///   aggregate slice; used by the walker's indirect dispatch until
-///   W0b retires it.
+///   every rule's packed bytes, last-write-wins) for diagnostics.
+/// - `pub const PRECEDENCE_ENTRIES: &[PrattEntry]` — flat aggregate
+///   slice for uniform generated introspection.
 /// - `pub const PRECEDENCE_OPERATOR_COUNT: usize` — aggregate entry
 ///   count, used by bench harnesses to assert chain mining.
 ///
@@ -108,11 +104,23 @@ fn pack_lut_byte(entry: &OperatorChainEntry) -> u8 {
 /// the grammar's marker struct ident). Prefixes identifiers so the
 /// same constant can coexist with other grammars' LUTs when
 /// multiple grammars share a crate.
-pub fn emit_precedence_lut(
-    grammar: &str,
-    facts: &OperatorChainFacts,
-) -> TokenStream {
+pub fn emit_precedence_lut(grammar: &str, facts: &OperatorChainFacts) -> TokenStream {
     let _ = grammar; // reserved for future prefix-based disambiguation.
+
+    let entry_type = quote! {
+        /// Grammar-local Pratt operator metadata.
+        ///
+        /// The dense LUT carries precedence, associativity, arity, and
+        /// the two-byte flag. This sparse slice only carries the data
+        /// needed to resolve ambiguous first bytes and stamp the
+        /// grammar's operator discriminant.
+        #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+        pub struct PrattEntry {
+            pub byte: u8,
+            pub second_byte: ::core::option::Option<u8>,
+            pub op_discriminant: u8,
+        }
+    };
 
     // ── Per-rule consts ──────────────────────────────────────────────
     //
@@ -125,8 +133,7 @@ pub fn emit_precedence_lut(
         .iter()
         .map(|rule| {
             let rule_lut_ident = format_ident!("PRECEDENCE_LUT_{}", rule.rule_name);
-            let rule_entries_ident =
-                format_ident!("PRECEDENCE_ENTRIES_{}", rule.rule_name);
+            let rule_entries_ident = format_ident!("PRECEDENCE_ENTRIES_{}", rule.rule_name);
 
             // AX.W0a.2.o — when multiple entries share a first byte
             // (Sheets `compare_op` shares byte 60 across `"<>" / "<=" /
@@ -159,11 +166,9 @@ pub fn emit_precedence_lut(
                     *slot | (byte & 0x80)
                 };
             }
-            let lut_bytes: Vec<TokenStream> =
-                packed.iter().map(|b| quote! { #b }).collect();
+            let lut_bytes: Vec<TokenStream> = packed.iter().map(|b| quote! { #b }).collect();
 
-            let entry_literals: Vec<TokenStream> =
-                rule.entries.iter().map(entry_literal).collect();
+            let entry_literals: Vec<TokenStream> = rule.entries.iter().map(entry_literal).collect();
 
             quote! {
                 /// AX.W0a.2.l — per-rule dense Pratt precedence LUT.
@@ -182,15 +187,14 @@ pub fn emit_precedence_lut(
                 /// Consulted by the rule's emitted `parse_pratt_*`
                 /// body when the LUT byte's bit-7 two-byte flag is
                 /// set, to resolve the second byte + discriminant.
-                pub const #rule_entries_ident:
-                    &[crate::runtime::tape::DtaPrecedenceEntry] = &[
+                pub const #rule_entries_ident: &[PrattEntry] = &[
                     #(#entry_literals),*
                 ];
             }
         })
         .collect();
 
-    // ── Aggregate consts (walker cold-path compat) ───────────────────
+    // ── Aggregate consts ─────────────────────────────────────────────
     //
     // Union of every rule's packed bytes (last-write-wins per byte —
     // the chain detector enforces within-rule disjointness, so the
@@ -214,13 +218,14 @@ pub fn emit_precedence_lut(
     let aggregate_entry_count = aggregate_entries.len();
 
     quote! {
+        #entry_type
+
         #(#per_rule)*
 
         /// AW-III.W6.5 — aggregate dense Pratt precedence LUT.
         ///
         /// Union of every Pratt rule's packed LUT (last-write-wins
-        /// per byte). Consulted by the walker cold-path's
-        /// `ShuntingYard` arm until W0b retires the walker. See
+        /// per byte). See
         /// `bbnf::backend::rust::emitter::precedence` for the bit
         /// layout.
         pub const #lut_ident: [u8; 256] = [
@@ -230,9 +235,7 @@ pub fn emit_precedence_lut(
         /// AW-III.W6.5 — aggregate sparse Pratt metadata slice.
         ///
         /// Flat union of every rule's mined operator entries.
-        /// Consulted by the walker cold-path until W0b retires it.
-        pub const #entries_ident:
-            &[crate::runtime::tape::DtaPrecedenceEntry] = &[
+        pub const #entries_ident: &[PrattEntry] = &[
             #(#aggregate_entry_literals),*
         ];
 
@@ -251,24 +254,11 @@ fn entry_literal(e: &OperatorChainEntry) -> TokenStream {
         Some(b) => quote! { ::core::option::Option::Some(#b) },
         None => quote! { ::core::option::Option::None },
     };
-    let prec = e.precedence;
-    let assoc = match e.associativity {
-        Associativity::Left => {
-            quote! { crate::runtime::tape::DtaAssociativity::Left }
-        }
-        Associativity::Right => {
-            quote! { crate::runtime::tape::DtaAssociativity::Right }
-        }
-    };
-    let op_rule = e.op_rule;
     let disc = e.op_discriminant;
     quote! {
-        crate::runtime::tape::DtaPrecedenceEntry {
+        PrattEntry {
             byte: #byte,
             second_byte: #second,
-            precedence: #prec,
-            associativity: #assoc,
-            op_rule: crate::runtime::tape::DtaRuleId(#op_rule),
             op_discriminant: #disc,
         }
     }

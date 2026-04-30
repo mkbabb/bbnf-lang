@@ -252,11 +252,22 @@ mod __ebnfparser_emit_impl {
             ::core::result::Result::Err(_) => ::core::option::Option::None,
         }
     }
+    /// Grammar-local Pratt operator metadata.
+    ///
+    /// The dense LUT carries precedence, associativity, arity, and
+    /// the two-byte flag. This sparse slice only carries the data
+    /// needed to resolve ambiguous first bytes and stamp the
+    /// grammar's operator discriminant.
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+    pub struct PrattEntry {
+        pub byte: u8,
+        pub second_byte: ::core::option::Option<u8>,
+        pub op_discriminant: u8,
+    }
     /// AW-III.W6.5 — aggregate dense Pratt precedence LUT.
     ///
     /// Union of every Pratt rule's packed LUT (last-write-wins
-    /// per byte). Consulted by the walker cold-path's
-    /// `ShuntingYard` arm until W0b retires the walker. See
+    /// per byte). See
     /// `bbnf::backend::rust::emitter::precedence` for the bit
     /// layout.
     pub const PRECEDENCE_LUT: [u8; 256] = [
@@ -280,8 +291,7 @@ mod __ebnfparser_emit_impl {
     /// AW-III.W6.5 — aggregate sparse Pratt metadata slice.
     ///
     /// Flat union of every rule's mined operator entries.
-    /// Consulted by the walker cold-path until W0b retires it.
-    pub const PRECEDENCE_ENTRIES: &[crate::runtime::tape::DtaPrecedenceEntry] = &[];
+    pub const PRECEDENCE_ENTRIES: &[PrattEntry] = &[];
     /// AW-III.W6.5 — total mined operator count for this
     /// grammar. Non-zero iff the lift admitted ≥ 1 chain OR the
     /// shape classifier admitted ≥ 1 single-rung Pratt rule.

@@ -32,7 +32,7 @@
 //! //    rhs_subtree, ...] — operator-and-operand interleave at this
 //! //    rule's precedence tier. The binary tree (with associativity
 //! //    honoured) is reconstructible by consumers using the rule's
-//! //    PRECEDENCE_ENTRIES and SheetsCompoundKind / equivalent metadata.
+//! //    PRECEDENCE_LUT, PRECEDENCE_ENTRIES, and grammar value metadata.
 //! builder.end_compound(__handle);
 //! ```
 //!
@@ -52,14 +52,14 @@
 //! Per `feedback_preserve-rich-ast`, the rule's structural shape
 //! (kind discriminator + linear children) preserves every typed
 //! projection the grammar declares; the binary-tree precedence /
-//! associativity reduction is a CONSUMER projection. The runtime
-//! exposes `PRECEDENCE_ENTRIES_<rule>` per rule with op-byte +
-//! precedence + associativity per entry; consumers (oracle, view-
-//! walker, parity harness) consult the entries to rebuild the
-//! associativity-honouring binary tree. The struct-direct body's
-//! job is to record the operator chain faithfully — semantic
-//! reduction lives one layer up, where it can be tested + tuned
-//! independently.
+//! associativity reduction is a CONSUMER projection. The generated
+//! module exposes `PRECEDENCE_LUT_<rule>` for precedence /
+//! associativity bits and `PRECEDENCE_ENTRIES_<rule>` for ambiguous
+//! operator-byte resolution + discriminants; consumers combine those
+//! with grammar value metadata to rebuild the associativity-honouring
+//! binary tree. The struct-direct body's job is to record the
+//! operator chain faithfully — semantic reduction lives one layer up,
+//! where it can be tested + tuned independently.
 //!
 //! # Why not eager binary-nesting?
 //!
@@ -219,8 +219,9 @@ pub(super) fn emit_parse_pratt_struct_direct(
         /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
         /// rule's structural alphabet is preserved verbatim;
         /// associativity-honouring binary-tree reduction is a
-        /// consumer-side projection (the runtime exposes
-        /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
+        /// consumer-side projection (the generated module exposes
+        /// `PRECEDENCE_LUT_<rule>` + `PRECEDENCE_ENTRIES_<rule>` for
+        /// that purpose).
         ///
         /// Returns unit for StructDirect composition
         /// with sibling shape fns under struct-direct mode.

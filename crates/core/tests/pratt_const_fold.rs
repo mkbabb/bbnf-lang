@@ -16,17 +16,15 @@
 //! End-to-end integration with the DTA driver's `ShuntingYard` arm
 //! is proven by the Sheets / BBNF / CSS parity tests upstream.
 
-use bbnf::backend::rust::emitter::precedence::{
-    emit_precedence_lut, pack_lut_byte_for_test,
-};
+use bbnf::backend::rust::emitter::precedence::{emit_precedence_lut, pack_lut_byte_for_test};
 use bbnf::pipeline::{
-    compile_paths_request, CompileOutput, CompileRequest, CompileTarget, PipelineOptions,
-};
-use bbnf_ir::passes::{
-    collect_operator_chains, Associativity, OperatorArity, OperatorChainEntry,
-    OperatorChainFacts, OperatorChainRule,
+    CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
 };
 use bbnf_ir::RuleId;
+use bbnf_ir::passes::{
+    Associativity, OperatorArity, OperatorChainEntry, OperatorChainFacts, OperatorChainRule,
+    collect_operator_chains,
+};
 
 // ─── Bit-layout invariants ────────────────────────────────────────────
 
@@ -137,8 +135,8 @@ fn emit_populated_facts_produces_nonzero_bytes() {
     let text = emitted.to_string();
     assert!(text.contains("const PRECEDENCE_LUT"));
     assert!(text.contains("PRECEDENCE_OPERATOR_COUNT : usize = 3"));
-    // Sparse slice non-empty.
-    assert!(text.contains("DtaPrecedenceEntry"));
+    // Sparse slice non-empty and grammar-local.
+    assert!(text.contains("PrattEntry"));
 }
 
 // ─── Per-grammar mining smoke ──────────────────────────────────────
@@ -178,7 +176,10 @@ fn sheets_mines_operators() {
         facts.operator_count() >= 6,
         "Sheets must mine ≥ 6 operators (&, +, -, *, /, ^), got {}: {:?}",
         facts.operator_count(),
-        facts.entries_flat().map(|e| e.byte as char).collect::<Vec<_>>(),
+        facts
+            .entries_flat()
+            .map(|e| e.byte as char)
+            .collect::<Vec<_>>(),
     );
     // Verify the key arithmetic operators are captured.
     for expected in &[b'+', b'-', b'*', b'/', b'^', b'&'] {
@@ -216,7 +217,10 @@ fn bbnf_mines_operators() {
         facts.operator_count() >= 4,
         "BBNF must mine ≥ 4 arithmetic operators, got {}: {:?}",
         facts.operator_count(),
-        facts.entries_flat().map(|e| e.byte as char).collect::<Vec<_>>(),
+        facts
+            .entries_flat()
+            .map(|e| e.byte as char)
+            .collect::<Vec<_>>(),
     );
     for expected in &[b'+', b'-', b'*', b'/'] {
         assert!(
@@ -245,7 +249,10 @@ fn css_l4_mines_math_expr_operators() {
         facts.operator_count() >= 4,
         "CSS L4 must mine ≥ 4 math operators, got {}: {:?}",
         facts.operator_count(),
-        facts.entries_flat().map(|e| e.byte as char).collect::<Vec<_>>(),
+        facts
+            .entries_flat()
+            .map(|e| e.byte as char)
+            .collect::<Vec<_>>(),
     );
     for expected in &[b'+', b'-', b'*', b'/'] {
         assert!(
@@ -277,19 +284,20 @@ fn json_mines_no_operators() {
         "JSON must mine 0 operators, got {}",
         facts.operator_count(),
     );
-    assert!(
-        facts.chain_heads.is_empty(),
-        "JSON must mine 0 chain heads",
-    );
+    assert!(facts.chain_heads.is_empty(), "JSON must mine 0 chain heads",);
 }
 
 // ─── LUT byte correctness ─────────────────────────────────────────────
 
 #[test]
 fn emitted_lut_packs_non_operator_bytes_as_zero() {
-    let entries = vec![
-        mk_entry(b'+', None, 5, Associativity::Left, OperatorArity::Binary),
-    ];
+    let entries = vec![mk_entry(
+        b'+',
+        None,
+        5,
+        Associativity::Left,
+        OperatorArity::Binary,
+    )];
     let facts = OperatorChainFacts {
         rules: vec![OperatorChainRule {
             rule: 0 as RuleId,

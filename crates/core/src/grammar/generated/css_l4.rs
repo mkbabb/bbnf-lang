@@ -1038,6 +1038,18 @@ mod __cssl4parser_emit_impl {
             ::core::result::Result::Err(_) => ::core::option::Option::None,
         }
     }
+    /// Grammar-local Pratt operator metadata.
+    ///
+    /// The dense LUT carries precedence, associativity, arity, and
+    /// the two-byte flag. This sparse slice only carries the data
+    /// needed to resolve ambiguous first bytes and stamp the
+    /// grammar's operator discriminant.
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+    pub struct PrattEntry {
+        pub byte: u8,
+        pub second_byte: ::core::option::Option<u8>,
+        pub op_discriminant: u8,
+    }
     /// AX.W0a.2.l — per-rule dense Pratt precedence LUT.
     ///
     /// One byte per dispatch byte for this Pratt rule's
@@ -1068,37 +1080,25 @@ mod __cssl4parser_emit_impl {
     /// Consulted by the rule's emitted `parse_pratt_*`
     /// body when the LUT byte's bit-7 two-byte flag is
     /// set, to resolve the second byte + discriminant.
-    pub const PRECEDENCE_ENTRIES_mathExpr: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
-        crate::runtime::tape::DtaPrecedenceEntry {
+    pub const PRECEDENCE_ENTRIES_mathExpr: &[PrattEntry] = &[
+        PrattEntry {
             byte: 43u8,
             second_byte: ::core::option::Option::None,
-            precedence: 2u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 0u8,
         },
-        crate::runtime::tape::DtaPrecedenceEntry {
+        PrattEntry {
             byte: 45u8,
             second_byte: ::core::option::Option::None,
-            precedence: 2u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 1u8,
         },
-        crate::runtime::tape::DtaPrecedenceEntry {
+        PrattEntry {
             byte: 42u8,
             second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(6u32),
             op_discriminant: 0u8,
         },
-        crate::runtime::tape::DtaPrecedenceEntry {
+        PrattEntry {
             byte: 47u8,
             second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(6u32),
             op_discriminant: 1u8,
         },
     ];
@@ -1132,37 +1132,25 @@ mod __cssl4parser_emit_impl {
     /// Consulted by the rule's emitted `parse_pratt_*`
     /// body when the LUT byte's bit-7 two-byte flag is
     /// set, to resolve the second byte + discriminant.
-    pub const PRECEDENCE_ENTRIES_mathProduct: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
-        crate::runtime::tape::DtaPrecedenceEntry {
+    pub const PRECEDENCE_ENTRIES_mathProduct: &[PrattEntry] = &[
+        PrattEntry {
             byte: 43u8,
             second_byte: ::core::option::Option::None,
-            precedence: 2u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 0u8,
         },
-        crate::runtime::tape::DtaPrecedenceEntry {
+        PrattEntry {
             byte: 45u8,
             second_byte: ::core::option::Option::None,
-            precedence: 2u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 1u8,
         },
-        crate::runtime::tape::DtaPrecedenceEntry {
+        PrattEntry {
             byte: 42u8,
             second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(6u32),
             op_discriminant: 0u8,
         },
-        crate::runtime::tape::DtaPrecedenceEntry {
+        PrattEntry {
             byte: 47u8,
             second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(6u32),
             op_discriminant: 1u8,
         },
     ];
@@ -1196,21 +1184,17 @@ mod __cssl4parser_emit_impl {
     /// Consulted by the rule's emitted `parse_pratt_*`
     /// body when the LUT byte's bit-7 two-byte flag is
     /// set, to resolve the second byte + discriminant.
-    pub const PRECEDENCE_ENTRIES_mediaQueryList: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
-        crate::runtime::tape::DtaPrecedenceEntry {
+    pub const PRECEDENCE_ENTRIES_mediaQueryList: &[PrattEntry] = &[
+        PrattEntry {
             byte: 44u8,
             second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(103u32),
             op_discriminant: 0u8,
         },
     ];
     /// AW-III.W6.5 — aggregate dense Pratt precedence LUT.
     ///
     /// Union of every Pratt rule's packed LUT (last-write-wins
-    /// per byte). Consulted by the walker cold-path's
-    /// `ShuntingYard` arm until W0b retires the walker. See
+    /// per byte). See
     /// `bbnf::backend::rust::emitter::precedence` for the bit
     /// layout.
     pub const PRECEDENCE_LUT: [u8; 256] = [
@@ -1234,78 +1218,50 @@ mod __cssl4parser_emit_impl {
     /// AW-III.W6.5 — aggregate sparse Pratt metadata slice.
     ///
     /// Flat union of every rule's mined operator entries.
-    /// Consulted by the walker cold-path until W0b retires it.
-    pub const PRECEDENCE_ENTRIES: &[crate::runtime::tape::DtaPrecedenceEntry] = &[
-        crate::runtime::tape::DtaPrecedenceEntry {
+    pub const PRECEDENCE_ENTRIES: &[PrattEntry] = &[
+        PrattEntry {
             byte: 43u8,
             second_byte: ::core::option::Option::None,
-            precedence: 2u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 0u8,
         },
-        crate::runtime::tape::DtaPrecedenceEntry {
+        PrattEntry {
             byte: 45u8,
             second_byte: ::core::option::Option::None,
-            precedence: 2u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 1u8,
         },
-        crate::runtime::tape::DtaPrecedenceEntry {
+        PrattEntry {
             byte: 42u8,
             second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(6u32),
             op_discriminant: 0u8,
         },
-        crate::runtime::tape::DtaPrecedenceEntry {
+        PrattEntry {
             byte: 47u8,
             second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(6u32),
             op_discriminant: 1u8,
         },
-        crate::runtime::tape::DtaPrecedenceEntry {
+        PrattEntry {
             byte: 43u8,
             second_byte: ::core::option::Option::None,
-            precedence: 2u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 0u8,
         },
-        crate::runtime::tape::DtaPrecedenceEntry {
+        PrattEntry {
             byte: 45u8,
             second_byte: ::core::option::Option::None,
-            precedence: 2u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(7u32),
             op_discriminant: 1u8,
         },
-        crate::runtime::tape::DtaPrecedenceEntry {
+        PrattEntry {
             byte: 42u8,
             second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(6u32),
             op_discriminant: 0u8,
         },
-        crate::runtime::tape::DtaPrecedenceEntry {
+        PrattEntry {
             byte: 47u8,
             second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(6u32),
             op_discriminant: 1u8,
         },
-        crate::runtime::tape::DtaPrecedenceEntry {
+        PrattEntry {
             byte: 44u8,
             second_byte: ::core::option::Option::None,
-            precedence: 1u8,
-            associativity: crate::runtime::tape::DtaAssociativity::Left,
-            op_rule: crate::runtime::tape::DtaRuleId(103u32),
             op_discriminant: 0u8,
         },
     ];
@@ -32752,8 +32708,9 @@ mod __cssl4parser_emit_impl {
     /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
     /// rule's structural alphabet is preserved verbatim;
     /// associativity-honouring binary-tree reduction is a
-    /// consumer-side projection (the runtime exposes
-    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
+    /// consumer-side projection (the generated module exposes
+    /// `PRECEDENCE_LUT_<rule>` + `PRECEDENCE_ENTRIES_<rule>` for
+    /// that purpose).
     ///
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
@@ -32878,8 +32835,9 @@ mod __cssl4parser_emit_impl {
     /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
     /// rule's structural alphabet is preserved verbatim;
     /// associativity-honouring binary-tree reduction is a
-    /// consumer-side projection (the runtime exposes
-    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
+    /// consumer-side projection (the generated module exposes
+    /// `PRECEDENCE_LUT_<rule>` + `PRECEDENCE_ENTRIES_<rule>` for
+    /// that purpose).
     ///
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.
@@ -33382,8 +33340,9 @@ mod __cssl4parser_emit_impl {
     /// `[lhs_subtree, op_tag, rhs_subtree, op_tag, …]` — the
     /// rule's structural alphabet is preserved verbatim;
     /// associativity-honouring binary-tree reduction is a
-    /// consumer-side projection (the runtime exposes
-    /// `PRECEDENCE_ENTRIES_<rule>` for that purpose).
+    /// consumer-side projection (the generated module exposes
+    /// `PRECEDENCE_LUT_<rule>` + `PRECEDENCE_ENTRIES_<rule>` for
+    /// that purpose).
     ///
     /// Returns unit for StructDirect composition
     /// with sibling shape fns under struct-direct mode.

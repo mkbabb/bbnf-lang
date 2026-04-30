@@ -52,6 +52,23 @@ AZ-III has two duties:
 7. **No silent fallback.** Unsolved cycles, heterogeneous alternations,
    unsupported StructDirect variants, and bootstrap bridges must produce
    a named error or a same-wave grammar-general implementation.
+8. **No workarounds; architectural transpositions for elegance.** No
+   quick fix, shim, fallback, stub, or compatibility bridge closes a
+   wave gate. Where elegance, simplicity, or performance demands a
+   transposition, the transposition is mandatory and not optional;
+   workarounds are zero-tolerance per `feedback_no_workarounds` and
+   `feedback_no_workarounds_arch`.
+9. **Orchestrator delegates and synthesises.** The orchestrator does
+   not implement. It dispatches research, plan, and redress agents,
+   synthesises returned worktrees, cherry-picks evidence-bearing
+   commits, audits diffs against declared bounds, and re-dispatches
+   when scope reveals. Implementation never runs in the main
+   conversation; it always routes through an agent with a HARD CAP
+   and a return contract.
+10. **Commit at every sub-gate.** Each wave-internal sub-gate produces
+    at least one commit before the wave-close commit lands. Commit
+    bodies cite an artefact, file path, command output, or measured
+    delta — not a templated provenance string.
 
 ## Carried Work Ledger
 

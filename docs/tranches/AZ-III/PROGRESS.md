@@ -37,8 +37,9 @@ grammar-general fact/type/CSP/projection authority substrate.
    slice and two untracked docs artefacts; implementation dispatch remains
    blocked until W0 slices or routes that work.
 2. AZ-II O5 close artifact is stale and must be regenerated under W1.
-3. Root, parse-that, and pprint format checks are green, but clippy is red
-   across all three workspaces; see `audit/W0-state-ledger.txt`.
+3. Root, parse-that, and pprint format checks are green. Root compile
+   passes. Root tests, root clippy, parse-that tests/clippy, and pprint
+   clippy are red; pprint tests pass. See `audit/W0-state-ledger.txt`.
 4. Parity and benchmark truth are stale or partial until W2/W4.
 5. BA/BB remain blocked until W5 terminal close.
 
@@ -54,3 +55,12 @@ Root commit history from `53d3e6b2..HEAD` was rewritten message-only to
 replace terse AZ-II subjects and missing bodies with concrete scopes and
 evidence-bearing bodies. The backup branch is
 `codex/az-history-before-reword-20260430-114057`.
+
+Additional W0 gate runs:
+
+- `cargo iter-check`: pass with generated-code warnings.
+- `cargo iter-test`: fail-fast after `bootstrap_full_parse`; 202/1509 run,
+  201 passed, 1 failed, 25 skipped, 1307 not run.
+- parse-that `cargo test --workspace`: fail on published `parse_that 0.3.3`
+  expecting old `pprint::Doc` / `pprint::Join`.
+- pprint `cargo test`: pass with one warning and two ignored doctests.

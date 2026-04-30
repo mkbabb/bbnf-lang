@@ -42,10 +42,14 @@ Format and lint baseline:
 ```text
 bbnf-lang: cargo fmt --all -- --check PASS
 bbnf-lang: cargo iter-clippy FAIL
+bbnf-lang: cargo iter-check PASS, with generated-code warnings
+bbnf-lang: cargo iter-test FAIL
 parse-that/rust: cargo fmt --all -- --check PASS
 parse-that/rust: cargo clippy --workspace -- -D warnings FAIL
+parse-that/rust: cargo test --workspace FAIL
 pprint/rust: cargo fmt --all -- --check PASS
 pprint/rust: cargo clippy --all-targets -- -D warnings FAIL
+pprint/rust: cargo test PASS, with one warning and two ignored doctests
 ```
 
 Root clippy failure surface:
@@ -66,12 +70,39 @@ parse-that clippy failure surface:
   duplicate branch, manual range contains, redundant closure, unwrap
   default, counter-loop, div-ceil, and UTF-8 loop lints.
 
+parse-that test failure surface:
+
+- `cargo test --workspace` fails while compiling published
+  `parse_that 0.3.3`, whose `parsers/csv.rs` imports old `pprint::Doc` and
+  `pprint::Join` APIs that are absent from the current sibling `pprint`
+  workspace.
+
 pprint clippy failure surface:
 
 - `benches/digit_count.rs`: generic benchmark samples need `Sync`;
 - tests: approximate constants, unused skipped enum field, and useless
   `.into_iter()` calls;
 - benches: redundant `RcDoc::as_string` closures.
+
+pprint test surface:
+
+- `cargo test` passes: 31 builder tests, 14 derive tests, 12 digit-count
+  tests, 13 pretty tests, and 2 ignored doctests. The run emits one
+  dead-code warning for `TestEnum::Skipped(i32)`.
+
+Root compile/test surface:
+
+- `cargo iter-check` passes under `ax-iter`, with generated-code warnings
+  for labeled `break` expressions, useless unsigned comparisons, and a small
+  set of unused helpers/imports.
+- `cargo iter-test` compiles and starts nextest, then fails fast:
+  202/1509 tests run, 201 passed, 1 failed, 25 skipped, 1307 not run.
+  The failing test is
+  `bbnf::ax_w0a2s_real_css_probe bootstrap_full_parse`; `bootstrap.css`
+  fails at offset 9317 because shape-dispatcher `skip_space` does not
+  consume a leading or inter-rule block comment.
+  Earlier first-attempt failures before fail-fast cancellation also exposed
+  CSS hex/named-color typed-payload and `:dir()` branch payload misses.
 
 W0 close remains blocked until the dirty root implementation slice is either
 committed in owned batches or routed into W1/W2/W3 dispatch worktrees, and

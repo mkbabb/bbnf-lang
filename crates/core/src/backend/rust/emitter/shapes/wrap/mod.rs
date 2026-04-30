@@ -3,7 +3,7 @@
 //! Wrap rules are StructDirect dispatch nodes: transparent wrappers
 //! delegate to the matched branch, and non-transparent wrappers open
 //! their registered StructBuilder frame before dispatch. The former
-//! tape dispatcher was unreachable after `EmitStrategy` became
+//! column dispatcher was unreachable after `EmitStrategy` became
 //! StructDirect-only and was deleted in AZ-II/O5.
 
 use bbnf_ir::registry::EmitStrategy;

@@ -76,10 +76,10 @@ case "$TIER" in
         # Leaf crates carry no derive-Parser sites; their rustc cost is
         # proportional to hand-written code only. Fastest tier.
         # Workspace crate names (see Cargo.toml / crates/*/Cargo.toml):
-        # `tape`, `bbnf-ir`, `egraph`, `csp-solver`, `bbnf-ser`.
+        # `bbnf-ir`, `egraph`, `csp-solver`, `bbnf-ser`.
         cargo nextest run \
             ${NEXTEST_PROFILE_ARGS[@]+"${NEXTEST_PROFILE_ARGS[@]}"} \
-            -p tape -p bbnf-ir -p egraph -p csp-solver -p bbnf-ser \
+            -p bbnf-ir -p egraph -p csp-solver -p bbnf-ser \
             ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} > "$OUT" 2>&1
         ;;
     grammar)

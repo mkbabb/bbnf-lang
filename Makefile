@@ -260,12 +260,12 @@ ay-expand-named-type:
 	cargo expand -p bbnf --test named_type_preservation > target/expand/ay-named-type.rs
 	@wc -l target/expand/ay-named-type.rs
 
-## AY.W5.3 hard gate — close-stamp asm inspection. FN defaults to the
-## AY.W5.1 target (tape::builder::close_compound); override per gate:
+## AY.W5.3 hard gate — StructBuilder asm inspection. FN defaults to a
+## stable JSON builder target; override per gate:
 ##   make ay-asm-close-compound FN=<module>::<fn>
 ## cargo asm exiting non-zero on an unresolved symbol is acceptable
 ## evidence for AY executors (the stderr names the real candidate).
-FN ?= tape::builder::close_compound
+FN ?= bbnf::runtime::json::builder::JsonStructBuilder::finalise
 ay-asm-close-compound:
 	@mkdir -p target/asm
 	cargo asm -p bbnf $(FN) > target/asm/ay-close-$(subst ::,-,$(FN)).s

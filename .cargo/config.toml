@@ -149,7 +149,7 @@ iter-test-lsp         = "nextest run --cargo-profile ax-iter -p bbnf-lsp"
 # correctness tier). Crate names match the workspace's actual package
 # names; `scripts/test-tier.sh leaf` routes through this alias. B1.md
 # hard-gate item 5 references it by name.
-iter-test-leaf        = "nextest run --cargo-profile ax-iter -p tape -p bbnf-ir -p egraph -p csp-solver -p bbnf-ser"
+iter-test-leaf        = "nextest run --cargo-profile ax-iter -p bbnf-ir -p egraph -p csp-solver -p bbnf-ser"
 
 # Grammar-tier passthrough under ax-iter. Pair with `--test <name>` or
 # `-p <crate>` at call sites, e.g.

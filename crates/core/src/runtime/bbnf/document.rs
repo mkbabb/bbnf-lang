@@ -212,10 +212,9 @@ impl<'a, 'p: 'a> BbnfView<'a, 'p> {
     // Walking accessors used by `crates/core/src/graph/{deps,metadata}.rs`
     // and `crates/core/src/pipeline/{compile,directives}.rs` after the
     // BBNF consumer migration. Mirrors the helpers retired from
-    // `crates/core/src/lower/tape_walk.rs` (find_descendant_by_kind,
-    // peel_transparent) but operates over the struct-direct
-    // `BbnfCompoundKind` alphabet instead of the tape's
-    // `BbnfBootstrapRuleKind`.
+    // `crates/core/src/lower/view_walk.rs` (find_descendant_by_kind,
+    // peel_transparent) and operate over the struct-direct
+    // `BbnfCompoundKind` alphabet.
 
     /// Number of structural children in this view's focus. Compound
     /// focuses report their child count; leaf focuses report `0`.
@@ -295,8 +294,8 @@ impl<'a, 'p: 'a> BbnfView<'a, 'p> {
 
     /// Depth-first descent: return the first descendant compound
     /// whose [`BbnfCompoundKind`] equals `target` (the receiver itself
-    /// counts as a candidate). Mirrors the retired
-    /// `tape_walk::find_descendant_by_kind`.
+    /// counts as a candidate). Mirrors the lowering
+    /// `view_walk::find_descendant_by_kind`.
     pub fn find_descendant_by_kind(&self, target: BbnfCompoundKind) -> Option<BbnfView<'a, 'p>> {
         if self.compound_kind() == Some(target) {
             return Some(*self);

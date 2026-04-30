@@ -1,8 +1,8 @@
 //! `BbnfView`-shaped descent helpers local to `value_expr` lowering.
 //!
-//! Replaces what `crate::lower::tape_walk::find_descendant_by_kind`
-//! previously provided over the tape-shaped `BbnfBootstrapNodeView`
-//! surface. Under struct-direct projection the parser emits typed
+//! Replaces the pre-cutover descendant walk previously provided over
+//! the bootstrap node-view surface. Under struct-direct projection
+//! the parser emits typed compounds with semantic identity preserved on
 //! compounds with semantic identity preserved on
 //! [`crate::runtime::bbnf::BbnfCompoundKind`]; descent functions
 //! match on that discriminator rather than `BbnfBootstrapRuleKind`.
@@ -12,7 +12,7 @@
 //! count as transparent wrappers, when to short-circuit at semantic
 //! boundaries, etc.). The corresponding helpers for the outer
 //! grammar-level lowering live alongside that pass in
-//! `crate::lower::tape_walk` (D1's territory).
+//! `crate::lower::view_walk` (D1's territory).
 
 use crate::runtime::RuntimeView;
 use crate::runtime::bbnf::{BbnfCompoundKind, BbnfKind, BbnfView};

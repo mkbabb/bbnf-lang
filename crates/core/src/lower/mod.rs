@@ -6,16 +6,14 @@
 //!
 //! AZ-II.cutover.D1 — every CST descent goes through
 //! [`BbnfView::compound_kind`] / [`BbnfView::span_text`] /
-//! [`BbnfView::children`] / [`BbnfView::child`]. Pre-cutover Tape
-//! cursor APIs (`rule_kind()`, positional `child(i)`,
-//! `variant_idx()`) are gone — every reference re-targets at the
-//! struct-direct accessor surface.
+//! [`BbnfView::children`] / [`BbnfView::child`]. Lowering is now
+//! rooted in the struct-direct accessor surface.
 
 mod expression;
 mod fn_table;
 mod metadata;
 mod string_interner;
-pub(crate) mod tape_walk;
+pub(crate) mod view_walk;
 pub(crate) mod value_expr;
 
 use std::collections::{HashMap, HashSet};

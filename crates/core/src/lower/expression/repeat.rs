@@ -15,7 +15,7 @@ use crate::runtime::RuntimeView;
 use crate::runtime::bbnf::{BbnfCompoundKind, BbnfView};
 
 use super::super::LowerCtx;
-use super::super::tape_walk::find_sibling_by_kind;
+use super::super::view_walk::find_sibling_by_kind;
 use super::lower_term;
 
 /// Lower a `factor = big_comment? term ?w modifier? big_comment?` view.

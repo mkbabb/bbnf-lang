@@ -13,11 +13,11 @@
 //! resolution (`resolve_name`) checks the env stack first before the rule
 //! table. This eliminates the parallel `substitute_and_lower` walker.
 //!
-//! AZ-II.cutover.D1 — every layer function consumes [`BbnfView`] (not
-//! the prior tape-cursor view), iterates children via
-//! [`super::tape_walk::iter_rep_children`], selects positional
-//! children by [`crate::runtime::bbnf::BbnfCompoundKind`] rather than
-//! by index, and panics on unhandled compound kinds. Silent
+//! AZ-II.cutover.D1 — every layer function consumes [`BbnfView`],
+//! iterates children via [`super::view_walk::iter_rep_children`],
+//! selects positional children by
+//! [`crate::runtime::bbnf::BbnfCompoundKind`] rather than by index,
+//! and panics on unhandled compound kinds. Silent
 //! `IrNode::Epsilon` fallbacks are forbidden because they corrupt
 //! every downstream rule body invisibly.
 //!
@@ -34,7 +34,7 @@ use crate::runtime::RuntimeView;
 use crate::runtime::bbnf::{BbnfCompoundKind, BbnfKind, BbnfView};
 
 use super::LowerCtx;
-use super::tape_walk::{collect_siblings_by_kind, peel_transparent};
+use super::view_walk::{collect_siblings_by_kind, peel_transparent};
 
 mod alt;
 mod closures;
@@ -279,7 +279,7 @@ fn is_single_token_span(node: BbnfView<'_, '_>) -> bool {
 /// on a bare `&str` (rather than a view). Used by
 /// [`wrap::lower_mapped_factor`] to recover an identifier / literal /
 /// regex that was consumed by the parser without pushing its own
-/// tape record.
+/// source leaf.
 pub(crate) fn lower_leaf_by_span_text_str<'a>(
     raw: &'a str,
     ctx: &mut LowerCtx<'a>,

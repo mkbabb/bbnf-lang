@@ -3,7 +3,7 @@
 //!
 //! Walks the top-level `grammar` root view and assembles either the
 //! observational [`crate::types::GrammarExtract`] (for LSP analysis /
-//! gorgeous JIT / debug binaries) or the pipeline-direct
+//! gorgeous formatting / debug binaries) or the pipeline-direct
 //! `(AST, DirectiveMaps)` pair (for `compile_grammar`). The `directive`
 //! wrapper is peeled to expose the specific directive
 //! [`crate::runtime::bbnf::BbnfCompoundKind`] (`ImportDirective`,
@@ -21,7 +21,7 @@ use std::borrow::Cow;
 
 use parse_that::Span;
 
-use crate::lower::tape_walk::{find_descendant_by_kind, find_rhs_expression_descendant};
+use crate::lower::view_walk::{find_descendant_by_kind, find_rhs_expression_descendant};
 use crate::pipeline::directives::DirectiveMaps;
 use crate::runtime::RuntimeView;
 use crate::runtime::bbnf::{BbnfCompoundKind, BbnfDocument, BbnfKind, BbnfView};

@@ -85,7 +85,7 @@ pub(crate) fn lower_mapped_factor<'a>(
     let mut base = if let Some(term) = term_node {
         dispatch_expression(term, ctx)
     } else {
-        // No tape-level term child — recover the leaf from the
+        // No term child surfaced in the view — recover the leaf from the
         // compound's own span_text after stripping any trailing
         // modifier and any trailing mapping group.
         let raw = node.span_text();
@@ -103,7 +103,7 @@ pub(crate) fn lower_mapped_factor<'a>(
         }
         lower_leaf_by_span_text_str(stripped, ctx).unwrap_or_else(|| {
             panic!(
-                "mapped_factor: no tape term child and span_text {:?} (after stripping \
+                "mapped_factor: no term child and span_text {:?} (after stripping \
                  modifier {:?} + mapping) resolved to {:?} which is not a recognisable leaf",
                 raw, modifier_text, stripped
             )
@@ -194,7 +194,7 @@ fn find_value_expr_child<'a>(
         // descendant projected to a typed leaf". Discriminate by
         // structural kind instead and only fall back to the span-text
         // guard for `Other`-kinded wrappers (which carry source-bytes
-        // verbatim in the parse_that-shaped tape).
+        // verbatim in the parse_that-shaped source view).
         if is_value_expr_head_kind(kind) {
             // Skip type-annotation subtrees — they begin with `:`.
             if trimmed.starts_with(':') {
@@ -334,7 +334,7 @@ fn find_inner_expression<'a>(
     ];
 
     for &kind in EXPRESSION_KINDS {
-        if let Some(v) = super::super::tape_walk::find_descendant_by_kind(node, kind) {
+        if let Some(v) = super::super::view_walk::find_descendant_by_kind(node, kind) {
             if let Some((lo, hi)) = v.byte_span() {
                 if hi > lo {
                     return Some(v);

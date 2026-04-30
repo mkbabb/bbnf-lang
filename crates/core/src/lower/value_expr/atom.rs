@@ -65,10 +65,9 @@ fn first_atom_child<'a, 'p: 'a>(
 }
 
 /// Compare two views' focused values for identity. Replaces the
-/// tape-shaped predecessor's `cursor().offset()` equality test —
-/// struct-direct focuses are compared by underlying `BbnfValue`
-/// payload (compound IDs are unique per parse, leaf payloads identify
-/// themselves).
+/// pre-cutover cursor-offset equality test: struct-direct focuses
+/// are compared by underlying `BbnfValue` payload (compound IDs are
+/// unique per parse, leaf payloads identify themselves).
 pub(super) fn same_focus<'a, 'p: 'a>(
     a: BbnfView<'a, 'p>,
     b: BbnfView<'a, 'p>,

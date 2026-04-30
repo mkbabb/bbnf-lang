@@ -3,10 +3,10 @@
 //! AZ-II.cutover.D1 substrate. The struct-direct BBNF runtime exposes
 //! a typed-value tree rooted at a [`BbnfDocument`]; consumers walk the
 //! tree via [`BbnfView`] (focused value + parent doc handle). This
-//! module is the migrated companion to the prior tape-walker
-//! (`tape_walk.rs`) — every layer function in `expression/` and the
-//! sister `value_expr/` lowering call through these helpers rather
-//! than making positional or wrapper assumptions about its input view.
+//! module is the shared CST-view traversal layer: every layer function
+//! in `expression/` and the sister `value_expr/` lowering call through
+//! these helpers rather than making positional or wrapper assumptions
+//! about its input view.
 //!
 //! The four primitives:
 //!
@@ -42,7 +42,7 @@
 //! [`BbnfCompoundKind::Other`] arm. Sibling-scoped traversal
 //! ([`find_sibling_by_kind`], [`collect_siblings_by_kind`]) treats
 //! `Other` as the only "anonymous wrapper" descent target — the
-//! struct-direct emitter no longer produces tape-era variant_idx=0
+//! struct-direct emitter no longer needs erased discriminator
 //! sentinels, and every BBNF-main-grammar compound carries its
 //! authoritative kind.
 
@@ -159,7 +159,7 @@ fn is_anonymous_wrapper(view: BbnfView<'_, '_>) -> bool {
 /// This is the correct companion to [`find_descendant_by_kind`] for
 /// "find my own body's direct child under structural wrappers": the
 /// caller's grammar body may be wrapped in one or more anonymous
-/// compounds emitted by the lifter's tape-shape requirement, and the
+/// compounds emitted by structural grammar grouping, and the
 /// target is a genuine sibling of the other body components (not a
 /// descendant inside another semantic rule's subtree). Blind descent
 /// via [`find_descendant_by_kind`] would step past a sibling
@@ -235,9 +235,7 @@ pub(crate) fn collect_siblings_by_kind<'a, 'p>(
 /// is a leaf), returns the view unchanged. If the view has no
 /// `child(0)`, returns it unchanged (defensive against empty
 /// compounds).
-pub(crate) fn peel_transparent<'a, 'p>(
-    mut view: BbnfView<'a, 'p>,
-) -> BbnfView<'a, 'p> {
+pub(crate) fn peel_transparent<'a, 'p>(mut view: BbnfView<'a, 'p>) -> BbnfView<'a, 'p> {
     loop {
         let kind = match view.compound_kind() {
             Some(k) => k,

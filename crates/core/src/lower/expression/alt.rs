@@ -14,7 +14,7 @@ use crate::runtime::RuntimeView;
 use crate::runtime::bbnf::{BbnfCompoundKind, BbnfKind, BbnfView};
 
 use super::super::LowerCtx;
-use super::super::tape_walk::iter_rep_children;
+use super::super::view_walk::iter_rep_children;
 use super::dispatch_expression;
 use super::pratt::looks_like_pratt_flat;
 

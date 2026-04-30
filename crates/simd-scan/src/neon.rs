@@ -37,7 +37,7 @@
 use crate::alphabet::{KernelShape, NibbleLut, StructuralAlphabet, WideLut};
 use crate::compaction;
 use crate::parity;
-use tape::stage1::StructuralIndex;
+use crate::StructuralIndex;
 
 use core::arch::aarch64::*;
 

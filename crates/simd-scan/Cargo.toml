@@ -8,7 +8,6 @@ description = "Architecture-neutral SIMD structural-bitmap kernel for the bbnf-l
 crate-type = ["lib"]
 
 [dependencies]
-tape = { path = "../tape", default-features = false }
 proc-macro2 = "1"
 syn = { version = "2", features = ["full", "parsing"] }
 quote = "1"

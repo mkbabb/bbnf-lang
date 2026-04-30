@@ -3,6 +3,7 @@
 //! reference; per-arch paths must match byte-for-byte.
 
 use simd_scan::{
+    StructuralIndex,
     alphabet::StructuralAlphabet,
     scalar,
     scan_structural,
@@ -36,7 +37,7 @@ fn read_corpus(name: &str) -> Vec<u8> {
     std::fs::read(&path).unwrap_or_else(|e| panic!("failed to read {}: {}", path.display(), e))
 }
 
-fn assert_indices_equal(a: &tape::StructuralIndex, b: &tape::StructuralIndex, ctx: &str) {
+fn assert_indices_equal(a: &StructuralIndex, b: &StructuralIndex, ctx: &str) {
     assert_eq!(
         a.positions.len(),
         b.positions.len(),

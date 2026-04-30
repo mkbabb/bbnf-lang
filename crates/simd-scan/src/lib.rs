@@ -10,10 +10,9 @@
 //! the precomputed kind at the next structural slot and jumps the
 //! cursor in O(1).
 //!
-//! This crate owns the kernel that builds the `StructuralIndex`. The
-//! type itself lives in `tape::stage1::StructuralIndex` to keep
-//! the wire contract on the tape side; this crate has one workspace
-//! dependency on `tape` and no other workspace deps.
+//! This crate owns both the kernel that builds the
+//! [`StructuralIndex`] and the wire type consumed by generated parser
+//! dispatch. It has no workspace dependencies.
 //!
 //! # Architecture
 //!
@@ -49,6 +48,7 @@
 
 pub mod alphabet;
 pub mod compaction;
+pub mod index;
 pub mod parity;
 pub mod scalar;
 
@@ -65,7 +65,7 @@ pub mod avx512;
 pub mod wasm;
 
 pub use alphabet::{KernelShape, NibbleLut, StructuralAlphabet, WideLut};
-pub use tape::stage1::StructuralIndex;
+pub use index::{StructuralIndex, next_structural_at_or_after};
 
 /// Build the [`StructuralIndex`] for `input` under `alphabet`.
 ///

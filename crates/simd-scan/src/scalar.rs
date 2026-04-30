@@ -9,7 +9,7 @@
 //!   quote parity.
 
 use crate::alphabet::StructuralAlphabet;
-use tape::stage1::StructuralIndex;
+use crate::StructuralIndex;
 
 /// Walk `input` byte-by-byte, classify against `alphabet`, and write
 /// the resulting `StructuralIndex`. Used by `simd_scan::scan_structural`

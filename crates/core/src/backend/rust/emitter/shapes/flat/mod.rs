@@ -50,18 +50,13 @@
 //!
 //! Module layout (B5.W3):
 //! - [`struct_direct`]   — StructBuilder per-position emission
-//! - [`visitor`]         — visitor-path per-position emission
 
 use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
 
-use super::dispatcher::{visitor_dispatcher_fn_ident, visitor_shape_fn_ident};
-use super::root_rule_name;
 use bbnf_ir::registry::EmitStrategy;
 
 mod struct_direct;
-mod visitor;
 
 /// Emit `pub fn parse_flat_<grammar>_<rule>(input, p, state,
 /// builder) -> Result<(), DtaError>`.
@@ -81,71 +76,6 @@ pub fn emit_parse_flat(
     ir: &GrammarIR,
 ) -> TokenStream {
     struct_direct::emit_parse_flat_struct_direct(grammar_suffix, rule, ir, strategy)
-}
-
-/// Emit `pub fn parse_flat_visitor_<grammar>_<rule><V>(input, p,
-/// state, visitor) -> Result<(), ParseErr>`.
-///
-/// # AZ-I.W2.RF — strategy-agnostic emission
-///
-/// The visitor path operates against an external `&mut V: ObjectVisitor
-/// + ArrayVisitor + …` argument that is substrate-orthogonal to the
-/// builder distinction production code uses. Visitor emission is
-/// therefore strategy-agnostic;
-/// the parameter is retained on the API surface for symmetry with
-/// [`emit_parse_flat`] (and to keep the call-site in `shapes/mod.rs`
-/// uniform across shape emitters that DO require the discriminator),
-/// but the emitted body is identical between the two strategies.
-pub fn emit_parse_flat_visitor(
-    _strategy: &EmitStrategy,
-    grammar_suffix: &str,
-    rule: &IrRule,
-    ir: &GrammarIR,
-) -> TokenStream {
-    let rule_name = ir.get_string(rule.name);
-    let fn_ident = visitor_shape_fn_ident("flat", grammar_suffix, rule_name);
-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
-
-    let dispatcher_ident = match root_rule_name(ir) {
-        Some(root) => {
-            let root_disp = visitor_dispatcher_fn_ident(grammar_suffix, &root);
-            format_ident!("{}__value", root_disp)
-        }
-        None => return quote! {},
-    };
-
-    let positions = collect_positions(&rule.body);
-    let body_emission =
-        visitor::emit_visitor_positions(&positions, &support_mod, &dispatcher_ident, ir);
-
-    quote! {
-        /// AW-V.W4-fix — visitor-path Flat-shape parse function.
-        ///
-        /// Mirrors the tape-path emitter structure. Literal positions
-        /// byte-match without emitting a visitor event; Ref / Regex /
-        /// Alt positions recurse through the visitor dispatcher.
-        ///
-        /// AX.W0a.2.f — compound; see tape-path comment for the
-        /// `#[inline]` downgrade rationale.
-        #[inline]
-        #[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
-        pub fn #fn_ident<V>(
-            input: &[u8],
-            p: &mut usize,
-            state: &mut #support_mod::ScanState,
-            visitor: &mut V,
-        ) -> ::core::result::Result<(), crate::runtime::ParseErr>
-        where
-            V: ::tape::ObjectVisitor
-                + ::tape::ArrayVisitor
-                + ::tape::StringVisitor
-                + ::tape::NumberVisitor
-                + ::tape::KeywordVisitor,
-        {
-            #body_emission
-            Ok(())
-        }
-    }
 }
 
 // ─────────────────────────────────────────────────────────────────────

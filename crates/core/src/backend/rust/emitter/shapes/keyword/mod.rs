@@ -32,9 +32,6 @@ use bbnf_ir::registry::EmitStrategy;
 
 mod payload;
 mod struct_direct;
-mod visitor;
-
-pub use visitor::emit_parse_keyword_visitor;
 
 /// AZ-I.W2.RD / AZ-II.cutover.O4 — emit the per-grammar
 /// Keyword-shape parse function for the resolved struct-builder

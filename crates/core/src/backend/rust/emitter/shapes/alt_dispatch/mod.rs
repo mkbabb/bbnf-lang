@@ -42,9 +42,6 @@ use super::substrate::builder_ty_with_lifetime;
 use bbnf_ir::registry::EmitStrategy;
 
 mod branches;
-mod visitor;
-
-pub use visitor::emit_parse_alt_dispatch_visitor;
 
 use branches::unwrap_trivia;
 

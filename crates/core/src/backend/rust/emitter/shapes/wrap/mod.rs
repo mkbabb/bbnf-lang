@@ -48,9 +48,6 @@ use bbnf_ir::registry::EmitStrategy;
 
 mod struct_direct;
 mod tape_dispatch;
-mod visitor;
-
-pub use visitor::emit_parse_wrap_visitor;
 
 use tape_dispatch::emit_alt_tape_dispatch;
 

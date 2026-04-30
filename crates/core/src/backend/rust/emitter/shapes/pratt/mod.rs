@@ -53,10 +53,8 @@
 
 mod struct_direct;
 mod tape;
-mod visitor;
 
 pub use tape::emit_parse_pratt;
-pub use visitor::emit_parse_pratt_visitor;
 
 /// Find the operand-position Ref in a Pratt rule's body for direct
 /// shape-fn dispatch.

@@ -44,9 +44,6 @@ use super::root_rule_name;
 use bbnf_ir::registry::EmitStrategy;
 
 mod element;
-mod visitor;
-
-pub use visitor::emit_parse_array_visitor;
 
 /// Emit the `parse_array_<grammar>_<rule>` body for the resolved
 /// struct-builder substrate.

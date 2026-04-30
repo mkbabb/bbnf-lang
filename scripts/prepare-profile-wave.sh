@@ -66,7 +66,7 @@ entries_for() {
       echo "json ebnf css_pretty google_sheets bbnf_self css_l4_grammar"
       ;;
     json_value)
-      echo "bbnf_data bbnf_twitter bbnf_citm bbnf_canada bbnf_data_xl sonic_data sonic_twitter sonic_citm sonic_canada sonic_data_xl"
+      echo "bbnf_get_twitter sonic_get_twitter bbnf_value_data_s bbnf_value_twitter bbnf_value_citm bbnf_value_canada bbnf_value_data_xl sonic_value_data_s sonic_value_twitter sonic_value_citm sonic_value_canada sonic_value_data_xl"
       ;;
     *)
       return 1

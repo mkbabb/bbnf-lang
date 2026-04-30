@@ -128,7 +128,7 @@ if [[ -z "$ARTIFACT_DIR" ]]; then
   ARTIFACT_DIR="$OUT_ROOT/$BENCH/$ENTRY"
 fi
 if [[ -z "$SYMS_PATTERN" ]]; then
-  SYMS_PATTERN="$BENCH|BbnfBootstrap|GoogleSheetsParser|JsonParser|CssL4Parser|TapeBuilder"
+  SYMS_PATTERN="$BENCH|BbnfBootstrap|GoogleSheetsParser|JsonParser|CssL4Parser"
 fi
 
 mkdir -p "$ARTIFACT_DIR"

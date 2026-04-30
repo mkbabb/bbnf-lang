@@ -7,7 +7,7 @@
 //! `operator_chain`, `leaves`, `map_value`, `tape_prelude`,
 //! `dispatch`, `ws`, `string_decode`) deleted along with their
 //! trait-method impls. Surviving: `grammar` (impl block + parse
-//! entry), `dta`/`profile`/`visitor` (codegen data), `prettify`
+//! entry), `dta`/`profile` (codegen data), `prettify`
 //! sub-dir (separate emission channel).
 
 pub mod dfa_codegen;
@@ -17,7 +17,6 @@ pub mod precedence;
 mod prettify;
 pub(crate) mod profile;
 pub mod shapes;
-pub mod visitor;
 
 // AZ-I.W2-act.A — `EmitStrategy` hoisted to `bbnf_ir::registry::strategy`.
 // Per `audit/AUDIT-6-ARCHITECTURE.md` §4 + §8.1 the substrate-selection
@@ -28,9 +27,9 @@ pub use bbnf_ir::registry::{EmitStrategy, SubstrateBinding};
 use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, RuleId, TypeDesc};
 use proc_macro2::TokenStream;
 
+use crate::backend::Emitter;
 use crate::backend::driver::analysis::BackendAnalysis;
 use crate::backend::prettify::{PrettyPolicy, PrettyRulePlan};
-use crate::backend::Emitter;
 
 pub use super::emitter_types::{RustEmitCtx, RustEmitter};
 
@@ -162,17 +161,11 @@ impl Emitter for RustEmitter {
         None
     }
 
-    fn pre_compile_alt_branches(
-        &mut self,
-        ctx: &mut Self::Ctx,
-    ) {
+    fn pre_compile_alt_branches(&mut self, ctx: &mut Self::Ctx) {
         ctx.save_alt_context();
     }
 
-    fn post_compile_alt_branches(
-        &mut self,
-        ctx: &mut Self::Ctx,
-    ) {
+    fn post_compile_alt_branches(&mut self, ctx: &mut Self::Ctx) {
         ctx.restore_alt_context();
     }
 
@@ -229,7 +222,13 @@ impl Emitter for RustEmitter {
                 let direct = ir
                     .types
                     .iter()
-                    .find_map(|(rid, td)| if *rid == rule.id { Some(td.clone()) } else { None })
+                    .find_map(|(rid, td)| {
+                        if *rid == rule.id {
+                            Some(td.clone())
+                        } else {
+                            None
+                        }
+                    })
                     .filter(|td| td.needs_payload_slot());
                 if let Some(td) = direct {
                     ctx.payload_types = vec![td];
@@ -369,18 +368,10 @@ impl Emitter for RustEmitter {
     ) -> TokenStream {
         self.emit_prettify_attempt_impl(expr, rollback_builder, use_light, ctx)
     }
-    fn emit_prettify_silent(
-        &mut self,
-        expr: TokenStream,
-        ctx: &mut Self::Ctx,
-    ) -> TokenStream {
+    fn emit_prettify_silent(&mut self, expr: TokenStream, ctx: &mut Self::Ctx) -> TokenStream {
         self.emit_prettify_silent_impl(expr, ctx)
     }
-    fn emit_prettify_sep_inline(
-        &mut self,
-        sep: &str,
-        _ctx: &mut Self::Ctx,
-    ) -> TokenStream {
+    fn emit_prettify_sep_inline(&mut self, sep: &str, _ctx: &mut Self::Ctx) -> TokenStream {
         let sep_lit = proc_macro2::Literal::string(sep);
         quote::quote! { __builder.sep(#sep_lit, ""); }
     }

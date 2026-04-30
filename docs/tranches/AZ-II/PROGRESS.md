@@ -68,6 +68,46 @@ and `feedback_no-orthogonal-codepaths` forbid retaining a
 tape-bearing substrate for BBNF alongside struct-only data
 grammars, even under W2 pressure.
 
+## 2026-04-30 — REAUDIT close honesty reconciliation
+
+AZ-III REAUDIT 2026-04-30 (six read-only audit lanes at master HEAD
+`d5179b8a`) reconciled the AZ-II close packet against fresh evidence.
+Authority: `docs/tranches/AZ-III/audit/REAUDIT-2026-04-30/SYNTHESIS.md`
+(accepted finding A2 — AZ-II FINAL.md has stale and inconsistent close
+evidence). The continuation handoff framing of the earlier 2026-04-30
+entry is unchanged; the close packet is corrected on three rows.
+
+Reconciliations applied to `FINAL.md`:
+
+- **Gate-1 status correction (BLOCKED → STALE-GOOD).** Lane 1 reran
+  `cargo build -p bbnf --no-default-features --profile ax-iter` at HEAD
+  `d5179b8a` and observed PASS in 35.57 s
+  (`/tmp/reaudit-fail-no-default.log`). The build-half of hard gate 1 is
+  MET; the close-packet half (refreshed scan + regen-drift fix) routes
+  to AZ-III.W1 - O5 Reclose. BA-handoff point 2 is updated in lockstep
+  from BLOCKED to ROUTED.
+- **Hard-gate 6 mismatch reconciliation.** `PROGRESS-SNAPSHOT-2026-04-29.md:75`
+  records "within ±2% of AZ-I close"; this figure has no citable bench
+  artefact (`post-AZ-II.json` is the cutover.E placeholder per the
+  throughput recap in FINAL.md). The claim is downgraded in FINAL.md to
+  "no current bench evidence; refresh routed to AZ-III.W4". BA-handoff
+  point 5 follows.
+- **BA-handoff point 1 reconciliation.** `PROGRESS-SNAPSHOT-2026-04-29.md:83`
+  reads "MET — plus CSV / Math / BNF / CSS Pretty also on StructDirect";
+  FINAL.md's "MET for the named four; terminal surface still partial"
+  is the more honest reading because the codegen-emitted self-host
+  remains bridged by `bootstrap_parser`. Generated BBNF self-host
+  canonicalization routes to AZ-III.W2.
+
+The PROGRESS-SNAPSHOT is preserved unedited as the
+implemented-state record for cutover.A through cutover.N halt; the
+authoritative close evidence lives in FINAL.md.
+
+Final status: BLOCKED → ROUTED. AZ-II remains closed as continuation
+handoff to AZ-III; no AZ-II hard gate flips green by this
+reconciliation, but the close packet now matches HEAD truth and routes
+to AZ-III.W1/W2/W3/W4/W5 unambiguously.
+
 ## 2026-04-30 — continuation handoff to AZ-III
 
 AZ-II is closed as a continuation handoff, not as terminal success. The

@@ -68,12 +68,12 @@ commit-by-commit record is
 
 | # | Gate | Status | Evidence |
 |---|---|---|---|
-| 1 | `crates/tape/` deleted; `cargo build -p bbnf --no-default-features` green without it | CONTINUED IN AZ-III.W1 - O5 Reclose | `crates/tape` is absent. Later audit found the old no-default blocker stale-repaired, but the O5 close packet remains stale and regen drift remains active. AZ-III.W1 - O5 Reclose owns the refreshed evidence. |
+| 1 | `crates/tape/` deleted; `cargo build -p bbnf --no-default-features` green without it | STALE-GOOD (corrected at HEAD `d5179b8a` in 35.57 s); close packet refresh routed to AZ-III.W1 - O5 Reclose | `crates/tape` is absent. AZ-III REAUDIT 2026-04-30 lane 1 reran `cargo build -p bbnf --no-default-features --profile ax-iter` at master HEAD `d5179b8a` and observed PASS in 35.57 s (`/tmp/reaudit-fail-no-default.log`); SYNTHESIS A2 records this as stale-BLOCKED. The build-half of the gate is MET; the close-packet half (refreshed scan + regen-drift fix) is the open work. AZ-III.W1 - O5 Reclose owns the refreshed close packet. |
 | 2 | Stage A / Stage B byte-equal across BBNF fixture corpus | MET (cutover.B) | Permanent CI gate at `crates/core/tests/bbnf_bootstrap_reproducibility.rs` PASSES under cutover.H regen output; idempotent. |
 | 3 | IR audit pass reports 100% `->` coverage fleet-wide | NOT VERIFIED | Audit pass exists; full-fleet verification is part of cutover.O semantic/perf close after EBNF activation. |
 | 4 | `StructRegistry` non-empty for every Named rule | MET (cutover.A) | `populate_struct_registry` returns layouts for all 9 grammars; regression test in place. |
 | 5 | Parity harnesses recoded to struct-vs-external on all four grammars | MET (cutover.D) | `685bad2f` / `825e8a06`. |
-| 6 | 17-entry matrix at AU floor; BBNF self-parse within ±10% of AU baseline | PARTIAL | Bench archive captured at `docs/benchmarks/post-AZ-II.json` (cutover.E-era placeholder plus later notes). Full refresh belongs to cutover.O after builder transactions, EBNF projection, and tape deletion. BBNF self-parse still routes through `bootstrap_parser`, not generated self-host parse. |
+| 6 | 17-entry matrix at AU floor; BBNF self-parse within ±10% of AU baseline | PARTIAL — refresh routed to AZ-III.W4 - Benchmark, Profile, and Workspace Truth | Bench archive captured at `docs/benchmarks/post-AZ-II.json` (cutover.E-era placeholder plus later notes). Full refresh belongs to AZ-III.W4 after builder transactions, EBNF projection, and tape deletion. BBNF self-parse still routes through `bootstrap_parser`, not generated self-host parse. AZ-III REAUDIT 2026-04-30 reconciliation: `PROGRESS-SNAPSHOT-2026-04-29.md:75` records "within ±2% of AZ-I close" — that figure has no citable bench artefact (`post-AZ-II.json` is the cutover.E placeholder per the throughput recap below); per SYNTHESIS A2 the claim has no current bench evidence and the refresh is routed to AZ-III.W4. |
 | 7 | AZ-II interim manifest + `docs/benchmarks/post-AZ-II.json` exist on master | MET (interim form) | Convert this manifest at cutover.O.7 after terminal gates pass. |
 | 8 | Decay sweep | PARTIAL | cutover.A landed (`tape::dta` hoist + `tape::visitor` deletion + driver helper deletion); `crates/tape/` deletion deferred per Gate 1. |
 
@@ -81,11 +81,11 @@ commit-by-commit record is
 
 | # | Point | Status | Notes |
 |---|---|---|---|
-| 1 | All four grammars on direct-to-struct (JSON + CSS L4 + Sheets + BBNF) | MET for the named four; terminal surface still partial | JSON + CSS L4 + Sheets active at cutover.A (StructDirect resolver-arms flipped, regen output on disk). BBNF resolver-arm flipped at cutover.H Phase 1 (`3d799a29`); the regen output produces a working struct-direct parser via `bootstrap_parser` routing. CSV / Math / BNF / CSS Pretty also flipped at cutover.M, and EBNF flipped at cutover.O2. The codegen-emitted `BbnfBootstrap::parse` self-host is still bridged by cutover.G's hand-written parser. |
-| 2 | `crates/tape/` deleted | BLOCKED | Directory/package deletion is evidenced, but the no-default-features build and regen hard gates are not green. Per Hard gate 1 above. |
+| 1 | All four grammars on direct-to-struct (JSON + CSS L4 + Sheets + BBNF) | MET for the named four; terminal surface still partial | JSON + CSS L4 + Sheets active at cutover.A (StructDirect resolver-arms flipped, regen output on disk). BBNF resolver-arm flipped at cutover.H Phase 1 (`3d799a29`); the regen output produces a working struct-direct parser via `bootstrap_parser` routing. CSV / Math / BNF / CSS Pretty also flipped at cutover.M, and EBNF flipped at cutover.O2. The codegen-emitted `BbnfBootstrap::parse` self-host is still bridged by cutover.G's hand-written parser. AZ-III REAUDIT 2026-04-30 reconciliation: `PROGRESS-SNAPSHOT-2026-04-29.md:83` says "MET — plus CSV / Math / BNF / CSS Pretty also on StructDirect"; this row's "terminal surface still partial" qualifier is the more honest reading because the codegen-emitted self-host remains bridged (SYNTHESIS A2). Generated BBNF self-host canonicalization is routed to AZ-III.W2 - Semantic Parity and Bootstrap Canonicalization. |
+| 2 | `crates/tape/` deleted | ROUTED to AZ-III.W1 (no-default build stale-good at HEAD `d5179b8a`; regen drift still open) | Directory/package deletion is evidenced. AZ-III REAUDIT 2026-04-30 lane 1 confirms `cargo build -p bbnf --no-default-features --profile ax-iter` PASS in 35.57 s (correction logged under SYNTHESIS A2). Regen-drift across the 9-grammar fleet remains the remaining O5 close-packet item. Per Hard gate 1 above. |
 | 3 | `StructRegistry` closed fleet-wide | MET | Per Hard gate 4 above. |
 | 4 | Parity harnesses on struct comparisons | MET | Per Hard gate 5 above. |
-| 5 | 17-entry matrix at AU parity | DEFERRED | Per Hard gate 6 above. |
+| 5 | 17-entry matrix at AU parity | ROUTED to AZ-III.W4 | Per Hard gate 6 above. AZ-III REAUDIT 2026-04-30: the SNAPSHOT's "within ±2% of AZ-I close" framing is unsourced; AZ-III.W4 owns the refreshed close matrix. |
 | 6 | BBNF self-parse byte-reproducible | MET | Permanent CI gate at `crates/core/tests/bbnf_bootstrap_reproducibility.rs` PASSES; regen of the cutover.H-fixed bbnf.rs produces byte-identical output. |
 | 7 | Parent-pointer decision surface open for BA.W0 | DEFERRED | Surface accessible post-tape-deletion. |
 
@@ -173,18 +173,26 @@ cutover.O:
    unless consumed through a document API.
 6. **[O4 `Parsed<R>` / `TapeDirect` deletion](waves/cutover/O4.md)** — LANDED: production
    `Parsed<R>` and fallback `TapeDirect` semantics are gone.
-7. **[O5 `crates/tape` deletion](waves/cutover/O5.md)** — BLOCKED: standalone crate
-   deletion is evidenced, but no-default-features build and regen hard
-   gates are not green.
-8. **[O6 semantic/perf close](waves/cutover/O6.md)** — refresh JSON sonic-rs parity, CSS
-   lightningcss typed parity, and the 17-entry close matrix.
-9. **[O7 FINAL conversion](waves/cutover/O7.md)** — convert this manifest from interim form to
-   terminal close.
+7. **[O5 `crates/tape` deletion](waves/cutover/O5.md)** — ROUTED to AZ-III.W1 - O5 Reclose:
+   standalone crate deletion is evidenced; the no-default-features build
+   is stale-good at HEAD `d5179b8a` (35.57 s) per AZ-III REAUDIT
+   2026-04-30 lane 1; the refreshed close packet (regen drift + scan
+   artefact) is owned by AZ-III.W1.
+8. **[O6 semantic/perf close](waves/cutover/O6.md)** — ROUTED to AZ-III.W2 - Semantic
+   Parity and Bootstrap Canonicalization (parity owners) and AZ-III.W4 -
+   Benchmark, Profile, and Workspace Truth (17-entry matrix refresh).
+9. **[O7 FINAL conversion](waves/cutover/O7.md)** — ROUTED to AZ-III.W5 - Terminal Close
+   and Handoff: AZ-III's terminal close converts this interim manifest
+   when AZ-III hard gates land.
 
-Remaining estimate after O5 evidence: O5 blocker repair plus O6-O7
-remain sequential under fan-out. Open AZ-III only if a later gate proves
-new grammar-general inference/layout substrate is required; do not move
-tape deletion, stale benches, or parity gaps into AZ-III.
+AZ-III is the continuation tranche per the 2026-04-30 close ceremony:
+O5 reclose, semantic/perf truth, terminal conversion, plus the
+fact/type/CSP/projection authority substrate that the AZ-II hardening
+audit identified are owned by AZ-III.W1/W2/W4/W5 and the substrate
+authority axis is owned by AZ-III.W3 substrate authority. The earlier
+"do not move … into AZ-III" guidance was authored before the
+continuation handoff was declared and is superseded by the AZ-III
+plan.
 
 ## Trajectory snapshot pointer
 

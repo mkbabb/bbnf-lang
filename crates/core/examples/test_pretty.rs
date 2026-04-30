@@ -33,9 +33,6 @@ fn probe(label: &str, input: &str) {
                 rule
             );
         }
-        Err(ParseErr::Tape(e)) => {
-            eprintln!("{:20} tape error: {:?}", label, e);
-        }
     }
 }
 

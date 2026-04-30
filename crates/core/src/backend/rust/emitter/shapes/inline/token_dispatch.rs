@@ -96,7 +96,7 @@ pub(super) fn emit_token_dispatch_tape(
             let td_child = builder.enter_post_order_children();
             let __post_body: ::core::result::Result<
                 (),
-                crate::runtime::tape::DtaError,
+                crate::runtime::DtaError,
             > = (|| {
                 let token_lo = *p;
                 #token_emit

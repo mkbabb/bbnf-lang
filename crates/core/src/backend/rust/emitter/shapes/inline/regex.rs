@@ -32,10 +32,8 @@ pub(super) fn emit_regex_tape(
             let span_lo = *p as u32;
             let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
                 return ::core::result::Result::Err(
-                    crate::runtime::tape::DtaError::Syntax {
+                    crate::runtime::DtaError::Syntax {
                         offset: span_lo,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     },
                 );
             };

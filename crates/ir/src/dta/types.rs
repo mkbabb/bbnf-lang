@@ -16,14 +16,11 @@
 //!   byte per operator in the precedence table.
 //! - [`DtaPrecedenceEntry`] — one row per operator, consumed by the
 //!   emitted Pratt reducer at compile time.
-//! - [`DtaStateId`] — opaque state identifier; retained as the `NONE`
-//!   sentinel that the emitted ClassifyByte LUT and shape-emitter
-//!   error paths stamp into `DtaError::Syntax`'s `failing_state`
-//!   field.
+//! - [`DtaStateId`] — opaque state identifier for IR-side DTA
+//!   planning. It is no longer stamped into generated runtime
+//!   errors; O5 keeps dispatcher failures position-only.
 
-/// Opaque state identifier — retained for the `NONE` sentinel that
-/// emitted ClassifyByte LUT entries and shape-emitter error paths
-/// stamp into `DtaError::Syntax`'s `failing_state` field.
+/// Opaque state identifier for IR-side DTA planning.
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct DtaStateId(pub u16);

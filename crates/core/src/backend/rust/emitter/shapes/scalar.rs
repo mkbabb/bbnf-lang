@@ -86,15 +86,13 @@ pub fn emit_parse_scalar(
                     p: &mut usize,
                     _state: &mut #support_mod::ScanState,
                     builder: &mut #builder_ty<'p>,
-                ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+                ) -> ::core::result::Result<(), crate::runtime::DtaError> {
                     use crate::runtime::builder::StructBuilder as _;
                     let at = *p;
                     let end = at + #len;
                     if input.len() < end || input[at..end] != [#(#byte_lits),*] {
-                        return Err(crate::runtime::tape::DtaError::Syntax {
+                        return Err(crate::runtime::DtaError::Syntax {
                             offset: at as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                     *p = end;
@@ -130,7 +128,7 @@ pub fn emit_parse_scalar(
                     p: &mut usize,
                     state: &mut #support_mod::ScanState,
                     builder: &mut #builder_ty<'p>,
-                ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+                ) -> ::core::result::Result<(), crate::runtime::DtaError> {
                     #call
                 }
             }

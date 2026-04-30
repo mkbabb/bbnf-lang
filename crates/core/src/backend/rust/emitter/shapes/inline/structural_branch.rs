@@ -280,10 +280,8 @@ fn emit_branch_position_core_struct_direct(
                     let end = at + #len;
                     if input.len() < end || input[at..end] != [#(#byte_lits),*] {
                         return ::core::result::Result::Err(
-                            crate::runtime::tape::DtaError::Syntax {
+                            crate::runtime::DtaError::Syntax {
                                 offset: at as u32,
-                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             },
                         );
                     }
@@ -297,10 +295,8 @@ fn emit_branch_position_core_struct_direct(
             },
             None => quote! {
                 return ::core::result::Result::Err(
-                    crate::runtime::tape::DtaError::Syntax {
+                    crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     },
                 );
             },
@@ -313,10 +309,8 @@ fn emit_branch_position_core_struct_direct(
                     let __scan_start = *p;
                     let Some(match_len) = #regex_scan_ident(#pattern, input, *p) else {
                         return ::core::result::Result::Err(
-                            crate::runtime::tape::DtaError::Syntax {
+                            crate::runtime::DtaError::Syntax {
                                 offset: __scan_start as u32,
-                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             },
                         );
                     };
@@ -377,7 +371,7 @@ fn emit_branch_position_core_struct_direct(
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             #inner_emit
                             ::core::result::Result::Ok(())
@@ -400,10 +394,8 @@ fn emit_branch_position_core_struct_direct(
                     }
                     if __iter_count < #lo_lit {
                         return ::core::result::Result::Err(
-                            crate::runtime::tape::DtaError::Syntax {
+                            crate::runtime::DtaError::Syntax {
                                 offset: *p as u32,
-                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             },
                         );
                     }
@@ -426,7 +418,7 @@ fn emit_branch_position_core_struct_direct(
                             let __alt_builder_checkpoint = builder.checkpoint();
                             let __alt_result: ::core::result::Result<
                                 (),
-                                crate::runtime::tape::DtaError,
+                                crate::runtime::DtaError,
                             > = (|| {
                                 #body
                                 ::core::result::Result::Ok(())
@@ -449,10 +441,8 @@ fn emit_branch_position_core_struct_direct(
                 'try_branches: loop {
                     #(#arms)*
                     return ::core::result::Result::Err(
-                        crate::runtime::tape::DtaError::Syntax {
+                        crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         },
                     );
                 }
@@ -467,7 +457,7 @@ fn emit_branch_position_core_struct_direct(
                     let __neg_builder_checkpoint = builder.checkpoint();
                     let __neg_result: ::core::result::Result<
                         (),
-                        crate::runtime::tape::DtaError,
+                        crate::runtime::DtaError,
                     > = (|| {
                         #inner_emit
                         ::core::result::Result::Ok(())
@@ -476,10 +466,8 @@ fn emit_branch_position_core_struct_direct(
                     builder.rollback(__neg_builder_checkpoint);
                     if __neg_result.is_ok() {
                         return ::core::result::Result::Err(
-                            crate::runtime::tape::DtaError::Syntax {
+                            crate::runtime::DtaError::Syntax {
                                 offset: *p as u32,
-                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             },
                         );
                     }
@@ -497,7 +485,7 @@ fn emit_branch_position_core_struct_direct(
                     let __minus_builder_checkpoint = builder.checkpoint();
                     let __minus_excl: ::core::result::Result<
                         (),
-                        crate::runtime::tape::DtaError,
+                        crate::runtime::DtaError,
                     > = (|| {
                         #excluded_emit
                         ::core::result::Result::Ok(())
@@ -506,10 +494,8 @@ fn emit_branch_position_core_struct_direct(
                     builder.rollback(__minus_builder_checkpoint);
                     if __minus_excl.is_ok() {
                         return ::core::result::Result::Err(
-                            crate::runtime::tape::DtaError::Syntax {
+                            crate::runtime::DtaError::Syntax {
                                 offset: *p as u32,
-                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             },
                         );
                     }
@@ -519,10 +505,8 @@ fn emit_branch_position_core_struct_direct(
         }
         IrNode::TokenDispatch { .. } => quote! {
             return ::core::result::Result::Err(
-                crate::runtime::tape::DtaError::Syntax {
+                crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 },
             );
         },
@@ -546,7 +530,7 @@ fn wrap_dta_err_to_unit(rule_emit: TokenStream) -> TokenStream {
         {
             let __pos_attempt: ::core::result::Result<
                 (),
-                crate::runtime::tape::DtaError,
+                crate::runtime::DtaError,
             > = (|| {
                 #rule_emit
                 ::core::result::Result::Ok(())

@@ -234,7 +234,7 @@ pub(super) fn emit_parse_pratt_struct_direct(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let _ = #support_mod::skip_space(input, p, state);
 
             // ── Open the rule compound ──────────────────────────────
@@ -251,7 +251,7 @@ pub(super) fn emit_parse_pratt_struct_direct(
             // frame onto the builder's stack.
             let __body_result: ::core::result::Result<
                 (),
-                crate::runtime::tape::DtaError,
+                crate::runtime::DtaError,
             > = (|| {
             // ── Leftmost operand ────────────────────────────────────
             // Recurses through the operand's per-shape parse fn,

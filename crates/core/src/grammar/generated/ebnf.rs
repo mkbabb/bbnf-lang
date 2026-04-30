@@ -708,10 +708,10 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder;
         let first = __shape_support_EbnfParser::skip_space(input, p, state)
-            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -723,10 +723,8 @@ mod __ebnfparser_emit_impl {
         };
         let __dispatch_checkpoint = builder.checkpoint();
         let __handle = builder.begin_compound(&__layout);
-        let __dispatch_result: ::core::result::Result<
-            (),
-            crate::runtime::tape::DtaError,
-        > = (|| {
+        let __dispatch_result: ::core::result::Result<(), crate::runtime::DtaError> = (||
+        {
             'try_branches: loop {
                 {
                     let at = *p;
@@ -1248,10 +1246,8 @@ mod __ebnfparser_emit_impl {
                         break 'try_branches;
                     }
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             ::core::result::Result::Ok(())
@@ -1284,7 +1280,7 @@ mod __ebnfparser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -1296,10 +1292,8 @@ mod __ebnfparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             49u8 => {
@@ -1310,10 +1304,8 @@ mod __ebnfparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             50u8 => {
@@ -1324,10 +1316,8 @@ mod __ebnfparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             51u8 => {
@@ -1338,10 +1328,8 @@ mod __ebnfparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             52u8 => {
@@ -1352,10 +1340,8 @@ mod __ebnfparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             53u8 => {
@@ -1366,10 +1352,8 @@ mod __ebnfparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             54u8 => {
@@ -1380,10 +1364,8 @@ mod __ebnfparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             55u8 => {
@@ -1394,10 +1376,8 @@ mod __ebnfparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             56u8 => {
@@ -1408,10 +1388,8 @@ mod __ebnfparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             57u8 => {
@@ -1422,17 +1400,13 @@ mod __ebnfparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 })
             }
         }
@@ -1455,10 +1429,10 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder;
         let first = __shape_support_EbnfParser::skip_space(input, p, state)
-            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1470,10 +1444,8 @@ mod __ebnfparser_emit_impl {
         };
         let __dispatch_checkpoint = builder.checkpoint();
         let __handle = builder.begin_compound(&__layout);
-        let __dispatch_result: ::core::result::Result<
-            (),
-            crate::runtime::tape::DtaError,
-        > = (|| {
+        let __dispatch_result: ::core::result::Result<(), crate::runtime::DtaError> = (||
+        {
             'try_branches: loop {
                 {
                     let at = *p;
@@ -1725,10 +1697,8 @@ mod __ebnfparser_emit_impl {
                         break 'try_branches;
                     }
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             ::core::result::Result::Ok(())
@@ -1771,7 +1741,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __identifier_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1787,8 +1757,7 @@ mod __ebnfparser_emit_impl {
             builder,
             &__identifier_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
                     let _ = __shape_support_EbnfParser::skip_space(input, p, state);
@@ -1809,7 +1778,7 @@ mod __ebnfparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             'try_branches: loop {
                                 {
@@ -1817,15 +1786,13 @@ mod __ebnfparser_emit_impl {
                                     let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
-                                        crate::runtime::tape::DtaError,
+                                        crate::runtime::DtaError,
                                     > = (|| {
                                         let at = *p;
                                         let end = at + 1usize;
                                         if input.len() < end || input[at..end] != [95u8] {
-                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                                 offset: at as u32,
-                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                             });
                                         }
                                         *p = end;
@@ -1847,7 +1814,7 @@ mod __ebnfparser_emit_impl {
                                     let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
-                                        crate::runtime::tape::DtaError,
+                                        crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
                                             let __first = __shape_support_EbnfParser::skip_space(
@@ -1855,7 +1822,7 @@ mod __ebnfparser_emit_impl {
                                                     p,
                                                     state,
                                                 )
-                                                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                                                     offset: *p as u32,
                                                 })?;
                                             parse_keyword_EbnfParser_digit(
@@ -1884,7 +1851,7 @@ mod __ebnfparser_emit_impl {
                                     let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
-                                        crate::runtime::tape::DtaError,
+                                        crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
                                             let _ = __shape_support_EbnfParser::skip_space(
@@ -1912,10 +1879,8 @@ mod __ebnfparser_emit_impl {
                                         }
                                     }
                                 }
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: *p as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             Ok(())
@@ -1937,10 +1902,8 @@ mod __ebnfparser_emit_impl {
                         }
                     }
                     if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -1981,10 +1944,10 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder;
         let first = __shape_support_EbnfParser::skip_space(input, p, state)
-            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1996,10 +1959,8 @@ mod __ebnfparser_emit_impl {
         };
         let __dispatch_checkpoint = builder.checkpoint();
         let __handle = builder.begin_compound(&__layout);
-        let __dispatch_result: ::core::result::Result<
-            (),
-            crate::runtime::tape::DtaError,
-        > = (|| {
+        let __dispatch_result: ::core::result::Result<(), crate::runtime::DtaError> = (||
+        {
             'try_branches: loop {
                 {
                     let at = *p;
@@ -2030,7 +1991,7 @@ mod __ebnfparser_emit_impl {
                                 p,
                                 state,
                             )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                                 offset: *p as u32,
                             })?;
                         parse_keyword_EbnfParser_digit(input, p, __first, state, builder)
@@ -2081,10 +2042,8 @@ mod __ebnfparser_emit_impl {
                         }
                     }
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             ::core::result::Result::Ok(())
@@ -2117,7 +2076,7 @@ mod __ebnfparser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -2127,16 +2086,14 @@ mod __ebnfparser_emit_impl {
                     let __seq_builder_checkpoint = builder.checkpoint();
                     let __seq_result: ::core::result::Result<
                         (),
-                        crate::runtime::tape::DtaError,
+                        crate::runtime::DtaError,
                     > = (|| {
                         {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [34u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -2146,16 +2103,14 @@ mod __ebnfparser_emit_impl {
                             let __minus_builder_checkpoint = builder.checkpoint();
                             let __minus_excl: ::core::result::Result<
                                 (),
-                                crate::runtime::tape::DtaError,
+                                crate::runtime::DtaError,
                             > = (|| {
                                 {
                                     let at = *p;
                                     let end = at + 1usize;
                                     if input.len() < end || input[at..end] != [34u8] {
-                                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                             offset: at as u32,
-                                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                         });
                                     }
                                     *p = end;
@@ -2165,10 +2120,8 @@ mod __ebnfparser_emit_impl {
                             *p = __minus_save_p;
                             builder.rollback(__minus_builder_checkpoint);
                             if __minus_excl.is_ok() {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: *p as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             let _ = ({
@@ -2190,23 +2143,21 @@ mod __ebnfparser_emit_impl {
                                 let __iter_builder_checkpoint = builder.checkpoint();
                                 let __iter_result: ::core::result::Result<
                                     (),
-                                    crate::runtime::tape::DtaError,
+                                    crate::runtime::DtaError,
                                 > = (|| {
                                     {
                                         let __minus_save_p = *p;
                                         let __minus_builder_checkpoint = builder.checkpoint();
                                         let __minus_excl: ::core::result::Result<
                                             (),
-                                            crate::runtime::tape::DtaError,
+                                            crate::runtime::DtaError,
                                         > = (|| {
                                             {
                                                 let at = *p;
                                                 let end = at + 1usize;
                                                 if input.len() < end || input[at..end] != [34u8] {
-                                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                                         offset: at as u32,
-                                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                                     });
                                                 }
                                                 *p = end;
@@ -2216,10 +2167,8 @@ mod __ebnfparser_emit_impl {
                                         *p = __minus_save_p;
                                         builder.rollback(__minus_builder_checkpoint);
                                         if __minus_excl.is_ok() {
-                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                                 offset: *p as u32,
-                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                             });
                                         }
                                         let _ = ({
@@ -2250,10 +2199,8 @@ mod __ebnfparser_emit_impl {
                                 }
                             }
                             if __iter_count < 0u32 {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: *p as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                         }
@@ -2261,10 +2208,8 @@ mod __ebnfparser_emit_impl {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [34u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -2290,10 +2235,8 @@ mod __ebnfparser_emit_impl {
                         }
                     }
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             39u8 => {
@@ -2302,16 +2245,14 @@ mod __ebnfparser_emit_impl {
                     let __seq_builder_checkpoint = builder.checkpoint();
                     let __seq_result: ::core::result::Result<
                         (),
-                        crate::runtime::tape::DtaError,
+                        crate::runtime::DtaError,
                     > = (|| {
                         {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [39u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -2321,16 +2262,14 @@ mod __ebnfparser_emit_impl {
                             let __minus_builder_checkpoint = builder.checkpoint();
                             let __minus_excl: ::core::result::Result<
                                 (),
-                                crate::runtime::tape::DtaError,
+                                crate::runtime::DtaError,
                             > = (|| {
                                 {
                                     let at = *p;
                                     let end = at + 1usize;
                                     if input.len() < end || input[at..end] != [39u8] {
-                                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                             offset: at as u32,
-                                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                         });
                                     }
                                     *p = end;
@@ -2340,10 +2279,8 @@ mod __ebnfparser_emit_impl {
                             *p = __minus_save_p;
                             builder.rollback(__minus_builder_checkpoint);
                             if __minus_excl.is_ok() {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: *p as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             let _ = ({
@@ -2365,23 +2302,21 @@ mod __ebnfparser_emit_impl {
                                 let __iter_builder_checkpoint = builder.checkpoint();
                                 let __iter_result: ::core::result::Result<
                                     (),
-                                    crate::runtime::tape::DtaError,
+                                    crate::runtime::DtaError,
                                 > = (|| {
                                     {
                                         let __minus_save_p = *p;
                                         let __minus_builder_checkpoint = builder.checkpoint();
                                         let __minus_excl: ::core::result::Result<
                                             (),
-                                            crate::runtime::tape::DtaError,
+                                            crate::runtime::DtaError,
                                         > = (|| {
                                             {
                                                 let at = *p;
                                                 let end = at + 1usize;
                                                 if input.len() < end || input[at..end] != [39u8] {
-                                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                                         offset: at as u32,
-                                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                                     });
                                                 }
                                                 *p = end;
@@ -2391,10 +2326,8 @@ mod __ebnfparser_emit_impl {
                                         *p = __minus_save_p;
                                         builder.rollback(__minus_builder_checkpoint);
                                         if __minus_excl.is_ok() {
-                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                                 offset: *p as u32,
-                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                             });
                                         }
                                         let _ = ({
@@ -2425,10 +2358,8 @@ mod __ebnfparser_emit_impl {
                                 }
                             }
                             if __iter_count < 0u32 {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: *p as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                         }
@@ -2436,10 +2367,8 @@ mod __ebnfparser_emit_impl {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [39u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -2465,17 +2394,13 @@ mod __ebnfparser_emit_impl {
                         }
                     }
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 })
             }
         }
@@ -2507,7 +2432,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __concatenation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2523,8 +2448,7 @@ mod __ebnfparser_emit_impl {
             builder,
             &__concatenation_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
                     let mut __iter_count: u32 = 0;
@@ -2539,7 +2463,7 @@ mod __ebnfparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             {
                                 let __scan_start = *p;
@@ -2548,10 +2472,8 @@ mod __ebnfparser_emit_impl {
                                     input,
                                     *p,
                                 ) else {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: __scan_start as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
@@ -2571,10 +2493,8 @@ mod __ebnfparser_emit_impl {
                                     input,
                                     *p,
                                 ) else {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: __scan_start as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
@@ -2592,15 +2512,13 @@ mod __ebnfparser_emit_impl {
                                     let __iter_builder_checkpoint = builder.checkpoint();
                                     let __iter_result: ::core::result::Result<
                                         (),
-                                        crate::runtime::tape::DtaError,
+                                        crate::runtime::DtaError,
                                     > = (|| {
                                         let at = *p;
                                         let end = at + 1usize;
                                         if input.len() < end || input[at..end] != [44u8] {
-                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                                 offset: at as u32,
-                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                             });
                                         }
                                         *p = end;
@@ -2623,10 +2541,8 @@ mod __ebnfparser_emit_impl {
                                     }
                                 }
                                 if __iter_count < 0u32 {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: *p as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 }
                             }
@@ -2649,10 +2565,8 @@ mod __ebnfparser_emit_impl {
                         }
                     }
                     if __iter_count < 1u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -2702,7 +2616,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __alternation_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2718,8 +2632,7 @@ mod __ebnfparser_emit_impl {
             builder,
             &__alternation_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
                     let mut __iter_count: u32 = 0;
@@ -2734,7 +2647,7 @@ mod __ebnfparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             {
                                 let __scan_start = *p;
@@ -2743,10 +2656,8 @@ mod __ebnfparser_emit_impl {
                                     input,
                                     *p,
                                 ) else {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: __scan_start as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
@@ -2766,10 +2677,8 @@ mod __ebnfparser_emit_impl {
                                     input,
                                     *p,
                                 ) else {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: __scan_start as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
@@ -2787,15 +2696,13 @@ mod __ebnfparser_emit_impl {
                                     let __iter_builder_checkpoint = builder.checkpoint();
                                     let __iter_result: ::core::result::Result<
                                         (),
-                                        crate::runtime::tape::DtaError,
+                                        crate::runtime::DtaError,
                                     > = (|| {
                                         let at = *p;
                                         let end = at + 1usize;
                                         if input.len() < end || input[at..end] != [124u8] {
-                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                                 offset: at as u32,
-                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                             });
                                         }
                                         *p = end;
@@ -2818,10 +2725,8 @@ mod __ebnfparser_emit_impl {
                                     }
                                 }
                                 if __iter_count < 0u32 {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: *p as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 }
                             }
@@ -2844,10 +2749,8 @@ mod __ebnfparser_emit_impl {
                         }
                     }
                     if __iter_count < 1u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -2883,7 +2786,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         { parse_flat_EbnfParser_alternation(input, p, state, builder) }
     }
     /// AZ-I.W2.RB — per-grammar AltDispatch-shape parse function,
@@ -2904,10 +2807,10 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder;
         let first = __shape_support_EbnfParser::skip_space(input, p, state)
-            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2919,26 +2822,20 @@ mod __ebnfparser_emit_impl {
         };
         let __dispatch_checkpoint = builder.checkpoint();
         let __handle = builder.begin_compound(&__layout);
-        let __dispatch_result: ::core::result::Result<
-            (),
-            crate::runtime::tape::DtaError,
-        > = (|| {
+        let __dispatch_result: ::core::result::Result<(), crate::runtime::DtaError> = (||
+        {
             'try_branches: loop {
                 {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    let attempt: ::core::result::Result<
-                        (),
-                        crate::runtime::tape::DtaError,
-                    > = (|| {
+                    let attempt: ::core::result::Result<(), crate::runtime::DtaError> = (||
+                    {
                         {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [40u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -2950,10 +2847,8 @@ mod __ebnfparser_emit_impl {
                                 input,
                                 *p,
                             ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: __scan_start as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             };
                             *p += match_len as usize;
@@ -2968,10 +2863,8 @@ mod __ebnfparser_emit_impl {
                                 input,
                                 *p,
                             ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: __scan_start as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             };
                             *p += match_len as usize;
@@ -2980,10 +2873,8 @@ mod __ebnfparser_emit_impl {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [41u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3005,18 +2896,14 @@ mod __ebnfparser_emit_impl {
                 {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    let attempt: ::core::result::Result<
-                        (),
-                        crate::runtime::tape::DtaError,
-                    > = (|| {
+                    let attempt: ::core::result::Result<(), crate::runtime::DtaError> = (||
+                    {
                         {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [91u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3028,10 +2915,8 @@ mod __ebnfparser_emit_impl {
                                 input,
                                 *p,
                             ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: __scan_start as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             };
                             *p += match_len as usize;
@@ -3046,10 +2931,8 @@ mod __ebnfparser_emit_impl {
                                 input,
                                 *p,
                             ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: __scan_start as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             };
                             *p += match_len as usize;
@@ -3058,10 +2941,8 @@ mod __ebnfparser_emit_impl {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [93u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3083,18 +2964,14 @@ mod __ebnfparser_emit_impl {
                 {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
-                    let attempt: ::core::result::Result<
-                        (),
-                        crate::runtime::tape::DtaError,
-                    > = (|| {
+                    let attempt: ::core::result::Result<(), crate::runtime::DtaError> = (||
+                    {
                         {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [123u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3106,10 +2983,8 @@ mod __ebnfparser_emit_impl {
                                 input,
                                 *p,
                             ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: __scan_start as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             };
                             *p += match_len as usize;
@@ -3124,10 +2999,8 @@ mod __ebnfparser_emit_impl {
                                 input,
                                 *p,
                             ) else {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: __scan_start as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             };
                             *p += match_len as usize;
@@ -3136,10 +3009,8 @@ mod __ebnfparser_emit_impl {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [125u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3167,7 +3038,7 @@ mod __ebnfparser_emit_impl {
                                 p,
                                 state,
                             )
-                            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                                 offset: *p as u32,
                             })?;
                         parse_keyword_EbnfParser_terminal(
@@ -3207,10 +3078,8 @@ mod __ebnfparser_emit_impl {
                         }
                     }
                 }
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             ::core::result::Result::Ok(())
@@ -3253,7 +3122,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3266,8 +3135,7 @@ mod __ebnfparser_emit_impl {
         let __factor_handle = <crate::runtime::ebnf::EbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__factor_layout);
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
                     let _ = __shape_support_EbnfParser::skip_space(input, p, state);
@@ -3282,10 +3150,8 @@ mod __ebnfparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -3298,15 +3164,13 @@ mod __ebnfparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [63u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3328,15 +3192,13 @@ mod __ebnfparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [42u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3358,15 +3220,13 @@ mod __ebnfparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [43u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3388,15 +3248,13 @@ mod __ebnfparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [45u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3407,10 +3265,8 @@ mod __ebnfparser_emit_impl {
                                     input,
                                     *p,
                                 ) else {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: __scan_start as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
@@ -3441,7 +3297,7 @@ mod __ebnfparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| { Ok(()) })();
                         match __alt_result {
                             Ok(()) => {
@@ -3454,10 +3310,8 @@ mod __ebnfparser_emit_impl {
                             }
                         }
                     }
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
             }
@@ -3506,7 +3360,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __rule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3519,8 +3373,7 @@ mod __ebnfparser_emit_impl {
         let __rule_handle = <crate::runtime::ebnf::EbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__rule_layout);
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
                     let _ = __shape_support_EbnfParser::skip_space(input, p, state);
@@ -3535,10 +3388,8 @@ mod __ebnfparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -3548,10 +3399,8 @@ mod __ebnfparser_emit_impl {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [61u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -3564,10 +3413,8 @@ mod __ebnfparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -3584,10 +3431,8 @@ mod __ebnfparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -3600,15 +3445,13 @@ mod __ebnfparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [59u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3630,15 +3473,13 @@ mod __ebnfparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [46u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3655,10 +3496,8 @@ mod __ebnfparser_emit_impl {
                             }
                         }
                     }
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
             }
@@ -3695,7 +3534,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 12u32 as ::bbnf_ir::RuleId,
@@ -3711,10 +3550,8 @@ mod __ebnfparser_emit_impl {
                 break;
             }
             let __iter_builder_checkpoint = builder.checkpoint();
-            let __iter_result: ::core::result::Result<
-                (),
-                crate::runtime::tape::DtaError,
-            > = (|| {
+            let __iter_result: ::core::result::Result<(), crate::runtime::DtaError> = (||
+            {
                 let _ = __shape_support_EbnfParser::skip_space(input, p, state);
                 ({
                     let _ = __shape_support_EbnfParser::skip_space(input, p, state);
@@ -6191,7 +6028,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         parse_EbnfParser_grammar__value(input, p, state, builder)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
@@ -6205,7 +6042,7 @@ mod __ebnfparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_EbnfParser::ScanState,
         builder: &mut crate::runtime::ebnf::EbnfStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_EbnfParser::skip_space(input, p, state);
         parse_array_EbnfParser_grammar(input, p, state, builder)
     }
@@ -8626,19 +8463,19 @@ mod __ebnfparser_emit_impl {
                         &mut builder,
                     )
                     .map_err(|e| match e {
-                        crate::runtime::tape::DtaError::Syntax { offset, .. } => {
+                        crate::runtime::DtaError::Syntax { offset } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        crate::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                        crate::runtime::DtaError::UnexpectedEnd { offset } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        crate::runtime::tape::DtaError::InvalidState { .. } => {
+                        crate::runtime::DtaError::InvalidState { .. } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset: 0,
                                 rule: None,

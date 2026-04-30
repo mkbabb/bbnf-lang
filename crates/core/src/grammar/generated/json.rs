@@ -943,15 +943,13 @@ mod __jsonparser_emit_impl {
         _first_byte: u8,
         _state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'_>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let at = *p;
         let end = at + 4usize;
         if input.len() < end || input[at..end] != [110u8, 117u8, 108u8, 108u8] {
-            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                 offset: at as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         *p = end;
@@ -975,7 +973,7 @@ mod __jsonparser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -989,10 +987,8 @@ mod __jsonparser_emit_impl {
                     builder.push_leaf_with_bool(false);
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             116u8 => {
@@ -1005,17 +1001,13 @@ mod __jsonparser_emit_impl {
                     builder.push_leaf_with_bool(true);
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 })
             }
         }
@@ -1036,7 +1028,7 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         first_byte: u8,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         const POW10_U64: [u64; 17] = [
             1, 10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000,
@@ -1064,10 +1056,8 @@ mod __jsonparser_emit_impl {
             }
         }
         if *p == int_start {
-            return Err(crate::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::DtaError::Syntax {
                 offset: start as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         let int_digit_count = *p - int_start;
@@ -1089,10 +1079,8 @@ mod __jsonparser_emit_impl {
             }
             fractional_digit_count = (*p - frac_start) as i64;
             if fractional_digit_count == 0 {
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::DtaError::Syntax {
                     offset: start as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             if int_digit_count as i64 + fractional_digit_count > 19 {
@@ -1128,10 +1116,8 @@ mod __jsonparser_emit_impl {
                 }
             }
             if *p == exp_start {
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::DtaError::Syntax {
                     offset: start as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             exponent += if exp_negative { -exp_val } else { exp_val };
@@ -1170,21 +1156,19 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         _state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let open = *p;
         if input.get(open).copied() != Some(b'"') {
-            return Err(crate::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::DtaError::Syntax {
                 offset: open as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         let body_start = open + 1;
         let tail = match input.get(body_start..) {
             Some(t) => t,
             None => {
-                return Err(crate::runtime::tape::DtaError::UnexpectedEnd {
+                return Err(crate::runtime::DtaError::UnexpectedEnd {
                     offset: open as u32,
                 });
             }
@@ -1242,17 +1226,15 @@ mod __jsonparser_emit_impl {
                         Ok(())
                     }
                     None => {
-                        Err(crate::runtime::tape::DtaError::Syntax {
+                        Err(crate::runtime::DtaError::Syntax {
                             offset: open as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         })
                     }
                 }
             }
             Some(_) => unreachable!(),
             None => {
-                Err(crate::runtime::tape::DtaError::UnexpectedEnd {
+                Err(crate::runtime::DtaError::UnexpectedEnd {
                     offset: open as u32,
                 })
             }
@@ -1272,13 +1254,11 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder;
         if input.get(*p).copied() != Some(b'{') {
-            return Err(crate::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1298,19 +1278,15 @@ mod __jsonparser_emit_impl {
         }
         loop {
             if input.get(*p).copied() != Some(b'"') {
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             parse_string_JsonParser_string(input, p, state, builder)?;
             let _ = __shape_support_JsonParser::skip_space(input, p, state);
             if input.get(*p).copied() != Some(b':') {
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p += 1;
@@ -1331,10 +1307,8 @@ mod __jsonparser_emit_impl {
                     return Ok(());
                 }
                 _ => {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return Err(crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
             }
@@ -1349,13 +1323,11 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder;
         if input.get(*p).copied() != Some(b'[') {
-            return Err(crate::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1367,8 +1339,7 @@ mod __jsonparser_emit_impl {
         };
         let __array_checkpoint = builder.checkpoint();
         let __handle = builder.begin_compound(&__layout);
-        let __array_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __array_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             *p += 1;
             let _ = __shape_support_JsonParser::skip_space(input, p, state);
             if input.get(*p).copied() == Some(b']') {
@@ -1391,10 +1362,8 @@ mod __jsonparser_emit_impl {
                         return Ok(());
                     }
                     _ => {
-                        return Err(crate::runtime::tape::DtaError::Syntax {
+                        return Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -1438,7 +1407,7 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __pair_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1451,8 +1420,7 @@ mod __jsonparser_emit_impl {
         let __pair_handle = <crate::runtime::json::JsonStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__pair_layout);
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
                     let _ = __shape_support_JsonParser::skip_space(input, p, state);
@@ -1464,10 +1432,8 @@ mod __jsonparser_emit_impl {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [58u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -1517,10 +1483,10 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_JsonParser::skip_space(input, p, state)
-            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
         'try_branches: loop {
@@ -1783,10 +1749,8 @@ mod __jsonparser_emit_impl {
                 }
                 _ => {}
             }
-            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         ::core::result::Result::Ok(())
@@ -2389,7 +2353,7 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         parse_JsonParser_value__value(input, p, state, builder)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
@@ -2403,9 +2367,9 @@ mod __jsonparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
         builder: &mut crate::runtime::json::JsonStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let first = __shape_support_JsonParser::skip_space(input, p, state)
-            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
         let __result = match first {
@@ -2418,10 +2382,8 @@ mod __jsonparser_emit_impl {
             b't' | b'f' => parse_keyword_JsonParser_bool(input, p, first, state, builder),
             b'n' => parse_keyword_JsonParser_null(input, p, first, state, builder),
             c => {
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
         };
@@ -3091,19 +3053,19 @@ mod __jsonparser_emit_impl {
                 let mut pos: usize = 0;
                 parse_JsonParser_value(__input_bytes, &mut pos, &mut state, &mut builder)
                     .map_err(|e| match e {
-                        crate::runtime::tape::DtaError::Syntax { offset, .. } => {
+                        crate::runtime::DtaError::Syntax { offset } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        crate::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                        crate::runtime::DtaError::UnexpectedEnd { offset } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        crate::runtime::tape::DtaError::InvalidState { .. } => {
+                        crate::runtime::DtaError::InvalidState { .. } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset: 0,
                                 rule: None,

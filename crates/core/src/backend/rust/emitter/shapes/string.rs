@@ -69,21 +69,19 @@ pub fn emit_parse_string(
             p: &mut usize,
             _state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty<'p>,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             use crate::runtime::builder::StructBuilder as _;
             let open = *p;
             if input.get(open).copied() != Some(b'"') {
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::DtaError::Syntax {
                     offset: open as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             let body_start = open + 1;
             let tail = match input.get(body_start..) {
                 Some(t) => t,
                 None => {
-                    return Err(crate::runtime::tape::DtaError::UnexpectedEnd {
+                    return Err(crate::runtime::DtaError::UnexpectedEnd {
                         offset: open as u32,
                     });
                 }
@@ -149,15 +147,13 @@ pub fn emit_parse_string(
                             builder.push_leaf_with_str(body);
                             Ok(())
                         }
-                        None => Err(crate::runtime::tape::DtaError::Syntax {
+                        None => Err(crate::runtime::DtaError::Syntax {
                             offset: open as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         }),
                     }
                 }
                 Some(_) => unreachable!(),
-                None => Err(crate::runtime::tape::DtaError::UnexpectedEnd {
+                None => Err(crate::runtime::DtaError::UnexpectedEnd {
                     offset: open as u32,
                 }),
             }

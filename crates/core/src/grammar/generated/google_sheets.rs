@@ -2695,17 +2695,15 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_GoogleSheetsParser(
             "(\\d+\\.?\\d*|\\.\\d+)([eE][+-]?\\d+)?",
             input,
             *p,
         ) else {
-            return Err(crate::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::DtaError::Syntax {
                 offset: span_lo,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         };
         *p += match_len as usize;
@@ -2736,21 +2734,19 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         _state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let open = *p;
         if input.get(open).copied() != Some(b'"') {
-            return Err(crate::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::DtaError::Syntax {
                 offset: open as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         let body_start = open + 1;
         let tail = match input.get(body_start..) {
             Some(t) => t,
             None => {
-                return Err(crate::runtime::tape::DtaError::UnexpectedEnd {
+                return Err(crate::runtime::DtaError::UnexpectedEnd {
                     offset: open as u32,
                 });
             }
@@ -2808,17 +2804,15 @@ mod __googlesheetsparser_emit_impl {
                         Ok(())
                     }
                     None => {
-                        Err(crate::runtime::tape::DtaError::Syntax {
+                        Err(crate::runtime::DtaError::Syntax {
                             offset: open as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         })
                     }
                 }
             }
             Some(_) => unreachable!(),
             None => {
-                Err(crate::runtime::tape::DtaError::UnexpectedEnd {
+                Err(crate::runtime::DtaError::UnexpectedEnd {
                     offset: open as u32,
                 })
             }
@@ -2844,7 +2838,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2858,20 +2852,17 @@ mod __googlesheetsparser_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
-                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
             'try_branches: loop {
                 match first {
                     _ => {}
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             ::core::result::Result::Ok(())
@@ -2930,7 +2921,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __error_literal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2946,16 +2937,13 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__error_literal_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [35u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -2967,16 +2955,14 @@ mod __googlesheetsparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let at = *p;
                             let end = at + 3usize;
                             if input.len() < end || input[at..end] != [78u8, 47u8, 65u8]
                             {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -2998,15 +2984,13 @@ mod __googlesheetsparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [78u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3016,17 +3000,15 @@ mod __googlesheetsparser_emit_impl {
                                     let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
-                                        crate::runtime::tape::DtaError,
+                                        crate::runtime::DtaError,
                                     > = (|| {
                                         let at = *p;
                                         let end = at + 4usize;
                                         if input.len() < end
                                             || input[at..end] != [85u8, 76u8, 76u8, 33u8]
                                         {
-                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                                 offset: at as u32,
-                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                             });
                                         }
                                         *p = end;
@@ -3048,16 +3030,14 @@ mod __googlesheetsparser_emit_impl {
                                     let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
-                                        crate::runtime::tape::DtaError,
+                                        crate::runtime::DtaError,
                                     > = (|| {
                                         let at = *p;
                                         let end = at + 3usize;
                                         if input.len() < end || input[at..end] != [85u8, 77u8, 33u8]
                                         {
-                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                                 offset: at as u32,
-                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                             });
                                         }
                                         *p = end;
@@ -3079,17 +3059,15 @@ mod __googlesheetsparser_emit_impl {
                                     let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
-                                        crate::runtime::tape::DtaError,
+                                        crate::runtime::DtaError,
                                     > = (|| {
                                         let at = *p;
                                         let end = at + 4usize;
                                         if input.len() < end
                                             || input[at..end] != [65u8, 77u8, 69u8, 63u8]
                                         {
-                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                                 offset: at as u32,
-                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                             });
                                         }
                                         *p = end;
@@ -3106,10 +3084,8 @@ mod __googlesheetsparser_emit_impl {
                                         }
                                     }
                                 }
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: *p as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             Ok(())
@@ -3130,17 +3106,15 @@ mod __googlesheetsparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let at = *p;
                             let end = at + 6usize;
                             if input.len() < end
                                 || input[at..end] != [86u8, 65u8, 76u8, 85u8, 69u8, 33u8]
                             {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3162,17 +3136,15 @@ mod __googlesheetsparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let at = *p;
                             let end = at + 6usize;
                             if input.len() < end
                                 || input[at..end] != [68u8, 73u8, 86u8, 47u8, 48u8, 33u8]
                             {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3194,17 +3166,15 @@ mod __googlesheetsparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let at = *p;
                             let end = at + 6usize;
                             if input.len() < end
                                 || input[at..end] != [69u8, 82u8, 82u8, 79u8, 82u8, 33u8]
                             {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3226,17 +3196,15 @@ mod __googlesheetsparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let at = *p;
                             let end = at + 6usize;
                             if input.len() < end
                                 || input[at..end] != [83u8, 80u8, 73u8, 76u8, 76u8, 33u8]
                             {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3258,17 +3226,15 @@ mod __googlesheetsparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let at = *p;
                             let end = at + 4usize;
                             if input.len() < end
                                 || input[at..end] != [82u8, 69u8, 70u8, 33u8]
                             {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3285,10 +3251,8 @@ mod __googlesheetsparser_emit_impl {
                             }
                         }
                     }
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
             }
@@ -3330,7 +3294,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3344,20 +3308,17 @@ mod __googlesheetsparser_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
-                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
             'try_branches: loop {
                 match first {
                     _ => {}
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             ::core::result::Result::Ok(())
@@ -3405,17 +3366,15 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_GoogleSheetsParser(
             "\\$?[A-Za-z]{1,3}\\$?\\d+",
             input,
             *p,
         ) else {
-            return Err(crate::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::DtaError::Syntax {
                 offset: span_lo,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         };
         *p += match_len as usize;
@@ -3445,17 +3404,15 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_GoogleSheetsParser(
             "[A-Za-z_][A-Za-z0-9_.]*",
             input,
             *p,
         ) else {
-            return Err(crate::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::DtaError::Syntax {
                 offset: span_lo,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         };
         *p += match_len as usize;
@@ -3486,7 +3443,7 @@ mod __googlesheetsparser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -3496,16 +3453,14 @@ mod __googlesheetsparser_emit_impl {
                     let __seq_builder_checkpoint = builder.checkpoint();
                     let __seq_result: ::core::result::Result<
                         (),
-                        crate::runtime::tape::DtaError,
+                        crate::runtime::DtaError,
                     > = (|| {
                         {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [60u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -3516,16 +3471,14 @@ mod __googlesheetsparser_emit_impl {
                                 let __alt_builder_checkpoint = builder.checkpoint();
                                 let __alt_result: ::core::result::Result<
                                     (),
-                                    crate::runtime::tape::DtaError,
+                                    crate::runtime::DtaError,
                                 > = (|| {
                                     {
                                         let at = *p;
                                         let end = at + 1usize;
                                         if input.len() < end || input[at..end] != [62u8] {
-                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                                 offset: at as u32,
-                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                             });
                                         }
                                         *p = end;
@@ -3548,16 +3501,14 @@ mod __googlesheetsparser_emit_impl {
                                 let __alt_builder_checkpoint = builder.checkpoint();
                                 let __alt_result: ::core::result::Result<
                                     (),
-                                    crate::runtime::tape::DtaError,
+                                    crate::runtime::DtaError,
                                 > = (|| {
                                     {
                                         let at = *p;
                                         let end = at + 1usize;
                                         if input.len() < end || input[at..end] != [61u8] {
-                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                                 offset: at as u32,
-                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                             });
                                         }
                                         *p = end;
@@ -3575,10 +3526,8 @@ mod __googlesheetsparser_emit_impl {
                                     }
                                 }
                             }
-                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                 offset: *p as u32,
-                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             });
                         }
                         ::core::result::Result::Ok(())
@@ -3609,10 +3558,8 @@ mod __googlesheetsparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             61u8 => {
@@ -3623,10 +3570,8 @@ mod __googlesheetsparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             62u8 => {
@@ -3644,17 +3589,13 @@ mod __googlesheetsparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 })
             }
         }
@@ -3676,7 +3617,7 @@ mod __googlesheetsparser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -3688,10 +3629,8 @@ mod __googlesheetsparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             45u8 => {
@@ -3702,17 +3641,13 @@ mod __googlesheetsparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 })
             }
         }
@@ -3734,7 +3669,7 @@ mod __googlesheetsparser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -3746,10 +3681,8 @@ mod __googlesheetsparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             47u8 => {
@@ -3760,17 +3693,13 @@ mod __googlesheetsparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 })
             }
         }
@@ -3792,7 +3721,7 @@ mod __googlesheetsparser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -3804,10 +3733,8 @@ mod __googlesheetsparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             45u8 => {
@@ -3818,17 +3745,13 @@ mod __googlesheetsparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 })
             }
         }
@@ -3860,7 +3783,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __cell_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3873,8 +3796,7 @@ mod __googlesheetsparser_emit_impl {
         let __cell_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__cell_layout);
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
                     let mut __iter_count: u32 = 0;
@@ -3889,7 +3811,7 @@ mod __googlesheetsparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
                                 let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -3923,10 +3845,8 @@ mod __googlesheetsparser_emit_impl {
                         }
                     }
                     if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -3986,7 +3906,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __func_open_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4002,8 +3922,7 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__func_open_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
                     let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -4018,10 +3937,8 @@ mod __googlesheetsparser_emit_impl {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [40u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -4071,7 +3988,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __range_ref_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4087,8 +4004,7 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__range_ref_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
                     let mut __iter_count: u32 = 0;
@@ -4103,7 +4019,7 @@ mod __googlesheetsparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
                                 let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -4137,10 +4053,8 @@ mod __googlesheetsparser_emit_impl {
                         }
                     }
                     if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -4152,7 +4066,7 @@ mod __googlesheetsparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
                                 let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -4185,7 +4099,7 @@ mod __googlesheetsparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             {
                                 let __scan_start = *p;
@@ -4194,10 +4108,8 @@ mod __googlesheetsparser_emit_impl {
                                     input,
                                     *p,
                                 ) else {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: __scan_start as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
@@ -4220,7 +4132,7 @@ mod __googlesheetsparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             {
                                 let __scan_start = *p;
@@ -4229,10 +4141,8 @@ mod __googlesheetsparser_emit_impl {
                                     input,
                                     *p,
                                 ) else {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: __scan_start as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
@@ -4250,10 +4160,8 @@ mod __googlesheetsparser_emit_impl {
                             }
                         }
                     }
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
             }
@@ -4261,10 +4169,8 @@ mod __googlesheetsparser_emit_impl {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [58u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -4276,7 +4182,7 @@ mod __googlesheetsparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
                                 let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -4309,7 +4215,7 @@ mod __googlesheetsparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             {
                                 let __scan_start = *p;
@@ -4318,10 +4224,8 @@ mod __googlesheetsparser_emit_impl {
                                     input,
                                     *p,
                                 ) else {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: __scan_start as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
@@ -4344,7 +4248,7 @@ mod __googlesheetsparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             {
                                 let __scan_start = *p;
@@ -4353,10 +4257,8 @@ mod __googlesheetsparser_emit_impl {
                                     input,
                                     *p,
                                 ) else {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: __scan_start as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
@@ -4374,10 +4276,8 @@ mod __googlesheetsparser_emit_impl {
                             }
                         }
                     }
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
             }
@@ -4419,7 +4319,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __wrap_checkpoint = builder.checkpoint();
         let __wrap_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4433,10 +4333,9 @@ mod __googlesheetsparser_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
-                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
             'try_branches: loop {
@@ -4478,10 +4377,8 @@ mod __googlesheetsparser_emit_impl {
                         }
                     }
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             ::core::result::Result::Ok(())
@@ -4545,7 +4442,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __comparison_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 15u32 as ::bbnf_ir::RuleId,
@@ -4560,8 +4457,7 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__comparison_expr_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_pratt_GoogleSheetsParser_concat_expr(input, p, state, builder)
@@ -4680,7 +4576,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __mul_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 16u32 as ::bbnf_ir::RuleId,
@@ -4692,8 +4588,7 @@ mod __googlesheetsparser_emit_impl {
         let __mul_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__mul_expr_layout);
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_pratt_GoogleSheetsParser_exp_expr(input, p, state, builder)
@@ -4804,7 +4699,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __unary_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4820,8 +4715,7 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__unary_expr_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
                     let mut __iter_count: u32 = 0;
@@ -4836,7 +4730,7 @@ mod __googlesheetsparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
                                 let __first = __shape_support_GoogleSheetsParser::skip_space(
@@ -4844,7 +4738,7 @@ mod __googlesheetsparser_emit_impl {
                                         p,
                                         state,
                                     )
-                                    .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                                         offset: *p as u32,
                                     })?;
                                 parse_keyword_GoogleSheetsParser_unary_prefix(
@@ -4874,10 +4768,8 @@ mod __googlesheetsparser_emit_impl {
                         }
                     }
                     if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -4937,7 +4829,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __paren_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -4953,16 +4845,13 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__paren_expr_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [40u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -4983,10 +4872,8 @@ mod __googlesheetsparser_emit_impl {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [41u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -5036,7 +4923,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __arg_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5049,8 +4936,7 @@ mod __googlesheetsparser_emit_impl {
         let __arg_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__arg_layout);
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
                     let mut __iter_count: u32 = 0;
@@ -5065,7 +4951,7 @@ mod __googlesheetsparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
                                 let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -5099,10 +4985,8 @@ mod __googlesheetsparser_emit_impl {
                         }
                     }
                     if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -5149,7 +5033,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __func_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5165,8 +5049,7 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__func_args_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
                     let mut __iter_count: u32 = 0;
@@ -5181,7 +5064,7 @@ mod __googlesheetsparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
                                 let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -5204,7 +5087,7 @@ mod __googlesheetsparser_emit_impl {
                                     let __iter_builder_checkpoint = builder.checkpoint();
                                     let __iter_result: ::core::result::Result<
                                         (),
-                                        crate::runtime::tape::DtaError,
+                                        crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = __shape_support_GoogleSheetsParser::skip_space(
                                             input,
@@ -5214,10 +5097,8 @@ mod __googlesheetsparser_emit_impl {
                                         let at = *p;
                                         let end = at + 1usize;
                                         if input.len() < end || input[at..end] != [44u8] {
-                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                                 offset: at as u32,
-                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                             });
                                         }
                                         *p = end;
@@ -5245,10 +5126,8 @@ mod __googlesheetsparser_emit_impl {
                                     }
                                 }
                                 if __iter_count < 0u32 {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: *p as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 }
                             }
@@ -5271,10 +5150,8 @@ mod __googlesheetsparser_emit_impl {
                         }
                     }
                     if __iter_count < 1u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -5324,7 +5201,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __let_binding_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5340,8 +5217,7 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__let_binding_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
                     let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -5357,10 +5233,8 @@ mod __googlesheetsparser_emit_impl {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [44u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -5421,7 +5295,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __lambda_params_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5437,8 +5311,7 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__lambda_params_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
                     let mut __iter_count: u32 = 0;
@@ -5453,7 +5326,7 @@ mod __googlesheetsparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
                                 let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -5481,7 +5354,7 @@ mod __googlesheetsparser_emit_impl {
                                     let __iter_builder_checkpoint = builder.checkpoint();
                                     let __iter_result: ::core::result::Result<
                                         (),
-                                        crate::runtime::tape::DtaError,
+                                        crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = __shape_support_GoogleSheetsParser::skip_space(
                                             input,
@@ -5491,10 +5364,8 @@ mod __googlesheetsparser_emit_impl {
                                         let at = *p;
                                         let end = at + 1usize;
                                         if input.len() < end || input[at..end] != [44u8] {
-                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                                 offset: at as u32,
-                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                             });
                                         }
                                         *p = end;
@@ -5522,10 +5393,8 @@ mod __googlesheetsparser_emit_impl {
                                     }
                                 }
                                 if __iter_count < 0u32 {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: *p as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 }
                             }
@@ -5548,10 +5417,8 @@ mod __googlesheetsparser_emit_impl {
                         }
                     }
                     if __iter_count < 1u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -5606,7 +5473,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __array_row_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 23u32 as ::bbnf_ir::RuleId,
@@ -5621,8 +5488,7 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__array_row_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_scalar_GoogleSheetsParser_expression(input, p, state, builder)
@@ -5738,7 +5604,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __array_rows_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 24u32 as ::bbnf_ir::RuleId,
@@ -5753,8 +5619,7 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__array_rows_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_pratt_GoogleSheetsParser_array_row(input, p, state, builder)
@@ -5865,7 +5730,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __array_literal_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -5881,16 +5746,13 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__array_literal_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [123u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -5911,10 +5773,8 @@ mod __googlesheetsparser_emit_impl {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [125u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -5969,7 +5829,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __concat_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 26u32 as ::bbnf_ir::RuleId,
@@ -5984,8 +5844,7 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__concat_expr_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_pratt_GoogleSheetsParser_add_expr(input, p, state, builder)
@@ -6101,7 +5960,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __add_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 27u32 as ::bbnf_ir::RuleId,
@@ -6113,8 +5972,7 @@ mod __googlesheetsparser_emit_impl {
         let __add_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__add_expr_layout);
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_pratt_GoogleSheetsParser_mul_expr(input, p, state, builder)
@@ -6230,7 +6088,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __exp_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 28u32 as ::bbnf_ir::RuleId,
@@ -6242,8 +6100,7 @@ mod __googlesheetsparser_emit_impl {
         let __exp_expr_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__exp_expr_layout);
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_flat_GoogleSheetsParser_unary_expr(input, p, state, builder)
@@ -6343,7 +6200,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 29u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("lambda_call"),
@@ -6357,8 +6214,7 @@ mod __googlesheetsparser_emit_impl {
         let __handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let _ = ({
@@ -6369,10 +6225,8 @@ mod __googlesheetsparser_emit_impl {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [41u8] {
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
@@ -6409,7 +6263,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         {
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             parse_pratt_GoogleSheetsParser_comparison_expr(input, p, state, builder)
@@ -6431,7 +6285,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 31u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("func_call"),
@@ -6445,8 +6299,7 @@ mod __googlesheetsparser_emit_impl {
         let __handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_flat_GoogleSheetsParser_func_open(input, p, state, builder)
@@ -6454,8 +6307,7 @@ mod __googlesheetsparser_emit_impl {
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             loop {
                 let __save = *p;
-                let __res: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-                {
+                let __res: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
                     let _ = ({
                         let _ = __shape_support_GoogleSheetsParser::skip_space(
                             input,
@@ -6475,10 +6327,8 @@ mod __googlesheetsparser_emit_impl {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [41u8] {
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
@@ -6529,7 +6379,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __let_args_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -6542,8 +6392,7 @@ mod __googlesheetsparser_emit_impl {
         let __let_args_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__let_args_layout);
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
                     let mut __iter_count: u32 = 0;
@@ -6558,7 +6407,7 @@ mod __googlesheetsparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
                                 let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -6581,10 +6430,8 @@ mod __googlesheetsparser_emit_impl {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [44u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -6612,10 +6459,8 @@ mod __googlesheetsparser_emit_impl {
                         }
                     }
                     if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -6664,7 +6509,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 33u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("let_call"),
@@ -6678,8 +6523,7 @@ mod __googlesheetsparser_emit_impl {
         let __handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = parse_GoogleSheetsParser_formula__value(input, p, state, builder)?;
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let _ = ({
@@ -6690,10 +6534,8 @@ mod __googlesheetsparser_emit_impl {
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [41u8] {
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: at as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             *p = end;
@@ -6737,10 +6579,10 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
-            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
         'try_branches: loop {
@@ -7245,10 +7087,8 @@ mod __googlesheetsparser_emit_impl {
                     }
                 }
             }
-            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         ::core::result::Result::Ok(())
@@ -7280,7 +7120,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __postfix_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -7296,8 +7136,7 @@ mod __googlesheetsparser_emit_impl {
             builder,
             &__postfix_expr_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
                     let _ = __shape_support_GoogleSheetsParser::skip_space(
@@ -7322,15 +7161,13 @@ mod __googlesheetsparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [37u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -7353,10 +7190,8 @@ mod __googlesheetsparser_emit_impl {
                         }
                     }
                     if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -7406,7 +7241,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __formula_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -7419,8 +7254,7 @@ mod __googlesheetsparser_emit_impl {
         let __formula_handle = <crate::runtime::google_sheets::SheetsStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__formula_layout);
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
                     let __scan_start = *p;
@@ -7429,10 +7263,8 @@ mod __googlesheetsparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -7485,7 +7317,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         parse_GoogleSheetsParser_formula__value(input, p, state, builder)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
@@ -7499,7 +7331,7 @@ mod __googlesheetsparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_GoogleSheetsParser::ScanState,
         builder: &mut crate::runtime::google_sheets::SheetsStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         parse_flat_GoogleSheetsParser_formula(input, p, state, builder)
     }
@@ -11695,19 +11527,19 @@ mod __googlesheetsparser_emit_impl {
                         &mut builder,
                     )
                     .map_err(|e| match e {
-                        crate::runtime::tape::DtaError::Syntax { offset, .. } => {
+                        crate::runtime::DtaError::Syntax { offset } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        crate::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                        crate::runtime::DtaError::UnexpectedEnd { offset } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        crate::runtime::tape::DtaError::InvalidState { .. } => {
+                        crate::runtime::DtaError::InvalidState { .. } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset: 0,
                                 rule: None,

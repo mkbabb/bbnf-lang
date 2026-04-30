@@ -145,14 +145,14 @@ pub(super) fn emit_alt_tape_dispatch(
         quote! {
             let first = *input
                 .get(*p)
-                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
         }
     } else {
         quote! {
             let first = #support_mod::skip_space(input, p, state)
-                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
         }
@@ -174,10 +174,8 @@ pub(super) fn emit_alt_tape_dispatch(
                 }
                 #(#linear_arms)*
                 return ::core::result::Result::Err(
-                    crate::runtime::tape::DtaError::Syntax {
+                    crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     },
                 );
             }
@@ -208,10 +206,8 @@ pub(super) fn emit_alt_tape_dispatch(
                 // the bracket counter is the emitter's responsibility.
                 builder.exit_post_order_children();
                 return ::core::result::Result::Err(
-                    crate::runtime::tape::DtaError::Syntax {
+                    crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     },
                 );
             }
@@ -370,17 +366,13 @@ fn emit_wrap_branch_call_tape(
                                     );
                                     ::core::result::Result::<
                                         crate::runtime::tape::TapeOffset,
-                                        crate::runtime::tape::DtaError,
+                                        crate::runtime::DtaError,
                                     >::Ok(())
                                 }
                                 ::core::option::Option::None => {
                                     ::core::result::Result::Err(
-                                        crate::runtime::tape::DtaError::Syntax {
+                                        crate::runtime::DtaError::Syntax {
                                             offset: span_lo,
-                                            failing_state:
-                                                crate::runtime::tape::DtaStateId::NONE,
-                                            failing_rule:
-                                                crate::runtime::tape::DtaRuleId(u32::MAX),
                                         },
                                     )
                                 }
@@ -407,17 +399,13 @@ fn emit_wrap_branch_call_tape(
                                     );
                                     ::core::result::Result::<
                                         crate::runtime::tape::TapeOffset,
-                                        crate::runtime::tape::DtaError,
+                                        crate::runtime::DtaError,
                                     >::Ok(())
                                 }
                                 ::core::option::Option::None => {
                                     ::core::result::Result::Err(
-                                        crate::runtime::tape::DtaError::Syntax {
+                                        crate::runtime::DtaError::Syntax {
                                             offset: span_lo,
-                                            failing_state:
-                                                crate::runtime::tape::DtaStateId::NONE,
-                                            failing_rule:
-                                                crate::runtime::tape::DtaRuleId(u32::MAX),
                                         },
                                     )
                                 }

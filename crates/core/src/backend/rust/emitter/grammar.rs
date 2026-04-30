@@ -742,19 +742,19 @@ fn emit_parse_body_struct_direct(
                 &mut builder,
             )
             .map_err(|e| match e {
-                crate::runtime::tape::DtaError::Syntax { offset, .. } => {
+                crate::runtime::DtaError::Syntax { offset } => {
                     crate::runtime::ParseErr::Syntax {
                         offset,
                         rule: None,
                     }
                 }
-                crate::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                crate::runtime::DtaError::UnexpectedEnd { offset } => {
                     crate::runtime::ParseErr::Syntax {
                         offset,
                         rule: None,
                     }
                 }
-                crate::runtime::tape::DtaError::InvalidState { .. } => {
+                crate::runtime::DtaError::InvalidState { .. } => {
                     crate::runtime::ParseErr::Syntax {
                         offset: 0,
                         rule: None,

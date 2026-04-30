@@ -213,12 +213,8 @@ pub(super) fn emit_parse_wrap_struct_direct(
                 },
                 None => quote! {
                     ::core::result::Result::Err(
-                        crate::runtime::tape::DtaError::Syntax {
+                        crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state:
-                                crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule:
-                                crate::runtime::tape::DtaRuleId(u32::MAX),
                         },
                     )
                 },
@@ -226,12 +222,8 @@ pub(super) fn emit_parse_wrap_struct_direct(
         }
         _ => quote! {
             ::core::result::Result::Err(
-                crate::runtime::tape::DtaError::Syntax {
+                crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state:
-                        crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule:
-                        crate::runtime::tape::DtaRuleId(u32::MAX),
                 },
             )
         },
@@ -258,7 +250,7 @@ pub(super) fn emit_parse_wrap_struct_direct(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             use crate::runtime::builder::StructBuilder as _;
 
             #dispatch
@@ -332,10 +324,10 @@ fn emit_alt_struct_dispatch(
         // frame onto the builder's stack.
         let __body_result: ::core::result::Result<
             (),
-            crate::runtime::tape::DtaError,
+            crate::runtime::DtaError,
         > = (|| {
             let first = #support_mod::skip_space(input, p, state)
-                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
             'try_branches: loop {
@@ -348,12 +340,8 @@ fn emit_alt_struct_dispatch(
                 // closes the open compound after observing the IIFE
                 // result.
                 return ::core::result::Result::Err(
-                    crate::runtime::tape::DtaError::Syntax {
+                    crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state:
-                            crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule:
-                            crate::runtime::tape::DtaRuleId(u32::MAX),
                     },
                 );
             }
@@ -432,7 +420,7 @@ fn emit_alt_struct_dispatch_transparent(
         // No outer compound. Dispatch to the chosen branch; the
         // branch's per-shape fn carries its own record emission.
         let first = #support_mod::skip_space(input, p, state)
-            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
         'try_branches: loop {
@@ -442,12 +430,8 @@ fn emit_alt_struct_dispatch_transparent(
             }
             #(#linear_arms)*
             return ::core::result::Result::Err(
-                crate::runtime::tape::DtaError::Syntax {
+                crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state:
-                        crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule:
-                        crate::runtime::tape::DtaRuleId(u32::MAX),
                 },
             );
         }

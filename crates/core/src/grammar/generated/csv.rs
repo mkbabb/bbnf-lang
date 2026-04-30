@@ -650,13 +650,11 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_CsvParser("[^,\"\\r\\n]+", input, *p) else {
-            return Err(crate::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::DtaError::Syntax {
                 offset: span_lo,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         };
         *p += match_len as usize;
@@ -697,7 +695,7 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __escaped_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -710,16 +708,13 @@ mod __csvparser_emit_impl {
         let __escaped_handle = <crate::runtime::csv::CsvStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__escaped_layout);
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [34u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -729,10 +724,8 @@ mod __csvparser_emit_impl {
                     let __scan_start = *p;
                     let Some(match_len) = __regex_scan_CsvParser("[^\"]*", input, *p)
                     else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -742,10 +735,8 @@ mod __csvparser_emit_impl {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [34u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -795,7 +786,7 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __record_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -808,8 +799,7 @@ mod __csvparser_emit_impl {
         let __record_handle = <crate::runtime::csv::CsvStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__record_layout);
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 'try_branches: loop {
                     {
@@ -817,7 +807,7 @@ mod __csvparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
                                 let _ = __shape_support_CsvParser::skip_space(
@@ -845,7 +835,7 @@ mod __csvparser_emit_impl {
                         let __alt_builder_checkpoint = builder.checkpoint();
                         let __alt_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
                                 parse_hregex_CsvParser_textdata(input, p, state, builder)
@@ -863,10 +853,8 @@ mod __csvparser_emit_impl {
                             }
                         }
                     }
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
             }
@@ -884,15 +872,13 @@ mod __csvparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [44u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -902,7 +888,7 @@ mod __csvparser_emit_impl {
                                     let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
-                                        crate::runtime::tape::DtaError,
+                                        crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
                                             let _ = __shape_support_CsvParser::skip_space(
@@ -930,7 +916,7 @@ mod __csvparser_emit_impl {
                                     let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
-                                        crate::runtime::tape::DtaError,
+                                        crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
                                             parse_hregex_CsvParser_textdata(input, p, state, builder)
@@ -948,10 +934,8 @@ mod __csvparser_emit_impl {
                                         }
                                     }
                                 }
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: *p as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             Ok(())
@@ -973,10 +957,8 @@ mod __csvparser_emit_impl {
                         }
                     }
                     if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -1026,7 +1008,7 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __csv_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1039,8 +1021,7 @@ mod __csvparser_emit_impl {
         let __csv_handle = <crate::runtime::csv::CsvStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__csv_layout);
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({ parse_flat_CsvParser_record(input, p, state, builder) })?;
             }
@@ -1058,7 +1039,7 @@ mod __csvparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             {
                                 let __scan_start = *p;
@@ -1067,10 +1048,8 @@ mod __csvparser_emit_impl {
                                     input,
                                     *p,
                                 ) else {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: __scan_start as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
@@ -1097,10 +1076,8 @@ mod __csvparser_emit_impl {
                         }
                     }
                     if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -1478,7 +1455,7 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         parse_CsvParser_csv__value(input, p, state, builder)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
@@ -1492,7 +1469,7 @@ mod __csvparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CsvParser::ScanState,
         builder: &mut crate::runtime::csv::CsvStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_CsvParser::skip_space(input, p, state);
         parse_flat_CsvParser_csv(input, p, state, builder)
     }
@@ -1580,19 +1557,19 @@ mod __csvparser_emit_impl {
                 let mut pos: usize = 0;
                 parse_CsvParser_csv(__input_bytes, &mut pos, &mut state, &mut builder)
                     .map_err(|e| match e {
-                        crate::runtime::tape::DtaError::Syntax { offset, .. } => {
+                        crate::runtime::DtaError::Syntax { offset } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        crate::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                        crate::runtime::DtaError::UnexpectedEnd { offset } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        crate::runtime::tape::DtaError::InvalidState { .. } => {
+                        crate::runtime::DtaError::InvalidState { .. } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset: 0,
                                 rule: None,

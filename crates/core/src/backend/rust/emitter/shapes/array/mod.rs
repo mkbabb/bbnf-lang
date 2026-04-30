@@ -155,14 +155,12 @@ fn emit_parse_array_struct_direct_wrapped(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             use crate::runtime::builder::StructBuilder;
 
             if input.get(*p).copied() != Some(b'[') {
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
 
@@ -182,7 +180,7 @@ fn emit_parse_array_struct_direct_wrapped(
             let __handle = builder.begin_compound(&__layout);
             let __array_result: ::core::result::Result<
                 (),
-                crate::runtime::tape::DtaError,
+                crate::runtime::DtaError,
             > = (|| {
                 *p += 1;
                 let _ = #support_mod::skip_space(input, p, state);
@@ -206,10 +204,8 @@ fn emit_parse_array_struct_direct_wrapped(
                             *p += 1;
                             return Ok(());
                         }
-                        _ => return Err(crate::runtime::tape::DtaError::Syntax {
+                        _ => return Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         }),
                     }
                 }
@@ -342,7 +338,7 @@ fn emit_parse_array_struct_direct_list(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             use crate::runtime::builder::StructBuilder;
 
             // Open the rule's compound frame (the outer Repeat).
@@ -371,7 +367,7 @@ fn emit_parse_array_struct_direct_list(
                 // surface as `Err` and unwind to `*p` rollback.
                 let __iter_result: ::core::result::Result<
                     (),
-                    crate::runtime::tape::DtaError,
+                    crate::runtime::DtaError,
                 > = (|| {
                     #intra_iter_ws
                     #value_call

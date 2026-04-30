@@ -1,4 +1,4 @@
-use bbnf::runtime::{ParseErr, RuntimeView};
+use bbnf::runtime::ParseErr;
 #[allow(dead_code)]
 mod css_types {
     pub fn parse_hex_color(_s: &str) -> u32 {
@@ -46,9 +46,6 @@ fn test_input(label: &str, input: &str) {
                 let end = std::cmp::min(offset + 40, input.len());
                 eprintln!("  stuck at: '{}'", &input[offset..end]);
             }
-        }
-        Err(ParseErr::Tape(e)) => {
-            eprintln!("{:40} tape error: {:?}", label, e);
         }
     }
 }

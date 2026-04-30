@@ -79,7 +79,7 @@ pub(super) fn emit_alt_byte_dispatch_tape(
             // transitions to the chosen branch, leaving tape emission
             // to the branch body itself).
             let first = #support_mod::skip_space(input, p, state)
-                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
             'try_branches: loop {
@@ -89,10 +89,8 @@ pub(super) fn emit_alt_byte_dispatch_tape(
                 }
                 #(#fallback_arms)*
                 return ::core::result::Result::Err(
-                    crate::runtime::tape::DtaError::Syntax {
+                    crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     },
                 );
             }
@@ -152,7 +150,7 @@ pub(super) fn emit_alt_tape(
             // AX.W0a.2.d — inline Alt position, walker-parity
             // `TapeKind::Alt` compound + per-branch byte dispatch.
             let first = #support_mod::skip_space(input, p, state)
-                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
             let alt_lo = *p as u32;
@@ -175,10 +173,8 @@ pub(super) fn emit_alt_tape(
                 // before propagating the error.
                 builder.exit_post_order_children();
                 return ::core::result::Result::Err(
-                    crate::runtime::tape::DtaError::Syntax {
+                    crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     },
                 );
             }

@@ -116,7 +116,7 @@ pub fn emit_parse_arglist(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let span_lo = *p as u32;
             // AY-II.W0.b — walker-parity post-order outer Rule compound.
             // B5.W6 — bracket the post-order children scope.
@@ -132,7 +132,7 @@ pub fn emit_parse_arglist(
             let outer_child = builder.enter_post_order_children();
             let __post_body: ::core::result::Result<
                 (),
-                crate::runtime::tape::DtaError,
+                crate::runtime::DtaError,
             > = (|| {
                 #body_emission
                 Ok(())
@@ -266,10 +266,8 @@ fn emit_tape_position_core(
                 let at = *p;
                 let end = at + #len;
                 if input.len() < end || input[at..end] != [#(#byte_lits),*] {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -327,7 +325,7 @@ fn emit_tape_position_core(
                     let iter_save_cols = builder.position();
                     let iter_lo = *p as u32;
                     let iter_child = builder.enter_post_order_children();
-                    let attempt = (|| -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+                    let attempt = (|| -> ::core::result::Result<(), crate::runtime::DtaError> {
                         #inner_emit
                         Ok(())
                     })();
@@ -367,7 +365,7 @@ fn emit_tape_position_core(
                         let save_cols = builder.position();
                         let iter_lo = *p as u32;
                         let iter_child = builder.enter_post_order_children();
-                        let attempt = (|| -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+                        let attempt = (|| -> ::core::result::Result<(), crate::runtime::DtaError> {
                             #inner_emit
                             Ok(())
                         })();
@@ -399,10 +397,8 @@ fn emit_tape_position_core(
                     }
                     if iter_count < (#lo_lit as u32) {
                         builder.exit_post_order_children();
-                        return Err(crate::runtime::tape::DtaError::Syntax {
+                        return Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                     let repeat_hi = *p as u32;
@@ -448,7 +444,7 @@ fn emit_tape_position_core(
                 let seq_child = builder.enter_post_order_children();
                 let __seq_body: ::core::result::Result<
                     (),
-                    crate::runtime::tape::DtaError,
+                    crate::runtime::DtaError,
                 > = (|| {
                     #(#out)*
                     Ok(())
@@ -763,7 +759,7 @@ fn emit_parse_arglist_struct_direct(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let __layout: ::bbnf_ir::registry::StructLayout =
                 ::bbnf_ir::registry::StructLayout {
                     rule_id: #rule_id_lit as ::bbnf_ir::RuleId,
@@ -782,7 +778,7 @@ fn emit_parse_arglist_struct_direct(
             // inner `?`-propagation closes the matching frame.
             let __body_result: ::core::result::Result<
                 (),
-                crate::runtime::tape::DtaError,
+                crate::runtime::DtaError,
             > = (|| {
                 #body_emission
                 ::core::result::Result::Ok(())
@@ -855,10 +851,8 @@ fn emit_struct_direct_position_core(
                 let end = at + #len;
                 if input.len() < end || input[at..end] != [#(#byte_lits),*] {
                     return ::core::result::Result::Err(
-                        crate::runtime::tape::DtaError::Syntax {
+                        crate::runtime::DtaError::Syntax {
                             offset: at as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         },
                     );
                 }
@@ -942,7 +936,7 @@ fn emit_struct_direct_position_core(
                     let __save = *p;
                     let __res: ::core::result::Result<
                         (),
-                        crate::runtime::tape::DtaError,
+                        crate::runtime::DtaError,
                     > = (|| {
                         #inner_emit
                         Ok(())

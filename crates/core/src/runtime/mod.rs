@@ -59,7 +59,7 @@ pub use css_l4::{
 };
 pub use css_l4::value::{Declaration as CssDeclaration, Selector as CssSelector};
 pub use css_l4::value::CssRule;
-pub use error::ParseErr;
+pub use error::{DtaError, ParseErr};
 pub use google_sheets::{
     SheetsArena, SheetsCompound, SheetsCompoundId, SheetsCompoundKind, SheetsCompoundView,
     SheetsDocument, SheetsKind, SheetsPathQuery, SheetsStructBuilder, SheetsValue, SheetsView,
@@ -78,19 +78,11 @@ pub use root::{PathQuery, Root, ValueRoot};
 // alongside the welded boundary.
 pub use tape::{PayloadTag, PayloadValue, ValueChildren, ValueFrame};
 
-/// Re-export the full `tape` public surface from `bbnf::runtime`.
+/// Re-export the remaining tape public surface from `bbnf::runtime`.
 ///
-/// Generated parsers reference `crate::runtime::tape::*` for tape
-/// types ([`Tape`], [`TapeOffset`], [`TapeCursor`], [`TapeKind`],
-/// [`TapeBuildError`]) so downstream consumers do not need a direct
-/// `tape` dependency — `bbnf` already carries it as the substrate
-/// for the generated code.
-///
-/// [`Tape`]: tape::Tape
-/// [`TapeOffset`]: tape::TapeOffset
-/// [`TapeCursor`]: tape::TapeCursor
-/// [`TapeKind`]: tape::TapeKind
-/// [`TapeBuildError`]: tape::TapeBuildError
+/// O5 keeps this temporarily while residual generated helper bodies
+/// are recoded or deleted. New generated dispatcher errors route
+/// through [`DtaError`] instead of the tape crate.
 pub use tape;
 
 /// AZ-I.W2-act.close A.fix — re-export the grammar-agnostic

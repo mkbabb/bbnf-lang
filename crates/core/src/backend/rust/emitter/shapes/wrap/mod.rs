@@ -264,12 +264,8 @@ pub fn emit_parse_wrap(
                 Some(call) => quote! { #call },
                 None => quote! {
                     ::core::result::Result::Err(
-                        crate::runtime::tape::DtaError::Syntax {
+                        crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state:
-                                crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule:
-                                crate::runtime::tape::DtaRuleId(u32::MAX),
                         },
                     )
                 },
@@ -282,12 +278,8 @@ pub fn emit_parse_wrap(
             let _ = dispatcher_ident;
             quote! {
                 ::core::result::Result::Err(
-                    crate::runtime::tape::DtaError::Syntax {
+                    crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state:
-                            crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule:
-                            crate::runtime::tape::DtaRuleId(u32::MAX),
                     },
                 )
             }
@@ -312,7 +304,7 @@ pub fn emit_parse_wrap(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             #dispatch
         }
     }

@@ -166,7 +166,7 @@ pub(super) fn emit_dispatch_arms_struct_direct(
                             let attempt_builder = builder.checkpoint();
                             let attempt: ::core::result::Result<
                                 (),
-                                crate::runtime::tape::DtaError,
+                                crate::runtime::DtaError,
                             > = (|| {
                                 #seq_body
                                 ::core::result::Result::Ok(())
@@ -193,10 +193,8 @@ pub(super) fn emit_dispatch_arms_struct_direct(
     quote! {
         'try_branches: loop {
             #(#arms)*
-            return Err(crate::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
     }

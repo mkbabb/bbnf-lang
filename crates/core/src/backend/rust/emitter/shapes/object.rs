@@ -131,14 +131,12 @@ fn emit_parse_object_struct_direct(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             use crate::runtime::builder::StructBuilder;
 
             if input.get(*p).copied() != Some(b'{') {
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
 
@@ -168,10 +166,8 @@ fn emit_parse_object_struct_direct(
             loop {
                 // Key: string shape fn pushes the decoded slice.
                 if input.get(*p).copied() != Some(b'"') {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return Err(crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 #string_fn(input, p, state, builder)?;
@@ -179,10 +175,8 @@ fn emit_parse_object_struct_direct(
                 // Colon.
                 let _ = #support_mod::skip_space(input, p, state);
                 if input.get(*p).copied() != Some(b':') {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return Err(crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p += 1;
@@ -203,10 +197,8 @@ fn emit_parse_object_struct_direct(
                         builder.end_compound(__handle);
                         return Ok(());
                     }
-                    _ => return Err(crate::runtime::tape::DtaError::Syntax {
+                    _ => return Err(crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     }),
                 }
             }

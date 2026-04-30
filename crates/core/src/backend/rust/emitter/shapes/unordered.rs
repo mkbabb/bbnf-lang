@@ -338,7 +338,7 @@ pub fn emit_parse_unordered(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let span_lo = *p as u32;
             // AY-II.W0.b — walker-parity post-order Repeat Rule
             // compound via begin_compound_post/end_compound_post_order.
@@ -364,7 +364,7 @@ pub fn emit_parse_unordered(
             let mut iters: u32 = 0;
             let __post_body: ::core::result::Result<
                 (),
-                crate::runtime::tape::DtaError,
+                crate::runtime::DtaError,
             > = (|| {
                 loop {
                     let Some(b) = input.get(*p).copied() else { break; };
@@ -385,13 +385,11 @@ pub fn emit_parse_unordered(
                 builder.exit_post_order_children();
                 return ::core::result::Result::Err(
                     match input.get(*p).copied() {
-                        None => crate::runtime::tape::DtaError::UnexpectedEnd {
+                        None => crate::runtime::DtaError::UnexpectedEnd {
                             offset: *p as u32,
                         },
-                        _ => crate::runtime::tape::DtaError::Syntax {
+                        _ => crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         },
                     },
                 );
@@ -450,7 +448,7 @@ fn emit_parse_unordered_fallback(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let _ = state;
             let span_lo = *p as u32;
             // AY-II.W0.b — empty-compound fallback via begin/end.
@@ -655,7 +653,7 @@ fn emit_parse_unordered_struct_direct(
                 p: &mut usize,
                 state: &mut #support_mod::ScanState,
                 builder: &mut #builder_ty,
-            ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+            ) -> ::core::result::Result<(), crate::runtime::DtaError> {
                 let _ = #dispatcher_ident(input, p, state, builder)?;
                 Ok(())
             }
@@ -700,7 +698,7 @@ fn emit_parse_unordered_struct_direct(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let __layout: ::bbnf_ir::registry::StructLayout =
                 ::bbnf_ir::registry::StructLayout {
                     rule_id: #rule_id_lit as ::bbnf_ir::RuleId,
@@ -717,7 +715,7 @@ fn emit_parse_unordered_struct_direct(
             >::begin_compound(builder, &__layout);
             let __unordered_result: ::core::result::Result<
                 (),
-                crate::runtime::tape::DtaError,
+                crate::runtime::DtaError,
             > = (|| {
                 let _ = #support_mod::skip_space(input, p, state);
 
@@ -735,10 +733,8 @@ fn emit_parse_unordered_struct_direct(
                 }
 
                 if __iters < #iters_lo_lit {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return Err(crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
 

@@ -109,10 +109,8 @@ fn hregex_typed_payload_body(
             {
                 let span_lo = *p as u32;
                 let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return Err(crate::runtime::DtaError::Syntax {
                         offset: span_lo,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 };
                 *p += match_len as usize;
@@ -144,10 +142,8 @@ fn hregex_typed_payload_body(
                 {
                     let span_lo = *p as u32;
                     let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                        return Err(crate::runtime::tape::DtaError::Syntax {
+                        return Err(crate::runtime::DtaError::Syntax {
                             offset: span_lo,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -195,10 +191,8 @@ fn hregex_typed_payload_body(
                     {
                         let span_lo = *p as u32;
                         let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                            return Err(crate::runtime::tape::DtaError::Syntax {
+                            return Err(crate::runtime::DtaError::Syntax {
                                 offset: span_lo,
-                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             });
                         };
                         *p += match_len as usize;
@@ -227,10 +221,8 @@ fn hregex_typed_payload_body(
                     {
                         let span_lo = *p as u32;
                         let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                            return Err(crate::runtime::tape::DtaError::Syntax {
+                            return Err(crate::runtime::DtaError::Syntax {
                                 offset: span_lo,
-                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                             });
                         };
                         *p += match_len as usize;
@@ -333,7 +325,7 @@ pub fn emit_parse_hregex(
                 p: &mut usize,
                 state: &mut #support_mod::ScanState,
                 builder: &mut crate::runtime::tape::Tape<()>,
-            ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+            ) -> ::core::result::Result<(), crate::runtime::DtaError> {
                 #body
             }
         };
@@ -353,13 +345,11 @@ pub fn emit_parse_hregex(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let span_lo = *p as u32;
             let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::DtaError::Syntax {
                     offset: span_lo,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             };
             *p += match_len as usize;
@@ -457,12 +447,10 @@ pub fn emit_parse_number_via_hregex(
                 p: &mut usize,
                 first_byte: u8,
                 builder: &mut crate::runtime::tape::Tape<()>,
-            ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+            ) -> ::core::result::Result<(), crate::runtime::DtaError> {
                 let _ = (input, p, first_byte, builder);
-                Err(crate::runtime::tape::DtaError::Syntax {
+                Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 })
             }
         };
@@ -510,14 +498,12 @@ pub fn emit_parse_number_via_hregex(
             p: &mut usize,
             first_byte: u8,
             builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let _ = first_byte;
             let span_lo = *p as u32;
             let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::DtaError::Syntax {
                     offset: span_lo,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             };
             *p += match_len as usize;
@@ -637,7 +623,7 @@ fn emit_unsupported_stub(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut crate::runtime::tape::Tape<()>,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let _ = state;
             let span_lo = *p as u32;
             let span_hi = *p as u32;
@@ -909,13 +895,11 @@ fn emit_parse_hregex_struct_direct(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let span_lo = *p as u32;
             let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::DtaError::Syntax {
                     offset: span_lo,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             };
             *p += match_len as usize;
@@ -951,12 +935,10 @@ fn emit_parse_number_via_hregex_struct_direct(
                 p: &mut usize,
                 first_byte: u8,
                 builder: &mut #builder_ty,
-            ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+            ) -> ::core::result::Result<(), crate::runtime::DtaError> {
                 let _ = (input, p, first_byte, builder);
-                Err(crate::runtime::tape::DtaError::Syntax {
+                Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 })
             }
         };
@@ -977,14 +959,12 @@ fn emit_parse_number_via_hregex_struct_direct(
             p: &mut usize,
             first_byte: u8,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let _ = first_byte;
             let span_lo = *p as u32;
             let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::DtaError::Syntax {
                     offset: span_lo,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             };
             *p += match_len as usize;
@@ -1034,12 +1014,10 @@ fn emit_struct_direct_unsupported_stub(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             let _ = (input, state, builder);
-            Err(crate::runtime::tape::DtaError::Syntax {
+            Err(crate::runtime::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             })
         }
     }

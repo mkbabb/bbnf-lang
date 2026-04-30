@@ -79,7 +79,7 @@ pub fn emit_ref_call_shape(
         ShapeTag::Number => quote! {
             {
                 let __first = #support_mod::skip_space(input, p, state)
-                    .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                         offset: *p as u32,
                     })?;
                 #target_fn(input, p, __first, builder)
@@ -88,7 +88,7 @@ pub fn emit_ref_call_shape(
         ShapeTag::Keyword => quote! {
             {
                 let __first = #support_mod::skip_space(input, p, state)
-                    .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                         offset: *p as u32,
                     })?;
                 #target_fn(input, p, __first, state, builder)

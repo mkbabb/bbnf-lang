@@ -77,7 +77,7 @@ fn emit_parse_number_struct_direct(
             p: &mut usize,
             first_byte: u8,
             builder: &mut #builder_ty<'p>,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             use crate::runtime::builder::StructBuilder as _;
             const POW10_U64: [u64; 17] = [
                 1, 10, 100, 1_000, 10_000, 100_000, 1_000_000,
@@ -104,10 +104,8 @@ fn emit_parse_number_struct_direct(
                 } else { break; }
             }
             if *p == int_start {
-                return Err(crate::runtime::tape::DtaError::Syntax {
+                return Err(crate::runtime::DtaError::Syntax {
                     offset: start as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             let int_digit_count = *p - int_start;
@@ -127,10 +125,8 @@ fn emit_parse_number_struct_direct(
                 }
                 fractional_digit_count = (*p - frac_start) as i64;
                 if fractional_digit_count == 0 {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return Err(crate::runtime::DtaError::Syntax {
                         offset: start as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 if int_digit_count as i64 + fractional_digit_count > 19 {
@@ -158,10 +154,8 @@ fn emit_parse_number_struct_direct(
                     } else { break; }
                 }
                 if *p == exp_start {
-                    return Err(crate::runtime::tape::DtaError::Syntax {
+                    return Err(crate::runtime::DtaError::Syntax {
                         offset: start as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 exponent += if exp_negative { -exp_val } else { exp_val };

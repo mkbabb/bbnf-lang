@@ -1357,7 +1357,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __important_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1373,16 +1373,13 @@ mod __cssprettyparser_emit_impl {
             builder,
             &__important_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [33u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -1395,10 +1392,8 @@ mod __cssprettyparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -1411,10 +1406,8 @@ mod __cssprettyparser_emit_impl {
                     || input[at..end]
                         != [105u8, 109u8, 112u8, 111u8, 114u8, 116u8, 97u8, 110u8, 116u8]
                 {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -1464,7 +1457,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __importRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1480,18 +1473,15 @@ mod __cssprettyparser_emit_impl {
             builder,
             &__importRule_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let at = *p;
                 let end = at + 7usize;
                 if input.len() < end
                     || input[at..end] != [64u8, 105u8, 109u8, 112u8, 111u8, 114u8, 116u8]
                 {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -1504,10 +1494,8 @@ mod __cssprettyparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -1527,15 +1515,13 @@ mod __cssprettyparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [44u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -1546,10 +1532,8 @@ mod __cssprettyparser_emit_impl {
                                     input,
                                     *p,
                                 ) else {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: __scan_start as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
@@ -1561,10 +1545,8 @@ mod __cssprettyparser_emit_impl {
                                     input,
                                     *p,
                                 ) else {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: __scan_start as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
@@ -1588,10 +1570,8 @@ mod __cssprettyparser_emit_impl {
                         }
                     }
                     if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -1600,10 +1580,8 @@ mod __cssprettyparser_emit_impl {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [59u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -1653,7 +1631,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __declaration_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -1669,8 +1647,7 @@ mod __cssprettyparser_emit_impl {
             builder,
             &__declaration_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
                     let __scan_start = *p;
@@ -1679,10 +1656,8 @@ mod __cssprettyparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -1696,10 +1671,8 @@ mod __cssprettyparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -1709,10 +1682,8 @@ mod __cssprettyparser_emit_impl {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [58u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -1725,10 +1696,8 @@ mod __cssprettyparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -1748,7 +1717,7 @@ mod __cssprettyparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             {
                                 let __scan_start = *p;
@@ -1757,10 +1726,8 @@ mod __cssprettyparser_emit_impl {
                                     input,
                                     *p,
                                 ) else {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: __scan_start as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
@@ -1778,15 +1745,13 @@ mod __cssprettyparser_emit_impl {
                                     let __iter_builder_checkpoint = builder.checkpoint();
                                     let __iter_result: ::core::result::Result<
                                         (),
-                                        crate::runtime::tape::DtaError,
+                                        crate::runtime::DtaError,
                                     > = (|| {
                                         let at = *p;
                                         let end = at + 1usize;
                                         if input.len() < end || input[at..end] != [44u8] {
-                                            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                                 offset: at as u32,
-                                                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                             });
                                         }
                                         *p = end;
@@ -1797,10 +1762,8 @@ mod __cssprettyparser_emit_impl {
                                                 input,
                                                 *p,
                                             ) else {
-                                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                                     offset: __scan_start as u32,
-                                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                                 });
                                             };
                                             *p += match_len as usize;
@@ -1812,10 +1775,8 @@ mod __cssprettyparser_emit_impl {
                                                 input,
                                                 *p,
                                             ) else {
-                                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                                     offset: __scan_start as u32,
-                                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                                 });
                                             };
                                             *p += match_len as usize;
@@ -1839,10 +1800,8 @@ mod __cssprettyparser_emit_impl {
                                     }
                                 }
                                 if __iter_count < 0u32 {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: *p as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 }
                             }
@@ -1865,10 +1824,8 @@ mod __cssprettyparser_emit_impl {
                         }
                     }
                     if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -1887,7 +1844,7 @@ mod __cssprettyparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
                                 let _ = __shape_support_CssPrettyParser::skip_space(
@@ -1921,10 +1878,8 @@ mod __cssprettyparser_emit_impl {
                         }
                     }
                     if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -1943,15 +1898,13 @@ mod __cssprettyparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             let at = *p;
                             let end = at + 1usize;
                             if input.len() < end || input[at..end] != [59u8] {
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: at as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             *p = end;
@@ -1974,10 +1927,8 @@ mod __cssprettyparser_emit_impl {
                         }
                     }
                     if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -1990,10 +1941,8 @@ mod __cssprettyparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -2044,7 +1993,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __genericAtRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2060,8 +2009,7 @@ mod __cssprettyparser_emit_impl {
             builder,
             &__genericAtRule_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
                     let __scan_start = *p;
@@ -2070,10 +2018,8 @@ mod __cssprettyparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -2087,10 +2033,8 @@ mod __cssprettyparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -2103,7 +2047,7 @@ mod __cssprettyparser_emit_impl {
                             p,
                             state,
                         )
-                        .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                             offset: *p as u32,
                         })?;
                     parse_keyword_CssPrettyParser_atRuleBody(
@@ -2160,7 +2104,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __qualifiedRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2176,8 +2120,7 @@ mod __cssprettyparser_emit_impl {
             builder,
             &__qualifiedRule_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
                     let __scan_start = *p;
@@ -2186,10 +2129,8 @@ mod __cssprettyparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -2203,10 +2144,8 @@ mod __cssprettyparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -2263,7 +2202,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __mediaRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2279,18 +2218,15 @@ mod __cssprettyparser_emit_impl {
             builder,
             &__mediaRule_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let at = *p;
                 let end = at + 6usize;
                 if input.len() < end
                     || input[at..end] != [64u8, 109u8, 101u8, 100u8, 105u8, 97u8]
                 {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -2303,10 +2239,8 @@ mod __cssprettyparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -2363,7 +2297,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __supportsRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2379,8 +2313,7 @@ mod __cssprettyparser_emit_impl {
             builder,
             &__supportsRule_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let at = *p;
                 let end = at + 9usize;
@@ -2388,10 +2321,8 @@ mod __cssprettyparser_emit_impl {
                     || input[at..end]
                         != [64u8, 115u8, 117u8, 112u8, 112u8, 111u8, 114u8, 116u8, 115u8]
                 {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -2404,10 +2335,8 @@ mod __cssprettyparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -2464,7 +2393,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __fontFaceRule_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2480,8 +2409,7 @@ mod __cssprettyparser_emit_impl {
             builder,
             &__fontFaceRule_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let at = *p;
                 let end = at + 10usize;
@@ -2492,10 +2420,8 @@ mod __cssprettyparser_emit_impl {
                             101u8,
                         ]
                 {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -2508,10 +2434,8 @@ mod __cssprettyparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -2558,7 +2482,7 @@ mod __cssprettyparser_emit_impl {
         first_byte: u8,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let _ = state;
         match first_byte {
@@ -2570,10 +2494,8 @@ mod __cssprettyparser_emit_impl {
                     builder.push_leaf_with_unit();
                     return ::core::result::Result::Ok(());
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             123u8 => {
@@ -2598,17 +2520,13 @@ mod __cssprettyparser_emit_impl {
                         }
                     }
                 }
-                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 });
             }
             _ => {
-                ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
-                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                 })
             }
         }
@@ -2640,7 +2558,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __ruleBlock_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2656,16 +2574,13 @@ mod __cssprettyparser_emit_impl {
             builder,
             &__ruleBlock_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [123u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -2678,10 +2593,8 @@ mod __cssprettyparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -2701,10 +2614,8 @@ mod __cssprettyparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -2714,10 +2625,8 @@ mod __cssprettyparser_emit_impl {
                 let at = *p;
                 let end = at + 1usize;
                 if input.len() < end || input[at..end] != [125u8] {
-                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                         offset: at as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     });
                 }
                 *p = end;
@@ -2767,7 +2676,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __blockContent_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -2783,8 +2692,7 @@ mod __cssprettyparser_emit_impl {
             builder,
             &__blockContent_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
                     let mut __iter_count: u32 = 0;
@@ -2799,7 +2707,7 @@ mod __cssprettyparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             {
                                 let __scan_start = *p;
@@ -2808,10 +2716,8 @@ mod __cssprettyparser_emit_impl {
                                     input,
                                     *p,
                                 ) else {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: __scan_start as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
@@ -2822,7 +2728,7 @@ mod __cssprettyparser_emit_impl {
                                     let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
-                                        crate::runtime::tape::DtaError,
+                                        crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
                                             let _ = __shape_support_CssPrettyParser::skip_space(
@@ -2855,7 +2761,7 @@ mod __cssprettyparser_emit_impl {
                                     let __alt_builder_checkpoint = builder.checkpoint();
                                     let __alt_result: ::core::result::Result<
                                         (),
-                                        crate::runtime::tape::DtaError,
+                                        crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
                                             parse_wrap_CssPrettyParser_ruleItem(
@@ -2878,10 +2784,8 @@ mod __cssprettyparser_emit_impl {
                                         }
                                     }
                                 }
-                                return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                     offset: *p as u32,
-                                    failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                    failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                 });
                             }
                             Ok(())
@@ -2903,10 +2807,8 @@ mod __cssprettyparser_emit_impl {
                         }
                     }
                     if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -2949,10 +2851,10 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_CssPrettyParser::skip_space(input, p, state)
-            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
         'try_branches: loop {
@@ -3056,10 +2958,8 @@ mod __cssprettyparser_emit_impl {
                 }
                 _ => {}
             }
-            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         ::core::result::Result::Ok(())
@@ -3084,10 +2984,10 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let first = __shape_support_CssPrettyParser::skip_space(input, p, state)
-            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
         'try_branches: loop {
@@ -3127,10 +3027,8 @@ mod __cssprettyparser_emit_impl {
                     }
                 }
             }
-            return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                 offset: *p as u32,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         }
         ::core::result::Result::Ok(())
@@ -3162,7 +3060,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __ruleList_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3175,8 +3073,7 @@ mod __cssprettyparser_emit_impl {
         let __ruleList_handle = <crate::runtime::css_pretty::CssPrettyStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__ruleList_layout);
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
                     let mut __iter_count: u32 = 0;
@@ -3191,7 +3088,7 @@ mod __cssprettyparser_emit_impl {
                         let __iter_builder_checkpoint = builder.checkpoint();
                         let __iter_result: ::core::result::Result<
                             (),
-                            crate::runtime::tape::DtaError,
+                            crate::runtime::DtaError,
                         > = (|| {
                             {
                                 let __scan_start = *p;
@@ -3200,10 +3097,8 @@ mod __cssprettyparser_emit_impl {
                                     input,
                                     *p,
                                 ) else {
-                                    return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                                         offset: __scan_start as u32,
-                                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                                     });
                                 };
                                 *p += match_len as usize;
@@ -3235,10 +3130,8 @@ mod __cssprettyparser_emit_impl {
                         }
                     }
                     if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: *p as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     }
                 }
@@ -3288,7 +3181,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         use crate::runtime::builder::StructBuilder as _;
         let __flat_checkpoint = builder.checkpoint();
         let __stylesheet_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
@@ -3304,8 +3197,7 @@ mod __cssprettyparser_emit_impl {
             builder,
             &__stylesheet_layout,
         );
-        let __body_result: ::core::result::Result<(), crate::runtime::tape::DtaError> = (||
-        {
+        let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 {
                     let __scan_start = *p;
@@ -3314,10 +3206,8 @@ mod __cssprettyparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -3337,10 +3227,8 @@ mod __cssprettyparser_emit_impl {
                         input,
                         *p,
                     ) else {
-                        return ::core::result::Result::Err(crate::runtime::tape::DtaError::Syntax {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
                             offset: __scan_start as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         });
                     };
                     *p += match_len as usize;
@@ -4581,7 +4469,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         parse_CssPrettyParser_stylesheet__value(input, p, state, builder)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
@@ -4595,7 +4483,7 @@ mod __cssprettyparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_CssPrettyParser::ScanState,
         builder: &mut crate::runtime::css_pretty::CssPrettyStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_CssPrettyParser::skip_space(input, p, state);
         parse_flat_CssPrettyParser_stylesheet(input, p, state, builder)
     }
@@ -6135,19 +6023,19 @@ mod __cssprettyparser_emit_impl {
                         &mut builder,
                     )
                     .map_err(|e| match e {
-                        crate::runtime::tape::DtaError::Syntax { offset, .. } => {
+                        crate::runtime::DtaError::Syntax { offset } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        crate::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                        crate::runtime::DtaError::UnexpectedEnd { offset } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        crate::runtime::tape::DtaError::InvalidState { .. } => {
+                        crate::runtime::DtaError::InvalidState { .. } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset: 0,
                                 rule: None,

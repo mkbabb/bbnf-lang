@@ -43,10 +43,8 @@ pub(super) fn emit_negate_tape(
             *p = save_p;
             if attempt.is_ok() {
                 return ::core::result::Result::Err(
-                    crate::runtime::tape::DtaError::Syntax {
+                    crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     },
                 );
             }
@@ -103,10 +101,8 @@ pub(super) fn emit_minus_tape(
             *p = save_p;
             if excluded_result.is_ok() {
                 return ::core::result::Result::Err(
-                    crate::runtime::tape::DtaError::Syntax {
+                    crate::runtime::DtaError::Syntax {
                         offset: save_p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     },
                 );
             }
@@ -254,10 +250,8 @@ pub(super) fn emit_primary_tape(
                 let end = at + #len;
                 if input.len() < end || input[at..end] != [#(#byte_lits),*] {
                     return ::core::result::Result::Err(
-                        crate::runtime::tape::DtaError::Syntax {
+                        crate::runtime::DtaError::Syntax {
                             offset: at as u32,
-                            failing_state: crate::runtime::tape::DtaStateId::NONE,
-                            failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                         },
                     );
                 }
@@ -282,10 +276,8 @@ pub(super) fn emit_primary_tape(
             Some(call) => quote! { let _ = (#call)?; },
             None => quote! {
                 return ::core::result::Result::Err(
-                    crate::runtime::tape::DtaError::Syntax {
+                    crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     },
                 );
             },

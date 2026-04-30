@@ -144,18 +144,14 @@ pub(super) fn emit_parse_keyword_struct_direct(
                     _first_byte: u8,
                     _state: &mut #support_mod::ScanState,
                     builder: &mut #builder_ty_e,
-                ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+                ) -> ::core::result::Result<(), crate::runtime::DtaError> {
                     use crate::runtime::builder::StructBuilder as _;
                     let at = *p;
                     let end = at + #len;
                     if input.len() < end || input[at..end] != [#(#byte_lits),*] {
                         return ::core::result::Result::Err(
-                            crate::runtime::tape::DtaError::Syntax {
+                            crate::runtime::DtaError::Syntax {
                                 offset: at as u32,
-                                failing_state:
-                                    crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule:
-                                    crate::runtime::tape::DtaRuleId(u32::MAX),
                             },
                         );
                     }
@@ -301,12 +297,8 @@ pub(super) fn emit_parse_keyword_struct_direct(
                                         grammar_suffix, *target_rid, ir,
                                     ).unwrap_or_else(|| quote! {
                                         ::core::result::Result::Err(
-                                            crate::runtime::tape::DtaError::Syntax {
+                                            crate::runtime::DtaError::Syntax {
                                                 offset: *p as u32,
-                                                failing_state:
-                                                    crate::runtime::tape::DtaStateId::NONE,
-                                                failing_rule:
-                                                    crate::runtime::tape::DtaRuleId(u32::MAX),
                                             },
                                         )
                                     });
@@ -345,7 +337,7 @@ pub(super) fn emit_parse_keyword_struct_direct(
                                             let __seq_builder_checkpoint = builder.checkpoint();
                                             let __seq_result: ::core::result::Result<
                                                 (),
-                                                crate::runtime::tape::DtaError,
+                                                crate::runtime::DtaError,
                                             > = (|| {
                                                 #inner_emit
                                                 ::core::result::Result::Ok(())
@@ -378,12 +370,8 @@ pub(super) fn emit_parse_keyword_struct_direct(
                             #first => {
                                 #(#tries)*
                                 return ::core::result::Result::Err(
-                                    crate::runtime::tape::DtaError::Syntax {
+                                    crate::runtime::DtaError::Syntax {
                                         offset: *p as u32,
-                                        failing_state:
-                                            crate::runtime::tape::DtaStateId::NONE,
-                                        failing_rule:
-                                            crate::runtime::tape::DtaRuleId(u32::MAX),
                                     },
                                 );
                             }
@@ -408,18 +396,14 @@ pub(super) fn emit_parse_keyword_struct_direct(
                     first_byte: u8,
                     state: &mut #support_mod::ScanState,
                     builder: &mut #builder_ty_p,
-                ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+                ) -> ::core::result::Result<(), crate::runtime::DtaError> {
                     use crate::runtime::builder::StructBuilder as _;
                     let _ = state;
                     match first_byte {
                         #(#arms)*
                         _ => ::core::result::Result::Err(
-                            crate::runtime::tape::DtaError::Syntax {
+                            crate::runtime::DtaError::Syntax {
                                 offset: *p as u32,
-                                failing_state:
-                                    crate::runtime::tape::DtaStateId::NONE,
-                                failing_rule:
-                                    crate::runtime::tape::DtaRuleId(u32::MAX),
                             },
                         ),
                     }

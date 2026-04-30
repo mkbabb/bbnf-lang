@@ -1,16 +1,29 @@
-//! `ParseErr` — the public parse-error type returned by generated
-//! `Grammar::parse(input)` functions.
+//! Parse and dispatcher error surfaces for generated grammars.
 //!
-//! Tranche AC.1. Carries either a syntactic failure (input byte
-//! offset + optional rule label) or a tape-construction failure
-//! (propagated from the tape builder's sticky error state).
-//!
-//! The error is intentionally minimal — a richer diagnostic surface
-//! layered on top can walk the rule stack and the source map, but
-//! the baseline public type stays small so it's cheap to return
-//! and cheap to pattern-match.
+//! `DtaError` is the internal rejection type returned by generated
+//! dispatchers. `ParseErr` is the public parse-entry type. Both carry
+//! only parse-position facts; DTA state/rule provenance is IR/compiler
+//! data and does not belong in the runtime surface.
 
-use tape::TapeBuildError;
+/// Internal error returned by generated dispatcher functions.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DtaError {
+    /// The dispatcher could not match at `offset`.
+    Syntax {
+        /// Byte offset where the match attempt failed.
+        offset: u32,
+    },
+    /// Parse needed another byte but reached EOF.
+    UnexpectedEnd {
+        /// Byte offset where the dispatcher terminated.
+        offset: u32,
+    },
+    /// Generated dispatch requested a state outside the valid range.
+    InvalidState {
+        /// Out-of-range generated state identifier.
+        state: u32,
+    },
+}
 
 /// Error returned by the generated `parse` entry point.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -27,12 +40,6 @@ pub enum ParseErr {
         /// the failure site is an anonymous inline sub-expression.
         rule: Option<u32>,
     },
-
-    /// The tape builder's sticky error fired during construction.
-    /// Only possible when the generated parser calls
-    /// [`tape::Tape<R>::set_error`] from a recovery path
-    /// — otherwise the builder never surfaces an error.
-    Tape(TapeBuildError),
 }
 
 impl std::fmt::Display for ParseErr {
@@ -42,15 +49,8 @@ impl std::fmt::Display for ParseErr {
                 Some(r) => write!(f, "parse error at byte {} (rule #{})", offset, r),
                 None => write!(f, "parse error at byte {}", offset),
             },
-            ParseErr::Tape(e) => write!(f, "tape build error: {:?}", e),
         }
     }
 }
 
 impl std::error::Error for ParseErr {}
-
-impl From<TapeBuildError> for ParseErr {
-    fn from(e: TapeBuildError) -> Self {
-        ParseErr::Tape(e)
-    }
-}

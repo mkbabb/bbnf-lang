@@ -103,12 +103,12 @@ pub fn emit_dispatcher(
             // mirrors the Ref-call emitter's per-shape switch.
             ShapeTag::Number => quote! {
                 let first = #support_mod::skip_space(input, p, state)
-                    .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
+                    .ok_or(crate::runtime::DtaError::UnexpectedEnd { offset: *p as u32 })?;
                 #target_ident(input, p, first, builder)
             },
             ShapeTag::Keyword => quote! {
                 let first = #support_mod::skip_space(input, p, state)
-                    .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
+                    .ok_or(crate::runtime::DtaError::UnexpectedEnd { offset: *p as u32 })?;
                 #target_ident(input, p, first, state, builder)
             },
             _ => quote! {
@@ -125,8 +125,8 @@ pub fn emit_dispatcher(
         // No shape coverage — shouldn't reach here (caller gates
         // dispatcher emission); emit a stub for safety.
         quote! {
-            Err(crate::runtime::tape::DtaError::InvalidState {
-                state: crate::runtime::tape::DtaStateId::NONE,
+            Err(crate::runtime::DtaError::InvalidState {
+                state: 0,
             })
         }
     };
@@ -172,7 +172,7 @@ pub fn emit_dispatcher(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             #nonroot_ident(input, p, state, builder)
         }
 
@@ -187,7 +187,7 @@ pub fn emit_dispatcher(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             #dispatch_body
         }
     }
@@ -212,8 +212,8 @@ pub(super) fn emit_alt_dispatch_body(
         _ => {
             // Single body — unreachable via root_tag guard above.
             return quote! {
-                Err(crate::runtime::tape::DtaError::InvalidState {
-                state: crate::runtime::tape::DtaStateId::NONE,
+                Err(crate::runtime::DtaError::InvalidState {
+                state: 0,
             })
             };
         }
@@ -297,7 +297,7 @@ pub(super) fn emit_alt_dispatch_body(
 
     quote! {
         let first = #support_mod::skip_space(input, p, state)
-            .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd { offset: *p as u32 })?;
+            .ok_or(crate::runtime::DtaError::UnexpectedEnd { offset: *p as u32 })?;
         let __result = match first {
             #object_arm
             #array_arm
@@ -307,10 +307,8 @@ pub(super) fn emit_alt_dispatch_body(
             #null_arm
             c => {
                 return ::core::result::Result::Err(
-                    crate::runtime::tape::DtaError::Syntax {
+                    crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
-                        failing_state: crate::runtime::tape::DtaStateId::NONE,
-                        failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
                     }
                 );
             }

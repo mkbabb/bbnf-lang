@@ -124,11 +124,11 @@ fn emit_parse_alt_dispatch_struct_direct(
             p: &mut usize,
             state: &mut #support_mod::ScanState,
             builder: &mut #builder_ty,
-        ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+        ) -> ::core::result::Result<(), crate::runtime::DtaError> {
             use crate::runtime::builder::StructBuilder;
 
             let first = #support_mod::skip_space(input, p, state)
-                .ok_or(crate::runtime::tape::DtaError::UnexpectedEnd {
+                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
 
@@ -151,7 +151,7 @@ fn emit_parse_alt_dispatch_struct_direct(
             let __handle = builder.begin_compound(&__layout);
             let __dispatch_result: ::core::result::Result<
                 (),
-                crate::runtime::tape::DtaError,
+                crate::runtime::DtaError,
             > = (|| {
                 #dispatch_arms
                 ::core::result::Result::Ok(())

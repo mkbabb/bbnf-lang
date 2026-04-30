@@ -510,17 +510,15 @@ mod __mathparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
         builder: &mut crate::runtime::math::MathStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let span_lo = *p as u32;
         let Some(match_len) = __regex_scan_MathParser(
             "(\\d+)?(\\.\\d+)?([eE][-+]?\\d+)?",
             input,
             *p,
         ) else {
-            return Err(crate::runtime::tape::DtaError::Syntax {
+            return Err(crate::runtime::DtaError::Syntax {
                 offset: span_lo,
-                failing_state: crate::runtime::tape::DtaStateId::NONE,
-                failing_rule: crate::runtime::tape::DtaRuleId(u32::MAX),
             });
         };
         *p += match_len as usize;
@@ -592,7 +590,7 @@ mod __mathparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
         builder: &mut crate::runtime::math::MathStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         parse_MathParser_number__value(input, p, state, builder)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
@@ -606,7 +604,7 @@ mod __mathparser_emit_impl {
         p: &mut usize,
         state: &mut __shape_support_MathParser::ScanState,
         builder: &mut crate::runtime::math::MathStructBuilder<'p>,
-    ) -> ::core::result::Result<(), crate::runtime::tape::DtaError> {
+    ) -> ::core::result::Result<(), crate::runtime::DtaError> {
         let _ = __shape_support_MathParser::skip_space(input, p, state);
         parse_hregex_MathParser_number(input, p, state, builder)
     }
@@ -699,19 +697,19 @@ mod __mathparser_emit_impl {
                         &mut builder,
                     )
                     .map_err(|e| match e {
-                        crate::runtime::tape::DtaError::Syntax { offset, .. } => {
+                        crate::runtime::DtaError::Syntax { offset } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        crate::runtime::tape::DtaError::UnexpectedEnd { offset } => {
+                        crate::runtime::DtaError::UnexpectedEnd { offset } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset,
                                 rule: None,
                             }
                         }
-                        crate::runtime::tape::DtaError::InvalidState { .. } => {
+                        crate::runtime::DtaError::InvalidState { .. } => {
                             crate::runtime::ParseErr::Syntax {
                                 offset: 0,
                                 rule: None,

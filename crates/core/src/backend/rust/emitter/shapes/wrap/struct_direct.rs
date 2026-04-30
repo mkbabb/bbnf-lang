@@ -95,9 +95,9 @@ fn quote_layout_literal(rule: &IrRule, ir: &GrammarIR) -> TokenStream {
 }
 
 /// Resolve the call expression for a Wrap-Alt branch on the
-/// struct-direct path. Returns `(call_tokens, first_byte_set)` per the
-/// tape-path partition; an empty first-byte set routes the branch as
-/// the linear-try fallback.
+/// struct-direct path. Returns `(call_tokens, first_byte_set)`;
+/// an empty first-byte set routes the branch as the linear-try
+/// fallback.
 fn emit_wrap_branch_call_struct_direct(
     inner: &IrNode,
     grammar_suffix: &str,
@@ -161,8 +161,8 @@ fn emit_struct_branch_attempt(call: &TokenStream, branch_idx: u32) -> TokenStrea
 }
 
 /// Emit the StructDirect Wrap-shape parse function. Mirrors the
-/// tape-path entry's structure (byte-dispatch + linear-try fallback)
-/// but routes structural emission through
+/// byte-dispatch + linear-try fallback structure while routing
+/// structural emission through
 /// `builder.begin_compound(&__wrap_layout)` /
 /// `builder.push_branch_tag(__wrap_branch_idx)` /
 /// `builder.end_compound(__wrap_handle)`.

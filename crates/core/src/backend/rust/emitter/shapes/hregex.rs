@@ -42,7 +42,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::super::dfa_codegen::regex_scan_adapter_ident;
-use super::dispatcher::{shape_fn_ident, visitor_shape_fn_ident};
+use super::dispatcher::shape_fn_ident;
 use super::sanitise_grammar;
 use bbnf_ir::registry::EmitStrategy;
 
@@ -530,82 +530,6 @@ pub fn emit_parse_number_via_hregex(
     }
 }
 
-/// AX.W0a.2.q — visitor-path mirror of
-/// [`emit_parse_number_via_hregex`] with the Number visitor
-/// signature (`input, p, first_byte, visitor`). Emits
-/// `parse_number_visitor_<grammar>_<rule>` so the visitor dispatcher
-/// continues to route via the Number-shape naming convention. Fires
-/// `visitor.number_f64(value)` with the decoded f64.
-pub fn emit_parse_number_visitor_via_hregex(
-    strategy: &EmitStrategy,
-    grammar_suffix: &str,
-    rule: &IrRule,
-    ir: &GrammarIR,
-) -> TokenStream {
-    let _ = strategy;
-    let rule_name = ir.get_string(rule.name);
-    let fn_ident = visitor_shape_fn_ident("number", grammar_suffix, rule_name);
-
-    let Some(sid) = extract_regex_pattern(&rule.body) else {
-        return quote! {
-            #[inline(always)]
-            #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-            pub fn #fn_ident<V>(
-                input: &[u8],
-                p: &mut usize,
-                first_byte: u8,
-                visitor: &mut V,
-            ) -> ::core::result::Result<(), crate::runtime::ParseErr>
-            where
-                V: ::tape::NumberVisitor,
-            {
-                let _ = (input, p, first_byte, visitor);
-                Err(crate::runtime::ParseErr::Syntax {
-                    offset: *p as u32, rule: None,
-                })
-            }
-        };
-    };
-    let pattern_lit = ir.get_string(sid).to_string();
-    let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
-
-    quote! {
-        /// AX.W0a.2.q — visitor-path Number-shape via regex-scan for
-        /// leading-dot-admitting rules; see
-        /// `emit_parse_number_via_hregex` for tape-path rationale.
-        #[inline(always)]
-        #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-        pub fn #fn_ident<V>(
-            input: &[u8],
-            p: &mut usize,
-            first_byte: u8,
-            visitor: &mut V,
-        ) -> ::core::result::Result<(), crate::runtime::ParseErr>
-        where
-            V: ::tape::NumberVisitor,
-        {
-            let _ = first_byte;
-            let span_lo = *p;
-            let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                return Err(crate::runtime::ParseErr::Syntax {
-                    offset: span_lo as u32, rule: None,
-                });
-            };
-            let span_hi = span_lo + match_len as usize;
-            *p = span_hi;
-            let __f64: f64 = core::str::from_utf8(&input[span_lo..span_hi])
-                .ok()
-                .and_then(|s| s.parse::<f64>().ok())
-                .unwrap_or(0.0);
-            visitor.number_f64(__f64).map_err(|_| {
-                crate::runtime::ParseErr::Syntax {
-                    offset: span_lo as u32, rule: None,
-                }
-            })
-        }
-    }
-}
-
 /// Emit a defensive stub when the rule body is not a single Regex
 /// leaf. The HRegex detector should gate admission upstream; this
 /// branch exists only to keep the emitter output compilable when the
@@ -649,86 +573,6 @@ fn extract_regex_pattern(node: &IrNode) -> Option<u32> {
             extract_regex_pattern(inner)
         }
         _ => None,
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// AW-V.W4-fix — visitor-path HRegex emitter.
-// ─────────────────────────────────────────────────────────────────────
-
-/// Emit `pub fn parse_hregex_visitor_<grammar>_<rule><V>(input, p,
-/// state, visitor) -> Result<(), ParseErr>`.
-///
-/// # AZ-I.W2.RE — strategy gate
-///
-/// Mirrors [`emit_parse_hregex`]. HRegex-shape rules are tape-only in
-/// W2; codegen-time panic on [`EmitStrategy::StructDirect`].
-pub fn emit_parse_hregex_visitor(
-    strategy: &EmitStrategy,
-    grammar_suffix: &str,
-    rule: &IrRule,
-    ir: &GrammarIR,
-) -> TokenStream {
-    let _ = strategy;
-    let rule_name = ir.get_string(rule.name);
-    let fn_ident = visitor_shape_fn_ident("hregex", grammar_suffix, rule_name);
-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
-
-    let pattern_sid = extract_regex_pattern(&rule.body);
-    let Some(sid) = pattern_sid else {
-        return quote! {
-            #[inline(always)]
-            #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-            pub fn #fn_ident<V>(
-                input: &[u8],
-                p: &mut usize,
-                state: &mut #support_mod::ScanState,
-                visitor: &mut V,
-            ) -> ::core::result::Result<(), crate::runtime::ParseErr>
-            where
-                V: ::tape::StringVisitor,
-            {
-                let _ = (input, p, state, visitor);
-                Ok(())
-            }
-        };
-    };
-    let pattern = ir.get_string(sid);
-    let pattern_lit = pattern.to_string();
-    let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
-
-    quote! {
-        /// AW-V.W4-fix — visitor-path HRegex-shape parse function.
-        ///
-        /// Regex scan via the per-grammar adapter; fires the
-        /// visitor's `string()` event with the matched span when
-        /// visitor is a StringVisitor. Non-string decoders (host_fn
-        /// payloads) dispatch at the per-grammar consumer wave.
-        #[inline(always)]
-        #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-        pub fn #fn_ident<V>(
-            input: &[u8],
-            p: &mut usize,
-            state: &mut #support_mod::ScanState,
-            visitor: &mut V,
-        ) -> ::core::result::Result<(), crate::runtime::ParseErr>
-        where
-            V: ::tape::StringVisitor,
-        {
-            let span_lo = *p;
-            let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
-                return Err(crate::runtime::ParseErr::Syntax {
-                    offset: span_lo as u32, rule: None,
-                });
-            };
-            let span_hi = *p + match_len as usize;
-            *p = span_hi;
-            visitor.string(&input[span_lo..span_hi]).map_err(|_| {
-                crate::runtime::ParseErr::Syntax {
-                    offset: span_lo as u32, rule: None,
-                }
-            })
-        }
     }
 }
 

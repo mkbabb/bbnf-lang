@@ -37,19 +37,43 @@ Dispatch after W1 close, or in parallel only when file bounds do not overlap.
 Ignored semantic tests, early-return harness masking, and bootstrap fallback
 keep W2 blocked until corrected or same-tranche redress is specified.
 
-## W3 - Fact, Type, CSP, and Projection Authority
+## W3 substrate authority - split into W3a / W3b / W3c
 
-Dispatch as the primary substrate wave after W0/W1, and only parallel to W2
+Per REAUDIT 2026-04-30 SYNTHESIS A3 the original single W3 wave was
+restructured into three sequential waves so file bounds are disjoint and
+each lane closes on its own evidence. Dispatch each as the primary
+substrate wave for its axis after W0p and W1, and only parallel to W2
 when bounds are disjoint.
 
-- W3.1 Durable fact authority: own egraph, recognizer, node, and projection
+### W3a - Fact and Type Authority
+
+- W3a.0 Pipeline registry research: enumerate `MultiPathParser` /
+  `ImportPrettyParser` / `SplitPrettyParser` callers; produce verdict at
+  `audit/W3a-0-pipeline-registry-research.md` before W3a planning.
+- W3a.1 Durable fact authority: own egraph, recognizer, node, and projection
   facts with at least one production consumer.
-- W3.2 Type obligation solver: own cycle and heterogeneous alternation
-  obligations; no silent `BoxedEnum` fallback may close the wave.
-- W3.3 CSP strategy globalization: own `shape_dict`, shape/layout/dispatch
-  constraints, and their production consumption.
-- W3.4 Projection consumption: own StructDirect and emitter fallback removal
-  for EBNF/CSS/Sheets/BBNF projection failures.
+- W3a.2 Type obligation solver: own cycle and heterogeneous alternation
+  obligations; delete the silent `BoxedEnum` fallbacks at
+  `crates/ir/src/passes/types/constraint/reference.rs:74` and
+  `crates/ir/src/passes/types/constraint/revise.rs:123`. No silent
+  fallback may close the wave.
+
+### W3b - CSP Strategy Globalization
+
+- W3b.1 Strategy globalization: own `shape_dict`, shape/layout/dispatch
+  constraints, and their production consumption. Replace any
+  `shape_dict::install` no-op with a consumed constraint.
+
+### W3c - Projection Consumption and Registry Authority
+
+- W3c.1 Projection consumption: own StructDirect and emitter fallback
+  removal for EBNF/CSS/Sheets/BBNF projection failures. File bounds carve
+  with W2: shape-specific `crates/core/src/backend/rust/emitter/shapes/**/struct_direct.rs`
+  belong to W2; the rest of `crates/core/src/backend/rust/emitter/**`
+  belong to W3c.
+- W3c.2 Registry authority: resolve pipeline registry holes at
+  `crates/ir/src/registry/strategy.rs:257` for `MultiPathParser` /
+  `ImportPrettyParser` / `SplitPrettyParser` per W3a.0 verdict.
 
 Every substrate lands with its consumer and a test that fails when the
 consumer is disconnected. Compatibility shims and no-op constraints are

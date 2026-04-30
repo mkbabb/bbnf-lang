@@ -322,7 +322,6 @@ impl JsonVisitor for ValueVisitor {
     }
 }
 
-
 // ── TapeVisitor ─────────────────────────────────────────────────────
 
 /// Materialises JSON events into a `tape::Columns` substrate via
@@ -492,14 +491,8 @@ impl<'input> JsonVisitor for TapeVisitor<'input> {
 
     #[inline(always)]
     fn null(&mut self) -> Result<(), Self::Error> {
-        self.tape.push_leaf_with(
-            TapeKind::Literal,
-            0,
-            0,
-            0,
-            0,
-            PayloadData::InlineScalar(0),
-        );
+        self.tape
+            .push_leaf_with(TapeKind::Literal, 0, 0, 0, 0, PayloadData::InlineScalar(0));
         Ok(())
     }
 }

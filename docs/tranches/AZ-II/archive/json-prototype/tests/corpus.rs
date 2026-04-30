@@ -6,12 +6,11 @@
 //! the [`Document::root`] is `Some`. Smaller smoke tests exercise
 //! scalar roots + error paths.
 
-use json_prototype::{parse_json, Document, TapeVisitor, Value, ValueVisitor};
+use json_prototype::{Document, TapeVisitor, Value, ValueVisitor, parse_json};
 
 fn load(name: &str) -> String {
     let path = format!("../../data/json/{}", name);
-    std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("{}: {}", path, e))
+    std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {}", path, e))
 }
 
 fn parse_doc(bytes: &[u8]) -> Document {

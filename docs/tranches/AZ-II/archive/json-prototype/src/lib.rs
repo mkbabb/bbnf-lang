@@ -47,7 +47,7 @@ pub mod string;
 pub mod value;
 pub mod visitor;
 
-pub use value::{ArenaSpan, Document, NodeSpan, Number, StringSpan, Value, ARENA_TAG};
+pub use value::{ARENA_TAG, ArenaSpan, Document, NodeSpan, Number, StringSpan, Value};
 pub use visitor::{JsonVisitor, TapeVisitor, ValueVisitor};
 
 use simd::ScanState;
@@ -149,14 +149,10 @@ impl std::error::Error for ParseError {}
 ///   [`visitor::TapeVisitor`]) cover the sonic-parity and
 ///   AW-IV-substrate bench lanes respectively.
 #[inline]
-pub fn parse_json<V: JsonVisitor>(
-    input: &[u8],
-    visitor: &mut V,
-) -> Result<(), ParseError> {
+pub fn parse_json<V: JsonVisitor>(input: &[u8], visitor: &mut V) -> Result<(), ParseError> {
     let mut p = 0usize;
     let mut state = ScanState::new();
-    let first = skip_space(input, &mut p, &mut state)
-        .ok_or(ParseError::Eof(0))?;
+    let first = skip_space(input, &mut p, &mut state).ok_or(ParseError::Eof(0))?;
     parse_value(input, &mut p, &mut state, first, visitor)?;
     let _ = skip_space(input, &mut p, &mut state);
     if p != input.len() {
@@ -178,11 +174,7 @@ pub fn parse_json<V: JsonVisitor>(
 /// on inputs with short or zero whitespace runs the fast-exit path
 /// skips SIMD entirely.
 #[inline(always)]
-pub(crate) fn skip_space(
-    input: &[u8],
-    p: &mut usize,
-    state: &mut ScanState,
-) -> Option<u8> {
+pub(crate) fn skip_space(input: &[u8], p: &mut usize, state: &mut ScanState) -> Option<u8> {
     // Fast exit when the next byte is non-whitespace — covers 100%
     // of citm's structural runs and ~90% of twitter's.
     match input.get(*p) {
@@ -281,8 +273,7 @@ pub(crate) fn parse_object<V: JsonVisitor>(
             return Err(ParseError::ExpectColon(*p));
         }
         *p += 1;
-        let val_first = skip_space(input, p, state)
-            .ok_or(ParseError::Eof(*p))?;
+        let val_first = skip_space(input, p, state).ok_or(ParseError::Eof(*p))?;
         parse_value(input, p, state, val_first, visitor)?;
         match skip_space(input, p, state) {
             Some(b'}') => {
@@ -315,8 +306,7 @@ pub(crate) fn parse_array<V: JsonVisitor>(
     visitor
         .begin_array()
         .map_err(|_| ParseError::VisitorReject(begin_at))?;
-    let mut first = skip_space(input, p, state)
-        .ok_or(ParseError::Eof(*p))?;
+    let mut first = skip_space(input, p, state).ok_or(ParseError::Eof(*p))?;
     if first == b']' {
         *p += 1;
         return visitor
@@ -334,8 +324,7 @@ pub(crate) fn parse_array<V: JsonVisitor>(
             }
             Some(b',') => {
                 *p += 1;
-                first = skip_space(input, p, state)
-                    .ok_or(ParseError::Eof(*p))?;
+                first = skip_space(input, p, state).ok_or(ParseError::Eof(*p))?;
             }
             _ => return Err(ParseError::ExpectCommaOrEnd(*p)),
         }
@@ -379,11 +368,7 @@ pub(crate) fn parse_number<V: JsonVisitor>(
 /// Expect an exact keyword sequence at `*p`. Advances `*p` past it on
 /// match; returns [`ParseError::ExpectKeyword`] on miss.
 #[inline(always)]
-pub(crate) fn expect_keyword(
-    input: &[u8],
-    p: &mut usize,
-    word: &[u8],
-) -> Result<(), ParseError> {
+pub(crate) fn expect_keyword(input: &[u8], p: &mut usize, word: &[u8]) -> Result<(), ParseError> {
     let at = *p;
     let end = at + word.len();
     if input.len() < end || &input[at..end] != word {

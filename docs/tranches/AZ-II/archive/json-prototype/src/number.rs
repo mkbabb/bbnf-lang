@@ -124,13 +124,11 @@ pub(crate) fn parse_number_body<V: JsonVisitor>(
         #[cfg(target_arch = "aarch64")]
         {
             while *p + 16 <= len {
-                let (sum, count) =
-                    unsafe { simd_str2int(&input[*p..*p + 16], 16) };
+                let (sum, count) = unsafe { simd_str2int(&input[*p..*p + 16], 16) };
                 if count == 0 {
                     break;
                 }
-                mantissa =
-                    mantissa.wrapping_mul(POW10_U64[count]).wrapping_add(sum);
+                mantissa = mantissa.wrapping_mul(POW10_U64[count]).wrapping_add(sum);
                 *p += count;
                 if count < 16 {
                     break;
@@ -327,21 +325,16 @@ unsafe fn simd_str2int(c: &[u8], need: usize) -> (u64, usize) {
         let sum = match count {
             0 => 0,
             1 => vgetq_lane_u8::<0>(digits) as u64,
-            2 => {
-                (vgetq_lane_u8::<0>(digits) as u64) * 10
-                    + (vgetq_lane_u8::<1>(digits) as u64)
-            }
+            2 => (vgetq_lane_u8::<0>(digits) as u64) * 10 + (vgetq_lane_u8::<1>(digits) as u64),
             3 => {
                 let shifted = vextq_u8::<13>(vdupq_n_u8(0), digits);
                 let p1 = packadd_1!(shifted);
-                (vgetq_lane_u16::<6>(p1) as u64) * 100
-                    + (vgetq_lane_u16::<7>(p1) as u64)
+                (vgetq_lane_u16::<6>(p1) as u64) * 100 + (vgetq_lane_u16::<7>(p1) as u64)
             }
             4 => {
                 let shifted = vextq_u8::<12>(vdupq_n_u8(0), digits);
                 let p1 = packadd_1!(shifted);
-                (vgetq_lane_u16::<6>(p1) as u64) * 100
-                    + (vgetq_lane_u16::<7>(p1) as u64)
+                (vgetq_lane_u16::<6>(p1) as u64) * 100 + (vgetq_lane_u16::<7>(p1) as u64)
             }
             5 => simd_add_5_8!(digits, 5),
             6 => simd_add_5_8!(digits, 6),
@@ -356,8 +349,7 @@ unsafe fn simd_str2int(c: &[u8], need: usize) -> (u64, usize) {
             15 => simd_add_9_15!(digits, 15),
             16 => {
                 let p = simd_add_8!(digits);
-                vgetq_lane_u64::<0>(p) * 100000000
-                    + vgetq_lane_u64::<1>(p)
+                vgetq_lane_u64::<0>(p) * 100000000 + vgetq_lane_u64::<1>(p)
             }
             _ => core::hint::unreachable_unchecked(),
         };

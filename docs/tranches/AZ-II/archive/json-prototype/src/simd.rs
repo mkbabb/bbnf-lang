@@ -101,9 +101,7 @@ pub(crate) fn skip_space_slow(input: &[u8], p: &mut usize, state: &mut ScanState
         }
 
         // SAFETY: bounds checked above — `input[*p..*p+64]` is valid.
-        let stripe = unsafe {
-            std::slice::from_raw_parts(input.as_ptr().add(*p), 64)
-        };
+        let stripe = unsafe { std::slice::from_raw_parts(input.as_ptr().add(*p), 64) };
         let mask = nospace_bitmap_64(stripe);
         state.nospace_bits = mask;
         state.nospace_start = *p as isize;
@@ -130,7 +128,11 @@ pub(crate) fn skip_space_slow(input: &[u8], p: &mut usize, state: &mut ScanState
 /// fallback is the per-byte loop.
 #[inline(always)]
 pub(crate) fn nospace_bitmap_64(stripe: &[u8]) -> u64 {
-    debug_assert_eq!(stripe.len(), 64, "nospace_bitmap_64 expects a 64-byte stripe");
+    debug_assert_eq!(
+        stripe.len(),
+        64,
+        "nospace_bitmap_64 expects a 64-byte stripe"
+    );
 
     #[cfg(target_arch = "aarch64")]
     unsafe {

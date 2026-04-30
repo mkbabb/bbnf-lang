@@ -96,7 +96,10 @@ impl StringSpan {
     /// slice.
     #[inline(always)]
     pub fn borrowed(ptr: *const u8, len: usize) -> Self {
-        debug_assert!((ptr as u64) & ARENA_TAG == 0, "user-space pointer must not set bit 63");
+        debug_assert!(
+            (ptr as u64) & ARENA_TAG == 0,
+            "user-space pointer must not set bit 63"
+        );
         Self {
             loc: ptr as u64,
             len: len as u32,
@@ -254,10 +257,7 @@ impl Document {
     /// further are returned by-value; the caller can re-resolve them
     /// via this method.
     #[inline]
-    pub fn object_entries(
-        &self,
-        span: NodeSpan,
-    ) -> impl Iterator<Item = (&[u8], Value)> + '_ {
+    pub fn object_entries(&self, span: NodeSpan) -> impl Iterator<Item = (&[u8], Value)> + '_ {
         let mut iter = self.children(span);
         core::iter::from_fn(move || {
             let k = iter.next()?;

@@ -198,7 +198,6 @@ dependencies = [
  "iai-callgrind",
  "indexmap",
  "jiter",
- "json-prototype",
  "lightningcss",
  "mimalloc",
  "nom",
@@ -216,7 +215,7 @@ dependencies = [
  "serde_json_borrow",
  "simd-json",
  "simd-scan",
- "sonic-rs 0.5.8",
+ "sonic-rs",
  "syn 2.0.117",
  "tape",
  "tempfile",
@@ -1768,19 +1767,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "json-prototype"
-version = "0.1.0"
-dependencies = [
- "divan",
- "mimalloc",
- "parse_that",
- "serde_json",
- "simd-scan",
- "sonic-rs 0.3.17",
- "tape",
-]
-
-[[package]]
 name = "json-strip-comments"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3246,26 +3232,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3775c3390edf958191f1ab1e8c5c188907feebd0f3ce1604cb621f72961dbf32"
 dependencies = [
  "cfg-if",
-]
-
-[[package]]
-name = "sonic-rs"
-version = "0.3.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0275f9f2f07d47556fe60c2759da8bc4be6083b047b491b2d476aa0bfa558eb1"
-dependencies = [
- "bumpalo",
- "bytes",
- "cfg-if",
- "faststr",
- "itoa",
- "ref-cast",
- "ryu",
- "serde",
- "simdutf8",
- "sonic-number",
- "sonic-simd",
- "thiserror 2.0.18",
 ]
 
 [[package]]

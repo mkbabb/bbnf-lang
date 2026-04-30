@@ -38,7 +38,11 @@ pub(crate) fn parse_string_body<V: JsonVisitor>(
     is_key: bool,
 ) -> Result<(), ParseError> {
     let open = *p;
-    debug_assert_eq!(input.get(open), Some(&b'"'), "parse_string expects opening `\"`");
+    debug_assert_eq!(
+        input.get(open),
+        Some(&b'"'),
+        "parse_string expects opening `\"`"
+    );
     let body_start = open + 1;
     let tail = input.get(body_start..).ok_or(ParseError::Eof(open))?;
     match first_quote_or_backslash(tail) {

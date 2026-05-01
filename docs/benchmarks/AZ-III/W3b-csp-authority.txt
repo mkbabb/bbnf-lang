@@ -1,0 +1,103 @@
+AZ-III.W3b — CSP authority: unified manifest
+============================================
+
+Date:        2026-04-30
+Worktree:    /Users/mkbabb/Programming/bbnf-wt-azIII-w3b
+Base commit: 876e918b (master)
+Wave:        AZ-III.W3b — CSP Strategy Globalization
+
+Sub-units (all four landed):
+
+  W3b.1  feat(csp/shape-dict): real installer with consumer wiring   5aa14c7b
+  W3b.2  feat(csp/layout): layout constraints with payload consumer  10429ff2
+  W3b.3  feat(csp/dispatch): dispatch constraints with strategy ...  2b51aaa8
+  W3b.4  chore(csp-solver): align strategy domain with global ...    dd08f0f7
+  W3b.t  test(csp/authority): cover shape, layout, dispatch ...      e25cb5ff
+
+
+Producer / consumer ledger
+--------------------------
+
+| installer            | producer fact (read by installer)            | consumer (reads `recognizer_decisions`)                        | NodeId-keyed VarId map  |
+|----------------------|----------------------------------------------|----------------------------------------------------------------|-------------------------|
+| `shape::install`     | `node_facts[id].recognizer.shape ==          | `crates/core/src/backend/strategy/alt_strategy.rs`             | `ConstraintCtx.alt_vars`|
+|                      |   TokenLedBranches | KeywordPrefix |          |   reads `ir.recognizer_decisions[id].alt_mode`                 |                         |
+|                      |   DelimiterBalanced | SeparatorList`         | `crates/core/src/backend/driver/wrap.rs::compile_wrap`         | `ConstraintCtx.wrap_vars`|
+|                      |                                              |   reads `ir.recognizer_decisions[id].wrap_mode`                |                         |
+| `layout::install`    | `ir.delim_scan_configs[id]` membership       | `crates/core/src/backend/driver/wrap.rs::compile_wrap`         | `ConstraintCtx.wrap_vars`|
+|                      |   OR `node_facts[id].recognizer.shape ==     |   reads `ir.recognizer_decisions[id].wrap_mode`                |                         |
+|                      |   SeparatorList | DelimiterBalanced`         |                                                                |                         |
+| `dispatch::install`  | `ir.key_dispatch_configs[id]` membership     | `crates/core/src/backend/strategy/alt_strategy.rs`             | `ConstraintCtx.alt_vars`|
+|                      |   OR `ir.keyword_branches[id]` membership    |   reads `ir.recognizer_decisions[id].alt_mode`                 |                         |
+| `engine::install`    | `regex_info[sid].feasible_engines`           | `crates/core/src/generate/regex/cost_model.rs`                 | `ConstraintCtx.engine_vars`|
+| (pre-existing)       |                                              |   reads `ir.regex_engine_decisions[sid]`                       |                         |
+| `shape_dict` selection | `ir.shape_dict_templates` (grammar-wide)    | `crates/core/src/pipeline/compile.rs:861` writes               | (grammar-wide, not      |
+|  (`solve_shape_dict_selection`) |                                     |   `ir.shape_dict_selection`; codegen consumes downstream       |  per-component)         |
+
+
+Disconnect / failing-without-it tests
+-------------------------------------
+
+`crates/ir/tests/lattices/csp_authority.rs` — five tests:
+
+  shape_constraint_pins_alt_mode_for_keyword_prefix          PASS
+  shape_constraint_disconnect_falls_back_to_checkpoint        PASS
+  layout_constraint_pins_wrap_mode_when_delim_scan_present    PASS
+  layout_constraint_disconnect_picks_generic_without_fact     PASS
+  dispatch_constraint_pins_alt_mode_when_key_dispatch_config_present
+                                                              PASS
+
+Disconnect proof: each "pin" test populates the producer fact and
+asserts `recognizer_decisions[id]` carries the expected mode after
+`solve_grammar_components`. Each "disconnect" test omits the producer
+fact and asserts the CSP returns its untargeted cost-min instead
+(Checkpoint / Generic). Removing any of the three new installers
+from `install_cross_rule_constraints` flips the corresponding pin
+test to FAIL.
+
+
+No-op installer proof
+---------------------
+
+`rg -n "install\\(.*-> usize \\{ 0 \\}"` over
+`crates/ir/src/passes/csp_strategy/constraints/`:
+
+  (no matches — the no-op is gone; the file's commentary mentions
+  the `shape_dict::install` historical name in a doc comment but
+  contains no executable no-op)
+
+
+Hard-gate runs
+--------------
+
+  cargo nextest run --cargo-profile ax-iter -p csp-solver
+    Summary [0.057s] 99 tests run: 99 passed, 6 skipped
+
+  cargo nextest run --cargo-profile ax-iter -p bbnf-ir --test lattices csp_authority
+    Summary [0.008s] 5 tests run: 5 passed, 74 skipped
+
+  cargo iter-check
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 2.14s
+    (workspace-wide compile-clean)
+
+
+Architectural notes
+-------------------
+
+1. Each installer reads upstream FACTS (recognizer.shape,
+   delim_scan_configs, key_dispatch_configs, keyword_branches) and
+   issues `Csp::add_equals(var, value)` — the canonical pin
+   primitive owned by the csp-solver crate. There is no inline
+   `LambdaConstraint::new` boilerplate in any installer (W3b.4
+   alignment).
+
+2. `ConstraintCtx` carries four per-component variable maps:
+   `engine_vars` (existing), `alt_vars` and `wrap_vars` (added
+   AZ-III.W3b). Each installer projects from the relevant map.
+
+3. The grammar-wide shape-dict admission selection
+   (`solve_shape_dict_selection`) remains a separate pass because
+   the budget cardinality decision is not per-component. Per the
+   updated module docstring, the per-component `shape_dict::install`
+   no-op was deleted; per-site shape authority lives in
+   `shape::install`.

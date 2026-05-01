@@ -1,0 +1,80 @@
+AZ-III.W3b.3 — dispatch constraint consumer evidence
+=====================================================
+
+Date:        2026-04-30
+Wave:        AZ-III.W3b.3 — Dispatch Constraint Installer
+Commit:      2b51aaa8 — feat(csp/dispatch): dispatch constraints with strategy consumer
+
+Producer
+--------
+
+`crate::passes::recognizers::key_dispatch::collect` populates
+`ir.key_dispatch_configs[id]` for Alt nodes whose branches share a
+disjoint leading-literal pattern. The miner produces a
+`KeyDispatchMatch = (KeyDispatchConfig, Vec<DetectedBranch>,
+Vec<usize>)` tuple per match.
+
+`crate::passes::recognizers::keyword_stats::collect` populates
+`ir.keyword_branches[id]` for Alt nodes the keyword-statistics
+miner identifies as keyword-led.
+
+
+Installer
+---------
+
+`crates/ir/src/passes/csp_strategy/constraints/dispatch.rs::install`
+
+For each Alt variable in the component, `pin_for_dispatch` resolves
+the pin in priority order:
+
+  1. `key_dispatch_configs[id]` membership ⇒ AltMode::KeyDispatch.
+  2. `keyword_branches[id]` membership      ⇒ AltMode::KeyDispatch.
+
+The pin is registered through `Csp::add_equals` (W3b.4 alignment).
+
+
+Production consumer
+-------------------
+
+`crates/core/src/backend/strategy/alt_strategy.rs::decide_alt_strategy`
+  — lines 140-186 read
+    `ir.recognizer_decisions.get(&id).and_then(|d| d.alt_mode.as_ref())`
+  and map the resulting AltMode to AltStrategy.
+
+The pre-W3b consumer carried two sidecar overrides at lines 161-166
+and 176-183 that re-checked `ir.key_dispatch_configs.contains_key(&id)`
+to override the CSP answer. With the dispatch pin installed, the CSP
+already produces `AltMode::KeyDispatch` for those NodeIds, so the
+sidecar override is redundant.
+
+(The sidecar override removal is a downstream wave concern —
+W3b's hard gate is "the CSP fact carries the authority", which
+is met by the pin installation. W3c may delete the override.)
+
+
+Disconnect test
+---------------
+
+`crates/ir/tests/lattices/csp_authority.rs::dispatch_constraint_pins_alt_mode_when_key_dispatch_config_present`
+
+Builds a 2-branch Alt (Literal | Literal), installs a
+KeywordPrefix recognizer fact (so KeyDispatch is in the CSP
+domain), populates `key_dispatch_configs[alt_id]` with a synthetic
+`KeyDispatchMatch`, runs `solve_grammar_components`, and asserts:
+
+  decisions[alt_id].alt_mode == Some(AltMode::KeyDispatch)
+
+The complementary `shape_constraint_disconnect_falls_back_to_checkpoint`
+test in the same module asserts the Alt picks Checkpoint without
+any producer fact — proving the dispatch pin is what activates
+KeyDispatch (the only path that adds it to the CSP domain *and*
+forces it as the cost-min answer).
+
+
+Test run
+--------
+
+  cargo nextest run --cargo-profile ax-iter -p bbnf-ir --test lattices \
+    csp_authority::dispatch_constraint_pins_alt_mode_when_key_dispatch_config_present
+
+  Test PASS in ~7ms.

@@ -1,0 +1,98 @@
+AZ-III.W3b.4 — CSP solver crate alignment evidence
+===================================================
+
+Date:        2026-04-30
+Wave:        AZ-III.W3b.4 — CSP Solver Crate Alignment
+Commit:      dd08f0f7 — chore(csp-solver): align strategy domain with global decision surface
+
+
+Alignment summary
+-----------------
+
+The csp-solver crate already exposed `Csp::add_equals(var, value)`
+as the canonical pin primitive (`crates/csp-solver/src/lib.rs:184`).
+The three new W3b constraint installers (`shape::install`,
+`layout::install`, `dispatch::install`) were initially landing
+inline `LambdaConstraint::new(vec![var], move |a| ..., format!())`
+boilerplate per pin. Per `feedback_isomorphic_api` ("bindings mirror
+the parent crate's API exactly; no adaptor layers"), the inline
+boilerplate is an orthogonal API.
+
+W3b.4 collapses each installer's `make_*_pin` helper to a single
+`csp.add_equals(var, value)` call. The CSP solver and the IR
+consumer now share one pin surface.
+
+
+Diff stats
+----------
+
+Before refactor (post W3b.1+W3b.2+W3b.3):
+  shape.rs    161 LOC — included `make_alt_pin` + `make_wrap_pin` helpers.
+  layout.rs   112 LOC — included `make_pin` helper.
+  dispatch.rs  98 LOC — included `make_pin` helper.
+
+After refactor (post W3b.4):
+  shape.rs    136 LOC (-25)
+  layout.rs   100 LOC (-12)
+  dispatch.rs  88 LOC (-10)
+
+Net delta: -47 LOC of inline boilerplate, replaced with three
+`csp.add_equals(...)` call sites that delegate to the solver's
+canonical primitive.
+
+
+Solver-side test surface
+------------------------
+
+The csp-solver crate exposes:
+
+  - `Csp::add_equals` (lib.rs:184)
+  - `Csp::add_constraint` (lib.rs:157)
+  - `Csp::add_constraint_enum` (lib.rs:162)
+  - `Csp::add_soft_constraint` (lib.rs:167)
+  - `Csp::add_not_equal`, `add_all_different`, `add_less_than`,
+    `add_greater_than` (typed devirtualised pins).
+
+All eight surfaces are covered by the existing csp-solver test
+suite (`crates/csp-solver/tests/`). Run:
+
+  cargo nextest run --cargo-profile ax-iter -p csp-solver
+
+Result:
+
+  Summary [0.057s] 99 tests run: 99 passed, 6 skipped
+
+The strategy-domain consumer (`crates/ir/src/passes/csp_strategy/`)
+uses only `add_constraint` (for the existing `EnginePropagation`
+pairwise implications) and `add_equals` (for the three W3b pins).
+Both are exercised by `crates/ir/tests/lattices/csp_authority.rs`.
+
+
+Orthogonal-API audit
+--------------------
+
+Searched `crates/csp-solver/src/` for legacy markers:
+
+  rg -n "todo|TODO|legacy|deprecated|FIXME|HACK|workaround" \
+     crates/csp-solver/src/
+
+Result: 0 hits.
+
+The `Csp` API surface in `crates/csp-solver/src/lib.rs` is the
+single source of truth — no `*_v2`, no fallback paths, no
+parallel old/new codepaths.
+
+
+Documentation alignment
+-----------------------
+
+The csp-solver crate retains its lib-level docstring:
+
+  "//! A generalized CSP (Constraint Satisfaction Problem) solver."
+
+The strategy-domain consumer module docstring at
+`crates/ir/src/passes/csp_strategy/mod.rs:1-121` already documented
+the per-component partition; the W3b update extended
+`install_cross_rule_constraints` doc to enumerate the four
+installers (engine, shape, layout, dispatch) so the docstring
+accurately describes the runtime topology.

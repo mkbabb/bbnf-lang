@@ -1,0 +1,75 @@
+AZ-III.W3b.2 — layout constraint consumer evidence
+===================================================
+
+Date:        2026-04-30
+Wave:        AZ-III.W3b.2 — Layout Constraint Installer
+Commit:      10429ff2 — feat(csp/layout): layout constraints with payload consumer
+
+Producer
+--------
+
+`crate::passes::recognizers::delim_scan::collect` populates
+`ir.delim_scan_configs[id]` for Wrap nodes that match the
+forward-memchr-to-close shape.
+
+`crate::passes::recognizers` populates
+`ir.node_facts[id].recognizer.shape == SeparatorList | DelimiterBalanced`
+for Wrap nodes that match the corresponding patterns.
+
+
+Installer
+---------
+
+`crates/ir/src/passes/csp_strategy/constraints/layout.rs::install`
+
+For each Wrap variable in the component, `pin_for_layout` resolves
+the pin in priority order:
+
+  1. `delim_scan_configs[id]` membership ⇒ WrapMode::BalancedScan.
+  2. `node_facts[id].recognizer.shape == SeparatorList` ⇒ SepBy.
+  3. `node_facts[id].recognizer.shape == DelimiterBalanced` ⇒ BalancedScan.
+
+The pin is registered through `Csp::add_equals` (W3b.4 alignment).
+
+
+Production consumer
+-------------------
+
+`crates/core/src/backend/driver/wrap.rs::compile_wrap`
+  — line 105-110 reads
+    `ir.dag.as_ref().and_then(|dag| dag.node_for(wrap_root))`
+       `.and_then(|id| ir.recognizer_decisions.get(&id))`
+       `.and_then(|d| d.wrap_mode.as_ref())`.
+
+When the layout pin is installed, this read returns the
+authoritative WrapMode without falling back to recomputation.
+
+
+Disconnect test
+---------------
+
+`crates/ir/tests/lattices/csp_authority.rs::layout_constraint_pins_wrap_mode_when_delim_scan_present`
+
+Builds a 3-node Wrap (open / middle / close), populates
+`delim_scan_configs[wrap_id]` with a forward_memchr config, and a
+DelimiterBalanced recognizer fact (so BalancedScan is in the CSP
+domain). Runs `solve_grammar_components` and asserts:
+
+  decisions[wrap_id].wrap_mode == Some(WrapMode::BalancedScan)
+
+`crates/ir/tests/lattices/csp_authority.rs::layout_constraint_disconnect_picks_generic_without_fact`
+
+Same fixture without the `delim_scan_configs` entry. The Wrap
+domain holds only Generic (the universal fallback). The CSP picks
+Generic. Asserting `wrap_mode == Some(WrapMode::Generic)` proves
+the producer fact is what activates the BalancedScan pin.
+
+
+Test run
+--------
+
+  cargo nextest run --cargo-profile ax-iter -p bbnf-ir --test lattices \
+    csp_authority::layout_constraint_pins_wrap_mode_when_delim_scan_present \
+    csp_authority::layout_constraint_disconnect_picks_generic_without_fact
+
+  Both tests PASS in ~7ms.

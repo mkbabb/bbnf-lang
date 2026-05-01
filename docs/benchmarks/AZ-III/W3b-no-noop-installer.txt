@@ -1,0 +1,58 @@
+AZ-III.W3b — no-op installer scan
+==================================
+
+Date:  2026-04-30
+Wave:  AZ-III.W3b.1 (keystone)
+Path:  crates/ir/src/passes/csp_strategy/constraints/
+
+Pre-W3b state
+-------------
+
+`crates/ir/src/passes/csp_strategy/constraints/shape_dict.rs:134-136`:
+
+    pub fn install(_ctx: &ConstraintCtx<'_>, _csp: &mut Csp<StrategyDomain>, _ir: &GrammarIR) -> usize {
+        0
+    }
+
+This was the literal no-op called out in:
+  - REAUDIT 2026-04-30 lane 3, row 9 of §3 / row 9 of §6
+  - AZ-III Carried Work Ledger ("CSP `shape_dict` no-op /
+    under-consumed global decisions" → W3b)
+  - W3b.md hard-gate clause 4: "rg over the constraint surface
+    returns no no-op hits."
+
+
+Post-W3b state
+--------------
+
+The function was deleted in commit 5aa14c7b. The module docstring
+now documents that there is no per-component shape_dict install
+because shape-template admission is grammar-wide.
+
+Replacement substrate (AZ-III.W3b.1):
+  - `shape::install`    → `crates/ir/src/passes/csp_strategy/constraints/shape.rs`
+  - `layout::install`   → `crates/ir/src/passes/csp_strategy/constraints/layout.rs`
+  - `dispatch::install` → `crates/ir/src/passes/csp_strategy/constraints/dispatch.rs`
+
+Each emits one `Csp::add_equals` pin per qualifying NodeId.
+
+
+Verification
+------------
+
+Command:
+  rg -n "install\(.*-> usize \{ 0 \}" \
+     /Users/mkbabb/Programming/bbnf-wt-azIII-w3b/crates/ir/src/passes/csp_strategy/constraints/
+
+Result:
+  (no matches)
+
+Command:
+  rg -n "shape_dict::install" \
+     /Users/mkbabb/Programming/bbnf-wt-azIII-w3b/crates/ir/src/passes/csp_strategy/constraints/
+
+Result:
+  shape_dict.rs:126:// `shape_dict::install` because the admission decision is
+
+The single hit is in a doc comment that *describes why the no-op
+was removed*, not an executable definition. The hard gate is met.

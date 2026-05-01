@@ -1,0 +1,387 @@
+AZ-III.W3a.2 — Type Obligation Evidence (Compound Ref)
+========================================================
+
+Worktree:  /Users/mkbabb/Programming/bbnf-wt-azIII-w3a-types-ref
+Base:      248d3ac6ec2b468720346a0db8dfc95cbc118250 (master)
+Date:      2026-04-30
+Owner:     AZ-III.W3a.2
+
+PURPOSE
+-------
+
+Per AZ-III invariant 7 ("no silent fallback"), the projection CSP must
+not collapse under-determined `IrNode::Ref(rid)` resolutions into
+`TypeDesc::BoxedEnum` silently. Two production sites swallowed those
+resolutions before the W3a wave:
+
+  1. `crates/ir/src/passes/types/constraint/reference.rs:74` — compound
+     Ref collapse (this scope).
+  2. `crates/ir/src/passes/types/constraint/revise.rs:123` —
+     heterogeneous Alt join (W3a.3 scope; not touched by W3a.2).
+
+W3a.2 replaces the line-74 fallback with a NAMED obligation
+(`TypeObligation::UnresolvedCompoundRef`) and extends the cycle-break
+pathway in `crates/ir/src/passes/types/mod.rs` so cyclic rule grounds
+also surface a NAMED obligation.
+
+W3a.3 will append heterogeneous Alt findings to this file when the
+revise-line-123 site is replaced.
+
+================================================================
+BEFORE (silent fallback @ reference.rs:74)
+================================================================
+
+  // crates/ir/src/passes/types/constraint/reference.rs
+
+  let result = {
+      let rule_slot = &vars[self.rule_var as usize].domain.solved;
+      match rule_slot {
+          // Target rule not solved yet — wait for the next pass.
+          None => return Revision::Unchanged,
+          Some(ty) if is_scalar_projectable(ty) => ty.clone(),
+          Some(_) => TypeDesc::BoxedEnum,        // SILENT FALLBACK
+      }
+  };
+
+The compound-Ref case discarded the structural type information
+entirely. The cycle-break path in `mod.rs` similarly grounded
+unsolved rule vars to `BoxedEnum` without recording why or where:
+
+  // crates/ir/src/passes/types/mod.rs (pre-W3a.2)
+  for var in unsolved_rule_vars {
+      system.csp.variables[var as usize].domain.solved =
+          Some(TypeDesc::BoxedEnum);              // SILENT GROUND
+  }
+
+Existing failure mode (lattice test `cyclic_ref_defaults_to_boxed_enum`):
+both sides of `a = b ; b = a` collapse to `BoxedEnum` with no audit
+trail; downstream registry / codegen / debug consumers see an opaque
+tagged-union wrapper and cannot distinguish a cyclic compound from a
+deliberately compound rule.
+
+================================================================
+AFTER (named obligation @ reference.rs:117 + mod.rs cycle-break)
+================================================================
+
+  // crates/ir/src/passes/types/constraint/reference.rs
+
+  let (result, obligation) = {
+      let rule_slot = &vars[self.rule_var as usize].domain.solved;
+      match rule_slot {
+          None => return Revision::Unchanged,
+          Some(ty) if is_scalar_projectable(ty) => (ty.clone(), None),
+          Some(structural) => {
+              let obligation = TypeObligation::UnresolvedCompoundRef {
+                  ref_node: Some(self.ref_node),
+                  target_rule: self.target_rule,
+                  structural_type: structural.clone(),
+                  cyclic: false,
+              };
+              (TypeDesc::BoxedEnum, Some(obligation))
+          }
+      }
+  };
+  if let Some(o) = obligation {
+      self.sink.record(o);
+  }
+
+The constraint still ASSIGNS `BoxedEnum` (the grammar-general layout
+for tagged-union codegen) but the assignment is paired with a NAMED
+obligation that records the underlying structural type. The
+obligation lands in `GrammarIR::type_obligations` after solver
+propagation converges.
+
+The cycle-break path in `mod.rs` walks every Ref into the cyclic rule
+(via the new `refs_per_rule` reverse map) and emits one
+`UnresolvedCompoundRef { cyclic: true, .. }` obligation per Ref site;
+rules with no incoming Refs still record one obligation against the
+ground site so the obligation list remains exhaustive.
+
+================================================================
+HARD GATE CHECK
+================================================================
+
+Command:
+  rg -n "BoxedEnum" crates/ir/src/passes/types/constraint/reference.rs
+
+Hits in this file:
+   3: //! `IrNode::Ref(rid)` historically ground-assigned ...   docstring
+   6: //! `Tuple([BoxedEnum, BoxedEnum])` instead of ...         docstring
+  13: //! is compound (`Tuple`, `Vec`, `Option`, `BoxedEnum`,    docstring
+  14: //! `Named`), the Ref is wrapped in `BoxedEnum` ...        docstring
+  39: /// type when scalar, else `BoxedEnum` and a recorded ...  docstring
+  48: /// `BoxedEnum`) project as `BoxedEnum` because the Ref    docstring
+ 102: //   * `Some(compound)` — collapse to BoxedEnum and ...    inline comment
+ 117: (TypeDesc::BoxedEnum, Some(obligation))                    PAIRED
+ 135: /// type directly rather than collapse to `BoxedEnum`...   docstring
+ 140: /// enum wrappers remain `BoxedEnum` — the structural ...  docstring
+
+Verdict: zero silent-fallback hits remain. Line 117 ASSIGNS
+`TypeDesc::BoxedEnum` but is structurally paired with
+`Some(obligation)`, which `self.sink.record(o)` flushes to the
+`ObligationSink` immediately afterwards. The W3a hard gate
+("returns 0 silent-fallback hits (the docstring references are OK)")
+is satisfied.
+
+================================================================
+TEST EVIDENCE
+================================================================
+
+Tests added to `crates/ir/tests/lattices/types.rs`:
+
+  * `compound_ref_obligation_surfaces` — heterogeneous EBNF-style
+    alternation. Rule 1 is `Many(Map(Lit, U8))` → `Vec(U8)`
+    (compound). Rule 0 references rule 1.
+      Pre-W3a.2: rule 0's projected type silently collapsed to
+      `BoxedEnum` with no audit trail.
+      Post-W3a.2: rule 0's projected type is `BoxedEnum`
+      (grammar-general tagged-union wrapper) AND
+      `ir.type_obligations` contains exactly one
+      `UnresolvedCompoundRef { target_rule: 1, structural_type:
+      Vec(U8), cyclic: false }` obligation.
+
+  * `cyclic_ref_obligation_surfaces` — recursive grammar. Rule 0
+    references rule 1 references rule 0.
+      Pre-W3a.2: both rule vars ground to `BoxedEnum` via the
+      cycle-break path; no surface records the cycle.
+      Post-W3a.2: each Ref into the cyclic rule emits a NAMED
+      obligation with `cyclic: true`. The diagnostic rendering
+      includes the literal phrase "cyclic compound Ref".
+
+  * `scalar_ref_emits_no_obligation` — guard test. A Ref to a
+    `-> f64` Map rule must NOT emit an obligation; the obligation
+    surface only fires on the compound / cyclic paths.
+
+Run command:
+  cd /Users/mkbabb/Programming/bbnf-wt-azIII-w3a-types-ref
+  CARGO_TARGET_DIR=./target/w3a-ref \
+    cargo test --profile ax-iter -p bbnf-ir \
+      --test lattices -- types --show-output
+
+Result (post-W3a.2):
+  test types::compound_ref_obligation_surfaces ... ok
+  test types::cyclic_ref_obligation_surfaces ... ok
+  test types::scalar_ref_emits_no_obligation ... ok
+  test result: ok. 28 passed; 0 failed; 0 ignored; 0 measured;
+  46 filtered out; finished in 0.00s
+
+Existing tests (unchanged):
+  * `types::cyclic_ref_defaults_to_boxed_enum` — still passes; the
+    projected `TypeDesc` for both sides of the cycle remains
+    `BoxedEnum` (grammar-general layout). The obligation surface is
+    additive, not invasive.
+  * Every other lattice / passes / vm test in `bbnf-ir` continues to
+    pass (399 tests, 0 failures).
+
+Failing-before, passing-after pivot:
+  Without the obligation substrate, the new tests fail at compile
+  time (`ir.type_obligations` does not exist as a field on
+  `GrammarIR`) and at runtime (no obligation list, no `cyclic`
+  marker). With the W3a.2 wiring, all three pass.
+
+================================================================
+DIAGNOSTIC RENDERING (canonical examples)
+================================================================
+
+`TypeObligation::diagnostic` returns one human-readable line per
+obligation. For the lattice tests above the rendering produces:
+
+  unresolved compound Ref: node 0 → rule 1 :: structural Vec(U8) \
+      (projected BoxedEnum for tagged-union wrapper)
+
+  cyclic compound Ref: node 0 → rule 0 :: structural BoxedEnum \
+      (projected BoxedEnum for tagged-union wrapper)
+
+  cyclic compound Ref: node 0 → rule 1 :: structural BoxedEnum \
+      (projected BoxedEnum for tagged-union wrapper)
+
+These lines are the exact diagnostic surface downstream consumers
+(audit, registry, debug renderers) consume. Per AZ-III invariant 7
+the projection CSP no longer swallows compound-Ref or cyclic-rule
+collapses; every collapse is named.
+
+================================================================
+FILES TOUCHED
+================================================================
+
+Authoritative substrate:
+  crates/ir/src/passes/types/obligation.rs            (new, 113 LOC)
+  crates/ir/src/passes/types/constraint/reference.rs  (rewritten)
+  crates/ir/src/passes/types/generate.rs              (sink wiring)
+  crates/ir/src/passes/types/mod.rs                   (cycle-break + drain)
+  crates/ir/src/types/grammar.rs                      (type_obligations field)
+
+Tests:
+  crates/ir/tests/lattices/types.rs                   (3 new tests)
+
+Test-fixture sweeps (mechanical `type_obligations: Vec::new()`):
+  31 test files under `crates/ir/tests/` and `crates/core/tests/`
+  plus the `crates/core/src/lower/mod.rs` test fixture.
+
+================================================================
+NEXT (W3a.3 — Heterogeneous Alt Join)
+================================================================
+
+W3a.3 owns `crates/ir/src/passes/types/constraint/revise.rs:123`
+(`join_types` returning `BoxedEnum` for heterogeneous Alt branches).
+The `TypeObligation` enum is positioned to accept a sibling variant
+`HeterogeneousAltJoin { alt_node, branch_types, joined_type }`
+without further substrate work; the obligation sink, drain logic,
+and `GrammarIR::type_obligations` field already handle it.
+
+
+================================================================
+AZ-III.W3a.3 — Heterogeneous Alt Join Evidence (appended segment)
+================================================================
+
+Worktree:  /Users/mkbabb/Programming/bbnf-wt-azIII-w3a-types-alt
+Base:      248d3ac6ec2b468720346a0db8dfc95cbc118250 (master)
+Date:      2026-04-30
+Owner:     AZ-III.W3a.3
+CARGO_TARGET_DIR: ./target/w3a-alt
+
+NOTE ON COEXISTENCE
+-------------------
+W3a.2 (above) and W3a.3 (this segment) authored their type-obligation
+substrates in independent sibling worktrees per the dispatch
+contract. Both extended `GrammarIR::type_obligations` and both
+authored `crates/ir/src/passes/types/obligation.rs`. The two
+`TypeObligation` shapes are distinct (`UnresolvedCompoundRef` vs
+`HeterogeneousAltJoin`) and sit on disjoint constraint sites
+(`reference.rs:74` vs `revise.rs:123`). Final integration merges the
+two obligation enums into a unified variant family; this segment
+documents the W3a.3 lane verbatim.
+
+MECHANISM
+---------
+
+Replaced the silent `TypeDesc::BoxedEnum` fallback at
+`crates/ir/src/passes/types/constraint/revise.rs:123` with a typed
+named-obligation lift:
+
+  TypeDesc::HeterogeneousAltJoin(dedup_branch_types(branch_types))
+
+The lift:
+  1. Adds `TypeDesc::HeterogeneousAltJoin(Vec<TypeDesc>)` — a new
+     variant carrying the deduplicated set of distinct branch types
+     observed at join time, in first-appearance order. This IS the
+     named obligation in `ir.types`.
+  2. Adds `GrammarIR::type_obligations: Vec<TypeObligation>` — the
+     diagnostic stream populated post-CSP by walking every Alt node
+     whose projected type is `HeterogeneousAltJoin(_)`.
+  3. Adds `crates/ir/src/passes/types/obligation.rs` — a new module
+     defining `TypeObligation::HeterogeneousAltJoin { rule, node,
+     branches }` and `dedup_branch_types`.
+
+Codegen continuity: `TypeDesc::HeterogeneousAltJoin(_)` lowers
+identically to `TypeDesc::BoxedEnum` (same `Box<Enum>` view) at
+every backend match site. Only the typed surface changes; the
+runtime contract is invariant.
+
+HARD GATE CHECK
+---------------
+
+Command:
+  rg -n "TypeDesc::BoxedEnum" \
+     crates/ir/src/passes/types/constraint/revise.rs
+
+Hits: zero.
+
+Verdict: the named site no longer contains a silent `BoxedEnum`
+return. The CSP join now lifts every heterogeneous Alt collapse
+into `TypeDesc::HeterogeneousAltJoin(...)` and the obligation
+streams via `ir.type_obligations`.
+
+TEST EVIDENCE
+-------------
+
+Lattice unit tests (`crates/ir/tests/lattices/types.rs`):
+
+  test types::heterogeneous_css_alt_surfaces_named_obligation ... ok
+  test types::homogeneous_alt_emits_no_obligation              ... ok
+
+Suite (filter `types::`):
+  test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured;
+  46 filtered out; finished in 0.00s
+
+Core integration tests (`crates/core/tests/types_heterogeneous_alt.rs`):
+
+  test json_value_alt_lifts_named_obligation        ... ok
+  test json_value_rule_projects_heterogeneous_alt_join ... ok
+
+  test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured;
+  0 filtered out; finished in 0.00s
+
+Failing-before / passing-after pivot:
+  Without the lift, both new lattice tests would assert
+  `TypeDesc::BoxedEnum` (silent fallback) and
+  `ir.type_obligations` would not exist as a field on
+  `GrammarIR`. With the W3a.3 wiring, every test compiles and
+  passes.
+
+TEST SEMANTICS
+--------------
+
+heterogeneous_css_alt_surfaces_named_obligation
+  Synthetic CSS-like grammar:
+    value = ident | length | percentage | color
+  Each branch carries a distinct typed payload (`Span`, `F64`,
+  `F64`, `U32`). Asserts:
+    * rule 0's projected type is
+      `TypeDesc::HeterogeneousAltJoin(vec![Span, F64, U32])` — the
+      duplicate `F64` collapses to one entry preserving
+      first-appearance order (dedup invariant).
+    * `ir.type_obligations` contains exactly one
+      `TypeObligation::HeterogeneousAltJoin { rule: Some(0), .. }`
+      whose `branches` matches the lifted payload.
+
+homogeneous_alt_emits_no_obligation
+  Sanity counterpart: `Alt(Ref(F64), Ref(F64))` projects to `F64`
+  and `ir.type_obligations` is empty. Confirms the obligation
+  fires only on heterogeneous joins.
+
+json_value_alt_lifts_named_obligation
+  End-to-end through `compile_paths_request(grammar/json/json.bbnf)`.
+  Asserts at least one `TypeObligation::HeterogeneousAltJoin`
+  surfaces (the canonical
+  `value = object | array | string | number | bool | null` Alt)
+  and every obligation carries >= 2 deduplicated branch types.
+
+json_value_rule_projects_heterogeneous_alt_join
+  End-to-end. Asserts the JSON `value` rule's projected type is
+  `TypeDesc::HeterogeneousAltJoin(_)` — not the historical silent
+  `BoxedEnum` fallback.
+
+LINT CADENCE
+------------
+
+  cargo fmt --all -- --check    : clean (exit 0)
+  cargo iter-check              : clean (Finished `ax-iter` 21.21s)
+  cargo xtask regen --check     : clean (9 of 9 grammars matched)
+  git diff --check              : clean (no whitespace errors)
+
+FILES TOUCHED
+-------------
+
+Source (production):
+  crates/ir/src/types/type_desc.rs                (new variant + helper)
+  crates/ir/src/types/grammar.rs                  (new field)
+  crates/ir/src/lib.rs                            (re-export)
+  crates/ir/src/passes/types/obligation.rs        (new module)
+  crates/ir/src/passes/types/mod.rs               (collector + intern arm)
+  crates/ir/src/passes/types/constraint/revise.rs (the named site)
+  crates/ir/src/passes/types/subvariants.rs       (boxed-enum-layout helper)
+  crates/core/src/grammar/schema/build.rs         (match arm)
+  crates/core/src/backend/rust/ir_types.rs        (match arm)
+  crates/core/src/backend/ts/projection.rs        (match arm)
+  crates/core/src/lower/mod.rs                    (field init)
+  crates/analysis/src/state/diagnostics/ir_analysis.rs (format arm)
+
+Tests (new):
+  crates/ir/tests/lattices/types.rs               (two new tests)
+  crates/core/tests/types_heterogeneous_alt.rs    (new file, two tests)
+
+Tests (mechanical `type_obligations: Vec::new()` field-init only):
+  37 test files under `crates/ir/tests/`, `crates/core/tests/`,
+  `crates/gorgeous/tests/`.
+

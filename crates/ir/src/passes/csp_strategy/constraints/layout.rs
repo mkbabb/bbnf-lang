@@ -51,7 +51,6 @@
 //! the same value twice is a no-op in the CSP.
 
 use csp_solver::Csp;
-use csp_solver::constraint::LambdaConstraint;
 
 use super::ConstraintCtx;
 use crate::GrammarIR;
@@ -66,7 +65,11 @@ pub fn install(ctx: &ConstraintCtx<'_>, csp: &mut Csp<StrategyDomain>, ir: &Gram
     for (&node_id, &var) in ctx.wrap_vars.iter() {
         let target = pin_for_layout(ir, node_id);
         if let Some(mode) = target {
-            csp.add_constraint(make_pin(var, mode));
+            // `Csp::add_equals` from the csp-solver crate is the
+            // canonical pin primitive — a single source of truth
+            // for "fix variable to value" across every constraint
+            // installer (W3b.4 alignment).
+            csp.add_equals(var, StrategyValue::Wrap(mode));
             count += 1;
         }
     }
@@ -94,19 +97,4 @@ fn pin_for_layout(ir: &GrammarIR, node_id: crate::dag::NodeId) -> Option<WrapMod
         RecognizerShape::DelimiterBalanced { .. } => Some(WrapMode::BalancedScan),
         _ => None,
     }
-}
-
-fn make_pin(
-    var: csp_solver::constraint::VarId,
-    mode: WrapMode,
-) -> LambdaConstraint<StrategyDomain> {
-    let value = StrategyValue::Wrap(mode);
-    LambdaConstraint::new(
-        vec![var],
-        move |assignment| match &assignment[var as usize] {
-            Some(v) => *v == value,
-            None => true,
-        },
-        format!("layout_pin({var})"),
-    )
 }

@@ -45,7 +45,6 @@
 //! test in `tests/lattices/csp_authority.rs` asserts the difference.
 
 use csp_solver::Csp;
-use csp_solver::constraint::LambdaConstraint;
 
 use super::ConstraintCtx;
 use crate::GrammarIR;
@@ -73,7 +72,12 @@ pub fn install(ctx: &ConstraintCtx<'_>, csp: &mut Csp<StrategyDomain>, ir: &Gram
         // walks every member rule's body.
         let pinned = pin_for_alt(ir, node_id);
         if let Some(target) = pinned {
-            csp.add_constraint(make_alt_pin(var, target));
+            // `Csp::add_equals` is the shared "pin a variable to a
+            // value" surface that the strategy domain inherits from
+            // the csp-solver crate. Delegating here keeps the
+            // installer aligned with the solver's authoritative pin
+            // primitive (W3b.4 isomorphic API).
+            csp.add_equals(var, StrategyValue::Alt(target));
             count += 1;
         }
     }
@@ -93,7 +97,7 @@ pub fn install(ctx: &ConstraintCtx<'_>, csp: &mut Csp<StrategyDomain>, ir: &Gram
     for (&node_id, &var) in ctx.wrap_vars.iter() {
         let pinned = pin_for_wrap(ir, node_id);
         if let Some(target) = pinned {
-            csp.add_constraint(make_wrap_pin(var, target));
+            csp.add_equals(var, StrategyValue::Wrap(target));
             count += 1;
         }
     }
@@ -128,34 +132,4 @@ fn pin_for_wrap(ir: &GrammarIR, node_id: crate::dag::NodeId) -> Option<WrapMode>
         RecognizerShape::SeparatorList { .. } => Some(WrapMode::SepBy),
         _ => None,
     }
-}
-
-fn make_alt_pin(
-    var: csp_solver::constraint::VarId,
-    mode: AltMode,
-) -> LambdaConstraint<StrategyDomain> {
-    let value = StrategyValue::Alt(mode);
-    LambdaConstraint::new(
-        vec![var],
-        move |assignment| match &assignment[var as usize] {
-            Some(v) => *v == value,
-            None => true,
-        },
-        format!("shape_alt_pin({var})"),
-    )
-}
-
-fn make_wrap_pin(
-    var: csp_solver::constraint::VarId,
-    mode: WrapMode,
-) -> LambdaConstraint<StrategyDomain> {
-    let value = StrategyValue::Wrap(mode);
-    LambdaConstraint::new(
-        vec![var],
-        move |assignment| match &assignment[var as usize] {
-            Some(v) => *v == value,
-            None => true,
-        },
-        format!("shape_wrap_pin({var})"),
-    )
 }

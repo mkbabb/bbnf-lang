@@ -47,7 +47,6 @@
 //! favor of a single CSP read.
 
 use csp_solver::Csp;
-use csp_solver::constraint::LambdaConstraint;
 
 use super::ConstraintCtx;
 use crate::GrammarIR;
@@ -61,7 +60,11 @@ pub fn install(ctx: &ConstraintCtx<'_>, csp: &mut Csp<StrategyDomain>, ir: &Gram
     for (&node_id, &var) in ctx.alt_vars.iter() {
         let target = pin_for_dispatch(ir, node_id);
         if let Some(mode) = target {
-            csp.add_constraint(make_pin(var, mode));
+            // Single canonical pin primitive shared with the
+            // csp-solver crate (`Csp::add_equals`). W3b.4 alignment
+            // — the IR consumer talks to the solver through one
+            // surface, not two.
+            csp.add_equals(var, StrategyValue::Alt(mode));
             count += 1;
         }
     }
@@ -83,16 +86,4 @@ fn pin_for_dispatch(ir: &GrammarIR, node_id: crate::dag::NodeId) -> Option<AltMo
         return Some(AltMode::KeyDispatch);
     }
     None
-}
-
-fn make_pin(var: csp_solver::constraint::VarId, mode: AltMode) -> LambdaConstraint<StrategyDomain> {
-    let value = StrategyValue::Alt(mode);
-    LambdaConstraint::new(
-        vec![var],
-        move |assignment| match &assignment[var as usize] {
-            Some(v) => *v == value,
-            None => true,
-        },
-        format!("dispatch_pin({var})"),
-    )
 }

@@ -12229,7 +12229,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 7usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(3u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -12247,7 +12247,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 10usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(2u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -12265,7 +12265,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 12usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(4u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -12280,7 +12280,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 7usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(5u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -12692,7 +12692,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -12704,7 +12704,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -12744,7 +12744,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -12756,7 +12756,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -12796,7 +12796,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(26u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -12809,7 +12809,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(9u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -12822,7 +12822,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(11u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -12835,7 +12835,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(10u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -12848,7 +12848,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [112u8] {
@@ -12993,7 +12993,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 3usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(43u32);
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 2usize && input[*p..*p + 2usize] == [99u8, 104u8]
@@ -13001,7 +13001,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(7u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -13122,7 +13122,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(44u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -13135,7 +13135,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(14u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -13149,7 +13149,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 3usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(2u32);
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 3usize
@@ -13158,7 +13158,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 3usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(15u32);
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [114u8] {
@@ -14544,6 +14544,7 @@ mod __cssl4parser_emit_impl {
                                             });
                                         }
                                         *p = end;
+                                        builder.push_branch_tag(41u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -14572,6 +14573,7 @@ mod __cssl4parser_emit_impl {
                                             });
                                         }
                                         *p = end;
+                                        builder.push_branch_tag(42u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -14617,6 +14619,7 @@ mod __cssl4parser_emit_impl {
                                 });
                             }
                             *p = end;
+                            builder.push_branch_tag(22u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -14645,6 +14648,7 @@ mod __cssl4parser_emit_impl {
                                 });
                             }
                             *p = end;
+                            builder.push_branch_tag(23u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -14673,6 +14677,7 @@ mod __cssl4parser_emit_impl {
                                 });
                             }
                             *p = end;
+                            builder.push_branch_tag(24u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -14701,6 +14706,7 @@ mod __cssl4parser_emit_impl {
                                 });
                             }
                             *p = end;
+                            builder.push_branch_tag(25u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -14765,7 +14771,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 3usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -14779,7 +14785,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(2u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -14793,7 +14799,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 3usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -14807,7 +14813,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(3u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -14848,7 +14854,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -14860,7 +14866,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -14901,7 +14907,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -14915,7 +14921,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 3usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15103,7 +15109,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(3u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15175,7 +15181,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15190,7 +15196,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 8usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(8u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15205,7 +15211,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 9usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(13u32);
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 4usize
@@ -15214,7 +15220,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(3u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15228,7 +15234,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(4u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15502,7 +15508,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 9usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(12u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15516,7 +15522,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(5u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15776,7 +15782,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 8usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(2u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15790,7 +15796,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(3u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15805,7 +15811,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 8usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15819,7 +15825,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 6usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 6usize
@@ -15829,7 +15835,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 6usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(4u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15871,7 +15877,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(3u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15885,7 +15891,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(4u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15900,7 +15906,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 6usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15915,7 +15921,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 6usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(2u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15930,7 +15936,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 7usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15973,7 +15979,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 8usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(2u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -15988,7 +15994,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 6usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -16003,7 +16009,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 7usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -16350,7 +16356,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 6usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -16526,7 +16532,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 8usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(4u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -16541,7 +16547,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 6usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(2u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -16555,7 +16561,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 3usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(9u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -16722,7 +16728,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 7usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(3u32);
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [115u8] {
@@ -17193,7 +17199,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 6usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(5u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17208,7 +17214,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 6usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(9u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17222,7 +17228,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(7u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17236,7 +17242,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17251,7 +17257,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 6usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(8u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17265,7 +17271,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(6u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17279,7 +17285,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17322,7 +17328,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 6usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17336,7 +17342,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(2u32);
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 4usize
@@ -17345,7 +17351,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17388,7 +17394,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 6usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(2u32);
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 4usize
@@ -17397,7 +17403,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17412,7 +17418,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 7usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(3u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17427,7 +17433,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 6usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17470,7 +17476,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 6usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(2u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17484,7 +17490,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 3usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(5u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17499,7 +17505,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 7usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(3u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17513,7 +17519,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17527,7 +17533,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17541,7 +17547,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(4u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17587,7 +17593,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 10usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17605,7 +17611,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 11usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17647,7 +17653,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17662,7 +17668,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 9usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(6u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17677,7 +17683,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 7usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17821,7 +17827,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(10u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17835,7 +17841,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(4u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17853,7 +17859,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 11usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(5u32);
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 4usize
@@ -17862,7 +17868,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(11u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17877,7 +17883,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 7usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(2u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17891,7 +17897,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(3u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -17905,7 +17911,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(9u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -18073,7 +18079,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 12usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 6usize
@@ -18083,7 +18089,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 6usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(4u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -18097,7 +18103,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(3u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -18139,7 +18145,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 3usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -18153,7 +18159,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -18307,7 +18313,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 3usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -18321,7 +18327,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -18612,7 +18618,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 12usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(10u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -18974,7 +18980,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 11usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(9u32);
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 5usize
@@ -18983,7 +18989,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -19001,7 +19007,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 13usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(7u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -19020,7 +19026,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 21usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(8u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -19066,7 +19072,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 10usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(7u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -19084,7 +19090,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 10usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(6u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -19099,7 +19105,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 6usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -19117,7 +19123,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 11usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(8u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -19459,7 +19465,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -19502,7 +19508,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 6usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(12u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -19520,7 +19526,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 10usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(17u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -19534,7 +19540,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 3usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(15u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -19548,7 +19554,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(14u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -19562,7 +19568,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 4usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(13u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -20171,7 +20177,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 7usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(16u32);
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 5usize
@@ -20180,7 +20186,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 5usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(11u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -20194,7 +20200,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 3usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(10u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -20478,7 +20484,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 7usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(16u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -20496,7 +20502,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 14usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(9u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -20514,7 +20520,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 13usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(15u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -21093,7 +21099,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 10usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(14u32);
                     return ::core::result::Result::Ok(());
                 }
                 if input.len() >= *p + 1usize && input[*p..*p + 1usize] == [119u8] {
@@ -21400,6 +21406,7 @@ mod __cssl4parser_emit_impl {
                                             });
                                         }
                                         *p = end;
+                                        builder.push_branch_tag(5u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -21434,6 +21441,7 @@ mod __cssl4parser_emit_impl {
                                             });
                                         }
                                         *p = end;
+                                        builder.push_branch_tag(8u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -21465,6 +21473,7 @@ mod __cssl4parser_emit_impl {
                                             });
                                         }
                                         *p = end;
+                                        builder.push_branch_tag(2u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -21496,6 +21505,7 @@ mod __cssl4parser_emit_impl {
                                             });
                                         }
                                         *p = end;
+                                        builder.push_branch_tag(4u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -21527,6 +21537,7 @@ mod __cssl4parser_emit_impl {
                                             });
                                         }
                                         *p = end;
+                                        builder.push_branch_tag(7u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -21557,6 +21568,7 @@ mod __cssl4parser_emit_impl {
                                             });
                                         }
                                         *p = end;
+                                        builder.push_branch_tag(1u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -21587,6 +21599,7 @@ mod __cssl4parser_emit_impl {
                                             });
                                         }
                                         *p = end;
+                                        builder.push_branch_tag(3u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -21617,6 +21630,7 @@ mod __cssl4parser_emit_impl {
                                             });
                                         }
                                         *p = end;
+                                        builder.push_branch_tag(6u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -21662,6 +21676,7 @@ mod __cssl4parser_emit_impl {
                                 });
                             }
                             *p = end;
+                            builder.push_branch_tag(0u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -21731,7 +21746,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 19usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(5u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -23243,7 +23258,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 12usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(7u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -23261,7 +23276,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 11usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(8u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -23579,7 +23594,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 12usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(4u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -23597,7 +23612,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 14usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(9u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -23713,7 +23728,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(4u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -23725,7 +23740,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(5u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -23737,7 +23752,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 1usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -23749,7 +23764,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(3u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -23762,7 +23777,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -23775,7 +23790,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 2usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(2u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -24080,6 +24095,7 @@ mod __cssl4parser_emit_impl {
                                 });
                             }
                             *p = end;
+                            builder.push_branch_tag(1u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -24110,6 +24126,7 @@ mod __cssl4parser_emit_impl {
                                 });
                             }
                             *p = end;
+                            builder.push_branch_tag(0u32);
                             Ok(())
                         })();
                         match __alt_result {
@@ -24189,6 +24206,7 @@ mod __cssl4parser_emit_impl {
                                             });
                                         }
                                         *p = end;
+                                        builder.push_branch_tag(3u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -24219,6 +24237,7 @@ mod __cssl4parser_emit_impl {
                                             });
                                         }
                                         *p = end;
+                                        builder.push_branch_tag(2u32);
                                         Ok(())
                                     })();
                                     match __alt_result {
@@ -24300,7 +24319,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 3usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(0u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
@@ -24314,7 +24333,7 @@ mod __cssl4parser_emit_impl {
                     let at = *p;
                     let end = at + 3usize;
                     *p = end;
-                    builder.push_leaf_with_unit();
+                    builder.push_branch_tag(1u32);
                     return ::core::result::Result::Ok(());
                 }
                 return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {

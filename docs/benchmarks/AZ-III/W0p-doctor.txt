@@ -1,0 +1,37 @@
+# AZ-III.W0p.4 — make doctor capture
+# host: Darwin 25.4.0 arm64
+# date: 2026-05-01T00:48:29Z
+# worktree: /Users/mkbabb/Programming/bbnf-wt-azIII-w0p-doctor
+# probe: scripts/doctor.sh (invoked via make doctor)
+
+## $ /usr/bin/time -p make doctor
+[ok] sccache
+[ok] cargo-nextest
+[ok] samply
+[missing] lld: install via brew install lld   (linux: distro package, e.g. apt install lld)
+[ok] cargo-expand
+doctor: missing 1 tool(s): lld
+make: *** [doctor] Error 1
+real 0.01
+user 0.00
+sys 0.00
+exit=2
+
+## $ /usr/bin/time -p ./scripts/doctor.sh   (direct invocation)
+[ok] sccache
+[ok] cargo-nextest
+[ok] samply
+[missing] lld: install via brew install lld   (linux: distro package, e.g. apt install lld)
+[ok] cargo-expand
+doctor: missing 1 tool(s): lld
+real 0.00
+user 0.00
+sys 0.00
+exit=1
+
+## tool census
+  sccache -> /opt/homebrew/bin/sccache
+  cargo-nextest -> /Users/mkbabb/.cargo/bin/cargo-nextest
+  samply -> /Users/mkbabb/.cargo/bin/samply
+  lld -> (absent)
+  cargo-expand -> /Users/mkbabb/.cargo/bin/cargo-expand

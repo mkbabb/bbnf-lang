@@ -1,0 +1,20 @@
+       Fresh autocfg v1.5.0
+       Fresh unicode-ident v1.0.24
+       Fresh ryu v1.0.23
+       Fresh smallvec v1.15.1
+       Fresh rustc-hash v2.1.2
+       Fresh csp-solver v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-azIII-w0p-profile/crates/csp-solver)
+       Fresh memchr v2.8.0
+   Compiling proc-macro2 v1.0.106
+   Compiling egraph v0.1.0 (/Users/mkbabb/Programming/bbnf-wt-azIII-w0p-profile/crates/egraph)
+       Fresh itoap v1.0.1
+       Fresh itoa v1.0.18
+   Compiling aho-corasick v1.1.4
+     Running `sccache /Users/mkbabb/.rustup/toolchains/nightly-2026-04-11-aarch64-apple-darwin/bin/rustc --crate-name proc_macro2 --edition=2021 /Users/mkbabb/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-1.0.106/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C codegen-units=256 -C debuginfo=line-tables-only -C split-debuginfo=unpacked --cfg 'feature="default"' --cfg 'feature="proc-macro"' --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values("default", "nightly", "proc-macro", "span-locations"))' -C metadata=3722a6deee4a3f2a -C extra-filename=-7f58ba1a3783bfea --out-dir /Users/mkbabb/Programming/bbnf-wt-azIII-w0p-profile/target/w0p-profile/ax-iter/deps -L dependency=/Users/mkbabb/Programming/bbnf-wt-azIII-w0p-profile/target/w0p-profile/ax-iter/deps --extern unicode_ident=/Users/mkbabb/Programming/bbnf-wt-azIII-w0p-profile/target/w0p-profile/ax-iter/deps/libunicode_ident-caf0f1ab12ec682a.rmeta --cap-lints allow --cfg wrap_proc_macro --cfg proc_macro_span --cfg proc_macro_span_location --cfg proc_macro_span_file --check-cfg 'cfg(fuzzing)' --check-cfg 'cfg(no_is_available)' --check-cfg 'cfg(no_literal_byte_character)' --check-cfg 'cfg(no_literal_c_string)' --check-cfg 'cfg(no_source_text)' --check-cfg 'cfg(proc_macro_span)' --check-cfg 'cfg(proc_macro_span_file)' --check-cfg 'cfg(proc_macro_span_location)' --check-cfg 'cfg(procmacro2_backtrace)' --check-cfg 'cfg(procmacro2_build_probe)' --check-cfg 'cfg(procmacro2_nightly_testing)' --check-cfg 'cfg(procmacro2_semver_exempt)' --check-cfg 'cfg(randomize_layout)' --check-cfg 'cfg(span_locations)' --check-cfg 'cfg(super_unstable)' --check-cfg 'cfg(wrap_proc_macro)'`
+     Running `sccache /Users/mkbabb/.rustup/toolchains/nightly-2026-04-11-aarch64-apple-darwin/bin/rustc --crate-name egraph --edition=2024 crates/egraph/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C codegen-units=256 -C debuginfo=line-tables-only -C split-debuginfo=unpacked --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=58597ac5be5b1233 -C extra-filename=-0506a268b57022cd --out-dir /Users/mkbabb/Programming/bbnf-wt-azIII-w0p-profile/target/w0p-profile/ax-iter/deps -C incremental=/Users/mkbabb/Programming/bbnf-wt-azIII-w0p-profile/target/w0p-profile/ax-iter/incremental -L dependency=/Users/mkbabb/Programming/bbnf-wt-azIII-w0p-profile/target/w0p-profile/ax-iter/deps --extern csp_solver=/Users/mkbabb/Programming/bbnf-wt-azIII-w0p-profile/target/w0p-profile/ax-iter/deps/libcsp_solver-9e1117c04b47628e.rmeta --extern rustc_hash=/Users/mkbabb/Programming/bbnf-wt-azIII-w0p-profile/target/w0p-profile/ax-iter/deps/librustc_hash-72c8a1c5cba3468d.rmeta --extern smallvec=/Users/mkbabb/Programming/bbnf-wt-azIII-w0p-profile/target/w0p-profile/ax-iter/deps/libsmallvec-668e5cda98c66aa6.rmeta`
+   Compiling serde_core v1.0.228
+   Compiling crossbeam-utils v0.8.21
+   Compiling serde_json v1.0.149
+   Compiling zmij v1.0.21
+   Compiling typeid v1.0.3
+   Compiling once_cell v1.21.4

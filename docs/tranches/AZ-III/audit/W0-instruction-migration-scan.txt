@@ -1,0 +1,143 @@
+# AZ-III W0 instruction migration scan - 2026-04-30
+
+## Command
+
+```
+rg -n "docs/instructions/tranche|458c2d1|six-agent|6 agents" docs/
+```
+
+## Output (live references)
+
+```
+docs/tranches/B0/FINAL.md:76:| 4 | `512da89d` | `docs/instructions/tranche/SPEC.md` `### Three-tier command surface` under §Bench contract + new Edicts bullet; PROFILING.md `### W2 close proof` subsubsection + `docs/benchmarks/post-B0-W2-close.json`. |
+docs/tranches/B0/waves/W2.md:21:| `docs/instructions/tranche/SPEC.md` | modify |
+docs/tranches/B0/waves/W2.md:44:Files touched: `docs/instructions/tranche/SPEC.md`,
+docs/tranches/B0/PROGRESS.md:255:- instruction sync: update `docs/instructions/tranche/SPEC.md` and
+docs/tranches/B0/PROGRESS.md:267:- **B0.W2.b** (`docs/instructions/tranche/SPEC.md` +
+docs/tranches/B0/PROGRESS.md:300:- `512da89d` `docs/instructions/tranche/SPEC.md` gains `### Three-tier
+docs/tranches/B0/PROGRESS.md:310:  docs/instructions/tranche/SPEC.md` returns 6 matches (requirement:
+docs/tranches/B7/AGENT_DISPATCH.md:7:`docs/instructions/tranche/SPEC.md` has every input it needs.
+docs/tranches/B7/AGENT_DISPATCH.md:63:2. `docs/instructions/tranche/SPEC.md` — §Hard gates, §Bench
+docs/tranches/B7/AGENT_DISPATCH.md:136:2. `docs/instructions/tranche/SPEC.md`
+docs/tranches/B7/AGENT_DISPATCH.md:228:2. `docs/instructions/tranche/SPEC.md` — §Document set, §Plan
+docs/tranches/B4/AGENT_DISPATCH.md:5:`docs/instructions/tranche/AGENT_DISPATCH_TEMPLATE.md` + the wave-
+docs/tranches/B4/AGENT_DISPATCH.md:56:`docs/instructions/tranche/AGENT_DISPATCH_TEMPLATE.md` form. The
+docs/tranches/AA/research/prototype-2.md:19:A six-agent audit (profile, CSP, e-graph, regex, sonic-rs SOTA, clones,
+docs/tranches/AA/research/prototype-2.md:200:## Profile-grounded ground truth (post-Z, six-agent audit)
+docs/tranches/AZ-III/waves/W0.md:121:4. `rg -n "docs/instructions/tranche|458c2d1|six-agent|6 agents"`
+docs/tranches/AA/research/prototype-3.md:13:A six-agent deep audit (3 Explore + 3 Plan) landed this tranche on a single
+docs/tranches/B6/AGENT_DISPATCH.md:4:W0, W1, W2 — built from `docs/instructions/tranche/AGENT_DISPATCH_
+docs/tranches/B6/AGENT_DISPATCH.md:7:`docs/instructions/README.md` plus `docs/instructions/tranche/
+docs/tranches/B6/AGENT_DISPATCH.md:57:2. `docs/instructions/tranche/SPEC.md` — §Hard gates, §Runtime-
+docs/tranches/AY-III/AGENT_DISPATCH.md:4:`docs/instructions/tranche/AGENT_DISPATCH_TEMPLATE.md`. Thirteen
+docs/tranches/AY-III/AGENT_DISPATCH.md:51:2. `docs/instructions/tranche/SPEC.md` — §Hard gates,
+docs/tranches/AY-III/AGENT_DISPATCH.md:166:2. `docs/instructions/tranche/SPEC.md` (§Bench contract,
+docs/tranches/AY-III/AGENT_DISPATCH.md:252:3. `docs/instructions/tranche/SPEC.md` (§Three-tier command
+docs/tranches/AY-III/AGENT_DISPATCH.md:339:2. `docs/instructions/tranche/SPEC.md`.
+docs/tranches/AY-III/AGENT_DISPATCH.md:429:2. `docs/instructions/tranche/SPEC.md` (§Activation-gate
+docs/tranches/AY-III/AGENT_DISPATCH.md:525:2. `docs/instructions/tranche/SPEC.md`.
+docs/tranches/AY-III/AGENT_DISPATCH.md:613:2. `docs/instructions/tranche/SPEC.md`.
+docs/tranches/AY-III/AGENT_DISPATCH.md:694:2. `docs/instructions/tranche/SPEC.md`.
+docs/tranches/AY-III/AGENT_DISPATCH.md:781:3. `docs/instructions/tranche/SPEC.md`.
+docs/tranches/AY-III/AGENT_DISPATCH.md:881:2. `docs/instructions/tranche/SPEC.md` (§Diagnostic-loop
+docs/tranches/AY-III/AGENT_DISPATCH.md:953:2. `docs/instructions/tranche/SPEC.md`.
+docs/tranches/AY-III/AGENT_DISPATCH.md:1044:3. `docs/instructions/tranche/SPEC.md`.
+docs/tranches/AY-III/AGENT_DISPATCH.md:1128:2. `docs/instructions/tranche/SPEC.md` (§Closing ceremony,
+docs/tranches/AY-III/AGENT_DISPATCH.md:1221:`docs/instructions/tranche/AGENT_DISPATCH_TEMPLATE.md`, every
+docs/tranches/AY-III/AGENT_DISPATCH.md:1236:`docs/instructions/tranche/SPEC.md` §N-agent shared-file
+docs/tranches/AZ-III/audit/W0-dispatch-packets.md:10:Dispatch up to 6 agents after the root dirty slice is assigned.
+docs/tranches/AY-III/waves/W2.md:187:   `docs/instructions/tranche/SPEC.md`. The xtask compares
+docs/precepts/instructions/LESSONS-LEARNED.md:141:  after user-driven six-agent audit).
+docs/tranches/meta-audit/02-instruction-adherence.md:347:### Edit 1: `docs/instructions/tranche/SPEC.md` §Edicts — NO heavy-surface routine defaults
+docs/tranches/meta-audit/02-instruction-adherence.md:390:### Edit 2: `docs/instructions/tranche/SPEC.md` §Diagnostic-loop relinquish
+docs/tranches/meta-audit/02-instruction-adherence.md:461:### Edit 4: `docs/instructions/tranche/SPEC.md` §Commit discipline
+docs/tranches/meta-audit/02-instruction-adherence.md:487:### Edit 5: `docs/instructions/tranche/SPEC.md` §Transitional fallback during elimination waves
+docs/tranches/meta-audit/02-instruction-adherence.md:531:### Edit 6: `docs/instructions/tranche/SPEC.md` §Commit discipline (second addition)
+docs/tranches/AU/PROGRESS.md:25:4 of 6 agents independently identified: `branch_pushes_children()`
+docs/precepts/instructions/ORCHESTRATION.md:11:- Hard ceiling: use at most 6 agents in a wave.
+docs/precepts/instructions/ORCHESTRATION.md:22:The six-agent ceiling preserves the parallel benefit while keeping
+docs/tranches/AZ-III/audit/REAUDIT-2026-04-30/CARRY-OVER-CHECKLIST.md:44:| 7 | 6 agents in parallel for original audit (DONE in REAUDIT-2026-04-30) | `01-failure-baseline.md` line 1, `02-future-sota.md` line 1, `03-substrate-deadcode.md` line 1, `04-instructions-process.md` line 1, `05-plan-waves.md` line 1, `06-throughput-commit.md` line 1 | MET | Six lanes ran in parallel as documented in SYNTHESIS.md §Lane Inputs table (lines 16-23). | none |
+docs/tranches/AZ-III/audit/REAUDIT-2026-04-30/CARRY-OVER-CHECKLIST.md:742:- Hard ceiling: use at most 6 agents in a wave.
+docs/tranches/B1/AGENT_DISPATCH.md:17:3. `docs/instructions/tranche/SPEC.md`
+docs/tranches/B1/AGENT_DISPATCH.md:18:4. `docs/instructions/tranche/WAVE_SPEC.md`
+docs/META-AUDIT-PROMPT.md:729:> "Begin tranche AY-II. First, read docs/instructions/tranche/* and any
+docs/META-AUDIT-PROMPT.md:1439:- `/Users/mkbabb/Programming/bbnf-lang/docs/instructions/tranche/`
+docs/tranches/AY-I/audit/AYW-archaeology-optimization-arc.md:262:  re-fan-out per RESEARCH.md six-agent edict).
+docs/tranches/AZ-III/audit/REAUDIT-2026-04-30/04-instructions-process.md:238:| `b20ea61b` | `docs(az-iii.waves)` | yes | yes - cites the six-agent audit findings, lists what changed | clean |
+docs/tranches/AZ-III/audit/REAUDIT-2026-04-30/04-instructions-process.md:519:  after user-driven six-agent audit).
+docs/tranches/meta-audit/05-validation.md:42:The edict at `docs/instructions/tranche/SPEC.md:577-594` now
+docs/audit/meta-audit-2026-04-23/axis-8-completeness-omissions.md:58:- `docs/instructions/tranche/START.md`
+docs/audit/meta-audit-2026-04-23/axis-8-completeness-omissions.md:59:- `docs/instructions/tranche/README.md`
+docs/audit/meta-audit-2026-04-23/axis-8-completeness-omissions.md:60:- `docs/instructions/tranche/RESEARCH.md`
+docs/audit/meta-audit-2026-04-23/axis-8-completeness-omissions.md:61:- `docs/instructions/tranche/SPEC.md`
+docs/audit/meta-audit-2026-04-23/axis-8-completeness-omissions.md:62:- `docs/instructions/tranche/WAVE_SPEC.md`
+docs/audit/meta-audit-2026-04-23/axis-8-completeness-omissions.md:63:- `docs/instructions/tranche/AGENT_DISPATCH_TEMPLATE.md`
+docs/tranches/AZ-III/audit/REAUDIT-2026-04-30/05-plan-waves.md:401:  hard gate 6 to W0** — `rg "docs/instructions/tranche|458c2d1|six-agent"`
+docs/tranches/AZ-III/audit/REAUDIT-2026-04-30/05-plan-waves.md:875:6. `rg "docs/instructions/tranche|458c2d1|six-agent|6 agents"`
+docs/audit/meta-audit-2026-04-23/axis-7-orchestrator-drift.md:58:  `docs/instructions/tranche/SPEC.md` preserve the corresponding
+docs/audit/meta-audit-2026-04-24/REPORT.md:20:| Instructions edicts | PASS | `docs/instructions/README.md`, `PROFILING.md`, `CHANGELOG.md`, and `docs/instructions/tranche/*` exist. |
+docs/tranches/AZ-I/audit/AUDIT-1-PROCESS-RETRO.md:7:`docs/instructions/tranche/SPEC.md`.
+docs/GESTALT.md:1097:`docs/instructions/tranche/SPEC.md:577-594` now enumerates this
+docs/GESTALT.md:1309:- Invariant codification: `docs/instructions/tranche/SPEC.md` (especially §577–594 heavy-surface edicts, AX invariant 13, N-agent disjoint-row)
+docs/tranches/AQ/AQ.md:600:## Execution Waves (6 agents per wave)
+docs/tranches/AQ/AQ.md:678:Each agent runs in its OWN worktree. This tranche has ~30 sub-phases across 4 waves × 6 agents = 24 parallel sessions max. Worktrees prevent file-level contention.
+docs/tranches/AQ/AQ.md:710:1. **Launch Wave 1 (6 agents in parallel).** Collect all results before launching Wave 2.
+docs/tranches/AY-I/audit/AYW-dev-expedite.md:101:- **`sub-agent profile dispatch template` with `wave.tsv` as the sole contract** — PROFILING.md §Orchestration contract describes this; needs a matching template file in `docs/instructions/tranche/` so agents can copy-paste.
+docs/tranches/AY-I/audit/AUDIT-A-plan-coherence.md:5:`docs/instructions/tranche/SPEC.md`, the AW synthesis, and the AX
+docs/tranches/B2/AGENT_DISPATCH.md:19:3. `docs/instructions/tranche/SPEC.md`
+docs/tranches/B2/AGENT_DISPATCH.md:20:4. `docs/instructions/tranche/WAVE_SPEC.md`
+docs/tranches/AY-I/audit/AUDIT-C-forward.md:360:(`docs/instructions/tranche/SPEC.md:§Three-tier command
+docs/tranches/AY-I/audit/AUDIT-C-forward.md:431:Per `docs/instructions/tranche/SPEC.md:§Scope-reveal protocol`
+docs/tranches/AY-I/audit/AUDIT-C-forward.md:470:six-agent-per-wave cap. `W7.md` + `W8.md` retire; PROGRESS.md
+docs/tranches/B1/PROGRESS.md:186:- W1: 6 agents (1 exemplar, 4 parallel bench ports by grammar family,
+docs/benchmarks/post-AX-W0a2-diag.md:106:Per `docs/instructions/tranche/SPEC.md` §Scope-reveal — halt with diagnosis
+docs/tranches/AZ-I/AZ-I.md:161:**Wave plan refined 2026-04-28** per six-agent audit synthesis at
+docs/tranches/AZ-II/AZ-II.md:40:the six-agent audit. AZ-II docs remain historical and point forward;
+docs/tranches/AZ-II/PROGRESS.md:558:`docs/tranches/AZ-II/audit/O3a-six-agent-audit-synthesis-2026-04-29.md`.
+docs/tranches/AZ-II/waves/cutover/O3a-C1.md:2:**Opens after**: AZ-II.cutover.O3a baseline capture and six-agent audit synthesis
+docs/tranches/AZ-II/waves/cutover/O3a-A1.md:2:**Opens after**: AZ-II.cutover.O3a baseline capture and six-agent audit synthesis
+docs/tranches/B3/AGENT_DISPATCH.md:24:3. `docs/instructions/tranche/SPEC.md` — tranche spec, §Hard gates,
+docs/tranches/B3/AGENT_DISPATCH.md:26:4. `docs/instructions/tranche/WAVE_SPEC.md` — wave-spec format.
+docs/tranches/B3/AGENT_DISPATCH.md:27:5. `docs/instructions/tranche/AGENT_DISPATCH_TEMPLATE.md` — sub-agent
+docs/tranches/AZ-II/waves/cutover/O3a-S1.md:2:**Opens after**: AZ-II.cutover.O3a baseline capture and six-agent audit synthesis
+docs/tranches/AZ-II/waves/cutover/O3a-P1.md:2:**Opens after**: AZ-II.cutover.O3a baseline capture and six-agent audit synthesis
+docs/tranches/BC/FINAL.md:81:  six-agent cap, abstract framing headers, stale bbnf instruction path
+docs/tranches/B3/audit/W0p-revert-rationale.md:4:revert (per `docs/instructions/tranche/SPEC.md` §"audit/*.md — in-flight
+docs/tranches/AZ-II/waves/cutover/O3a-J1.md:2:**Opens after**: AZ-II.cutover.O3a baseline capture and six-agent audit synthesis
+docs/tranches/BC/waves/W1.md:5:**Hard gate**: no stale six-agent cap; triumvirate and scope-dilation protocol explicit
+docs/tranches/AZ-II/waves/cutover/O3a.md:51:| `docs/tranches/AZ-II/audit/O3a-six-agent-audit-synthesis-2026-04-29.md` | create |
+docs/tranches/AZ-II/waves/cutover/O3a.md:271:- `docs/tranches/AZ-II/audit/O3a-six-agent-audit-synthesis-2026-04-29.md`.
+docs/tranches/AX/audit/R2-instructions-redress.md:135:**Redress.** New `docs/instructions/tranche/AGENT_DISPATCH_TEMPLATE.md`
+docs/tranches/BC/waves/W2.md:12:3. Remove duplicated `docs/instructions/tranche/*.md` where those paths
+docs/tranches/BC/waves/W2.md:24:| `<consumer>/docs/instructions/tranche/*.md` | delete where already present |
+docs/tranches/BC/BC.md:58:| `docs/instructions/tranche/*.md` where already present | W2 | Removed duplicate shared canon |
+docs/tranches/BC/BC.md:78:1. `precepts` docs contain no stale six-agent cap.
+docs/tranches/BC/BC.md:82:4. Existing consumer `docs/instructions/tranche/*.md` duplicate files are
+docs/tranches/BC/PROGRESS.md:42:- stale six-agent wording scan in `precepts`: clean;
+docs/tranches/BC/PROGRESS.md:82:- stale six-agent and old bbnf instruction path scan over new instruction
+docs/tranches/AL/research/prototype-3.md:5:Post-AK: citm 2,008 MB/s (+25% vs slab era, +23% vs simd-json). The tape substrate is sound. A six-agent deep audit reveals the optimization stack is **architecturally complete yet strategically dormant**:
+docs/tranches/AW/FINAL-III.md:748:- `docs/tranches/AW/research/aw3-r1..r6.md` — six-agent research
+docs/tranches/BC/research/precepts-rollout.md:22:   six-agent cap. BC must update the cap to 10, challenge sizing to max 5,
+docs/tranches/BC/research/precepts-rollout.md:25:   `docs/instructions/tranche/`. They should remove those files and read
+docs/tranches/AZ-II/audit/AZ-II-HARDENING-AUDIT-2026-04-29.md:242:   [`O3a-six-agent-audit-synthesis-2026-04-29.md`](O3a-six-agent-audit-synthesis-2026-04-29.md).
+docs/tranches/AY-II-I/waves/W4.md:57:1. Run `cargo xtask regen --check`; non-zero exit triggers §Diagnostic-loop relinquish per `docs/instructions/tranche/SPEC.md`. The xtask compares freshly emitted per-grammar source against the in-tree `crates/core/src/grammar/generated/<ident>.rs` files; the post-B2 substrate retired the prior bash-bootstrap cycle-1 ≡ cycle-2 contract along with the `target/.bbnf-cache/` derive cache.
+docs/tranches/AX/audit/SYNTHESIS.md:202:- `docs/instructions/tranche/AGENT_DISPATCH_TEMPLATE.md` — reusable
+docs/tranches/AW/audit/AV-retro.md:42:## 4. Edict adherence — RESEARCH.md six-agent fan-out
+docs/tranches/AZ-II/audit/O3a-round2-synthesis-2026-04-29.md:4:Scope: orchestrator synthesis of the six-agent Round 2 cohort triads.
+docs/tranches/AW/audit/AQ-retro.md:9:Plan declared nine mandatory phases across 4 waves × 6 agents = 24 parallel
+docs/tranches/AY-II-I/PROGRESS.md:460:(`docs/instructions/tranche/SPEC.md` §Multi-pass tranche split).
+docs/tranches/AW/audit/SYNTHESIS.md:198:RESEARCH.md six-agent fan-out aspirational; tranches inherit
+docs/tranches/AW/PROGRESS.md:1443:A six-agent follow-up wave at HEAD `f34531e7` produced the
+docs/tranches/AW/AW-III.md:14:(`2f7c1bd4`) and never attempted optimally. The follow-up six-agent wave
+docs/tranches/AW/AW-III.md:489:A follow-up six-agent wave at 2026-04-17 produced the architectural transposition synthesis:
+docs/tranches/AW/research/SYNTHESIS-5-AW-V-RECKONING.md:101:The six-agent wave resolved the architectural question but did not surface novel performance levers beyond what was already scoped. What it did is:
+```
+
+## Verdict
+
+All hits are in historical tranche docs (B0/B7/AY-II-I/AZ-II/AW/AA/AQ), audit
+snapshots (meta-audit-2026-04-23/24), and the precepts submodule itself
+(LESSONS-LEARNED.md cites the prior six-agent audit as historical fact).
+Live AZ-III/AZ-II/REMAINING-TRAJECTORY references all point to
+`docs/precepts/instructions/**`. Migration is coherent; the no-half-migrated
+sub-gate (W0.3) is met.

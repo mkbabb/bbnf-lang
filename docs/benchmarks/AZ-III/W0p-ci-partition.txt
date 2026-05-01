@@ -1,0 +1,172 @@
+AZ-III.W0p.5 — Nextest Partition Wiring
+========================================
+
+Wave: AZ-III.W0p — Throughput Substrate
+Sub-unit: AZ-III.W0p.5 (Nextest Partition Wiring)
+Date: 2026-04-30
+Worktree: /Users/mkbabb/Programming/bbnf-wt-azIII-w0p-partition
+Base commit: 8abd2ebfea920913d12ca7b8ba617d42ad3af6e3
+Reference audit: docs/tranches/AZ-III/audit/REAUDIT-2026-04-30/06-throughput-commit.md §6
+
+
+1. Mechanism
+------------
+
+The CI workflow's `heavy — workspace tests` step is sharded across three
+parallel runners via cargo-nextest's upstream `--partition count:N/M`
+flag. The matrix is driven by `strategy.matrix.partition: [1, 2, 3]` and
+`strategy.matrix.total: [3]` on the existing `rust` job. Each runner
+hashes test binaries deterministically and executes ~1/3 of the
+workspace test surface; combined, the three shards exercise the full
+workspace.
+
+Preflight steps (regen check, clippy, iter-check) and parity suites
+(sonic-rs JSON parity, lightningcss CSS parity) are pinned to
+`matrix.partition == 1` so they run exactly once per workflow. They
+derive no benefit from sharding: preflight is the iteration loop and
+parity tests are focused single-test invocations that already complete
+in a small bounded wall.
+
+Per-shard junit.xml is uploaded under
+`name: nextest-junit-${{ matrix.partition }}` so all three shards'
+results are preserved as separate artifacts.
+
+
+2. Matrix definition
+--------------------
+
+Inserted under `jobs.rust`:
+
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: [1, 2, 3]
+        total: [3]
+
+
+3. Heavy step (post-edit, exact lines)
+--------------------------------------
+
+      # ── Heavy (wave-close gates) ───────────────────────────────────
+      # Full-workspace correctness via nextest under the ci profile
+      # (retries=1, fail-fast=false, junit output). Sharded into 3
+      # partitions (count:N/3) for parallel CI wall-time reclaim.
+      # Parity suites run under the release profile; they are pinned
+      # to partition 1 because they are focused single-test invocations
+      # that don't benefit from partitioning. These are the close
+      # gates; they pay the full release cost and are explicitly
+      # separated from the preflight block above.
+      - name: heavy — workspace tests (nextest, ci profile, shard ${{ matrix.partition }}/${{ matrix.total }})
+        run: cargo nextest run --workspace --profile ci --partition count:${{ matrix.partition }}/${{ matrix.total }}
+      - name: heavy — sonic-rs JSON parity
+        if: matrix.partition == 1
+        run: cargo nextest run -p bbnf --test sonic_rs_parity --profile ci --cargo-profile release
+      - name: heavy — lightningcss CSS parity
+        if: matrix.partition == 1
+        run: cargo nextest run -p bbnf --test lightningcss_parity --profile ci --cargo-profile release
+      - name: upload nextest junit artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextest-junit-${{ matrix.partition }}
+          path: target/nextest/ci/junit.xml
+          if-no-files-found: warn
+
+
+4. Planned shard invocations (concrete commands the matrix expands to)
+----------------------------------------------------------------------
+
+GitHub Actions expands `strategy.matrix` into one job per (partition,
+total) tuple. With `partition: [1, 2, 3]` and `total: [3]`, three
+parallel jobs run:
+
+  Job 1 (matrix.partition=1, matrix.total=3):
+    cargo nextest run --workspace --profile ci --partition count:1/3
+    + preflight steps (regen / clippy / iter-check)
+    + heavy parity (sonic-rs, lightningcss)
+    + upload artifact: nextest-junit-1 -> target/nextest/ci/junit.xml
+
+  Job 2 (matrix.partition=2, matrix.total=3):
+    cargo nextest run --workspace --profile ci --partition count:2/3
+    + upload artifact: nextest-junit-2 -> target/nextest/ci/junit.xml
+
+  Job 3 (matrix.partition=3, matrix.total=3):
+    cargo nextest run --workspace --profile ci --partition count:3/3
+    + upload artifact: nextest-junit-3 -> target/nextest/ci/junit.xml
+
+
+5. Configuration documentation
+------------------------------
+
+`.config/nextest.toml` was updated in two places:
+
+  (a) Top-of-file comment block now includes a "CI partitions" stanza
+      explaining the W0p.5 sharding policy: 3 shards, workflow-driven,
+      no per-profile override required.
+
+  (b) `[profile.ci]` block carries an inline comment pointing readers to
+      `.github/workflows/ci.yml` for the matrix definition.
+
+The `ci` profile itself is shard-agnostic; partitioning is applied at
+invocation time via the upstream cargo-nextest flag. `fail-fast = false`
+in the existing profile already ensures all three shards drive to
+completion independently.
+
+
+6. Validation
+-------------
+
+YAML parse:
+  $ python3 -c "import yaml; yaml.safe_load(open('.github/workflows/ci.yml'))"
+  -> parses cleanly (no SyntaxError); top-level keys present
+     (name, on triggers, jobs); jobs.rust.strategy.matrix correctly
+     extracts as {"partition": [1, 2, 3], "total": [3]} and
+     fail-fast is False.
+
+Format / whitespace:
+  $ git diff --check
+  -> no whitespace errors.
+
+  $ cargo fmt --all -- --check
+  -> no source files touched; passes trivially.
+
+
+7. Reference
+------------
+
+Upstream nextest partition docs:
+  https://nexte.st/docs/ci-features/partitioning/
+
+Upstream supports `count:N/M` (deterministic hash binning) and
+`hash:N/M` (legacy alias). `count:N/M` is the canonical form and is
+what the workflow now passes verbatim per audit lane 6 §6 / §P4.
+
+
+8. Files changed
+----------------
+
+  .github/workflows/ci.yml      (matrix strategy + sharded heavy step
+                                 + per-shard junit artifact name +
+                                 partition-1 gating on preflight/parity)
+  .config/nextest.toml          (top-of-file CI-partitions doc block +
+                                 inline comment on [profile.ci])
+
+No source code, no Cargo.toml, no .cargo/config.toml, no Makefile, no
+xtask, no scripts/ touched (those are owned by W0p.1 / W0p.2 / W0p.3 /
+W0p.4 sub-units).
+
+
+9. Hard gate evidence
+---------------------
+
+Sub-gate from W0p.md §AZ-III.W0p.5: "CI matrix runs three workspace
+shards; archived workflow output (snippet, since you can't actually
+run CI) in W0p evidence directory (W0p hard gate 5)."
+
+Met by this file. The workflow YAML now declares a 3-element matrix
+that propagates into the shard-bearing `cargo nextest --partition
+count:N/3` invocation; the matrix axis propagates to per-shard junit
+artifact uploads. Live workflow output will land on the next CI run
+post-merge; the planned-invocation snippet above is the artifact
+this sub-gate accepts (the upstream ground truth being the cargo-
+nextest --partition documentation).

@@ -107,3 +107,37 @@ Root compile/test surface:
 W0 close remains blocked until the dirty root implementation slice is either
 committed in owned batches or routed into W1/W2/W3 dispatch worktrees, and
 until the clippy surfaces are assigned to the relevant waves.
+
+## 2026-04-30 - Dirty Slice Disposition
+
+Updated after orchestrator inspection of the restored slice:
+
+- The "AZ-II implementation/source slice" is now confirmed to be 437
+  source files with +4813/-4081 net +732 LOC, all of which is rustfmt
+  2024-edition normalisation: collapsed `if/else` to single-line,
+  reflow of struct-field, `use`-import sort, and single-line function
+  signatures. `git diff -w` over the constraint solver, shape_dict,
+  emitter, and registry surfaces returns empty. No semantic or
+  architectural change rides on the slice. Generated grammar files
+  under `crates/core/src/grammar/generated/**` are not part of this
+  slice; rustfmt vs prettyplease drift on those files is a W1
+  responsibility.
+- The two untracked docs (`docs/benchmarks/AZ-II/cutover/O5-tape-delete-scan.txt`
+  and `docs/precepts-plan.md`) were authored alongside the AZ-II.O5
+  scan and the BC precepts close; they are evidence artefacts that
+  belong with W1 - O5 Reclose and the BC submodule pin respectively.
+
+Disposition: PRESERVED, routed to W1 - O5 Reclose. The slice and the
+two untracked evidence files are stashed as `stash@{0}` with the title
+`AZ-III.W0 preserved: post-AZ-II cargo fmt --all + W0/W1 evidence;
+routed to W1`. W1 - O5 Reclose reapplies the stash inside its
+sibling-worktree commit plan (one of: `style(workspace): apply cargo
+fmt --all` + `docs(az-ii.cutover.O5): record tape deletion scan` +
+`docs(precepts): land precepts extraction plan`) once `cargo xtask
+regen` clears the global drift gate; the pre-commit `regen --check`
+hook fails as long as the 9/9 grammar drift remains, so the slice
+cannot land in W0 without bypassing hooks (forbidden).
+
+Hard gate 2 verdict: every dirty slice is now classified
+(committed = none, preserved = the stash, blocked = none).
+Implementation dispatch can proceed against clean main.

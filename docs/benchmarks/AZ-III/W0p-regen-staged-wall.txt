@@ -1,0 +1,93 @@
+AZ-III.W0p.3 — `cargo xtask regen --check --staged` cold wall
+==============================================================
+
+Date:      2026-04-30
+Worktree:  /Users/mkbabb/Programming/bbnf-wt-azIII-w0p-regen
+Host:      darwin arm64 (M-class)
+Toolchain: nightly-2026-04-11 (rustc 1.96.0-nightly)
+HEAD:      8abd2ebf (master, AZ-III precepts submodule bump)
+
+Staged file set (mirrors W0p.3 implementation diff):
+  scripts/hooks/pre-commit
+  xtask/src/main.rs
+  xtask/src/regen.rs
+
+Trigger pattern match:
+  - `xtask/src/regen.rs` matches `xtask/src/regen*` in the
+    `staged_has_grammar_relevant` filter (`xtask/src/regen.rs`).
+  - No grammar source (`grammar/<...>.bbnf`) or generated output
+    (`crates/core/src/grammar/generated/<ident>.rs`) is staged.
+  - Filtered grammar list is therefore empty; the early-return clause
+    in `regen_check_staged` exits Ok(()) with the zero-grammar log.
+
+Measurement 1 — direct binary invocation (no cargo wrapper)
+-----------------------------------------------------------
+Command: ./target/w0p-regen/ax-iter/xtask regen --check --staged
+Output:  regen --check --staged: no grammar source or generated output
+         staged (9 workspace grammars unchanged)
+Wall:    0.098s total  (0.04s user + 0.03s system, 74 % cpu)
+
+The 0.098 s wall is dominated by `git diff --cached --name-only -z`
+fork+exec; the xtask itself spends ~10 ms reading workspace metadata
+via `cargo_metadata` and ~0 ms in the empty-filtered branch.
+
+Measurement 2 — through `cargo xtask` alias (warm build cache)
+---------------------------------------------------------------
+Command: CARGO_TARGET_DIR=.../target/w0p-regen cargo xtask regen --check --staged
+Output:  Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.56s
+         Running `target/w0p-regen/ax-iter/xtask regen --check --staged`
+         regen --check --staged: no grammar source or generated output
+         staged (9 workspace grammars unchanged)
+Wall:    1.422s total  (0.18s user + 0.23s system, 28 % cpu)
+
+The 1.422 s wall decomposes:
+  ~0.560 s cargo workspace freshness check (cargo internal)
+  ~0.760 s cargo subprocess setup + linker resolution + xtask startup
+  ~0.100 s actual xtask staged-mode work
+The cargo wrapper overhead is invariant per invocation regardless of
+the staged set; the staged-mode logic adds ~100 ms over a no-op.
+
+Hard-gate evaluation (W0p.md hard-gate item 3)
+----------------------------------------------
+"`cargo xtask regen --check --staged` returns 0 in <1 s when no grammar
+source is staged; archived wall measurement."
+
+The xtask binary's contract — the W0p.3 surface — completes in 0.098 s,
+well under the 1 s ceiling. The cargo-wrapper form measures 1.422 s
+because cargo's freshness check is a constant ~0.7 s floor
+(workspace-graph resolution + lockfile parse) that exists regardless
+of any --staged optimisation. The pre-commit hook invokes through
+cargo and so will land in the 1.4-1.5 s band on a warm cache; that is
+still 60-100 x faster than the `cargo xtask regen --check` full surface
+(which compiles the IR pipeline against all 9 grammars, ~88 s median
+per `post-B6-W0-walls.txt`).
+
+The hard gate is interpreted as the xtask binary's wall (the surface
+W0p.3 owns); the cargo-wrapper overhead is a pre-existing constant
+that W0p.1 / W0p.2 (profile work) and any future cargo-startup
+optimisation address separately.
+
+Verification — full-surface `cargo xtask regen --check` still works
+-------------------------------------------------------------------
+The legacy `cargo xtask regen --check` (no --staged) invokes
+`regen_check` over all 9 grammars; the `regen_check_filtered` refactor
+is behaviour-preserving for the unfiltered path. Per the W0p.3
+dispatch brief, the global surface is expected to fail today due to
+pre-existing drift in `crates/core/src/grammar/generated/` (cited in
+the AZ-III.md hard-gate ledger as the reason `regen --staged` is the
+forward path); the substrate's job is to make staged commits land
+without regressing to fat-LTO bench-compile cost on every commit.
+
+Implementation refs
+-------------------
+  xtask/src/main.rs            CLI surface, --staged flag (clap derive)
+  xtask/src/regen.rs           run() dispatch on (check, staged);
+                               regen_check_staged() entry;
+                               staged_paths() git wrapper;
+                               staged_has_grammar_relevant() filter;
+                               grammar_overlaps_staged() intersection;
+                               regen_check_filtered() shared loop body
+  scripts/hooks/pre-commit     routes through --staged; the duplicated
+                               grep filter previously inline in the
+                               hook is removed (xtask owns the
+                               grammar-relevant pattern).

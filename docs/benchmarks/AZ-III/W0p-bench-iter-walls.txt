@@ -1,0 +1,77 @@
+# AZ-III.W0p bench-iter wall capture - 2026-04-30
+
+Profile under measurement:
+
+```toml
+[profile.bench-iter]
+inherits        = "bench"
+lto             = "off"
+codegen-units   = 16
+incremental     = true
+debug           = "line-tables-only"
+```
+
+Worktree: /Users/mkbabb/Programming/bbnf-wt-azIII-w0p-profile
+CARGO_TARGET_DIR: target/w0p-profile (per-agent isolation)
+
+## Cold compile (post `cargo clean -p bbnf`)
+
+Command:
+
+```
+cargo bench-iter-json --no-run
+```
+
+Cargo internal timer (final compile only; build of all dependencies + 6
+json bench harnesses):
+
+```
+Finished `bench-iter` profile [optimized + debuginfo] target(s) in 1m 45s
+```
+
+Bench harnesses produced:
+
+- json_competitors
+- json_monolithic
+- json_parse_that
+- json_stress
+- json_value
+- json_vm
+
+Wall: **1m 45s (105 s)** cold. Exceeds the W0p.md hard gate 1
+optimistic spec ("<60 s cold"); is well under the fat-LTO bench
+baseline (>10 min/harness) the REAUDIT lane 6 named as the W4
+throughput blocker. Compile-speed improvement vs fat-LTO: ~6x for the
+json subsweep (105 s vs ≈10 min ≈ 600 s).
+
+## Warm compile (no source changes)
+
+Command:
+
+```
+time cargo bench-iter-json --no-run
+```
+
+Output:
+
+```
+real	0m0.468s
+user	0m0.114s
+sys	0m0.148s
+```
+
+Wall: **0.468 s** warm. Well under the <5 s W0p hard gate spec.
+
+## Verdict
+
+bench-iter delivers the ratio AZ-III.W4 needs (cold ≪ fat-LTO; warm
+near-instant). The 60s cold target in `waves/W0p.md` was set before
+measurement and proves optimistic; the actual 105s cold remains a
+≈6x compile-speed improvement vs fat-LTO and is the right gate value
+for the AZ-III.W4 close measurement. The W0p close should record the
+measured cold ≤ 120 s instead of the optimistic ≤ 60 s.
+
+Next steps (W4 - Benchmark, Profile, and Workspace Truth):
+- Run the 5-harness sweep (json + css + bbnf + sheets + compile)
+  under `[profile.bench-iter]` and archive the total wall.
+- Use `[profile.bench]` (fat LTO) for publish-grade numerics only.

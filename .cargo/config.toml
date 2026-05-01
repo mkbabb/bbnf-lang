@@ -88,6 +88,20 @@ debug           = "full"
 lto             = "off"
 codegen-units   = 1
 
+# bench-iter: dev-loop bench profile. Inherits bench (release-level optimisation
+# semantics) but disables LTO, expands codegen-units, enables incremental, and
+# trims debuginfo to line tables. Purpose: rebuild the 5-harness AZ-III sweep
+# in seconds during iteration rather than the >50-min fat-LTO wall under
+# `[profile.ay-final]` / `[profile.bench]`. Used exclusively by the
+# `bench-iter-*` aliases below; final-grade numerics still flow through
+# `bench-*` (ay-final) and `final-bench` (release+fat-LTO).
+[profile.bench-iter]
+inherits        = "bench"
+lto             = "off"
+codegen-units   = 16
+incremental     = true
+debug           = "line-tables-only"
+
 # ── Aliases ─────────────────────────────────────────────────────────────────
 # Routine surfaces. Every alias is the single canonical way to issue its
 # operation; the Makefile delegates here rather than duplicating flags.
@@ -170,6 +184,17 @@ bench-compile         = "bench --profile ay-final -p bbnf --bench compile_pipeli
 
 # iai-callgrind (CI-only; requires valgrind on Linux).
 bench-iai             = "bench --profile bench-ci -p bbnf --features callgrind --bench json_callgrind"
+
+# Bench-iter surface: same harness selection as `bench-*` above, but compiled
+# under `[profile.bench-iter]` (no LTO, codegen-units=16, incremental). Use
+# during iteration to rebuild bench binaries in seconds rather than minutes;
+# final-grade numerics still flow through `bench-*` (ay-final).
+bench-iter-all        = "bench --profile bench-iter --workspace --features bbnf/competitor,bbnf/stress,bbnf/vm,bbnf/wasm-bench"
+bench-iter-json       = "bench --profile bench-iter -p bbnf --features competitor,stress,vm --bench json_monolithic --bench json_parse_that --bench json_vm --bench json_competitors --bench json_stress --bench json_value"
+bench-iter-css        = "bench --profile bench-iter -p bbnf --features competitor,stress,vm --bench css_l4 --bench css_vm --bench css_competitors --bench css_stress"
+bench-iter-bbnf       = "bench --profile bench-iter -p bbnf --bench bbnf_monolithic"
+bench-iter-sheets     = "bench --profile bench-iter -p bbnf --features vm --bench google_sheets_monolithic --bench google_sheets_vm"
+bench-iter-compile    = "bench --profile bench-iter -p bbnf --bench compile_pipeline"
 
 # B0.W1.a three-tier surface — `prep-bench` and `final-bench` anchor
 # the profiling-prep and publish-grade tiers. Profile definitions live

@@ -16,14 +16,14 @@ pub mod registry;
 mod subvariants;
 mod type_map;
 
-pub use obligation::{ObligationSink, TypeObligation};
+pub use obligation::{ObligationSink, TypeObligation, dedup_branch_types};
 
 use std::collections::HashMap;
 
 use rustc_hash::FxHashMap;
 
 use crate::dag::{GrammarDag, NodeId};
-use crate::{GrammarIR, IrNode, RuleId, SubVariant, TypeDesc, TypeDescInterner};
+use crate::{AltBranch, GrammarIR, IrNode, RuleId, SubVariant, TypeDesc, TypeDescInterner};
 
 use constraint::SeqChildKind;
 use generate::generate_constraints;
@@ -450,18 +450,24 @@ pub fn project_types(ir: &mut GrammarIR) {
         types_map.iter().map(|(id, ty)| (*id, ty.clone())).collect();
     registry::populate_struct_registry(ir, &rule_types_for_registry, &type_map);
 
-    ir.type_map = Some(type_map);
-    ir.types = types_map.into_iter().collect();
-    ir.types.sort_by_key(|(id, _)| *id);
-
-    // AZ-III.W3a.2 — drain the obligation sink and publish to the IR.
-    // Per AZ-III invariant 7, the projection CSP must not collapse
-    // under-determined Ref resolution into `BoxedEnum` silently. Every
-    // compound-Ref collapse and every cycle-break ground recorded an
-    // `UnresolvedCompoundRef` obligation; drain them here so the
-    // downstream audit/registry/diagnostic consumers see the named
-    // shape under each tagged-union wrapper. Stable order: the sink
-    // preserves insertion order, so dedup-while-preserving-order
+    // AZ-III.W3a — publish the unified obligation stream.
+    //
+    // Per AZ-III invariant 7 ("no silent fallback"), every
+    // under-determined Ref or Alt must surface a NAMED obligation in
+    // `ir.type_obligations`. Two disjoint sources contribute:
+    //
+    //   * W3a.2 (`UnresolvedCompoundRef`) — recorded into
+    //     `system.obligation_sink` by `RefConstraint::revise` and the
+    //     cycle-break loop above. Drained here.
+    //   * W3a.3 (`HeterogeneousAltJoin`) — discovered by walking each
+    //     rule body for `Alt` nodes whose projected type is
+    //     `TypeDesc::HeterogeneousAltJoin(_)`. The lift IS the
+    //     obligation in `ir.types`; this walk pairs each occurrence
+    //     with its owning rule + Alt NodeId so consumers (audit,
+    //     diagnostics) can locate the source site.
+    //
+    // Stable order: the sink preserves insertion order, the walker
+    // visits rules in topological order, dedup-while-preserving-order
     // produces a deterministic obligation list across runs.
     let mut seen = std::collections::HashSet::new();
     let drained = system.obligation_sink.drain();
@@ -471,7 +477,77 @@ pub fn project_types(ir: &mut GrammarIR) {
             obligations.push(o);
         }
     }
+    {
+        let dag = ir.dag.as_ref().expect("ir.dag asserted non-None at entry");
+        for rule in &ir.rules {
+            collect_alt_join_obligations(rule.id, &rule.body, &type_map, dag, &mut obligations);
+        }
+    }
     ir.type_obligations = obligations;
+
+    ir.type_map = Some(type_map);
+    ir.types = types_map.into_iter().collect();
+    ir.types.sort_by_key(|(id, _)| *id);
+}
+
+/// AZ-III.W3a.3 — walk a rule body looking for `Alt` nodes whose
+/// projected type is `TypeDesc::HeterogeneousAltJoin(...)` and lift
+/// each occurrence into a `TypeObligation::HeterogeneousAltJoin`.
+///
+/// The CSP solver only knows about variables and `TypeDesc` values;
+/// the IR-side metadata (which rule, which Alt node) is recovered
+/// here from the durable `GrammarDag` and the IR walk. Other Alts
+/// whose join collapsed to a homogeneous payload are skipped.
+fn collect_alt_join_obligations(
+    rule_id: RuleId,
+    node: &IrNode,
+    type_map: &type_map::TypeMap,
+    dag: &GrammarDag,
+    out: &mut Vec<TypeObligation>,
+) {
+    match node {
+        IrNode::Alt(branches, _) => {
+            if let Some(node_id) = dag.node_for(node) {
+                if let Some(TypeDesc::HeterogeneousAltJoin(types)) = type_map.node_type(node_id) {
+                    out.push(TypeObligation::HeterogeneousAltJoin {
+                        rule: Some(rule_id),
+                        node: Some(node_id),
+                        branches: types.clone(),
+                    });
+                }
+            }
+            for AltBranch { node: child, .. } in branches {
+                collect_alt_join_obligations(rule_id, child, type_map, dag, out);
+            }
+        }
+        IrNode::Seq(children) => {
+            for c in children {
+                collect_alt_join_obligations(rule_id, c, type_map, dag, out);
+            }
+        }
+        IrNode::Repeat { inner, .. }
+        | IrNode::Map { inner, .. }
+        | IrNode::OptionalWhitespace(inner)
+        | IrNode::Negate(inner) => {
+            collect_alt_join_obligations(rule_id, inner, type_map, dag, out);
+        }
+        IrNode::Skip(l, r) | IrNode::Next(l, r) | IrNode::Minus(l, r) => {
+            collect_alt_join_obligations(rule_id, l, type_map, dag, out);
+            collect_alt_join_obligations(rule_id, r, type_map, dag, out);
+        }
+        IrNode::TokenDispatch {
+            token,
+            arms,
+            fallback,
+        } => {
+            collect_alt_join_obligations(rule_id, token, type_map, dag, out);
+            for arm in arms {
+                collect_alt_join_obligations(rule_id, &arm.continuation, type_map, dag, out);
+            }
+            collect_alt_join_obligations(rule_id, fallback, type_map, dag, out);
+        }
+        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => {}
+    }
 }
 
 /// Intern every `TypeDesc` that appears anywhere in the projected type
@@ -536,6 +612,14 @@ fn intern_recursive(ty: &TypeDesc, interner: &mut TypeDescInterner) {
         TypeDesc::Tuple(elems) => {
             for e in elems {
                 intern_recursive(e, interner);
+            }
+        }
+        // AZ-III.W3a.3 — recurse into every distinct branch type so
+        // the interner sees the obligation's evidence at the same
+        // granularity as the structural shapes that produced it.
+        TypeDesc::HeterogeneousAltJoin(branches) => {
+            for b in branches {
+                intern_recursive(b, interner);
             }
         }
         TypeDesc::Span

@@ -63,7 +63,12 @@ fn collect_sub_variants_walk(
             if is_heterogeneous {
                 let mut seen_types: Vec<(TypeDesc, String)> = Vec::new();
                 for (i, ty) in tys.iter().enumerate() {
-                    if *ty == TypeDesc::BoxedEnum || *ty == TypeDesc::Enum {
+                    // AZ-III.W3a.3 — treat the heterogeneous-alt obligation
+                    // identically to the historical `BoxedEnum` here:
+                    // both denote a `Box<Enum>` codegen layout that the
+                    // outer Alt already coerces, so an inner sub-variant
+                    // would double-wrap.
+                    if ty.is_boxed_enum_layout() || *ty == TypeDesc::Enum {
                         continue;
                     }
                     let variant_name = if let Some((_, existing)) =

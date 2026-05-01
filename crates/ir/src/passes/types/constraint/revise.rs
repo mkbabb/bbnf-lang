@@ -17,6 +17,7 @@
 use csp_solver::variable::Variable;
 
 use crate::TypeDesc;
+use crate::passes::types::obligation::dedup_branch_types;
 use crate::passes::types::type_map::try_flatten_pair;
 
 use super::TypeVarId;
@@ -86,8 +87,9 @@ pub(super) fn project_seq_type(child_types: &[&TypeDesc], preserve_spans: bool) 
 /// Tranche Y.10: takes `&[&TypeDesc]` so the caller can borrow from
 /// variable slots without cloning N child types per revise call. The
 /// homogeneous case still clones the one representative branch into
-/// the return; the heterogeneous case returns `BoxedEnum` with zero
-/// clones.
+/// the return; the heterogeneous case lifts the distinct branch
+/// types into a `TypeDesc::HeterogeneousAltJoin` named-obligation
+/// successor to the historical silent `BoxedEnum` fallback.
 ///
 /// AU.2.5: a branch shaped `Tuple([Span, T])` where `T` is a scalar
 /// payload carries the same runtime value as a bare `T` — the Span
@@ -100,6 +102,17 @@ pub(super) fn project_seq_type(child_types: &[&TypeDesc], preserve_spans: bool) 
 /// scalar), the join is that scalar. This restores correct types for
 /// `absoluteLengthUnit`, `relativeLengthUnit`, and every other Alt
 /// whose branches were broken up by the trie-style byte factoring.
+///
+/// AZ-III.W3a.3: when none of the homogeneity reductions fire the
+/// join no longer collapses silently to `BoxedEnum`. Instead the
+/// distinct branch types are lifted into
+/// `TypeDesc::HeterogeneousAltJoin(branches)` so the obligation is
+/// surfaced explicitly in `ir.types`, the post-projection
+/// `GrammarIR::type_obligations` stream, and any downstream
+/// diagnostic consumer. Per AZ-III invariant 7 (no silent fallback)
+/// and W3a hard gate 4 (no live `BoxedEnum` literal under the
+/// constraint solver), the join site no longer hides a
+/// heterogeneous alternation behind the boxed-enum codegen layout.
 pub(super) fn join_types(branch_types: &[&TypeDesc]) -> TypeDesc {
     if branch_types.is_empty() {
         return TypeDesc::Tuple(vec![]);
@@ -120,7 +133,12 @@ pub(super) fn join_types(branch_types: &[&TypeDesc]) -> TypeDesc {
         }
     }
 
-    TypeDesc::BoxedEnum
+    // AZ-III.W3a.3 — named obligation in place of the silent
+    // boxed-enum fallback. The deduplicated branch list canonicalises
+    // the obligation payload so structurally equivalent Alts produce
+    // identical `TypeDesc::HeterogeneousAltJoin` values regardless of
+    // branch repetition.
+    TypeDesc::HeterogeneousAltJoin(dedup_branch_types(branch_types))
 }
 
 /// Extract the semantically meaningful payload type from a branch's

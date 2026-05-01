@@ -45,6 +45,22 @@ pub enum TypeDesc {
     Enum,
     /// A named type (for custom mapping results).
     Named(StringId),
+    /// A heterogeneous-alternation join obligation produced by the type
+    /// projection CSP when an `Alt`'s branch types disagree on payload
+    /// shape.
+    ///
+    /// AZ-III.W3a.3 — replaces the historical silent `BoxedEnum`
+    /// fallback at `passes::types::constraint::revise::join_types`. The
+    /// obligation carries the structurally distinct branch types so
+    /// downstream consumers can both (a) emit the same `Box<Enum>`
+    /// layout that `BoxedEnum` expanded to, and (b) surface the
+    /// alternation's branch types as a named diagnostic via
+    /// `GrammarIR::type_obligations`.
+    ///
+    /// Invariant: the embedded branch list is the deduplicated set of
+    /// distinct branch types observed at join time, ordered by first
+    /// appearance — never empty, never a single homogeneous element.
+    HeterogeneousAltJoin(Vec<TypeDesc>),
 }
 
 impl TypeDesc {
@@ -176,5 +192,21 @@ impl TypeDesc {
             TypeDesc::U64 => Some("u64"),
             _ => None,
         }
+    }
+
+    /// True for `BoxedEnum` and the heterogeneous-alt join obligation.
+    ///
+    /// AZ-III.W3a.3: `HeterogeneousAltJoin` is the named-obligation
+    /// successor to the historical silent `BoxedEnum` fallback at
+    /// `passes::types::constraint::revise::join_types`. Every codegen
+    /// site that previously branched on `BoxedEnum` consults this
+    /// helper instead so the obligation lowers to the same
+    /// `Box<Enum>` layout while remaining structurally distinct in
+    /// `ir.types`.
+    pub fn is_boxed_enum_layout(&self) -> bool {
+        matches!(
+            self,
+            TypeDesc::BoxedEnum | TypeDesc::HeterogeneousAltJoin(_)
+        )
     }
 }

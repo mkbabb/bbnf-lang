@@ -384,6 +384,13 @@ fn type_desc_to_syn_raw(
             // the typed surface lives in the view layer.
             boxed_enum_type.clone()
         }
+        TypeDesc::HeterogeneousAltJoin(_) => {
+            // AZ-III.W3a.3 — the named-obligation successor to the
+            // historical silent `BoxedEnum` join. Lowers to the same
+            // boxed-enum view; the obligation evidence travels via
+            // `GrammarIR::type_obligations`, not via codegen output.
+            boxed_enum_type.clone()
+        }
         TypeDesc::Enum => enum_type.clone(),
         TypeDesc::Named(sid) => {
             let type_str = ir.get_string(*sid);

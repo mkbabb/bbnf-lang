@@ -34,7 +34,13 @@ pub fn type_desc_to_ts(td: &TypeDesc, enum_name: &str, ir: &GrammarIR) -> String
                 .collect();
             format!("[{}]", parts.join(", "))
         }
-        TypeDesc::Enum | TypeDesc::BoxedEnum => enum_name.to_string(),
+        TypeDesc::Enum | TypeDesc::BoxedEnum | TypeDesc::HeterogeneousAltJoin(_) => {
+            // AZ-III.W3a.3 — `HeterogeneousAltJoin` lowers identically to
+            // `BoxedEnum` for the TS surface; the obligation evidence is
+            // surfaced in `ir.type_obligations`, not in the projected
+            // type string.
+            enum_name.to_string()
+        }
         TypeDesc::Named(sid) => ir.get_string(*sid).to_string(),
     }
 }

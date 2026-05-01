@@ -48,3 +48,8 @@ pub use types::{
     StringId, SubVariant, TokenDispatchArm, TypeDesc, TypeDescId, TypeDescInterner,
     key_class_regex_pattern, parse_sep_hint, parse_split_hint,
 };
+
+// AZ-III.W3a — type obligation surface re-export so consumers
+// outside the `passes::types` module can name the diagnostic
+// payload via `bbnf_ir::TypeObligation`.
+pub use passes::types::TypeObligation;

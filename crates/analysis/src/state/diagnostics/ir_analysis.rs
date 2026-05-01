@@ -226,5 +226,11 @@ fn format_type_desc(td: &bbnf_ir::TypeDesc, ir: &bbnf_ir::GrammarIR) -> String {
         bbnf_ir::TypeDesc::BoxedEnum => "Box<Enum>".into(),
         bbnf_ir::TypeDesc::Enum => "Enum".into(),
         bbnf_ir::TypeDesc::Named(id) => ir.get_string(*id).to_string(),
+        bbnf_ir::TypeDesc::HeterogeneousAltJoin(branches) => {
+            // AZ-III.W3a.3 — render the obligation alongside its branch
+            // types so editor diagnostics expose the unsolved join.
+            let parts: Vec<_> = branches.iter().map(|t| format_type_desc(t, ir)).collect();
+            format!("HeterogeneousAltJoin<{}>", parts.join(" | "))
+        }
     }
 }

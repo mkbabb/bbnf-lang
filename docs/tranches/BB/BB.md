@@ -1,3 +1,11 @@
+> **STATUS: SUBSUMED at master c2a1c39e (2026-05-01).**
+>
+> Tranche BB is subsumed: the rule-discovery scope (Ruler CVC enumerator, VM oracle on residue, ranker, Class-1/2/3 tiering, `crates/ir/src/rewrites/`, grammar-colocated `rewrites/*.ron`, Tranche H rediscovery, ≥ 5 accepted rules per production grammar) is absorbed verbatim into the **recycled BA tranche** at `../BA/BA.md`. The BB perf/value/struct-projection items (per-grammar value-enum dedup, sonic-rs same-harness floor, watchdog row resolution under fat-LTO) are absorbed into **AZ-IV** at `../AZ-IV/AZ-IV.md` (waves W3 lazy parse, W5 value-API dedup, W6 measurement + close).
+>
+> This document is preserved for archaeology only. **Do NOT cite this file as authoritative for execution.** Cite `../AZ-IV/AZ-IV.md` for perf items and `../BA/BA.md` for rule-discovery items.
+
+---
+
 # Tranche BB — E-graph Rewrite Rule Inference
 
 > **Refined 2026-04-30 (post AZ-III terminal close)** — BB.scaffold

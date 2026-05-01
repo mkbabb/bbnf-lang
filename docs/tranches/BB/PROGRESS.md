@@ -1,3 +1,7 @@
+> **STATUS: SUBSUMED at master c2a1c39e (2026-05-01).** Pre-subsumption progress preserved for archaeology. Rule-discovery scope absorbed into recycled BA; perf items absorbed into AZ-IV.
+
+---
+
 # BB — Progress Log
 
 **Status**: planned (gated on AZ close + AY-II close; grammar-colocated rule

@@ -1,479 +1,293 @@
-# Tranche BA — Lazy Typed Pointer-Path Queries over Struct Trees
+# Tranche BA (recycled) — Egraph Rule Inference + Ruler + VM Oracle + Ranker
 
-> **Refined 2026-04-28** — per `docs/tranches/AZ-I/audit/W2-CLOSE-AUDIT.md`
-> §2 + Audit-5 Proposal D, BA collapses to one wave: Path IR + type
-> checker + `path!` macro + zero-allocation traversal + host bindings
-> (Rust + TS + Python) under one isomorphic-API close. The
-> parent-pointer-vs-root-traversal micro-bench folds into the opening
-> preflight (15-min preface), retiring the separate BA.W-1 / BA.W0
-> wave letters.
+> **Letter recycled at master c2a1c39e (2026-05-01).** The previous BA tranche (typed pointer-path queries over struct trees) is **subsumed into AZ-IV**: typed `path!` macro lands in AZ-IV.W2; lazy bail-out parse lands in AZ-IV.W3; TS template-literal tag binding + per-grammar value-API dedup land in AZ-IV.W5. Old BA preserves at `docs/tranches/BA/historical/`. Tranche BB's rule-discovery scope is absorbed here verbatim; BB's perf/value/struct-projection items are subsumed into AZ-IV; BB tranche is closed.
+>
+> BA opens after **AZ-IV close**. BA does not open while AZ-IV is in flight.
 
-BA opens on AZ-III's settled substrate. Where AZ-II/AZ-III dissolve the tape in
-favor of direct-to-struct materialization — every `->` producing a
-typed node in a grammar-derived struct tree via `project_types` and
-a non-empty `StructRegistry` — BA layers lazy typed pointer-path
-queries on top of that struct-only substrate. The ergonomic target
-is sonic-rs's `pointer!` macro; the laziness discipline is simdjson
-OnDemand's forward-skip; the strength is compile-time path
-typechecking against the `StructRegistry`, isomorphic across Rust,
-TypeScript, and Python bindings.
+BA closes the loop on `feedback_pluggable-components`, `feedback_csp-always-optimize`, and `feedback_general-infra-crates` by letting the e-graph *discover* grammar-level rewrite rules rather than only apply a fixed set. Ruler-style CVC enumeration over `IrNode` produces candidate pairs `(L, R)`; the e-graph itself is the fast-path equivalence check; the surviving VM interpreter serves as the non-circular ground-truth oracle on the *residue* — candidates the e-graph cannot decide — and nothing more. An automatic ranker scores every surviving candidate; a tiered review pipeline auto-accepts the trivial class, fast-tracks the structural class, and reserves full human review for the novel class only. Rules live outside `crates/core`: fleet-wide rules in a new `crates/ir/src/rewrites/` module, grammar-specific rules colocated with each grammar under `grammar/<name>/rewrites/*.ron` via a standardised schema `cargo xtask regen` scans at IR-pipeline time and compiles into that grammar's cost-config.
 
 ## Architectural thesis
 
-1. **Pointer paths are grammar-typed at compile time.** A path
-   expressed in the host language resolves to a typed accessor via
-   IR type inference consulting the `StructRegistry` produced by
-   AZ. Invalid paths (keys that do not exist at the grammar
-   position, index into a non-list, type mismatch at the terminal)
-   fail to compile with a grammar-aware error. This is strictly
-   stronger than sonic-rs, which resolves `pointer!` at compile
-   time against untyped JSON and fails at runtime on a bad path.
-2. **The substrate is the struct tree, not a tape.** AZ-II's
-   close dissolved the 16-byte TapeRec and the backward container
-   pointer fleet-wide (AZ-I dissolved it for JSON / CSS L4 /
-   Sheets; AZ-II extended the dissolution to BBNF self-hosting).
-   Paths navigate grammar-derived struct nodes whose field layout
-   is the `project_types` return type. There is no tape cursor, no
-   TapeOffset, no paired open/close record walk. Descent is field
-   projection; ascent (where needed) resolves via a chosen
-   parent-pointer strategy rather than a child-off/parent-off
-   column.
-3. **Laziness is lazy tail-clone, not lazy parse.** AZ materialises
-   struct trees eagerly for every grammar by default (JSON / CSS
-   / Sheets at AZ-I close; BBNF at AZ-II close). OnDemand-style
-   forward-skip survives as laziness of the *path tail*: an
-   intermediate `NodeView<'p, T>` borrows into the already-
-   materialized struct tree and only performs a payload read or
-   sub-tree clone at the terminal. Where AZ-I retains a lazy-
-   field mode (deferred `Value::String` slicing from the input,
-   for example), BA's path evaluator skips unread siblings by
-   never projecting their fields.
-4. **Path construction is ergonomic and backend-agnostic.** The
-   host-facing form is a `path!` macro (Rust proc-macro, TS
-   template-literal tag, Python callable); the IR-level form is a
-   typed `Path<Grammar, Target>` value. The three binding
-   frontends share a single path IR, a single type checker, and
-   a single traversal engine, per `feedback_isomorphic-api`.
-5. **Paths compose with the egraph.** A path is rewritten at
-   compile time under duplicate-prefix elimination, redundant
-   downcast removal, and adjacent-accessor fusion. BB later
-   extends that rewrite surface with inferred rules; BA ships
-   the initial small, hand-authored rule set.
+1. **Rule inference over `IrNode` is an e-graph enumeration problem.** Ruler (Nandi et al. 2021) demonstrates the CVC-style approach: generate candidate terms over the grammar's alphabet up to bounded size, group them by equivalence under an oracle, extract rules as cross-class equivalences. BA applies the same shape to bbnf's `IrNode`.
+2. **The e-graph is the fast path; the VM is the residue oracle.** An e-graph that already contains both `L` and `R` in the same class proves their equivalence without any external call. The VM runs only when the e-graph is silent — `L` and `R` belong to different classes under the current rewrite set.
+3. **Rules are grammar-derived, not hand-coded.** Tranche H's `factor` / `merge_regex_alts` / `inline_acyclic` were hand-written. BA does not hand-code; BA discovers. Every rule that persists was produced by enumeration, survived oracle validation, and cleared the ranker tiering.
+4. **Storage is extensible and out-of-core.** Fleet-wide rules live in `crates/ir/src/rewrites/`; grammar-specific rules colocate with their grammar directory. `crates/core` never accumulates a hand-curated rule list. Adding a grammar does not require editing core.
+5. **Ranking + tiering is first-class.** Candidates are scored on frequency, cost delta, generality, similarity-to-known, novelty, and size. Class 1 (trivial / algebraic / rediscovered) auto-accepts with audit log only. Class 2 (structural resemblance to hand-coded patterns) fast-tracks. Class 3 (novel) is the only class that consumes human review time.
 
-## AZ dependency (hard opening gate)
+## AZ-IV dependency (hard opening gate)
 
-**Status (2026-04-30)**: AZ-III closed TERMINAL_WITH_CARRIES at HEAD
-`d071daf9` per [`../AZ-III/FINAL.md`](../AZ-III/FINAL.md). BA is
-UNBLOCKED for defensible-floor scope. The full-stretch scope's
-17-entry-floor item (#4 below) is a NAMED CARRY routed to **BB.close**
-for cross-profile bench refresh under fat-LTO; BA's opening gate is
-not blocked on it.
+BA opens after AZ-IV close. The opening contract:
 
-AZ-III's handoff contract that BA consumes (with AZ-III evidence):
+1. **`crates/ir/src/rewrites/` does not exist** at AZ-IV close. AZ-IV.W4 deletes the unconsumed `RuleSet` field from `pipeline.rs::CompileOptions::rewrites` and the unconsumed `egraph::ruler::*` skeleton (per Babbage's third-pass audit; per AZ-IV §Hard Gates 14). BA recreates them clean — schema, registry, ranker, tiering, miner — without inheriting the eprintln-sink anti-pattern.
+2. **`StructRegistry` populated for JSON / CSS L4 / Sheets / BBNF.** Verified at AZ-IV close per `docs/tranches/AZ-IV/audit/W5-substrate-audit-pass.txt`. The enumerator and oracle consume the same registry.
+3. **Tape path fully deleted.** Verified at AZ-IV close. Direct-to-struct substrate stable; the enumerator targets the struct tree.
+4. **TypedPath<G, T> + path! macro live.** AZ-IV.W2 lands the typed path IR; BA can consume `TypedPath` for path-rewrite enumeration where the rewrite is path-shape-keyed.
+5. **Lazy bail-out parse on 4 grammars.** AZ-IV.W3 closes; BA's enumeration uses the path-driven parse mode for path-rewrite oracle runs.
+6. **Permanent substrate-audit test passing.** AZ-IV.W5 lands the test; BA's new substrates (rewrites/, ruler/, ranker, schema) must pass it at every wave close.
+7. **Workspace nextest 100 % pass.** AZ-IV.W1's redress closes at zero failures; BA inherits the discipline (every wave close passes the workspace nextest sweep at zero failures).
+8. **`cargo xtask regen --check` green 9/9.** Strict regen drift is closed at AZ-IV.W0; BA's grammar-rewrite-dir discovery integrates with the regen pipeline.
 
-1. `StructRegistry` populated for JSON, CSS L4, Sheets, BBNF — **MET**
-   per `docs/benchmarks/archive/AZ-III/W3b-layout-consumer.txt` and
-   `W3a-fact-authority.txt`. A partial registry at AZ-III close would
-   have **blocked** BA open; the registry is closed.
-2. Every `->` in every production grammar reaches the direct-to-
-   struct emitter (`push_*` on the struct builder, not on a tape) —
-   **MET** per `docs/benchmarks/archive/AZ-III/W4-structural-audits.txt`
-   (payload_coverage_audit + struct_registry 21/21 PASS). An IR
-   audit pass holds 100% coverage.
-3. The tape path is fully deleted — **MET** per
-   `docs/benchmarks/archive/AZ-III/W1-deletion-scan.txt` and
-   `W4-structural-audits.txt` static no-legacy GREEN. No orthogonal
-   codepath remains (`feedback_no-orthogonal-codepaths`).
-4. 17-entry AU-baseline matrix at or above AU floor — **NOT-MET-WITHOUT-CARRY**.
-   `docs/benchmarks/post-AZ-III.json` measures under bench-iter
-   (no-LTO); the AZ-I/AU baselines used fat-LTO. Cross-profile
-   comparison is not apples-to-apples. Routed: **BB.close** owns the
-   cross-profile refresh.
+If any of these is not true at AZ-IV close, BA does not open. The carry routes back to AZ-IV per the non-routable-carries discipline (a non-routable item that survives close is a process failure; the response is triumvirate review of AZ-IV thesis, not a successor letter).
 
-BA may open BA.W0 on the AZ-III substrate. The bench-floor item is
-a NAMED CARRY routed to BB.close; BA's opening gate is not blocked
-on it for defensible-floor scope. AZ-III also routes 11 Sheets
-parity tests to BA.W0 (path-API substrate) and 1
-`ts_backend_emits_discriminated_union` test to BA.W2 (host-binding
-isomorphism).
+## Rule admission chain
 
-## BA.W-1 — opening verification
+A rule is not admitted until the whole consumer chain is green:
 
-BA gains a pre-wave handoff verification before BA.W0 creates any new
-path API. This is not a runtime implementation wave; it is the gate
-that proves BA is not layering typed paths over the legacy tape path
-surface.
+```text
+RON rule or inferred candidate -> schema validation -> derive cache key
+-> live rule registry -> e-graph search/apply -> extraction chooses it
+-> write_back_optimized changes GrammarIR -> expanded Rust hot path changes
+-> fixture and bench/proof move
+```
 
-BA.W-1 must prove:
-
-1. No tape imports or tape runtime re-exports remain in the public
-   parse/path surface.
-2. `StructRegistry` and `StructLayout` exist for JSON, CSS L4,
-   Sheets, and BBNF.
-3. Every production grammar reaches struct-only parse output.
-4. BBNF bootstrap reproducibility is permanent after AZ-II close.
-5. Legacy `runtime::path` is renamed, retired, or explicitly marked
-   internal so BA's `TypedPath` cannot coexist ambiguously with the
-   old tape path API.
+Per-rule report must show `search > 0`, `apply/work > 0`, extraction selected the new form, and generated code changed in a parser hot path. Line-count-only diffs, rule-store-only diffs, and rules subsumed by the pre-egraph normalizer do not close a BA wave.
 
 Command packet:
 
 ```bash
-rg -n 'struct TypedPath|enum PathError|PathSegment::Wildcard|fn type_check|AscentStrategy|path_check|parent_pointer_strategies' crates/core/src crates/ir/src crates/bbnf-path/src
-cargo test --profile ax-iter -p bbnf --test path_type_errors
-cargo bench -p bbnf --bench parent_pointer_strategies
+rg -n 'src/rewrites|src/ruler|RuleSet|Provenance|rewrites/' crates/ir crates/egraph crates/core/src/rewrites grammar
+
+BBNF_EGRAPH_REPORT=1 BBNF_HIR_EGRAPH_REPORT=1 \
+cargo run -p bbnf --example egraph_fire_probe --profile ax-iter
+
+BBNF_PIPELINE_REPORT=1 BBNF_EGRAPH_REPORT=1 BBNF_CSP_REPORT=1 \
+cargo expand -p bbnf --bench json_monolithic > target/expand/ba-json.rs
 ```
 
-If these commands cannot exist by BA open, BA stays closed and an
-AZ-II carry wave owns the missing substrate. BA does not create a
-fallback untyped resolver.
+Profile only after the expand diff proves emitted hot-path change.
 
-## Invariants
+## Architecture — e-graph first, VM residue second
 
-1. **No runtime path error.** Every path that compiles returns a
-   valid accessor for a parsed document matching the grammar.
-2. **Zero heap allocation during traversal** (dhat-verified).
-   Intermediate `NodeView` state borrows into the struct tree.
-   The terminal may allocate only if the caller requests an owned
-   clone; default return is borrow-shaped.
-3. **No hand-written path resolver per grammar.** The resolver is
-   derived from `StructRegistry` + grammar IR. One traversal engine
-   serves every production grammar.
-4. **No duplicate traversal logic.** A single path executor. No
-   second "untyped fallback" path; a path that cannot typecheck
-   does not run.
-5. **Cross-binding isomorphism.** The Rust `path!`, the TS
-   template-literal tag, and the Python callable share identical
-   signatures up to host-language syntax. `feedback_isomorphic-api`
-   is enforced.
-6. **Typed-materialization invariant preserved.** Every `->` in
-   the grammar reaches the emitter under AZ; BA only *consumes*
-   the struct tree, it never bypasses or flattens it.
-   `feedback_typed-materialization-invariant` in force.
-7. **Measurement at every wave boundary.** Lazy-path micro-bench
-   suite runs alongside the 17-entry AU-baseline matrix; regression
-   on either blocks wave close.
+The question "why is the VM being used for an oracle equivalence when our e-graph system should do the same thing?" is sharper than it looks. The answer is that the e-graph alone cannot *bootstrap* — before any rule is proven, every candidate pair is in its own singleton class and the e-graph proves nothing. The VM supplies the extrinsic ground truth that seeds the first round; the e-graph then amortises every subsequent check against the growing rewrite set.
+
+Flow per enumeration pass:
+
+```text
+                        candidate (L, R)
+                              │
+                              ▼
+        ┌────────────────────────────────────┐
+        │  e-graph equivalence check under   │
+        │  current accepted rewrite set      │
+        └────────────────────────────────────┘
+                    │              │
+          same class│              │different classes
+                    ▼              ▼
+            skip (already      VM oracle: run L, R
+            captured or        over fixture corpus;
+            redundant)         compare tape output
+                                      │
+                               ┌──────┴──────┐
+                               │             │
+                         equivalent      diverges
+                               │             │
+                               ▼             ▼
+                        feed into       discard
+                        ranker
+                               │
+                               ▼
+                     tiered review
+                               │
+                               ▼
+                     persist accepted
+                     rules; next pass
+                     sees them in
+                     the e-graph
+```
+
+Three consequences:
+
+1. **The residue is small.** Empirically in Ruler / Enumo, >90 % of candidate pairs are captured or redundant once even a small seed ruleset is in place. BA's VM workload is sized to the residue, not total enumeration.
+2. **The VM stays narrow.** Its job is: compile `L` and `R` to the bytecode already supported at HEAD (`crates/ir/src/vm/`, ~1800 LOC), run each against the fixture corpus, byte-compare tape output. No DTA walker. No shape emitter. No resurrection of the dispatch machinery that AX.W0b abrogated. `feedback_abrogate-before-patch` holds: we consume what survived, we do not re-open what was deleted.
+3. **Each round compounds.** Accepted rules extend the e-graph's rewrite set. The next enumeration pass's residue is strictly smaller — rules the e-graph now proves equivalent for free stop reaching the VM. Convergence is observable in residue size per pass.
+
+The VM's oracle role is scoped to residue only. The walker that AX.W0b deleted stays deleted; we consume only the narrow VM surface that compiled at HEAD through the rename.
+
+## Storage architecture
+
+Rules do not live in `crates/core`. Two layers.
+
+### Fleet-wide rules — `crates/ir/src/rewrites/`
+
+A module inside the existing `bbnf-ir` crate, per `feedback_no-core-dumping`. A standalone `ir-rewrites` crate was explicitly rejected: rewrite rules operate on `IrNode` shapes and are not general-purpose infrastructure the way `bbnf-egraph` or a cost-model crate would be, so they do not merit an independent crate boundary. `feedback_general-infra-crates` applies to the e-graph machinery at `crates/egraph/` and the enumeration scaffold, not to the rule store. The module contains:
+
+- `mod.rs` — `Rule` schema, `RuleSet` registry, provenance types.
+- `base/*.ron` — the base rules shipped with bbnf: `Concat(x, Epsilon) → x`, `Alt(Alt(a,b), c) → Alt(a, b, c)`, identity folds, bounded unrolling, etc. Every file is a plain data file — no Rust authorship required to add a fleet-wide rule.
+- `rank.rs` — the automatic ranker (see next section).
+- `tiering.rs` — Class-1 / Class-2 / Class-3 classifier.
+- `schema.rs` — rule-file validation against the schema.
+
+### Grammar-specific rules — `grammar/<name>/rewrites/*.ron`
+
+Each grammar directory may contain a `rewrites/` subdirectory. Every `.ron` file there declares one rule in the standardised schema:
+
+```ron
+Rule(
+    name: "css_declaration_flatten_trailing_semicolons",
+    lhs: Concat([
+        IrNode::Sym("declaration"),
+        IrNode::Repeat(box IrNode::Terminal(";")),
+    ]),
+    rhs: IrNode::Sym("declaration"),
+    cost_delta: -3,
+    provenance: Inferred(
+        enumeration_run: "2026-05-02-css-w2",
+        corpus_coverage: 0.97,
+    ),
+    tier: Class1,
+)
+```
+
+At IR-pipeline time `cargo xtask regen` scans `grammar/<name>/rewrites/` for every grammar it processes, parses each rule file against the schema, and compiles matching rules into that grammar's `cost_config`. Fleet-wide rules are statically linked from `crates/ir/src/rewrites/`. Grammar authors add rules by dropping files in — no core edit, no regen-emitter edit.
+
+### Why RON rather than `.rs`
+
+RON is data-only and schema-validatable at build time; rule files are data, not code. A typo in a RON file is caught by the schema validator with a file/line pointer. A typo in an `.rs` rule file is caught by `rustc` but drags the full macro surface into each rule. Data-only wins.
+
+### Extensibility statement
+
+Adding a new grammar `foo` with three custom rewrites requires: creating `grammar/foo/rewrites/{r1,r2,r3}.ron`. That is the whole delta. No `crates/core` edit. No regen-emitter edit. No hand-authored registry. This is what "grammar-colocated, modular, extensible" resolves to.
+
+## VM-as-oracle
+
+The VM role is explicit and narrow:
+
+1. **Input**: two `IrNode` candidates `L`, `R` plus the grammar's fixture corpus.
+2. **Compile**: each candidate is lowered to the existing bytecode surface (`crates/ir/src/vm/bytecode.rs`). No new opcodes. Lowering is a restricted subset — only node kinds the enumerator produces.
+3. **Execute**: both bytecode programs run against every fixture in the corpus under a time + memory budget per candidate. Outputs are tape sequences.
+4. **Compare**: byte-equal tape output across the full corpus ⇒ equivalent. Diverges on any fixture ⇒ not equivalent. Timeout on any fixture ⇒ inconclusive, queued for wave-close review, never auto-shipped.
+
+The VM is ~1800 LOC at HEAD. BA neither grows it nor revives the token-dispatch walker dispatch; the walker stayed deleted at AX.W0b and stays deleted here. Oracle-only.
+
+## Ranker + tiered review
+
+Every candidate surviving the oracle is scored.
+
+| Signal | Measures | Why it matters |
+|---|---|---|
+| Match frequency | # of corpus matches for LHS pattern across all grammars | Rules that never fire have no value |
+| Cost delta | `cost(LHS) - cost(RHS)` via existing cost model | Larger reduction ⇒ higher priority |
+| Generality | # of grammars whose IR contains LHS pattern | Fleet-wide wins outweigh single-grammar wins |
+| Similarity-to-known | Structural edit distance to Tranche H hand-coded rules | Near-matches are low-risk |
+| Novelty | Inverse of similarity | Flags for scrutiny, not a penalty |
+| Tree size | LHS node count | Smaller LHS easier to verify, less fragile |
+
+The weighted score feeds a tier classifier:
+
+- **Class 1 — Trivial.** Algebraic identities, associativity / commutativity already present in the ground-truth set, rediscoveries of Tranche H hand-coded rules. Auto-accept with machine-generated justification committed to the audit log. No human gate.
+- **Class 2 — Structural.** Shape resembles a Tranche H hand-coded pattern but differs in arity, ordering, or a literal. Fast-track review: one-line LGTM plus corpus coverage assertion. The review surface is a Markdown table plus a per-rule Markdown doc under `docs/rules/<rule-id>.md` generated by the ranker.
+- **Class 3 — Novel.** High novelty score, no structural kin in the Tranche H set. Full human review: rationale, corpus-coverage audit, intentional-divergence probing (i.e., do we *want* this transformation semantically?). The only class that burdens review time.
+
+Target distribution: > 90 % Class 1 + Class 2, < 10 % Class 3. Human review time scales on novel rules only. The bootstrap review is bounded by the Tranche H ground-truth rule count (low dozens); post-bootstrap the delta review is per IR or cost-model change — incremental and small.
+
+### Review surface — where rules are saved and how humans process them
+
+- **Saved**: per the storage architecture above — fleet-wide inferred rules land in `crates/ir/src/rewrites/inferred/*.ron`; grammar-specific inferred rules land in `grammar/<name>/rewrites/*.ron`.
+- **Machine output per run**: one Markdown report per enumeration run under `docs/rules/runs/<run-id>.md`, plus one `docs/rules/<rule-id>.md` per candidate rule. Reports include the ranked candidate list, tier assignment, cost delta, provenance, corpus coverage, and rationale.
+- **Reviewer workflow**: sort by tier; confirm Class 1 audit log passes; fast-track Class 2 in batches; deliberate on Class 3 one at a time. Accepted rules are committed as RON files; rejected rules are recorded under `docs/rules/rejected/<rule-id>.md` with rationale.
 
 ## Hard gates
 
-**Path-specific gates:**
+**Rule-inference gates:**
 
-- `path!("$.pair[0].number")` against the JSON grammar returns an
-  `f64`-typed accessor at compile time.
-- An invalid path (`path!("$.foo.nope")` where `foo` has no field
-  `nope` on the resolved struct) fails to compile with a
-  grammar-aware error naming the offending segment, the struct
-  type it was resolved against, and the valid alternatives at
-  that position.
-- Lazy-path micro-bench suite beats sonic-rs `pointer!` by ≥ 20%
-  on "extract 3 fields from citm.json" and reaches parity or
-  better on "extract 30 fields". Parity or better against
-  simdjson OnDemand on a matched 3-field extraction workload.
-- Zero heap allocations during path traversal (dhat-verified on
-  every fixture in the micro-bench suite).
-- Compile-time error messages include the full path segment chain
-  and the struct position where resolution failed; reviewed
-  against the IR audit coverage matrix.
+- Each wave declares N_w candidates and ships an oracle run that validates them. `W0 = 0 (scaffold only); W1 = 20 JSON; W2 = 50 CSS + BBNF; W3 = grammar-specific corpora`.
+- Oracle rejection rate ≤ 50 % per wave; higher rejection indicates alphabet drift — the alphabet narrows before the next wave.
+- **Soundness rediscovery**: the enumerator must rediscover at least 80 % of Tranche H's hand-coded rules on matching grammars. A miss there is a soundness bug, not a coverage gap.
+- **Corpus hit-rate measurement.** Every retained rule fires ≥ 0.1 times per parse averaged across the 4 primary grammars (JSON, CSS L4, Sheets, BBNF); rules below the floor retire per the e-graph cost model. The measurement is artefact-bound — W0's `docs/benchmarks/post-BA-W0-hit-rate.json` plus samply attribution proving firings register on the parse hot path — and refreshes at every subsequent wave's close.
 
-**Regression gates:**
+**Ranker gates:**
 
-- 17-entry AU-baseline matrix: no regression against AZ-II close.
-- lightningcss / sonic-rs / simdjson / serde_json / cssparser
-  parity harnesses green at every wave boundary.
-- Workspace suite: pass count ≥ AZ-II close, fail count ≤ AZ-II close.
+- ≥ 90 % of accepted rules classify as Class 1 or Class 2 across all shipped waves.
+- Class 1 auto-accept has a signed audit-log entry in `docs/rules/audit-log.ndjson` for every rule.
+- Class 3 rules have a `docs/rules/<rule-id>.md` doc with reviewer-signed rationale.
 
-**Coverage gates:**
+**Cost gates:**
 
-- Every Named rule in every production grammar has a compilable
-  path accessor.
-- `path!` macro works from Rust, TS binding, and Python binding
-  with isomorphic signatures.
+- After applying accepted rules, at least one grammar's `generated.rs` shrinks by ≥ 10 LOC.
+- At least one grammar shows a measurable throughput gain on `post-AZ-IV.json` close matrix (the new floor is post-AZ-IV, not post-AU; the AU floor stays in the `floors` block per `docs/benchmarks/SPEC.md`).
+- No grammar regresses on the post-AZ-IV close matrix.
+
+**Parity gates:**
+
+- lightningcss / sonic-rs / simdjson / cssparser parity harnesses green after every accepted rule.
+- Workspace nextest: 100 % pass at every wave close (inheriting AZ-IV.W1's discipline; zero failures, every `#[ignore]` justified per spec).
+
+**Storage gates:**
+
+- `crates/ir/src/rewrites/` compiles standalone; schema validator rejects malformed RON with file/line diagnostics.
+- `cargo xtask regen` discovers and compiles `grammar/<name>/rewrites/*.ron` for every grammar without per-grammar edits.
+- Permanent `substrate_audit.rs` test (landed at AZ-IV.W5) passes — every new BA substrate has a production caller.
 
 ## Wave structure
 
-Four waves. Every wave ships a same-commit runtime consumer; no
-ledger-only close.
+Five waves. Every wave has a runtime call site at its landing commit. Each wave spec is ≤ 150 LOC.
 
 | Wave | Spec | Headline | Opens after | Status |
 |---|---|---|---|---|
-| **W0** | [waves/W0.md](waves/W0.md) | Path IR + type checker + parent-pointer micro-bench | AZ-II close | planned |
-| **W1** | [waves/W1.md](waves/W1.md) | Lazy traversal engine + `path!` macro + per-grammar bench | W0 | planned |
-| **W2** | [waves/W2.md](waves/W2.md) | Host-binding isomorphism (TS + Python) + e2e integration | W1 | planned |
-| **W3** | [waves/W3.md](waves/W3.md) | FINAL — measurement matrix + parity harness + handoff to BB | W2 | planned |
-
-### W0 — Path IR + type checker + parent-pointer decision
-
-A `Path` is an IR value: a sequence of `PathSegment` (key, index,
-wildcard) typed against a grammar's `StructRegistry`. The type
-checker resolves each segment against the registry and produces a
-`TypedPath<Grammar, Terminal>` with the terminal rule's `TypeDesc`
-attached. W0 also runs a parent-pointer micro-bench across the
-three candidate strategies (in-struct pointer, root-traversal,
-sidecar index) on citm / tailwind / sheets fixtures and selects
-the default; the pick is measurement-driven, not declared.
-
-No path *execution* yet — W0 ships types, type errors, and the
-parent-pointer decision only.
-
-### W1 — Lazy traversal engine + `path!` macro
-
-The traversal engine advances a `TypedPath` over the struct tree:
-field projection for descent, parent-pointer strategy for ascent.
-The `path!` proc-macro expands at the call site to a typed
-accessor consuming a `NodeView`. Micro-bench suite per grammar
-(citm, tailwind, sheets, bbnf) records ns/access at 3 / 10 / 30
-field extraction.
-
-### W2 — Host-binding isomorphism
-
-The TypeScript binding exposes a template-literal tag (`` path`$.a.b` ``)
-and the Python binding a callable (`path("$.a.b")`). Both share the
-Rust path IR via wasm-bindgen / PyO3. A round-trip e2e test exercises
-identical fixtures across all three host bindings and asserts
-identical response shapes.
-
-### W3 — FINAL
-
-Full measurement matrix: JSON / CSS / Sheets / BBNF × 3 / 10 / 30
-fields × cold / warm. Pointer-parity harness asserts bbnf's pointer
-output matches sonic-rs / simdjson / cssparser / lightningcss
-pointer output for every compilable path. `FINAL.md` records
-deltas, reversals, and any work routed to BB.
+| **W0** | [waves/W0.md](waves/W0.md) | Enumerator + VM oracle + ranker + `crates/ir/src/rewrites/` scaffold; Tranche H soundness rediscovery; corpus-wide rule hit-rate measurement | AZ-IV close | planned |
+| **W1** | [waves/W1.md](waves/W1.md) | First enumeration run — JSON + Sheets, curated Class-1/2 batch | W0 | planned |
+| **W2** | [waves/W2.md](waves/W2.md) | Wide alphabet — CSS L4 + BBNF self-hosting | W1 | planned |
+| **W3** | [waves/W3.md](waves/W3.md) | Grammar-specific rule discovery + per-grammar `rewrites/*.ron` authoring | W2 | planned |
+| **W4** | [waves/W4.md](waves/W4.md) | FINAL — cost-model integration + CI auto-accept + review-ledger close | W3 | planned |
 
 ## Reversal criteria
 
-Inheriting AZ's discipline:
+Inheriting AZ-IV's discipline:
 
-1. **Wave-local 20% rule.** A wave that misses its declared gate
-   by more than 20% reverts its own substrate at wave close; it
-   does not ship a hedged substrate that a later wave "fixes".
-2. **No regression on AZ-II close.** Any regression of the 17-entry
-   matrix reverts the responsible substrate immediately at the
-   offending commit.
-3. **No hedging forward.** A wave does not route its miss to a
-   later BA wave or to BB. Misses reset the wave.
-4. **Path-complexity reversal.** If path resolution compile-time
-   grows super-linear in grammar size, the resolution algorithm
-   reverts. BA's path compiler is bounded by
-   `O(path_depth × grammar_rule_count)` with egraph normalization;
-   anything worse reverts.
-
-## Q1 resolution — parent-pointer design
-
-Ascent from a `NodeView` to its container is required for
-wildcard-sibling operators and for path-fusion rewrites that
-anchor at a known ancestor. Under the tape substrate the answer
-was "backward container pointer in TapeRec" (a column). Under
-the struct tree there are three candidates:
-
-1. **In-struct parent pointer.** Each struct node carries
-   `parent: Option<&Parent>` or `parent_id: NodeId`.
-   *Pro*: O(1) ascent, natural locality.
-   *Con*: inflates every node by 8 B (pointer) or 4 B (NodeId)
-   whether the feature is used or not; cycle / lifetime
-   gymnastics under borrow-checker rules; violates "no bloat when
-   the feature is unused."
-2. **Root traversal.** Every path resolves from root; ascent
-   is not offered. Siblings reached via ancestor memoization.
-   *Pro*: zero node bloat; matches AZ's bare struct discipline.
-   *Con*: descent cost on every path access; memoization is
-   per-query, not per-document.
-3. **Hybrid sidecar.** A parallel index (`HashMap<NodeId, NodeId>`
-   or `Vec<NodeId>` indexed by depth-first order) maintained
-   alongside the struct tree, populated only when a query
-   requests ascent. Preserves Q1's original "sidecar column"
-   intent translated to struct-tree: a sidecar tree / parallel
-   index parallel to the struct, not embedded in every struct
-   node.
-   *Pro*: zero node bloat, O(1) ascent when the feature is
-   active, matches the "no bloat when feature unused" discipline
-   the user preserved through the rename.
-   *Con*: index build cost on first ascent query; eviction
-   policy to manage.
-
-**Recommendation**: hybrid sidecar. It is the natural translation
-of the Q1 user decision to the struct-tree substrate. Final pick
-deferred to BA.W0's parent-pointer micro-bench on citm / tailwind /
-sheets fixtures; the micro-bench results land in the W0 close
-commit. If the micro-bench shows root traversal dominating for the
-common-path distribution, BA adopts root traversal and documents
-the inversion.
-
-## Q2 resolution — StructRegistry close
-
-The `StructRegistry` must be populated for JSON, CSS L4, Sheets,
-and BBNF at AZ-II close. BA's type checker dispatches every path
-segment through it; a missing registry entry is a hard compile
-error, not a fallback. If AZ-I.W1 closes with any production grammar
-uncovered, BA.W0 does not open. The remaining grammar lands under
-an AZ-II carry wave and BA re-plans the schedule.
-
-## Cross-binding `path!` macro
-
-The `path!` surface is the user's sole ergonomic entry point. The
-architecture is a three-frontend, shared-IR, shared-executor
-design. The shared core is `crates/core/src/path/`; each host
-binding is a thin adaptor compiling against that same core.
-
-### Frontend surfaces
-
-- **Rust proc-macro** (`crates/bbnf-path/src/path_macro.rs`): expands
-  `path!("$.users[0].name", Users)` at compile time to a typed
-  accessor. The macro parses the path string with the bespoke
-  `bbnf-regex` parser, resolves against the compile-time
-  `StructRegistry` from the derive input, and emits a
-  `TypedPath<Users, StrSlice>` literal plus a call site against
-  `NodeView::project<TypedPath>`. A malformed path fails the
-  surrounding `cargo build` with a `proc_macro2::Span`-anchored
-  diagnostic pointing at the offending segment token.
-- **TypeScript template-literal tag** (`crates/bbnf-path-ts/`):
-  a `cdylib` WASM sub-crate exposes `compile_path(path, grammar)`
-  and `execute_path(typed_path, node_view)` via `wasm-bindgen`.
-  The TS frontend is `` path`$.users[0].name` `` with the tag
-  invoking the WASM-exported validator at load time (build-time
-  under bundlers with constant folding — Vite, esbuild, SWC) and
-  producing a typed accessor closure over the shared struct-tree
-  view. A malformed path throws a `PathError` carrying identical
-  diagnostic fields to the Rust frontend.
-- **Python callable** (`crates/bbnf-path-py/`): PyO3 binding
-  exposing `path("$.users[0].name", grammar=Users)` returning a
-  typed path object. Runtime-typed in Python per the language's
-  idioms, but the underlying validation and execution dispatch
-  through the same Rust path IR. A malformed path raises
-  `bbnf_path.PathError` carrying identical diagnostic fields.
-
-### Shared core
-
-| Module | Responsibility |
-|---|---|
-| `crates/core/src/path/ir.rs` | `Path`, `PathSegment`, `TypedPath<G, T>` — the IR shared across all three frontends |
-| `crates/core/src/path/type_check.rs` | Single type-checker entry point; consumes `StructRegistry` |
-| `crates/core/src/path/executor.rs` | Single traversal executor over the struct tree |
-| `crates/core/src/path/ascent.rs` | `AscentStrategy` trait + picked default (hybrid sidecar per W0) |
-| `crates/core/src/path/error.rs` | `PathError` with segment + struct + alternatives fields; rendered identically across frontends |
-
-### Isomorphism contract
-
-Signature isomorphism per `feedback_isomorphic-api` is enforced at
-the signatures-test level. For every public call:
-
-- Argument shape: (path string, optional grammar/target type).
-- Return shape: typed accessor over `NodeView`, or a typed
-  result in the Python case.
-- Error taxonomy: `PathError { segment, struct_name, alternatives,
-  reason }` — identical field set across Rust / TS / Python,
-  rendered in each host's native error surface.
-
-`feedback_wasm-subcrate-pattern` places the WASM binding as a
-workspace sub-crate under `crates/bbnf-path-ts/`, isomorphic to
-the Python binding location at `crates/bbnf-path-py/`. Neither
-binding imports the other; both import the shared core.
-
-## Critical files
-
-| File | Role | Wave |
-|---|---|---|
-| `crates/core/src/path/ir.rs` | Path IR — `Path`, `PathSegment`, `TypedPath<G, T>` | W0 |
-| `crates/core/src/path/type_check.rs` | Type checker consuming `StructRegistry` | W0 |
-| `crates/core/src/path/ascent.rs` | Parent-pointer strategy (`AscentStrategy` trait + three impls; default picked per W0 micro-bench) | W0 |
-| `crates/core/src/path/error.rs` | `PathError` with segment / struct / alternatives / reason — rendered identically across frontends | W0 |
-| `crates/ir/src/passes/path_check.rs` | IR pass validating all compile-time paths against the grammar | W0 |
-| `crates/core/src/path/executor.rs` | Lazy traversal executor over the struct tree | W1 |
-| `crates/core/src/path/view.rs` | `NodeView<'p, T>` — borrowed cursor state | W1 |
-| `crates/bbnf-path/src/path_macro.rs` | Rust `path!` proc-macro | W1 |
-| `benches/path_extract.rs` | Per-grammar lazy-path micro-bench | W1 |
-| `tests/path_parity.rs` | Parity harness vs. sonic-rs / simdjson / cssparser / lightningcss | W1 |
-| `crates/bbnf-path-ts/` | WASM sub-crate: TS template-literal tag frontend | W2 |
-| `crates/bbnf-path-py/` | PyO3 sub-crate: Python callable frontend | W2 |
-| `tests/path_isomorphic.rs` | Round-trip across Rust / TS / Python bindings | W2 |
-| `docs/tranches/BA/FINAL.md` | BA close summary + handoff contract to BB | W3 |
+1. **Wave-local 20 % rule.** A wave whose accepted rules fail to produce the declared cost delta by > 20 % of target reverts its rule batch.
+2. **Soundness violation ⇒ immediate revert.** A rediscovered rule that fails the corpus is a soundness bug in the enumerator or oracle; wave halts, batch reverts, root cause found before the next run opens.
+3. **No regression on AZ-IV close `post-AZ-IV.json` matrix.** Any regression of the close matrix reverts the responsible rule batch.
+4. **No hedging forward.** A wave does not route its miss to a later wave of BA. Misses reset the wave.
+5. **E-graph node-count ceiling.** Crossing the per-wave ceiling reverts the enumeration alphabet at wave close; alphabet narrows before the next wave opens.
+6. **Permanent substrate-audit test stays green.** Every new BA substrate (rewrites/, ruler/, schema, ranker, tiering) has a production caller; zero-caller substrate fails the test.
 
 ## Risk register
 
-1. **Path explosion under nested pattern matching.** Wildcard (`[*]`)
-   segments across deep CSS / tailwind structs can expand to large
-   typed path sets at compile time; a naive type checker visits
-   every resolved variant. Mitigation: path-fusion rewrites in the
-   egraph unify shared prefixes; wildcard depth cap in the type
-   checker with a grammar-aware diagnostic that names the offending
-   depth; the W0 bench includes a wildcard-heavy tailwind path to
-   expose explosion before it reaches W1.
-2. **Macro hygiene across three host languages.** Rust proc-macro
-   hygiene diverges from TS template-tag identifier resolution and
-   from Python's runtime-only binding. A path-string literal that
-   contains identifier-like fragments could resolve differently in
-   each host. Mitigation: path parsing happens entirely inside the
-   shared WASM validator; each frontend is a thin adaptor that
-   passes the raw string to that validator and cannot reintroduce
-   host-specific substitution. The signatures test in W2 asserts
-   equivalent resolution across frontends on an adversarial fixture.
-3. **Partial `StructRegistry` coverage edge cases.** A Named rule
-   present in grammar but absent from registry breaks path
-   resolution silently if not caught. Mitigation: `path_check.rs`
-   IR pass holds hard coverage; missing entries fail the build at
-   AZ-II close, not at BA compile time. BA treats a missing registry
-   entry as a hard-fail, never a fallback. `feedback_no-workarounds`
-   in force.
-4. **Parent-pointer strategy reversal mid-tranche.** W0's micro-bench
-   pick may prove wrong under a broader W1 workload. Mitigation:
-   the parent-pointer module (`ascent.rs`) is strategy-pluggable
-   per `feedback_pluggable-components`; the `AscentStrategy` trait
-   is the reversal seam. A W1-triggered reversal swaps the
-   implementation without disturbing the executor or any frontend;
-   the reversal commit records the W1 measurement that forced it.
-5. **Host-binding build drift.** The WASM and PyO3 sub-crates can
-   drift out of sync with the core IR if their test harnesses are
-   run only at W2 close. Mitigation: `tests/path_isomorphic.rs`
-   runs on every wave boundary from W1 onward (smoke) with full
-   enforcement at W2; signature drift is caught the commit it
-   lands.
+| Risk | Mitigation |
+|---|---|
+| **E-graph explosion** — candidate enumeration blows past the bounded budget and consumes GB of memory. | Per-wave size bound; fail-fast if `EGraphSolver::node_count()` exceeds the declared ceiling. Revert the enumeration alphabet. |
+| **Rule validity drift** — a rule is equivalent on the fixture corpus but semantically wrong on an unseen input. | Accept rules only with oracle coverage ≥ 95 % of fixture bytes. Rules with narrower coverage ship as `narrow` and restrict to matching grammar positions. |
+| **Interaction with AZ-IV path/lazy-parse substrate** — a rule rewrites a path-shape back into a non-path shape, regressing the lazy lane. | The cost model is the ranker's gate: a rule with negative cost delta cannot auto-accept; the path-aware cost dimension is added at W0. |
+| **Oracle timeout storms** — enumeration emits many candidates the VM cannot validate in budget. | Per-candidate timeout marks "inconclusive"; inconclusives never auto-ship and are reviewed at wave close. |
+| **Rule accumulation entropy** — hundreds of accepted rules slow compilation. | Hard cap of 25 accepted per grammar; new accepts must displace older accepts on measured cost delta. |
+| **Ranker miscalibration** — too many candidates land in Class 3. | Ranker weights are themselves subject to review at wave close; W4 includes a calibration audit. |
+
+## Critical files
+
+| File | Status | Role |
+|---|---|---|
+| `crates/egraph/src/ruler/enumerate.rs` | create | Ruler-style CVC enumerator |
+| `crates/egraph/src/ruler/oracle.rs` | create | VM oracle wrapper with per-candidate budget |
+| `crates/egraph/src/ruler/residue.rs` | create | E-graph-first check; routes residue to oracle |
+| `crates/ir/src/rewrites/` | create (new module inside `bbnf-ir`) | Fleet-wide rule registry, schema, ranker, tiering |
+| `crates/ir/src/rewrites/mod.rs` | create | `Rule`, `RuleSet`, provenance types |
+| `crates/ir/src/rewrites/rank.rs` | create | Automatic ranker |
+| `crates/ir/src/rewrites/tiering.rs` | create | Class-1/2/3 classifier |
+| `crates/ir/src/rewrites/schema.rs` | create | RON rule-file schema + validator |
+| `crates/ir/src/rewrites/base/*.ron` | create | Base fleet-wide rule files |
+| `grammar/<name>/rewrites/*.ron` | create per grammar | Grammar-specific rule files |
+| `crates/core/src/rewrites/mod.rs` | create | IR-pipeline scan + compile of rule files into cost-config (invoked by `cargo xtask regen`) |
+| `docs/rules/` | create | Per-rule docs, run reports, audit log |
 
 ## Defensible floor
 
-Minimum BA delivers, even if stretch scope slips:
+Minimum BA delivers:
 
-1. Path typechecking at compile time for JSON and CSS L4 in Rust
-   only. Every Named rule in those two grammars has a compilable
-   `path!` accessor.
-2. Lazy traversal engine with zero heap allocations on those two
-   grammars (dhat-verified).
-3. ≥ 20% win over sonic-rs on 3-field citm.json extraction;
-   parity or better on 30-field.
-4. Grammar-aware compile-time diagnostics on malformed paths:
-   offending segment + struct + valid alternatives.
-5. No regression on the AZ-close 17-entry AU-baseline matrix.
+1. Working Ruler-style enumerator + e-graph residue split + VM oracle wrapper.
+2. Automatic ranker with Class-1/2/3 tiering functional.
+3. `crates/ir/src/rewrites/` module landed inside `bbnf-ir` with base rules and schema validated.
+4. JSON grammar: ≥ 5 accepted rules, auto-accept on Class 1, review on Class 2 + 3, measurable codegen shrink ≥ 10 LOC on JSON.
+5. Tranche H ground-truth rules rediscovered by enumeration on matching grammars (soundness check).
+6. No regression on AZ-IV close `post-AZ-IV.json` matrix; parity harnesses green; permanent `substrate_audit.rs` test green.
 
-Sheets and BBNF grammar support are stretch. TS and Python
-binding isomorphism are stretch. The floor is the useful-in-Rust
-promise across two production grammars; the stretch is the full
-isomorphic surface across four grammars and three host languages.
-BA does not ship floor-only as a rename of the full tranche — a
-floor-only close is an explicit reversal, not a ledger-ended
-partial success.
+Other grammars, novel-rule review, and per-grammar `grammar/<name>/rewrites/` authoring are stretch beyond the floor but shipped in W2-W3 under normal execution.
 
 ## External SOTA grounding
 
-- **sonic-rs `pointer!` macro** — compile-time path construction,
-  runtime type validation. BA strengthens to compile-time type
-  resolution against `StructRegistry`.
-- **simdjson OnDemand** — lazy forward-only iteration over a
-  structural bitmap. BA applies the same skip discipline to the
-  struct tree rather than to input bytes: paths never project
-  fields they do not reach.
-- **JSONPath RFC 9535** — BA's `path!` syntax is compatible with
-  a subset (key, index, wildcard) and extensible beyond it where
-  the grammar supports richer indexing.
-- **lightningcss typed accessors** — structural parity target
-  for the CSS L4 path surface; BA's paths resolve to the same
-  typed shapes lightningcss exposes on its AST,
-  `feedback_beat-lightningcss-target` in force.
+- **egg — equality saturation with e-graphs.** The substrate bbnf uses today (`crates/egraph/`). See [egg home](https://egraphs-good.github.io/) and the [egg SIGPLAN blog](https://blog.sigplan.org/2021/04/06/equality-saturation-with-egg/).
+- **Ruler — rewrite rule inference.** The technique BA applies. CVC-style enumeration up to bounded term size, pairwise equivalence checks under an oracle, cost-ranked rule extraction. See [Rewrite Rule Inference (Nandi et al. 2021)](https://arxiv.org/pdf/2108.10436).
+- **Enumo — follow-on tooling for rule inference.** Newer infrastructure from the same line of research with support for conditional rules and domain-specific rulers. See [Enumo paper](https://dl.acm.org/doi/10.1145/3591283).
 
 ## Indefatigability
 
-When BA closes correctly, bbnf exposes a grammar-typed pointer API
-that is ergonomically on par with sonic-rs and structurally
-stronger: compile-time path typechecking, zero allocation on
-traversal, cross-binding isomorphism, and parity-or-better on
-every measured extraction workload. The struct-only substrate from
-AZ now supports both full materialization (AZ) and lazy extraction
-(BA) from the same substrate, with no alternate code path.
+When BA closes correctly, bbnf's optimiser discovers rules as first-class output; the e-graph is the fast-path proof substrate; the VM is the residue oracle; rule storage is grammar-colocated and extensible; the ranker tiers candidates so human review scales on novelty only. Combined with AZ-IV's typed `path!` macro, lazy bail-out parse, and per-grammar value-API consolidation, the project delivers grammar-derived everything: a parser per grammar, a typed value tree per grammar, compile-time path types per grammar, lazy bail-out parse per grammar, TS bindings per grammar, and inferred rewrite rules per grammar. One grammar surface; one IR substrate; one parse path; multiple emitted backends; rules discovered, not authored.

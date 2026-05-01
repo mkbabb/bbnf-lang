@@ -144,6 +144,67 @@ present but the structural role cannot be resolved. Per
 modifier annotation in the grammar source must reach the IR; predicate
 silent-drops corrupt every downstream rule body invisibly.
 
+## Test Census Delta (post-regen vs pre-redress baseline)
+
+The W0.3 hard gate compares the new test census against
+`W0-failing-test-census.txt` (78 failures, captured 2026-05-01 18:04
+at HEAD `8ead0d29` on the triad-fixed lowering but pre-regen
+generated tree).
+
+`cargo nextest run -p bbnf -p bbnf-ir --cargo-profile ax-iter
+--no-fail-fast` against post-regen HEAD reports:
+
+```
+Summary [54.025s] 1272 tests run: 1184 passed, 88 failed, 13 skipped
+```
+
+Set comparison vs baseline (`comm` on extracted `crate::module test_name`
+identifiers):
+
+- 46 baseline failures now pass — primarily `bbnf-lsp::integration`
+  surfaces (`test_completion`, `test_hover_recover_keyword`,
+  `test_inlay_hints_nullable`, `test_large_grammar`,
+  `test_range_formatting`), `bbnf::backend_ts ts_many_emits_while_loop`
+  / `bbnf::backend_wasm wat_*_uses_loop`, `bbnf::egraph_semantic *`,
+  and `bbnf::lower lower_optional` / `lower_repetition`. These
+  surfaces depended on the modifier IR shape that the structural
+  detection now produces correctly.
+- 55 new failures surface in JSON / CSS L4 / Google Sheets parity
+  tests (`bbnf::json_parity *`, `bbnf::json_value_parity *`,
+  `bbnf::sonic_rs_parity *`, `bbnf::lightningcss_parity_*`,
+  `bbnf::sheets_parity error_literal_*`).
+
+The new failures are NOT caused by `mod.rs::dispatch_expression`'s
+fix — verified by reverting `mod.rs` to its `8ead0d29` parent state
+and re-dumping the IR for `null = "null" -> 0u8`:
+
+```
+=== fns table (5 entries) ===   <- entry 0u8 missing both pre and post
+  fn[0] = BoolLit(true) ; fn[1] = BoolLit(false) ;
+  fn[2] = Expr Input F64 ; fn[3] = NumberConvert ;
+  fn[4] = decode_json_string_to_arena
+=== rule #0 null (entry=false) ===
+Literal("null")           <- no Map wrapper, both pre and post
+```
+
+The `Map { fn_id, U8 }` wrapper for `null = "null" -> 0u8` is
+missing from the IR with OR without `mod.rs` carved — the loss is
+upstream in the triad's `wrap.rs::lower_mapped_factor` interaction
+with the `value_expr = "0u8"` numeric-literal-with-suffix shape.
+The post-regen `parse_keyword_JsonParser_null` therefore emits
+`push_leaf_with_str` instead of `push_leaf_with_unit`, and the
+runtime's `null_materialises_to_null_value` test fails because
+`JsonValue::Null` is keyed off the U8 typed-leaf path.
+
+This is a pre-existing defect in the triad's `lower_mapped_factor`
+structural detection for numeric-literal value_expr heads — it
+only became observable post-regen because the prior generated
+tree was dated 2026-04-08 and predated the lowering carve. It is
+out of scope for the W0.3 lowering quartet (which targeted only
+the canonical-parser-tree divergence in BBNF self-host) and is
+filed for W1 redress against `wrap.rs::lower_map_arrow` /
+`try_specialize_map_fn` numeric-suffix detection.
+
 ## Commits
 
 1. `7413a213 fix(lower/expression/mod): replace is_single_token_span

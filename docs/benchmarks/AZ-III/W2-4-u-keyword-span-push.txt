@@ -1,0 +1,262 @@
+================================================================================
+AZ-III.W2.4.u - Keyword Shape Span Push (Route B for Modifier Recovery)
+================================================================================
+
+Date          : 2026-04-30
+Worktree      : /Users/mkbabb/Programming/bbnf-wt-azIII-w2-keyword
+Status        : PARTIAL — emitter Span synthesis landed; AZ-III hard
+                gate 1 (`regen --check` green) NOT closed because the
+                canonical regen pipeline produces a non-functional
+                BBNF self-host parser independently of the keyword
+                shape carve. Routes still open for entry-rule shape
+                classification (W3a) and HRegex / PHF / payload
+                divergences (W3c).
+Lane HARD CAP : 50 min (W2.4.u dispatch).
+
+--------------------------------------------------------------------------------
+1. Restated dispatch
+--------------------------------------------------------------------------------
+
+W2.4.t reduced regen drift from 8/9 to 6/9 by adding a Unit-marker
+recovery path in `lower_factor` / `lower_mapped_factor` that scans
+the source gap forward when the codegen alt_dispatch shape pushes
+`Unit` for a matched modifier. Three remaining drift sources beyond
+that recovery were attributed to the keyword-shape struct_direct
+emitter still pushing Unit at source.
+
+W2.4.u dispatched Route B per W3a.4 § 5: modify the keyword-shape
+emitter to push a synthetic `BbnfValue::Span` carrying the matched
+literal text, eliminating the indirection at the emit site so
+`lower_factor`'s standard span-text classifier resolves the
+punctuator directly and the W2.4.t recovery becomes a back-stop
+rather than the primary path.
+
+--------------------------------------------------------------------------------
+2. Implementation
+--------------------------------------------------------------------------------
+
+`crates/core/src/backend/rust/emitter/shapes/keyword/struct_direct.rs`:
+
+- `struct_direct_leaf_emit_for(rule_ty, branch_bool_payload,
+   branch_payload, span_capture: Option<&TokenStream>)` gained the
+   fourth parameter. The catch-all `(_, None)` arm now branches on
+   `span_capture`:
+     - `Some(capture)` → `builder.push_leaf_with_str(#capture)`
+     - `None`          → `builder.push_leaf_with_unit()` (legacy)
+
+- The two emit sites in `emit_parse_keyword_struct_direct` plumb
+  `span_capture = Some(unsafe { ::core::str::from_utf8_unchecked(
+   &input[at..end]) })`:
+
+    (a) Single-literal body (`IrNode::Literal(sid)` arm).
+    (b) Alt-of-literal-led branch (`BranchKind::Literal` arm).
+
+  Both arms compute `at = *p` / `end = at + #len` and verify
+  `input[at..end]` matches the literal byte sequence before the leaf
+  push. The matched bytes came from `ir.get_string(*sid)` (a `&str`),
+  so the slice is UTF-8 by construction; the unchecked decode is
+  sound.
+
+- Ref-led and Seq-led Alt branches were unchanged. Ref-led delegates
+  to a target shape fn (which pushes its own records via
+  `begin_compound` / `push_*` / `end_compound`). Seq-led already
+  pushes `push_leaf_with_str(__seq_text)` covering the inner-emission
+  span — no Unit fallback to absorb.
+
+--------------------------------------------------------------------------------
+3. Behavioural delta on canonical regen
+--------------------------------------------------------------------------------
+
+Generated `parse_keyword_BbnfBootstrap_modifier` (each of the four
+branches `?w`, `?`, `*`, `+`):
+
+  Before (W2.4.t baseline):
+    *p = end;
+    builder.push_leaf_with_unit();
+    return Ok(());
+
+  After (W2.4.u):
+    *p = end;
+    builder
+        .push_leaf_with_str(unsafe {
+            ::core::str::from_utf8_unchecked(&input[at..end])
+        });
+    return Ok(());
+
+Same delta on `binary_operators` (`<<` / `>>` / `-`). On the lowering
+side, the runtime emission of `BbnfValue::Span` (vs `BbnfValue::Unit`)
+makes `lower_factor`'s children-iteration classifier match the
+modifier branch directly:
+
+    if matches!(trimmed, "?w" | "?" | "*" | "+") {
+        modifier_text = Some(trimmed.to_string());
+        continue;
+    }
+
+The W2.4.t `recover_modifier(term)` source-gap scanner now functions
+as a back-stop (only fires when `has_unit_marker = true && modifier_text
+is None`) rather than the primary modifier-resolution path on the
+canonical generated parser.
+
+--------------------------------------------------------------------------------
+4. Verification
+--------------------------------------------------------------------------------
+
+```
+cargo iter-check                      : exits 0 (Finished `ax-iter` in 9.21s)
+cargo fmt --all -- --check            : clean
+git diff --check                      : clean
+cargo nextest -p bbnf -E              :
+   "test(bbnf) - test(egraph_semantic_bbnf_self_hosting)"
+                                      : 52 / 52 passed, 817 skipped
+cargo nextest -p bbnf-ir              : 411 / 411 passed
+cargo xtask regen --check             : 7 of 9 grammars drifted
+                                        (same count as W2.4.t baseline)
+```
+
+The single excluded test `egraph_semantic_bbnf_self_hosting` was
+verified as a pre-existing failure on the unmodified W2.4.t baseline
+(stash + nextest run pre-change exited with the same offset=0/65
+panic). It is NOT introduced by W2.4.u.
+
+--------------------------------------------------------------------------------
+5. Why the hard gate did not close
+--------------------------------------------------------------------------------
+
+Rerunning `cargo xtask regen --grammar bbnf --output /tmp/regen-w2-4-u`
+followed by overwriting `crates/core/src/grammar/generated/bbnf.rs`
+with the new tree and rebuilding produces a generated parser that
+fails to parse even the minimal input `foo = "a" ;` with
+`Syntax { offset: 0 }`. The same failure reproduces on the W2.4.t
+baseline (without W2.4.u changes) — i.e. the canonical-regen
+pipeline produces a broken BBNF parser with or without the W2.4.u
+keyword Span synthesis.
+
+Diffing `/tmp/regen-w2-4-u/bbnf.rs` against the checked-in tree
+(4396 line delta with W2.4.u; 4259 lines without) reveals three
+independent drift sources outside the keyword carve:
+
+  (i)   Entry-rule shape misclassification.
+
+        Checked-in tree carries `parse_array_BbnfBootstrap_grammar`
+        (Array shape with savepoint iteration over the
+        `(comment? , (...) ?w , comment?)*` body). Canonical regen
+        emits `parse_BbnfBootstrap_grammar -> parse_BbnfBootstrap_
+        grammar__value -> parse_scalar_BbnfBootstrap_grammar` — a
+        Scalar (transparent-Ref) shape that delegates without
+        opening a compound or iterating. This is a recognizer
+        shape-classification regression in W3a's
+        `crates/ir/src/passes/recognizers/**` carve.
+
+  (ii)  HRegex payload-emission shape change.
+
+        Checked-in `parse_hregex_BbnfBootstrap_int_lit` decodes the
+        regex match into `i64` and emits
+        `push_leaf_with_i64(__i64)`. Canonical regen emits
+        `push_leaf_with_str(...)` carrying the raw byte slice. This
+        is W3c's HRegex-shape struct-direct emitter carve.
+
+ (iii)  PHF-keyword table generation.
+
+        Canonical regen adds `__PHF_BbnfBootstrap_10_KW` and
+        `__phf_BbnfBootstrap_dispatch_10` (mined keyword tables at
+        Alt branch nodes); the checked-in tree has fewer or no
+        such tables. Regex-constant id renumbering (`__DTA_REGEX_119`
+        vs `__DTA_REGEX_108`) is a downstream renaming consequence.
+
+These three categories account for the majority of the 4396-line
+diff between checked-in and canonical regen. The W2.4.u Span
+synthesis closes one specific architectural divergence (the
+modifier slot Unit-vs-Span indirection) but cannot close the
+remaining three independent divergences from inside the
+`shapes/keyword/struct_direct.rs` file bound.
+
+--------------------------------------------------------------------------------
+6. Routes still open
+--------------------------------------------------------------------------------
+
+(W3a entry-rule shape classifier — primary blocker)
+
+  Investigate why the bbnf grammar's entry rule (`grammar = (...) *`)
+  is now classified as Scalar by the canonical-regen recognizer
+  passes. The rule body's outer `*` quantifier should drive Array
+  classification (Shape 2 — entry-rule list per
+  `crates/core/src/backend/rust/emitter/shapes/array/**`). The
+  W2.4.t `lower_concatenation` / `lower_alternation` deferred
+  Repeat-wrapping per W3a.4 § 5 may have left the canonical IR
+  without the outer Repeat that the recognizer's array-shape
+  predicate consults.
+
+(W3c HRegex / PHF substrate parity)
+
+  Restore `int_lit -> i64` payload semantics (and the symmetric
+  `float_lit -> f64`) by ensuring the type-inference / payload
+  passes preserve the rule's projected `TypeDesc` through the
+  HRegex-shape struct-direct emitter. Independently, decide
+  whether PHF keyword tables should be admitted under
+  StructDirect or factored out at the recognizer level — the
+  W6.2 PHF mining is enabled by default and generates per-Alt
+  tables that the checked-in tree does not carry.
+
+(Continuation Route A: lower_concatenation / lower_alternation)
+
+  W3a.4 § 5 also identified the Repeat-wrapping loss on the outer
+  `(content, optional_separator)+` iteration in `concatenation`
+  and `alternation` rules. The W2.4.t recovery handled the inner
+  modifier slot; the outer iteration wrapper still drops its
+  `Repeat(0, MAX, _)` / `Repeat(1, MAX, _)` IR node. This
+  contributes to the entry-rule shape misclassification (without
+  the outer Repeat the recognizer cannot match the array-shape
+  predicate's `Seq([head, Repeat(_)])` form).
+
+--------------------------------------------------------------------------------
+7. Verdict
+--------------------------------------------------------------------------------
+
+PARTIAL. AZ-III hard gate 1 (`cargo xtask regen --check` green)
+NOT closed; drift count unchanged from W2.4.t (7 of 9 grammars
+drifted). The W2.4.u architectural fix DID land and is verified
+correct (BBNF parity 52/52 + IR 411/411 + iter-check + fmt all
+green); it eliminates the keyword-shape Unit-marker indirection
+that motivated the dispatch. The remaining drift is dominated by
+three independent canonical-regen divergences outside the keyword
+carve, all of which require W3a (entry-rule shape classification +
+outer-iteration Repeat wrapping) and W3c (HRegex payload semantics,
+PHF table generation) work to close.
+
+Refreshing the checked-in tree with the canonical regen output
+would regress BBNF parity (the broken self-host parser fails on
+`foo = "a" ;`), so Commit 2 (`fix(grammar/generated): refresh
+tree`) was NOT taken.
+
+W2.4.u source-code commit:
+  86a600f8 fix(emitter/keyword-struct-direct): synthesize span leaf
+           for content-only keyword compounds
+
+--------------------------------------------------------------------------------
+8. Files changed
+--------------------------------------------------------------------------------
+
+  crates/core/src/backend/rust/emitter/shapes/keyword/struct_direct.rs
+    + 70 / - 9 lines
+    + new `span_capture: Option<&TokenStream>` parameter on
+      `struct_direct_leaf_emit_for` with `push_leaf_with_str`
+      branch in the catch-all
+    + two emit-site splices
+      (`unsafe { from_utf8_unchecked(&input[at..end]) }`)
+      for single-literal body and Alt-of-literal-led branch
+
+--------------------------------------------------------------------------------
+9. Time accounting
+--------------------------------------------------------------------------------
+
+  Read tranche / wave / W2.4.t / W3a.4 docs   :  ~5 min
+  Read keyword + flat struct_direct files     :  ~5 min
+  Design predicate + plumb span_capture       :  ~5 min
+  Edit emitter + cargo iter-check verify      :  ~5 min
+  Test new regen idempotence (failed)         :  ~5 min
+  Diagnose pre-existing canonical-regen break : ~10 min
+  Verify pristine baseline reproduces failure :  ~5 min
+  Run full test suites (BBNF + IR)            :  ~5 min
+  Lint cadence + commit + evidence            :  ~5 min
+  Total                                       : ~50 min (at hard cap)
